@@ -1,5 +1,5 @@
 <!-- src/app/expense/expense.html -->
-<div class="container mx-auto p-4 sm:p-6 lg:p-8 mt-3">
+<div class="container mx-auto p-4 sm:p-6 lg:p-8 mt-5">
   <div class="card shadow-lg rounded-3">
     <div class="card-body p-4 p-md-5">
       <h2 class="card-title text-center mb-4 fw-bold text-primary text-2xl sm:text-3xl">အသုံးစရိတ်ထည့်သွင်းခြင်း</h2>
@@ -83,7 +83,7 @@
         </div>
         <div class="col-span-full text-end mt-4">
           <button type="submit" class="btn btn-primary btn-lg rounded-3 shadow-sm px-6 py-3 text-base sm:text-lg" [disabled]="isSaving">
-            <i class="fas fa-plus-circle me-2"></i> အသုံးစရိတ်ထည့်ရန်
+            <fa-icon [icon]="['fas', 'plus-circle']" class="me-2"></fa-icon> အသုံးစရိတ်ထည့်ရန်
           </button>
         </div>
       </form>
@@ -120,10 +120,10 @@
                   <td class="py-2 px-2 sm:px-4">
                     <div class="d-flex justify-content-center gap-2">
                       <button (click)="editExpense(expense)" class="btn btn-sm btn-warning rounded-3 px-2 py-1 sm:px-3 sm:py-2">
-                        <i class="fas fa-edit"></i> <span class="d-none d-sm-inline">ပြင်ဆင်ရန်</span>
+                        <fa-icon [icon]="['fas', 'pencil']"></fa-icon>
                       </button>
                       <button (click)="deleteExpense(expense.id)" class="btn btn-sm btn-danger rounded-3 px-2 py-1 sm:px-3 sm:py-2">
-                        <i class="fas fa-trash-alt"></i> <span class="d-none d-sm-inline">ဖျက်ရန်</span>
+                        <fa-icon [icon]="['far', 'trash-can']"></fa-icon>
                       </button>
                     </div>
                   </td>
@@ -150,10 +150,10 @@
                   <td class="py-2 px-2 sm:px-4">
                     <div class="d-flex justify-content-center gap-2">
                       <button (click)="saveExpense(expense)" class="btn btn-sm btn-success rounded-3 px-2 py-1 sm:px-3 sm:py-2" [disabled]="isSaving">
-                        <i class="fas fa-save"></i> <span class="d-none d-sm-inline">သိမ်းဆည်းရန်</span>
+                        <fa-icon [icon]="['far', 'floppy-disk']"></fa-icon>
                       </button>
                       <button (click)="cancelEdit(expense)" class="btn btn-sm btn-secondary rounded-3 px-2 py-1 sm:px-3 sm:py-2">
-                        <i class="fas fa-times"></i> <span class="d-none d-sm-inline">ပယ်ဖျက်ရန်</span>
+                        <fa-icon [icon]="['fas', 'times']"></fa-icon>
                       </button>
                     </div>
                   </td>

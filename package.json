@@ -29,6 +29,8 @@
     "@angular/router": "^20.1.0",
     "@fortawesome/angular-fontawesome": "^2.0.1",
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
+    "@fortawesome/free-brands-svg-icons": "^6.7.2",
+    "@fortawesome/free-regular-svg-icons": "^6.7.2",
     "@fortawesome/free-solid-svg-icons": "^6.7.2",
     "bootstrap": "^5.3.7",
     "firebase": "^11.10.0",

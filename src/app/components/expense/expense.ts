@@ -7,12 +7,13 @@ import { ref, push, onValue, update, remove, Database, DataSnapshot } from 'fire
 import { FIREBASE_AUTH, FIREBASE_DATABASE } from '../../firebase.providers';
 import { environment } from '../../../environments/environment.development'; // environment ကို import လုပ်ပါ
 import { IExpense } from '../../models/expense';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 
 
 @Component({
   selector: 'app-expense',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, FontAwesomeModule],
   templateUrl: './expense.html',
 })
 
