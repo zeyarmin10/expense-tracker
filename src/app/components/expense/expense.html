@@ -1,7 +1,8 @@
-<div class="container mt-5">
+<!-- src/app/expense/expense.html -->
+<div class="container mx-auto p-4 sm:p-6 lg:p-8 mt-3">
   <div class="card shadow-lg rounded-3">
     <div class="card-body p-4 p-md-5">
-      <h2 class="card-title text-center mb-4 fw-bold text-primary">အသုံးစရိတ်ထည့်သွင်းခြင်း</h2>
+      <h2 class="card-title text-center mb-4 fw-bold text-primary text-2xl sm:text-3xl">အသုံးစရိတ်ထည့်သွင်းခြင်း</h2>
 
       <!-- Loading Indicator -->
       <div *ngIf="loading" class="text-center py-3">
@@ -12,27 +13,27 @@
       </div>
 
       <!-- User ID Display -->
-      <div *ngIf="!loading && userId" class="alert alert-info text-break rounded-3 shadow-sm mb-4" role="alert">
+      <div *ngIf="!loading && userId" class="alert alert-info text-break rounded-3 shadow-sm mb-4 text-sm sm:text-base" role="alert">
         <strong class="fw-semibold">အသုံးပြုသူ ID:</strong> {{ userId }}
       </div>
 
       <!-- Expense Registration Form -->
-      <form (ngSubmit)="onSubmit()" class="row g-3">
-        <div class="col-md-6">
+      <form (ngSubmit)="onSubmit()" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="col-span-1">
           <label for="date" class="form-label text-secondary">ရက်စွဲ</label>
           <input
             type="date"
-            class="form-control rounded-3"
+            class="form-control rounded-3 p-2 w-full"
             id="date"
             name="date"
             [(ngModel)]="newExpense.date"
             required
           />
         </div>
-        <div class="col-md-6">
+        <div class="col-span-1">
           <label for="category" class="form-label text-secondary">အမျိုးအစား</label>
           <select
-            class="form-select rounded-3"
+            class="form-select rounded-3 p-2 w-full"
             id="category"
             name="category"
             [(ngModel)]="newExpense.category"
@@ -42,11 +43,11 @@
             <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
           </select>
         </div>
-        <div class="col-md-6">
+        <div class="col-span-1">
           <label for="itemName" class="form-label text-secondary">ပစ္စည်းအမျိုးအမည်</label>
           <input
             type="text"
-            class="form-control rounded-3"
+            class="form-control rounded-3 p-2 w-full"
             id="itemName"
             name="itemName"
             placeholder="ဥပမာ: ကော်ဖီ"
@@ -54,11 +55,11 @@
             required
           />
         </div>
-        <div class="col-md-6">
+        <div class="col-span-1">
           <label for="quantity" class="form-label text-secondary">အရေအတွက်</label>
           <input
             type="number"
-            class="form-control rounded-3"
+            class="form-control rounded-3 p-2 w-full"
             id="quantity"
             name="quantity"
             [(ngModel)]="newExpense.quantity"
@@ -66,11 +67,11 @@
             required
           />
         </div>
-        <div class="col-md-12">
+        <div class="col-span-full">
           <label for="price" class="form-label text-secondary">ဈေးနှုန်း</label>
           <input
             type="number"
-            class="form-control rounded-3"
+            class="form-control rounded-3 p-2 w-full"
             id="price"
             name="price"
             placeholder="0.00"
@@ -80,72 +81,80 @@
             required
           />
         </div>
-        <div class="col-12 text-end mt-4">
-          <button type="submit" class="btn btn-primary btn-lg rounded-3 shadow-sm">
-            အသုံးစရိတ်ထည့်ရန်
+        <div class="col-span-full text-end mt-4">
+          <button type="submit" class="btn btn-primary btn-lg rounded-3 shadow-sm px-6 py-3 text-base sm:text-lg" [disabled]="isSaving">
+            <i class="fas fa-plus-circle me-2"></i> အသုံးစရိတ်ထည့်ရန်
           </button>
         </div>
       </form>
 
-      <hr class="my-5">
+      <hr class="my-5 border-t-2 border-gray-300">
 
       <!-- Display Registered Expenses -->
-      <h3 class="text-center mb-4 fw-bold text-secondary">ထည့်သွင်းထားသော အသုံးစရိတ်များ</h3>
+      <h3 class="text-center mb-4 fw-bold text-secondary text-xl sm:text-2xl">ထည့်သွင်းထားသော အသုံးစရိတ်များ</h3>
       <div class="bg-light p-4 rounded-3 shadow-sm">
-        <p *ngIf="expenses.length === 0" class="text-center text-muted py-3">အသုံးစရိတ်များ မရှိသေးပါ</p>
+        <p *ngIf="expenses.length === 0 && !loading" class="text-center fw-bold text-secondary py-3">အသုံးစရိတ်များ မရှိသေးပါ</p>
         
-        <div *ngIf="expenses.length > 0" class="table-responsive">
-          <table class="table table-striped table-hover rounded-3 overflow-hidden">
+        <div *ngIf="expenses.length > 0" class="overflow-x-auto">
+          <table class="table table-striped table-hover rounded-3 overflow-hidden w-full text-sm sm:text-base">
             <thead class="table-dark">
               <tr>
-                <th scope="col">ရက်စွဲ</th>
-                <th scope="col">အမျိုးအစား</th>
-                <th scope="col">ပစ္စည်းအမျိုးအမည်</th>
-                <th scope="col">အရေအတွက်</th>
-                <th scope="col">ဈေးနှုန်း</th>
-                <th scope="col">စုစုပေါင်း</th>
-                <th scope="col">လုပ်ဆောင်ချက်များ</th> <!-- Added Actions column -->
+                <th scope="col" class="py-3 px-2 sm:px-4">ရက်စွဲ</th>
+                <th scope="col" class="py-3 px-2 sm:px-4">အမျိုးအစား</th>
+                <th scope="col" class="py-3 px-2 sm:px-4">ပစ္စည်းအမျိုးအမည်</th>
+                <th scope="col" class="py-3 px-2 sm:px-4">အရေအတွက်</th>
+                <th scope="col" class="py-3 px-2 sm:px-4">ဈေးနှုန်း</th>
+                <th scope="col" class="py-3 px-2 sm:px-4">စုစုပေါင်း</th>
+                <th scope="col" class="py-3 px-2 sm:px-4 text-center">လုပ်ဆောင်ချက်များ</th>
               </tr>
             </thead>
             <tbody>
               <ng-container *ngFor="let expense of expenses">
                 <tr *ngIf="!expense.isEditing">
-                  <td>{{ expense.date }}</td>
-                  <td>{{ expense.category }}</td>
-                  <td>{{ expense.itemName }}</td>
-                  <td>{{ expense.quantity }}</td>
-                  <td>{{ expense.price?.toFixed(2) }} ကျပ်</td>
-                  <td class="fw-bold">{{ expense.total?.toFixed(2) }} ကျပ်</td>
-                  <td>
-                    <div class="d-flex gap-2">
-                      <button (click)="editExpense(expense)" class="btn btn-sm btn-warning rounded-3">ပြင်ဆင်ရန်</button>
-                      <button (click)="deleteExpense(expense.id)" class="btn btn-sm btn-danger rounded-3">ဖျက်ရန်</button>
+                  <td class="py-2 px-2 sm:px-4">{{ expense.date }}</td>
+                  <td class="py-2 px-2 sm:px-4">{{ expense.category }}</td>
+                  <td class="py-2 px-2 sm:px-4">{{ expense.itemName }}</td>
+                  <td class="py-2 px-2 sm:px-4">{{ expense.quantity }}</td>
+                  <td class="py-2 px-2 sm:px-4">{{ expense.price?.toFixed(2) }} ကျပ်</td>
+                  <td class="py-2 px-2 sm:px-4 fw-bold">{{ expense.total?.toFixed(2) }} ကျပ်</td>
+                  <td class="py-2 px-2 sm:px-4">
+                    <div class="d-flex justify-content-center gap-2">
+                      <button (click)="editExpense(expense)" class="btn btn-sm btn-warning rounded-3 px-2 py-1 sm:px-3 sm:py-2">
+                        <i class="fas fa-edit"></i> <span class="d-none d-sm-inline">ပြင်ဆင်ရန်</span>
+                      </button>
+                      <button (click)="deleteExpense(expense.id)" class="btn btn-sm btn-danger rounded-3 px-2 py-1 sm:px-3 sm:py-2">
+                        <i class="fas fa-trash-alt"></i> <span class="d-none d-sm-inline">ဖျက်ရန်</span>
+                      </button>
                     </div>
                   </td>
                 </tr>
                 <tr *ngIf="expense.isEditing" class="table-info">
-                  <td>
-                    <input type="date" class="form-control form-control-sm rounded-3" [(ngModel)]="expense.date" required>
+                  <td class="py-2 px-2 sm:px-4">
+                    <input type="date" class="form-control form-control-sm rounded-3 w-full" [(ngModel)]="expense.date" required>
                   </td>
-                  <td>
-                    <select class="form-select form-select-sm rounded-3" [(ngModel)]="expense.category" required>
+                  <td class="py-2 px-2 sm:px-4">
+                    <select class="form-select form-select-sm rounded-3 w-full" [(ngModel)]="expense.category" required>
                       <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
                     </select>
                   </td>
-                  <td>
-                    <input type="text" class="form-control form-control-sm rounded-3" [(ngModel)]="expense.itemName" required>
+                  <td class="py-2 px-2 sm:px-4">
+                    <input type="text" class="form-control form-control-sm rounded-3 w-full" [(ngModel)]="expense.itemName" required>
                   </td>
-                  <td>
-                    <input type="number" class="form-control form-control-sm rounded-3" [(ngModel)]="expense.quantity" min="1" required>
+                  <td class="py-2 px-2 sm:px-4">
+                    <input type="number" class="form-control form-control-sm rounded-3 w-full" [(ngModel)]="expense.quantity" min="1" required>
                   </td>
-                  <td>
-                    <input type="number" class="form-control form-control-sm rounded-3" [(ngModel)]="expense.price" step="0.01" min="0" required>
+                  <td class="py-2 px-2 sm:px-4">
+                    <input type="number" class="form-control form-control-sm rounded-3 w-full" [(ngModel)]="expense.price" step="0.01" min="0" required>
                   </td>
-                  <td class="fw-bold">{{ (expense.quantity * expense.price)?.toFixed(2) }} ကျပ်</td>
-                  <td>
-                    <div class="d-flex gap-2">
-                      <button (click)="saveExpense(expense)" class="btn btn-sm btn-success rounded-3">သိမ်းဆည်းရန်</button>
-                      <button (click)="cancelEdit(expense)" class="btn btn-sm btn-secondary rounded-3">ပယ်ဖျက်ရန်</button>
+                  <td class="py-2 px-2 sm:px-4 fw-bold">{{ (expense.quantity * expense.price)?.toFixed(2) }} ကျပ်</td>
+                  <td class="py-2 px-2 sm:px-4">
+                    <div class="d-flex justify-content-center gap-2">
+                      <button (click)="saveExpense(expense)" class="btn btn-sm btn-success rounded-3 px-2 py-1 sm:px-3 sm:py-2" [disabled]="isSaving">
+                        <i class="fas fa-save"></i> <span class="d-none d-sm-inline">သိမ်းဆည်းရန်</span>
+                      </button>
+                      <button (click)="cancelEdit(expense)" class="btn btn-sm btn-secondary rounded-3 px-2 py-1 sm:px-3 sm:py-2">
+                        <i class="fas fa-times"></i> <span class="d-none d-sm-inline">ပယ်ဖျက်ရန်</span>
+                      </button>
                     </div>
                   </td>
                 </tr>
