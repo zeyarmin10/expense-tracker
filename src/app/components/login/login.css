@@ -1,0 +1,28 @@
+.login-btn {
+    background-color: aliceblue;
+    border: 1px solid #007bff;
+}
+.login-btn:hover {
+    border: 1px solid #acacac;
+}
+
+.svg-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+    vertical-align: text-bottom;
+}
+
+.spinner-border {
+  display: inline-block;
+  width: 1.5rem;
+  height: 1.5rem;
+  vertical-align: text-bottom;
+  border: 0.25em solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spinner-border .75s linear infinite;
+}
+
+@keyframes spinner-border {
+  to { transform: rotate(360deg); }
+}

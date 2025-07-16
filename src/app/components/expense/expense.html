@@ -1,4 +1,3 @@
-<!-- src/app/expense/expense.html -->
 <div class="container mx-auto p-4 sm:p-6 lg:p-8 mt-5">
   <div class="card shadow-lg rounded-3">
     <div class="card-body p-4 p-md-5">
@@ -12,10 +11,14 @@
         <p class="text-primary mt-2">ဒေတာများ တင်နေသည်...</p>
       </div>
 
-      <!-- User ID Display -->
-      <div *ngIf="!loading && userId" class="alert alert-info text-break rounded-3 shadow-sm mb-4 text-sm sm:text-base" role="alert">
-        <strong class="fw-semibold">အသုံးပြုသူ ID:</strong> {{ userId }}
+      <!-- User Name Display (instead of ID) -->
+      <div *ngIf="!loading && userName" class="alert alert-info text-break rounded-3 shadow-sm mb-4 text-sm sm:text-base" role="alert">
+        <strong class="fw-semibold">အသုံးပြုသူအမည်:</strong> {{ userName }}
       </div>
+      <!-- User ID Display (Optional, if still needed for debugging) -->
+      <!-- <div *ngIf="!loading && userId" class="alert alert-info text-break rounded-3 shadow-sm mb-4 text-sm sm:text-base" role="alert">
+        <strong class="fw-semibold">အသုံးပြုသူ ID:</strong> {{ userId }}
+      </div> -->
 
       <!-- Expense Registration Form -->
       <form (ngSubmit)="onSubmit()" class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -101,10 +104,10 @@
               <tr>
                 <th scope="col" class="py-3 px-2 sm:px-4">ရက်စွဲ</th>
                 <th scope="col" class="py-3 px-2 sm:px-4">အမျိုးအစား</th>
-                <th scope="col" class="py-3 px-2 sm:px-4">ပစ္စည်းအမျိုးအမည်</th>
-                <th scope="col" class="py-3 px-2 sm:px-4">အရေအတွက်</th>
-                <th scope="col" class="py-3 px-2 sm:px-4">ဈေးနှုန်း</th>
-                <th scope="col" class="py-3 px-2 sm:px-4">စုစုပေါင်း</th>
+                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">ပစ္စည်းအမျိုးအမည်</th>
+                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">အရေအတွက်</th>
+                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">ဈေးနှုန်း</th>
+                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">စုစုပေါင်း</th>
                 <th scope="col" class="py-3 px-2 sm:px-4 text-center">လုပ်ဆောင်ချက်များ</th>
               </tr>
             </thead>
@@ -120,10 +123,10 @@
                   <td class="py-2 px-2 sm:px-4">
                     <div class="d-flex justify-content-center gap-2">
                       <button (click)="editExpense(expense)" class="btn btn-sm btn-warning rounded-3 px-2 py-1 sm:px-3 sm:py-2">
-                        <fa-icon [icon]="['fas', 'pencil']"></fa-icon>
+                        <fa-icon [icon]="['fas', 'pencil']"></fa-icon> <span class="d-none d-sm-inline">ပြင်ဆင်ရန်</span>
                       </button>
                       <button (click)="deleteExpense(expense.id)" class="btn btn-sm btn-danger rounded-3 px-2 py-1 sm:px-3 sm:py-2">
-                        <fa-icon [icon]="['far', 'trash-can']"></fa-icon>
+                        <fa-icon [icon]="['far', 'trash-can']"></fa-icon> <span class="d-none d-sm-inline">ဖျက်ရန်</span>
                       </button>
                     </div>
                   </td>
@@ -150,10 +153,10 @@
                   <td class="py-2 px-2 sm:px-4">
                     <div class="d-flex justify-content-center gap-2">
                       <button (click)="saveExpense(expense)" class="btn btn-sm btn-success rounded-3 px-2 py-1 sm:px-3 sm:py-2" [disabled]="isSaving">
-                        <fa-icon [icon]="['far', 'floppy-disk']"></fa-icon>
+                        <fa-icon [icon]="['far', 'floppy-disk']"></fa-icon> <span class="d-none d-sm-inline">သိမ်းဆည်းရန်</span>
                       </button>
                       <button (click)="cancelEdit(expense)" class="btn btn-sm btn-secondary rounded-3 px-2 py-1 sm:px-3 sm:py-2">
-                        <fa-icon [icon]="['fas', 'times']"></fa-icon>
+                        <fa-icon [icon]="['fas', 'times']"></fa-icon> <span class="d-none d-sm-inline">ပယ်ဖျက်ရန်</span>
                       </button>
                     </div>
                   </td>

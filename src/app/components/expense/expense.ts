@@ -1,29 +1,35 @@
 // src/app/expense/expense.component.ts
-import { Component, OnInit, OnDestroy, Inject, ChangeDetectorRef } from '@angular/core'; // ChangeDetectorRef, NgZone များကို ဖယ်ရှားထားပါသည်
+import { Component, OnInit, OnDestroy, Inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { onAuthStateChanged, Auth, signInAnonymously } from 'firebase/auth';
+import { onAuthStateChanged, Auth } from 'firebase/auth';
 import { ref, push, onValue, update, remove, Database, DataSnapshot } from 'firebase/database';
 import { FIREBASE_AUTH, FIREBASE_DATABASE } from '../../firebase.providers';
-import { environment } from '../../../environments/environment.development'; // environment ကို import လုပ်ပါ
-import { IExpense } from '../../models/expense';
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome'; // Import FontAwesomeModule
+
+// Declare global variables for Canvas environment
+declare const __app_id: string;
+declare const __initial_auth_token: string;
+import { IExpense } from '../../models/expense'; // Import your IExpense interface
 
 
 @Component({
   selector: 'app-expense',
   standalone: true,
-  imports: [CommonModule, FormsModule, FontAwesomeModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    FontAwesomeModule // Add FontAwesomeModule to imports array
+  ],
   templateUrl: './expense.html',
 })
-
-
 export class Expense implements OnInit, OnDestroy {
   Object = Object; // Make Object accessible in the template for Object.keys()
 
   userId: string | null = null;
+  userName: string | null = null; // Add userName property
   private unsubscribeFromAuth!: () => void;
-  private unsubscribeFromExpenses!: () => void;
+  private unsubscribeFromExpenses: (() => void) | null = null; // Initialize as null
 
   loading: boolean = true;
   isSaving: boolean = false; // Add a flag to prevent double saving
@@ -52,7 +58,7 @@ export class Expense implements OnInit, OnDestroy {
   constructor(
     @Inject(FIREBASE_AUTH) private auth: Auth,
     @Inject(FIREBASE_DATABASE) private db: Database,
-    private cdr: ChangeDetectorRef // ChangeDetectorRef ကို ပြန်လည်ထည့်သွင်းပါ
+    private cdr: ChangeDetectorRef // Inject ChangeDetectorRef
   ) { }
 
   async ngOnInit(): Promise<void> {
@@ -61,33 +67,33 @@ export class Expense implements OnInit, OnDestroy {
     try {
       // Listen for Firebase Authentication state changes
       this.unsubscribeFromAuth = onAuthStateChanged(this.auth, async (user) => {
-        if (user) {
+        console.log('Expense Component: onAuthStateChanged - User state changed:', user ? user.uid : 'No user');
+        if (user && !user.isAnonymous) { // Only listen for authenticated, non-anonymous users
           this.userId = user.uid;
-          console.log('Firebase user authenticated:', this.userId);
+          this.userName = user.displayName; // Set userName from authenticated user
+          console.log('Expense Component: Firebase user authenticated:', this.userId, 'Name:', this.userName);
           // Once authenticated, start listening for expenses
           this.listenForExpenses();
         } else {
-          try {
-            // If no user, sign in anonymously for local development and production
-            console.log('No user found, attempting anonymous sign-in...');
-            await signInAnonymously(this.auth);
-            console.log('Signed in anonymously successfully.');
-            // After successful anonymous sign-in, onAuthStateChanged will fire again with a user.
-            // So, listenForExpenses will be called in the 'if (user)' block.
-          } catch (authError: any) {
-            console.error('Firebase authentication error:', authError);
-            alert('အကောင့်ဝင်ရာတွင် အမှားအယွင်းရှိပါသည်။'); // Error signing in
-            this.loading = false; // Set loading to false if authentication completely fails
-            console.log('Authentication failed, setting loading to false.');
-            this.cdr.detectChanges(); // Force UI update
+          // If no user or anonymous user, clear data and stop listeners
+          if (this.unsubscribeFromExpenses) {
+            this.unsubscribeFromExpenses(); // Stop listening to expenses
+            this.unsubscribeFromExpenses = null; // Reset the unsubscribe function
+            console.log('Expense Component: Unsubscribed from expenses listener due to logout/anonymous user.');
           }
+          this.userId = null;
+          this.userName = null;
+          this.expenses = []; // Clear expenses
+          this.loading = false; // Set loading to false if no user is found
+          this.cdr.detectChanges(); // Force UI update
+          console.log('Expense Component: User logged out or is anonymous. Data cleared and loading set to false.');
         }
       });
     } catch (error) {
-      console.error('Firebase initialization error:', error);
+      console.error('Expense Component: Firebase initialization error:', error);
       alert('Firebase စတင်ရာတွင် အမှားအယွင်းရှိပါသည်။'); // Error initializing Firebase
       this.loading = false; // Always set loading to false if initialization fails
-      console.log('Initialization error, setting loading to false.');
+      console.log('Expense Component: Initialization error, setting loading to false.');
       this.cdr.detectChanges(); // Force UI update
     }
   }
@@ -96,24 +102,33 @@ export class Expense implements OnInit, OnDestroy {
     // Unsubscribe from Firebase listeners to prevent memory leaks
     if (this.unsubscribeFromAuth) {
       this.unsubscribeFromAuth();
+      console.log('Expense Component: ngOnDestroy - Unsubscribed from auth listener.');
     }
-    if (this.db && this.userId && this.unsubscribeFromExpenses) {
+    if (this.unsubscribeFromExpenses) { // Check if it's not null before calling
       this.unsubscribeFromExpenses();
+      console.log('Expense Component: ngOnDestroy - Unsubscribed from expenses listener.');
     }
   }
 
   // Listen for real-time updates to expenses from Firebase Realtime Database
   private listenForExpenses(): void {
     if (!this.db || !this.userId) {
-      console.warn('Realtime Database or user ID not available for listening to expenses. Setting loading to false.');
+      console.warn('Expense Component: Realtime Database or user ID not available for listening to expenses. Setting loading to false.');
       this.loading = false;
       this.cdr.detectChanges(); // Force UI update
       return;
     }
 
-    console.log('Starting to listen for expenses...');
+    // If already listening, unsubscribe first to prevent multiple listeners
+    if (this.unsubscribeFromExpenses) {
+        this.unsubscribeFromExpenses();
+        this.unsubscribeFromExpenses = null;
+        console.log('Expense Component: Existing expenses listener unsubscribed before setting new one.');
+    }
+
+    console.log('Expense Component: Starting to listen for expenses...');
     // Use projectId from environment as appId for Realtime Database path
-    const appId = environment.firebaseConfig.projectId;
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
     const expensesRef = ref(
       this.db,
       `artifacts/${appId}/users/${this.userId}/expenses`
@@ -132,14 +147,15 @@ export class Expense implements OnInit, OnDestroy {
           } as IExpense);
         });
         this.loading = false; // Data loaded, set loading to false
-        console.log('Expenses updated from Firebase Realtime Database. Expenses count:', this.expenses.length, 'Loading state:', this.loading);
+        console.log('Expense Component: Expenses updated from Firebase Realtime Database. Expenses count:', this.expenses.length, 'Loading state:', this.loading);
         this.cdr.detectChanges(); // Force UI update after data is loaded and loading state is false
       },
       (error) => {
-        console.error('Error fetching expenses from Firebase Realtime Database:', error);
-        alert('အသုံးစရိတ်များ ရယူရာတွင် အမှားအယွင်းရှိပါသည်။'); // Error fetching expenses
+        console.error('Expense Component: Error fetching expenses from Firebase Realtime Database:', error);
+        // Do not show alert here as it might be due to logout (permission_denied).
+        // The onAuthStateChanged listener handles clearing data and redirects.
         this.loading = false; // Set loading to false on error
-        console.log('Error fetching expenses, setting loading to false.');
+        console.log('Expense Component: Error fetching expenses, setting loading to false.');
         this.cdr.detectChanges(); // Force UI update
       }
     );
@@ -149,7 +165,7 @@ export class Expense implements OnInit, OnDestroy {
   async onSubmit(): Promise<void> {
     // Prevent multiple submissions if already saving
     if (this.isSaving) {
-      console.log('Submission already in progress. Please wait.');
+      console.log('Expense Component: Submission already in progress. Please wait.');
       return;
     }
 
@@ -182,14 +198,14 @@ export class Expense implements OnInit, OnDestroy {
         userId: this.userId,
       };
 
-      const appId = environment.firebaseConfig.projectId;
+      const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
       const expensesRef = ref(
         this.db,
         `artifacts/${appId}/users/${this.userId}/expenses`
       );
       await push(expensesRef, expenseToSave); // Add new expense to Firebase
 
-      console.log('အသုံးစရိတ် အောင်မြင်စွာ ထည့်သွင်းပြီးပါပြီ:', expenseToSave); // Expense added successfully
+      console.log('Expense Component: အသုံးစရိတ် အောင်မြင်စွာ ထည့်သွင်းပြီးပါပြီ:', expenseToSave); // Expense added successfully
 
       // Reset the form, pre-filling today's date for the next entry
       this.newExpense = {
@@ -202,7 +218,7 @@ export class Expense implements OnInit, OnDestroy {
       // onValue listener will handle UI update automatically with NgZone.
 
     } catch (error) {
-      console.error('Error adding document to Firebase Realtime Database:', error);
+      console.error('Expense Component: Error adding document to Firebase Realtime Database:', error);
       alert('အသုံးစရိတ်ထည့်သွင်းရာတွင် အမှားအယွင်းရှိပါသည်။'); // Error adding expense
     } finally {
       this.isSaving = false; // Reset saving flag
@@ -233,7 +249,7 @@ export class Expense implements OnInit, OnDestroy {
   async saveExpense(expense: IExpense): Promise<void> {
     // Prevent multiple saves if already saving
     if (this.isSaving) {
-      console.log('Save operation already in progress. Please wait.');
+      console.log('Expense Component: Save operation already in progress. Please wait.');
       return;
     }
 
@@ -259,7 +275,7 @@ export class Expense implements OnInit, OnDestroy {
     this.isSaving = true; // Set saving flag to true
 
     try {
-      const appId = environment.firebaseConfig.projectId;
+      const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
       const expenseRefPath = `artifacts/${appId}/users/${this.userId}/expenses/${expense.id}`;
       const expenseItemRef = ref(this.db, expenseRefPath);
 
@@ -277,9 +293,9 @@ export class Expense implements OnInit, OnDestroy {
 
       expense.isEditing = false;
       delete expense.originalExpense; // Clean up original expense data
-      console.log('အသုံးစရိတ်ကို Firebase Realtime Database တွင် ပြင်ဆင်ပြီးပါပြီ:', expense); // Expense updated in Firebase
+      console.log('Expense Component: အသုံးစရိတ်ကို Firebase Realtime Database တွင် ပြင်ဆင်ပြီးပါပြီ:', expense); // Expense updated in Firebase
     } catch (error) {
-      console.error('Error updating document in Firebase Realtime Database:', error);
+      console.error('Expense Component: Error updating document in Firebase Realtime Database:', error);
       alert('အသုံးစရိတ်ပြင်ဆင်ရာတွင် အမှားအယွင်းရှိပါသည်။'); // Error updating expense
     } finally {
       this.isSaving = false; // Reset saving flag
@@ -300,13 +316,13 @@ export class Expense implements OnInit, OnDestroy {
     }
 
     try {
-      const appId = environment.firebaseConfig.projectId;
+      const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
       const expenseRefPath = `artifacts/${appId}/users/${this.userId}/expenses/${id}`;
       const expenseItemRef = ref(this.db, expenseRefPath);
       await remove(expenseItemRef); // Use remove for deleting entries
-      console.log('အသုံးစရိတ်ကို Firebase Realtime Database မှ ဖျက်ပြီးပါပြီ:', id); // Expense deleted from Firebase
+      console.log('Expense Component: အသုံးစရိတ်ကို Firebase Realtime Database မှ ဖျက်ပြီးပါပြီ:', id); // Expense deleted from Firebase
     } catch (error) {
-      console.error('Error deleting document from Firebase Realtime Database:', error);
+      console.error('Expense Component: Error deleting document from Firebase Realtime Database:', error);
       alert('အသုံးစရိတ်ဖျက်ရာတွင် အမှားအယွင်းရှိပါသည်။'); // Error deleting expense
     }
   }
