@@ -1,0 +1,45 @@
+    .form-control, .form-select {
+        border-radius: 0.5rem;
+    }
+    .btn-primary {
+        border-radius: 0.5rem;
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+    .btn-primary:hover {
+        background-color: #0b5ed7;
+        border-color: #0a58ca;
+    }
+    .btn-warning {
+        background-color: #ffc107;
+        border-color: #ffc107;
+        color: #212529; /* Dark text for warning button */
+    }
+    .btn-warning:hover {
+        background-color: #e0a800;
+        border-color: #d39e00;
+    }
+    .btn-danger {
+        background-color: #dc3545;
+        border-color: #dc3545;
+    }
+    .btn-danger:hover {
+        background-color: #c82333;
+        border-color: #bd2130;
+    }
+    .btn-success {
+        background-color: #198754;
+        border-color: #198754;
+    }
+    .btn-success:hover {
+        background-color: #157347;
+        border-color: #146c43;
+    }
+    .btn-secondary {
+        background-color: #6c757d;
+        border-color: #6c757d;
+    }
+    .btn-secondary:hover {
+        background-color: #5a6268;
+        border-color: #545b62;
+    }
