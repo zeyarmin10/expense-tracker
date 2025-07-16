@@ -32,6 +32,6 @@ export class App {
   protected readonly title = signal('expense-tracker');
   constructor(library: FaIconLibrary) {
     // သင်သုံးမယ့် icon တွေကို library ထဲ ထည့်ပါ
-    library.addIcons(faEdit, faTrashAlt, faPlusCircle, faSave, faTimes);
+    library.addIcons(faEdit, faTrashAlt, faPlusCircle, faSave, faTimes, faPencil, farFloppyDisk, faTrashCan, faGoogle);
   }
 }
