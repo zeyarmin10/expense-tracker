@@ -3,13 +3,36 @@
     border: 1px solid #007bff;
 }
 .login-btn:hover {
-    border: 1px solid #acacac;
+    border: 1px solid #00cf00;
+    background-color: rgb(235, 255, 210);
 }
 
 .svg-icon {
     width: 1.5rem;
     height: 1.5rem;
     vertical-align: text-bottom;
+}
+
+.login-page {
+    background-color: #ffffff !important;
+    /* background-image: url('../../../../public/images/login-bg.jpg'); */
+    background-image: url('../../../../public/images/—Pngtree—finance-and-accounting.png');
+
+    /* background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat; */
+
+    background-size: auto 35%;
+    background-position: top center;
+    background-repeat: no-repeat;
+}
+
+.card {
+    /* background-image: url('../../../../public/images/login-bg.jpg') !important; */
+
+    /* border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important; */
 }
 
 .spinner-border {
@@ -25,4 +48,28 @@
 
 @keyframes spinner-border {
   to { transform: rotate(360deg); }
+}
+
+/* For screens smaller than or equal to 768px (typical mobile devices) */
+@media (max-width: 768px) {
+    .login-page {
+        /* background-size: contain;*/
+        background-size: auto 35%; 
+        background-position: top center; 
+        background-repeat: no-repeat;
+    }
+}
+
+/* You can add more breakpoints if needed, e.g., for very small phones */
+@media (max-width: 480px) {
+    .login-page {
+        /* Further adjustments for smaller screens if 'contain' is too small */
+        /* background-size: auto 80%; */
+        /* background-position: center bottom; */
+
+        background-size: auto 35%; 
+        background-position: top center; 
+        background-repeat: no-repeat;
+
+    }
 }

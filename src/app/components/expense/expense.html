@@ -85,8 +85,8 @@
           />
         </div>
         <div class="col-span-full text-end mt-4">
-          <button type="submit" class="btn btn-primary btn-lg rounded-3 shadow-sm px-6 py-3 text-base sm:text-lg" [disabled]="isSaving">
-            <fa-icon [icon]="['fas', 'plus-circle']" class="me-2"></fa-icon> အသုံးစရိတ်ထည့်ရန်
+          <button type="submit" class="btn btn-primary btn-lg rounded-3 shadow-sm text-base sm:text-lg" [disabled]="isSaving">
+            <fa-icon [icon]="['far', 'floppy-disk']"></fa-icon>
           </button>
         </div>
       </form>
@@ -123,10 +123,10 @@
                   <td class="py-2 px-2 sm:px-4">
                     <div class="d-flex justify-content-center gap-2">
                       <button (click)="editExpense(expense)" class="btn btn-sm btn-warning rounded-3 px-2 py-1 sm:px-3 sm:py-2">
-                        <fa-icon [icon]="['fas', 'pencil']"></fa-icon> <span class="d-none d-sm-inline">ပြင်ဆင်ရန်</span>
+                        <fa-icon [icon]="['fas', 'pencil']"></fa-icon>
                       </button>
                       <button (click)="deleteExpense(expense.id)" class="btn btn-sm btn-danger rounded-3 px-2 py-1 sm:px-3 sm:py-2">
-                        <fa-icon [icon]="['far', 'trash-can']"></fa-icon> <span class="d-none d-sm-inline">ဖျက်ရန်</span>
+                        <fa-icon [icon]="['far', 'trash-can']"></fa-icon>
                       </button>
                     </div>
                   </td>
@@ -153,10 +153,10 @@
                   <td class="py-2 px-2 sm:px-4">
                     <div class="d-flex justify-content-center gap-2">
                       <button (click)="saveExpense(expense)" class="btn btn-sm btn-success rounded-3 px-2 py-1 sm:px-3 sm:py-2" [disabled]="isSaving">
-                        <fa-icon [icon]="['far', 'floppy-disk']"></fa-icon> <span class="d-none d-sm-inline">သိမ်းဆည်းရန်</span>
+                        <fa-icon [icon]="['far', 'floppy-disk']"></fa-icon>
                       </button>
                       <button (click)="cancelEdit(expense)" class="btn btn-sm btn-secondary rounded-3 px-2 py-1 sm:px-3 sm:py-2">
-                        <fa-icon [icon]="['fas', 'times']"></fa-icon> <span class="d-none d-sm-inline">ပယ်ဖျက်ရန်</span>
+                        <fa-icon [icon]="['fas', 'times']"></fa-icon>
                       </button>
                     </div>
                   </td>
