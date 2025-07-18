@@ -1,0 +1,13 @@
+/* Custom adjustments if needed, otherwise Bootstrap handles most of it */
+.card {
+  border-radius: 1rem; /* More rounded corners */
+}
+
+.card-title {
+  font-weight: 600;
+}
+
+/* Adjustments for the Google button icon if Font Awesome isn't perfectly aligned */
+.btn-outline-danger i {
+  vertical-align: middle;
+}

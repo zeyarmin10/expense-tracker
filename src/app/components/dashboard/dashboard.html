@@ -1,0 +1,26 @@
+<div class="container mt-5">
+  <div class="card shadow-lg p-4 text-center">
+    <h2 class="card-title mb-4">Welcome to your Dashboard!</h2>
+
+    <ng-container *ngIf="authService.currentUser$ | async as user; else loadingUser">
+      <p class="lead">You are logged in as: <strong>{{ user.email }}</strong></p>
+      <p class="text-muted">Your User ID (UID): <code>{{ user.uid }}</code></p>
+
+      <div *ngIf="userProfile$ | async as profile; else loadingProfile" class="user-profile card p-3 mt-4 mb-4 bg-light">
+        <h3 class="card-subtitle mb-2 text-primary">Your Profile Data (from Realtime Database):</h3>
+        <p class="mb-1"><strong>Display Name:</strong> {{ profile?.displayName || 'N/A' }}</p>
+        <p class="mb-1"><strong>Email:</strong> {{ profile?.email || 'N/A' }}</p>
+        <p class="mb-0"><strong>Joined:</strong> {{ profile?.createdAt | date: 'mediumDate' }}</p>
+        <!-- Add more profile fields as needed -->
+      </div>
+      <ng-template #loadingProfile>
+        <p class="text-info">Loading user profile from Realtime Database...</p>
+      </ng-template>
+
+      <button class="btn btn-danger mt-3" (click)="logout()">Logout</button>
+    </ng-container>
+    <ng-template #loadingUser>
+      <p class="text-info">Checking authentication status...</p>
+    </ng-template>
+  </div>
+</div>

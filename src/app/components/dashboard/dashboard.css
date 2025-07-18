@@ -1,0 +1,7 @@
+.dashboard-container {
+  /* Bootstrap handles most of the layout, but you can add custom styles */
+}
+
+.user-profile {
+  border: 1px dashed #007bff;
+}

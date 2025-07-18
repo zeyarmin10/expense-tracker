@@ -1,0 +1,102 @@
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+      <div class="card shadow-lg p-4">
+        <h2 class="card-title text-center mb-4">
+          {{ isLoginMode ? 'Login' : 'Register' }}
+        </h2>
+
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+          <div class="mb-3">
+            <label for="email" class="form-label">Email address</label>
+            <input
+              type="email"
+              class="form-control"
+              id="email"
+              formControlName="email"
+              placeholder="name@example.com"
+              [class.is-invalid]="
+                loginForm.controls['email'].invalid &&
+                loginForm.controls['email'].touched
+              "
+            />
+            <div
+              *ngIf="
+                loginForm.controls['email'].invalid &&
+                loginForm.controls['email'].touched
+              "
+              class="invalid-feedback"
+            >
+              <span *ngIf="loginForm.controls['email'].errors?.['required']"
+                >Email is required.</span
+              >
+              <span *ngIf="loginForm.controls['email'].errors?.['email']"
+                >Please enter a valid email address.</span
+              >
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="password" class="form-label">Password</label>
+            <input
+              type="password"
+              class="form-control"
+              id="password"
+              formControlName="password"
+              placeholder="Password"
+              [class.is-invalid]="
+                loginForm.controls['password'].invalid &&
+                loginForm.controls['password'].touched
+              "
+            />
+            <div
+              *ngIf="
+                loginForm.controls['password'].invalid &&
+                loginForm.controls['password'].touched
+              "
+              class="invalid-feedback"
+            >
+              <span *ngIf="loginForm.controls['password'].errors?.['required']"
+                >Password is required.</span
+              >
+              <span *ngIf="loginForm.controls['password'].errors?.['minlength']"
+                >Password must be at least 6 characters.</span
+              >
+            </div>
+          </div>
+
+          <div *ngIf="errorMessage" class="alert alert-danger" role="alert">
+            {{ errorMessage }}
+          </div>
+
+          <button
+            type="submit"
+            class="btn btn-primary w-100 mb-3"
+            [disabled]="loginForm.invalid"
+          >
+            {{ isLoginMode ? 'Login' : 'Register' }}
+          </button>
+        </form>
+
+        <div class="text-center mb-3">
+          <span class="text-muted">OR</span>
+        </div>
+
+        <button
+          type="button"
+          class="btn btn-outline-danger w-100 mb-3"
+          (click)="signInWithGoogle()"
+        >
+          <i class="fab fa-google me-2"></i> Sign in with Google
+        </button>
+
+        <p class="text-center mt-3">
+          {{ isLoginMode ? "Don't have an account?" : "Already have an account?" }}
+          <a class="link-primary" (click)="toggleMode()">{{
+            isLoginMode ? 'Register here' : 'Login here'
+          }}</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
