@@ -7,6 +7,14 @@ import { getAuth, provideAuth } from '@angular/fire/auth';
 import { getDatabase, provideDatabase } from '@angular/fire/database';
 import { environment } from '../environments/environment';
 
+import { FaIconLibrary, FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { fas } from '@fortawesome/free-solid-svg-icons';
+import { fab } from '@fortawesome/free-brands-svg-icons';
+import { far } from '@fortawesome/free-regular-svg-icons';
+// If you only need specific icons, import them directly:
+// import { faPlus, faEdit, faTrash, faGoogle } from '@fortawesome/free-solid-svg-icons';
+// For brands icons (like faGoogle for Google Sign-In button)
+
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
@@ -16,6 +24,19 @@ export const appConfig: ApplicationConfig = {
 
     provideFirebaseApp(() => initializeApp(environment.firebaseConfig)),
     provideAuth(() => getAuth()),
-    provideDatabase(() => getDatabase()) // <-- Realtime Database provider
+    provideDatabase(() => getDatabase()), // <-- Realtime Database provider
+    FontAwesomeModule,
+    // Add a provider to configure FaIconLibrary with icons
+    {
+        provide: FaIconLibrary,
+        useFactory: () => {
+            const library = new FaIconLibrary();
+            library.addIconPacks(fas, fab, far); // Add solid and brand icons packs
+            // If you import specific icons, add them like this:
+            // library.addIcons(faPlus, faEdit, faTrash, faGoogle);
+            return library;
+        },
+        multi: true // Essential for multiple icon packs/icons
+    }
   ]
 };

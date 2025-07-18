@@ -16,6 +16,11 @@ import { Observable } from 'rxjs';
 })
 export class AuthService {
   private auth: Auth = inject(Auth);
+
+  public get currentUserId(): string | null {
+    return this.auth.currentUser ? this.auth.currentUser.uid : null;
+  }
+  
   currentUser$: Observable<User | null>;
 
   constructor() {

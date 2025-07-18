@@ -1,1 +1,95 @@
-<p>category works!</p>
+<div class="container mt-4 mb-5">
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+      <div class="card shadow-sm p-3 p-md-4">
+        <h2 class="card-title text-center mb-4">
+          {{ editingCategoryId ? 'Edit Category' : 'Create Category' }} (အမျိုးအစား)
+        </h2>
+
+        <form [formGroup]="categoryForm" (ngSubmit)="onSubmit()">
+          <div class="mb-3">
+            <label for="categoryName" class="form-label">Category Name (အမျိုးအစား)</label>
+            <input
+              type="text"
+              class="form-control"
+              id="categoryName"
+              formControlName="name"
+              placeholder="e.g., အစားအသောက်"
+              [class.is-invalid]="
+                categoryForm.controls['name'].invalid &&
+                categoryForm.controls['name'].touched
+              "
+            />
+            <div
+              *ngIf="
+                categoryForm.controls['name'].invalid &&
+                categoryForm.controls['name'].touched
+              "
+              class="invalid-feedback"
+            >
+              Category name is required.
+            </div>
+          </div>
+
+          <div *ngIf="errorMessage" class="alert alert-danger" role="alert">
+            {{ errorMessage }}
+          </div>
+          <div *ngIf="successMessage" class="alert alert-success" role="alert">
+            {{ successMessage }}
+          </div>
+
+          <div class="d-grid gap-2">
+            <button
+              type="submit"
+              class="btn btn-primary"
+              [disabled]="categoryForm.invalid"
+            >
+              <fa-icon [icon]="editingCategoryId ? faSave : faPlus"></fa-icon>
+              {{ editingCategoryId ? ' Update' : ' Add' }} Category
+            </button>
+            <button
+              *ngIf="editingCategoryId"
+              type="button"
+              class="btn btn-secondary"
+              (click)="cancelEdit()"
+            >
+              <fa-icon [icon]="faTimes"></fa-icon> Cancel
+            </button>
+          </div>
+        </form>
+
+        <hr class="my-4" />
+
+        <h3 class="h5 text-center mb-3">Existing Categories</h3>
+        <div *ngIf="(categories$ | async)?.length === 0" class="alert alert-info text-center">
+            No categories found. Add one above!
+        </div>
+        <ul class="list-group">
+          <li
+            *ngFor="let category of categories$ | async"
+            class="list-group-item d-flex justify-content-between align-items-center"
+          >
+            <span>{{ category.name }}</span>
+            <div>
+              <button
+                class="btn btn-sm btn-outline-info me-2"
+                (click)="startEdit(category)"
+                [disabled]="editingCategoryId === category.id"
+                aria-label="Edit"
+              >
+                <fa-icon [icon]="faEdit"></fa-icon>
+              </button>
+              <button
+                class="btn btn-sm btn-outline-danger"
+                (click)="onDelete(category.id!)"
+                aria-label="Delete"
+              >
+                <fa-icon [icon]="faTrash"></fa-icon>
+              </button>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
