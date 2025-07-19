@@ -10,7 +10,7 @@ import { UserDataService, UserProfile } from '../../services/user-data';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './login.html',
-  styleUrls: ['./login.css'] // Keep custom CSS for specific adjustments
+  styleUrls: ['./login.css']
 })
 export class LoginComponent implements OnInit {
   loginForm: FormGroup;
@@ -18,7 +18,7 @@ export class LoginComponent implements OnInit {
   userDataService = inject(UserDataService);
   router = inject(Router);
   errorMessage: string | null = null;
-  isLoginMode: boolean = true; // To toggle between login and register UI
+  isLoginMode: boolean = true; // <== Controls if it's Login or Register mode
 
   constructor(private fb: FormBuilder) {
     this.loginForm = this.fb.group({
@@ -28,16 +28,16 @@ export class LoginComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Optional: If user is already logged in, redirect them
     this.authService.currentUser$.subscribe(user => {
       if (user) {
-        this.router.navigate(['/dashboard']); // Redirect to a protected dashboard page
+        this.router.navigate(['/dashboard']);
       }
     });
   }
 
   /**
    * Toggles between Login and Register modes for the form.
+   * This is what effectively makes it your "Register page".
    */
   toggleMode(): void {
     this.isLoginMode = !this.isLoginMode;
@@ -46,10 +46,10 @@ export class LoginComponent implements OnInit {
   }
 
   /**
-   * Handles form submission for email/password login or registration.
+   * Handles form submission for both login and registration based on 'isLoginMode'.
    */
   async onSubmit(): Promise<void> {
-    this.errorMessage = null; // Clear previous errors
+    this.errorMessage = null;
     if (this.loginForm.invalid) {
       this.errorMessage = 'Please enter valid email and password.';
       return;
@@ -60,32 +60,31 @@ export class LoginComponent implements OnInit {
     try {
       let user;
       if (this.isLoginMode) {
-        // Attempt to log in an existing user
+        // LOGIN logic
         user = await this.authService.login(email, password);
         console.log('User logged in:', user.email);
       } else {
-        // Attempt to register a new user
-        user = await this.authService.register(email, password);
+        // REGISTRATION logic <================================================
+        user = await this.authService.register(email, password); // <== Calls the register method
         console.log('User registered:', user.email);
 
         // After successful registration, create a profile in Realtime Database
+        // This ensures new registered users have a profile entry
         if (user && user.uid) {
           const userProfile: UserProfile = {
             uid: user.uid,
             email: user.email!,
-            displayName: user.displayName || email.split('@')[0], // Default display name
+            displayName: user.displayName || email.split('@')[0],
             createdAt: new Date().toISOString()
           };
-          await this.userDataService.createUserProfile(userProfile);
+          await this.userDataService.createUserProfile(userProfile); // <== Stores user data in RTDB
           console.log('User profile created in Realtime Database for:', user.email);
         }
       }
 
-      // On successful login or registration, navigate to a protected route
       this.router.navigate(['/dashboard']);
 
     } catch (error: any) {
-      // Display error messages from the AuthService
       this.errorMessage = error.message;
       console.error('Authentication error:', error);
     }
@@ -95,12 +94,12 @@ export class LoginComponent implements OnInit {
    * Handles Google Sign-In.
    */
   async signInWithGoogle(): Promise<void> {
-    this.errorMessage = null; // Clear previous errors
+    this.errorMessage = null;
     try {
       const user = await this.authService.signInWithGoogle();
       console.log('Signed in with Google:', user.email);
 
-      // Check if user profile exists, if not, create one
+      // Check if user profile exists, if not, create one for Google sign-ins
       const userProfileObservable = this.userDataService.getUserProfile(user.uid);
       userProfileObservable.subscribe(async (profile) => {
         if (!profile) {

@@ -42,7 +42,7 @@
                   expenseForm.controls['category'].touched
                 "
               >
-                <option value="" disabled selected>Select a category</option>
+                <option value="" disabled selected>---Select a category---</option>
                 <option *ngFor="let cat of categories$ | async" [value]="cat.name">
                   {{ cat.name }}
                 </option>
@@ -216,9 +216,9 @@
                 <td>{{ expense.unit }}</td>
                 <td>{{ expense.price | currency:'USD':'symbol':'1.0-2' }}</td>
                 <td>{{ expense.totalCost | currency:'USD':'symbol':'1.0-2' }}</td>
-                <td>
+                <td class="text-end">
                   <button
-                    class="btn btn-sm btn-outline-info me-2"
+                    class="btn btn-sm btn-outline-info me-2 eidt-btn"
                     (click)="startEdit(expense)"
                     [disabled]="editingExpenseId === expense.id"
                     aria-label="Edit"

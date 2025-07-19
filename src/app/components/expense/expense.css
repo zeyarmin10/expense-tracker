@@ -62,3 +62,7 @@ fa-icon {
     height: 1em;
     vertical-align: -0.125em;
 }
+
+.eidt-btn {
+    width: 3rem !important;
+}

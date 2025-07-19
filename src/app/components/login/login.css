@@ -11,3 +11,11 @@
 .btn-outline-danger i {
   vertical-align: middle;
 }
+.btn-outline-info {
+    vertical-align: middle;
+    color: black;
+}
+.btn-outline-info:hover,
+.btn-outline-info:focus {
+    color: #ffffff;
+}
