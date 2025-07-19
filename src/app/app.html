@@ -12,7 +12,7 @@
             </g>
         </svg>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarColor03"
-            aria-controls="navbarColor03" aria-expanded="false" aria-label="Toggle navigation" (click)="toggleNavbar()">
+            aria-controls="navbarColor03" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
         
@@ -38,7 +38,7 @@
                 <!-- <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
                 <button class="btn btn-outline-primary" type="submit">Search</button> -->
                 <span class="navbar-text me-2">
-                    {{ (currentUser$ | async)?.displayName }}
+                    {{ (currentUser$ | async)?.displayName || (currentUser$ | async)?.email }}
                 </span>
                 <button class="btn btn-outline-danger" type="button" (click)="logout()">Logout</button>
             </form>

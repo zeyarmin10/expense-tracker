@@ -7,7 +7,8 @@ import {
   User,
   onAuthStateChanged,
   GoogleAuthProvider, // Import GoogleAuthProvider
-  signInWithPopup // Import signInWithPopup
+  signInWithPopup, // Import signInWithPopup
+  AuthErrorCodes
 } from '@angular/fire/auth';
 import { Observable } from 'rxjs';
 
@@ -44,6 +45,11 @@ export class AuthService {
       const userCredential = await createUserWithEmailAndPassword(this.auth, email, password);
       return userCredential.user;
     } catch (error: any) {
+        if (error.code === AuthErrorCodes.EMAIL_EXISTS) {
+            alert('This email is already registered. Try logging in instead.');
+        } else {
+            alert(`Authentication error: ${error.message}`);
+        }
       throw new Error(this.getFirebaseErrorMessage(error.code));
     }
   }

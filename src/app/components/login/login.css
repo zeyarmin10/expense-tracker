@@ -15,7 +15,6 @@
     vertical-align: middle;
     color: black;
 }
-.btn-outline-info:hover,
-.btn-outline-info:focus {
+.btn-outline-info:hover {
     color: #ffffff;
 }
