@@ -105,19 +105,19 @@ export class AuthService {
   private getFirebaseErrorMessage(errorCode: string): string {
     switch (errorCode) {
       case 'auth/email-already-in-use':
-        return 'This email address is already in use.';
+        return 'ဒီအီးမေးလ်လိပ်စာက သုံးနေပြီးသားပါ။ အသစ်တခုနဲ့ လော့ဂင်လုပ်ပါ။';
       case 'auth/invalid-email':
-        return 'The email address is not valid.';
+        return 'မမှန်ကန်သော အီးမေးလ်လိပ်စာ။';
       case 'auth/operation-not-allowed':
         return 'Email/password sign-in is not enabled. Please check Firebase settings.';
       case 'auth/weak-password':
-        return 'Password is too weak. Please use at least 6 characters.';
+        return 'စကားဝှက်က လုံခြုံရေးအရ အားနည်းနေပါတယ်။ အနည်းဆုံး ၈ လုံးရှိရပါမယ်။';
       case 'auth/user-disabled':
-        return 'This user account has been disabled.';
+        return 'ဒီအကောင့်ကို ပိတ်ထားလိုက်ပါပြီ။';
       case 'auth/user-not-found':
-        return 'No user found with this email.';
+        return 'ဒီအီးမေးလ်လိပ်စာနဲ့ သုံးစွဲသူမရှိပါ။';
       case 'auth/wrong-password':
-        return 'Incorrect password.';
+        return 'စကားဝှက်မှားနေပါတယ်။';
       case 'auth/popup-closed-by-user':
         return 'Google sign-in popup was closed.';
       case 'auth/cancelled-popup-request':

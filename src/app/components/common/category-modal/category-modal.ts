@@ -72,7 +72,7 @@ export class CategoryModalComponent implements OnInit {
     this.successMessage = null;
 
     if (this.categoryForm.invalid) {
-      this.errorMessage = 'Category name is required.';
+      this.errorMessage = 'Category name ကို ဖြည့်ရန်လိုအပ်ပါသည်။';
       return;
     }
 
@@ -88,7 +88,7 @@ export class CategoryModalComponent implements OnInit {
         this.close();
       }, 1500); // Close after 1.5 seconds
     } catch (error: any) {
-      this.errorMessage = error.message || 'Error adding category.';
+      this.errorMessage = error.message || ' Category ကို ထည့်ရာတွင် အမှားတစ်ခုဖြစ်သွားသည်။';
       console.error('Error adding category:', error);
     }
   }

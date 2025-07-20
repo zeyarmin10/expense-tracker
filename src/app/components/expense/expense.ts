@@ -84,7 +84,7 @@ export class Expense implements OnInit {
   async onSubmitNewExpense(): Promise<void> {
     this.clearMessages();
     if (this.newExpenseForm.invalid) {
-      this.errorMessage = 'Please fill in all required fields correctly for the new expense.';
+      this.errorMessage = 'အသုံးစရိတ်အတွက် လိုအပ်သော အချက်အလက်များကို ဖြည့်ရန်လိုအပ်ပါသည်။';
       return;
     }
 
@@ -97,7 +97,7 @@ export class Expense implements OnInit {
       const today = this.datePipe.transform(new Date(), 'yyyy-MM-dd');
       this.newExpenseForm.patchValue({ date: today, currency: 'MMK' });
     } catch (error: any) {
-      this.errorMessage = error.message || 'An error occurred while adding the expense.';
+      this.errorMessage = error.message || 'အသုံးစရိတ်သိမ်းရာတွင် အမှားတစ်ခု ဖြစ်သွားသည်။';
       console.error('New expense save error:', error);
     }
   }
@@ -124,11 +124,11 @@ export class Expense implements OnInit {
   async saveEdit(): Promise<void> {
     this.clearMessages();
     if (this.editingForm && this.editingForm.invalid) {
-      this.errorMessage = 'Please correct the invalid fields in the expense you are editing.';
+      this.errorMessage = 'ဒေတာပြင်ဆင်ရာတွင် အချက်အလက်များကို မှန်ကန်အောင် ဖြည့်ရန်လိုအပ်ပါသည်။';
       return;
     }
     if (!this.editingForm || !this.editingExpenseId) {
-      this.errorMessage = 'No expense selected for editing or form is invalid.';
+      this.errorMessage = 'မှန်ကန်သော အချက်အလက်များမရှိပါ။';
       return;
     }
 
@@ -138,7 +138,7 @@ export class Expense implements OnInit {
       this.cancelEdit(); // <--- THIS IS THE KEY FIX: Hide buttons immediately
       this.cdr.detectChanges();
     } catch (error: any) {
-      this.errorMessage = error.message || 'An error occurred while updating the expense.';
+      this.errorMessage = error.message || 'အသုံးစရိတ်ပြင်ဆင်ရာတွင် အမှားတစ်ခု ဖြစ်သွားသည်။';
       console.error('Expense update error:', error);
     }
   }
@@ -162,7 +162,7 @@ export class Expense implements OnInit {
             this.cancelEdit(); // Also cancel edit mode if the deleted item was being edited
         }
       } catch (error: any) {
-        this.errorMessage = error.message || 'An error occurred while deleting the expense.';
+        this.errorMessage = error.message || 'အသုံးစရတ်ဖျက်ရာတွင် အမှားတစ်ခု ဖြစ်သွားသည်။';
         console.error('Expense delete error:', error);
       }
     }

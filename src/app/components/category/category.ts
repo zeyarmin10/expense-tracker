@@ -50,7 +50,7 @@ export class Category implements OnInit { // Renamed from CategoryComponent to C
   async onSubmit(): Promise<void> {
     this.clearMessages();
     if (this.categoryForm.invalid) {
-      this.errorMessage = 'Category name cannot be empty.';
+      this.errorMessage = 'Category name ကို ဖြည့်ရန် လိုအပ်ပါသည်။';
       return;
     }
 
@@ -67,7 +67,7 @@ export class Category implements OnInit { // Renamed from CategoryComponent to C
       this.categoryForm.reset();
       this.editingCategoryId = null; // Exit editing mode
     } catch (error: any) {
-      this.errorMessage = error.message || 'An error occurred while saving the category.';
+      this.errorMessage = error.message || 'ဒေတာသိမ်းရာတွင် အမှားတစ်ခု ဖြစ်သွားသည်။';
       console.error('Category save error:', error);
     }
   }
@@ -96,7 +96,7 @@ export class Category implements OnInit { // Renamed from CategoryComponent to C
             this.cancelEdit(); // If deleted the one being edited, cancel edit mode
         }
       } catch (error: any) {
-        this.errorMessage = error.message || 'An error occurred while deleting the category.';
+        this.errorMessage = error.message || 'ဒေတာဖျက်ရာတွင် အမှားတစ်ခု ဖြစ်သွားသည်။';
         console.error('Category delete error:', error);
       }
     }

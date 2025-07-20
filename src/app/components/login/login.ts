@@ -92,7 +92,7 @@ export class LoginComponent implements OnInit {
     // Mark all fields as touched to display validation messages before submission
     this.loginForm.markAllAsTouched();
     if (this.loginForm.invalid) {
-      this.errorMessage = 'Please fill in all required fields correctly.';
+      this.errorMessage = 'လိုအပ်သော အချက်အလက်များကို ဖြည့်ရန်လိုအပ်ပါသည်။';
       return;
     }
 
@@ -121,15 +121,15 @@ export class LoginComponent implements OnInit {
       console.error('Authentication error:', error);
       // Handle specific Firebase Auth errors by comparing string codes
       if (error.code === 'auth/email-already-in-use') {
-        this.errorMessage = 'This email address is already in use. Please try logging in or use a different email.';
+        this.errorMessage = 'ဒီအီးမေးလ်လိပ်စာသည် သုံးနေပြီးပါပြီ။ အသစ်တခုနဲ့ လော့ဂင်လုပ်ပါ။';
       } else if (error.code === 'auth/invalid-email') {
-        this.errorMessage = 'The email address is not valid.';
+        this.errorMessage = 'မှန်ကန်သော အီးမေးလ်လိပ်စာ မဟုတ်ပါ။';
       } else if (error.code === 'auth/weak-password') {
-        this.errorMessage = 'The password is too weak. Please choose a stronger password.';
+        this.errorMessage = 'စကားဝှက်က လုံခြုံရေးအရ အားနည်းနေပါတယ်။ အနည်းဆုံး ၈ လုံးရှိရပါမယ်။';
       } else if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-        this.errorMessage = 'Invalid email or password. Please check your credentials.';
+        this.errorMessage = 'အီးမေးလ် (သို့) စကားဝှက် မှားနေပါတယ်။';
       } else {
-        this.errorMessage = 'An unexpected error occurred. Please try again.';
+        this.errorMessage = 'မထင်မှတ်ထားသော အမှားတခု ဖြစ်သွားပါတယ်။ ထပ်ကြိုးစားကြည့်ပါ။';
       }
     }
   }
@@ -152,7 +152,7 @@ export class LoginComponent implements OnInit {
               this.userDataService.createUserProfile(newUserProfile)
                 .then(() => this.router.navigate(['/dashboard']))
                 .catch(err => {
-                  this.errorMessage = 'Error saving user data after Google sign-in.';
+                  this.errorMessage = 'Google sign-in ပြုလုပ်ရာတွင် အမှားတခု  ဖြစ်သွားပါတယ်။';
                   console.error('Error saving user data:', err);
                 });
             } else {
@@ -163,7 +163,7 @@ export class LoginComponent implements OnInit {
       })
       .catch(error => {
         console.error('Google sign-in error:', error);
-        this.errorMessage = 'Failed to sign in with Google. Please try again.';
+        this.errorMessage = 'Google ဖြင့် လော့ဂင်လုပ်ဆောင်မှု မအောင်မြင်ပါ။ ထပ်ကြိုးစားကြည့်ပါ။';
       });
   }
 }
