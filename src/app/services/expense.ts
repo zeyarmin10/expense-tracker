@@ -3,17 +3,19 @@ import { Database, ref, push, remove, update, listVal, query, orderByChild, equa
 import { Observable, switchMap, map, of, firstValueFrom } from 'rxjs';
 import { AuthService } from './auth';
 
+// services/expense.ts (Example - adjust based on your actual interface)
 export interface ServiceIExpense {
-  id?: string; // Firebase push ID
-  userId: string;
-  date: string; // YYYY-MM-DD
-  category: string; // အမျိုးအစား (name of the category)
-  itemName: string; // ပစ္စည်းအမျိုးအမည်
-  quantity: number; // အရေအတွက်
-  unit: string; // ယူနစ်
-  price: number; // ဈေးနှုန်း (per unit)
-  totalCost: number; // Calculated field
+  id?: string;
+  date: string;
+  category: string;
+  itemName: string;
+  quantity: number;
+  unit: string;
+  price: number;
+  currency: string; // <== ADD THIS
+  totalCost: number; // Assuming this is derived
   createdAt: string;
+  userId: string;
 }
 
 @Injectable({

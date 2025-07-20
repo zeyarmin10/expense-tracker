@@ -1,11 +1,11 @@
+// expense.ts
 import { Component, OnInit, inject } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common'; // Add DatePipe
+import { CommonModule, DatePipe } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ServiceIExpense, ExpenseService } from '../../services/expense';
-import { ServiceICategory, CategoryService } from '../../services/category'; // Import CategoryService
+import { ServiceICategory, CategoryService } from '../../services/category';
 import { Observable } from 'rxjs';
 
-// Font Awesome Imports
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faPlus, faEdit, faTrash, faSave, faTimes } from '@fortawesome/free-solid-svg-icons';
 
@@ -14,24 +14,23 @@ import { faPlus, faEdit, faTrash, faSave, faTimes } from '@fortawesome/free-soli
   selector: 'app-expense',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, FontAwesomeModule],
-  providers: [DatePipe], // Provide DatePipe here if not provided globally
+  providers: [DatePipe],
   templateUrl: './expense.html',
   styleUrls: ['./expense.css']
 })
-export class Expense implements OnInit { // Renamed from ExpenseComponent to Expense as per app.routes.ts
+export class Expense implements OnInit {
   expenseForm: FormGroup;
   expenses$: Observable<ServiceIExpense[]>;
-  categories$: Observable<ServiceICategory[]>; // For the dropdown
+  categories$: Observable<ServiceICategory[]>;
 
   expenseService = inject(ExpenseService);
-  categoryService = inject(CategoryService); // Inject CategoryService
-  datePipe = inject(DatePipe); // Inject DatePipe
+  categoryService = inject(CategoryService);
+  datePipe = inject(DatePipe);
 
   editingExpenseId: string | null = null;
   errorMessage: string | null = null;
   successMessage: string | null = null;
 
-  // Font Awesome Icons
   faPlus = faPlus;
   faEdit = faEdit;
   faTrash = faTrash;
@@ -40,22 +39,24 @@ export class Expense implements OnInit { // Renamed from ExpenseComponent to Exp
 
   constructor(private fb: FormBuilder) {
     this.expenseForm = this.fb.group({
-      date: ['', Validators.required], // ရက်စွဲ
-      category: ['', Validators.required], // အမျိုးအစား
-      itemName: ['', Validators.required], // ပစ္စည်းအမျိုးအမည်
-      quantity: [1, [Validators.required, Validators.min(1)]], // အရေအတွက်
-      unit: ['', Validators.required], // ယူနစ်
-      price: [0, [Validators.required, Validators.min(0)]] // ဈေးနှုန်း
+      date: ['', Validators.required],
+      category: ['', Validators.required],
+      itemName: ['', Validators.required],
+      quantity: [1, [Validators.required, Validators.min(1)]],
+      unit: ['', Validators.required],
+      price: [0, [Validators.required, Validators.min(0)]],
+      currency: ['MMK', Validators.required] // <== ADD THIS NEW FORM CONTROL
     });
 
     this.expenses$ = this.expenseService.getExpenses();
-    this.categories$ = this.categoryService.getCategories(); // Fetch categories for dropdown
+    this.categories$ = this.categoryService.getCategories();
   }
 
   ngOnInit(): void {
-    // Set today's date as default
     const today = this.datePipe.transform(new Date(), 'yyyy-MM-dd');
     this.expenseForm.patchValue({ date: today });
+    // <== Optionally set default currency here if not set in form builder
+    // this.expenseForm.patchValue({ currency: 'MMK' });
   }
 
   private clearMessages(): void {
@@ -81,9 +82,9 @@ export class Expense implements OnInit { // Renamed from ExpenseComponent to Exp
         this.successMessage = 'Expense added successfully!';
       }
       this.expenseForm.reset();
-      this.editingExpenseId = null; // Exit editing mode
+      this.editingExpenseId = null;
       const today = this.datePipe.transform(new Date(), 'yyyy-MM-dd');
-      this.expenseForm.patchValue({ date: today }); // Reset date to today after submit
+      this.expenseForm.patchValue({ date: today, currency: 'MMK' }); // <== Reset currency to default after submit
     } catch (error: any) {
       this.errorMessage = error.message || 'An error occurred while saving the expense.';
       console.error('Expense save error:', error);
@@ -99,10 +100,10 @@ export class Expense implements OnInit { // Renamed from ExpenseComponent to Exp
       itemName: expense.itemName,
       quantity: expense.quantity,
       unit: expense.unit,
-      price: expense.price
+      price: expense.price,
+      currency: expense.currency || 'MMK' // <== Patch currency, default to 'MMK' if not present
     });
-    // Add this line to scroll to the top
-    window.scrollTo({ top: 0, behavior: 'smooth' }); //
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   cancelEdit(): void {
@@ -110,7 +111,7 @@ export class Expense implements OnInit { // Renamed from ExpenseComponent to Exp
     this.editingExpenseId = null;
     this.expenseForm.reset();
     const today = this.datePipe.transform(new Date(), 'yyyy-MM-dd');
-    this.expenseForm.patchValue({ date: today }); // Reset date to today
+    this.expenseForm.patchValue({ date: today, currency: 'MMK' }); // <== Reset currency to default
   }
 
   async onDelete(expenseId: string): Promise<void> {
@@ -120,7 +121,7 @@ export class Expense implements OnInit { // Renamed from ExpenseComponent to Exp
         await this.expenseService.deleteExpense(expenseId);
         this.successMessage = 'Expense deleted successfully!';
         if (this.editingExpenseId === expenseId) {
-            this.cancelEdit(); // If deleted the one being edited, cancel edit mode
+            this.cancelEdit();
         }
       } catch (error: any) {
         this.errorMessage = error.message || 'An error occurred while deleting the expense.';

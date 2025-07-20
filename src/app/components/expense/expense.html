@@ -137,25 +137,54 @@
 
             <div class="col-12 col-md-4 mb-3">
               <label for="price" class="form-label">ဈေးနှုန်း (Price)</label>
-              <input
-                type="number"
-                class="form-control"
-                id="price"
-                formControlName="price"
-                min="0"
-                [class.is-invalid]="
-                  expenseForm.controls['price'].invalid &&
-                  expenseForm.controls['price'].touched
-                "
-              />
+            <div class="input-group has-validation">
+                <input
+                    type="number"
+                    class="form-control"
+                    id="price"
+                    formControlName="price"
+                    min="0"
+                    [class.is-invalid]="
+                        expenseForm.controls['price'].invalid &&
+                        expenseForm.controls['price'].touched
+                    "
+                    placeholder="Price"
+                    aria-label="Price"
+                />
+                <select
+                    class="form-select"
+                    id="currency"
+                    formControlName="currency"
+                    style="max-width: 25%;"
+                    [class.is-invalid]="
+                        expenseForm.controls['currency'].invalid &&
+                        expenseForm.controls['currency'].touched
+                    "
+                    aria-label="Currency"
+                >
+                    <option value="" disabled>Select</option>
+                    <option value="MMK">MMK</option>
+                    <option value="USD">USD</option>
+                    <option value="THB">THB</option>
+                </select>
+            </div>
               <div
                 *ngIf="
                   expenseForm.controls['price'].invalid &&
                   expenseForm.controls['price'].touched
                 "
-                class="invalid-feedback"
+                class="invalid-feedback d-block"
               >
                 Price must be a non-negative number.
+              </div>
+              <div
+                *ngIf="
+                  expenseForm.controls['currency'].invalid &&
+                  expenseForm.controls['currency'].touched
+                "
+                class="invalid-feedback d-block"
+              >
+                Currency is required.
               </div>
             </div>
           </div>
@@ -214,8 +243,8 @@
                 <td>{{ expense.itemName }}</td>
                 <td>{{ expense.quantity }}</td>
                 <td>{{ expense.unit }}</td>
-                <td>{{ expense.price | currency:'USD':'symbol':'1.0-2' }}</td>
-                <td>{{ expense.totalCost | currency:'USD':'symbol':'1.0-2' }}</td>
+                <td>{{ expense.price | currency:expense.currency:'symbol':'1.0-2' }}</td>
+                <td class="fw-bold">{{ expense.totalCost | currency:expense.currency:'symbol':'1.0-2' }}</td>
                 <td class="text-end">
                   <button
                     class="btn btn-sm btn-outline-info me-2 eidt-btn"

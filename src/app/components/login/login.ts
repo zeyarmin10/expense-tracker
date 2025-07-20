@@ -1,10 +1,11 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, HostListener, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth';
 import { UserDataService, UserProfile } from '../../services/user-data';
 import { AuthErrorCodes } from '@angular/fire/auth';
+import { debounceTime, Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-login',
@@ -14,6 +15,12 @@ import { AuthErrorCodes } from '@angular/fire/auth';
   styleUrls: ['./login.css']
 })
 export class LoginComponent implements OnInit {
+    isMobileView: boolean = false;
+    private destroy$ = new Subject<void>();
+  private resizeSubject = new Subject<number>();
+  private readonly MOBILE_BREAKPOINT = 768;
+
+
   loginForm: FormGroup;
   authService = inject(AuthService);
   userDataService = inject(UserDataService);
@@ -34,6 +41,32 @@ export class LoginComponent implements OnInit {
         this.router.navigate(['/dashboard']);
       }
     });
+    // Initial check on component load
+    this.checkMobileView(window.innerWidth);
+
+    // Debounce resize events to prevent excessive checks
+    this.resizeSubject
+      .pipe(
+        debounceTime(100), // Adjust debounce time as needed
+        takeUntil(this.destroy$)
+      )
+      .subscribe(width => {
+        this.checkMobileView(width);
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  @HostListener('window:resize', ['$event'])
+  onResize(event: Event): void {
+    this.resizeSubject.next((event.target as Window).innerWidth);
+  }
+
+  private checkMobileView(width: number): void {
+    this.isMobileView = width < this.MOBILE_BREAKPOINT;
   }
 
   /**
