@@ -5,7 +5,38 @@
 
 .card-title {
   font-weight: 600;
+    position: relative; /* Ensure z-index works for title if needed */
+    z-index: 5;
 }
+
+.language-switcher {
+    position: absolute;
+    top: 10px;    /* Adjust as needed for desired spacing from top */
+    right: 10px;  /* Adjust as needed for desired spacing from right */
+    z-index: 10;  /* Ensure it's above other elements if overlaps occur */
+    display: flex;
+    gap: 5px;     /* Space between buttons */
+}
+
+.flag-icon {
+    width: 28px;  /* Adjust size of flags as needed */
+    height: 28px; /* Adjust size of flags as needed */
+    border-radius: 50%; /* Make flags circular, or remove for square */
+    border: 1px solid transparent; /* Default border */
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2); /* Subtle shadow for flags */
+}
+
+.language-switcher button.active .flag-icon {
+    border: 2px solid #007bff; /* Blue border for active flag */
+    box-shadow: 0 0 8px rgba(0, 123, 255, 0.5); /* Glowing effect for active flag */
+}
+
+.language-switcher button:hover .flag-icon {
+    opacity: 0.8;
+}
+
+
 
 /* Adjustments for the Google button icon if Font Awesome isn't perfectly aligned */
 .btn-outline-danger i {

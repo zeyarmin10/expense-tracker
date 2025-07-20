@@ -1,9 +1,10 @@
-import { Component, OnInit, inject, ViewChild, ChangeDetectorRef  } from '@angular/core';
+import { Component, OnInit, inject, ViewChild, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ServiceIExpense, ExpenseService } from '../../services/expense';
 import { ServiceICategory, CategoryService } from '../../services/category';
 import { Observable } from 'rxjs';
+import { TranslateService, TranslateModule } from '@ngx-translate/core';
 
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faPlus, faEdit, faTrash, faSave, faTimes } from '@fortawesome/free-solid-svg-icons';
@@ -13,20 +14,15 @@ import { CategoryModalComponent } from '../common/category-modal/category-modal'
 @Component({
   selector: 'app-expense',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FontAwesomeModule, CategoryModalComponent],
+  imports: [CommonModule, ReactiveFormsModule, FontAwesomeModule, CategoryModalComponent, TranslateModule],
   providers: [DatePipe],
   templateUrl: './expense.html',
   styleUrls: ['./expense.css']
 })
 export class Expense implements OnInit {
-    private cdr = inject(ChangeDetectorRef);
   @ViewChild(CategoryModalComponent) categoryModal!: CategoryModalComponent;
 
-  // Form for adding NEW expenses (at the top of the page)
-  newExpenseForm: FormGroup; // Renamed from expenseForm
-
-  // Form for INLINE editing an existing expense
-  // This will be initialized when an expense row goes into edit mode
+  newExpenseForm: FormGroup;
   editingForm: FormGroup | null = null;
 
   expenses$: Observable<ServiceIExpense[]>;
@@ -35,8 +31,10 @@ export class Expense implements OnInit {
   expenseService = inject(ExpenseService);
   categoryService = inject(CategoryService);
   datePipe = inject(DatePipe);
+  translate = inject(TranslateService);
+  private cdr = inject(ChangeDetectorRef);
 
-  editingExpenseId: string | null = null; // Stores the ID of the expense being edited
+  editingExpenseId: string | null = null;
   errorMessage: string | null = null;
   successMessage: string | null = null;
 
@@ -47,7 +45,6 @@ export class Expense implements OnInit {
   faTimes = faTimes;
 
   constructor(private fb: FormBuilder) {
-    // Initialize the form for adding NEW expenses
     this.newExpenseForm = this.fb.group({
       date: ['', Validators.required],
       category: ['', Validators.required],
@@ -60,6 +57,15 @@ export class Expense implements OnInit {
 
     this.expenses$ = this.expenseService.getExpenses();
     this.loadCategories();
+
+    // Set default language for other components as well (optional, could be in a base service)
+    const storedLang = localStorage.getItem('selectedLanguage');
+    if (storedLang) {
+      this.translate.use(storedLang);
+    } else {
+      const browserLang = this.translate.getBrowserLang();
+      this.translate.use(browserLang && browserLang.match(/en|my/) ? browserLang : 'en');
+    }
   }
 
   ngOnInit(): void {
@@ -78,13 +84,13 @@ export class Expense implements OnInit {
   private clearMessages(): void {
     this.errorMessage = null;
     this.successMessage = null;
+    this.cdr.detectChanges(); // Force update after clearing messages
   }
 
-  // Method for submitting the NEW expense form
   async onSubmitNewExpense(): Promise<void> {
     this.clearMessages();
     if (this.newExpenseForm.invalid) {
-      this.errorMessage = 'အသုံးစရိတ်အတွက် လိုအပ်သော အချက်အလက်များကို ဖြည့်ရန်လိုအပ်ပါသည်။';
+      this.errorMessage = this.translate.instant('ERROR_FILL_ALL_FIELDS'); // <== Translated
       return;
     }
 
@@ -92,79 +98,76 @@ export class Expense implements OnInit {
 
     try {
       await this.expenseService.addExpense(formData);
-      this.successMessage = 'Expense added successfully!';
+      this.successMessage = this.translate.instant('EXPENSE_SUCCESS_ADDED'); // <== Translated
       this.newExpenseForm.reset();
       const today = this.datePipe.transform(new Date(), 'yyyy-MM-dd');
       this.newExpenseForm.patchValue({ date: today, currency: 'MMK' });
     } catch (error: any) {
-      this.errorMessage = error.message || 'အသုံးစရိတ်သိမ်းရာတွင် အမှားတစ်ခု ဖြစ်သွားသည်။';
+      this.errorMessage = error.message || this.translate.instant('EXPENSE_ERROR_ADD'); // <== Translated
       console.error('New expense save error:', error);
     }
+    this.cdr.detectChanges(); // Force update after submit
   }
 
-  // Method to start INLINE editing of an existing expense
   startEdit(expense: ServiceIExpense): void {
     this.clearMessages();
     this.editingExpenseId = expense.id!;
-    // Initialize editingForm with the values of the expense to be edited
     this.editingForm = this.fb.group({
       date: [expense.date, Validators.required],
       category: [expense.category, Validators.required],
       itemName: [expense.itemName, Validators.required],
       quantity: [expense.quantity, [Validators.required, Validators.min(1)]],
-      unit: [expense.unit, Validators.required], // Keep unit in form for now
+      unit: [expense.unit, Validators.required],
       price: [expense.price, [Validators.required, Validators.min(0)]],
       currency: [expense.currency || 'MMK', Validators.required]
     });
-    // Scroll to the top if the user is editing an item far down
-    // window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    this.cdr.detectChanges(); // Force update
   }
 
-  // Method to save INLINE edits
   async saveEdit(): Promise<void> {
     this.clearMessages();
     if (this.editingForm && this.editingForm.invalid) {
-      this.errorMessage = 'ဒေတာပြင်ဆင်ရာတွင် အချက်အလက်များကို မှန်ကန်အောင် ဖြည့်ရန်လိုအပ်ပါသည်။';
+      this.errorMessage = this.translate.instant('EXPENSE_ERROR_EDIT_FORM_INVALID'); // <== Translated
       return;
     }
     if (!this.editingForm || !this.editingExpenseId) {
-      this.errorMessage = 'မှန်ကန်သော အချက်အလက်များမရှိပါ။';
+      this.errorMessage = this.translate.instant('EXPENSE_ERROR_NO_EXPENSE_SELECTED'); // <== Translated
       return;
     }
 
     try {
       await this.expenseService.updateExpense(this.editingExpenseId, this.editingForm.value);
-      this.successMessage = 'Expense updated successfully!';
-      this.cancelEdit(); // <--- THIS IS THE KEY FIX: Hide buttons immediately
-      this.cdr.detectChanges();
+      this.successMessage = this.translate.instant('EXPENSE_SUCCESS_UPDATED'); // <== Translated
+      this.cancelEdit();
     } catch (error: any) {
-      this.errorMessage = error.message || 'အသုံးစရိတ်ပြင်ဆင်ရာတွင် အမှားတစ်ခု ဖြစ်သွားသည်။';
+      this.errorMessage = error.message || this.translate.instant('EXPENSE_ERROR_UPDATE'); // <== Translated
       console.error('Expense update error:', error);
     }
+    this.cdr.detectChanges(); // Force update
   }
 
-  // Method to cancel INLINE edits
   cancelEdit(): void {
     this.clearMessages();
     this.editingExpenseId = null;
-    this.editingForm = null; // Clear the editing form
-    this.cdr.detectChanges();
+    this.editingForm = null;
+    this.cdr.detectChanges(); // Force update
   }
 
-  // Method for deleting an expense (remains the same)
   async onDelete(expenseId: string): Promise<void> {
     this.clearMessages();
-    if (confirm('Are you sure you want to delete this expense? This cannot be undone.')) {
+    if (confirm(this.translate.instant('EXPENSE_CONFIRM_DELETE'))) { // <== Translated confirm message
       try {
         await this.expenseService.deleteExpense(expenseId);
-        this.successMessage = 'Expense deleted successfully!';
+        this.successMessage = this.translate.instant('EXPENSE_SUCCESS_DELETED'); // <== Translated
         if (this.editingExpenseId === expenseId) {
-            this.cancelEdit(); // Also cancel edit mode if the deleted item was being edited
+            this.cancelEdit();
         }
       } catch (error: any) {
-        this.errorMessage = error.message || 'အသုံးစရတ်ဖျက်ရာတွင် အမှားတစ်ခု ဖြစ်သွားသည်။';
+        this.errorMessage = error.message || this.translate.instant('EXPENSE_ERROR_DELETE'); // <== Translated
         console.error('Expense delete error:', error);
       }
     }
+    this.cdr.detectChanges(); // Force update
   }
 }

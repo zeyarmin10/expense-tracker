@@ -1,22 +1,41 @@
 <div class="container" [ngClass]="{'mt-5': !isMobileView}">
   <div class="row justify-content-center">
     <div class="col-md-6 col-lg-5">
-        <div class="login-bg-image"></div>
+      <div class="login-bg-image"></div>
       <div class="card shadow-lg p-4">
+        <div class="language-switcher">
+            <button
+            class="btn btn-link p-0"
+            (click)="switchLanguage('my')"
+            [ngClass]="{'active': currentLang === 'my'}"
+            aria-label="Switch to Burmese"
+          >
+            <img src="assets/flags/mm.png" alt="Myanmar Flag" class="flag-icon" />
+          </button>
+          <button
+            class="btn btn-link p-0 me-1"
+            (click)="switchLanguage('en')"
+            [ngClass]="{'active': currentLang === 'en'}"
+            aria-label="Switch to English"
+          >
+            <img src="assets/flags/en.png" alt="English Flag" class="flag-icon" />
+          </button>
+          
+        </div>
         <h2 class="card-title text-center mb-4">
-          {{ isLoginMode ? 'Login' : 'Register' }}
+          {{ isLoginMode ? ('LOGIN_TITLE' | translate) : ('REGISTER_TITLE' | translate) }}
         </h2>
 
         <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
 
           <div class="mb-3" *ngIf="!isLoginMode">
-            <label for="name" class="form-label">Name</label>
+            <label for="name" class="form-label">{{ 'NAME_LABEL' | translate }}</label>
             <input
               type="text"
               class="form-control"
               id="name"
               formControlName="name"
-              placeholder="Your Name"
+              placeholder="{{ 'NAME_PLACEHOLDER' | translate }}"
               [class.is-invalid]="
                 loginForm.controls['name'].invalid &&
                 loginForm.controls['name'].touched
@@ -30,19 +49,19 @@
               class="invalid-feedback"
             >
               <span *ngIf="loginForm.controls['name'].errors?.['required']"
-                >Name is required.</span
+                >{{ 'ERROR_NAME_REQUIRED' | translate }}</span
               >
             </div>
           </div>
 
           <div class="mb-3">
-            <label for="email" class="form-label">Email address</label>
+            <label for="email" class="form-label">{{ 'EMAIL_LABEL' | translate }}</label>
             <input
               type="email"
               class="form-control"
               id="email"
               formControlName="email"
-              placeholder="name@example.com"
+              placeholder="{{ 'EMAIL_PLACEHOLDER' | translate }}"
               [class.is-invalid]="
                 loginForm.controls['email'].invalid &&
                 loginForm.controls['email'].touched
@@ -56,22 +75,22 @@
               class="invalid-feedback"
             >
               <span *ngIf="loginForm.controls['email'].errors?.['required']"
-                >Email is required.</span
+                >{{ 'ERROR_EMAIL_REQUIRED' | translate }}</span
               >
               <span *ngIf="loginForm.controls['email'].errors?.['email']"
-                >Please enter a valid email address.</span
+                >{{ 'ERROR_EMAIL_INVALID' | translate }}</span
               >
             </div>
           </div>
 
           <div class="mb-3">
-            <label for="password" class="form-label">Password</label>
+            <label for="password" class="form-label">{{ 'PASSWORD_LABEL' | translate }}</label>
             <input
               type="password"
               class="form-control"
               id="password"
               formControlName="password"
-              placeholder="Password"
+              placeholder="{{ 'PASSWORD_PLACEHOLDER' | translate }}"
               [class.is-invalid]="
                 loginForm.controls['password'].invalid &&
                 loginForm.controls['password'].touched
@@ -85,10 +104,10 @@
               class="invalid-feedback"
             >
               <span *ngIf="loginForm.controls['password'].errors?.['required']"
-                >Password is required.</span
+                >{{ 'ERROR_PASSWORD_REQUIRED' | translate }}</span
               >
               <span *ngIf="loginForm.controls['password'].errors?.['minlength']"
-                >Password must be at least 6 characters.</span
+                >{{ 'ERROR_PASSWORD_MINLENGTH' | translate }}</span
               >
             </div>
           </div>
@@ -96,18 +115,21 @@
           <div *ngIf="errorMessage" class="alert alert-danger" role="alert">
             {{ errorMessage }}
           </div>
+          <div *ngIf="successMessage" class="alert alert-success" role="alert">
+            {{ successMessage }}
+          </div>
 
           <button
             type="submit"
             class="btn btn-primary w-100 mb-3"
             [disabled]="loginForm.invalid"
           >
-            {{ isLoginMode ? 'Login' : 'Register' }}
+            {{ isLoginMode ? ('LOGIN_BUTTON' | translate) : ('REGISTER_BUTTON' | translate) }}
           </button>
         </form>
 
         <div class="text-center mb-3" *ngIf="isLoginMode">
-          <span class="text-muted">OR</span>
+          <span class="text-muted">{{ 'OR_TEXT' | translate }}</span>
         </div>
 
         <button
@@ -130,13 +152,13 @@
                     d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z">
                 </path>
             </svg>
-            &nbsp; Sign in with Google
+            &nbsp; {{ 'SIGN_IN_GOOGLE' | translate }}
         </button>
 
         <p class="text-center mt-3">
-          {{ isLoginMode ? "Don't have an account?" : "Already have an account?" }}
+          {{ isLoginMode ? ('NO_ACCOUNT_QUESTION' | translate) : ('HAVE_ACCOUNT_QUESTION' | translate) }}
           <a class="link-primary" (click)="toggleMode()">{{
-            isLoginMode ? 'Register here' : 'Login here'
+            isLoginMode ? ('REGISTER_HERE_LINK' | translate) : ('LOGIN_HERE_LINK' | translate)
           }}</a>
         </p>
       </div>

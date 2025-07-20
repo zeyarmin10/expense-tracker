@@ -1,17 +1,16 @@
-import { Component, HostListener, OnInit, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, HostListener, OnInit, inject, ChangeDetectorRef } from '@angular/core';
+import { CommonModule, DatePipe } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth';
 import { UserDataService, UserProfile } from '../../services/user-data';
-// No longer importing AuthErrorCodes directly for comparison, as we'll use string literals
-// import { AuthErrorCodes } from '@angular/fire/auth';
 import { debounceTime, Subject, takeUntil } from 'rxjs';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslateModule],
   templateUrl: './login.html',
   styleUrls: ['./login.css']
 })
@@ -27,15 +26,32 @@ export class LoginComponent implements OnInit {
   userDataService = inject(UserDataService);
   router = inject(Router);
   errorMessage: string | null = null;
-  isLoginMode: boolean = true; // <== Controls if it's Login or Register mode
+  successMessage: string | null = null;
+  isLoginMode: boolean = true;
+
+  translate = inject(TranslateService);
+  private cdr = inject(ChangeDetectorRef);
+
+  currentLang: string; // Add this property to track the current language
 
   constructor(private fb: FormBuilder) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
-      // Add 'name' form control, initially not required but will be for register mode
       name: ['']
     });
+
+    this.translate.addLangs(['en', 'my']);
+    // Set default language preference
+    const storedLang = localStorage.getItem('selectedLanguage');
+    if (storedLang && this.translate.getLangs().includes(storedLang)) {
+      this.translate.use(storedLang);
+      this.currentLang = storedLang; // Set currentLang from stored preference
+    } else {
+      // Default to Burmese if no stored language or browser language isn't recognized
+      this.translate.use('my'); // <== Set 'my' as default here
+      this.currentLang = 'my';
+    }
   }
 
   ngOnInit(): void {
@@ -44,12 +60,10 @@ export class LoginComponent implements OnInit {
         this.router.navigate(['/dashboard']);
       }
     });
-    // Initial check on component load
     this.checkMobileView(window.innerWidth);
-    // Debounce resize events to prevent excessive checks
     this.resizeSubject
       .pipe(
-        debounceTime(100), // Adjust debounce time as needed
+        debounceTime(100),
         takeUntil(this.destroy$)
       )
       .subscribe(width => {
@@ -71,28 +85,33 @@ export class LoginComponent implements OnInit {
     this.isMobileView = width < this.MOBILE_BREAKPOINT;
   }
 
+  // Method to switch language
+  switchLanguage(lang: string) {
+    this.translate.use(lang);
+    this.currentLang = lang; // Update currentLang when language is switched
+    localStorage.setItem('selectedLanguage', lang); // Persist
+  }
 
-  // Toggles between login and register mode
   toggleMode(): void {
     this.isLoginMode = !this.isLoginMode;
-    this.errorMessage = null; // Clear error message on mode change
-    this.loginForm.reset(); // Reset form fields
+    this.errorMessage = null;
+    this.successMessage = null;
+    this.loginForm.reset();
 
-    // Conditionally set validators for the 'name' field
-    if (!this.isLoginMode) { // If switching to Register mode
+    if (!this.isLoginMode) {
       this.loginForm.controls['name'].setValidators(Validators.required);
-    } else { // If switching to Login mode
+    } else {
       this.loginForm.controls['name'].clearValidators();
     }
-    this.loginForm.controls['name'].updateValueAndValidity(); // Apply validator changes
+    this.loginForm.controls['name'].updateValueAndValidity();
   }
 
   async onSubmit(): Promise<void> {
-    this.errorMessage = null; // Clear previous errors
-    // Mark all fields as touched to display validation messages before submission
+    this.errorMessage = null;
+    this.successMessage = null;
     this.loginForm.markAllAsTouched();
     if (this.loginForm.invalid) {
-      this.errorMessage = 'လိုအပ်သော အချက်အလက်များကို ဖြည့်ရန်လိုအပ်ပါသည်။';
+      this.errorMessage = this.translate.instant('ERROR_FILL_ALL_FIELDS');
       return;
     }
 
@@ -100,11 +119,9 @@ export class LoginComponent implements OnInit {
 
     try {
       if (this.isLoginMode) {
-        // Login mode
         await this.authService.login(email, password);
         this.router.navigate(['/dashboard']);
       } else {
-        // Register mode
         const user = await this.authService.register(email, password);
         if (user) {
           const newUserProfile: UserProfile = {
@@ -119,28 +136,27 @@ export class LoginComponent implements OnInit {
       }
     } catch (error: any) {
       console.error('Authentication error:', error);
-      // Handle specific Firebase Auth errors by comparing string codes
       if (error.code === 'auth/email-already-in-use') {
-        this.errorMessage = 'ဒီအီးမေးလ်လိပ်စာသည် သုံးနေပြီးပါပြီ။ အသစ်တခုနဲ့ လော့ဂင်လုပ်ပါ။';
+        this.errorMessage = this.translate.instant('ERROR_EMAIL_IN_USE');
       } else if (error.code === 'auth/invalid-email') {
-        this.errorMessage = 'မှန်ကန်သော အီးမေးလ်လိပ်စာ မဟုတ်ပါ။';
+        this.errorMessage = this.translate.instant('ERROR_INVALID_EMAIL');
       } else if (error.code === 'auth/weak-password') {
-        this.errorMessage = 'စကားဝှက်က လုံခြုံရေးအရ အားနည်းနေပါတယ်။ အနည်းဆုံး ၈ လုံးရှိရပါမယ်။';
+        this.errorMessage = this.translate.instant('ERROR_WEAK_PASSWORD');
       } else if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-        this.errorMessage = 'အီးမေးလ် (သို့) စကားဝှက် မှားနေပါတယ်။';
+        this.errorMessage = this.translate.instant('ERROR_INVALID_CREDENTIALS');
       } else {
-        this.errorMessage = 'မထင်မှတ်ထားသော အမှားတခု ဖြစ်သွားပါတယ်။ ထပ်ကြိုးစားကြည့်ပါ။';
+        this.errorMessage = this.translate.instant('ERROR_UNEXPECTED');
       }
     }
   }
 
   signInWithGoogle(): void {
     this.errorMessage = null;
+    this.successMessage = null;
     this.authService.signInWithGoogle()
-    .then((userCredential: any) => {
+      .then((userCredential: any) => {
         if (userCredential.user) {
           const user = userCredential.user;
-          // Check if user profile already exists, if not, create it
           this.userDataService.getUserProfile(user.uid).subscribe(profile => {
             if (!profile) {
               const newUserProfile: UserProfile = {
@@ -152,7 +168,7 @@ export class LoginComponent implements OnInit {
               this.userDataService.createUserProfile(newUserProfile)
                 .then(() => this.router.navigate(['/dashboard']))
                 .catch(err => {
-                  this.errorMessage = 'Google sign-in ပြုလုပ်ရာတွင် အမှားတခု  ဖြစ်သွားပါတယ်။';
+                  this.errorMessage = this.translate.instant('ERROR_SAVING_USER_DATA');
                   console.error('Error saving user data:', err);
                 });
             } else {
@@ -163,7 +179,7 @@ export class LoginComponent implements OnInit {
       })
       .catch(error => {
         console.error('Google sign-in error:', error);
-        this.errorMessage = 'Google ဖြင့် လော့ဂင်လုပ်ဆောင်မှု မအောင်မြင်ပါ။ ထပ်ကြိုးစားကြည့်ပါ။';
+        this.errorMessage = this.translate.instant('ERROR_GOOGLE_SIGNIN_FAILED');
       });
   }
 }

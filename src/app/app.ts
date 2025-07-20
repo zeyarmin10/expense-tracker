@@ -4,9 +4,8 @@ import { AuthService } from './services/auth';
 import { Observable } from 'rxjs';
 import { User } from '@angular/fire/auth';
 
-import { LoginComponent } from './components/login/login';
-import { DashboardComponent } from './components/dashboard/dashboard';
 import { CommonModule } from '@angular/common';
+import { TranslateService, TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-root',
@@ -15,8 +14,7 @@ import { CommonModule } from '@angular/common';
     RouterLink,
     RouterLinkActive,
     CommonModule,
-    LoginComponent,
-    DashboardComponent,
+    TranslateModule 
   ],
   templateUrl: './app.html',
   styleUrl: './app.css',
@@ -26,6 +24,17 @@ export class App {
   authService = inject(AuthService);
   currentUser$: Observable<User | null> = this.authService.currentUser$; // Expose current user observable
   router = inject(Router);
+  translateService = inject(TranslateService);
+
+  constructor() {
+    // Set default language and add languages
+    this.translateService.addLangs(['en', 'my']);
+    this.translateService.setDefaultLang('my');
+
+    // Attempt to use the browser's language, or fall back to default
+    const browserLang = this.translateService.getBrowserLang();
+    this.translateService.use(browserLang?.match(/en|my/) ? browserLang : 'en');
+  }
 
   async logout(): Promise<void> {
     try {
