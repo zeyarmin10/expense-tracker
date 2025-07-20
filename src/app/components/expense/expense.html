@@ -33,26 +33,38 @@
 
             <div class="col-12 col-md-6 mb-3">
               <label for="category" class="form-label">အမျိုးအစား (Category)</label>
-              <select
-                class="form-select"
-                id="category"
-                formControlName="category"
-                [class.is-invalid]="
-                  expenseForm.controls['category'].invalid &&
-                  expenseForm.controls['category'].touched
-                "
-              >
-                <option value="" disabled selected>---Select a category---</option>
-                <option *ngFor="let cat of categories$ | async" [value]="cat.name">
-                  {{ cat.name }}
-                </option>
-              </select>
+              <div class="input-group">
+                <select
+                  class="form-select"
+                  id="category"
+                  formControlName="category"
+                  [class.is-invalid]="
+                    expenseForm.controls['category'].invalid &&
+                    expenseForm.controls['category'].touched
+                  "
+                >
+                  <option value="" disabled selected>---Select a category---</option>
+                  <option *ngFor="let cat of categories$ | async" [value]="cat.name">
+                    {{ cat.name }}
+                  </option>
+                </select>
+                <button
+                  class="btn btn-outline-secondary"
+                  type="button"
+                  data-bs-toggle="modal"
+                  data-bs-target="#addCategoryModal"
+                  (click)="openAddCategoryModal()"
+                  title="Add new category"
+                >
+                  <fa-icon [icon]="faPlus"></fa-icon>
+                </button>
+              </div>
               <div
                 *ngIf="
                   expenseForm.controls['category'].invalid &&
                   expenseForm.controls['category'].touched
                 "
-                class="invalid-feedback"
+                class="invalid-feedback d-block"
               >
                 Category is required.
               </div>
@@ -137,37 +149,37 @@
 
             <div class="col-12 col-md-4 mb-3">
               <label for="price" class="form-label">ဈေးနှုန်း (Price)</label>
-            <div class="input-group has-validation">
+              <div class="input-group has-validation">
                 <input
-                    type="number"
-                    class="form-control"
-                    id="price"
-                    formControlName="price"
-                    min="0"
-                    [class.is-invalid]="
-                        expenseForm.controls['price'].invalid &&
-                        expenseForm.controls['price'].touched
-                    "
-                    placeholder="Price"
-                    aria-label="Price"
+                  type="number"
+                  class="form-control"
+                  id="price"
+                  formControlName="price"
+                  min="0"
+                  [class.is-invalid]="
+                    expenseForm.controls['price'].invalid &&
+                    expenseForm.controls['price'].touched
+                  "
+                  placeholder="Price"
+                  aria-label="Price"
                 />
                 <select
-                    class="form-select"
-                    id="currency"
-                    formControlName="currency"
-                    style="max-width: 25%;"
-                    [class.is-invalid]="
-                        expenseForm.controls['currency'].invalid &&
-                        expenseForm.controls['currency'].touched
-                    "
-                    aria-label="Currency"
+                  class="form-select"
+                  id="currency"
+                  formControlName="currency"
+                  style="max-width: 25%;"
+                  [class.is-invalid]="
+                    expenseForm.controls['currency'].invalid &&
+                    expenseForm.controls['currency'].touched
+                  "
+                  aria-label="Currency"
                 >
-                    <option value="" disabled>Select</option>
-                    <option value="MMK">MMK</option>
-                    <option value="USD">USD</option>
-                    <option value="THB">THB</option>
+                  <option value="" disabled>Select</option>
+                  <option value="MMK">MMK</option>
+                  <option value="USD">USD</option>
+                  <option value="THB">THB</option>
                 </select>
-            </div>
+              </div>
               <div
                 *ngIf="
                   expenseForm.controls['price'].invalid &&
@@ -267,6 +279,53 @@
           </table>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="addCategoryModal" tabindex="-1" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addCategoryModalLabel">Add New Category (အမျိုးအစားအသစ်ထည့်ရန်)</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form [formGroup]="newCategoryForm" (ngSubmit)="addNewCategory()">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="categoryName" class="form-label">Category Name</label>
+            <input
+              type="text"
+              class="form-control"
+              id="categoryName"
+              formControlName="name"
+              placeholder="e.g., Food, Transport"
+              [class.is-invalid]="
+                newCategoryForm.controls['name'].invalid &&
+                newCategoryForm.controls['name'].touched
+              "
+            />
+            <div
+              *ngIf="
+                newCategoryForm.controls['name'].invalid &&
+                newCategoryForm.controls['name'].touched
+              "
+              class="invalid-feedback d-block"
+            >
+              Category name is required.
+            </div>
+          </div>
+          <div *ngIf="categoryErrorMessage" class="alert alert-danger" role="alert">
+            {{ categoryErrorMessage }}
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary" [disabled]="newCategoryForm.invalid">
+            Add Category
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 </div>
