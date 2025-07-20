@@ -44,13 +44,13 @@
   td:nth-of-type(2):before { content: "Category"; }
   td:nth-of-type(3):before { content: "Item"; }
   td:nth-of-type(4):before { content: "Qty"; }
-  td:nth-of-type(5):before { content: "Unit"; }
-  td:nth-of-type(6):before { content: "Price"; }
-  td:nth-of-type(7):before { content: "Total"; }
-  td:nth-of-type(8):before { content: "Actions"; }
+  /* td:nth-of-type(5):before { content: "Unit"; } */
+  td:nth-of-type(5):before { content: "Price"; }
+  td:nth-of-type(6):before { content: "Total"; }
+  td:nth-of-type(7):before { content: "Actions"; }
 
   /* Buttons specific mobile adjustment */
-  td:nth-of-type(8) {
+  td:nth-of-type(7) {
       text-align: left;
       padding-left: 6px !important;
   }

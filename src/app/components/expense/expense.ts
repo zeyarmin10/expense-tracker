@@ -1,5 +1,4 @@
-// expense.ts
-import { Component, OnInit, inject, ViewChild } from '@angular/core';
+import { Component, OnInit, inject, ViewChild, ChangeDetectorRef  } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ServiceIExpense, ExpenseService } from '../../services/expense';
@@ -20,6 +19,7 @@ import { CategoryModalComponent } from '../common/category-modal/category-modal'
   styleUrls: ['./expense.css']
 })
 export class Expense implements OnInit {
+    private cdr = inject(ChangeDetectorRef);
   @ViewChild(CategoryModalComponent) categoryModal!: CategoryModalComponent;
 
   // Form for adding NEW expenses (at the top of the page)
@@ -30,7 +30,7 @@ export class Expense implements OnInit {
   editingForm: FormGroup | null = null;
 
   expenses$: Observable<ServiceIExpense[]>;
-  categories$!: Observable<ServiceICategory[]>;
+  categories$: Observable<ServiceICategory[]> | undefined;
 
   expenseService = inject(ExpenseService);
   categoryService = inject(CategoryService);
@@ -112,11 +112,11 @@ export class Expense implements OnInit {
       category: [expense.category, Validators.required],
       itemName: [expense.itemName, Validators.required],
       quantity: [expense.quantity, [Validators.required, Validators.min(1)]],
-      unit: [expense.unit, Validators.required],
+      unit: [expense.unit, Validators.required], // Keep unit in form for now
       price: [expense.price, [Validators.required, Validators.min(0)]],
       currency: [expense.currency || 'MMK', Validators.required]
     });
-    // // Scroll to the top if the user is editing an item far down
+    // Scroll to the top if the user is editing an item far down
     // window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -135,7 +135,8 @@ export class Expense implements OnInit {
     try {
       await this.expenseService.updateExpense(this.editingExpenseId, this.editingForm.value);
       this.successMessage = 'Expense updated successfully!';
-      this.cancelEdit(); // Exit edit mode after saving
+      this.cancelEdit(); // <--- THIS IS THE KEY FIX: Hide buttons immediately
+      this.cdr.detectChanges();
     } catch (error: any) {
       this.errorMessage = error.message || 'An error occurred while updating the expense.';
       console.error('Expense update error:', error);
@@ -147,6 +148,7 @@ export class Expense implements OnInit {
     this.clearMessages();
     this.editingExpenseId = null;
     this.editingForm = null; // Clear the editing form
+    this.cdr.detectChanges();
   }
 
   // Method for deleting an expense (remains the same)

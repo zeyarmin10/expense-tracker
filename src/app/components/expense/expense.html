@@ -39,7 +39,7 @@
                     newExpenseForm.controls['category'].invalid &&
                     newExpenseForm.controls['category'].touched
                   "
-                style="border-top-right-radius: 0;border-bottom-right-radius: 0;"
+                  style="border-top-right-radius: 0;border-bottom-right-radius: 0;"
                 >
                   <option value="" disabled selected>---Select a category---</option>
                   <option *ngFor="let cat of categories$ | async" [value]="cat.name">
@@ -229,8 +229,7 @@
                 <th>Date</th>
                 <th>Category</th>
                 <th>Item</th>
-                <th>Qty</th>
-                <th>Unit</th>
+                <th>Qty/Unit</th>
                 <th>Price</th>
                 <th>Total</th>
                 <th>Actions</th>
@@ -242,13 +241,12 @@
                   <td>{{ expense.date }}</td>
                   <td>{{ expense.category }}</td>
                   <td>{{ expense.itemName }}</td>
-                  <td>{{ expense.quantity }}</td>
-                  <td>{{ expense.unit }}</td>
+                  <td>{{ expense.quantity }} {{ expense.unit }}</td>
                   <td>{{ expense.price | currency:expense.currency:'symbol':'1.0-2' }}</td>
                   <td class="fw-bold">{{ expense.totalCost | currency:expense.currency:'symbol':'1.0-2' }}</td>
                   <td class="text-end">
                     <button
-                      class="btn btn-sm btn-outline-info me-2"
+                      class="btn btn-sm btn-outline-info me-2 edit-btn"
                       (click)="startEdit(expense)"
                       aria-label="Edit"
                       [disabled]="editingExpenseId !== null" >
@@ -281,15 +279,15 @@
                     [class.is-invalid]="editingForm.controls['itemName'].invalid && editingForm.controls['itemName'].touched" />
                   </td>
                   <td>
-                    <input type="number" class="form-control form-control-sm" formControlName="quantity" min="1"
-                    [class.is-invalid]="editingForm.controls['quantity'].invalid && editingForm.controls['quantity'].touched" />
+                    <div class="input-group input-group-sm">
+                        <input type="number" class="form-control" formControlName="quantity" min="1"
+                        [class.is-invalid]="editingForm.controls['quantity'].invalid && editingForm.controls['quantity'].touched" />
+                        <input type="text" class="form-control" formControlName="unit" placeholder="Unit"
+                        [class.is-invalid]="editingForm.controls['unit'].invalid && editingForm.controls['unit'].touched" />
+                    </div>
                   </td>
                   <td>
-                    <input type="text" class="form-control form-control-sm" formControlName="unit"
-                    [class.is-invalid]="editingForm.controls['unit'].invalid && editingForm.controls['unit'].touched" />
-                  </td>
-                  <td>
-                    <div class="input-group input-group-sm input-group-md input-group-lg">
+                    <div class="input-group input-group-sm">
                       <input type="number" class="form-control" formControlName="price" min="0"
                       [class.is-invalid]="editingForm.controls['price'].invalid && editingForm.controls['price'].touched" />
                       <select class="form-select" formControlName="currency" style="max-width: 50%;"
@@ -305,7 +303,7 @@
                   </td>
                   <td class="text-end">
                     <button
-                      class="btn btn-sm btn-outline-success me-2"
+                      class="btn btn-sm btn-outline-success me-2 save-btn"
                       (click)="saveEdit()"
                       [disabled]="editingForm.invalid"
                       aria-label="Save"
