@@ -1,31 +1,30 @@
 // expense.ts
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ViewChild } from '@angular/core'; // <== Add ViewChild
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ServiceIExpense, ExpenseService } from '../../services/expense';
-import { ServiceICategory, CategoryService } from '../../services/category'; // Make sure CategoryService is imported
+import { ServiceICategory, CategoryService } from '../../services/category';
 import { Observable } from 'rxjs';
 
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faPlus, faEdit, faTrash, faSave, faTimes } from '@fortawesome/free-solid-svg-icons'; // Ensure faPlus is here
+import { faPlus, faEdit, faTrash, faSave, faTimes } from '@fortawesome/free-solid-svg-icons';
 
-// Declare the global 'bootstrap' object for TypeScript to recognize it.
-// This assumes bootstrap.bundle.min.js is loaded correctly via angular.json
-declare const bootstrap: any;
+import { CategoryModalComponent } from '../common/category-modal/category-modal'; // <== Import the new modal component
 
 @Component({
   selector: 'app-expense',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FontAwesomeModule],
+  imports: [CommonModule, ReactiveFormsModule, FontAwesomeModule, CategoryModalComponent], // <== Add CategoryModalComponent here
   providers: [DatePipe],
   templateUrl: './expense.html',
   styleUrls: ['./expense.css']
 })
 export class Expense implements OnInit {
+  @ViewChild(CategoryModalComponent) categoryModal!: CategoryModalComponent; // <== ViewChild to access the modal component
+
   expenseForm: FormGroup;
-  newCategoryForm: FormGroup; // <== NEW: Form for adding categories in modal
   expenses$: Observable<ServiceIExpense[]>;
-  categories$: Observable<ServiceICategory[]>;
+  categories$!: Observable<ServiceICategory[]>;
 
   expenseService = inject(ExpenseService);
   categoryService = inject(CategoryService);
@@ -34,7 +33,6 @@ export class Expense implements OnInit {
   editingExpenseId: string | null = null;
   errorMessage: string | null = null;
   successMessage: string | null = null;
-  categoryErrorMessage: string | null = null; // <== NEW: For category modal errors
 
   faPlus = faPlus;
   faEdit = faEdit;
@@ -53,12 +51,9 @@ export class Expense implements OnInit {
       currency: ['MMK', Validators.required]
     });
 
-    this.newCategoryForm = this.fb.group({ // <== NEW: Initialize new category form
-      name: ['', Validators.required]
-    });
-
     this.expenses$ = this.expenseService.getExpenses();
-    this.categories$ = this.categoryService.getCategories();
+    // Re-fetch categories every time the component loads or is navigated to
+    this.loadCategories();
   }
 
   ngOnInit(): void {
@@ -66,10 +61,19 @@ export class Expense implements OnInit {
     this.expenseForm.patchValue({ date: today });
   }
 
-  private clearMessages(): void {
+  loadCategories(): void {
+    this.categories$ = this.categoryService.getCategories();
+  }
+
+  openCategoryModal(): void {
+    this.categoryModal.open(); // Call the open method of the modal component
+  }
+
+  // ... (rest of your existing code) ...
+
+  clearMessages(): void {
     this.errorMessage = null;
     this.successMessage = null;
-    this.categoryErrorMessage = null; // <== Clear category message too
   }
 
   async onSubmit(): Promise<void> {
@@ -135,62 +139,6 @@ export class Expense implements OnInit {
         this.errorMessage = error.message || 'An error occurred while deleting the expense.';
         console.error('Expense delete error:', error);
       }
-    }
-  }
-
-  // <== NEW METHODS FOR CATEGORY MODAL ==>
-
-  openAddCategoryModal(): void {
-    this.clearMessages(); // Clear any previous error messages
-    this.newCategoryForm.reset(); // Reset the form when opening the modal
-    // Optional: if you need to manually show modal via JS (not needed if data-bs-toggle is used)
-    // const modalElement = document.getElementById('addCategoryModal');
-    // if (modalElement) {
-    //   const modal = new bootstrap.Modal(modalElement);
-    //   modal.show();
-    // }
-  }
-
-  async addNewCategory(): Promise<void> {
-    this.categoryErrorMessage = null; // Clear previous error
-    if (this.newCategoryForm.invalid) {
-      this.categoryErrorMessage = 'Category name is required.';
-      return;
-    }
-
-    const categoryName = this.newCategoryForm.value.name;
-    if (!categoryName) {
-      this.categoryErrorMessage = 'Category name cannot be empty.';
-      return;
-    }
-
-    try {
-      await this.categoryService.addCategory(categoryName);
-      this.successMessage = `Category '${categoryName}' added successfully!`;
-      this.newCategoryForm.reset(); // Clear modal form
-
-      // Close the modal programmatically
-      const modalElement = document.getElementById('addCategoryModal');
-      if (modalElement) {
-        const modal = bootstrap.Modal.getInstance(modalElement); // Get existing instance
-        if (modal) {
-          modal.hide();
-        } else {
-          // If instance doesn't exist, create and hide (less common for toggle buttons)
-          new bootstrap.Modal(modalElement).hide();
-        }
-      }
-      // The categories$ observable should automatically refresh the dropdown
-      // because it's a real-time observable from your service.
-
-    } catch (error: any) {
-      // Check if the error is due to a duplicate category (e.g., from Firebase rule or custom logic)
-      if (error.message && error.message.includes('Category already exists')) { // Adjust based on your actual error message
-         this.categoryErrorMessage = `Category '${categoryName}' already exists.`;
-      } else {
-         this.categoryErrorMessage = error.message || 'Error adding category.';
-      }
-      console.error('Error adding category:', error);
     }
   }
 }

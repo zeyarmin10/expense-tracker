@@ -33,7 +33,7 @@
 
             <div class="col-12 col-md-6 mb-3">
               <label for="category" class="form-label">အမျိုးအစား (Category)</label>
-              <div class="input-group">
+              <div class="input-group has-validation">
                 <select
                   class="form-select"
                   id="category"
@@ -42,6 +42,7 @@
                     expenseForm.controls['category'].invalid &&
                     expenseForm.controls['category'].touched
                   "
+                  style="border-top-right-radius: 0;border-bottom-right-radius: 0;"
                 >
                   <option value="" disabled selected>---Select a category---</option>
                   <option *ngFor="let cat of categories$ | async" [value]="cat.name">
@@ -49,12 +50,10 @@
                   </option>
                 </select>
                 <button
-                  class="btn btn-outline-secondary"
                   type="button"
-                  data-bs-toggle="modal"
-                  data-bs-target="#addCategoryModal"
-                  (click)="openAddCategoryModal()"
-                  title="Add new category"
+                  class="btn btn-outline-secondary"
+                  (click)="openCategoryModal()"
+                  aria-label="Add new category"
                 >
                   <fa-icon [icon]="faPlus"></fa-icon>
                 </button>
@@ -64,8 +63,7 @@
                   expenseForm.controls['category'].invalid &&
                   expenseForm.controls['category'].touched
                 "
-                class="invalid-feedback d-block"
-              >
+                class="invalid-feedback d-block" >
                 Category is required.
               </div>
               <small *ngIf="(categories$ | async)?.length === 0" class="form-text text-muted">
@@ -162,6 +160,7 @@
                   "
                   placeholder="Price"
                   aria-label="Price"
+                  style="border-top-right-radius: 0;border-bottom-right-radius: 0;"
                 />
                 <select
                   class="form-select"
@@ -283,49 +282,4 @@
   </div>
 </div>
 
-<div class="modal fade" id="addCategoryModal" tabindex="-1" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="addCategoryModalLabel">Add New Category (အမျိုးအစားအသစ်ထည့်ရန်)</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <form [formGroup]="newCategoryForm" (ngSubmit)="addNewCategory()">
-        <div class="modal-body">
-          <div class="mb-3">
-            <label for="categoryName" class="form-label">Category Name</label>
-            <input
-              type="text"
-              class="form-control"
-              id="categoryName"
-              formControlName="name"
-              placeholder="e.g., Food, Transport"
-              [class.is-invalid]="
-                newCategoryForm.controls['name'].invalid &&
-                newCategoryForm.controls['name'].touched
-              "
-            />
-            <div
-              *ngIf="
-                newCategoryForm.controls['name'].invalid &&
-                newCategoryForm.controls['name'].touched
-              "
-              class="invalid-feedback d-block"
-            >
-              Category name is required.
-            </div>
-          </div>
-          <div *ngIf="categoryErrorMessage" class="alert alert-danger" role="alert">
-            {{ categoryErrorMessage }}
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-primary" [disabled]="newCategoryForm.invalid">
-            Add Category
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
+<app-category-modal (categoryAdded)="loadCategories()"></app-category-modal>
