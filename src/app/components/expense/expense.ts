@@ -101,6 +101,8 @@ export class Expense implements OnInit { // Renamed from ExpenseComponent to Exp
       unit: expense.unit,
       price: expense.price
     });
+    // Add this line to scroll to the top
+    window.scrollTo({ top: 0, behavior: 'smooth' }); //
   }
 
   cancelEdit(): void {

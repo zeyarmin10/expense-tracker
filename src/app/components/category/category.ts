@@ -76,6 +76,8 @@ export class Category implements OnInit { // Renamed from CategoryComponent to C
     this.clearMessages();
     this.editingCategoryId = category.id!;
     this.categoryForm.patchValue({ name: category.name });
+    // Add this line to scroll to the top
+    window.scrollTo({ top: 0, behavior: 'smooth' }); //
   }
 
   cancelEdit(): void {
