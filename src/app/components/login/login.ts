@@ -4,7 +4,8 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth';
 import { UserDataService, UserProfile } from '../../services/user-data';
-import { AuthErrorCodes } from '@angular/fire/auth';
+// No longer importing AuthErrorCodes directly for comparison, as we'll use string literals
+// import { AuthErrorCodes } from '@angular/fire/auth';
 import { debounceTime, Subject, takeUntil } from 'rxjs';
 
 @Component({
@@ -15,8 +16,8 @@ import { debounceTime, Subject, takeUntil } from 'rxjs';
   styleUrls: ['./login.css']
 })
 export class LoginComponent implements OnInit {
-    isMobileView: boolean = false;
-    private destroy$ = new Subject<void>();
+  isMobileView: boolean = false;
+  private destroy$ = new Subject<void>();
   private resizeSubject = new Subject<number>();
   private readonly MOBILE_BREAKPOINT = 768;
 
@@ -31,7 +32,9 @@ export class LoginComponent implements OnInit {
   constructor(private fb: FormBuilder) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]]
+      password: ['', [Validators.required, Validators.minLength(6)]],
+      // Add 'name' form control, initially not required but will be for register mode
+      name: ['']
     });
   }
 
@@ -43,7 +46,6 @@ export class LoginComponent implements OnInit {
     });
     // Initial check on component load
     this.checkMobileView(window.innerWidth);
-
     // Debounce resize events to prevent excessive checks
     this.resizeSubject
       .pipe(
@@ -69,89 +71,99 @@ export class LoginComponent implements OnInit {
     this.isMobileView = width < this.MOBILE_BREAKPOINT;
   }
 
-  /**
-   * Toggles between Login and Register modes for the form.
-   * This is what effectively makes it your "Register page".
-   */
+
+  // Toggles between login and register mode
   toggleMode(): void {
     this.isLoginMode = !this.isLoginMode;
-    this.errorMessage = null; // Clear error message on mode switch
-    this.loginForm.reset(); // Clear form on mode switch
+    this.errorMessage = null; // Clear error message on mode change
+    this.loginForm.reset(); // Reset form fields
+
+    // Conditionally set validators for the 'name' field
+    if (!this.isLoginMode) { // If switching to Register mode
+      this.loginForm.controls['name'].setValidators(Validators.required);
+    } else { // If switching to Login mode
+      this.loginForm.controls['name'].clearValidators();
+    }
+    this.loginForm.controls['name'].updateValueAndValidity(); // Apply validator changes
   }
 
-  /**
-   * Handles form submission for both login and registration based on 'isLoginMode'.
-   */
   async onSubmit(): Promise<void> {
-    this.errorMessage = null;
+    this.errorMessage = null; // Clear previous errors
+    // Mark all fields as touched to display validation messages before submission
+    this.loginForm.markAllAsTouched();
     if (this.loginForm.invalid) {
-      this.errorMessage = 'Please enter valid email and password.';
+      this.errorMessage = 'Please fill in all required fields correctly.';
       return;
     }
 
-    const { email, password } = this.loginForm.value;
+    const { email, password, name } = this.loginForm.value;
 
     try {
-      let user;
       if (this.isLoginMode) {
-        // LOGIN logic
-        user = await this.authService.login(email, password);
-        console.log('User logged in:', user.email);
+        // Login mode
+        await this.authService.login(email, password);
+        this.router.navigate(['/dashboard']);
       } else {
-        // REGISTRATION logic <================================================
-        user = await this.authService.register(email, password); // <== Calls the register method
-        console.log('User registered:', user.email);
-
-        // After successful registration, create a profile in Realtime Database
-        // This ensures new registered users have a profile entry
-        if (user && user.uid) {
-          const userProfile: UserProfile = {
-            uid: user.uid,
-            email: user.email!,
-            displayName: user.displayName || email.split('@')[0],
-            createdAt: new Date().toISOString()
-          };
-          await this.userDataService.createUserProfile(userProfile); // <== Stores user data in RTDB
-          console.log('User profile created in Realtime Database for:', user.email);
-        }
-      }
-
-      this.router.navigate(['/dashboard']);
-
-    } catch (error: any) {
-      this.errorMessage = error.message;
-      console.error('Authentication error:', error);
-    }
-  }
-
-  /**
-   * Handles Google Sign-In.
-   */
-  async signInWithGoogle(): Promise<void> {
-    this.errorMessage = null;
-    try {
-      const user = await this.authService.signInWithGoogle();
-      console.log('Signed in with Google:', user.email);
-
-      // Check if user profile exists, if not, create one for Google sign-ins
-      const userProfileObservable = this.userDataService.getUserProfile(user.uid);
-      userProfileObservable.subscribe(async (profile) => {
-        if (!profile) {
+        // Register mode
+        const user = await this.authService.register(email, password);
+        if (user) {
           const newUserProfile: UserProfile = {
             uid: user.uid,
-            email: user.email!,
-            displayName: user.displayName || 'Google User',
+            email: user.email || email,
+            displayName: name,
             createdAt: new Date().toISOString()
           };
           await this.userDataService.createUserProfile(newUserProfile);
-          console.log('User profile created in Realtime Database for Google user:', user.email);
+          this.router.navigate(['/dashboard']);
         }
-        this.router.navigate(['/dashboard']);
-      });
-
+      }
     } catch (error: any) {
-      this.errorMessage = error.message;
-      console.error('Google Sign-In error:', error);
+      console.error('Authentication error:', error);
+      // Handle specific Firebase Auth errors by comparing string codes
+      if (error.code === 'auth/email-already-in-use') {
+        this.errorMessage = 'This email address is already in use. Please try logging in or use a different email.';
+      } else if (error.code === 'auth/invalid-email') {
+        this.errorMessage = 'The email address is not valid.';
+      } else if (error.code === 'auth/weak-password') {
+        this.errorMessage = 'The password is too weak. Please choose a stronger password.';
+      } else if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+        this.errorMessage = 'Invalid email or password. Please check your credentials.';
+      } else {
+        this.errorMessage = 'An unexpected error occurred. Please try again.';
+      }
     }
+  }
+
+  signInWithGoogle(): void {
+    this.errorMessage = null;
+    this.authService.signInWithGoogle()
+    .then((userCredential: any) => {
+        if (userCredential.user) {
+          const user = userCredential.user;
+          // Check if user profile already exists, if not, create it
+          this.userDataService.getUserProfile(user.uid).subscribe(profile => {
+            if (!profile) {
+              const newUserProfile: UserProfile = {
+                uid: user.uid,
+                email: user.email || '',
+                displayName: user.displayName || 'Google User',
+                createdAt: new Date().toISOString()
+              };
+              this.userDataService.createUserProfile(newUserProfile)
+                .then(() => this.router.navigate(['/dashboard']))
+                .catch(err => {
+                  this.errorMessage = 'Error saving user data after Google sign-in.';
+                  console.error('Error saving user data:', err);
+                });
+            } else {
+              this.router.navigate(['/dashboard']);
+            }
+          });
+        }
+      })
+      .catch(error => {
+        console.error('Google sign-in error:', error);
+        this.errorMessage = 'Failed to sign in with Google. Please try again.';
+      });
   }
 }

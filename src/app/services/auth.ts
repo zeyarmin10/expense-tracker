@@ -46,7 +46,7 @@ export class AuthService {
       return userCredential.user;
     } catch (error: any) {
         if (error.code === AuthErrorCodes.EMAIL_EXISTS) {
-            alert('This email is already registered. Try logging in instead.');
+            alert('ဒီအီးမေးလ်ကို စာရင်းသွင်းထားပြီးသားဖြစ်သည်။ အကောင့် Login ဝင်ကြည့်ပါ။');
         } else {
             alert(`Authentication error: ${error.message}`);
         }
