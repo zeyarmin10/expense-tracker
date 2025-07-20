@@ -18,3 +18,16 @@
 .btn-outline-info:hover {
     color: #ffffff;
 }
+
+@media screen and (max-width: 576px) {
+    .login-bg-image {
+        background-image: url('../../assets/images/—Pngtree—hand_drawn_doodle_icons_illustrating_bg.png');
+        background-size: contain;
+        background-position: top;
+        background-repeat: no-repeat;
+        height: 12rem;
+        border-top-left-radius: 1rem;
+        border-top-right-radius: 1rem;
+    }
+}
+
