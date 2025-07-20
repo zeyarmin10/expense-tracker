@@ -1,5 +1,5 @@
 // expense.ts
-import { Component, OnInit, inject, ViewChild } from '@angular/core'; // <== Add ViewChild
+import { Component, OnInit, inject, ViewChild } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ServiceIExpense, ExpenseService } from '../../services/expense';
@@ -9,20 +9,26 @@ import { Observable } from 'rxjs';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faPlus, faEdit, faTrash, faSave, faTimes } from '@fortawesome/free-solid-svg-icons';
 
-import { CategoryModalComponent } from '../common/category-modal/category-modal'; // <== Import the new modal component
+import { CategoryModalComponent } from '../common/category-modal/category-modal';
 
 @Component({
   selector: 'app-expense',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FontAwesomeModule, CategoryModalComponent], // <== Add CategoryModalComponent here
+  imports: [CommonModule, ReactiveFormsModule, FontAwesomeModule, CategoryModalComponent],
   providers: [DatePipe],
   templateUrl: './expense.html',
   styleUrls: ['./expense.css']
 })
 export class Expense implements OnInit {
-  @ViewChild(CategoryModalComponent) categoryModal!: CategoryModalComponent; // <== ViewChild to access the modal component
+  @ViewChild(CategoryModalComponent) categoryModal!: CategoryModalComponent;
 
-  expenseForm: FormGroup;
+  // Form for adding NEW expenses (at the top of the page)
+  newExpenseForm: FormGroup; // Renamed from expenseForm
+
+  // Form for INLINE editing an existing expense
+  // This will be initialized when an expense row goes into edit mode
+  editingForm: FormGroup | null = null;
+
   expenses$: Observable<ServiceIExpense[]>;
   categories$!: Observable<ServiceICategory[]>;
 
@@ -30,7 +36,7 @@ export class Expense implements OnInit {
   categoryService = inject(CategoryService);
   datePipe = inject(DatePipe);
 
-  editingExpenseId: string | null = null;
+  editingExpenseId: string | null = null; // Stores the ID of the expense being edited
   errorMessage: string | null = null;
   successMessage: string | null = null;
 
@@ -41,7 +47,8 @@ export class Expense implements OnInit {
   faTimes = faTimes;
 
   constructor(private fb: FormBuilder) {
-    this.expenseForm = this.fb.group({
+    // Initialize the form for adding NEW expenses
+    this.newExpenseForm = this.fb.group({
       date: ['', Validators.required],
       category: ['', Validators.required],
       itemName: ['', Validators.required],
@@ -52,13 +59,12 @@ export class Expense implements OnInit {
     });
 
     this.expenses$ = this.expenseService.getExpenses();
-    // Re-fetch categories every time the component loads or is navigated to
     this.loadCategories();
   }
 
   ngOnInit(): void {
     const today = this.datePipe.transform(new Date(), 'yyyy-MM-dd');
-    this.expenseForm.patchValue({ date: today });
+    this.newExpenseForm.patchValue({ date: today });
   }
 
   loadCategories(): void {
@@ -66,66 +72,84 @@ export class Expense implements OnInit {
   }
 
   openCategoryModal(): void {
-    this.categoryModal.open(); // Call the open method of the modal component
+    this.categoryModal.open();
   }
 
-  // ... (rest of your existing code) ...
-
-  clearMessages(): void {
+  private clearMessages(): void {
     this.errorMessage = null;
     this.successMessage = null;
   }
 
-  async onSubmit(): Promise<void> {
+  // Method for submitting the NEW expense form
+  async onSubmitNewExpense(): Promise<void> {
     this.clearMessages();
-    if (this.expenseForm.invalid) {
-      this.errorMessage = 'Please fill in all required fields correctly.';
+    if (this.newExpenseForm.invalid) {
+      this.errorMessage = 'Please fill in all required fields correctly for the new expense.';
       return;
     }
 
-    const formData = this.expenseForm.value;
+    const formData = this.newExpenseForm.value;
 
     try {
-      if (this.editingExpenseId) {
-        await this.expenseService.updateExpense(this.editingExpenseId, formData);
-        this.successMessage = 'Expense updated successfully!';
-      } else {
-        await this.expenseService.addExpense(formData);
-        this.successMessage = 'Expense added successfully!';
-      }
-      this.expenseForm.reset();
-      this.editingExpenseId = null;
+      await this.expenseService.addExpense(formData);
+      this.successMessage = 'Expense added successfully!';
+      this.newExpenseForm.reset();
       const today = this.datePipe.transform(new Date(), 'yyyy-MM-dd');
-      this.expenseForm.patchValue({ date: today, currency: 'MMK' });
+      this.newExpenseForm.patchValue({ date: today, currency: 'MMK' });
     } catch (error: any) {
-      this.errorMessage = error.message || 'An error occurred while saving the expense.';
-      console.error('Expense save error:', error);
+      this.errorMessage = error.message || 'An error occurred while adding the expense.';
+      console.error('New expense save error:', error);
     }
   }
 
+  // Method to start INLINE editing of an existing expense
   startEdit(expense: ServiceIExpense): void {
     this.clearMessages();
     this.editingExpenseId = expense.id!;
-    this.expenseForm.patchValue({
-      date: expense.date,
-      category: expense.category,
-      itemName: expense.itemName,
-      quantity: expense.quantity,
-      unit: expense.unit,
-      price: expense.price,
-      currency: expense.currency || 'MMK'
+    // Initialize editingForm with the values of the expense to be edited
+    this.editingForm = this.fb.group({
+      date: [expense.date, Validators.required],
+      category: [expense.category, Validators.required],
+      itemName: [expense.itemName, Validators.required],
+      quantity: [expense.quantity, [Validators.required, Validators.min(1)]],
+      unit: [expense.unit, Validators.required],
+      price: [expense.price, [Validators.required, Validators.min(0)]],
+      currency: [expense.currency || 'MMK', Validators.required]
     });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // // Scroll to the top if the user is editing an item far down
+    // window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
+  // Method to save INLINE edits
+  async saveEdit(): Promise<void> {
+    this.clearMessages();
+    if (this.editingForm && this.editingForm.invalid) {
+      this.errorMessage = 'Please correct the invalid fields in the expense you are editing.';
+      return;
+    }
+    if (!this.editingForm || !this.editingExpenseId) {
+      this.errorMessage = 'No expense selected for editing or form is invalid.';
+      return;
+    }
+
+    try {
+      await this.expenseService.updateExpense(this.editingExpenseId, this.editingForm.value);
+      this.successMessage = 'Expense updated successfully!';
+      this.cancelEdit(); // Exit edit mode after saving
+    } catch (error: any) {
+      this.errorMessage = error.message || 'An error occurred while updating the expense.';
+      console.error('Expense update error:', error);
+    }
+  }
+
+  // Method to cancel INLINE edits
   cancelEdit(): void {
     this.clearMessages();
     this.editingExpenseId = null;
-    this.expenseForm.reset();
-    const today = this.datePipe.transform(new Date(), 'yyyy-MM-dd');
-    this.expenseForm.patchValue({ date: today, currency: 'MMK' });
+    this.editingForm = null; // Clear the editing form
   }
 
+  // Method for deleting an expense (remains the same)
   async onDelete(expenseId: string): Promise<void> {
     this.clearMessages();
     if (confirm('Are you sure you want to delete this expense? This cannot be undone.')) {
@@ -133,7 +157,7 @@ export class Expense implements OnInit {
         await this.expenseService.deleteExpense(expenseId);
         this.successMessage = 'Expense deleted successfully!';
         if (this.editingExpenseId === expenseId) {
-            this.cancelEdit();
+            this.cancelEdit(); // Also cancel edit mode if the deleted item was being edited
         }
       } catch (error: any) {
         this.errorMessage = error.message || 'An error occurred while deleting the expense.';

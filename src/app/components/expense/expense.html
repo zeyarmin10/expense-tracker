@@ -2,11 +2,8 @@
   <div class="row justify-content-center">
     <div class="col-12 col-md-10 col-lg-8">
       <div class="card shadow-sm p-3 p-md-4">
-        <h2 class="card-title text-center mb-4">
-          {{ editingExpenseId ? 'Edit Expense' : 'Add New Expense' }} (ကုန်ကျစရိတ်)
-        </h2>
-
-        <form [formGroup]="expenseForm" (ngSubmit)="onSubmit()">
+        <h2 class="card-title text-center mb-4">Add New Expense (ကုန်ကျစရိတ်)</h2>
+        <form [formGroup]="newExpenseForm" (ngSubmit)="onSubmitNewExpense()">
           <div class="row">
             <div class="col-12 col-md-6 mb-3">
               <label for="date" class="form-label">ရက်စွဲ (Date)</label>
@@ -16,14 +13,14 @@
                 id="date"
                 formControlName="date"
                 [class.is-invalid]="
-                  expenseForm.controls['date'].invalid &&
-                  expenseForm.controls['date'].touched
+                  newExpenseForm.controls['date'].invalid &&
+                  newExpenseForm.controls['date'].touched
                 "
               />
               <div
                 *ngIf="
-                  expenseForm.controls['date'].invalid &&
-                  expenseForm.controls['date'].touched
+                  newExpenseForm.controls['date'].invalid &&
+                  newExpenseForm.controls['date'].touched
                 "
                 class="invalid-feedback"
               >
@@ -39,10 +36,10 @@
                   id="category"
                   formControlName="category"
                   [class.is-invalid]="
-                    expenseForm.controls['category'].invalid &&
-                    expenseForm.controls['category'].touched
+                    newExpenseForm.controls['category'].invalid &&
+                    newExpenseForm.controls['category'].touched
                   "
-                  style="border-top-right-radius: 0;border-bottom-right-radius: 0;"
+                style="border-top-right-radius: 0;border-bottom-right-radius: 0;"
                 >
                   <option value="" disabled selected>---Select a category---</option>
                   <option *ngFor="let cat of categories$ | async" [value]="cat.name">
@@ -60,10 +57,11 @@
               </div>
               <div
                 *ngIf="
-                  expenseForm.controls['category'].invalid &&
-                  expenseForm.controls['category'].touched
+                  newExpenseForm.controls['category'].invalid &&
+                  newExpenseForm.controls['category'].touched
                 "
-                class="invalid-feedback d-block" >
+                class="invalid-feedback d-block"
+              >
                 Category is required.
               </div>
               <small *ngIf="(categories$ | async)?.length === 0" class="form-text text-muted">
@@ -81,14 +79,14 @@
               formControlName="itemName"
               placeholder="e.g., ထမင်း, ရေသန့်"
               [class.is-invalid]="
-                expenseForm.controls['itemName'].invalid &&
-                expenseForm.controls['itemName'].touched
+                newExpenseForm.controls['itemName'].invalid &&
+                newExpenseForm.controls['itemName'].touched
               "
             />
             <div
               *ngIf="
-                expenseForm.controls['itemName'].invalid &&
-                expenseForm.controls['itemName'].touched
+                newExpenseForm.controls['itemName'].invalid &&
+                newExpenseForm.controls['itemName'].touched
               "
               class="invalid-feedback"
             >
@@ -106,14 +104,14 @@
                 formControlName="quantity"
                 min="1"
                 [class.is-invalid]="
-                  expenseForm.controls['quantity'].invalid &&
-                  expenseForm.controls['quantity'].touched
+                  newExpenseForm.controls['quantity'].invalid &&
+                  newExpenseForm.controls['quantity'].touched
                 "
               />
               <div
                 *ngIf="
-                  expenseForm.controls['quantity'].invalid &&
-                  expenseForm.controls['quantity'].touched
+                  newExpenseForm.controls['quantity'].invalid &&
+                  newExpenseForm.controls['quantity'].touched
                 "
                 class="invalid-feedback"
               >
@@ -130,14 +128,14 @@
                 formControlName="unit"
                 placeholder="e.g., ပွဲ, ဘူး, ကီလို"
                 [class.is-invalid]="
-                  expenseForm.controls['unit'].invalid &&
-                  expenseForm.controls['unit'].touched
+                  newExpenseForm.controls['unit'].invalid &&
+                  newExpenseForm.controls['unit'].touched
                 "
               />
               <div
                 *ngIf="
-                  expenseForm.controls['unit'].invalid &&
-                  expenseForm.controls['unit'].touched
+                  newExpenseForm.controls['unit'].invalid &&
+                  newExpenseForm.controls['unit'].touched
                 "
                 class="invalid-feedback"
               >
@@ -155,8 +153,8 @@
                   formControlName="price"
                   min="0"
                   [class.is-invalid]="
-                    expenseForm.controls['price'].invalid &&
-                    expenseForm.controls['price'].touched
+                    newExpenseForm.controls['price'].invalid &&
+                    newExpenseForm.controls['price'].touched
                   "
                   placeholder="Price"
                   aria-label="Price"
@@ -168,8 +166,8 @@
                   formControlName="currency"
                   style="max-width: 25%;"
                   [class.is-invalid]="
-                    expenseForm.controls['currency'].invalid &&
-                    expenseForm.controls['currency'].touched
+                    newExpenseForm.controls['currency'].invalid &&
+                    newExpenseForm.controls['currency'].touched
                   "
                   aria-label="Currency"
                 >
@@ -181,8 +179,8 @@
               </div>
               <div
                 *ngIf="
-                  expenseForm.controls['price'].invalid &&
-                  expenseForm.controls['price'].touched
+                  newExpenseForm.controls['price'].invalid &&
+                  newExpenseForm.controls['price'].touched
                 "
                 class="invalid-feedback d-block"
               >
@@ -190,8 +188,8 @@
               </div>
               <div
                 *ngIf="
-                  expenseForm.controls['currency'].invalid &&
-                  expenseForm.controls['currency'].touched
+                  newExpenseForm.controls['currency'].invalid &&
+                  newExpenseForm.controls['currency'].touched
                 "
                 class="invalid-feedback d-block"
               >
@@ -211,18 +209,9 @@
             <button
               type="submit"
               class="btn btn-primary"
-              [disabled]="expenseForm.invalid"
+              [disabled]="newExpenseForm.invalid"
             >
-              <fa-icon [icon]="editingExpenseId ? faSave : faPlus"></fa-icon>
-              {{ editingExpenseId ? ' Update' : ' Add' }} Expense
-            </button>
-            <button
-              *ngIf="editingExpenseId"
-              type="button"
-              class="btn btn-secondary"
-              (click)="cancelEdit()"
-            >
-              <fa-icon [icon]="faTimes"></fa-icon> Cancel
+              <fa-icon [icon]="faPlus"></fa-icon> Add Expense
             </button>
           </div>
         </form>
@@ -248,34 +237,105 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let expense of expenses$ | async">
-                <td>{{ expense.date }}</td>
-                <td>{{ expense.category }}</td>
-                <td>{{ expense.itemName }}</td>
-                <td>{{ expense.quantity }}</td>
-                <td>{{ expense.unit }}</td>
-                <td>{{ expense.price | currency:expense.currency:'symbol':'1.0-2' }}</td>
-                <td class="fw-bold">{{ expense.totalCost | currency:expense.currency:'symbol':'1.0-2' }}</td>
-                <td class="text-end">
-                  <button
-                    class="btn btn-sm btn-outline-info me-2 eidt-btn"
-                    (click)="startEdit(expense)"
-                    [disabled]="editingExpenseId === expense.id"
-                    aria-label="Edit"
-                  >
-                    <fa-icon [icon]="faEdit"></fa-icon>
-                  </button>
-                  <button
-                    class="btn btn-sm btn-outline-danger"
-                    (click)="onDelete(expense.id!);"
-                    aria-label="Delete"
-                  >
-                    <fa-icon [icon]="faTrash"></fa-icon>
-                  </button>
-                </td>
-              </tr>
+              <ng-container *ngFor="let expense of expenses$ | async">
+                <tr *ngIf="editingExpenseId !== expense.id">
+                  <td>{{ expense.date }}</td>
+                  <td>{{ expense.category }}</td>
+                  <td>{{ expense.itemName }}</td>
+                  <td>{{ expense.quantity }}</td>
+                  <td>{{ expense.unit }}</td>
+                  <td>{{ expense.price | currency:expense.currency:'symbol':'1.0-2' }}</td>
+                  <td class="fw-bold">{{ expense.totalCost | currency:expense.currency:'symbol':'1.0-2' }}</td>
+                  <td class="text-end">
+                    <button
+                      class="btn btn-sm btn-outline-info me-2"
+                      (click)="startEdit(expense)"
+                      aria-label="Edit"
+                      [disabled]="editingExpenseId !== null" >
+                      <fa-icon [icon]="faEdit"></fa-icon>
+                    </button>
+                    <button
+                      class="btn btn-sm btn-outline-danger"
+                      (click)="onDelete(expense.id!);"
+                      aria-label="Delete"
+                      [disabled]="editingExpenseId !== null"
+                    >
+                      <fa-icon [icon]="faTrash"></fa-icon>
+                    </button>
+                  </td>
+                </tr>
+
+                <tr *ngIf="editingExpenseId === expense.id && editingForm" [formGroup]="editingForm">
+                  <td>
+                    <input type="date" class="form-control form-control-sm" formControlName="date"
+                    [class.is-invalid]="editingForm.controls['date'].invalid && editingForm.controls['date'].touched" />
+                  </td>
+                  <td>
+                    <select class="form-select form-select-sm" formControlName="category"
+                    [class.is-invalid]="editingForm.controls['category'].invalid && editingForm.controls['category'].touched" >
+                      <option *ngFor="let cat of categories$ | async" [value]="cat.name">{{ cat.name }}</option>
+                    </select>
+                  </td>
+                  <td>
+                    <input type="text" class="form-control form-control-sm" formControlName="itemName"
+                    [class.is-invalid]="editingForm.controls['itemName'].invalid && editingForm.controls['itemName'].touched" />
+                  </td>
+                  <td>
+                    <input type="number" class="form-control form-control-sm" formControlName="quantity" min="1"
+                    [class.is-invalid]="editingForm.controls['quantity'].invalid && editingForm.controls['quantity'].touched" />
+                  </td>
+                  <td>
+                    <input type="text" class="form-control form-control-sm" formControlName="unit"
+                    [class.is-invalid]="editingForm.controls['unit'].invalid && editingForm.controls['unit'].touched" />
+                  </td>
+                  <td>
+                    <div class="input-group input-group-sm input-group-md input-group-lg">
+                      <input type="number" class="form-control" formControlName="price" min="0"
+                      [class.is-invalid]="editingForm.controls['price'].invalid && editingForm.controls['price'].touched" />
+                      <select class="form-select" formControlName="currency" style="max-width: 50%;"
+                      [class.is-invalid]="editingForm.controls['currency'].invalid && editingForm.controls['currency'].touched" >
+                        <option value="MMK">MMK</option>
+                        <option value="USD">USD</option>
+                        <option value="THB">THB</option>
+                      </select>
+                    </div>
+                  </td>
+                  <td class="fw-bold">
+                    {{ editingForm.value.price * editingForm.value.quantity | currency:editingForm.value.currency:'symbol':'1.0-2' }}
+                  </td>
+                  <td class="text-end">
+                    <button
+                      class="btn btn-sm btn-outline-success me-2"
+                      (click)="saveEdit()"
+                      [disabled]="editingForm.invalid"
+                      aria-label="Save"
+                    >
+                      <fa-icon [icon]="faSave"></fa-icon>
+                    </button>
+                    <button
+                      class="btn btn-sm btn-outline-danger"
+                      (click)="cancelEdit()"
+                      aria-label="Cancel"
+                    >
+                      <fa-icon [icon]="faTimes"></fa-icon>
+                    </button>
+                  </td>
+                </tr>
+              </ng-container>
             </tbody>
           </table>
+        </div>
+        <div *ngIf="editingForm && editingForm.invalid && (editingForm.dirty || editingForm.touched)" class="alert alert-warning mt-3">
+          Please correct the errors in the edited expense fields.
+          <ul>
+            <li *ngIf="editingForm.controls['date'].invalid && editingForm.controls['date'].touched">Date is required.</li>
+            <li *ngIf="editingForm.controls['category'].invalid && editingForm.controls['category'].touched">Category is required.</li>
+            <li *ngIf="editingForm.controls['itemName'].invalid && editingForm.controls['itemName'].touched">Item name is required.</li>
+            <li *ngIf="editingForm.controls['quantity'].invalid && editingForm.controls['quantity'].touched">Quantity must be at least 1.</li>
+            <li *ngIf="editingForm.controls['unit'].invalid && editingForm.controls['unit'].touched">Unit is required.</li>
+            <li *ngIf="editingForm.controls['price'].invalid && editingForm.controls['price'].touched">Price must be a non-negative number.</li>
+            <li *ngIf="editingForm.controls['currency'].invalid && editingForm.controls['currency'].touched">Currency is required.</li>
+          </ul>
         </div>
       </div>
     </div>
