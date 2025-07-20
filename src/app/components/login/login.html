@@ -78,7 +78,7 @@
           </button>
         </form>
 
-        <div class="text-center mb-3">
+        <div class="text-center mb-3" *ngIf="isLoginMode">
           <span class="text-muted">OR</span>
         </div>
 
@@ -86,6 +86,7 @@
           type="button"
           class="btn btn-outline-info w-100 mb-3"
           (click)="signInWithGoogle()"
+          *ngIf="isLoginMode"
         >
           <!-- <i class="fab fa-google me-2"></i>  -->
            <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="25" height="25" viewBox="0 0 48 48" class="svg-icon">
