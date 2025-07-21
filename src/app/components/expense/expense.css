@@ -63,6 +63,7 @@ fa-icon {
     vertical-align: -0.125em;
 }
 
+
 /* Adjust table header/data for better mobile readability */
 @media (max-width: 767.98px) {
   /* ... (your existing mobile table styles) ... */
@@ -84,13 +85,14 @@ fa-icon {
 }
 
 /* Specific styles for filter date inputs on smaller screens */
+/* This section can be simplified as we now have a single date picker */
 @media (max-width: 575.98px) { /* Extra small devices (phones, 320px and up) */
-  .row.g-2 .col-6 {
-    flex: 0 0 auto; /* Prevent stretching */
-    width: 49%; /* Slightly less than 50% to account for gap */
+  .row.g-2 .col-8, .row.g-2 .col-4 { /* Adjusted for date picker and reset button */
+    flex: 0 0 auto;
+    width: auto; /* Allow content to define width */
   }
-  .row.g-2 .col-6:nth-child(odd) {
-    margin-right: 2%; /* Add a small gap between inputs */
+  .row.g-2 .col-8 {
+    flex-grow: 1; /* Allow date picker to grow */
   }
 }
 
@@ -101,10 +103,16 @@ fa-icon {
     vertical-align: -0.125em;
 }
 
-/* Additional styling for the totals badges */
+/* Styling for the total buttons/badges */
 .badge.bg-primary, .badge.bg-secondary {
-    font-size: 0.9em; /* Slightly smaller font for badges */
-    padding: 0.5em 0.75em; /* Comfortable padding */
+    font-size: 0.9em;
+    padding: 0.5em 0.75em;
+    cursor: pointer; /* Indicate clickable */
+    transition: background-color 0.2s ease-in-out;
+}
+
+.badge.bg-primary:hover, .badge.bg-secondary:hover {
+    filter: brightness(1.1); /* Slightly brighten on hover */
 }
 
 /* Ensure the flex wrap for badges */
@@ -114,31 +122,22 @@ fa-icon {
 
 /* Gap between badges */
 .gap-2 {
-    gap: 0.5rem; /* Bootstrap's default gap-2 */
+    gap: 0.5rem;
 }
 
 /* Hide labels for screen readers only on larger screens for filter inputs */
-.visually-hidden {
-  position: absolute !important;
-  width: 1px !important;
-  height: 1px !important;
-  padding: 0 !important;
-  margin: -1px !important;
-  overflow: hidden !important;
-  clip: rect(0, 0, 0, 0) !important;
-  white-space: nowrap !important;
-  border: 0 !important;
-}
-/* Re-show labels if needed for smaller screens by overriding */
-@media (max-width: 767.98px) {
+/* This `visually-hidden` is now primarily for accessibility of placeholders, no longer needed for labels explicitly if using `placeholder` */
+/* You can remove this media query if you prefer the label always visible on small screens */
+@media (min-width: 768px) {
     .form-label.visually-hidden {
-        position: static !important;
-        width: auto !important;
-        height: auto !important;
-        overflow: visible !important;
-        clip: auto !important;
-        white-space: normal !important;
-        margin-bottom: .5rem !important; /* Standard Bootstrap label margin */
-        font-weight: bold; /* Make it more prominent */
+        position: absolute !important;
+        width: 1px !important;
+        height: 1px !important;
+        padding: 0 !important;
+        margin: -1px !important;
+        overflow: hidden !important;
+        clip: rect(0, 0, 0, 0) !important;
+        white-space: nowrap !important;
+        border: 0 !important;
     }
 }

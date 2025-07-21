@@ -73,12 +73,12 @@
   "EXPENSE_PRICE_NON_NEGATIVE": "Price must be a non-negative number.",
   "EXPENSE_CURRENCY_REQUIRED": "Currency is required.",
 
-  "START_DATE_LABEL": "Start Date",
-  "END_DATE_LABEL": "End Date",
-  "APPLY_FILTER_BUTTON": "Apply Filter",
+  "SELECT_DATE_LABEL": "Select Date",
   "TOTALS_BY_CURRENCY_LABEL": "Totals by Currency",
   "TOTALS_BY_CATEGORY_LABEL": "Totals by Category",
-  "TOTAL_FOR_CURRENCY": "Total for {{currency}}",
-  "NO_TOTALS_FOR_RANGE": "No totals found for the selected date range.",
-  "NO_CATEGORY_TOTALS_FOR_RANGE": "No category totals found for the selected date range."
+  "TOTAL_FOR_CURRENCY": "Total",
+  "TOTAL_FOR_CATEGORY_CURRENCY": "{{category}}",
+  "NO_TOTALS_FOR_DATE": "No totals found for the selected date.",
+  "NO_CATEGORY_TOTALS_FOR_DATE": "No category totals found for the selected date.",
+  "RESET_FILTER_BUTTON": "Reset Filter"
 }

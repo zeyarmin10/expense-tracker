@@ -14,7 +14,7 @@ import {
 } from '@angular/forms';
 import { ServiceIExpense, ExpenseService } from '../../services/expense';
 import { ServiceICategory, CategoryService } from '../../services/category';
-import { Observable, BehaviorSubject, combineLatest, map } from 'rxjs'; // Import BehaviorSubject, combineLatest, map
+import { Observable, BehaviorSubject, combineLatest, map } from 'rxjs';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
@@ -51,9 +51,13 @@ export class Expense implements OnInit {
   expenses$: Observable<ServiceIExpense[]>;
   categories$: Observable<ServiceICategory[]> | undefined;
 
-  // Add new observables for filtered expenses and totals
-  private _filterDates$ = new BehaviorSubject<{ startDate: string; endDate: string }>({ startDate: '', endDate: '' });
-  filteredExpenses$: Observable<ServiceIExpense[]>;
+  // New BehaviorSubjects for filtering and active total filter
+  private _selectedDate$ = new BehaviorSubject<string>('');
+  private _activeCurrencyFilter$ = new BehaviorSubject<string | null>(null);
+  private _activeCategoryFilter$ = new BehaviorSubject<string | null>(null);
+
+  // Observables for displayed data and totals
+  displayedExpenses$: Observable<ServiceIExpense[]>;
   totalExpensesByCurrency$: Observable<{ [key: string]: number }>;
   totalExpensesByCategoryAndCurrency$: Observable<{ [category: string]: { [currency: string]: number } }>;
 
@@ -75,55 +79,71 @@ export class Expense implements OnInit {
   faTimes = faTimes;
 
   constructor(private fb: FormBuilder) {
-    const today = new Date();
-    const oneMonthAgo = new Date();
-    oneMonthAgo.setMonth(today.getMonth() - 1);
+    const todayFormatted = this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
 
     this.newExpenseForm = this.fb.group({
-      date: ['', Validators.required],
+      date: [todayFormatted, Validators.required],
       category: ['', Validators.required],
       itemName: ['', Validators.required],
       quantity: [1, [Validators.required, Validators.min(1)]],
       unit: ['', Validators.required],
       price: [0, [Validators.required, Validators.min(0)]],
       currency: ['MMK', Validators.required],
-      startDate: [this.datePipe.transform(oneMonthAgo, 'yyyy-MM-dd')], // Default to one month ago
-      endDate: [this.datePipe.transform(today, 'yyyy-MM-dd')], // Default to today
+      // THIS IS THE LINE THAT NEEDS TO BE ADDED/UPDATED:
+      selectedDate: [todayFormatted], // Initialize date picker with today's date
     });
 
     this.expenses$ = this.expenseService.getExpenses();
     this.loadCategories();
 
-    // Combine expenses and filter dates to create filteredExpenses$
-    this.filteredExpenses$ = combineLatest([
+    // Combine all relevant observables to get the final displayed expenses
+    this.displayedExpenses$ = combineLatest([
       this.expenses$,
-      this._filterDates$,
+      this._selectedDate$,
+      this._activeCurrencyFilter$,
+      this._activeCategoryFilter$
     ]).pipe(
-      map(([expenses, filterDates]) => {
-        const startDate = new Date(filterDates.startDate);
-        const endDate = new Date(filterDates.endDate);
-        return expenses.filter(expense => {
-          const expenseDate = new Date(expense.date);
-          // Ensure comparison includes the entire end day
-          return expenseDate >= startDate && expenseDate <= new Date(endDate.setHours(23, 59, 59, 999));
-        }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()); // Sort by date descending
+      map(([expenses, selectedDate, activeCurrency, activeCategory]) => {
+        let filtered = expenses.filter(expense => {
+          // Filter by selected date
+          return expense.date === selectedDate;
+        });
+
+        // Apply currency filter if active
+        if (activeCurrency) {
+          filtered = filtered.filter(expense => expense.currency === activeCurrency);
+        }
+
+        // Apply category filter if active
+        if (activeCategory) {
+          filtered = filtered.filter(expense => expense.category === activeCategory);
+        }
+        return filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()); // Sort by creation date descending
       })
     );
 
-    // Calculate total expenses by currency based on filtered expenses
-    this.totalExpensesByCurrency$ = this.filteredExpenses$.pipe(
-      map(expenses => {
-        return expenses.reduce((acc, expense) => {
+    // Calculate total expenses by currency for the selected date
+    this.totalExpensesByCurrency$ = combineLatest([
+      this.expenses$,
+      this._selectedDate$
+    ]).pipe(
+      map(([expenses, selectedDate]) => {
+        const dailyExpenses = expenses.filter(expense => expense.date === selectedDate);
+        return dailyExpenses.reduce((acc, expense) => {
           acc[expense.currency] = (acc[expense.currency] || 0) + expense.totalCost;
           return acc;
         }, {} as { [key: string]: number });
       })
     );
 
-    // Calculate total expenses by category and currency based on filtered expenses
-    this.totalExpensesByCategoryAndCurrency$ = this.filteredExpenses$.pipe(
-      map(expenses => {
-        return expenses.reduce((acc, expense) => {
+    // Calculate total expenses by category and currency for the selected date
+    this.totalExpensesByCategoryAndCurrency$ = combineLatest([
+      this.expenses$,
+      this._selectedDate$
+    ]).pipe(
+      map( ([expenses, selectedDate]) => {
+        const dailyExpenses = expenses.filter(expense => expense.date === selectedDate);
+        return dailyExpenses.reduce((acc, expense) => {
           if (!acc[expense.category]) {
             acc[expense.category] = {};
           }
@@ -133,7 +153,7 @@ export class Expense implements OnInit {
       })
     );
 
-    // Set default language for other components as well (optional, could be in a base service)
+    // Set default language
     const storedLang = localStorage.getItem('selectedLanguage');
     if (storedLang) {
       this.translate.use(storedLang);
@@ -146,9 +166,8 @@ export class Expense implements OnInit {
   }
 
   ngOnInit(): void {
-    const today = this.datePipe.transform(new Date(), 'yyyy-MM-dd');
-    this.newExpenseForm.patchValue({ date: today });
-    this.applyFilter(); // Apply filter on init with default dates
+    // Set the initial selected date for filtering
+    this.applyDateFilter();
   }
 
   loadCategories(): void {
@@ -162,13 +181,13 @@ export class Expense implements OnInit {
   private clearMessages(): void {
     this.errorMessage = null;
     this.successMessage = null;
-    this.cdr.detectChanges(); // Force update after clearing messages
+    this.cdr.detectChanges();
   }
 
   async onSubmitNewExpense(): Promise<void> {
     this.clearMessages();
     if (this.newExpenseForm.invalid) {
-      this.errorMessage = this.translate.instant('ERROR_FILL_ALL_FIELDS'); // <== Translated
+      this.errorMessage = this.translate.instant('ERROR_FILL_ALL_FIELDS');
       return;
     }
 
@@ -176,26 +195,51 @@ export class Expense implements OnInit {
 
     try {
       await this.expenseService.addExpense(formData);
-      this.successMessage = this.translate.instant('EXPENSE_SUCCESS_ADDED'); // <== Translated
+      this.successMessage = this.translate.instant('EXPENSE_SUCCESS_ADDED');
       this.newExpenseForm.reset();
-      const today = this.datePipe.transform(new Date(), 'yyyy-MM-dd');
-      this.newExpenseForm.patchValue({ date: today, currency: 'MMK' });
-      this.applyFilter(); // Re-apply filter after adding new expense
+      const todayFormatted = this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
+      // Ensure selectedDate is also reset to today
+      this.newExpenseForm.patchValue({ date: todayFormatted, currency: 'MMK', selectedDate: todayFormatted });
+      this.resetFilter(); // Reset filters after adding a new expense
     } catch (error: any) {
       this.errorMessage =
-        error.message || this.translate.instant('EXPENSE_ERROR_ADD'); // <== Translated
+        error.message || this.translate.instant('EXPENSE_ERROR_ADD');
       console.error('New expense save error:', error);
     }
-    this.cdr.detectChanges(); // Force update after submit
+    this.cdr.detectChanges();
   }
 
-  applyFilter(): void {
-    const startDate = this.newExpenseForm.get('startDate')?.value;
-    const endDate = this.newExpenseForm.get('endDate')?.value;
-    if (startDate && endDate) {
-      this._filterDates$.next({ startDate, endDate });
+  applyDateFilter(): void {
+    const selectedDate = this.newExpenseForm.get('selectedDate')?.value;
+    if (selectedDate) {
+      this._selectedDate$.next(selectedDate);
+      this.resetActiveFilters(); // Reset active filters when date changes
     }
   }
+
+  resetActiveFilters(): void {
+    this._activeCurrencyFilter$.next(null);
+    this._activeCategoryFilter$.next(null);
+  }
+
+  resetFilter(): void {
+    // Reset date to today and clear active filters
+    const todayFormatted = this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
+    this.newExpenseForm.patchValue({ selectedDate: todayFormatted });
+    this._selectedDate$.next(todayFormatted);
+    this.resetActiveFilters();
+  }
+
+  filterByCurrency(currency: string): void {
+    this._activeCategoryFilter$.next(null); // Clear category filter
+    this._activeCurrencyFilter$.next(currency);
+  }
+
+  filterByCategory(category: string): void {
+    this._activeCurrencyFilter$.next(null); // Clear currency filter
+    this._activeCategoryFilter$.next(category);
+  }
+
 
   startEdit(expense: ServiceIExpense): void {
     this.clearMessages();
@@ -209,8 +253,8 @@ export class Expense implements OnInit {
       price: [expense.price, [Validators.required, Validators.min(0)]],
       currency: [expense.currency || 'MMK', Validators.required],
     });
-    window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll to top when editing
-    this.cdr.detectChanges(); // Force update
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    this.cdr.detectChanges();
   }
 
   async saveEdit(): Promise<void> {
@@ -218,13 +262,13 @@ export class Expense implements OnInit {
     if (this.editingForm && this.editingForm.invalid) {
       this.errorMessage = this.translate.instant(
         'EXPENSE_ERROR_EDIT_FORM_INVALID'
-      ); // <== Translated
+      );
       return;
     }
     if (!this.editingForm || !this.editingExpenseId) {
       this.errorMessage = this.translate.instant(
         'EXPENSE_ERROR_NO_EXPENSE_SELECTED'
-      ); // <== Translated
+      );
       return;
     }
 
@@ -233,41 +277,40 @@ export class Expense implements OnInit {
         this.editingExpenseId,
         this.editingForm.value
       );
-      this.successMessage = this.translate.instant('EXPENSE_SUCCESS_UPDATED'); // <== Translated
+      this.successMessage = this.translate.instant('EXPENSE_SUCCESS_UPDATED');
       this.cancelEdit();
-      this.applyFilter(); // Re-apply filter after saving edit
+      this.applyDateFilter(); // Re-apply filter after saving edit
     } catch (error: any) {
       this.errorMessage =
-        error.message || this.translate.instant('EXPENSE_ERROR_UPDATE'); // <== Translated
+        error.message || this.translate.instant('EXPENSE_ERROR_UPDATE');
       console.error('Expense update error:', error);
     }
-    this.cdr.detectChanges(); // Force update
+    this.cdr.detectChanges();
   }
 
   cancelEdit(): void {
     this.clearMessages();
     this.editingExpenseId = null;
     this.editingForm = null;
-    this.cdr.detectChanges(); // Force update
+    this.cdr.detectChanges();
   }
 
   async onDelete(expenseId: string): Promise<void> {
     this.clearMessages();
     if (confirm(this.translate.instant('EXPENSE_CONFIRM_DELETE'))) {
-      // <== Translated confirm message
       try {
         await this.expenseService.deleteExpense(expenseId);
-        this.successMessage = this.translate.instant('EXPENSE_SUCCESS_DELETED'); // <== Translated
+        this.successMessage = this.translate.instant('EXPENSE_SUCCESS_DELETED');
         if (this.editingExpenseId === expenseId) {
           this.cancelEdit();
         }
-        this.applyFilter(); // Re-apply filter after deleting expense
+        this.applyDateFilter(); // Re-apply filter after deleting expense
       } catch (error: any) {
         this.errorMessage =
-          error.message || this.translate.instant('EXPENSE_ERROR_DELETE'); // <== Translated
+          error.message || this.translate.instant('EXPENSE_ERROR_DELETE');
         console.error('Expense delete error:', error);
       }
     }
-    this.cdr.detectChanges(); // Force update
+    this.cdr.detectChanges();
   }
 }

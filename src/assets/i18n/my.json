@@ -73,12 +73,12 @@
   "EXPENSE_PRICE_NON_NEGATIVE": "ဈေးနှုန်းသည် သုည သို့မဟုတ် အပေါင်းကိန်းဖြစ်ရမည်။",
   "EXPENSE_CURRENCY_REQUIRED": "ငွေကြေးလိုအပ်ပါသည်။",
 
-  "START_DATE_LABEL": "စတင်ရက်စွဲ",
-  "END_DATE_LABEL": "ပြီးဆုံးရက်စွဲ",
-  "APPLY_FILTER_BUTTON": "စစ်ထုတ်မည်",
+  "SELECT_DATE_LABEL": "ရက်စွဲရွေးပါ",
   "TOTALS_BY_CURRENCY_LABEL": "ငွေကြေးအလိုက် စုစုပေါင်း",
   "TOTALS_BY_CATEGORY_LABEL": "အမျိုးအစားအလိုက် စုစုပေါင်း",
-  "TOTAL_FOR_CURRENCY": "{{currency}} အတွက် စုစုပေါင်း",
-  "NO_TOTALS_FOR_RANGE": "ရွေးချယ်ထားသော ရက်စွဲအပိုင်းအခြားအတွက် စုစုပေါင်းမရှိပါ။",
-  "NO_CATEGORY_TOTALS_FOR_RANGE": "ရွေးချယ်ထားသော ရက်စွဲအပိုင်းအခြားအတွက် အမျိုးအစားအလိုက် စုစုပေါင်းမရှိပါ။"
+  "TOTAL_FOR_CURRENCY": "စုစုပေါင်း: {{currency}}",
+  "TOTAL_FOR_CATEGORY_CURRENCY": "{{category}}: {{currency}}",
+  "NO_TOTALS_FOR_DATE": "ရွေးချယ်ထားသော ရက်စွဲအတွက် စုစုပေါင်းမရှိပါ။",
+  "NO_CATEGORY_TOTALS_FOR_DATE": "ရွေးချယ်ထားသော ရက်စွဲအတွက် အမျိုးအစားအလိုက် စုစုပေါင်းမရှိပါ။",
+  "RESET_FILTER_BUTTON": "စစ်ထုတ်မှုကို ပြန်လည်သတ်မှတ်မည်"
 }

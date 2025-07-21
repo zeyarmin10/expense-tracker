@@ -217,62 +217,76 @@
 
           <hr class="my-4" />
 
-          <div class="row g-2 mb-4 align-items-end justify-content-between">
-              <div class="col-6 col-md-4">
-                  <label for="startDate" class="form-label visually-hidden">{{ 'START_DATE_LABEL' | translate }}</label>
-                  <input type="date" class="form-control" id="startDate" formControlName="startDate" placeholder="{{ 'START_DATE_LABEL' | translate }}">
-              </div>
-              <div class="col-6 col-md-4">
-                  <label for="endDate" class="form-label visually-hidden">{{ 'END_DATE_LABEL' | translate }}</label>
-                  <input type="date" class="form-control" id="endDate" formControlName="endDate" placeholder="{{ 'END_DATE_LABEL' | translate }}">
-              </div>
-              <div class="col-12 col-md-4 d-grid mt-2 mt-md-0">
-                  <button type="button" class="btn btn-outline-primary" (click)="applyFilter()">
-                      {{ 'APPLY_FILTER_BUTTON' | translate }}
-                  </button>
-              </div>
-          </div>
+            <div class="row g-2 mb-4 align-items-end justify-content-between">
+                <div class="col-8 col-sm-6 col-md-4">
+                    <label for="selectedDate" class="form-label">{{ 'SELECT_DATE_LABEL' | translate }}</label>
+                    <input
+                        type="date"
+                        class="form-control"
+                        id="selectedDate"
+                        formControlName="selectedDate"
+                        (change)="applyDateFilter()"
+                    />
+                </div>
+                <div class="col-4 col-sm-6 col-md-3 d-grid mt-2 mt-md-0">
+                    <button type="button" class="btn btn-outline-secondary" (click)="resetFilter()">
+                        {{ 'RESET_FILTER_BUTTON' | translate }}
+                    </button>
+                </div>
+            </div>
+
         </form>
 
-        <div *ngIf="(totalExpensesByCurrency$ | async) as totals" class="mb-4">
-            <h4 class="h5 mb-3">{{ 'TOTALS_BY_CURRENCY_LABEL' | translate }}</h4>
-            <div *ngIf="totals && (totals | keyvalue).length > 0; else noTotals">
+        <div class="d-flex flex-wrap gap-2 mb-4">
+          <ng-container *ngIf="(totalExpensesByCurrency$ | async) as totals">
+            <div *ngIf="(totals | keyvalue).length > 0; else noTotals">
                 <div class="d-flex flex-wrap gap-2">
-                    <span *ngFor="let total of (totals | keyvalue)" class="badge bg-primary text-white p-2">
+                    <button
+                        type="button"
+                        class="badge bg-primary text-white p-2 border-0 total-btn"
+                        *ngFor="let total of (totals | keyvalue)"
+                        (click)="filterByCurrency(total.key)"
+                    >
                         <strong>{{ 'TOTAL_FOR_CURRENCY' | translate: {currency: total.key} }}:</strong>
                         {{ total.value | currency:total.key:'symbol':'1.0-2' }}
-                    </span>
+                    </button>
                 </div>
             </div>
-            <ng-template #noTotals>
-                <div class="alert alert-info text-center">
-                    {{ 'NO_TOTALS_FOR_RANGE' | translate }}
-                </div>
-            </ng-template>
-        </div>
+          </ng-container>
 
-        <div *ngIf="(totalExpensesByCategoryAndCurrency$ | async) as categoryTotals" class="mb-4">
-            <h4 class="h5 mb-3">{{ 'TOTALS_BY_CATEGORY_LABEL' | translate }}</h4>
-            <div *ngIf="categoryTotals && (categoryTotals | keyvalue).length > 0; else noCategoryTotals">
-                <div *ngFor="let categoryTotal of (categoryTotals | keyvalue)" class="mb-3">
-                    <h6 class="text-primary">{{ categoryTotal.key }}</h6>
-                    <div class="d-flex flex-wrap gap-2">
-                        <span *ngFor="let currencyTotal of (categoryTotal.value | keyvalue)" class="badge bg-secondary text-white p-2">
-                            {{ currencyTotal.key }}: {{ currencyTotal.value | currency:currencyTotal.key:'symbol':'1.0-2' }}
-                        </span>
-                    </div>
+          <ng-container *ngIf="(totalExpensesByCategoryAndCurrency$ | async) as categoryTotals">
+            <div *ngIf="(categoryTotals | keyvalue).length > 0; else noCategoryTotals">
+                <div class="d-flex flex-wrap gap-2">
+                    <button
+                        type="button"
+                        class="badge bg-secondary text-white p-2 border-0 total-btn"
+                        *ngFor="let categoryTotal of (categoryTotals | keyvalue)"
+                        (click)="filterByCategory(categoryTotal.key)"
+                    >
+                        <ng-container *ngFor="let currencyTotal of (categoryTotal.value | keyvalue)">
+                            {{ 'TOTAL_FOR_CATEGORY_CURRENCY' | translate: {category: categoryTotal.key, currency: currencyTotal.key} }}:
+                            {{ currencyTotal.value | currency:currencyTotal.key:'symbol':'1.0-2' }}
+                        </ng-container>
+                    </button>
                 </div>
             </div>
-            <ng-template #noCategoryTotals>
-                <div class="alert alert-info text-center">
-                    {{ 'NO_CATEGORY_TOTALS_FOR_RANGE' | translate }}
-                </div>
-            </ng-template>
+          </ng-container>
+
+          <ng-template #noTotals>
+            <div class="alert alert-info text-center w-100">
+                {{ 'NO_TOTALS_FOR_DATE' | translate }}
+            </div>
+          </ng-template>
+          <ng-template #noCategoryTotals>
+            <div class="alert alert-info text-center w-100">
+                {{ 'NO_CATEGORY_TOTALS_FOR_DATE' | translate }}
+            </div>
+          </ng-template>
         </div>
 
 
         <h3 class="h5 text-center mb-3">{{ 'EXPENSE_YOUR_EXPENSES_TITLE' | translate }}</h3>
-        <div *ngIf="(filteredExpenses$ | async)?.length === 0" class="alert alert-info text-center">
+        <div *ngIf="(displayedExpenses$ | async)?.length === 0" class="alert alert-info text-center">
             {{ 'EXPENSE_NO_EXPENSES_HINT' | translate }}
         </div>
         <div class="table-responsive">
@@ -289,7 +303,7 @@
               </tr>
             </thead>
             <tbody>
-              <ng-container *ngFor="let expense of filteredExpenses$ | async">
+              <ng-container *ngFor="let expense of displayedExpenses$ | async">
                 <tr *ngIf="editingExpenseId !== expense.id">
                   <td>{{ expense.date }}</td>
                   <td>{{ expense.category }}</td>
