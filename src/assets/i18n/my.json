@@ -41,6 +41,9 @@
   "EXPENSE_UNIT_LABEL": "ယူနစ်",
   "EXPENSE_UNIT_PLACEHOLDER": "ဥပမာ: ပွဲ, ဘူး, ကီလို",
   "EXPENSE_PRICE_LABEL": "ဈေးနှုန်း",
+  "EXPENSE_PRICE_PLACEHOLDER": "ဥပမာ: ၅၀၀",
+  "EXPENSE_CURRENCY_LABEL": "ငွေကြေး",
+  "EXPENSE_CURRENCY_SELECT": "ငွေကြေးရွေးပါ",
   "EXPENSE_ADD_BUTTON": "ကုန်ကျစရိတ်ထည့်မည်",
   "EXPENSE_SAVE_BUTTON": "သိမ်းမည်",
   "EXPENSE_CANCEL_BUTTON": "ဖျက်မည်",
@@ -61,5 +64,21 @@
   "EXPENSE_ERROR_UPDATE": "ကုန်ကျစရိတ်ပြင်ဆင်ရာတွင် အမှားဖြစ်ခဲ့သည်။",
   "EXPENSE_ERROR_DELETE": "ကုန်ကျစရိတ်ဖျက်ရာတွင် အမှားဖြစ်ခဲ့သည်။",
   "EXPENSE_ERROR_EDIT_FORM_INVALID": "ကျေးဇူးပြု၍ သင်ပြင်ဆင်နေသော ကုန်ကျစရိတ်အကွက်များရှိ အမှားများကို ပြင်ပါ။",
-  "EXPENSE_ERROR_NO_EXPENSE_SELECTED": "ပြင်ဆင်ရန် ကုန်ကျစရိတ်မရွေးချယ်ရသေးပါ သို့မဟုတ် ဖောင်မမှန်ပါ။"
+  "EXPENSE_ERROR_NO_EXPENSE_SELECTED": "ပြင်ဆင်ရန် ကုန်ကျစရိတ်မရွေးချယ်ရသေးပါ သို့မဟုတ် ဖောင်မမှန်ပါ။",
+  "EXPENSE_DATE_REQUIRED": "ရက်စွဲလိုအပ်ပါသည်။",
+  "EXPENSE_CATEGORY_REQUIRED": "အမျိုးအစားလိုအပ်ပါသည်။",
+  "EXPENSE_ITEM_NAME_REQUIRED": "ပစ္စည်းအမည်လိုအပ်ပါသည်။",
+  "EXPENSE_QUANTITY_MIN": "အရေအတွက်သည် အနည်းဆုံး ၁ ဖြစ်ရမည်။",
+  "EXPENSE_UNIT_REQUIRED": "ယူနစ်လိုအပ်ပါသည်။",
+  "EXPENSE_PRICE_NON_NEGATIVE": "ဈေးနှုန်းသည် သုည သို့မဟုတ် အပေါင်းကိန်းဖြစ်ရမည်။",
+  "EXPENSE_CURRENCY_REQUIRED": "ငွေကြေးလိုအပ်ပါသည်။",
+
+  "START_DATE_LABEL": "စတင်ရက်စွဲ",
+  "END_DATE_LABEL": "ပြီးဆုံးရက်စွဲ",
+  "APPLY_FILTER_BUTTON": "စစ်ထုတ်မည်",
+  "TOTALS_BY_CURRENCY_LABEL": "ငွေကြေးအလိုက် စုစုပေါင်း",
+  "TOTALS_BY_CATEGORY_LABEL": "အမျိုးအစားအလိုက် စုစုပေါင်း",
+  "TOTAL_FOR_CURRENCY": "{{currency}} အတွက် စုစုပေါင်း",
+  "NO_TOTALS_FOR_RANGE": "ရွေးချယ်ထားသော ရက်စွဲအပိုင်းအခြားအတွက် စုစုပေါင်းမရှိပါ။",
+  "NO_CATEGORY_TOTALS_FOR_RANGE": "ရွေးချယ်ထားသော ရက်စွဲအပိုင်းအခြားအတွက် အမျိုးအစားအလိုက် စုစုပေါင်းမရှိပါ။"
 }

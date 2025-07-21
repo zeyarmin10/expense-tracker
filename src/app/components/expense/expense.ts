@@ -14,7 +14,7 @@ import {
 } from '@angular/forms';
 import { ServiceIExpense, ExpenseService } from '../../services/expense';
 import { ServiceICategory, CategoryService } from '../../services/category';
-import { Observable } from 'rxjs';
+import { Observable, BehaviorSubject, combineLatest, map } from 'rxjs'; // Import BehaviorSubject, combineLatest, map
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
@@ -51,6 +51,13 @@ export class Expense implements OnInit {
   expenses$: Observable<ServiceIExpense[]>;
   categories$: Observable<ServiceICategory[]> | undefined;
 
+  // Add new observables for filtered expenses and totals
+  private _filterDates$ = new BehaviorSubject<{ startDate: string; endDate: string }>({ startDate: '', endDate: '' });
+  filteredExpenses$: Observable<ServiceIExpense[]>;
+  totalExpensesByCurrency$: Observable<{ [key: string]: number }>;
+  totalExpensesByCategoryAndCurrency$: Observable<{ [category: string]: { [currency: string]: number } }>;
+
+
   expenseService = inject(ExpenseService);
   categoryService = inject(CategoryService);
   datePipe = inject(DatePipe);
@@ -68,6 +75,10 @@ export class Expense implements OnInit {
   faTimes = faTimes;
 
   constructor(private fb: FormBuilder) {
+    const today = new Date();
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setMonth(today.getMonth() - 1);
+
     this.newExpenseForm = this.fb.group({
       date: ['', Validators.required],
       category: ['', Validators.required],
@@ -76,10 +87,51 @@ export class Expense implements OnInit {
       unit: ['', Validators.required],
       price: [0, [Validators.required, Validators.min(0)]],
       currency: ['MMK', Validators.required],
+      startDate: [this.datePipe.transform(oneMonthAgo, 'yyyy-MM-dd')], // Default to one month ago
+      endDate: [this.datePipe.transform(today, 'yyyy-MM-dd')], // Default to today
     });
 
     this.expenses$ = this.expenseService.getExpenses();
     this.loadCategories();
+
+    // Combine expenses and filter dates to create filteredExpenses$
+    this.filteredExpenses$ = combineLatest([
+      this.expenses$,
+      this._filterDates$,
+    ]).pipe(
+      map(([expenses, filterDates]) => {
+        const startDate = new Date(filterDates.startDate);
+        const endDate = new Date(filterDates.endDate);
+        return expenses.filter(expense => {
+          const expenseDate = new Date(expense.date);
+          // Ensure comparison includes the entire end day
+          return expenseDate >= startDate && expenseDate <= new Date(endDate.setHours(23, 59, 59, 999));
+        }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()); // Sort by date descending
+      })
+    );
+
+    // Calculate total expenses by currency based on filtered expenses
+    this.totalExpensesByCurrency$ = this.filteredExpenses$.pipe(
+      map(expenses => {
+        return expenses.reduce((acc, expense) => {
+          acc[expense.currency] = (acc[expense.currency] || 0) + expense.totalCost;
+          return acc;
+        }, {} as { [key: string]: number });
+      })
+    );
+
+    // Calculate total expenses by category and currency based on filtered expenses
+    this.totalExpensesByCategoryAndCurrency$ = this.filteredExpenses$.pipe(
+      map(expenses => {
+        return expenses.reduce((acc, expense) => {
+          if (!acc[expense.category]) {
+            acc[expense.category] = {};
+          }
+          acc[expense.category][expense.currency] = (acc[expense.category][expense.currency] || 0) + expense.totalCost;
+          return acc;
+        }, {} as { [category: string]: { [currency: string]: number } });
+      })
+    );
 
     // Set default language for other components as well (optional, could be in a base service)
     const storedLang = localStorage.getItem('selectedLanguage');
@@ -96,6 +148,7 @@ export class Expense implements OnInit {
   ngOnInit(): void {
     const today = this.datePipe.transform(new Date(), 'yyyy-MM-dd');
     this.newExpenseForm.patchValue({ date: today });
+    this.applyFilter(); // Apply filter on init with default dates
   }
 
   loadCategories(): void {
@@ -127,12 +180,21 @@ export class Expense implements OnInit {
       this.newExpenseForm.reset();
       const today = this.datePipe.transform(new Date(), 'yyyy-MM-dd');
       this.newExpenseForm.patchValue({ date: today, currency: 'MMK' });
+      this.applyFilter(); // Re-apply filter after adding new expense
     } catch (error: any) {
       this.errorMessage =
         error.message || this.translate.instant('EXPENSE_ERROR_ADD'); // <== Translated
       console.error('New expense save error:', error);
     }
     this.cdr.detectChanges(); // Force update after submit
+  }
+
+  applyFilter(): void {
+    const startDate = this.newExpenseForm.get('startDate')?.value;
+    const endDate = this.newExpenseForm.get('endDate')?.value;
+    if (startDate && endDate) {
+      this._filterDates$.next({ startDate, endDate });
+    }
   }
 
   startEdit(expense: ServiceIExpense): void {
@@ -147,7 +209,7 @@ export class Expense implements OnInit {
       price: [expense.price, [Validators.required, Validators.min(0)]],
       currency: [expense.currency || 'MMK', Validators.required],
     });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll to top when editing
     this.cdr.detectChanges(); // Force update
   }
 
@@ -173,6 +235,7 @@ export class Expense implements OnInit {
       );
       this.successMessage = this.translate.instant('EXPENSE_SUCCESS_UPDATED'); // <== Translated
       this.cancelEdit();
+      this.applyFilter(); // Re-apply filter after saving edit
     } catch (error: any) {
       this.errorMessage =
         error.message || this.translate.instant('EXPENSE_ERROR_UPDATE'); // <== Translated
@@ -198,6 +261,7 @@ export class Expense implements OnInit {
         if (this.editingExpenseId === expenseId) {
           this.cancelEdit();
         }
+        this.applyFilter(); // Re-apply filter after deleting expense
       } catch (error: any) {
         this.errorMessage =
           error.message || this.translate.instant('EXPENSE_ERROR_DELETE'); // <== Translated
