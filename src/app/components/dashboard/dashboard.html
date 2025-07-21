@@ -2,6 +2,64 @@
     <div class="card shadow-lg p-4 text-center">
         <h2 class="card-title mb-4">{{ 'DASHBOARD_WELCOME' | translate }}</h2>
 
+        <div class="row d-flex justify-content-center mb-5">
+            <div class="col-lg-6 col-md-12 col-sm-12 col-xs-12 d-flex flex-column align-items-start">
+                <div class="badge bg-primary text-white p-2 border-0 total-btn text-start all-total mb-2">
+                    <strong>{{ 'NET_PROFIT' | translate }}:</strong>
+                    <ng-container *ngIf="(netProfitByCurrency$ | async) as netProfits; else loadingNetProfit">
+                        <span *ngIf="(netProfits | keyvalue).length > 0; else noNetProfitData">
+                            <ng-container *ngFor="let netProfit of (netProfits | keyvalue)">
+                                <span [class.text-success]="netProfit.value >= 0" [class.text-danger]="netProfit.value < 0">
+                                    {{ formatAmountWithSymbol(netProfit.value, netProfit.key) }}
+                                </span>
+                            </ng-container>
+                        </span>
+                        <ng-template #noNetProfitData>
+                            <span>0</span>
+                        </ng-template>
+                    </ng-container>
+                    <ng-template #loadingNetProfit>
+                        <span>{{ 'LOADING_DATA' | translate }}</span>
+                    </ng-template>
+                </div>
+
+                <div class="badge bg-success text-white p-2 border-0 total-btn text-start all-total mb-2">
+                    <strong>{{ 'REMAINING_BALANCE' | translate }}:</strong>
+                    <ng-container *ngIf="(remainingBalanceByCurrency$ | async) as balances; else loadingBalance">
+                        <span *ngIf="(balances | keyvalue).length > 0; else noBalanceData">
+                            <ng-container *ngFor="let balance of (balances | keyvalue)">
+                                <span [class.text-white]="balance.value >= 0" [class.text-danger]="balance.value < 0">
+                                    {{ formatAmountWithSymbol(balance.value, balance.key) }}
+                                </span>
+                            </ng-container>
+                        </span>
+                        <ng-template #noBalanceData>
+                            <span>0</span>
+                        </ng-template>
+                    </ng-container>
+                    <ng-template #loadingBalance>
+                        <span>{{ 'LOADING_DATA' | translate }}</span>
+                    </ng-template>
+                </div>
+                <div class="badge bg-danger text-white p-2 border-0 total-btn text-start all-total">
+                    <strong>{{ 'ALL_TOTAL_EXPENSES' | translate }}:</strong>
+                    <ng-container *ngIf="(totalExpensesByCurrency$ | async) as totalsByCurrency; else loadingTotals">
+                        <span *ngIf="(totalsByCurrency | keyvalue).length > 0; else noTotals">
+                            <ng-container *ngFor="let total of (totalsByCurrency | keyvalue)">
+                                {{ formatAmountWithSymbol(total.value, total.key) }}
+                            </ng-container>
+                        </span>
+                        <ng-template #noTotals>
+                            <span>0</span>
+                        </ng-template>
+                    </ng-container>
+                    <ng-template #loadingTotals>
+                        <span>{{ 'LOADING_DATA' | translate }}</span>
+                    </ng-template>
+                </div>  
+            </div>
+        </div>
+
         <form [formGroup]="dateRangeForm" (ngSubmit)="applyDateFilter()" class="mb-4">
             <div class="d-flex flex-wrap align-items-end justify-content-center date-filter-row">
 
