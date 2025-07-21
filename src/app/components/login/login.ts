@@ -38,20 +38,11 @@ export class LoginComponent implements OnInit {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
-      name: ['']
+      name: [''] // Name is not required for login, only for register
     });
 
-    this.translate.addLangs(['my', 'en']);
-    // Set default language preference
-    const storedLang = localStorage.getItem('selectedLanguage');
-    if (storedLang && this.translate.getLangs().includes(storedLang)) {
-      this.translate.use(storedLang);
-      this.currentLang = storedLang; // Set currentLang from stored preference
-    } else {
-      // Default to Burmese if no stored language or browser language isn't recognized
-      this.translate.use('my'); // <== Set 'my' as default here
-      this.currentLang = 'my';
-    }
+    // Initialize currentLang with the currently used language
+    this.currentLang = this.translate.currentLang || this.translate.getDefaultLang();
   }
 
   ngOnInit(): void {
