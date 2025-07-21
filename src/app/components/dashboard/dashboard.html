@@ -56,6 +56,30 @@
                     </div>
                 </ng-container>
 
+                <ng-container *ngIf="(totalExpensesByCategoryAndCurrency$ | async) as categoryTotals">
+                    <div *ngIf="(categoryTotals | keyvalue).length > 0; else noCategoryTotals" class="w-100 mt-2">
+                        <div class="d-flex flex-column align-items-start gap-1">
+                            <div class="badge text-white p-2 border-0 total-btn text-start daily-cat-total"
+                                *ngFor="let categoryTotal of (categoryTotals | keyvalue)"
+                                (click)="filterByCategory(categoryTotal.key)">
+                                <ng-container *ngFor="let currencyTotal of (categoryTotal.value | keyvalue)">
+                                    {{ 'TOTAL_FOR_CATEGORY_CURRENCY' | translate: {category: categoryTotal.key,
+                                    currency: currencyTotal.key} }} - 
+                                    {{ formatAmountWithSymbol(currencyTotal.value, currencyTotal.key) }}
+                                </ng-container>
+                                <div class="daily-totals mt-2">
+                                    <div *ngFor="let dailyTotal of (dailyTotalsByCategoryAndCurrency$ | async)?.[categoryTotal.key] | keyvalue">
+                                        <strong>{{ formatDailyDate(dailyTotal.key) }}</strong>: 
+                                        <ng-container *ngFor="let dailyCurrencyTotal of (dailyTotal.value | keyvalue)">
+                                            {{ formatAmountWithSymbol(dailyCurrencyTotal.value, dailyCurrencyTotal.key) }}
+                                        </ng-container>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </ng-container>
+
                 <ng-template #noTotals>
                     <div class="alert alert-info text-start w-100">
                         {{ 'NO_TOTALS_FOR_DATE_RANGE' | translate }}

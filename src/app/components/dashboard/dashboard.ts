@@ -41,6 +41,7 @@ export class DashboardComponent implements OnInit {
 
   totalExpensesByCurrency$: Observable<{ [key: string]: number }>;
   totalExpensesByCategoryAndCurrency$: Observable<{ [category: string]: { [currency: string]: number } }>;
+  dailyTotalsByCategoryAndCurrency$: Observable<{ [category: string]: { [date: string]: { [currency: string]: number } } }>;
 
 
   currencySymbols: { [key: string]: string } = {
@@ -51,15 +52,15 @@ export class DashboardComponent implements OnInit {
 
   constructor(private fb: FormBuilder) {
     const today = new Date();
-    const oneMonthAgo = new Date();
-    oneMonthAgo.setMonth(today.getMonth() - 1);
+    const oneWeekAgo = new Date(); // Change from oneMonthAgo to oneWeekAgo
+    oneWeekAgo.setDate(today.getDate() - 7); // Set date back by 7 days
 
     const todayFormatted = this.datePipe.transform(today, 'yyyy-MM-dd') || '';
-    const oneMonthAgoFormatted = this.datePipe.transform(oneMonthAgo, 'yyyy-MM-dd') || '';
+    const oneWeekAgoFormatted = this.datePipe.transform(oneWeekAgo, 'yyyy-MM-dd') || ''; // Use oneWeekAgoFormatted
 
 
     this.dateRangeForm = this.fb.group({
-      startDate: [oneMonthAgoFormatted, Validators.required], // Initialize to one month back
+      startDate: [oneWeekAgoFormatted, Validators.required], // Initialize to one week back
       endDate: [todayFormatted, Validators.required] // Initialize to current date
     });
 
@@ -67,7 +68,7 @@ export class DashboardComponent implements OnInit {
     this.loadCategories();
 
     // Initialize date range subjects with calculated dates
-    this._startDate$.next(oneMonthAgoFormatted);
+    this._startDate$.next(oneWeekAgoFormatted); // Use oneWeekAgoFormatted
     this._endDate$.next(todayFormatted);
 
 
@@ -136,6 +137,44 @@ export class DashboardComponent implements OnInit {
       })
     );
 
+    // Calculate daily total expenses by category and currency
+    this.dailyTotalsByCategoryAndCurrency$ = combineLatest([
+      this.expenses$,
+      this._startDate$,
+      this._endDate$,
+      this._activeCurrencyFilter$,
+      this._activeCategoryFilter$
+    ]).pipe(
+      map(([expenses, startDate, endDate, activeCurrency, activeCategory]) => {
+        let filteredExpenses = expenses.filter(expense => {
+          const expenseDate = new Date(expense.date);
+          const start = new Date(startDate);
+          const end = new Date(endDate);
+          return expenseDate >= start && expenseDate <= end;
+        });
+
+        if (activeCurrency) {
+          filteredExpenses = filteredExpenses.filter(expense => expense.currency === activeCurrency);
+        }
+
+        if (activeCategory) {
+          filteredExpenses = filteredExpenses.filter(expense => expense.category === activeCategory);
+        }
+
+        return filteredExpenses.reduce((acc, expense) => {
+          const expenseDate = this.datePipe.transform(expense.date, 'yyyy-MM-dd') || '';
+          if (!acc[expense.category]) {
+            acc[expense.category] = {};
+          }
+          if (!acc[expense.category][expenseDate]) {
+            acc[expense.category][expenseDate] = {};
+          }
+          acc[expense.category][expenseDate][expense.currency] = (acc[expense.category][expenseDate][expense.currency] || 0) + expense.totalCost;
+          return acc;
+        }, {} as { [category: string]: { [date: string]: { [currency: string]: number } } });
+      })
+    );
+
 
     // Set default language
     const storedLang = localStorage.getItem('selectedLanguage');
@@ -173,17 +212,17 @@ export class DashboardComponent implements OnInit {
 
   resetFilter(): void {
     const today = new Date();
-    const oneMonthAgo = new Date();
-    oneMonthAgo.setMonth(today.getMonth() - 1);
+    const oneWeekAgo = new Date(); // Change from oneMonthAgo to oneWeekAgo
+    oneWeekAgo.setDate(today.getDate() - 7); // Set date back by 7 days
 
     const todayFormatted = this.datePipe.transform(today, 'yyyy-MM-dd') || '';
-    const oneMonthAgoFormatted = this.datePipe.transform(oneMonthAgo, 'yyyy-MM-dd') || '';
+    const oneWeekAgoFormatted = this.datePipe.transform(oneWeekAgo, 'yyyy-MM-dd') || ''; // Use oneWeekAgoFormatted
 
     this.dateRangeForm.patchValue({
-      startDate: oneMonthAgoFormatted,
+      startDate: oneWeekAgoFormatted,
       endDate: todayFormatted
     });
-    this._startDate$.next(oneMonthAgoFormatted);
+    this._startDate$.next(oneWeekAgoFormatted);
     this._endDate$.next(todayFormatted);
     this.resetActiveFilters();
   }
@@ -214,5 +253,9 @@ export class DashboardComponent implements OnInit {
     const formattedAmount = new Intl.NumberFormat(this.translate.currentLang, options).format(amount);
     const symbol = this.currencySymbols[currencyCode] || currencyCode;
     return `${formattedAmount}${symbol}`; // Removed space as per user's "no space" request
+  }
+
+  formatDailyDate(dateString: string): string {
+    return this.datePipe.transform(dateString, 'mediumDate') || dateString;
   }
 }
