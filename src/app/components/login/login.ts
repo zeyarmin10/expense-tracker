@@ -41,7 +41,7 @@ export class LoginComponent implements OnInit {
       name: ['']
     });
 
-    this.translate.addLangs(['en', 'my']);
+    this.translate.addLangs(['my', 'en']);
     // Set default language preference
     const storedLang = localStorage.getItem('selectedLanguage');
     if (storedLang && this.translate.getLangs().includes(storedLang)) {

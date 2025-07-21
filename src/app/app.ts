@@ -28,12 +28,11 @@ export class App {
 
   constructor() {
     // Set default language and add languages
-    this.translateService.addLangs(['en', 'my']);
+    this.translateService.addLangs(['my', 'en']);
     this.translateService.setDefaultLang('my');
 
-    // Attempt to use the browser's language, or fall back to default
-    const browserLang = this.translateService.getBrowserLang();
-    this.translateService.use(browserLang?.match(/en|my/) ? browserLang : 'en');
+    // Force use 'my' as the initial language
+    this.translateService.use('my');
   }
 
   async logout(): Promise<void> {

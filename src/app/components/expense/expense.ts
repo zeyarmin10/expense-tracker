@@ -1,23 +1,46 @@
-import { Component, OnInit, inject, ViewChild, ChangeDetectorRef } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  inject,
+  ViewChild,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  Validators,
+  ReactiveFormsModule,
+} from '@angular/forms';
 import { ServiceIExpense, ExpenseService } from '../../services/expense';
 import { ServiceICategory, CategoryService } from '../../services/category';
 import { Observable } from 'rxjs';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faPlus, faEdit, faTrash, faSave, faTimes } from '@fortawesome/free-solid-svg-icons';
+import {
+  faPlus,
+  faEdit,
+  faTrash,
+  faSave,
+  faTimes,
+} from '@fortawesome/free-solid-svg-icons';
 
 import { CategoryModalComponent } from '../common/category-modal/category-modal';
 
 @Component({
   selector: 'app-expense',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FontAwesomeModule, CategoryModalComponent, TranslateModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    FontAwesomeModule,
+    CategoryModalComponent,
+    TranslateModule,
+  ],
   providers: [DatePipe],
   templateUrl: './expense.html',
-  styleUrls: ['./expense.css']
+  styleUrls: ['./expense.css'],
 })
 export class Expense implements OnInit {
   @ViewChild(CategoryModalComponent) categoryModal!: CategoryModalComponent;
@@ -52,7 +75,7 @@ export class Expense implements OnInit {
       quantity: [1, [Validators.required, Validators.min(1)]],
       unit: ['', Validators.required],
       price: [0, [Validators.required, Validators.min(0)]],
-      currency: ['MMK', Validators.required]
+      currency: ['MMK', Validators.required],
     });
 
     this.expenses$ = this.expenseService.getExpenses();
@@ -64,7 +87,9 @@ export class Expense implements OnInit {
       this.translate.use(storedLang);
     } else {
       const browserLang = this.translate.getBrowserLang();
-      this.translate.use(browserLang && browserLang.match(/en|my/) ? browserLang : 'en');
+      this.translate.use(
+        browserLang && browserLang.match(/my|en/) ? browserLang : 'my'
+      );
     }
   }
 
@@ -103,7 +128,8 @@ export class Expense implements OnInit {
       const today = this.datePipe.transform(new Date(), 'yyyy-MM-dd');
       this.newExpenseForm.patchValue({ date: today, currency: 'MMK' });
     } catch (error: any) {
-      this.errorMessage = error.message || this.translate.instant('EXPENSE_ERROR_ADD'); // <== Translated
+      this.errorMessage =
+        error.message || this.translate.instant('EXPENSE_ERROR_ADD'); // <== Translated
       console.error('New expense save error:', error);
     }
     this.cdr.detectChanges(); // Force update after submit
@@ -119,7 +145,7 @@ export class Expense implements OnInit {
       quantity: [expense.quantity, [Validators.required, Validators.min(1)]],
       unit: [expense.unit, Validators.required],
       price: [expense.price, [Validators.required, Validators.min(0)]],
-      currency: [expense.currency || 'MMK', Validators.required]
+      currency: [expense.currency || 'MMK', Validators.required],
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
     this.cdr.detectChanges(); // Force update
@@ -128,20 +154,28 @@ export class Expense implements OnInit {
   async saveEdit(): Promise<void> {
     this.clearMessages();
     if (this.editingForm && this.editingForm.invalid) {
-      this.errorMessage = this.translate.instant('EXPENSE_ERROR_EDIT_FORM_INVALID'); // <== Translated
+      this.errorMessage = this.translate.instant(
+        'EXPENSE_ERROR_EDIT_FORM_INVALID'
+      ); // <== Translated
       return;
     }
     if (!this.editingForm || !this.editingExpenseId) {
-      this.errorMessage = this.translate.instant('EXPENSE_ERROR_NO_EXPENSE_SELECTED'); // <== Translated
+      this.errorMessage = this.translate.instant(
+        'EXPENSE_ERROR_NO_EXPENSE_SELECTED'
+      ); // <== Translated
       return;
     }
 
     try {
-      await this.expenseService.updateExpense(this.editingExpenseId, this.editingForm.value);
+      await this.expenseService.updateExpense(
+        this.editingExpenseId,
+        this.editingForm.value
+      );
       this.successMessage = this.translate.instant('EXPENSE_SUCCESS_UPDATED'); // <== Translated
       this.cancelEdit();
     } catch (error: any) {
-      this.errorMessage = error.message || this.translate.instant('EXPENSE_ERROR_UPDATE'); // <== Translated
+      this.errorMessage =
+        error.message || this.translate.instant('EXPENSE_ERROR_UPDATE'); // <== Translated
       console.error('Expense update error:', error);
     }
     this.cdr.detectChanges(); // Force update
@@ -156,15 +190,17 @@ export class Expense implements OnInit {
 
   async onDelete(expenseId: string): Promise<void> {
     this.clearMessages();
-    if (confirm(this.translate.instant('EXPENSE_CONFIRM_DELETE'))) { // <== Translated confirm message
+    if (confirm(this.translate.instant('EXPENSE_CONFIRM_DELETE'))) {
+      // <== Translated confirm message
       try {
         await this.expenseService.deleteExpense(expenseId);
         this.successMessage = this.translate.instant('EXPENSE_SUCCESS_DELETED'); // <== Translated
         if (this.editingExpenseId === expenseId) {
-            this.cancelEdit();
+          this.cancelEdit();
         }
       } catch (error: any) {
-        this.errorMessage = error.message || this.translate.instant('EXPENSE_ERROR_DELETE'); // <== Translated
+        this.errorMessage =
+          error.message || this.translate.instant('EXPENSE_ERROR_DELETE'); // <== Translated
         console.error('Expense delete error:', error);
       }
     }

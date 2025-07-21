@@ -5,14 +5,6 @@
       <div class="card shadow-lg p-4">
         <div class="language-switcher">
             <button
-            class="btn btn-link p-0"
-            (click)="switchLanguage('my')"
-            [ngClass]="{'active': currentLang === 'my'}"
-            aria-label="Switch to Burmese"
-          >
-            <img src="assets/flags/mm.png" alt="Myanmar Flag" class="flag-icon" />
-          </button>
-          <button
             class="btn btn-link p-0 me-1"
             (click)="switchLanguage('en')"
             [ngClass]="{'active': currentLang === 'en'}"
@@ -20,7 +12,14 @@
           >
             <img src="assets/flags/en.png" alt="English Flag" class="flag-icon" />
           </button>
-          
+            <button
+            class="btn btn-link p-0"
+            (click)="switchLanguage('my')"
+            [ngClass]="{'active': currentLang === 'my'}"
+            aria-label="Switch to Burmese"
+          >
+            <img src="assets/flags/mm.png" alt="Myanmar Flag" class="flag-icon" />
+          </button>
         </div>
         <h2 class="card-title text-center mb-4">
           {{ isLoginMode ? ('LOGIN_TITLE' | translate) : ('REGISTER_TITLE' | translate) }}
