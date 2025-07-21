@@ -51,12 +51,10 @@ export class Expense implements OnInit {
   expenses$: Observable<ServiceIExpense[]>;
   categories$: Observable<ServiceICategory[]> | undefined;
 
-  // New BehaviorSubjects for filtering and active total filter
   private _selectedDate$ = new BehaviorSubject<string>('');
   private _activeCurrencyFilter$ = new BehaviorSubject<string | null>(null);
   private _activeCategoryFilter$ = new BehaviorSubject<string | null>(null);
 
-  // Observables for displayed data and totals
   displayedExpenses$: Observable<ServiceIExpense[]>;
   totalExpensesByCurrency$: Observable<{ [key: string]: number }>;
   totalExpensesByCategoryAndCurrency$: Observable<{ [category: string]: { [currency: string]: number } }>;
@@ -78,6 +76,19 @@ export class Expense implements OnInit {
   faSave = faSave;
   faTimes = faTimes;
 
+  currencySymbols: { [key: string]: string } = {
+    MMK: 'Ks',
+    USD: '$',
+    THB: '฿'
+  };
+
+  availableCurrencies = [
+    { code: 'MMK', symbol: 'Ks' },
+    { code: 'USD', symbol: '$' },
+    { code: 'THB', symbol: '฿' }
+  ];
+
+
   constructor(private fb: FormBuilder) {
     const todayFormatted = this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
 
@@ -89,14 +100,12 @@ export class Expense implements OnInit {
       unit: ['', Validators.required],
       price: [0, [Validators.required, Validators.min(0)]],
       currency: ['MMK', Validators.required],
-      // THIS IS THE LINE THAT NEEDS TO BE ADDED/UPDATED:
-      selectedDate: [todayFormatted], // Initialize date picker with today's date
+      selectedDate: [todayFormatted],
     });
 
     this.expenses$ = this.expenseService.getExpenses();
     this.loadCategories();
 
-    // Combine all relevant observables to get the final displayed expenses
     this.displayedExpenses$ = combineLatest([
       this.expenses$,
       this._selectedDate$,
@@ -105,24 +114,21 @@ export class Expense implements OnInit {
     ]).pipe(
       map(([expenses, selectedDate, activeCurrency, activeCategory]) => {
         let filtered = expenses.filter(expense => {
-          // Filter by selected date
           return expense.date === selectedDate;
         });
 
-        // Apply currency filter if active
         if (activeCurrency) {
           filtered = filtered.filter(expense => expense.currency === activeCurrency);
         }
 
-        // Apply category filter if active
         if (activeCategory) {
           filtered = filtered.filter(expense => expense.category === activeCategory);
         }
-        return filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()); // Sort by creation date descending
+        // MODIFIED: Sort by creation date descending to display the latest content first
+        return filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       })
     );
 
-    // Calculate total expenses by currency for the selected date
     this.totalExpensesByCurrency$ = combineLatest([
       this.expenses$,
       this._selectedDate$
@@ -136,7 +142,6 @@ export class Expense implements OnInit {
       })
     );
 
-    // Calculate total expenses by category and currency for the selected date
     this.totalExpensesByCategoryAndCurrency$ = combineLatest([
       this.expenses$,
       this._selectedDate$
@@ -153,7 +158,6 @@ export class Expense implements OnInit {
       })
     );
 
-    // Set default language
     const storedLang = localStorage.getItem('selectedLanguage');
     if (storedLang) {
       this.translate.use(storedLang);
@@ -166,7 +170,6 @@ export class Expense implements OnInit {
   }
 
   ngOnInit(): void {
-    // Set the initial selected date for filtering
     this.applyDateFilter();
   }
 
@@ -184,6 +187,24 @@ export class Expense implements OnInit {
     this.cdr.detectChanges();
   }
 
+  formatAmountWithSymbol(amount: number, currencyCode: string): string {
+    let options: Intl.NumberFormatOptions = {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    };
+
+    if (currencyCode === 'MMK') {
+      options = {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      };
+    }
+
+    const formattedAmount = new Intl.NumberFormat(this.translate.currentLang, options).format(amount);
+    const symbol = this.currencySymbols[currencyCode] || currencyCode;
+    return `${formattedAmount} ${symbol}`;
+  }
+
   async onSubmitNewExpense(): Promise<void> {
     this.clearMessages();
     if (this.newExpenseForm.invalid) {
@@ -198,9 +219,8 @@ export class Expense implements OnInit {
       this.successMessage = this.translate.instant('EXPENSE_SUCCESS_ADDED');
       this.newExpenseForm.reset();
       const todayFormatted = this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
-      // Ensure selectedDate is also reset to today
       this.newExpenseForm.patchValue({ date: todayFormatted, currency: 'MMK', selectedDate: todayFormatted });
-      this.resetFilter(); // Reset filters after adding a new expense
+      this.resetFilter();
     } catch (error: any) {
       this.errorMessage =
         error.message || this.translate.instant('EXPENSE_ERROR_ADD');
@@ -213,7 +233,7 @@ export class Expense implements OnInit {
     const selectedDate = this.newExpenseForm.get('selectedDate')?.value;
     if (selectedDate) {
       this._selectedDate$.next(selectedDate);
-      this.resetActiveFilters(); // Reset active filters when date changes
+      this.resetActiveFilters();
     }
   }
 
@@ -223,7 +243,6 @@ export class Expense implements OnInit {
   }
 
   resetFilter(): void {
-    // Reset date to today and clear active filters
     const todayFormatted = this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
     this.newExpenseForm.patchValue({ selectedDate: todayFormatted });
     this._selectedDate$.next(todayFormatted);
@@ -231,12 +250,12 @@ export class Expense implements OnInit {
   }
 
   filterByCurrency(currency: string): void {
-    this._activeCategoryFilter$.next(null); // Clear category filter
+    this._activeCategoryFilter$.next(null);
     this._activeCurrencyFilter$.next(currency);
   }
 
   filterByCategory(category: string): void {
-    this._activeCurrencyFilter$.next(null); // Clear currency filter
+    this._activeCurrencyFilter$.next(null);
     this._activeCategoryFilter$.next(category);
   }
 
@@ -279,7 +298,7 @@ export class Expense implements OnInit {
       );
       this.successMessage = this.translate.instant('EXPENSE_SUCCESS_UPDATED');
       this.cancelEdit();
-      this.applyDateFilter(); // Re-apply filter after saving edit
+      this.applyDateFilter();
     } catch (error: any) {
       this.errorMessage =
         error.message || this.translate.instant('EXPENSE_ERROR_UPDATE');
@@ -304,7 +323,7 @@ export class Expense implements OnInit {
         if (this.editingExpenseId === expenseId) {
           this.cancelEdit();
         }
-        this.applyDateFilter(); // Re-apply filter after deleting expense
+        this.applyDateFilter();
       } catch (error: any) {
         this.errorMessage =
           error.message || this.translate.instant('EXPENSE_ERROR_DELETE');

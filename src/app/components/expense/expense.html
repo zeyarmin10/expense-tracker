@@ -172,9 +172,7 @@
                   [attr.aria-labe]="'EXPENSE_CURRENCY_LABEL' | translate"
                 >
                   <option value="" disabled>{{ 'EXPENSE_CURRENCY_SELECT' | translate }}</option>
-                  <option value="MMK">MMK</option>
-                  <option value="USD">USD</option>
-                  <option value="THB">THB</option>
+                  <option *ngFor="let curr of availableCurrencies" [value]="curr.code">{{ curr.symbol }}</option>
                 </select>
               </div>
               <div
@@ -215,7 +213,7 @@
             </button>
           </div>
 
-          <hr class="my-4" />
+                  <hr class="my-4" />
 
             <div class="row g-2 mb-4 align-items-end justify-content-between">
                 <div class="col-8 col-sm-6 col-md-4">
@@ -237,6 +235,8 @@
 
         </form>
 
+
+
         <div class="d-flex flex-wrap gap-2 mb-4">
           <ng-container *ngIf="(totalExpensesByCurrency$ | async) as totals">
             <div *ngIf="(totals | keyvalue).length > 0; else noTotals">
@@ -248,7 +248,7 @@
                         (click)="filterByCurrency(total.key)"
                     >
                         <strong>{{ 'TOTAL_FOR_CURRENCY' | translate: {currency: total.key} }}:</strong>
-                        {{ total.value | currency:total.key:'symbol':'1.0-2' }}
+                        {{ formatAmountWithSymbol(total.value, total.key) }}
                     </button>
                 </div>
             </div>
@@ -265,7 +265,7 @@
                     >
                         <ng-container *ngFor="let currencyTotal of (categoryTotal.value | keyvalue)">
                             {{ 'TOTAL_FOR_CATEGORY_CURRENCY' | translate: {category: categoryTotal.key, currency: currencyTotal.key} }}:
-                            {{ currencyTotal.value | currency:currencyTotal.key:'symbol':'1.0-2' }}
+                            {{ formatAmountWithSymbol(currencyTotal.value, currencyTotal.key) }}
                         </ng-container>
                     </button>
                 </div>
@@ -309,8 +309,8 @@
                   <td>{{ expense.category }}</td>
                   <td>{{ expense.itemName }}</td>
                   <td>{{ expense.quantity }} {{ expense.unit }}</td>
-                  <td>{{ expense.price | currency:expense.currency:'symbol':'1.0-2' }}</td>
-                  <td class="fw-bold">{{ expense.totalCost | currency:expense.currency:'symbol':'1.0-2' }}</td>
+                  <td>{{ formatAmountWithSymbol(expense.price, expense.currency) }}</td>
+                  <td class="fw-bold">{{ formatAmountWithSymbol(expense.totalCost, expense.currency) }}</td>
                   <td class="text-end">
                     <button
                       class="btn btn-sm btn-outline-info me-2 edit-btn"
@@ -360,14 +360,12 @@
                       [class.is-invalid]="editingForm.controls['price'].invalid && editingForm.controls['price'].touched" />
                       <select class="form-select" formControlName="currency" style="max-width: 30%;"
                       [class.is-invalid]="editingForm.controls['currency'].invalid && editingForm.controls['currency'].touched" >
-                        <option value="MMK">MMK</option>
-                        <option value="USD">USD</option>
-                        <option value="THB">THB</option>
+                        <option *ngFor="let curr of availableCurrencies" [value]="curr.code">{{ curr.symbol }}</option>
                       </select>
                     </div>
                   </td>
                   <td class="fw-bold">
-                    {{ editingForm.value.price * editingForm.value.quantity | currency:editingForm.value.currency:'symbol':'1.0-2' }}
+                    {{ formatAmountWithSymbol(editingForm.value.price * editingForm.value.quantity, editingForm.value.currency) }}
                   </td>
                   <td class="text-end">
                     <button
