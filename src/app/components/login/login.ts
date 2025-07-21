@@ -173,4 +173,16 @@ export class LoginComponent implements OnInit {
         this.errorMessage = this.translate.instant('ERROR_GOOGLE_SIGNIN_FAILED');
       });
   }
+
+  /**
+   * Toggles the active language between 'my' (Burmese) and 'en' (English).
+   */
+  toggleLanguage(): void {
+    const newLang = this.currentLang === 'my' ? 'en' : 'my';
+    this.translate.use(newLang).subscribe(() => {
+      this.currentLang = newLang; // Update currentLang after successful language change
+      localStorage.setItem('selectedLanguage', newLang); // Persist the selected language
+      this.cdr.detectChanges(); // Manually trigger change detection to update view
+    });
+  }
 }
