@@ -7,11 +7,14 @@ import { Observable, BehaviorSubject, combineLatest, map } from 'rxjs';
 import { ServiceIExpense, ExpenseService } from '../../services/expense';
 import { ServiceICategory, CategoryService } from '../../services/category';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { faSync } from '@fortawesome/free-solid-svg-icons';
+
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslateModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslateModule, FontAwesomeModule],
   providers: [DatePipe],
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.css']
@@ -24,6 +27,7 @@ export class DashboardComponent implements OnInit {
   datePipe = inject(DatePipe);
   translate = inject(TranslateService);
   private cdr = inject(ChangeDetectorRef);
+  faSync = faSync;
 
   dateRangeForm: FormGroup;
 
@@ -37,6 +41,7 @@ export class DashboardComponent implements OnInit {
 
   totalExpensesByCurrency$: Observable<{ [key: string]: number }>;
   totalExpensesByCategoryAndCurrency$: Observable<{ [category: string]: { [currency: string]: number } }>;
+
 
   currencySymbols: { [key: string]: string } = {
     MMK: 'Ks',
@@ -130,6 +135,7 @@ export class DashboardComponent implements OnInit {
         }, {} as { [category: string]: { [currency: string]: number } });
       })
     );
+
 
     // Set default language
     const storedLang = localStorage.getItem('selectedLanguage');

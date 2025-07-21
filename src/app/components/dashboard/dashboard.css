@@ -62,9 +62,12 @@
 
 /* Ensure the reset button is compact */
 .reset-filter-button {
-  flex-grow: 0;
-  flex-shrink: 0;
-  white-space: nowrap; /* Prevent button text from wrapping */
+  /* flex-grow: 0;
+  flex-shrink: 0; */
+  /* white-space: nowrap; Prevent button text from wrapping */
+  max-width: fit-content;
+  margin-left: 1rem;
+  margin-top: 1rem !important;
 }
 
 /* For larger screens (web views), refine width and alignment */
@@ -78,12 +81,31 @@
 }
 
 
+/* For larger screens (web views), refine width and alignment */
+@media (max-width: 768px) {
+    .total-btn {
+        /* Make buttons full width within their flex-column parent, and left-aligned */
+        width: 100%;
+        padding: 0.7rem 1rem !important;
+        text-align: left !important; /* Force text alignment to left */
+        min-width: unset; /* Remove min-width to allow content to define width */
+    }
+}
+
 /* General styling for total buttons, adjust as needed */
 .total-btn {
-  /* Make buttons full width within their flex-column parent, and left-aligned */
-  width: 100%;
   text-align: left !important; /* Force text alignment to left */
   min-width: unset; /* Remove min-width to allow content to define width */
+  pointer-events: cursor !important;
+}
+
+.all-total {
+    font-size: 1.1rem;
+    padding: 0.6rem 1rem !important;
+}
+.cat-total {
+    font-size: 1.05rem;
+    font-weight: lighter;
 }
 
 /* Specific adjustments for the summary content container */

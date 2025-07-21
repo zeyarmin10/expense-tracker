@@ -272,7 +272,6 @@ export class Expense implements OnInit {
       price: [expense.price, [Validators.required, Validators.min(0)]],
       currency: [expense.currency || 'MMK', Validators.required],
     });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
     this.cdr.detectChanges();
   }
 

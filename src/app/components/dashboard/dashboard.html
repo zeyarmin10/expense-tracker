@@ -1,86 +1,73 @@
 <div class="container mt-5">
-  <div class="card shadow-lg p-4 text-center">
-    <h2 class="card-title mb-4">{{ 'DASHBOARD_WELCOME' | translate }}</h2>
+    <div class="card shadow-lg p-4 text-center">
+        <h2 class="card-title mb-4">{{ 'DASHBOARD_WELCOME' | translate }}</h2>
 
-    <form [formGroup]="dateRangeForm" (ngSubmit)="applyDateFilter()" class="mb-4">
-      <div class="d-flex flex-wrap align-items-end justify-content-center date-filter-row">
+        <form [formGroup]="dateRangeForm" (ngSubmit)="applyDateFilter()" class="mb-4">
+            <div class="d-flex flex-wrap align-items-end justify-content-center date-filter-row">
 
-        <div class="d-flex flex-grow-1 flex-shrink-1 date-inputs-wrapper">
-            <div class="date-input-group">
-            <input
-                type="date"
-                class="form-control"
-                id="startDate"
-                formControlName="startDate"
-                (change)="applyDateFilter()"
-                [attr.aria-label]="'DASHBOARD_START_DATE_LABEL' | translate"
-            />
+                <div class="d-flex flex-grow-1 flex-shrink-1 date-inputs-wrapper">
+                    <div class="date-input-group">
+                        <input type="date" class="form-control" id="startDate" formControlName="startDate"
+                            (change)="applyDateFilter()" [attr.aria-label]="'DASHBOARD_START_DATE_LABEL' | translate" />
+                    </div>
+
+                    <div class="date-input-group">
+                        <input type="date" class="form-control" id="endDate" formControlName="endDate"
+                            (change)="applyDateFilter()" [attr.aria-label]="'DASHBOARD_END_DATE_LABEL' | translate" />
+                    </div>
+                </div>
+            </div>
+        </form>
+
+
+        <div class="row">
+            <div class="d-flex flex-column align-items-start gap-2 mb-4 total-expenses-summary-content">
+                <div class="d-flex align-items-start">
+                    <h3 class="h5 mt-4 mb-3 text-start">{{ 'DASHBOARD_TOTAL_EXPENSES_SUMMARY' | translate }}</h3>
+                    <button type="button" class="btn btn-outline-secondary reset-filter-button" (click)="resetFilter()">
+                        <fa-icon [icon]="faSync"></fa-icon>
+                    </button>
+                </div>
+                <ng-container *ngIf="(totalExpensesByCurrency$ | async) as totals">
+                    <div *ngIf="(totals | keyvalue).length > 0; else noTotals" class="w-100">
+                        <div class="d-flex flex-column align-items-start gap-1">
+                            <div class="badge bg-primary text-white p-2 border-0 total-btn text-start all-total"
+                                *ngFor="let total of (totals | keyvalue)" (click)="filterByCurrency(total.key)">
+                                <strong>{{ 'TOTAL_FOR_CURRENCY' | translate: {currency: total.key} }}:</strong>
+                                {{ formatAmountWithSymbol(total.value, total.key) }}
+                            </div>
+                        </div>
+                    </div>
+                </ng-container>
+
+                <ng-container *ngIf="(totalExpensesByCategoryAndCurrency$ | async) as categoryTotals">
+                    <div *ngIf="(categoryTotals | keyvalue).length > 0; else noCategoryTotals" class="w-100 mt-2">
+                        <div class="d-flex flex-column align-items-start gap-1">
+                            <div class="badge bg-secondary text-white p-2 border-0 total-btn text-start cat-total"
+                                *ngFor="let categoryTotal of (categoryTotals | keyvalue)"
+                                (click)="filterByCategory(categoryTotal.key)">
+                                <ng-container *ngFor="let currencyTotal of (categoryTotal.value | keyvalue)">
+                                    {{ 'TOTAL_FOR_CATEGORY_CURRENCY' | translate: {category: categoryTotal.key,
+                                    currency: currencyTotal.key} }}:
+                                    {{ formatAmountWithSymbol(currencyTotal.value, currencyTotal.key) }}
+                                </ng-container>
+                            </div>
+                        </div>
+                    </div>
+                </ng-container>
+
+                <ng-template #noTotals>
+                    <div class="alert alert-info text-start w-100">
+                        {{ 'NO_TOTALS_FOR_DATE_RANGE' | translate }}
+                    </div>
+                </ng-template>
+                <ng-template #noCategoryTotals>
+                    <div class="alert alert-info text-start w-100">
+                        {{ 'NO_CATEGORY_TOTALS_FOR_DATE_RANGE' | translate }}
+                    </div>
+                </ng-template>
             </div>
 
-            <div class="date-input-group">
-            <input
-                type="date"
-                class="form-control"
-                id="endDate"
-                formControlName="endDate"
-                (change)="applyDateFilter()"
-                [attr.aria-label]="'DASHBOARD_END_DATE_LABEL' | translate"
-            />
-            </div>
         </div>
-
-        <button type="button" class="btn btn-outline-secondary reset-filter-button" (click)="resetFilter()">
-          {{ 'RESET_FILTER_BUTTON' | translate }}
-        </button>
-      </div>
-    </form>
-
-
-    <h3 class="h5 mt-4 mb-3 text-start">{{ 'DASHBOARD_TOTAL_EXPENSES_SUMMARY' | translate }}</h3>
-
-    <div class="d-flex flex-column align-items-start gap-2 mb-4 total-expenses-summary-content">
-      <ng-container *ngIf="(totalExpensesByCurrency$ | async) as totals">
-        <div *ngIf="(totals | keyvalue).length > 0; else noTotals" class="w-100">
-          <div class="d-flex flex-column align-items-start gap-1">
-            <div
-              class="badge bg-primary text-white p-2 border-0 total-btn text-start"
-              *ngFor="let total of (totals | keyvalue)"
-              (click)="filterByCurrency(total.key)"
-            >
-              <strong>{{ 'TOTAL_FOR_CURRENCY' | translate: {currency: total.key} }}:</strong>
-              {{ formatAmountWithSymbol(total.value, total.key) }}
-            </div>
-          </div>
-        </div>
-      </ng-container>
-
-      <ng-container *ngIf="(totalExpensesByCategoryAndCurrency$ | async) as categoryTotals">
-        <div *ngIf="(categoryTotals | keyvalue).length > 0; else noCategoryTotals" class="w-100 mt-2">
-          <div class="d-flex flex-column align-items-start gap-1">
-            <div
-              class="badge bg-secondary text-white p-2 border-0 total-btn text-start"
-              *ngFor="let categoryTotal of (categoryTotals | keyvalue)"
-              (click)="filterByCategory(categoryTotal.key)"
-            >
-              <ng-container *ngFor="let currencyTotal of (categoryTotal.value | keyvalue)">
-                {{ 'TOTAL_FOR_CATEGORY_CURRENCY' | translate: {category: categoryTotal.key, currency: currencyTotal.key} }}:
-                {{ formatAmountWithSymbol(currencyTotal.value, currencyTotal.key) }}
-              </ng-container>
-            </div>
-          </div>
-        </div>
-      </ng-container>
-
-      <ng-template #noTotals>
-        <div class="alert alert-info text-start w-100">
-            {{ 'NO_TOTALS_FOR_DATE_RANGE' | translate }}
-        </div>
-      </ng-template>
-      <ng-template #noCategoryTotals>
-        <div class="alert alert-info text-start w-100">
-            {{ 'NO_CATEGORY_TOTALS_FOR_DATE_RANGE' | translate }}
-        </div>
-      </ng-template>
     </div>
-  </div>
 </div>
