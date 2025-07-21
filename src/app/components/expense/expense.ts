@@ -24,7 +24,9 @@ import {
   faTrash,
   faSave,
   faTimes,
+  faSync
 } from '@fortawesome/free-solid-svg-icons';
+
 
 import { CategoryModalComponent } from '../common/category-modal/category-modal';
 
@@ -58,6 +60,8 @@ export class Expense implements OnInit {
   displayedExpenses$: Observable<ServiceIExpense[]>;
   totalExpensesByCurrency$: Observable<{ [key: string]: number }>;
   totalExpensesByCategoryAndCurrency$: Observable<{ [category: string]: { [currency: string]: number } }>;
+
+  faSync = faSync;
 
 
   expenseService = inject(ExpenseService);

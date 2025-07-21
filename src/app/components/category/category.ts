@@ -5,26 +5,28 @@ import { ServiceICategory, CategoryService } from '../../services/category';
 import { Observable } from 'rxjs';
 
 // Font Awesome Imports
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome'; // Import FontAwesomeModule
-import { faPlus, faEdit, faTrash, faSave, faTimes } from '@fortawesome/free-solid-svg-icons'; // Import specific icons
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { faPlus, faEdit, faTrash, faSave, faTimes } from '@fortawesome/free-solid-svg-icons';
+
+import { TranslateService, TranslateModule } from '@ngx-translate/core'; // Import TranslateService and TranslateModule
 
 @Component({
   selector: 'app-category',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FontAwesomeModule], // Add FontAwesomeModule
+  imports: [CommonModule, ReactiveFormsModule, FontAwesomeModule, TranslateModule], // Add TranslateModule here
   templateUrl: './category.html',
   styleUrls: ['./category.css']
 })
-export class Category implements OnInit { // Renamed from CategoryComponent to Category as per app.routes.ts
+export class Category implements OnInit {
   categoryForm: FormGroup;
   categories$: Observable<ServiceICategory[]>;
   categoryService = inject(CategoryService);
+  translateService = inject(TranslateService); // Inject TranslateService
 
-  editingCategoryId: string | null = null; // To track which category is being edited
+  editingCategoryId: string | null = null;
   errorMessage: string | null = null;
   successMessage: string | null = null;
 
-  // Font Awesome Icons
   faPlus = faPlus;
   faEdit = faEdit;
   faTrash = faTrash;
@@ -50,7 +52,10 @@ export class Category implements OnInit { // Renamed from CategoryComponent to C
   async onSubmit(): Promise<void> {
     this.clearMessages();
     if (this.categoryForm.invalid) {
-      this.errorMessage = 'Category name ကို ဖြည့်ရန် လိုအပ်ပါသည်။';
+      // Use translation key for error message
+      this.translateService.get('CATEGORY_NAME_REQUIRED').subscribe((res: string) => {
+        this.errorMessage = res;
+      });
       return;
     }
 
@@ -59,15 +64,21 @@ export class Category implements OnInit { // Renamed from CategoryComponent to C
     try {
       if (this.editingCategoryId) {
         await this.categoryService.updateCategory(this.editingCategoryId, categoryName);
-        this.successMessage = 'Category updated successfully!';
+        this.translateService.get('CATEGORY_UPDATED_SUCCESS').subscribe((res: string) => {
+          this.successMessage = res;
+        });
       } else {
         await this.categoryService.addCategory(categoryName);
-        this.successMessage = 'Category added successfully!';
+        this.translateService.get('CATEGORY_ADDED_SUCCESS').subscribe((res: string) => {
+          this.successMessage = res;
+        });
       }
       this.categoryForm.reset();
       this.editingCategoryId = null; // Exit editing mode
     } catch (error: any) {
-      this.errorMessage = error.message || 'ဒေတာသိမ်းရာတွင် အမှားတစ်ခု ဖြစ်သွားသည်။';
+      this.translateService.get('DATA_SAVE_ERROR').subscribe((res: string) => {
+        this.errorMessage = error.message || res;
+      });
       console.error('Category save error:', error);
     }
   }
@@ -76,8 +87,7 @@ export class Category implements OnInit { // Renamed from CategoryComponent to C
     this.clearMessages();
     this.editingCategoryId = category.id!;
     this.categoryForm.patchValue({ name: category.name });
-    // Add this line to scroll to the top
-    window.scrollTo({ top: 0, behavior: 'smooth' }); //
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   cancelEdit(): void {
@@ -88,17 +98,23 @@ export class Category implements OnInit { // Renamed from CategoryComponent to C
 
   async onDelete(categoryId: string): Promise<void> {
     this.clearMessages();
-    if (confirm('Are you sure you want to delete this category? This cannot be undone.')) {
-      try {
-        await this.categoryService.deleteCategory(categoryId);
-        this.successMessage = 'Category deleted successfully!';
-        if (this.editingCategoryId === categoryId) {
-            this.cancelEdit(); // If deleted the one being edited, cancel edit mode
+    this.translateService.get('CONFIRM_DELETE_CATEGORY').subscribe(async (confirmMsg: string) => {
+      if (confirm(confirmMsg)) {
+        try {
+          await this.categoryService.deleteCategory(categoryId);
+          this.translateService.get('CATEGORY_DELETED_SUCCESS').subscribe((res: string) => {
+            this.successMessage = res;
+          });
+          if (this.editingCategoryId === categoryId) {
+              this.cancelEdit();
+          }
+        } catch (error: any) {
+          this.translateService.get('DATA_DELETE_ERROR').subscribe((res: string) => {
+            this.errorMessage = error.message || res;
+          });
+          console.error('Category delete error:', error);
         }
-      } catch (error: any) {
-        this.errorMessage = error.message || 'ဒေတာဖျက်ရာတွင် အမှားတစ်ခု ဖြစ်သွားသည်။';
-        console.error('Category delete error:', error);
       }
-    }
+    });
   }
 }

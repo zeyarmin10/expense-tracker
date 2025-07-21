@@ -3,18 +3,19 @@
     <div class="col-12 col-md-8 col-lg-6">
       <div class="card shadow-sm p-3 p-md-4">
         <h2 class="card-title text-center mb-4">
-          {{ editingCategoryId ? 'Edit Category' : 'Create Category' }} (အမျိုးအစား)
+          {{ editingCategoryId ? ('EDIT_CATEGORY_TITLE' | translate) : ('CREATE_CATEGORY_TITLE' | translate) }}
+          <!-- ({{ 'CATEGORY_TERM' | translate }}) -->
         </h2>
 
         <form [formGroup]="categoryForm" (ngSubmit)="onSubmit()">
           <div class="mb-3">
-            <label for="categoryName" class="form-label">Category Name (အမျိုးအစား)</label>
+            <label for="categoryName" class="form-label">{{ 'CATEGORY_NAME_LABEL' | translate }} </label>
             <input
               type="text"
               class="form-control"
               id="categoryName"
               formControlName="name"
-              placeholder="e.g., အစားအသောက်"
+              placeholder="{{ 'CATEGORY_NAME_PLACEHOLDER' | translate }}"
               [class.is-invalid]="
                 categoryForm.controls['name'].invalid &&
                 categoryForm.controls['name'].touched
@@ -27,7 +28,7 @@
               "
               class="invalid-feedback"
             >
-              Category name is required.
+              {{ 'CATEGORY_NAME_REQUIRED' | translate }}
             </div>
           </div>
 
@@ -45,7 +46,7 @@
               [disabled]="categoryForm.invalid"
             >
               <fa-icon [icon]="editingCategoryId ? faSave : faPlus"></fa-icon>
-              {{ editingCategoryId ? ' Update' : ' Add' }} Category
+              {{ editingCategoryId ? ('UPDATE_CATEGORY_BUTTON' | translate) : ('ADD_CATEGORY_BUTTON' | translate) }}
             </button>
             <button
               *ngIf="editingCategoryId"
@@ -53,16 +54,16 @@
               class="btn btn-secondary"
               (click)="cancelEdit()"
             >
-              <fa-icon [icon]="faTimes"></fa-icon> Cancel
+              <fa-icon [icon]="faTimes"></fa-icon> {{ 'CANCEL_BUTTON' | translate }}
             </button>
           </div>
         </form>
 
         <hr class="my-4" />
 
-        <h3 class="h5 text-center mb-3">Existing Categories</h3>
+        <h3 class="h5 text-center mb-3">{{ 'EXISTING_CATEGORIES_TITLE' | translate }}</h3>
         <div *ngIf="(categories$ | async)?.length === 0" class="alert alert-info text-center">
-            No categories found. Add one above!
+            {{ 'NO_CATEGORIES_FOUND' | translate }}
         </div>
         <ul class="list-group">
           <li
@@ -75,14 +76,14 @@
                 class="btn btn-sm btn-outline-info me-2 edit-btn"
                 (click)="startEdit(category)"
                 [disabled]="editingCategoryId === category.id"
-                aria-label="Edit"
+                [attr.aria-label]="' EDIT_BUTTON_LABEL' | translate "
               >
                 <fa-icon [icon]="faEdit"></fa-icon>
               </button>
               <button
                 class="btn btn-sm btn-outline-danger"
                 (click)="onDelete(category.id!)"
-                aria-label="Delete"
+                [attr.aria-label]=" 'DELETE_BUTTON_LABEL' | translate "
               >
                 <fa-icon [icon]="faTrash"></fa-icon>
               </button>

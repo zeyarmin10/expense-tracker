@@ -96,7 +96,7 @@
 .total-btn {
   text-align: left !important; /* Force text alignment to left */
   min-width: unset; /* Remove min-width to allow content to define width */
-  pointer-events: cursor !important;
+  cursor: pointer;
 }
 
 .all-total {

@@ -215,7 +215,7 @@
 
                   <hr class="my-4" />
 
-            <div class="row g-2 mb-4 align-items-end justify-content-between">
+            <div class="row g-2 mb-4 align-items-end">
                 <div class="col-8 col-sm-6 col-md-4">
                     <label for="selectedDate" class="form-label">{{ 'SELECT_DATE_LABEL' | translate }}</label>
                     <input
@@ -227,8 +227,8 @@
                     />
                 </div>
                 <div class="col-4 col-sm-6 col-md-3 d-grid mt-2 mt-md-0">
-                    <button type="button" class="btn btn-outline-secondary" (click)="resetFilter()">
-                        {{ 'RESET_FILTER_BUTTON' | translate }}
+                    <button type="button" class="btn btn-outline-secondary reset-filter-button" (click)="resetFilter()">
+                        <fa-icon [icon]="faSync"></fa-icon>
                     </button>
                 </div>
             </div>
@@ -243,7 +243,7 @@
                 <div class="d-flex flex-wrap gap-2">
                     <button
                         type="button"
-                        class="badge bg-primary text-white p-2 border-0 total-btn"
+                        class="badge bg-primary text-white p-2 border-0 total-btn mb-2"
                         *ngFor="let total of (totals | keyvalue)"
                         (click)="filterByCurrency(total.key)"
                     >
@@ -259,7 +259,7 @@
                 <div class="d-flex flex-wrap gap-2">
                     <button
                         type="button"
-                        class="badge bg-secondary text-white p-2 border-0 total-btn"
+                        class="badge bg-secondary text-white p-2 border-0 total-btn fw-light"
                         *ngFor="let categoryTotal of (categoryTotals | keyvalue)"
                         (click)="filterByCategory(categoryTotal.key)"
                     >

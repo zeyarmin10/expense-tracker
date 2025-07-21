@@ -103,6 +103,10 @@ fa-icon {
     vertical-align: -0.125em;
 }
 
+.reset-filter-button {
+    max-width: fit-content;
+}
+
 /* Styling for the total buttons/badges */
 .badge.bg-primary, .badge.bg-secondary {
     font-size: 0.9em;
