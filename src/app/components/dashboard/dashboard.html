@@ -1,26 +1,86 @@
 <div class="container mt-5">
   <div class="card shadow-lg p-4 text-center">
-    <h2 class="card-title mb-4">Welcome to your Dashboard!</h2>
+    <h2 class="card-title mb-4">{{ 'DASHBOARD_WELCOME' | translate }}</h2>
 
-    <ng-container *ngIf="authService.currentUser$ | async as user; else loadingUser">
-      <p class="lead">You are logged in as: <strong>{{ user.email }}</strong></p>
-      <p class="text-muted">Your User ID (UID): <code>{{ user.uid }}</code></p>
+    <form [formGroup]="dateRangeForm" (ngSubmit)="applyDateFilter()" class="mb-4">
+      <div class="d-flex flex-wrap align-items-end justify-content-center date-filter-row">
 
-      <div *ngIf="userProfile$ | async as profile; else loadingProfile" class="user-profile card p-3 mt-4 mb-4 bg-light">
-        <h3 class="card-subtitle mb-2 text-primary">Your Profile Data (from Realtime Database):</h3>
-        <p class="mb-1"><strong>Display Name:</strong> {{ profile?.displayName || 'N/A' }}</p>
-        <p class="mb-1"><strong>Email:</strong> {{ profile?.email || 'N/A' }}</p>
-        <p class="mb-0"><strong>Joined:</strong> {{ profile?.createdAt | date: 'mediumDate' }}</p>
-        <!-- Add more profile fields as needed -->
+        <div class="d-flex flex-grow-1 flex-shrink-1 date-inputs-wrapper">
+            <div class="date-input-group">
+            <input
+                type="date"
+                class="form-control"
+                id="startDate"
+                formControlName="startDate"
+                (change)="applyDateFilter()"
+                [attr.aria-label]="'DASHBOARD_START_DATE_LABEL' | translate"
+            />
+            </div>
+
+            <div class="date-input-group">
+            <input
+                type="date"
+                class="form-control"
+                id="endDate"
+                formControlName="endDate"
+                (change)="applyDateFilter()"
+                [attr.aria-label]="'DASHBOARD_END_DATE_LABEL' | translate"
+            />
+            </div>
+        </div>
+
+        <button type="button" class="btn btn-outline-secondary reset-filter-button" (click)="resetFilter()">
+          {{ 'RESET_FILTER_BUTTON' | translate }}
+        </button>
       </div>
-      <ng-template #loadingProfile>
-        <p class="text-info">Loading user profile from Realtime Database...</p>
-      </ng-template>
+    </form>
 
-      <button class="btn btn-danger mt-3" (click)="logout()">Logout</button>
-    </ng-container>
-    <ng-template #loadingUser>
-      <p class="text-info">Checking authentication status...</p>
-    </ng-template>
+
+    <h3 class="h5 mt-4 mb-3 text-start">{{ 'DASHBOARD_TOTAL_EXPENSES_SUMMARY' | translate }}</h3>
+
+    <div class="d-flex flex-column align-items-start gap-2 mb-4 total-expenses-summary-content">
+      <ng-container *ngIf="(totalExpensesByCurrency$ | async) as totals">
+        <div *ngIf="(totals | keyvalue).length > 0; else noTotals" class="w-100">
+          <div class="d-flex flex-column align-items-start gap-1">
+            <div
+              class="badge bg-primary text-white p-2 border-0 total-btn text-start"
+              *ngFor="let total of (totals | keyvalue)"
+              (click)="filterByCurrency(total.key)"
+            >
+              <strong>{{ 'TOTAL_FOR_CURRENCY' | translate: {currency: total.key} }}:</strong>
+              {{ formatAmountWithSymbol(total.value, total.key) }}
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
+      <ng-container *ngIf="(totalExpensesByCategoryAndCurrency$ | async) as categoryTotals">
+        <div *ngIf="(categoryTotals | keyvalue).length > 0; else noCategoryTotals" class="w-100 mt-2">
+          <div class="d-flex flex-column align-items-start gap-1">
+            <div
+              class="badge bg-secondary text-white p-2 border-0 total-btn text-start"
+              *ngFor="let categoryTotal of (categoryTotals | keyvalue)"
+              (click)="filterByCategory(categoryTotal.key)"
+            >
+              <ng-container *ngFor="let currencyTotal of (categoryTotal.value | keyvalue)">
+                {{ 'TOTAL_FOR_CATEGORY_CURRENCY' | translate: {category: categoryTotal.key, currency: currencyTotal.key} }}:
+                {{ formatAmountWithSymbol(currencyTotal.value, currencyTotal.key) }}
+              </ng-container>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
+      <ng-template #noTotals>
+        <div class="alert alert-info text-start w-100">
+            {{ 'NO_TOTALS_FOR_DATE_RANGE' | translate }}
+        </div>
+      </ng-template>
+      <ng-template #noCategoryTotals>
+        <div class="alert alert-info text-start w-100">
+            {{ 'NO_CATEGORY_TOTALS_FOR_DATE_RANGE' | translate }}
+        </div>
+      </ng-template>
+    </div>
   </div>
 </div>

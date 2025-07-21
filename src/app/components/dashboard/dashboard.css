@@ -5,3 +5,91 @@
 .user-profile {
   border: 1px dashed #007bff;
 }
+
+
+/* Custom styles for the dashboard to achieve specific layout */
+
+.date-filter-row {
+  display: flex; /* Ensure flex behavior */
+  flex-wrap: nowrap; /* Prevent wrapping by default for the main row */
+  align-items: flex-end; /* Align items to the bottom (for inputs) */
+  justify-content: center; /* Center the entire row */
+  overflow-x: auto;   /* Add horizontal scroll if content overflows on very small screens */
+  padding-bottom: 5px; /* Add some padding in case of scrollbar */
+  gap: 10px; /* Gap between the date wrapper and the reset button */
+}
+
+.date-inputs-wrapper {
+  display: flex;
+  gap: 0px; /* No gap between start and end date inputs */
+  flex-grow: 1; /* Allow this wrapper to grow to take space */
+  flex-shrink: 1; /* Allow it to shrink */
+  min-width: fit-content; /* Ensure it doesn't shrink below its content minimum */
+}
+
+.date-input-group {
+  flex-basis: auto;
+  flex-grow: 1;
+  flex-shrink: 1;
+  min-width: 100px;
+  max-width: 150px; /* Limit max width for date inputs on larger screens */
+}
+
+/* Style the inputs themselves to remove their default borders/radii if they are causing issues */
+.date-input-group input {
+    /* Ensure no extra borders are drawn when they are joined */
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.date-input-group:first-child input {
+    /* Left-most input retains its left radius */
+    border-top-left-radius: .25rem;
+    border-bottom-left-radius: .25rem;
+    border-top-right-radius: 0; /* Override if previous style set it */
+    border-bottom-right-radius: 0; /* Override if previous style set it */
+}
+
+.date-input-group:last-child input {
+    /* Right-most input retains its right radius, removes left border */
+    border-left: none; /* Remove left border for the second input to join them */
+    border-top-right-radius: .25rem;
+    border-bottom-right-radius: .25rem;
+    border-top-left-radius: 0; /* Override if previous style set it */
+    border-bottom-left-radius: 0; /* Override if previous style set it */
+}
+
+
+/* Ensure the reset button is compact */
+.reset-filter-button {
+  flex-grow: 0;
+  flex-shrink: 0;
+  white-space: nowrap; /* Prevent button text from wrapping */
+}
+
+/* For larger screens (web views), refine width and alignment */
+@media (min-width: 768px) {
+  .date-filter-row {
+    width: auto;
+    max-width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+
+/* General styling for total buttons, adjust as needed */
+.total-btn {
+  /* Make buttons full width within their flex-column parent, and left-aligned */
+  width: 100%;
+  text-align: left !important; /* Force text alignment to left */
+  min-width: unset; /* Remove min-width to allow content to define width */
+}
+
+/* Specific adjustments for the summary content container */
+.total-expenses-summary-content {
+  width: 100%; /* Ensure the container takes full width if needed */
+  max-width: 600px; /* Optional: Limit max width of the summary block on large screens */
+  margin-left: auto;
+  margin-right: auto; /* Center the summary block if max-width is applied */
+}

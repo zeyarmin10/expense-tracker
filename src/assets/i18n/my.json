@@ -77,8 +77,17 @@
   "TOTALS_BY_CURRENCY_LABEL": "ငွေကြေးအလိုက် စုစုပေါင်း",
   "TOTALS_BY_CATEGORY_LABEL": "အမျိုးအစားအလိုက် စုစုပေါင်း",
   "TOTAL_FOR_CURRENCY": "စုစုပေါင်း: {{currency}}",
-  "TOTAL_FOR_CATEGORY_CURRENCY": "{{category}}: {{currency}}",
+  "TOTAL_FOR_CATEGORY_CURRENCY": "{{category}} ({{currency}})",
   "NO_TOTALS_FOR_DATE": "ရွေးချယ်ထားသော ရက်စွဲအတွက် စုစုပေါင်းမရှိပါ။",
   "NO_CATEGORY_TOTALS_FOR_DATE": "ရွေးချယ်ထားသော ရက်စွဲအတွက် အမျိုးအစားအလိုက် စုစုပေါင်းမရှိပါ။",
-  "RESET_FILTER_BUTTON": "စစ်ထုတ်မှုကို ပြန်လည်သတ်မှတ်မည်"
+  "RESET_FILTER_BUTTON": "စစ်ထုတ်မှုကို ပြန်လည်သတ်မှတ်မည်",
+
+  "DASHBOARD_WELCOME": "သင်၏ Dashboard သို့ကြိုဆိုပါသည်။",
+  "DASHBOARD_WELCOME_BACK": "ပြန်ကြိုဆိုပါတယ်",
+  "DASHBOARD_START_DATE_LABEL": "စတင်ရက်",
+  "DASHBOARD_END_DATE_LABEL": "ကုန်ဆုံးရက်",
+  "DASHBOARD_TOTAL_EXPENSES_SUMMARY": "စုစုပေါင်းကုန်ကျစရိတ်အနှစ်ချုပ်",
+  "DASHBOARD_LOGOUT_BUTTON": "ထွက်ရန်",
+  "NO_TOTALS_FOR_DATE_RANGE": "ရွေးချယ်ထားသော ရက်စွဲအကွာအဝေးအတွက် စုစုပေါင်းမရှိပါ။",
+  "NO_CATEGORY_TOTALS_FOR_DATE_RANGE": "ရွေးချယ်ထားသော ရက်စွဲအကွာအဝေးအတွက် အမျိုးအစားအလိုက် စုစုပေါင်းမရှိပါ။"
 }
