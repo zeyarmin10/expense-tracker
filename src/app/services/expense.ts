@@ -26,7 +26,7 @@ export class ExpenseService {
   private authService = inject(AuthService);
 
   private getExpensesRef(userId: string): DatabaseReference {
-    return ref(this.db, `expenses/${userId}`);
+    return ref(this.db, `expenseprofit/users/${userId}/expenses`);
   }
 
   /**
@@ -92,7 +92,7 @@ export class ExpenseService {
       // You might need to fetch the current expense to get existing quantity/price
       // or pass all required fields in updatedData to calculate totalCost accurately.
       // For simplicity, let's assume `updatedData` has `quantity` and `price` if they are changing.
-      const currentExpenseRef = ref(this.db, `expenses/${userId}/${expenseId}`);
+      const currentExpenseRef = ref(this.db, `expenseprofit/users/${userId}/expenses/${expenseId}`);
       const snapshot = await get(currentExpenseRef);
       const currentExpense = snapshot.val() as ServiceIExpense;
 
@@ -101,7 +101,7 @@ export class ExpenseService {
       updatedData.totalCost = quantity * price;
     }
 
-    const expenseRef = ref(this.db, `expenses/${userId}/${expenseId}`);
+    const expenseRef = ref(this.db, `expenseprofit/users/${userId}/expenses/${expenseId}`);
     await update(expenseRef, updatedData);
   }
 
@@ -122,7 +122,7 @@ export class ExpenseService {
     if (!expenseId) {
       throw new Error('Expense ID is required for deletion.');
     }
-    const expenseRef = ref(this.db, `expenses/${userId}/${expenseId}`);
+    const expenseRef = ref(this.db, `expenseprofit/users/${userId}/expenses/${expenseId}`);
     await remove(expenseRef);
   }
 }
