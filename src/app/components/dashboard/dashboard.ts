@@ -58,15 +58,16 @@ export class DashboardComponent implements OnInit {
 
   constructor(private fb: FormBuilder) {
     const today = new Date();
-    const oneMonthAgo = new Date();
-    oneMonthAgo.setMonth(today.getMonth() - 1);
+    // Changed to one week back
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(today.getDate() - 7);
 
     const todayFormatted = this.datePipe.transform(today, 'yyyy-MM-dd') || '';
-    const oneMonthAgoFormatted = this.datePipe.transform(oneMonthAgo, 'yyyy-MM-dd') || '';
+    const oneWeekAgoFormatted = this.datePipe.transform(oneWeekAgo, 'yyyy-MM-dd') || '';
 
 
     this.dateRangeForm = this.fb.group({
-      startDate: [oneMonthAgoFormatted, Validators.required], // Initialize to one month back
+      startDate: [oneWeekAgoFormatted, Validators.required], // Initialize to one week back
       endDate: [todayFormatted, Validators.required] // Initialize to current date
     });
 
@@ -75,7 +76,7 @@ export class DashboardComponent implements OnInit {
     this.loadCategories();
 
     // Initialize date range subjects with calculated dates
-    this._startDate$.next(oneMonthAgoFormatted);
+    this._startDate$.next(oneWeekAgoFormatted);
     this._endDate$.next(todayFormatted);
 
 
@@ -286,17 +287,18 @@ export class DashboardComponent implements OnInit {
 
   resetFilter(): void {
     const today = new Date();
-    const oneMonthAgo = new Date();
-    oneMonthAgo.setMonth(today.getMonth() - 1);
+    // Changed to one week back
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(today.getDate() - 7);
 
     const todayFormatted = this.datePipe.transform(today, 'yyyy-MM-dd') || '';
-    const oneMonthAgoFormatted = this.datePipe.transform(oneMonthAgo, 'yyyy-MM-dd') || '';
+    const oneWeekAgoFormatted = this.datePipe.transform(oneWeekAgo, 'yyyy-MM-dd') || '';
 
     this.dateRangeForm.patchValue({
-      startDate: oneMonthAgoFormatted,
+      startDate: oneWeekAgoFormatted,
       endDate: todayFormatted
     });
-    this._startDate$.next(oneMonthAgoFormatted);
+    this._startDate$.next(oneWeekAgoFormatted);
     this._endDate$.next(todayFormatted);
     this.resetActiveFilters();
   }

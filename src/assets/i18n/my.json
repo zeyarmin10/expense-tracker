@@ -77,7 +77,7 @@
   "TOTALS_BY_CURRENCY_LABEL": "ငွေကြေးအလိုက် စုစုပေါင်း",
   "TOTALS_BY_CATEGORY_LABEL": "အမျိုးအစားအလိုက် စုစုပေါင်း",
   "TOTAL_FOR_CURRENCY": "စုစုပေါင်း ",
-  "TOTAL_FOR_CATEGORY_CURRENCY": "{{currency}} ",
+  "TOTAL_FOR_CATEGORY_CURRENCY": "{{ category }} ",
   "NO_TOTALS_FOR_DATE": "ရွေးချယ်ထားသော ရက်စွဲအတွက် စုစုပေါင်းမရှိပါ။",
   "NO_CATEGORY_TOTALS_FOR_DATE": "ရွေးချယ်ထားသော ရက်စွဲအတွက် အမျိုးအစားအလိုက် စုစုပေါင်းမရှိပါ။",
   "RESET_FILTER_BUTTON": "စစ်ထုတ်မှုကို ပြန်လည်သတ်မှတ်မည်",
@@ -146,6 +146,7 @@
   "NO_DATA_FOR_CATEGORY": "ဒီအမျိုးအစားအတွက် ဒေတာမရှိသေးပါ။",
   "NO_DAILY_DATA": "နေ့စဉ်ဒေတာမရှိသေးပါ။",
   "TOTAL_EXPENSES_BY_CATEGORY": "အမျိုးအစားအလိုက် စုစုပေါင်း အသုံးစရိတ်",
-  "TOTAL": "စုစုပေါင်း"
+  "TOTAL": "စုစုပေါင်း",
+  "YEARLY_SUMMARY": "နှစ်အလိုက်အကျဉ်းချုပ်"
 
 }
