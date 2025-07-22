@@ -2,61 +2,65 @@
     <div class="card shadow-lg p-4 text-center">
         <h2 class="card-title mb-4">{{ 'DASHBOARD_WELCOME' | translate }}</h2>
 
-        <div class="row d-flex justify-content-center mb-5">
-            <div class="col-lg-6 col-md-12 col-sm-12 col-xs-12 d-flex flex-column align-items-start">
-                <div class="badge bg-primary text-white p-2 border-0 total-btn text-start all-total mb-2">
-                    <strong>{{ 'NET_PROFIT' | translate }}:</strong>
-                    <ng-container *ngIf="(netProfitByCurrency$ | async) as netProfits; else loadingNetProfit">
-                        <span *ngIf="(netProfits | keyvalue).length > 0; else noNetProfitData">
-                            <ng-container *ngFor="let netProfit of (netProfits | keyvalue)">
-                                <span [class.text-success]="netProfit.value >= 0" [class.text-danger]="netProfit.value < 0">
-                                    {{ formatAmountWithSymbol(netProfit.value, netProfit.key) }}
-                                </span>
-                            </ng-container>
-                        </span>
-                        <ng-template #noNetProfitData>
-                            <span>0</span>
+        <div class="row mb-4">
+            <div class="col-md-4 mb-3">
+                <div class="card h-100 shadow"> <div class="card-body">
+                    <h5 class="card-title">{{ 'ALL_TOTAL_EXPENSES' | translate }}</h5>
+                    <div *ngIf="(totalExpensesByCurrency$ | async) as totals; else loading">
+                        <div *ngIf="totals && (totals | keyvalue).length > 0; else noData">
+                            <p *ngFor="let total of (totals | keyvalue)">
+                                <strong>{{ total.key }}:</strong> {{ formatAmountWithSymbol(total.value, total.key) }}
+                            </p>
+                        </div>
+                        <ng-template #noData>
+                            <p>{{ 'NO_EXPENSES_FOUND' | translate }}</p>
                         </ng-template>
-                    </ng-container>
-                    <ng-template #loadingNetProfit>
-                        <span>{{ 'LOADING_DATA' | translate }}</span>
+                    </div>
+                    <ng-template #loading>
+                        <p>{{ 'LOADING_DATA' | translate }}</p>
                     </ng-template>
+                    </div>
                 </div>
+            </div>
 
-                <div class="badge bg-success text-white p-2 border-0 total-btn text-start all-total mb-2">
-                    <strong>{{ 'REMAINING_BALANCE' | translate }}:</strong>
-                    <ng-container *ngIf="(remainingBalanceByCurrency$ | async) as balances; else loadingBalance">
-                        <span *ngIf="(balances | keyvalue).length > 0; else noBalanceData">
-                            <ng-container *ngFor="let balance of (balances | keyvalue)">
-                                <span [class.text-white]="balance.value >= 0" [class.text-danger]="balance.value < 0">
-                                    {{ formatAmountWithSymbol(balance.value, balance.key) }}
-                                </span>
-                            </ng-container>
-                        </span>
-                        <ng-template #noBalanceData>
-                            <span>0</span>
+            <div class="col-md-4 mb-3">
+                <div class="card h-100 shadow"> <div class="card-body">
+                    <h5 class="card-title">{{ 'NET_PROFIT' | translate }}</h5>
+                    <div *ngIf="(netProfitByCurrency$ | async) as netProfits; else loading">
+                        <div *ngIf="netProfits && (netProfits | keyvalue).length > 0; else noNetProfitData">
+                            <p *ngFor="let profit of (netProfits | keyvalue)" [class.text-success]="profit.value >= 0" [class.text-danger]="profit.value < 0">
+                                <strong>{{ profit.key }}:</strong> {{ formatAmountWithSymbol(profit.value, profit.key) }}
+                            </p>
+                        </div>
+                        <ng-template #noNetProfitData>
+                            <p>{{ 'NO_DATA_FOR_NET_PROFIT' | translate }}</p>
                         </ng-template>
-                    </ng-container>
-                    <ng-template #loadingBalance>
-                        <span>{{ 'LOADING_DATA' | translate }}</span>
+                    </div>
+                    <ng-template #loading>
+                        <p>{{ 'LOADING_DATA' | translate }}</p>
                     </ng-template>
+                    </div>
                 </div>
-                <div class="badge bg-danger text-white p-2 border-0 total-btn text-start all-total">
-                    <strong>{{ 'ALL_TOTAL_EXPENSES' | translate }}:</strong>
-                    <ng-container *ngIf="(totalExpensesByCurrency$ | async) as totalsByCurrency; else loadingTotals">
-                        <span *ngIf="(totalsByCurrency | keyvalue).length > 0; else noTotals">
-                            <ng-container *ngFor="let total of (totalsByCurrency | keyvalue)">
-                                {{ formatAmountWithSymbol(total.value, total.key) }}
-                            </ng-container>
-                        </span>
-                        <ng-template #noTotals>
-                            <span>0</span>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <div class="card h-100 shadow"> <div class="card-body">
+                    <h5 class="card-title">{{ 'REMAINING_BALANCE' | translate }}</h5>
+                    <div *ngIf="(remainingBalanceByCurrency$ | async) as balances; else loading">
+                        <div *ngIf="balances && (balances | keyvalue).length > 0; else noBalanceData">
+                            <p *ngFor="let balance of (balances | keyvalue)" [class.text-success]="balance.value >= 0" [class.text-danger]="balance.value < 0">
+                                <strong>{{ balance.key }}:</strong> {{ formatAmountWithSymbol(balance.value, balance.key) }}
+                            </p>
+                        </div>
+                        <ng-template #noBalanceData>
+                            <p>{{ 'NO_DATA_FOR_REMAINING_BALANCE' | translate }}</p>
                         </ng-template>
-                    </ng-container>
-                    <ng-template #loadingTotals>
-                        <span>{{ 'LOADING_DATA' | translate }}</span>
+                    </div>
+                    <ng-template #loading>
+                        <p>{{ 'LOADING_DATA' | translate }}</p>
                     </ng-template>
-                </div>  
+                    </div>
+                </div>
             </div>
         </div>
 
