@@ -4,7 +4,7 @@
             <h2>{{ 'PROFIT_LOSS_TITLE' | translate }}</h2>
 
             <div class="card mb-4">
-                <div class="card-header">{{ 'ADD_INCOME' | translate }}</div>
+                <div class="card-header">{{ currentIncomeIdBeingEdited ? ('EDIT_INCOME' | translate) : ('ADD_INCOME' | translate) }}</div>
                 <div class="card-body">
                     <form [formGroup]="incomeForm" (ngSubmit)="onSubmitIncome()">
                         <div class="mb-3">
@@ -35,8 +35,14 @@
                             <label for="description" class="form-label">{{ 'DESCRIPTION' | translate }}</label>
                             <input type="text" id="description" formControlName="description" class="form-control">
                         </div>
-                        <button type="submit" class="btn btn-primary" [disabled]="incomeForm.invalid">{{ 'ADD_INCOME' |
-                            translate }}</button>
+                        <div class="text-end">
+                            <button *ngIf="currentIncomeIdBeingEdited" type="button" class="btn btn-secondary  me-2" (click)="resetForm()">
+                                {{ 'CANCEL_EDIT' | translate }}
+                            </button>
+                            <button type="submit" class="btn btn-primary" [disabled]="incomeForm.invalid">
+                                {{ currentIncomeIdBeingEdited ? ('UPDATE_INCOME' | translate) : ('ADD_INCOME' | translate) }}
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -49,11 +55,19 @@
                             <ng-container *ngFor="let income of incomes">
                                 <li class="list-group-item d-flex justify-content-between align-items-center"
                                     *ngIf="(income.date | date:'yyyy') === (_selectedYear$ | async)?.toString()">
-                                    <span>
-                                        <strong>{{ formatDate(income.date) }}</strong>:
-                                        {{ formatAmountWithSymbol(income.amount, income.currency) }} -
-                                        {{ income.description || ('NO_DESCRIPTION' | translate) }}
-                                    </span>
+                                    <div class="d-flex flex-column">
+                                        <span>
+                                            <strong>{{ formatDate(income.date) }}</strong>:
+                                        </span>
+                                        <span>
+                                            {{ formatAmountWithSymbol(income.amount, income.currency) }} -
+                                            {{ income.description || ('NO_DESCRIPTION' | translate) }}
+                                        </span>
+                                    </div>
+                                    <div style="min-width: 5rem;">
+                                        <fa-icon class="btn btn-sm btn-outline-info me-1" [icon]="faEdit" (click)="editIncome(income)" title="{{ 'EDIT' | translate }}"></fa-icon>
+                                        <fa-icon class="btn btn-sm btn-outline-danger" [icon]="faTrash" (click)="deleteIncome(income.id)" title="{{ 'DELETE' | translate }}"></fa-icon>
+                                    </div>
                                 </li>
                             </ng-container>
                         </ul>

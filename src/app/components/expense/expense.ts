@@ -61,8 +61,6 @@ export class Expense implements OnInit {
   totalExpensesByCurrency$: Observable<{ [key: string]: number }>;
   totalExpensesByCategoryAndCurrency$: Observable<{ [category: string]: { [currency: string]: number } }>;
 
-  faSync = faSync;
-
 
   expenseService = inject(ExpenseService);
   categoryService = inject(CategoryService);
@@ -79,6 +77,7 @@ export class Expense implements OnInit {
   faTrash = faTrash;
   faSave = faSave;
   faTimes = faTimes;
+  faSync = faSync;
 
   currencySymbols: { [key: string]: string } = {
     MMK: 'Ks',

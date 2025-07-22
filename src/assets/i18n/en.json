@@ -154,5 +154,10 @@
   "WELCOME_MESSAGE": "It looks like you're new here or don't have any financial data yet. Let's get started!",
   "WELCOME_GET_STARTED": "To see your financial overview, start by adding your first expense or income.",
   "ADD_FIRST_EXPENSE": "Add Your First Expense",
-  "ADD_FIRST_INCOME": "Add Your First Income"
+  "ADD_FIRST_INCOME": "Add Your First Income",
+  "CONFIRM_DELETE_INCOME": "Confirm Delete Income",
+  "EDIT": "Edit",
+  "DELETE": "Delete",
+  "UPDATE_INCOME": "Update",
+  "CANCEL_EDIT": "Cancel"
 }
