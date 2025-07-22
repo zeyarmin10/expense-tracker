@@ -6,11 +6,10 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Observable, BehaviorSubject, combineLatest, map } from 'rxjs';
 import { ServiceIExpense, ExpenseService } from '../../services/expense';
 import { ServiceICategory, CategoryService } from '../../services/category';
-import { ServiceIIncome, IncomeService } from '../../services/income'; // Import IncomeService
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faSync } from '@fortawesome/free-solid-svg-icons';
-
+import { ServiceIIncome, IncomeService } from '../../services/income'; // Import IncomeService
 
 @Component({
   selector: 'app-dashboard',
@@ -44,10 +43,12 @@ export class DashboardComponent implements OnInit {
 
   totalExpensesByCurrency$: Observable<{ [key: string]: number }>;
   totalExpensesByCategoryAndCurrency$: Observable<{ [category: string]: { [currency: string]: number } }>;
-  dailyTotalsByCategoryAndCurrency$: Observable<{ [category: string]: { [date: string]: { [currency: string]: number } } }>;
+  // Renamed and re-structured observable for daily totals
+  dailyTotalsByDateAndCategory$: Observable<{ [date: string]: { [category: string]: { [currency: string]: number } } }>;
 
-  netProfitByCurrency$: Observable<{ [key: string]: number }>; // New observable for net profit
-  remainingBalanceByCurrency$: Observable<{ [key: string]: number }>; // New observable for remaining balance
+  netProfitByCurrency$: Observable<{ [key: string]: number }>; // Declare netProfitByCurrency$
+  remainingBalanceByCurrency$: Observable<{ [key: string]: number }>; // Declare remainingBalanceByCurrency$
+
 
   currencySymbols: { [key: string]: string } = {
     MMK: 'Ks',
@@ -57,16 +58,16 @@ export class DashboardComponent implements OnInit {
 
   constructor(private fb: FormBuilder) {
     const today = new Date();
-    const oneWeekAgo = new Date();
-    oneWeekAgo.setDate(today.getDate() - 7);
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setMonth(today.getMonth() - 1);
 
     const todayFormatted = this.datePipe.transform(today, 'yyyy-MM-dd') || '';
-    const oneWeekAgoFormatted = this.datePipe.transform(oneWeekAgo, 'yyyy-MM-dd') || '';
+    const oneMonthAgoFormatted = this.datePipe.transform(oneMonthAgo, 'yyyy-MM-dd') || '';
 
 
     this.dateRangeForm = this.fb.group({
-      startDate: [oneWeekAgoFormatted, Validators.required],
-      endDate: [todayFormatted, Validators.required]
+      startDate: [oneMonthAgoFormatted, Validators.required], // Initialize to one month back
+      endDate: [todayFormatted, Validators.required] // Initialize to current date
     });
 
     this.expenses$ = this.expenseService.getExpenses();
@@ -74,7 +75,7 @@ export class DashboardComponent implements OnInit {
     this.loadCategories();
 
     // Initialize date range subjects with calculated dates
-    this._startDate$.next(oneWeekAgoFormatted);
+    this._startDate$.next(oneMonthAgoFormatted);
     this._endDate$.next(todayFormatted);
 
 
@@ -143,8 +144,8 @@ export class DashboardComponent implements OnInit {
       })
     );
 
-    // Calculate daily total expenses by category and currency
-    this.dailyTotalsByCategoryAndCurrency$ = combineLatest([
+    // Calculate daily totals by date, then category, then currency
+    this.dailyTotalsByDateAndCategory$ = combineLatest([
       this.expenses$,
       this._startDate$,
       this._endDate$,
@@ -168,92 +169,85 @@ export class DashboardComponent implements OnInit {
         }
 
         return filteredExpenses.reduce((acc, expense) => {
-          const expenseDate = this.datePipe.transform(expense.date, 'yyyy-MM-dd') || '';
-          if (!acc[expense.category]) {
-            acc[expense.category] = {};
+          const expenseDateString = this.datePipe.transform(expense.date, 'yyyy-MM-dd') || '';
+          if (!acc[expenseDateString]) {
+            acc[expenseDateString] = {};
           }
-          if (!acc[expense.category][expenseDate]) {
-            acc[expense.category][expenseDate] = {};
+          if (!acc[expenseDateString][expense.category]) {
+            acc[expenseDateString][expense.category] = {};
           }
-          acc[expense.category][expenseDate][expense.currency] = (acc[expense.category][expenseDate][expense.currency] || 0) + expense.totalCost;
+          acc[expenseDateString][expense.category][expense.currency] =
+            (acc[expenseDateString][expense.category][expense.currency] || 0) + expense.totalCost;
           return acc;
-        }, {} as { [category: string]: { [date: string]: { [currency: string]: number } } });
+        }, {} as { [date: string]: { [category: string]: { [currency: string]: number } } });
       })
     );
 
-    // Calculate Net Profit (Income - Expense) for the selected date range
+
+    // Calculate net profit by currency
     this.netProfitByCurrency$ = combineLatest([
       this.incomes$,
       this.expenses$,
       this._startDate$,
-      this._endDate$,
-      this._activeCurrencyFilter$,
-      this._activeCategoryFilter$
+      this._endDate$
     ]).pipe(
-      map(([incomes, expenses, startDate, endDate, activeCurrency, activeCategory]) => {
-        const netProfit: { [key: string]: number } = {};
+      map(([incomes, expenses, startDate, endDate]) => {
+        const incomeTotals: { [key: string]: number } = {};
+        const expenseTotals: { [key: string]: number } = {};
 
-        // Change 'const' to 'let' for filteredIncomes and filteredExpenses
-        let filteredIncomes = incomes.filter(income => {
+        incomes.forEach(income => {
           const incomeDate = new Date(income.date);
           const start = new Date(startDate);
           const end = new Date(endDate);
-          return incomeDate >= start && incomeDate <= end;
+          if (incomeDate >= start && incomeDate <= end) {
+            incomeTotals[income.currency] = (incomeTotals[income.currency] || 0) + income.amount;
+          }
         });
 
-        let filteredExpenses = expenses.filter(expense => {
+        expenses.forEach(expense => {
           const expenseDate = new Date(expense.date);
           const start = new Date(startDate);
           const end = new Date(endDate);
-          return expenseDate >= start && expenseDate <= end;
+          if (expenseDate >= start && expenseDate <= end) {
+            expenseTotals[expense.currency] = (expenseTotals[expense.currency] || 0) + expense.totalCost;
+          }
         });
 
-        if (activeCurrency) {
-          filteredIncomes = filteredIncomes.filter(income => income.currency === activeCurrency);
-          filteredExpenses = filteredExpenses.filter(expense => expense.currency === activeCurrency);
-        }
-
-        // Note: activeCategory filter is not directly applicable to overall net profit without specific category mapping for income.
-        // Assuming income is not categorized or you want total income vs total expense.
-
-        // Sum incomes by currency
-        filteredIncomes.forEach(income => {
-          netProfit[income.currency] = (netProfit[income.currency] || 0) + income.amount;
+        const netProfits: { [key: string]: number } = {};
+        const allCurrencies = new Set([...Object.keys(incomeTotals), ...Object.keys(expenseTotals)]);
+        allCurrencies.forEach(currency => {
+          netProfits[currency] = (incomeTotals[currency] || 0) - (expenseTotals[currency] || 0);
         });
-
-        // Subtract expenses by currency
-        filteredExpenses.forEach(expense => {
-          netProfit[expense.currency] = (netProfit[expense.currency] || 0) - expense.totalCost;
-        });
-
-        return netProfit;
+        return netProfits;
       })
     );
 
-    // Calculate Remaining Balance (This might be a cumulative balance over time, or starting balance + current net profit)
-    // For simplicity, let's assume it's the net profit for the *entire* available data (not filtered by date range, to represent an ongoing balance)
-    // If "Remaining Balance" means "Net Profit for selected range", then this observable can just be netProfitByCurrency$.
-    // If it means "Total Balance accumulated", we need to sum all incomes and expenses without date filter.
+    // Calculate remaining balance by currency
     this.remainingBalanceByCurrency$ = combineLatest([
       this.incomes$,
       this.expenses$
     ]).pipe(
-      map(([allIncomes, allExpenses]) => {
-        const remainingBalance: { [key: string]: number } = {};
+      map(([incomes, expenses]) => {
+        const incomeTotals: { [key: string]: number } = {};
+        const expenseTotals: { [key: string]: number } = {};
 
-        // Sum all incomes by currency
-        allIncomes.forEach(income => {
-          remainingBalance[income.currency] = (remainingBalance[income.currency] || 0) + income.amount;
+        incomes.forEach(income => {
+          incomeTotals[income.currency] = (incomeTotals[income.currency] || 0) + income.amount;
         });
 
-        // Subtract all expenses by currency
-        allExpenses.forEach(expense => {
-          remainingBalance[expense.currency] = (remainingBalance[expense.currency] || 0) - expense.totalCost;
+        expenses.forEach(expense => {
+          expenseTotals[expense.currency] = (expenseTotals[expense.currency] || 0) + expense.totalCost;
         });
 
-        return remainingBalance;
+        const remainingBalances: { [key: string]: number } = {};
+        const allCurrencies = new Set([...Object.keys(incomeTotals), ...Object.keys(expenseTotals)]);
+        allCurrencies.forEach(currency => {
+          remainingBalances[currency] = (incomeTotals[currency] || 0) - (expenseTotals[currency] || 0);
+        });
+        return remainingBalances;
       })
     );
+
 
     // Set default language
     const storedLang = localStorage.getItem('selectedLanguage');
@@ -268,7 +262,8 @@ export class DashboardComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.applyDateFilter();
+    // No explicit call to applyDateFilter here, as date inputs now trigger it on change.
+    // Initial values from form control will be picked up by combineLatest.
   }
 
   loadCategories(): void {
@@ -280,7 +275,7 @@ export class DashboardComponent implements OnInit {
     if (startDate && endDate) {
       this._startDate$.next(startDate);
       this._endDate$.next(endDate);
-      this.resetActiveFilters();
+      // No resetActiveFilters here, so existing currency/category filters persist
     }
   }
 
@@ -291,28 +286,28 @@ export class DashboardComponent implements OnInit {
 
   resetFilter(): void {
     const today = new Date();
-    const oneWeekAgo = new Date();
-    oneWeekAgo.setDate(today.getDate() - 7);
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setMonth(today.getMonth() - 1);
 
     const todayFormatted = this.datePipe.transform(today, 'yyyy-MM-dd') || '';
-    const oneWeekAgoFormatted = this.datePipe.transform(oneWeekAgo, 'yyyy-MM-dd') || '';
+    const oneMonthAgoFormatted = this.datePipe.transform(oneMonthAgo, 'yyyy-MM-dd') || '';
 
     this.dateRangeForm.patchValue({
-      startDate: oneWeekAgoFormatted,
+      startDate: oneMonthAgoFormatted,
       endDate: todayFormatted
     });
-    this._startDate$.next(oneWeekAgoFormatted);
+    this._startDate$.next(oneMonthAgoFormatted);
     this._endDate$.next(todayFormatted);
     this.resetActiveFilters();
   }
 
   filterByCurrency(currency: string): void {
-    this._activeCategoryFilter$.next(null);
+    this._activeCategoryFilter$.next(null); // Clear category filter when currency is selected
     this._activeCurrencyFilter$.next(currency);
   }
 
   filterByCategory(category: string): void {
-    this._activeCurrencyFilter$.next(null);
+    this._activeCurrencyFilter$.next(null); // Clear currency filter when category is selected
     this._activeCategoryFilter$.next(category);
   }
 
@@ -335,6 +330,7 @@ export class DashboardComponent implements OnInit {
   }
 
   formatDailyDate(dateString: string): string {
-    return this.datePipe.transform(dateString, 'mediumDate') || dateString;
+    const date = new Date(dateString);
+    return this.datePipe.transform(date, 'MMM d, yyyy') || dateString;
   }
 }

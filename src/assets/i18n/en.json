@@ -77,7 +77,7 @@
   "TOTALS_BY_CURRENCY_LABEL": "Totals by Currency",
   "TOTALS_BY_CATEGORY_LABEL": "Totals by Category",
   "TOTAL_FOR_CURRENCY": "Total ",
-  "TOTAL_FOR_CATEGORY_CURRENCY": "{{category}} ",
+  "TOTAL_FOR_CATEGORY_CURRENCY": "{{currency}} ",
   "NO_TOTALS_FOR_DATE": "No totals found for the selected date.",
   "NO_CATEGORY_TOTALS_FOR_DATE": "No category totals found for the selected date.",
   "RESET_FILTER_BUTTON": "Reset Filter",
@@ -144,5 +144,7 @@
   "NO_EXPENSE_DATA": "No expense data available.",
   "DAILY_EXPENSE_SUMMARY": "Daily Expense Summary",
   "NO_DATA_FOR_CATEGORY": "No data available for this category.",
-  "NO_DAILY_DATA": "No daily data available."
+  "NO_DAILY_DATA": "No daily data available.",
+  "TOTAL_EXPENSES_BY_CATEGORY": "Total Expenses by Category",
+  "TOTAL": "Total"
 }
