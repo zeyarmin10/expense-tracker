@@ -29,45 +29,24 @@
             </div>
 
             <div class="col-12 col-md-6 mb-3">
-              <label for="category" class="form-label">{{ 'EXPENSE_CATEGORY_LABEL' | translate }}</label>
-              <div class="input-group has-validation">
-                <select
-                  class="form-select"
-                  id="category"
-                  formControlName="category"
-                  [class.is-invalid]="
-                    newExpenseForm.controls['category'].invalid &&
-                    newExpenseForm.controls['category'].touched
-                  "
-                  style="border-top-right-radius: 0;border-bottom-right-radius: 0;"
-                >
-                  <option value="" disabled selected>{{ 'EXPENSE_SELECT_CATEGORY' | translate }}</option>
-                  <option *ngFor="let cat of categories$ | async" [value]="cat.name">
-                    {{ cat.name }}
-                  </option>
-                </select>
-                <button
-                  type="button"
-                  class="btn btn-outline-secondary"
-                  (click)="openCategoryModal()"
-                  [attr.aria-label]="'EXPENSE_ADD_CATEGORY_BTN' | translate"
-                >
-                  <fa-icon [icon]="faPlus"></fa-icon>
-                </button>
-              </div>
-              <div
-                *ngIf="
-                  newExpenseForm.controls['category'].invalid &&
-                  newExpenseForm.controls['category'].touched
-                "
-                class="invalid-feedback d-block"
-              >
-                {{ 'EXPENSE_CATEGORY_REQUIRED' | translate }}
-              </div>
-              <small *ngIf="(categories$ | async)?.length === 0" class="form-text text-muted">
-                {{ 'EXPENSE_NO_CATEGORY_HINT' | translate }}
-              </small>
+                <label for="category" class="form-label">{{ 'EXPENSE_CATEGORY_LABEL' | translate }}</label>
+                <div class="input-group has-validation">
+                    <select class="form-select" id="category" formControlName="category" [class.is-invalid]="
+                                newExpenseForm.controls['category'].invalid &&
+                                newExpenseForm.controls['category'].touched
+                              " style="border-top-right-radius: 0;border-bottom-right-radius: 0;">
+                        <option value="" disabled selected>{{ 'EXPENSE_SELECT_CATEGORY' | translate }}</option>
+                        <option *ngFor="let cat of categories$ | async" [value]="cat.name">
+                            {{ cat.name }}
+                        </option>
+                    </select>
+                    <button type="button" class="btn btn-outline-secondary" (click)="openCategoryModal()"
+                        [attr.aria-label]="'EXPENSE_ADD_CATEGORY_BTN' | translate">
+                        <fa-icon [icon]="faPlus"></fa-icon>
+                    </button>
+                </div>
             </div>
+
           </div>
 
           <div class="mb-3">

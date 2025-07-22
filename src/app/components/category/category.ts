@@ -1,19 +1,19 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { ServiceICategory, CategoryService } from '../../services/category';
+import { ServiceICategory, CategoryService } from '../../services/category'; // Ensure this path is correct
 import { Observable } from 'rxjs';
 
 // Font Awesome Imports
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faPlus, faEdit, faTrash, faSave, faTimes } from '@fortawesome/free-solid-svg-icons';
 
-import { TranslateService, TranslateModule } from '@ngx-translate/core'; // Import TranslateService and TranslateModule
+import { TranslateService, TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-category',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FontAwesomeModule, TranslateModule], // Add TranslateModule here
+  imports: [CommonModule, ReactiveFormsModule, FontAwesomeModule, TranslateModule],
   templateUrl: './category.html',
   styleUrls: ['./category.css']
 })
@@ -21,7 +21,7 @@ export class Category implements OnInit {
   categoryForm: FormGroup;
   categories$: Observable<ServiceICategory[]>;
   categoryService = inject(CategoryService);
-  translateService = inject(TranslateService); // Inject TranslateService
+  translateService = inject(TranslateService);
 
   editingCategoryId: string | null = null;
   errorMessage: string | null = null;
@@ -37,11 +37,12 @@ export class Category implements OnInit {
     this.categoryForm = this.fb.group({
       name: ['', Validators.required]
     });
+    // The categories$ observable is set here, relying on CategoryService.getCategories()
     this.categories$ = this.categoryService.getCategories();
   }
 
   ngOnInit(): void {
-    // Categories Observable is set in constructor
+    // No specific initialization needed here as categories$ is already set up in constructor
   }
 
   private clearMessages(): void {
@@ -52,7 +53,6 @@ export class Category implements OnInit {
   async onSubmit(): Promise<void> {
     this.clearMessages();
     if (this.categoryForm.invalid) {
-      // Use translation key for error message
       this.translateService.get('CATEGORY_NAME_REQUIRED').subscribe((res: string) => {
         this.errorMessage = res;
       });
@@ -85,7 +85,7 @@ export class Category implements OnInit {
 
   startEdit(category: ServiceICategory): void {
     this.clearMessages();
-    this.editingCategoryId = category.id!;
+    this.editingCategoryId = category.id!; // Store the Firebase ID
     this.categoryForm.patchValue({ name: category.name });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }

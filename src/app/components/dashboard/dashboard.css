@@ -100,11 +100,11 @@
 }
 
 .all-total {
-    font-size: 1.1rem;
+    /* font-size: 1.1rem; */
     padding: 0.6rem 1rem !important;
 }
 .cat-total {
-    font-size: 1.05rem;
+    /* font-size: 1.05rem; */
     font-weight: lighter;
 }
 
@@ -118,7 +118,7 @@
 
 .daily-cat-total {
     background-color: #838069;
-    font-size: 1.05rem;
+    /* font-size: 1.05rem; */
     font-weight: lighter;
 
 }

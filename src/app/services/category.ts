@@ -1,12 +1,12 @@
 import { Injectable, inject } from '@angular/core';
-import { Database, ref, push, remove, update, listVal, DatabaseReference, objectVal } from '@angular/fire/database';
-import { Observable, switchMap } from 'rxjs';
-import { AuthService } from './auth'; // To get current user UID if categories were per-user
+import { Database, ref, push, remove, update, listVal, query, orderByChild, equalTo, DatabaseReference } from '@angular/fire/database';
+import { Observable, switchMap, firstValueFrom, map, of } from 'rxjs';
+import { AuthService } from './auth'; // Assuming you have an AuthService to get the current user's UID
 
 export interface ServiceICategory {
-  id?: string; // Firebase push ID
-  name: string; // အမျိုးအစား
-  createdAt: string;
+  id?: string; // Firebase push key
+  name: string;
+  userId: string;
 }
 
 @Injectable({
@@ -14,66 +14,84 @@ export interface ServiceICategory {
 })
 export class CategoryService {
   private db: Database = inject(Database);
-  private authService = inject(AuthService); // Inject AuthService if categories were per-user
+  private authService = inject(AuthService); // Inject your AuthService
 
-  private get categoriesRef(): DatabaseReference {
-    // For now, categories are global. If you want them per-user:
-    // return ref(this.db, `categories/${this.authService.currentUserId}`);
-    return ref(this.db, 'categories');
+  private getCategoriesRef(userId: string): DatabaseReference {
+    return ref(this.db, `expenseprofit/users/${userId}/categories`);
   }
 
   /**
-   * Adds a new category to the Realtime Database.
+   * Adds a new category for the current user.
    * @param categoryName The name of the category to add.
    * @returns A Promise that resolves when the category is added.
    */
   async addCategory(categoryName: string): Promise<void> {
-    if (!categoryName || categoryName.trim() === '') {
-      throw new Error('Category name cannot be empty.');
+    const userId = (await firstValueFrom(
+      this.authService.currentUser$.pipe(map((user) => user?.uid))
+    ))!;
+    if (!userId) {
+      throw new Error('User not authenticated.');
     }
-    const newCategory: ServiceICategory = {
-      name: categoryName.trim(),
-      createdAt: new Date().toISOString()
+    const newCategory: Omit<ServiceICategory, 'id'> = {
+      name: categoryName,
+      userId: userId
     };
-    await push(this.categoriesRef, newCategory);
+    await push(this.getCategoriesRef(userId), newCategory);
   }
 
   /**
-   * Gets all categories as an Observable.
+   * Gets all categories for the current user as an Observable.
    * Attaches Firebase push IDs as 'id' property.
-   * @returns An Observable of an array of Category objects.
+   * @returns An Observable of an array of ServiceICategory objects.
    */
   getCategories(): Observable<ServiceICategory[]> {
-    return listVal<ServiceICategory>(this.categoriesRef, { keyField: 'id' });
+    return this.authService.currentUser$.pipe(
+      switchMap(user => {
+        if (user?.uid) {
+          // Use listVal with keyField to include the Firebase key as 'id'
+          return listVal<ServiceICategory>(this.getCategoriesRef(user.uid), { keyField: 'id' });
+        }
+        return of([]); // Return empty array if no user
+      })
+    );
   }
 
   /**
-   * Updates an existing category.
+   * Updates an existing category for the current user.
    * @param categoryId The ID of the category to update.
-   * @param newName The new name for the category.
+   * @param newCategoryName The new name for the category.
    * @returns A Promise that resolves when the category is updated.
    */
-  async updateCategory(categoryId: string, newName: string): Promise<void> {
+  async updateCategory(categoryId: string, newCategoryName: string): Promise<void> {
+    const userId = (await firstValueFrom(
+      this.authService.currentUser$.pipe(map((user) => user?.uid))
+    ))!;
+    if (!userId) {
+      throw new Error('User not authenticated.');
+    }
     if (!categoryId) {
       throw new Error('Category ID is required for update.');
     }
-    if (!newName || newName.trim() === '') {
-      throw new Error('Category name cannot be empty.');
-    }
-    const categoryRef = ref(this.db, `categories/${categoryId}`);
-    await update(categoryRef, { name: newName.trim() });
+    const categoryRef = ref(this.db, `expenseprofit/users/${userId}/categories/${categoryId}`);
+    await update(categoryRef, { name: newCategoryName });
   }
 
   /**
-   * Deletes a category.
+   * Deletes a category for the current user.
    * @param categoryId The ID of the category to delete.
    * @returns A Promise that resolves when the category is deleted.
    */
   async deleteCategory(categoryId: string): Promise<void> {
+    const userId = (await firstValueFrom(
+      this.authService.currentUser$.pipe(map((user) => user?.uid))
+    ))!;
+    if (!userId) {
+      throw new Error('User not authenticated.');
+    }
     if (!categoryId) {
       throw new Error('Category ID is required for deletion.');
     }
-    const categoryRef = ref(this.db, `categories/${categoryId}`);
+    const categoryRef = ref(this.db, `expenseprofit/users/${userId}/categories/${categoryId}`);
     await remove(categoryRef);
   }
 }
