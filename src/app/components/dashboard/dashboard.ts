@@ -1,7 +1,7 @@
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { AuthService } from '../../services/auth';
-import { Router } from '@angular/router';
+import { Router } from '@angular/router'; // Ensure Router is imported
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Observable, BehaviorSubject, combineLatest, map } from 'rxjs';
 import { ServiceIExpense, ExpenseService } from '../../services/expense';
@@ -9,7 +9,7 @@ import { ServiceICategory, CategoryService } from '../../services/category';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faSync } from '@fortawesome/free-solid-svg-icons';
-import { ServiceIIncome, IncomeService } from '../../services/income'; // Import IncomeService
+import { ServiceIIncome, IncomeService } from '../../services/income';
 
 @Component({
   selector: 'app-dashboard',
@@ -21,10 +21,9 @@ import { ServiceIIncome, IncomeService } from '../../services/income'; // Import
 })
 export class DashboardComponent implements OnInit {
   authService = inject(AuthService);
-  router = inject(Router);
   expenseService = inject(ExpenseService);
   categoryService = inject(CategoryService);
-  incomeService = inject(IncomeService); // Inject IncomeService
+  incomeService = inject(IncomeService);
   datePipe = inject(DatePipe);
   translate = inject(TranslateService);
   private cdr = inject(ChangeDetectorRef);
@@ -38,17 +37,17 @@ export class DashboardComponent implements OnInit {
   private _activeCategoryFilter$ = new BehaviorSubject<string | null>(null);
 
   expenses$: Observable<ServiceIExpense[]>;
-  incomes$: Observable<ServiceIIncome[]>; // Declare incomes$
+  incomes$: Observable<ServiceIIncome[]>;
   categories$: Observable<ServiceICategory[]> | undefined;
 
   totalExpensesByCurrency$: Observable<{ [key: string]: number }>;
   totalExpensesByCategoryAndCurrency$: Observable<{ [category: string]: { [currency: string]: number } }>;
   dailyTotalsByDateAndCategory$: Observable<{ [date: string]: { [category: string]: { [currency: string]: number } } }>;
 
-  netProfitByCurrency$: Observable<{ [key: string]: number }>; // Declare netProfitByCurrency$
-  remainingBalanceByCurrency$: Observable<{ [key: string]: number }>; // Declare remainingBalanceByCurrency$
+  netProfitByCurrency$: Observable<{ [key: string]: number }>;
+  remainingBalanceByCurrency$: Observable<{ [key: string]: number }>;
 
-  hasData$: Observable<boolean>; // New observable to check for data existence
+  hasData$: Observable<boolean>;
 
   currencySymbols: { [key: string]: string } = {
     MMK: 'Ks',
@@ -56,14 +55,13 @@ export class DashboardComponent implements OnInit {
     THB: '฿'
   };
 
-  constructor(private fb: FormBuilder) {
+  constructor(private fb: FormBuilder, private router: Router) { // Keep this injection for Router
     const today = new Date();
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(today.getDate() - 7);
 
     const todayFormatted = this.datePipe.transform(today, 'yyyy-MM-dd') || '';
     const oneWeekAgoFormatted = this.datePipe.transform(oneWeekAgo, 'yyyy-MM-dd') || '';
-
 
     this.dateRangeForm = this.fb.group({
       startDate: [oneWeekAgoFormatted, Validators.required],
@@ -77,7 +75,6 @@ export class DashboardComponent implements OnInit {
     this._startDate$.next(oneWeekAgoFormatted);
     this._endDate$.next(todayFormatted);
 
-    // Initialize hasData$
     this.hasData$ = combineLatest([this.expenses$, this.incomes$]).pipe(
       map(([expenses, incomes]) => expenses.length > 0 || incomes.length > 0)
     );
@@ -183,7 +180,6 @@ export class DashboardComponent implements OnInit {
       })
     );
 
-
     this.netProfitByCurrency$ = combineLatest([
       this.incomes$,
       this.expenses$,
@@ -245,7 +241,6 @@ export class DashboardComponent implements OnInit {
         return remainingBalances;
       })
     );
-
 
     const storedLang = localStorage.getItem('selectedLanguage');
     if (storedLang) {
@@ -326,5 +321,16 @@ export class DashboardComponent implements OnInit {
   formatDailyDate(dateString: string): string {
     const date = new Date(dateString);
     return this.datePipe.transform(date, 'MMM d, yyyy') || dateString;
+  }
+
+  // Your new navigation methods
+  goToExpensePage(): void {
+    console.log('Clicked Add First Expense button. Attempting navigation...');
+    this.router.navigate(['/expense']);
+  }
+
+  goToProfitPage(): void {
+    console.log('Clicked Add First Income button. Attempting navigation...');
+    this.router.navigate(['/profit']);
   }
 }

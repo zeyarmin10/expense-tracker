@@ -206,12 +206,11 @@
             <div class="welcome-container text-center py-5">
                 <h3 class="mb-3">{{ 'WELCOME_TITLE' | translate }}</h3>
                 <p class="lead mb-4">{{ 'WELCOME_MESSAGE' | translate }}</p>
-                <img src="../../../assets/images/welcome-image.png" alt="Welcome Image" class="img-fluid mb-4">
-                <!-- <div class="welcome-image"></div> -->
+                <img src="assets/images/welcome-dashboard.png" alt="Welcome Image" class="img-fluid mb-4" class="img-fluid" style="max-width: 300px;">
                 <p>{{ 'WELCOME_GET_STARTED' | translate }}</p>
                 <div class="d-grid gap-2 col-md-6 mx-auto">
-                    <button class="btn btn-primary btn-lg" routerLink="/add-expense">{{ 'ADD_FIRST_EXPENSE' | translate }}</button>
-                    <button class="btn btn-outline-success btn-lg" routerLink="/add-income">{{ 'ADD_FIRST_INCOME' | translate }}</button>
+                    <button class="btn btn-primary btn-lg" (click)="goToExpensePage()">{{ 'ADD_FIRST_EXPENSE' | translate }}</button>
+                    <button class="btn btn-outline-success btn-lg" (click)="goToProfitPage()">{{ 'ADD_FIRST_INCOME' | translate }}</button>
                 </div>
             </div>
         </ng-template>
