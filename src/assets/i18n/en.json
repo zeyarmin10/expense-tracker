@@ -147,5 +147,12 @@
   "NO_DAILY_DATA": "No daily data available.",
   "TOTAL_EXPENSES_BY_CATEGORY": "Total Expenses by Category",
   "TOTAL": "Total",
-  "YEARLY_SUMMARY": "Yearly Summary"
+  "YEARLY_SUMMARY": "Yearly Summary",
+  "AMOUNT_REQUIRED": "Amount is required and must be greater than 0.",
+  "NO_EXPENSES_FOUND": "No expenses found for the selected date range.",
+  "WELCOME_TITLE": "Welcome to Your Financial Dashboard!",
+  "WELCOME_MESSAGE": "It looks like you're new here or don't have any financial data yet. Let's get started!",
+  "WELCOME_GET_STARTED": "To see your financial overview, start by adding your first expense or income.",
+  "ADD_FIRST_EXPENSE": "Add Your First Expense",
+  "ADD_FIRST_INCOME": "Add Your First Income"
 }

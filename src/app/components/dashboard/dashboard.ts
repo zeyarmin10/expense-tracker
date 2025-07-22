@@ -43,12 +43,12 @@ export class DashboardComponent implements OnInit {
 
   totalExpensesByCurrency$: Observable<{ [key: string]: number }>;
   totalExpensesByCategoryAndCurrency$: Observable<{ [category: string]: { [currency: string]: number } }>;
-  // Renamed and re-structured observable for daily totals
   dailyTotalsByDateAndCategory$: Observable<{ [date: string]: { [category: string]: { [currency: string]: number } } }>;
 
   netProfitByCurrency$: Observable<{ [key: string]: number }>; // Declare netProfitByCurrency$
   remainingBalanceByCurrency$: Observable<{ [key: string]: number }>; // Declare remainingBalanceByCurrency$
 
+  hasData$: Observable<boolean>; // New observable to check for data existence
 
   currencySymbols: { [key: string]: string } = {
     MMK: 'Ks',
@@ -58,7 +58,6 @@ export class DashboardComponent implements OnInit {
 
   constructor(private fb: FormBuilder) {
     const today = new Date();
-    // Changed to one week back
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(today.getDate() - 7);
 
@@ -67,20 +66,22 @@ export class DashboardComponent implements OnInit {
 
 
     this.dateRangeForm = this.fb.group({
-      startDate: [oneWeekAgoFormatted, Validators.required], // Initialize to one week back
-      endDate: [todayFormatted, Validators.required] // Initialize to current date
+      startDate: [oneWeekAgoFormatted, Validators.required],
+      endDate: [todayFormatted, Validators.required]
     });
 
     this.expenses$ = this.expenseService.getExpenses();
-    this.incomes$ = this.incomeService.getIncomes(); // Initialize incomes$
+    this.incomes$ = this.incomeService.getIncomes();
     this.loadCategories();
 
-    // Initialize date range subjects with calculated dates
     this._startDate$.next(oneWeekAgoFormatted);
     this._endDate$.next(todayFormatted);
 
+    // Initialize hasData$
+    this.hasData$ = combineLatest([this.expenses$, this.incomes$]).pipe(
+      map(([expenses, incomes]) => expenses.length > 0 || incomes.length > 0)
+    );
 
-    // Calculate total expenses by currency for the selected date range
     this.totalExpensesByCurrency$ = combineLatest([
       this.expenses$,
       this._startDate$,
@@ -111,7 +112,6 @@ export class DashboardComponent implements OnInit {
       })
     );
 
-    // Calculate total expenses by category and currency for the selected date range
     this.totalExpensesByCategoryAndCurrency$ = combineLatest([
       this.expenses$,
       this._startDate$,
@@ -145,7 +145,6 @@ export class DashboardComponent implements OnInit {
       })
     );
 
-    // Calculate daily totals by date, then category, then currency
     this.dailyTotalsByDateAndCategory$ = combineLatest([
       this.expenses$,
       this._startDate$,
@@ -185,7 +184,6 @@ export class DashboardComponent implements OnInit {
     );
 
 
-    // Calculate net profit by currency
     this.netProfitByCurrency$ = combineLatest([
       this.incomes$,
       this.expenses$,
@@ -223,7 +221,6 @@ export class DashboardComponent implements OnInit {
       })
     );
 
-    // Calculate remaining balance by currency
     this.remainingBalanceByCurrency$ = combineLatest([
       this.incomes$,
       this.expenses$
@@ -250,7 +247,6 @@ export class DashboardComponent implements OnInit {
     );
 
 
-    // Set default language
     const storedLang = localStorage.getItem('selectedLanguage');
     if (storedLang) {
       this.translate.use(storedLang);
@@ -263,8 +259,6 @@ export class DashboardComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // No explicit call to applyDateFilter here, as date inputs now trigger it on change.
-    // Initial values from form control will be picked up by combineLatest.
   }
 
   loadCategories(): void {
@@ -276,7 +270,6 @@ export class DashboardComponent implements OnInit {
     if (startDate && endDate) {
       this._startDate$.next(startDate);
       this._endDate$.next(endDate);
-      // No resetActiveFilters here, so existing currency/category filters persist
     }
   }
 
@@ -287,7 +280,6 @@ export class DashboardComponent implements OnInit {
 
   resetFilter(): void {
     const today = new Date();
-    // Changed to one week back
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(today.getDate() - 7);
 
@@ -304,12 +296,12 @@ export class DashboardComponent implements OnInit {
   }
 
   filterByCurrency(currency: string): void {
-    this._activeCategoryFilter$.next(null); // Clear category filter when currency is selected
+    this._activeCategoryFilter$.next(null);
     this._activeCurrencyFilter$.next(currency);
   }
 
   filterByCategory(category: string): void {
-    this._activeCurrencyFilter$.next(null); // Clear currency filter when category is selected
+    this._activeCurrencyFilter$.next(null);
     this._activeCategoryFilter$.next(category);
   }
 
