@@ -15,7 +15,7 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-3 mb-3">
-                            <div class="card h-100 shadow">
+                            <div class="card h-100">
                                 <div class="card-body">
                                     <h6 class="text-start fw-bold">{{ 'ALL_TOTAL_EXPENSES' | translate }}</h6>
                                     <div class="pt-2" *ngIf="(totalExpensesByCurrency$ | async) as totals; else loading">
@@ -36,7 +36,7 @@
                         </div>
 
                         <div class="col-md-3 mb-3">
-                            <div class="card h-100 shadow">
+                            <div class="card h-100">
                                 <div class="card-body">
                                     <h6 class="text-start fw-bold">{{ 'ALL_TOTAL_INCOMES' | translate }}</h6>
                                     <div class="pt-2" *ngIf="(totalIncomesByCurrency$ | async) as totals; else loading">
@@ -57,7 +57,7 @@
                         </div>
 
                         <div class="col-md-3 mb-3">
-                            <div class="card h-100 shadow">
+                            <div class="card h-100">
                                 <div class="card-body">
                                     <h6 class="text-start fw-bold">{{ 'PROFIT_LOSS_SUMMARY' | translate }}</h6>
                                     <div class="pt-2" *ngIf="(monthlyProfitLoss$ | async) as profitLossData; else loading">
@@ -84,7 +84,7 @@
                         </div>
 
                         <div class="col-md-3 mb-3">
-                            <div class="card h-100 shadow">
+                            <div class="card h-100">
                                 <div class="card-body">
                                     <h6 class="text-start fw-bold">{{ 'REMAINING_BALANCE' | translate }}</h6>
                                     <div class="pt-2" *ngIf="(remainingBalanceByCurrency$ | async) as balances; else loading">
