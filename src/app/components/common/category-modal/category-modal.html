@@ -2,23 +2,23 @@
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="categoryModalLabel">Add New Category (အမျိုးအစားအသစ်ထည့်ရန်)</h5>
+        <h5 class="modal-title" id="categoryModalLabel">{{ 'CATEGORY_MODAL_TITLE' | translate }}</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <form [formGroup]="categoryForm" (ngSubmit)="onSubmit()">
           <div class="mb-3">
-            <label for="categoryName" class="form-label">Category Name</label>
+            <label for="categoryName" class="form-label">{{ 'CATEGORY_NAME_LABEL' | translate }}</label>
             <input
               type="text"
               class="form-control"
               id="categoryName"
               formControlName="name"
-              placeholder="e.g., Food, Transport"
+              placeholder="{{ 'CATEGORY_NAME_REQUIRED' | translate }}"
               [class.is-invalid]="categoryForm.controls['name'].invalid && categoryForm.controls['name'].touched"
             >
             <div *ngIf="categoryForm.controls['name'].invalid && categoryForm.controls['name'].touched" class="invalid-feedback">
-              Category name is required.
+              {{ 'CATEGORY_NAME_REQUIRED' | translate }}
             </div>
           </div>
 
@@ -31,8 +31,8 @@
         </form>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="submit" class="btn btn-primary" [disabled]="categoryForm.invalid" (click)="onSubmit()">Add Category</button>
+        <!-- <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><fa-icon [icon]="faTimes"></fa-icon></button> -->
+        <button type="submit" class="btn btn-primary" [disabled]="categoryForm.invalid" (click)="onSubmit()"><fa-icon [icon]="faSave"></fa-icon></button>
       </div>
     </div>
   </div>

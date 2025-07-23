@@ -6,7 +6,7 @@ import { ServiceIExpense, ExpenseService } from '../../services/expense';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ServiceIIncome, IncomeService } from '../../services/income';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faEdit, faTrashAlt, faTrash } from '@fortawesome/free-solid-svg-icons'; // Ensure faTrashAlt is imported
+import { faEdit, faTrashAlt, faTrash, faSave, faTimes } from '@fortawesome/free-solid-svg-icons'; // Ensure faTrashAlt is imported
 
 @Component({
   selector: 'app-profit',
@@ -46,6 +46,8 @@ export class Profit implements OnInit {
   faEdit = faEdit;
   faTrashAlt = faTrashAlt;
   faTrash = faTrash;
+  faSave = faSave;
+  faTimes = faTimes;
   
   constructor() {
     this.incomeForm = this.fb.group({

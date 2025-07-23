@@ -2,6 +2,9 @@ import { Component, ElementRef, EventEmitter, OnInit, Output, ViewChild, inject 
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CategoryService } from '../../../services/category'; // Assuming your CategoryService is here
 import { CommonModule } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
+import { faSave, faTimes } from '@fortawesome/free-solid-svg-icons'
+import { FaIconComponent } from "@fortawesome/angular-fontawesome";
 
 // Declare bootstrap as any to access Bootstrap's JS API
 declare const bootstrap: any;
@@ -9,7 +12,7 @@ declare const bootstrap: any;
 @Component({
   selector: 'app-category-modal',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslateModule, FaIconComponent],
   templateUrl: './category-modal.html',
   styleUrls: ['./category-modal.css']
 })
@@ -22,6 +25,10 @@ export class CategoryModalComponent implements OnInit {
 
   errorMessage: string | null = null;
   successMessage: string | null = null;
+
+  faSave = faSave;
+  faTimes = faTimes;
+  
 
   private bsModal!: any; // To store the Bootstrap modal instance
 

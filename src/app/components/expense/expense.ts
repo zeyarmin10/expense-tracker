@@ -91,6 +91,12 @@ export class Expense implements OnInit {
     { code: 'THB', symbol: '฿' }
   ];
 
+  expenseForm!: FormGroup;
+  // Store original values when input is focused
+  private originalItemName: string | null = null;
+  private originalUnit: string | null = null;
+  private originalQuantity: number | null = null;
+  private originalPrice: number | null = null;
 
   constructor(private fb: FormBuilder) {
     const todayFormatted = this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
@@ -174,6 +180,12 @@ export class Expense implements OnInit {
 
   ngOnInit(): void {
     this.applyDateFilter();
+    this.expenseForm = this.fb.group({
+      itemName: ['', Validators.required],
+      unit: [''],
+      quantity: ['', [Validators.required, Validators.min(0.01)]],
+      price: ['', [Validators.required, Validators.min(0.01)]],
+    });
   }
 
   loadCategories(): void {
@@ -333,5 +345,63 @@ export class Expense implements OnInit {
       }
     }
     this.cdr.detectChanges();
+  }
+
+  /**
+   * Handles the focus event for input fields.
+   * Stores the current value of the input before it's cleared.
+   */
+  onFocusInput(
+    event: Event,
+    controlName: 'itemName' | 'unit' | 'quantity' | 'price'
+  ): void {
+    const inputElement = event.target as HTMLInputElement;
+    const currentControl = this.expenseForm.get(controlName);
+
+    if (currentControl) {
+      if (controlName === 'itemName') {
+        this.originalItemName = currentControl.value;
+      } else if (controlName === 'unit') {
+        this.originalUnit = currentControl.value;
+      } else if (controlName === 'quantity') {
+        this.originalQuantity = currentControl.value;
+      } else if (controlName === 'price') {
+        this.originalPrice = currentControl.value;
+      }
+    }
+
+    // Clear the input element's visual value
+    inputElement.value = '';
+  }
+
+  /**
+   * Handles the blur event for input fields.
+   * Restores the original value if the input is left empty.
+   */
+  onBlurInput(
+    event: Event,
+    controlName: 'itemName' | 'unit' | 'quantity' | 'price'
+  ): void {
+    const inputElement = event.target as HTMLInputElement;
+    const currentValue = inputElement.value;
+    const currentControl = this.expenseForm.get(controlName);
+
+    if (currentValue === '' && currentControl) {
+      if (controlName === 'itemName' && this.originalItemName !== null) {
+        currentControl.setValue(this.originalItemName);
+      } else if (controlName === 'unit' && this.originalUnit !== null) {
+        currentControl.setValue(this.originalUnit);
+      } else if (controlName === 'quantity' && this.originalQuantity !== null) {
+        currentControl.setValue(this.originalQuantity);
+      } else if (controlName === 'price' && this.originalPrice !== null) {
+        currentControl.setValue(this.originalPrice);
+      }
+    }
+
+    // Reset all original stored values
+    this.originalItemName = null;
+    this.originalUnit = null;
+    this.originalQuantity = null;
+    this.originalPrice = null;
   }
 }
