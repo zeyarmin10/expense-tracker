@@ -10,6 +10,8 @@ import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faSync } from '@fortawesome/free-solid-svg-icons';
 import { ServiceIIncome, IncomeService } from '../../services/income';
+import { trigger, state, style, animate, transition, keyframes } from '@angular/animations';
+
 
 @Component({
   selector: 'app-dashboard',
@@ -17,7 +19,18 @@ import { ServiceIIncome, IncomeService } from '../../services/income';
   imports: [CommonModule, ReactiveFormsModule, TranslateModule, FontAwesomeModule],
   providers: [DatePipe],
   templateUrl: './dashboard.html',
-  styleUrls: ['./dashboard.css']
+  styleUrls: ['./dashboard.css'],
+  animations: [
+    trigger('titleRollAnimation', [
+      transition('* => roll', [ // Trigger on transition to 'roll' state
+        animate('150ms ease-out', keyframes([ // Animate over 150ms
+          style({ transform: 'translateY(0)', offset: 0 }), // Start at normal position
+          style({ transform: 'translateY(5px)', offset: 0.5 }), // Move down 5px in the middle
+          style({ transform: 'translateY(0)', offset: 1.0 }) // Return to normal position
+        ]))
+      ])
+    ])
+  ]
 })
 export class DashboardComponent implements OnInit {
   authService = inject(AuthService);
@@ -31,22 +44,22 @@ export class DashboardComponent implements OnInit {
 
   faSync = faSync;
 
-  // Updated: Subject for view mode toggle, starts with 'monthly'
   private _currentViewModeSubject = new BehaviorSubject<'yearly' | 'first-half-yearly' | 'second-half-yearly' | 'monthly'>('monthly');
   currentViewMode$ = this._currentViewModeSubject.asObservable();
 
-  // New: Observable for dynamic summary title
+  // NEW: Property to track if the title is clicked for background color
+  isTitleClicked: boolean = false;
+
+  titleAnimTrigger: string = 'initial';
+
   currentSummaryTitle$: Observable<string>;
 
-  // Existing date range subjects, will be updated based on view mode
   private _startDate$ = new BehaviorSubject<string>(this.getFormattedDate(this.getStartOfYear()));
   private _endDate$ = new BehaviorSubject<string>(this.getFormattedDate(new Date()));
 
-  // Form groups (if they are for manual filtering, they'll act independently)
   expenseFilterForm: FormGroup;
   categoryFilterForm: FormGroup;
 
-  // Combined observable for filtered expenses and incomes based on dynamic date range
   filteredExpensesAndIncomes$: Observable<{
     expenses: ServiceIExpense[];
     incomes: ServiceIIncome[];
@@ -54,12 +67,12 @@ export class DashboardComponent implements OnInit {
 
   totalExpensesByCurrency$: Observable<{ [currency: string]: number }>;
   totalIncomesByCurrency$: Observable<{ [currency: string]: number }>;
-  remainingBalanceByCurrency$: Observable<{ [currency: string]: number }>; // New observable for remaining balance
+  remainingBalanceByCurrency$: Observable<{ [currency: string]: number }>;
 
   dailyExpensesAndIncomes$: Observable<
     { date: string; totalExpenses: number; totalIncomes: number; currency: string }[]
   >;
-  monthlyProfitLoss$: Observable<{ [period: string]: { profitLoss: number; currency: string }[] }>; // Updated type for generic period
+  monthlyProfitLoss$: Observable<{ [period: string]: { profitLoss: number; currency: string }[] }>;
 
   currencySymbols: { [key: string]: string } = {
     USD: '$',
@@ -69,19 +82,25 @@ export class DashboardComponent implements OnInit {
     MMK: 'Ks',
     THB: '฿',
     SGD: 'S$',
-    // Add more as needed
   };
 
-  // Placeholder subjects for category and currency filters, assumed to exist
+  burmeseCurrencyNames: { [key: string]: string } = {
+    USD: 'ဒေါ်လာ',
+    MMK: 'ကျပ်',
+    EUR: 'ယူရို',
+    GBP: 'ပေါင်',
+    JPY: 'ယန်း',
+    THB: 'ဘတ်',
+    SGD: 'စင်ကာပူဒေါ်လာ',
+  };
+
   private _activeCategoryFilter$ = new BehaviorSubject<string | null>(null);
   private _activeCurrencyFilter$ = new BehaviorSubject<string | null>(null);
 
-  // Observable to check if there is any data to display (for welcome page)
-  hasDataNext$: Observable<boolean>; // Renamed to avoid confusion if you have another hasData$
+  hasDataNext$: Observable<boolean>;
 
 
   constructor() {
-    // Initialize forms
     this.expenseFilterForm = inject(FormBuilder).group({
       startDate: [this._startDate$.getValue(), Validators.required],
       endDate: [this._endDate$.getValue(), Validators.required],
@@ -92,7 +111,6 @@ export class DashboardComponent implements OnInit {
       category: ['all'],
     });
 
-    // Initialize currentSummaryTitle$ based on view mode and date range
     this.currentSummaryTitle$ = combineLatest([
       this.currentViewMode$,
       this._startDate$,
@@ -102,38 +120,39 @@ export class DashboardComponent implements OnInit {
         const startDate = new Date(startDateStr);
         const endDate = new Date(endDateStr);
         let title = '';
+        const currentLang = this.translate.currentLang;
+
         switch (mode) {
           case 'yearly':
             title = this.translate.instant('YEARLY_SUMMARY_TITLE') + ` (${startDate.getFullYear()})`;
             break;
           case 'first-half-yearly':
-            title = this.translate.instant('SUMMARY_TITLE_PREFIX') + ` (${this.datePipe.transform(startDate, 'MMM')} - ${this.datePipe.transform(endDate, 'MMM yyyy')})`;
+            title = this.translate.instant('SUMMARY_TITLE_PREFIX') +
+                    ` (${this.datePipe.transform(startDate, 'MMM', '', currentLang)} - ${this.datePipe.transform(endDate, 'MMM yyyy', '', currentLang)})`;
             break;
           case 'second-half-yearly':
-            title = this.translate.instant('SUMMARY_TITLE_PREFIX') + ` (${this.datePipe.transform(startDate, 'MMM')} - ${this.datePipe.transform(endDate, 'MMM yyyy')})`;
+            title = this.translate.instant('SUMMARY_TITLE_PREFIX') +
+                    ` (${this.datePipe.transform(startDate, 'MMM', '', currentLang)} - ${this.datePipe.transform(endDate, 'MMM yyyy', '', currentLang)})`;
             break;
           case 'monthly':
-            title = this.translate.instant('SUMMARY_TITLE_PREFIX') + ` (${this.datePipe.transform(startDate, 'MMMM yyyy')})`;
+            title = this.translate.instant('SUMMARY_TITLE_PREFIX') +
+                    ` (${this.datePipe.transform(startDate, 'MMMM yyyy', '', currentLang)})`;
             break;
           default:
-            title = this.translate.instant('SUMMARY_TITLE_PREFIX'); // Fallback
+            title = this.translate.instant('SUMMARY_TITLE_PREFIX');
         }
         return title;
       })
     );
 
-    // Get all expenses and incomes for the current user
     const allExpenses$ = this.authService.currentUser$.pipe(
       switchMap(user => (user && user.uid) ? this.expenseService.getExpenses() : of([] as ServiceIExpense[])),
-      // tap(() => this.cdr.detectChanges()) // Consider if manual change detection is truly needed
     );
 
     const allIncomes$ = this.authService.currentUser$.pipe(
       switchMap(user => (user && user.uid) ? this.incomeService.getIncomes() : of([] as ServiceIIncome[])),
-      // tap(() => this.cdr.detectChanges()) // Consider if manual change detection is truly needed
     );
 
-    // Filter expenses and incomes based on _startDate$ and _endDate$
     this.filteredExpensesAndIncomes$ = combineLatest([
       allExpenses$,
       allIncomes$,
@@ -146,13 +165,11 @@ export class DashboardComponent implements OnInit {
 
         const filteredExpenses = expenses.filter(expense => {
           const expenseDate = new Date(expense.date);
-          // Ensure comparison includes the entire end day
           return expenseDate >= startDate && expenseDate <= this.addDays(endDate, 1);
         });
 
         const filteredIncomes = incomes.filter(income => {
           const incomeDate = new Date(income.date);
-          // Ensure comparison includes the entire end day
           return incomeDate >= startDate && incomeDate <= this.addDays(endDate, 1);
         });
 
@@ -160,7 +177,6 @@ export class DashboardComponent implements OnInit {
       })
     );
 
-    // Calculate total expenses by currency from filtered data
     this.totalExpensesByCurrency$ = this.filteredExpensesAndIncomes$.pipe(
       map(({ expenses }) => {
         return expenses.reduce((acc, expense) => {
@@ -170,7 +186,6 @@ export class DashboardComponent implements OnInit {
       })
     );
 
-    // Calculate total incomes by currency from filtered data
     this.totalIncomesByCurrency$ = this.filteredExpensesAndIncomes$.pipe(
       map(({ incomes }) => {
         return incomes.reduce((acc, income) => {
@@ -180,7 +195,6 @@ export class DashboardComponent implements OnInit {
       })
     );
 
-    // New: Calculate remaining balance by currency
     this.remainingBalanceByCurrency$ = combineLatest([
       this.totalIncomesByCurrency$,
       this.totalExpensesByCurrency$
@@ -198,7 +212,6 @@ export class DashboardComponent implements OnInit {
       })
     );
 
-    // Calculate monthly/half-yearly/yearly profit/loss based on filtered data and view mode
     this.monthlyProfitLoss$ = combineLatest([
       this.filteredExpensesAndIncomes$,
       this.currentViewMode$,
@@ -212,16 +225,16 @@ export class DashboardComponent implements OnInit {
             let periodKey: string;
 
             if (viewMode === 'monthly') {
-              periodKey = this.datePipe.transform(itemDate, 'MMM yyyy') || '';
+              periodKey = this.datePipe.transform(itemDate, 'MMM yyyy', '', this.translate.currentLang) || '';
             } else if (viewMode === 'first-half-yearly') {
-                const year = itemDate.getFullYear();
-                periodKey = `${year} H1`; // First half-year
+                const year = this.datePipe.transform(itemDate, 'yyyy', '', this.translate.currentLang);
+                periodKey = `${year} H1`;
             } else if (viewMode === 'second-half-yearly') {
-                const year = itemDate.getFullYear();
-                periodKey = `${year} H2`; // Second half-year
+                const year = this.datePipe.transform(itemDate, 'yyyy', '', this.translate.currentLang);
+                periodKey = `${year} H2`;
             }
-            else { // yearly
-                periodKey = this.datePipe.transform(itemDate, 'yyyy') || '';
+            else {
+                periodKey = this.datePipe.transform(itemDate, 'yyyy', '', this.translate.currentLang) || '';
             }
 
             if (!profitLossMap[periodKey]) {
@@ -248,29 +261,25 @@ export class DashboardComponent implements OnInit {
         aggregateData(expenses, true);
         aggregateData(incomes, false);
 
-        // Sort periods for consistent display
         const sortedPeriods = Object.keys(profitLossMap).sort((a, b) => {
           if (viewMode === 'monthly') {
-              // Parse month-year strings for comparison (e.g., "Jan 2023")
               const dateA = new Date(a);
               const dateB = new Date(b);
               return dateA.getTime() - dateB.getTime();
-          } else if (viewMode.includes('half-yearly')) { // Handles both first and second half-yearly
-              // Parse 'YYYY H1/H2' for comparison
+          } else if (viewMode.includes('half-yearly')) {
               const yearA = parseInt(a.substring(0, 4));
               const yearB = parseInt(b.substring(0, 4));
-              const halfA = parseInt(a.substring(5)); // '1' or '2'
+              const halfA = parseInt(a.substring(5));
               const halfB = parseInt(b.substring(5));
               if (yearA !== yearB) return yearA - yearB;
               return halfA - halfB;
-          } else { // yearly
+          } else {
               return parseInt(a) - parseInt(b);
           }
         });
 
         const sortedProfitLossMap: typeof profitLossMap = {};
         sortedPeriods.forEach(key => {
-            // Sort currencies within each period for consistency
             profitLossMap[key].sort((a, b) => a.currency.localeCompare(b.currency));
             sortedProfitLossMap[key] = profitLossMap[key];
         });
@@ -279,7 +288,6 @@ export class DashboardComponent implements OnInit {
       })
     );
 
-    // Initial load for daily expenses, reacting to _startDate$ and _endDate$
     this.dailyExpensesAndIncomes$ = combineLatest([
       allExpenses$,
       allIncomes$,
@@ -288,7 +296,7 @@ export class DashboardComponent implements OnInit {
     ]).pipe(
       map(([expenses, incomes, startDateStr, endDateStr]) => {
         const startDate = new Date(startDateStr);
-        const endDate = new Date(endDateStr); // This is the end of the day you filter to
+        const endDate = new Date(endDateStr);
 
         const dailyTotals: {
           [date: string]: {
@@ -303,7 +311,6 @@ export class DashboardComponent implements OnInit {
             const itemDate = this.datePipe.transform(item.date, 'yyyy-MM-dd');
             if (itemDate) {
               const dateObj = new Date(itemDate);
-              // Only include if within the selected date range
               if (dateObj >= startDate && dateObj <= endDate) {
                 if (!dailyTotals[itemDate]) {
                   dailyTotals[itemDate] = [];
@@ -334,7 +341,7 @@ export class DashboardComponent implements OnInit {
         aggregate(incomes, false);
 
         const result = Object.keys(dailyTotals)
-          .sort((a, b) => new Date(b).getTime() - new Date(a).getTime()) // Sort by date in descending order (latest first)
+          .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
           .flatMap((date) =>
             dailyTotals[date].map((entry) => ({
               date: date,
@@ -347,7 +354,6 @@ export class DashboardComponent implements OnInit {
       })
     );
 
-    // `hasDataNext$` to conditionally show welcome page or dashboard content
     const uid$ = this.authService.currentUser$.pipe(
       map(user => user?.uid || null)
     );
@@ -360,40 +366,31 @@ export class DashboardComponent implements OnInit {
             this.incomeService.getIncomes()
           ]).pipe(
             map(([expenses, incomes]) => expenses.length > 0 || incomes.length > 0),
-            startWith(false) // Emit false initially while data is loading
+            startWith(false)
           );
         }
-        return of(false); // No user, no data
+        return of(false);
       })
     );
   }
 
   ngOnInit(): void {
-    // Subscribe to view mode changes to update _startDate$ and _endDate$
     this.currentViewMode$.subscribe(mode => {
       const { startDate, endDate } = this.getDatesForViewMode(mode);
       this._startDate$.next(startDate);
       this._endDate$.next(endDate);
-      // Reset manual date picker form values to reflect the new range
       this.expenseFilterForm.patchValue({
         startDate: startDate,
         endDate: endDate
-      }, { emitEvent: false }); // Prevent infinite loop
+      }, { emitEvent: false });
     });
 
-    // Handle manual date filter changes (optional, if you want manual override)
     this.expenseFilterForm.valueChanges.subscribe((value) => {
-      // If user manually changes dates, we can switch to a 'custom' view mode
-      // or simply let the date subjects drive the filtering.
-      // For now, let's just update the subjects directly.
       this._startDate$.next(value.startDate);
       this._endDate$.next(value.endDate);
-      // Potentially set view mode to 'custom' or null if you have such a state
-      // this._currentViewModeSubject.next('custom');
     });
   }
 
-  // New: Method to toggle summary view
   toggleSummaryView(): void {
     const currentMode = this._currentViewModeSubject.getValue();
     let nextMode: 'yearly' | 'first-half-yearly' | 'second-half-yearly' | 'monthly';
@@ -411,24 +408,30 @@ export class DashboardComponent implements OnInit {
         nextMode = 'yearly';
         break;
       default:
-        nextMode = 'yearly'; // Fallback
+        nextMode = 'yearly';
     }
     this._currentViewModeSubject.next(nextMode);
+
+    // NEW: Toggle the boolean for background color change
+    this.isTitleClicked = !this.isTitleClicked;
+
+    // Trigger the title animation by changing its state
+    this.titleAnimTrigger = 'roll';
+    setTimeout(() => {
+      this.titleAnimTrigger = 'initial';
+    }, 150);
   }
 
-  // Helper function to get formatted date string (yyyy-MM-dd)
   private getFormattedDate(date: Date): string {
     return this.datePipe.transform(date, 'yyyy-MM-dd') || '';
   }
 
-  // Helper function to add days to a date (useful for end date inclusivity)
   private addDays(date: Date, days: number): Date {
     const result = new Date(date);
     result.setDate(result.getDate() + days);
     return result;
   }
 
-  // Helper functions for date range calculations based on view mode
   private getStartOfYear(): Date {
     const now = new Date();
     return new Date(now.getFullYear(), 0, 1);
@@ -455,7 +458,7 @@ export class DashboardComponent implements OnInit {
   }
 
   private getEndOfMonth(date: Date): Date {
-    return new Date(date.getFullYear(), date.getMonth() + 1, 0); // Day 0 of next month
+    return new Date(date.getFullYear(), date.getMonth() + 1, 0);
   }
 
   private getDatesForViewMode(mode: 'yearly' | 'first-half-yearly' | 'second-half-yearly' | 'monthly'): { startDate: string, endDate: string } {
@@ -466,7 +469,7 @@ export class DashboardComponent implements OnInit {
     switch (mode) {
       case 'yearly':
         startDate = this.getStartOfYear();
-        endDate = today; // Up to today in the current year
+        endDate = today;
         break;
       case 'first-half-yearly':
         startDate = this.getStartOfFirstHalfYear(today);
@@ -480,14 +483,13 @@ export class DashboardComponent implements OnInit {
         startDate = this.getStartOfMonth(today);
         endDate = this.getEndOfMonth(today);
         break;
-      default: // Fallback to yearly
+      default:
         startDate = this.getStartOfYear();
         endDate = today;
     }
     return { startDate: this.getFormattedDate(startDate), endDate: this.getFormattedDate(endDate) };
   }
 
-  // Existing methods (ensure they use the filtered data implicitly through observables)
   filterByCurrency(currency: string): void {
     this._activeCategoryFilter$.next(null);
     this._activeCurrencyFilter$.next(currency);
@@ -511,14 +513,33 @@ export class DashboardComponent implements OnInit {
       };
     }
 
-    const formattedAmount = new Intl.NumberFormat(this.translate.currentLang, options).format(amount);
-    const symbol = this.currencySymbols[currencyCode] || currencyCode;
-    return `${formattedAmount}${symbol}`;
+    const currentLang = this.translate.currentLang;
+
+    let formattedAmount: string;
+
+    if (currentLang === 'my') {
+      formattedAmount = new Intl.NumberFormat('my-MM', {
+        numberingSystem: 'mymr',
+        ...options
+      }).format(amount);
+
+      const burmeseCurrencyName = this.burmeseCurrencyNames[currencyCode] || currencyCode;
+      return `${formattedAmount} ${burmeseCurrencyName}`;
+    } else {
+      formattedAmount = new Intl.NumberFormat(currentLang, options).format(amount);
+      const symbol = this.currencySymbols[currencyCode] || currencyCode;
+
+      if (['USD', 'EUR', 'GBP'].includes(currencyCode)) {
+        return `${symbol}${formattedAmount}`;
+      } else {
+        return `${formattedAmount}${symbol}`;
+      }
+    }
   }
 
   formatDailyDate(dateString: string): string {
     const date = new Date(dateString);
-    return this.datePipe.transform(date, 'MMM d, yyyy') || dateString;
+    return this.datePipe.transform(date, 'MMM d, yyyy', '', this.translate.currentLang) || dateString;
   }
 
   goToExpensePage(): void {

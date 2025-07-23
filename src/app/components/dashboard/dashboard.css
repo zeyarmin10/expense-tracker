@@ -102,6 +102,11 @@
 
 }
 
+.card-header.clicked-header {
+  background-color: #e0f2f7; /* Light blue color, you can change this */
+  transition: background-color 0.3s ease-in-out; /* Smooth transition for background color */
+}
+
 /* Styles for screens with a maximum width of 767px (typical for mobile/small tablets) */
 @media (max-width: 767px) {
     .daily-summary-table th,
