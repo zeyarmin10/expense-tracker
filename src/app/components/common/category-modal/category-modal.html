@@ -14,7 +14,7 @@
               class="form-control"
               id="categoryName"
               formControlName="name"
-              placeholder="{{ 'CATEGORY_NAME_REQUIRED' | translate }}"
+              placeholder="{{ 'CATEGORY_NAME_PLACEHOLDER' | translate }}"
               [class.is-invalid]="categoryForm.controls['name'].invalid && categoryForm.controls['name'].touched"
             >
             <div *ngIf="categoryForm.controls['name'].invalid && categoryForm.controls['name'].touched" class="invalid-feedback">
@@ -32,7 +32,7 @@
       </div>
       <div class="modal-footer">
         <!-- <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><fa-icon [icon]="faTimes"></fa-icon></button> -->
-        <button type="submit" class="btn btn-primary" [disabled]="categoryForm.invalid" (click)="onSubmit()"><fa-icon [icon]="faSave"></fa-icon></button>
+        <button type="submit" class="btn btn-outline-info ps-4 pe-4" [disabled]="categoryForm.invalid" (click)="onSubmit()"><fa-icon [icon]="faSave"></fa-icon></button>
       </div>
     </div>
   </div>

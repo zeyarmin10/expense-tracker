@@ -195,7 +195,7 @@
           <div class="d-grid gap-2 d-flex justify-content-end">
             <button
               type="submit"
-              class="btn btn-primary ps-4 pe-4"
+              class="btn btn-outline-info ps-4 pe-4"
               [disabled]="newExpenseForm.invalid"
             >
               <fa-icon [icon]="faSave"></fa-icon>
@@ -233,7 +233,7 @@
                 <div class="d-flex flex-wrap gap-2">
                     <button
                         type="button"
-                        class="badge bg-primary text-white p-2 border-0 text-wrap total-btn mb-2"
+                        class="btn btn-outline-info text-wrap total-btn mb-2"
                         *ngFor="let total of (totals | keyvalue)"
                         (click)="filterByCurrency(total.key)"
                     >
@@ -249,7 +249,7 @@
                 <div class="d-flex flex-wrap gap-2">
                     <button
                         type="button"
-                        class="badge bg-secondary text-white p-2 border-0 total-btn text-wrap"
+                        class="btn btn-outline-secondary total-btn text-wrap"
                         *ngFor="let categoryTotal of (categoryTotals | keyvalue)"
                         (click)="filterByCategory(categoryTotal.key)"
                     >
@@ -303,7 +303,7 @@
                   <td class="fw-bold">{{ formatAmountWithSymbol(expense.totalCost, expense.currency) }}</td>
                   <td class="text-end">
                     <button
-                      class="btn btn-sm btn-outline-info me-2 edit-btn"
+                      class="btn btn-sm btn-outline-info me-2 ps-4 pe-4"
                       (click)="startEdit(expense)"
                       [attr.aria-label]="'EXPENSE_EDIT_BUTTON' | translate"
                       [disabled]="editingExpenseId !== null"
@@ -359,7 +359,7 @@
                   </td>
                   <td class="text-end">
                     <button
-                      class="btn btn-sm btn-outline-success me-2 edit-btn"
+                      class="btn btn-sm btn-outline-success me-2 ps-4 pe-4"
                       (click)="saveEdit()"
                       [disabled]="editingForm.invalid"
                       [attr.aria-label]="'EXPENSE_SAVE_BUTTON' | translate"

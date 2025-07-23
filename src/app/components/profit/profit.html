@@ -35,14 +35,14 @@
                             <label for="description" class="form-label">{{ 'DESCRIPTION' | translate }}</label>
                             <input type="text" id="description" formControlName="description" class="form-control">
                         </div>
-                        <div class="text-end">
-                            <button *ngIf="currentIncomeIdBeingEdited" type="button" class="btn btn-secondary me-2" (click)="resetForm()">
-                                <!-- {{ 'CANCEL_EDIT' | translate }} -->
-                                <fa-icon [icon]="faTimes"></fa-icon>
-                            </button>
-                            <button type="submit" class="btn btn-primary ps-4 pe-4" [disabled]="incomeForm.invalid">
+                        <div class="d-grid gap-2 d-flex justify-content-end">
+                            <button type="submit" class="btn btn-outline-info ps-4 pe-4" [disabled]="incomeForm.invalid">
                                 <!-- {{ currentIncomeIdBeingEdited ? ('UPDATE_INCOME' | translate) : ('ADD_INCOME' | translate) }} -->
                                   <fa-icon [icon]="faSave"></fa-icon>
+                            </button>
+                            <button *ngIf="currentIncomeIdBeingEdited" type="button" class="btn btn-outline-secondary" (click)="resetForm()">
+                                <!-- {{ 'CANCEL_EDIT' | translate }} -->
+                                <fa-icon [icon]="faTimes"></fa-icon>
                             </button>
                         </div>
                     </form>
