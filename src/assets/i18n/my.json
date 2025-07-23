@@ -180,6 +180,10 @@
   "PROFIT_LOSS_SUMMARY": "အမြတ်/အရှုံး အကျဉ်းချုပ်",
   "DAILY_SUMMARY_TITLE": "နေ့စဉ် အကျဉ်းချုပ်",
   "DATE_LABEL": "ရက်စွဲ",
-  "TOTAL_EXPENSES_LABEL": "စုစုပေါင်း အသုံးစရိတ်",
-  "TOTAL_INCOMES_LABEL": "စုစုပေါင်း ဝင်ငွေ"
+  "TOTAL_EXPENSES_LABEL": "အသုံးစရိတ်ပေါင်း",
+  "NO_INCOME_DATA": "ဝင်ငွေဒေတာ မရှိသေးပါ။",
+  "TOTAL_INCOMES_LABEL": "ဝင်ငွေပေါင်း",
+  "FIRST_HALF_YEARLY_SUMMARY_TITLE": "ပထမနှစ်ဝက် အကျဉ်းချုပ်",
+  "SECOND_HALF_YEARLY_SUMMARY_TITLE": "ဒုတိယနှစ်ဝက် အကျဉ်းချုပ်",
+  "SUMMARY_TITLE_PREFIX": "အကျဉ်းချုပ်"
 }

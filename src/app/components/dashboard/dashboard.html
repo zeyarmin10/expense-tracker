@@ -11,7 +11,7 @@
                 </div>
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-3 mb-3">
                             <div class="card h-100 shadow">
                                 <div class="card-body">
                                     <h6 class="text-start fw-bold">{{ 'ALL_TOTAL_EXPENSES' | translate }}</h6>
@@ -32,7 +32,7 @@
                             </div>
                         </div>
 
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-3 mb-3">
                             <div class="card h-100 shadow">
                                 <div class="card-body">
                                     <h6 class="text-start fw-bold">{{ 'ALL_TOTAL_INCOMES' | translate }}</h6>
@@ -53,7 +53,7 @@
                             </div>
                         </div>
 
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-3 mb-3">
                             <div class="card h-100 shadow">
                                 <div class="card-body">
                                     <h6 class="text-start fw-bold">{{ 'PROFIT_LOSS_SUMMARY' | translate }}</h6>
@@ -79,7 +79,32 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+
+                        <div class="col-md-3 mb-3">
+                            <div class="card h-100 shadow">
+                                <div class="card-body">
+                                    <h6 class="text-start fw-bold">{{ 'REMAINING_BALANCE' | translate }}</h6>
+                                    <div class="pt-2" *ngIf="(remainingBalanceByCurrency$ | async) as balances; else loading">
+                                        <div *ngIf="balances && (balances | keyvalue).length > 0; else noData">
+                                            <p *ngFor="let balance of (balances | keyvalue)" class="d-flex justify-content-between" style="margin-bottom: 0;">
+                                                <strong>{{ balance.key }}:</strong>
+                                                <span [class.text-success]="balance.value >= 0"
+                                                      [class.text-danger]="balance.value < 0">
+                                                    {{ formatAmountWithSymbol(balance.value, balance.key) }}
+                                                </span>
+                                            </p>
+                                        </div>
+                                        <ng-template #noData>
+                                            <p class="text-muted text-center">{{ 'NO_BALANCE_DATA' | translate }}</p>
+                                        </ng-template>
+                                    </div>
+                                    <ng-template #loading>
+                                        <p class="text-muted text-center">{{ 'LOADING_DATA' | translate }}</p>
+                                    </ng-template>
+                                </div>
+                            </div>
+                        </div>
+                        </div>
                 </div>
             </div>
 
@@ -89,32 +114,32 @@
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-hover table-sm">
+                        <table class="table table-hover table-sm" style="font-size: 0.85em;">
                             <thead>
                                 <tr>
-                                    <th>{{ 'DATE_LABEL' | translate }}</th>
-                                    <th>{{ 'TOTAL_EXPENSES_LABEL' | translate }}</th>
-                                    <th>{{ 'TOTAL_INCOMES_LABEL' | translate }}</th>
+                                    <th style="font-size: 0.9em;">{{ 'DATE_LABEL' | translate }}</th>
+                                    <th style="font-size: 0.9em;">{{ 'TOTAL_EXPENSES_LABEL' | translate }}</th>
+                                    <th style="font-size: 0.9em;">{{ 'TOTAL_INCOMES_LABEL' | translate }}</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <ng-container *ngIf="(dailyExpensesAndIncomes$ | async) as dailyData; else loadingDailyData">
                                     <tr *ngFor="let daily of dailyData">
-                                        <td>{{ formatDailyDate(daily.date) }}</td>
-                                        <td [class.text-danger]="daily.totalExpenses > 0">
+                                        <td style="font-size: 0.9em;">{{ formatDailyDate(daily.date) }}</td>
+                                        <td style="font-size: 0.9em;" [class.text-danger]="daily.totalExpenses > 0">
                                             {{ formatAmountWithSymbol(daily.totalExpenses, daily.currency) }}
                                         </td>
-                                        <td [class.text-success]="daily.totalIncomes > 0">
+                                        <td style="font-size: 0.9em;" [class.text-success]="daily.totalIncomes > 0">
                                             {{ formatAmountWithSymbol(daily.totalIncomes, daily.currency) }}
                                         </td>
                                     </tr>
                                     <tr *ngIf="dailyData.length === 0">
-                                        <td colspan="3" class="text-center text-muted">{{ 'NO_DAILY_DATA' | translate }}</td>
+                                        <td colspan="3" class="text-center text-muted" style="font-size: 0.9em;">{{ 'NO_DAILY_DATA' | translate }}</td>
                                     </tr>
                                 </ng-container>
                                 <ng-template #loadingDailyData>
                                     <tr>
-                                        <td colspan="3" class="text-center text-muted">{{ 'LOADING_DATA' | translate }}</td>
+                                        <td colspan="3" class="text-center text-muted" style="font-size: 0.9em;">{{ 'LOADING_DATA' | translate }}</td>
                                     </tr>
                                 </ng-template>
                             </tbody>

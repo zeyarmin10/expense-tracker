@@ -31,8 +31,8 @@ export class DashboardComponent implements OnInit {
 
   faSync = faSync;
 
-  // New: Subject for view mode toggle, starts with 'yearly'
-  private _currentViewModeSubject = new BehaviorSubject<'yearly' | 'half-yearly' | 'monthly'>('yearly');
+  // Updated: Subject for view mode toggle, starts with 'monthly'
+  private _currentViewModeSubject = new BehaviorSubject<'yearly' | 'first-half-yearly' | 'second-half-yearly' | 'monthly'>('monthly');
   currentViewMode$ = this._currentViewModeSubject.asObservable();
 
   // New: Observable for dynamic summary title
@@ -54,6 +54,8 @@ export class DashboardComponent implements OnInit {
 
   totalExpensesByCurrency$: Observable<{ [currency: string]: number }>;
   totalIncomesByCurrency$: Observable<{ [currency: string]: number }>;
+  remainingBalanceByCurrency$: Observable<{ [currency: string]: number }>; // New observable for remaining balance
+
   dailyExpensesAndIncomes$: Observable<
     { date: string; totalExpenses: number; totalIncomes: number; currency: string }[]
   >;
@@ -90,19 +92,33 @@ export class DashboardComponent implements OnInit {
       category: ['all'],
     });
 
-    // Initialize currentSummaryTitle$ based on view mode
-    this.currentSummaryTitle$ = this.currentViewMode$.pipe(
-      map(mode => {
+    // Initialize currentSummaryTitle$ based on view mode and date range
+    this.currentSummaryTitle$ = combineLatest([
+      this.currentViewMode$,
+      this._startDate$,
+      this._endDate$,
+    ]).pipe(
+      map(([mode, startDateStr, endDateStr]) => {
+        const startDate = new Date(startDateStr);
+        const endDate = new Date(endDateStr);
+        let title = '';
         switch (mode) {
           case 'yearly':
-            return this.translate.instant('YEARLY_SUMMARY_TITLE');
-          case 'half-yearly':
-            return this.translate.instant('HALF_YEARLY_SUMMARY_TITLE');
+            title = this.translate.instant('YEARLY_SUMMARY_TITLE') + ` (${startDate.getFullYear()})`;
+            break;
+          case 'first-half-yearly':
+            title = this.translate.instant('SUMMARY_TITLE_PREFIX') + ` (${this.datePipe.transform(startDate, 'MMM')} - ${this.datePipe.transform(endDate, 'MMM yyyy')})`;
+            break;
+          case 'second-half-yearly':
+            title = this.translate.instant('SUMMARY_TITLE_PREFIX') + ` (${this.datePipe.transform(startDate, 'MMM')} - ${this.datePipe.transform(endDate, 'MMM yyyy')})`;
+            break;
           case 'monthly':
-            return this.translate.instant('MONTHLY_SUMMARY_TITLE');
+            title = this.translate.instant('SUMMARY_TITLE_PREFIX') + ` (${this.datePipe.transform(startDate, 'MMMM yyyy')})`;
+            break;
           default:
-            return this.translate.instant('SUMMARY_TITLE'); // Fallback
+            title = this.translate.instant('SUMMARY_TITLE_PREFIX'); // Fallback
         }
+        return title;
       })
     );
 
@@ -164,6 +180,24 @@ export class DashboardComponent implements OnInit {
       })
     );
 
+    // New: Calculate remaining balance by currency
+    this.remainingBalanceByCurrency$ = combineLatest([
+      this.totalIncomesByCurrency$,
+      this.totalExpensesByCurrency$
+    ]).pipe(
+      map(([incomes, expenses]) => {
+        const balance: { [currency: string]: number } = {};
+        const allCurrencies = new Set([...Object.keys(incomes), ...Object.keys(expenses)]);
+
+        allCurrencies.forEach(currency => {
+          const totalIncome = incomes[currency] || 0;
+          const totalExpense = expenses[currency] || 0;
+          balance[currency] = totalIncome - totalExpense;
+        });
+        return balance;
+      })
+    );
+
     // Calculate monthly/half-yearly/yearly profit/loss based on filtered data and view mode
     this.monthlyProfitLoss$ = combineLatest([
       this.filteredExpensesAndIncomes$,
@@ -179,11 +213,14 @@ export class DashboardComponent implements OnInit {
 
             if (viewMode === 'monthly') {
               periodKey = this.datePipe.transform(itemDate, 'MMM yyyy') || '';
-            } else if (viewMode === 'half-yearly') {
+            } else if (viewMode === 'first-half-yearly') {
                 const year = itemDate.getFullYear();
-                const month = itemDate.getMonth();
-                periodKey = month < 6 ? `${year} H1` : `${year} H2`; // Half-year
-            } else { // yearly
+                periodKey = `${year} H1`; // First half-year
+            } else if (viewMode === 'second-half-yearly') {
+                const year = itemDate.getFullYear();
+                periodKey = `${year} H2`; // Second half-year
+            }
+            else { // yearly
                 periodKey = this.datePipe.transform(itemDate, 'yyyy') || '';
             }
 
@@ -218,7 +255,7 @@ export class DashboardComponent implements OnInit {
               const dateA = new Date(a);
               const dateB = new Date(b);
               return dateA.getTime() - dateB.getTime();
-          } else if (viewMode === 'half-yearly') {
+          } else if (viewMode.includes('half-yearly')) { // Handles both first and second half-yearly
               // Parse 'YYYY H1/H2' for comparison
               const yearA = parseInt(a.substring(0, 4));
               const yearB = parseInt(b.substring(0, 4));
@@ -297,7 +334,7 @@ export class DashboardComponent implements OnInit {
         aggregate(incomes, false);
 
         const result = Object.keys(dailyTotals)
-          .sort() // Sort by date
+          .sort((a, b) => new Date(b).getTime() - new Date(a).getTime()) // Sort by date in descending order (latest first)
           .flatMap((date) =>
             dailyTotals[date].map((entry) => ({
               date: date,
@@ -359,12 +396,15 @@ export class DashboardComponent implements OnInit {
   // New: Method to toggle summary view
   toggleSummaryView(): void {
     const currentMode = this._currentViewModeSubject.getValue();
-    let nextMode: 'yearly' | 'half-yearly' | 'monthly';
+    let nextMode: 'yearly' | 'first-half-yearly' | 'second-half-yearly' | 'monthly';
     switch (currentMode) {
       case 'yearly':
-        nextMode = 'half-yearly';
+        nextMode = 'first-half-yearly';
         break;
-      case 'half-yearly':
+      case 'first-half-yearly':
+        nextMode = 'second-half-yearly';
+        break;
+      case 'second-half-yearly':
         nextMode = 'monthly';
         break;
       case 'monthly':
@@ -394,16 +434,20 @@ export class DashboardComponent implements OnInit {
     return new Date(now.getFullYear(), 0, 1);
   }
 
-  private getStartOfHalfYear(date: Date): Date {
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    return month < 6 ? new Date(year, 0, 1) : new Date(year, 6, 1);
+  private getStartOfFirstHalfYear(date: Date): Date {
+    return new Date(date.getFullYear(), 0, 1);
   }
 
-  private getEndOfHalfYear(date: Date): Date {
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    return month < 6 ? new Date(year, 5, 30) : new Date(year, 11, 31);
+  private getEndOfFirstHalfYear(date: Date): Date {
+    return new Date(date.getFullYear(), 5, 30);
+  }
+
+  private getStartOfSecondHalfYear(date: Date): Date {
+    return new Date(date.getFullYear(), 6, 1);
+  }
+
+  private getEndOfSecondHalfYear(date: Date): Date {
+    return new Date(date.getFullYear(), 11, 31);
   }
 
   private getStartOfMonth(date: Date): Date {
@@ -414,7 +458,7 @@ export class DashboardComponent implements OnInit {
     return new Date(date.getFullYear(), date.getMonth() + 1, 0); // Day 0 of next month
   }
 
-  private getDatesForViewMode(mode: 'yearly' | 'half-yearly' | 'monthly'): { startDate: string, endDate: string } {
+  private getDatesForViewMode(mode: 'yearly' | 'first-half-yearly' | 'second-half-yearly' | 'monthly'): { startDate: string, endDate: string } {
     const today = new Date();
     let startDate: Date;
     let endDate: Date;
@@ -424,9 +468,13 @@ export class DashboardComponent implements OnInit {
         startDate = this.getStartOfYear();
         endDate = today; // Up to today in the current year
         break;
-      case 'half-yearly':
-        startDate = this.getStartOfHalfYear(today);
-        endDate = this.getEndOfHalfYear(today);
+      case 'first-half-yearly':
+        startDate = this.getStartOfFirstHalfYear(today);
+        endDate = this.getEndOfFirstHalfYear(today);
+        break;
+      case 'second-half-yearly':
+        startDate = this.getStartOfSecondHalfYear(today);
+        endDate = this.getEndOfSecondHalfYear(today);
         break;
       case 'monthly':
         startDate = this.getStartOfMonth(today);

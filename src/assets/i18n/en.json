@@ -181,5 +181,10 @@
   "DAILY_SUMMARY_TITLE": "Daily Summary",
   "DATE_LABEL": "Date",
   "TOTAL_EXPENSES_LABEL": "Total Expenses",
-  "TOTAL_INCOMES_LABEL": "Total Incomes"
+  "SUMMARY_TITLE_PREFIX": "Summary",
+  "FIRST_HALF_YEARLY_SUMMARY_TITLE": "First Half-Yearly Summary",
+  "SECOND_HALF_YEARLY_SUMMARY_TITLE": "Second Half-Yearly Summary",
+  "NO_INCOME_DATA": "No income data available.",
+  "TOTAL_INCOMES_LABEL": "Total Incomes",
+
 }
