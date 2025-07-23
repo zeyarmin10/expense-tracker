@@ -47,8 +47,20 @@ export class DashboardComponent implements OnInit {
   private _currentViewModeSubject = new BehaviorSubject<'yearly' | 'first-half-yearly' | 'second-half-yearly' | 'monthly'>('monthly');
   currentViewMode$ = this._currentViewModeSubject.asObservable();
 
-  // NEW: Property to track if the title is clicked for background color
-  isTitleClicked: boolean = false;
+  // Removed isTitleClicked, replaced with dynamic background color
+  // NEW: Array of colors to cycle through
+  headerBackgroundColors: string[] = [
+    '#90e0ef', // Default/light grey (Bootstrap's card-header default if not overridden)
+    '#e0f2f7', // Light blue
+    '#e6ffe6', // Light green
+    '#fff0e6', // Light orange
+    '#f5e6ff'  // Light purple
+  ];
+  // NEW: Index to track the current color
+  currentHeaderColorIndex: number = 0;
+  // NEW: Property to hold the current background color
+  currentHeaderBackgroundColor: string = this.headerBackgroundColors[0];
+
 
   titleAnimTrigger: string = 'initial';
 
@@ -412,8 +424,10 @@ export class DashboardComponent implements OnInit {
     }
     this._currentViewModeSubject.next(nextMode);
 
-    // NEW: Toggle the boolean for background color change
-    this.isTitleClicked = !this.isTitleClicked;
+    // NEW: Cycle through background colors
+    this.currentHeaderColorIndex = (this.currentHeaderColorIndex + 1) % this.headerBackgroundColors.length;
+    this.currentHeaderBackgroundColor = this.headerBackgroundColors[this.currentHeaderColorIndex];
+
 
     // Trigger the title animation by changing its state
     this.titleAnimTrigger = 'roll';
