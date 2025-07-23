@@ -29,12 +29,12 @@
 
       <div *ngIf="userDisplayData$ | async as userData">
         <div class="mb-3">
-          <label class="form-label font-weight-bold">{{ 'EMAIL_LABEL' | translate }}:</label>
+          <label class="form-label font-weight-bold"><strong>{{ 'EMAIL_LABEL' | translate }} :</strong></label>
           <p class="form-control-plaintext">{{ userData.email }}</p>
         </div>
 
         <div class="mb-3">
-          <label class="form-label font-weight-bold">{{ 'MEMBER_SINCE_LABEL' | translate }}:</label>
+          <label class="form-label font-weight-bold"><strong>{{ 'MEMBER_SINCE_LABEL' | translate }} :</strong></label>
           <p class="form-control-plaintext">{{ userData.createdAt }}</p>
         </div>
       </div>
@@ -44,7 +44,7 @@
 
       <form [formGroup]="userProfileForm" (ngSubmit)="onSubmit()">
         <div class="mb-3">
-          <label for="displayName" class="form-label">{{ 'DISPLAY_NAME_LABEL' | translate }}:</label>
+          <label for="displayName" class="form-label"><strong>{{ 'DISPLAY_NAME_LABEL' | translate }} :</strong></label>
           <div class="d-flex align-items-center">
             <input
               id="displayName"

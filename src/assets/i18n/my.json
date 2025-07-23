@@ -162,7 +162,7 @@
   "CANCEL_EDIT": "ပယ်ဖျက်",
   "USER_PROFILE_TITLE": "သုံးစွဲသူအချက်အလက်",
   "DISPLAY_NAME_LABEL": "ပြသရန်အမည်",
-  "MEMBER_SINCE_LABEL": "အဖွဲ့ဝင်ဖြစ်သည့်အချိန်မှစ၍",
+  "MEMBER_SINCE_LABEL": "အဖွဲ့ဝင်ဖြစ်သည့် ရက်စွဲ",
   "SAVE_PROFILE_BUTTON": "အချက်အလက်များသိမ်းမည်",
   "DISPLAY_NAME_MAX_LENGTH_ERROR": "ပြသရန်အမည်သည် စာလုံး ၅၀ ထက် မကျော်လွန်ရပါ။",
   "PROFILE_UPDATE_SUCCESS": "အချက်အလက်များ အောင်မြင်စွာ ပြောင်းလဲပြီးပါပြီ။",
@@ -171,5 +171,15 @@
   "AUTH_ERROR_PROFILE_UPDATE": "အကောင့်ဝင်ခြင်းဆိုင်ရာ အမှား။ ကျေးဇူးပြု၍ ထပ်မံဝင်ရောက်ပါ။",
   "PROFILE_PICTURE_ALT": "သုံးစွဲသူ ပရိုဖိုင်ပုံ",
   "NO_CHANGES_TO_SAVE": "သိမ်းဆည်းရန် ပြောင်းလဲမှု မရှိပါ။",
-  "LOADING_PROFILE_DATA": "သုံးစွဲသူ အချက်အလက်များကို တင်နေသည်..."
+  "LOADING_PROFILE_DATA": "သုံးစွဲသူ အချက်အလက်များကို တင်နေသည်...",
+  "YEARLY_SUMMARY_TITLE": "နှစ်အလိုက် အကျဉ်းချုပ်",
+  "HALF_YEARLY_SUMMARY_TITLE": "ခြောက်လအလိုက် အကျဉ်းချုပ်",
+  "MONTHLY_SUMMARY_TITLE": "လအလိုက် အကျဉ်းချုပ်",
+  "SUMMARY_TITLE": "အကျဉ်းချုပ်",
+  "ALL_TOTAL_INCOMES": "စုစုပေါင်း ဝင်ငွေများ",
+  "PROFIT_LOSS_SUMMARY": "အမြတ်/အရှုံး အကျဉ်းချုပ်",
+  "DAILY_SUMMARY_TITLE": "နေ့စဉ် အကျဉ်းချုပ်",
+  "DATE_LABEL": "ရက်စွဲ",
+  "TOTAL_EXPENSES_LABEL": "စုစုပေါင်း အသုံးစရိတ်",
+  "TOTAL_INCOMES_LABEL": "စုစုပေါင်း ဝင်ငွေ"
 }

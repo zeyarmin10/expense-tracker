@@ -171,5 +171,15 @@
   "AUTH_ERROR_PROFILE_UPDATE": "Authentication error. Please log in again.",
   "PROFILE_PICTURE_ALT": "User Profile Picture",
   "NO_CHANGES_TO_SAVE": "No changes to save.",
-  "LOADING_PROFILE_DATA": "Loading user profile data..."
+  "LOADING_PROFILE_DATA": "Loading user profile data...",
+  "YEARLY_SUMMARY_TITLE": "Yearly Summary",
+  "HALF_YEARLY_SUMMARY_TITLE": "Half-Yearly Summary",
+  "MONTHLY_SUMMARY_TITLE": "Monthly Summary",
+  "SUMMARY_TITLE": "Summary",
+  "ALL_TOTAL_INCOMES": "All Total Incomes",
+  "PROFIT_LOSS_SUMMARY": "Profit/Loss Summary",
+  "DAILY_SUMMARY_TITLE": "Daily Summary",
+  "DATE_LABEL": "Date",
+  "TOTAL_EXPENSES_LABEL": "Total Expenses",
+  "TOTAL_INCOMES_LABEL": "Total Incomes"
 }
