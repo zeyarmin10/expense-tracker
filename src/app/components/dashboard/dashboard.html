@@ -63,12 +63,14 @@
                                     <div class="pt-2" *ngIf="(monthlyProfitLoss$ | async) as profitLossData; else loading">
                                         <div *ngIf="profitLossData && (profitLossData | keyvalue).length > 0; else noData">
                                             <div *ngFor="let entry of (profitLossData | keyvalue)" class="d-flex justify-content-between">
-                                                <p class="mb-1"><strong>{{ entry.key }}</strong></p>
-                                                <p *ngFor="let total of entry.value"
-                                                   [class.text-success]="total.profitLoss >= 0"
-                                                   [class.text-danger]="total.profitLoss < 0"
-                                                   style="margin-left: 10px; margin-bottom: 0;">
-                                                    {{ formatAmountWithSymbol(total.profitLoss, total.currency) }}
+                                                <p class="d-flex align-items-center mb-1"><strong>{{ entry.key }}</strong></p>
+                                                <p class="d-flex flex-column align-items-end mb-1">
+                                                    <span *ngFor="let total of entry.value"
+                                                    [class.text-success]="total.profitLoss >= 0"
+                                                    [class.text-danger]="total.profitLoss < 0"
+                                                    style="margin-left: 10px; margin-bottom: 0;">
+                                                        {{ formatAmountWithSymbol(total.profitLoss, total.currency) }}
+                                                    </span>
                                                 </p>
                                             </div>
                                         </div>
