@@ -1,0 +1,70 @@
+<div class="container mt-3 mb-5">
+  <div class="card shadow-sm p-4">
+    <div class="card-body">
+      <h2 class="card-title text-center mb-4">
+        <fa-icon [icon]="faUserCircle"></fa-icon> {{ 'USER_PROFILE_TITLE' | translate }}
+      </h2>
+
+      <div class="profile-picture-container text-center mb-4">
+        <ng-container *ngIf="(userPhotoUrl$ | async) as photoURL">
+          <img
+            *ngIf="!imageLoadError"
+            [src]="photoURL"
+            alt="{{ 'PROFILE_PICTURE_ALT' | translate }}"
+            class="profile-picture-img rounded-circle border border-2 border-primary"
+            (error)="onImageError()"
+          />
+        </ng-container>
+        <ng-container *ngIf="!(userPhotoUrl$ | async) || imageLoadError">
+          <fa-icon [icon]="faUserCircle" class="default-profile-icon"></fa-icon>
+        </ng-container>
+      </div>
+
+      <div *ngIf="errorMessage" class="alert alert-danger" role="alert">
+        {{ errorMessage }}
+      </div>
+      <div *ngIf="successMessage" class="alert alert-success" role="alert">
+        {{ successMessage }}
+      </div>
+
+      <div *ngIf="userDisplayData$ | async as userData">
+        <div class="mb-3">
+          <label class="form-label font-weight-bold">{{ 'EMAIL_LABEL' | translate }}:</label>
+          <p class="form-control-plaintext">{{ userData.email }}</p>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label font-weight-bold">{{ 'MEMBER_SINCE_LABEL' | translate }}:</label>
+          <p class="form-control-plaintext">{{ userData.createdAt }}</p>
+        </div>
+      </div>
+      <div *ngIf="!(userDisplayData$ | async)">
+        <p class="text-center text-muted">{{ 'LOADING_PROFILE_DATA' | translate }}</p>
+      </div>
+
+      <form [formGroup]="userProfileForm" (ngSubmit)="onSubmit()">
+        <div class="mb-3">
+          <label for="displayName" class="form-label">{{ 'DISPLAY_NAME_LABEL' | translate }}:</label>
+          <div class="d-flex align-items-center">
+            <input
+              id="displayName"
+              type="text"
+              formControlName="displayName"
+              class="form-control me-2" [class.is-invalid]="userProfileForm.get('displayName')?.invalid && userProfileForm.get('displayName')?.touched"
+            />
+            <button type="submit" class="btn btn-primary" [disabled]="userProfileForm.invalid || !userProfileForm.dirty">
+              <fa-icon [icon]="faSave"></fa-icon> 
+              <!-- {{ 'SAVE_PROFILE_BUTTON' | translate }} -->
+            </button>
+          </div>
+          <div *ngIf="userProfileForm.get('displayName')?.invalid && userProfileForm.get('displayName')?.touched" class="invalid-feedback d-block">
+            <span *ngIf="userProfileForm.get('displayName')?.errors?.['maxlength']">
+              {{ 'DISPLAY_NAME_MAX_LENGTH_ERROR' | translate }}
+            </span>
+          </div>
+        </div>
+
+        </form>
+    </div>
+  </div>
+</div>

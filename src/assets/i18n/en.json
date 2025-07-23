@@ -159,5 +159,17 @@
   "EDIT": "Edit",
   "DELETE": "Delete",
   "UPDATE_INCOME": "Update",
-  "CANCEL_EDIT": "Cancel"
+  "CANCEL_EDIT": "Cancel",
+  "USER_PROFILE_TITLE": "User Profile",
+  "DISPLAY_NAME_LABEL": "Display Name",
+  "MEMBER_SINCE_LABEL": "Member Since",
+  "SAVE_PROFILE_BUTTON": "Save Profile",
+  "DISPLAY_NAME_MAX_LENGTH_ERROR": "Display name cannot exceed 50 characters.",
+  "PROFILE_UPDATE_SUCCESS": "Profile updated successfully!",
+  "PROFILE_UPDATE_ERROR": "Failed to update profile. Please try again.",
+  "PROFILE_FETCH_ERROR": "Failed to load user profile. Please refresh.",
+  "AUTH_ERROR_PROFILE_UPDATE": "Authentication error. Please log in again.",
+  "PROFILE_PICTURE_ALT": "User Profile Picture",
+  "NO_CHANGES_TO_SAVE": "No changes to save.",
+  "LOADING_PROFILE_DATA": "Loading user profile data..."
 }

@@ -176,7 +176,7 @@
                                                                 {{ categoryEntry.key }}
                                                                 <ul class="list-inline mb-0 text-end">
                                                                     <li *ngFor="let currencyEntry of (categoryEntry.value | keyvalue)"
-                                                                        class="list-inline-item me-3">
+                                                                        class="list-inline-item">
                                                                         <span>{{ formatAmountWithSymbol(currencyEntry.value, currencyEntry.key) }}</span>
                                                                     </li>
                                                                 </ul>

@@ -5,6 +5,7 @@ import { Category } from './components/category/category';
 import { LoginComponent } from './components/login/login';
 import { DashboardComponent } from './components/dashboard/dashboard';
 import { AuthGuard } from './guards/auth-guard'; // Import your auth guard
+import { UserProfileComponent } from './components/user-profile/user-profile';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' }, // Default route
@@ -27,6 +28,11 @@ export const routes: Routes = [
   {
     path: 'category',
     component: Category,
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'profile',
+    component: UserProfileComponent,
     canActivate: [AuthGuard],
   },
   // Move the wildcard route to the very end of the array

@@ -1,0 +1,16 @@
+/* src/app/components/user-profile/user-profile.component.css */
+.profile-picture-container {
+  margin-bottom: 20px;
+}
+
+.profile-picture-img {
+  width: 120px; /* Adjust size as needed */
+  height: 120px; /* Adjust size as needed */
+  object-fit: cover;
+  border: 2px solid var(--bs-primary); /* Example border */
+}
+
+.default-profile-icon {
+  font-size: 120px; /* Adjust size to match image */
+  color: #ccc; /* A default grey color */
+}
