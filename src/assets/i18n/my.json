@@ -206,15 +206,15 @@
   "CATEGORY_ERROR_DELETE": "အမျိုးအစားဖျက်ရာတွင် အမှားပေါ်ပေါက်ခဲ့သည်။",
   "CATEGORY_ERROR_DUPLICATE_NAME": "အမျိုးအစားအမည် ရှိပြီးသားဖြစ်သည်။",
   "CATEGORY_CLOSE_BUTTON": "ပိတ်ရန်",
-  "CATEGORY_LIMIT_REACHED": "အမျိုးအစား ၁၀ ခုထိသာ ထည့်သွင်းနိုင်ပါတယ်။ အသစ်ထည့်ရန် အမျိုးအစားတစ်ခုဖျက်ပါ။",
-  "DATA_LOAD_ERROR": "ဒေတာတင်ရာတွင် အမှားတစ်ခု ဖြစ်ပေါ်ခဲ့ပါသည်။",
-  "SAVE_BUTTON_LABEL": "သိမ်းရန်",
   "CANCEL_BUTTON_LABEL": "ဖျက်ရန်",
   "SUCCESS_TITLE": "အောင်မြင်သည်",
   "ERROR_TITLE": "အမှား",
-  "CONFIRM_DELETE_TITLE": "ဖျက်ရန် အတည်ပြုပါ",
-  "DELETE_BUTTON": "ဖျက်မည်",
   "CONFIRMATION_TITLE": "အတည်ပြုချက်",
   "CONFIRM_DELETE_EXPENSE": "ဤအသုံးစရိတ်ကို ဖျက်ရန် သေချာပါသလား။ ဤလုပ်ဆောင်ချက်ကို ပြန်ဖျက်၍ မရပါ။",
-  "EXPENSE_DELETED_SUCCESS": "အသုံးစရိတ်ကို အောင်မြင်စွာ ဖျက်ပြီးပါပြီ။"
+  "EXPENSE_DELETED_SUCCESS": "အသုံးစရိတ်ကို အောင်မြင်စွာ ဖျက်ပြီးပါပြီ။",
+  "CATEGORY_LIMIT_REACHED": "အများဆုံး အမျိုးအစား ၁၀ ခုသာ ခွင့်ပြုပါသည်။",
+  "CATEGORY_ALREADY_EXISTS": "ဤအမည်ဖြင့် အမျိုးအစားတစ်ခု ရှိပြီးသားဖြစ်သည်။ အခြားအမည်တစ်ခု ရွေးချယ်ပါ။",
+  "CONFIRM_DELETE_TITLE": "ဖျက်ခြင်းကို အတည်ပြုပါ",
+  "DELETE_BUTTON": "ဖျက်မည်",
+  "SAVE_BUTTON_LABEL": "သိမ်းဆည်းမည်"
 }

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, ViewChild } from '@angular/core'; // Add ViewChild
+import { Component, OnInit, inject, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { ServiceICategory, CategoryService } from '../../services/category';
@@ -9,12 +9,12 @@ import { faPlus, faEdit, faTrash, faSave, faTimes } from '@fortawesome/free-soli
 
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { ToastService } from '../../services/toast';
-import { ConfirmationModal } from '../common/confirmation-modal/confirmation-modal'; // Import the new modal
+import { ConfirmationModal } from '../common/confirmation-modal/confirmation-modal';
 
 @Component({
   selector: 'app-category',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FontAwesomeModule, TranslateModule, ConfirmationModal], // Add ConfirmationModalComponent
+  imports: [CommonModule, ReactiveFormsModule, FontAwesomeModule, TranslateModule, ConfirmationModal],
   templateUrl: './category.html',
   styleUrls: ['./category.css']
 })
@@ -75,7 +75,18 @@ export class Category implements OnInit {
       return;
     }
 
-    const categoryName = this.addCategoryForm.value.name;
+    const categoryName = this.addCategoryForm.value.name.trim(); // Trim whitespace
+
+    // Check for duplicate category name (case-insensitive)
+    const categories = this._categoriesSubject.value;
+    const isDuplicate = categories.some(category => category.name.toLowerCase() === categoryName.toLowerCase());
+
+    if (isDuplicate) {
+      this.translateService.get('CATEGORY_ALREADY_EXISTS').subscribe((res: string) => {
+      this.toastService.showError(res);
+    });
+      return;
+    }
 
     try {
       await this.categoryService.addCategory(categoryName);
@@ -98,7 +109,6 @@ export class Category implements OnInit {
     }
     this.editingCategoryId = category.id!;
     this.editingCategoryFormControl = new FormControl(category.name, Validators.required);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   cancelEdit(): void {
@@ -115,7 +125,20 @@ export class Category implements OnInit {
       return;
     }
 
-    const updatedName = this.editingCategoryFormControl.value;
+    const updatedName = this.editingCategoryFormControl.value.trim(); // Trim whitespace
+
+    // Check for duplicate category name (case-insensitive), excluding the current category being edited
+    const categories = this._categoriesSubject.value;
+    const isDuplicate = categories.some(category =>
+      category.id !== categoryId && category.name.toLowerCase() === updatedName.toLowerCase()
+    );
+
+    if (isDuplicate) {
+      this.translateService.get('CATEGORY_ALREADY_EXISTS').subscribe((res: string) => {
+        this.toastService.showError(res);
+      });
+      return;
+    }
 
     try {
       await this.categoryService.updateCategory(categoryId, updatedName);
