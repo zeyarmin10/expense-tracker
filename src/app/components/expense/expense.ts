@@ -233,30 +233,34 @@ export class Expense implements OnInit {
     return `${formattedAmount} ${symbol}`;
   }
 
-  async onSubmitNewExpense(): Promise<void> {
-    this.clearMessages();
-    if (this.newExpenseForm.invalid) {
-      this.errorMessage = this.translate.instant('ERROR_FILL_ALL_FIELDS');
-      return;
+    async onSubmitNewExpense(): Promise<void> {
+        this.clearMessages();
+        if (this.newExpenseForm.invalid) {
+        this.errorMessage = this.translate.instant('ERROR_FILL_ALL_FIELDS');
+        return;
+        }
+
+        const formData = this.newExpenseForm.value;
+
+        try {
+        await this.expenseService.addExpense(formData);
+        // Use toast service instead of successMessage
+        this.translate.get('EXPENSE_SUCCESS_ADDED').subscribe((res: string) => {
+            this.toastService.showSuccess(res);
+        });
+        this.newExpenseForm.reset();
+        const todayFormatted = this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
+        this.newExpenseForm.patchValue({ date: todayFormatted, currency: 'MMK', selectedDate: todayFormatted });
+        this.resetFilter();
+        await this.loadExpenses();
+        } catch (error: any) {
+        this.errorMessage =
+            error.message || this.translate.instant('EXPENSE_ERROR_ADD');
+        console.error('New expense save error:', error);
+        }
+        this.cdr.detectChanges();
     }
 
-    const formData = this.newExpenseForm.value;
-
-    try {
-      await this.expenseService.addExpense(formData);
-      this.successMessage = this.translate.instant('EXPENSE_SUCCESS_ADDED');
-      this.newExpenseForm.reset();
-      const todayFormatted = this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
-      this.newExpenseForm.patchValue({ date: todayFormatted, currency: 'MMK', selectedDate: todayFormatted });
-      this.resetFilter();
-      await this.loadExpenses(); // Reload expenses after adding
-    } catch (error: any) {
-      this.errorMessage =
-        error.message || this.translate.instant('EXPENSE_ERROR_ADD');
-      console.error('New expense save error:', error);
-    }
-    this.cdr.detectChanges();
-  }
 
   applyDateFilter(): void {
     const selectedDate = this.newExpenseForm.get('selectedDate')?.value;
@@ -304,36 +308,40 @@ export class Expense implements OnInit {
     this.cdr.detectChanges();
   }
 
-  async saveEdit(): Promise<void> {
-    this.clearMessages();
-    if (this.editingForm && this.editingForm.invalid) {
-      this.errorMessage = this.translate.instant(
-        'EXPENSE_ERROR_EDIT_FORM_INVALID'
-      );
-      return;
-    }
-    if (!this.editingForm || !this.editingExpenseId) {
-      this.errorMessage = this.translate.instant(
-        'EXPENSE_ERROR_NO_EXPENSE_SELECTED'
-      );
-      return;
+    async saveEdit(): Promise<void> {
+        this.clearMessages();
+        if (this.editingForm && this.editingForm.invalid) {
+        this.errorMessage = this.translate.instant(
+            'EXPENSE_ERROR_EDIT_FORM_INVALID'
+        );
+        return;
+        }
+        if (!this.editingForm || !this.editingExpenseId) {
+        this.errorMessage = this.translate.instant(
+            'EXPENSE_ERROR_NO_EXPENSE_SELECTED'
+        );
+        return;
+        }
+
+        try {
+        await this.expenseService.updateExpense(
+            this.editingExpenseId,
+            this.editingForm.value
+        );
+        // Use toast service instead of successMessage
+        this.translate.get('EXPENSE_SUCCESS_UPDATED').subscribe((res: string) => {
+            this.toastService.showSuccess(res);
+        });
+        this.cancelEdit();
+        await this.loadExpenses();
+        } catch (error: any) {
+        this.errorMessage =
+            error.message || this.translate.instant('EXPENSE_ERROR_UPDATE');
+        console.error('Expense update error:', error);
+        }
+        this.cdr.detectChanges();
     }
 
-    try {
-      await this.expenseService.updateExpense(
-        this.editingExpenseId,
-        this.editingForm.value
-      );
-      this.successMessage = this.translate.instant('EXPENSE_SUCCESS_UPDATED');
-      this.cancelEdit();
-      await this.loadExpenses(); // Reload expenses after updating
-    } catch (error: any) {
-      this.errorMessage =
-        error.message || this.translate.instant('EXPENSE_ERROR_UPDATE');
-      console.error('Expense update error:', error);
-    }
-    this.cdr.detectChanges();
-  }
 
   cancelEdit(): void {
     this.clearMessages();
