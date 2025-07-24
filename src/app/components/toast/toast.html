@@ -1,23 +1,15 @@
-<div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3 mt-5">
-    <div
-        *ngFor="let toast of toasts"
-        #liveToast
-        id="toast-{{toast.id}}"
-        class="toast"
-        role="alert"
-        aria-live="assertive"
-        aria-atomic="true"
-        [class.bg-success]="toast.type === 'success'"
-        [class.bg-danger]="toast.type === 'error'"
-        [class.text-white]="true"
-        data-bs-delay="3000"
-    >
-        <div class="toast-header" [class.text-white]="true" [class.bg-success]="toast.type === 'success'" [class.bg-danger]="toast.type === 'error'">
-        <strong class="me-auto">{{ toast.type === 'success' ? ('SUCCESS_TITLE' | translate) : ('ERROR_TITLE' | translate) }}</strong>
-        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close" (click)="removeToast(toast.id)"></button>
-        </div>
-        <div class="toast-body">
+<div *ngFor="let toast of toasts" #liveToast id="toast-{{toast.id}}"
+    class="toast position-fixed top-0 start-50 translate-middle-x mt-5" role="alert" aria-live="assertive"
+    aria-atomic="true" [class.bg-success]="toast.type === 'success'" [class.bg-danger]="toast.type === 'error'"
+    [class.text-white]="true" data-bs-delay="3000">
+    <div class="toast-header" [class.text-white]="true" [class.bg-success]="toast.type === 'success'"
+        [class.bg-danger]="toast.type === 'error'">
+        <strong class="me-auto">{{ toast.type === 'success' ? ('SUCCESS_TITLE' | translate) : ('ERROR_TITLE' |
+            translate) }}</strong>
+        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"
+            (click)="removeToast(toast.id)"></button>
+    </div>
+    <div class="toast-body">
         {{ toast.message }}
-        </div>
     </div>
 </div>

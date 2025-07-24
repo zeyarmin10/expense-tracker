@@ -1,9 +1,12 @@
+// expense.ts
 import {
   Component,
   OnInit,
   inject,
   ViewChild,
   ChangeDetectorRef,
+  viewChild,
+  NgZone
 } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import {
@@ -14,7 +17,7 @@ import {
 } from '@angular/forms';
 import { ServiceIExpense, ExpenseService } from '../../services/expense';
 import { ServiceICategory, CategoryService } from '../../services/category';
-import { Observable, BehaviorSubject, combineLatest, map } from 'rxjs';
+import { Observable, BehaviorSubject, combineLatest, map, firstValueFrom } from 'rxjs';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
@@ -29,6 +32,8 @@ import {
 
 
 import { CategoryModalComponent } from '../common/category-modal/category-modal';
+import { ConfirmationModal } from '../common/confirmation-modal/confirmation-modal';
+import { ToastService } from '../../services/toast';
 
 @Component({
   selector: 'app-expense',
@@ -39,6 +44,7 @@ import { CategoryModalComponent } from '../common/category-modal/category-modal'
     FontAwesomeModule,
     CategoryModalComponent,
     TranslateModule,
+    ConfirmationModal
   ],
   providers: [DatePipe],
   templateUrl: './expense.html',
@@ -46,7 +52,7 @@ import { CategoryModalComponent } from '../common/category-modal/category-modal'
 })
 export class Expense implements OnInit {
   @ViewChild(CategoryModalComponent) categoryModal!: CategoryModalComponent;
-
+  @ViewChild('deleteConfirmationModal') deleteConfirmationModal!: ConfirmationModal;
   newExpenseForm: FormGroup;
   editingForm: FormGroup | null = null;
 
@@ -67,6 +73,8 @@ export class Expense implements OnInit {
   datePipe = inject(DatePipe);
   translate = inject(TranslateService);
   private cdr = inject(ChangeDetectorRef);
+  toastService = inject(ToastService);
+  private ngZone: NgZone;
 
   editingExpenseId: string | null = null;
   errorMessage: string | null = null;
@@ -97,9 +105,11 @@ export class Expense implements OnInit {
   private originalUnit: string | null = null;
   private originalQuantity: number | null = null;
   private originalPrice: number | null = null;
+  private _expensesSubject: BehaviorSubject<ServiceIExpense[]> = new BehaviorSubject<ServiceIExpense[]>([]);
 
   constructor(private fb: FormBuilder) {
     const todayFormatted = this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
+    this.ngZone = inject(NgZone);
 
     this.newExpenseForm = this.fb.group({
       date: [todayFormatted, Validators.required],
@@ -112,7 +122,8 @@ export class Expense implements OnInit {
       selectedDate: [todayFormatted],
     });
 
-    this.expenses$ = this.expenseService.getExpenses();
+    // Subscribing to the _expensesSubject to update expenses$
+    this.expenses$ = this._expensesSubject.asObservable();
     this.loadCategories();
 
     this.displayedExpenses$ = combineLatest([
@@ -186,6 +197,8 @@ export class Expense implements OnInit {
       quantity: ['', [Validators.required, Validators.min(0.01)]],
       price: ['', [Validators.required, Validators.min(0.01)]],
     });
+    // Initial load of expenses
+    this.loadExpenses();
   }
 
   loadCategories(): void {
@@ -236,6 +249,7 @@ export class Expense implements OnInit {
       const todayFormatted = this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
       this.newExpenseForm.patchValue({ date: todayFormatted, currency: 'MMK', selectedDate: todayFormatted });
       this.resetFilter();
+      await this.loadExpenses(); // Reload expenses after adding
     } catch (error: any) {
       this.errorMessage =
         error.message || this.translate.instant('EXPENSE_ERROR_ADD');
@@ -312,7 +326,7 @@ export class Expense implements OnInit {
       );
       this.successMessage = this.translate.instant('EXPENSE_SUCCESS_UPDATED');
       this.cancelEdit();
-      this.applyDateFilter();
+      await this.loadExpenses(); // Reload expenses after updating
     } catch (error: any) {
       this.errorMessage =
         error.message || this.translate.instant('EXPENSE_ERROR_UPDATE');
@@ -328,24 +342,62 @@ export class Expense implements OnInit {
     this.cdr.detectChanges();
   }
 
-  async onDelete(expenseId: string): Promise<void> {
-    this.clearMessages();
-    if (confirm(this.translate.instant('EXPENSE_CONFIRM_DELETE'))) {
-      try {
-        await this.expenseService.deleteExpense(expenseId);
-        this.successMessage = this.translate.instant('EXPENSE_SUCCESS_DELETED');
-        if (this.editingExpenseId === expenseId) {
-          this.cancelEdit();
-        }
-        this.applyDateFilter();
-      } catch (error: any) {
-        this.errorMessage =
-          error.message || this.translate.instant('EXPENSE_ERROR_DELETE');
-        console.error('Expense delete error:', error);
-      }
+    onDelete(expenseId: string): void {
+        this.translate.get('CONFIRM_DELETE_EXPENSE').subscribe((confirmMsg: string) => {
+        this.deleteConfirmationModal.title = this.translate.instant('CONFIRM_DELETE_TITLE');
+        this.deleteConfirmationModal.message = confirmMsg;
+        this.deleteConfirmationModal.confirmButtonText = this.translate.instant('DELETE_BUTTON');
+        this.deleteConfirmationModal.cancelButtonText = this.translate.instant('CANCEL_BUTTON');
+        this.deleteConfirmationModal.messageColor = 'text-danger';
+
+        this.deleteConfirmationModal.open();
+
+        const subscription = this.deleteConfirmationModal.confirmed.subscribe(async (confirmed: boolean) => {
+            if (confirmed) {
+            try {
+                await this.expenseService.deleteExpense(expenseId);
+                // Ensuring all asynchronous operations and UI updates happen within Angular's zone
+                // and explicitly forcing change detection.
+                this.ngZone.run(async () => { // Use async here to await loadExpenses
+                    this.translate.get('EXPENSE_DELETED_SUCCESS').subscribe((res: string) => {
+                        this.toastService.showSuccess(res);
+                        this.cdr.detectChanges(); // Force change detection to render the toast
+                    });
+
+                    if (this.editingExpenseId === expenseId) {
+                        this.cancelEdit();
+                    }
+                    // It's crucial to reload expenses and then detect changes
+                    // to ensure the list is updated visually.
+                    await this.loadExpenses(); // Await the reloading of expenses
+                    this.cdr.detectChanges(); // Force change detection after the list is loaded
+                });
+
+            } catch (error: any) {
+                this.translate.get('DATA_DELETE_ERROR').subscribe((res: string) => {
+                this.toastService.showError(error.message || res);
+                });
+                console.error('Expense delete error:', error);
+            }
+            }
+            subscription.unsubscribe(); // Unsubscribe to prevent memory leaks
+        });
+        });
     }
-    this.cdr.detectChanges();
-  }
+
+
+    public async loadExpenses(): Promise<void> {
+        try {
+        const expenses = await firstValueFrom(this.expenseService.getExpenses());
+        this._expensesSubject.next(expenses);
+        this.applyDateFilter(); // Re-apply filter to update displayed expenses based on the current date
+        } catch (error) {
+        this.translate.get('DATA_LOAD_ERROR').subscribe((res: string) => {
+            this.toastService.showError((error as any).message || res);
+        });
+        console.error('Error loading expenses:', error);
+        }
+    }
 
   /**
    * Handles the focus event for input fields.

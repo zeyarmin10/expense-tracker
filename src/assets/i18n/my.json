@@ -214,5 +214,7 @@
   "ERROR_TITLE": "အမှား",
   "CONFIRM_DELETE_TITLE": "ဖျက်ရန် အတည်ပြုပါ",
   "DELETE_BUTTON": "ဖျက်မည်",
-  "CONFIRMATION_TITLE": "အတည်ပြုချက်"
+  "CONFIRMATION_TITLE": "အတည်ပြုချက်",
+  "CONFIRM_DELETE_EXPENSE": "ဤအသုံးစရိတ်ကို ဖျက်ရန် သေချာပါသလား။ ဤလုပ်ဆောင်ချက်ကို ပြန်ဖျက်၍ မရပါ။",
+  "EXPENSE_DELETED_SUCCESS": "အသုံးစရိတ်ကို အောင်မြင်စွာ ဖျက်ပြီးပါပြီ။"
 }

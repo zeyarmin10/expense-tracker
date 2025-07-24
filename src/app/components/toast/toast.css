@@ -1,4 +1,0 @@
-/* Ensure toasts stack correctly and are always on top */
-.toast-container {
-  z-index: 1080; /* Bootstrap modal z-index is 1050, offcanvas is 1040, navbar is 1030 */
-}
