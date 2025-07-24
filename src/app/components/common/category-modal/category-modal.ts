@@ -6,7 +6,8 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { faSave, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { FaIconComponent } from "@fortawesome/angular-fontawesome";
 import { ToastService } from '../../../services/toast'; // Ensure this path is correct: services/toast.service
-import { firstValueFrom } from 'rxjs'; // Import firstValueFrom
+import { BehaviorSubject, firstValueFrom } from 'rxjs'; // Import firstValueFrom
+import { ServiceICategory } from '../../../services/category';
 
 declare const bootstrap: any;
 
@@ -37,6 +38,9 @@ export class CategoryModalComponent implements OnInit {
 
   private bsModal!: any;
 
+  private _categoriesSubject: BehaviorSubject<ServiceICategory[]> = new BehaviorSubject<ServiceICategory[]>([]);
+  
+
   constructor(private fb: FormBuilder) {
     this.categoryForm = this.fb.group({
       name: ['', Validators.required]
@@ -62,6 +66,7 @@ export class CategoryModalComponent implements OnInit {
       // Fetch the latest category count when the modal opens
       const categories = await firstValueFrom(this.categoryService.getCategories());
       this._modalCurrentCategoryCount = categories.length;
+      this._categoriesSubject.next(categories);
       console.log('Modal opened. Current categories in service:', this._modalCurrentCategoryCount); // For debugging
     } catch (error) {
       this.translateService.get('DATA_LOAD_ERROR').subscribe((res: string) => {
@@ -92,7 +97,8 @@ export class CategoryModalComponent implements OnInit {
       this.translateService.get('CATEGORY_LIMIT_REACHED').subscribe((res: string) => {
         this.toastService.showError(res); // Show error as toast
       });
-      return; // Stop execution if limit is reached
+      this.close();
+      return;
     }
 
     if (this.categoryForm.invalid) {
@@ -104,6 +110,19 @@ export class CategoryModalComponent implements OnInit {
 
     const newCategoryName = this.categoryForm.value.name;
 
+    // Check for duplicate category name (case-insensitive)
+    const categories = this._categoriesSubject.value;
+    const isDuplicate = categories.some(category => category.name.toLowerCase() === newCategoryName.toLowerCase());
+
+    if (isDuplicate) {
+        this.translateService.get('CATEGORY_ALREADY_EXISTS').subscribe((res: string) => {
+            console.log('translate service', res);
+            this.toastService.showError(res);
+        });
+        this.close();
+        return;
+    }
+
     try {
       await this.categoryService.addCategory(newCategoryName);
       this.translateService.get('CATEGORY_ADDED_SUCCESS').subscribe((res: string) => {
@@ -114,10 +133,7 @@ export class CategoryModalComponent implements OnInit {
 
       // Increment internal count for immediate display consistency
       this._modalCurrentCategoryCount++;
-
-      setTimeout(() => {
-        this.close(); // Close modal after success toast
-      }, 1500); // Give time for the toast to be seen
+      this.close();
     } catch (error: any) {
       this.translateService.get('DATA_SAVE_ERROR').subscribe((res: string) => {
         this.toastService.showError(error.message || res); // Show error as toast

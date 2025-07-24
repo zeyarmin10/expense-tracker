@@ -82,10 +82,10 @@ export class Category implements OnInit {
     const isDuplicate = categories.some(category => category.name.toLowerCase() === categoryName.toLowerCase());
 
     if (isDuplicate) {
-      this.translateService.get('CATEGORY_ALREADY_EXISTS').subscribe((res: string) => {
-      this.toastService.showError(res);
-    });
-      return;
+        this.translateService.get('CATEGORY_ALREADY_EXISTS').subscribe((res: string) => {
+            this.toastService.showError(res);
+        });
+        return;
     }
 
     try {
