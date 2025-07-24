@@ -1,12 +1,12 @@
-import { Component, ElementRef, EventEmitter, OnInit, Output, ViewChild, inject } from '@angular/core';
+import { Component, ElementRef, EventEmitter, OnInit, Output, ViewChild, inject, Input } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { CategoryService } from '../../../services/category'; // Assuming your CategoryService is here
+import { CategoryService } from '../../../services/category';
 import { CommonModule } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { faSave, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { FaIconComponent } from "@fortawesome/angular-fontawesome";
+import { ToastService } from '../../../services/toast'; // Import ToastService
 
-// Declare bootstrap as any to access Bootstrap's JS API
 declare const bootstrap: any;
 
 @Component({
@@ -17,20 +17,24 @@ declare const bootstrap: any;
   styleUrls: ['./category-modal.css']
 })
 export class CategoryModalComponent implements OnInit {
-  @ViewChild('categoryModal') modalElementRef!: ElementRef; // Reference to the modal HTML element
-  @Output() categoryAdded = new EventEmitter<void>(); // Event to notify parent on success
+  @ViewChild('categoryModal') modalElementRef!: ElementRef;
+  @Output() categoryAdded = new EventEmitter<void>();
+
+  @Input() currentCategoryCount: number = 0;
 
   categoryForm: FormGroup;
   categoryService = inject(CategoryService);
+  translateService = inject(TranslateService);
+  toastService = inject(ToastService); // Inject ToastService
 
-  errorMessage: string | null = null;
-  successMessage: string | null = null;
+  // No longer needed for inline messages
+  // errorMessage: string | null = null;
+  // successMessage: string | null = null;
 
   faSave = faSave;
   faTimes = faTimes;
-  
 
-  private bsModal!: any; // To store the Bootstrap modal instance
+  private bsModal!: any;
 
   constructor(private fb: FormBuilder) {
     this.categoryForm = this.fb.group({
@@ -39,14 +43,12 @@ export class CategoryModalComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Initialize Bootstrap modal when the component view is ready
-    // This is safe to do here because @ViewChild('categoryModal') will be ready
+    // Initialization logic for the component
   }
 
   ngAfterViewInit(): void {
     if (this.modalElementRef) {
       this.bsModal = new bootstrap.Modal(this.modalElementRef.nativeElement);
-      // Optional: Listen to modal hidden event to reset form
       this.modalElementRef.nativeElement.addEventListener('hidden.bs.modal', () => {
         this.resetForm();
       });
@@ -54,9 +56,10 @@ export class CategoryModalComponent implements OnInit {
   }
 
   open(): void {
-    this.errorMessage = null;
-    this.successMessage = null;
-    this.resetForm(); // Ensure form is clean when opening
+    // No longer needed to clear inline messages
+    // this.errorMessage = null;
+    // this.successMessage = null;
+    this.resetForm();
     if (this.bsModal) {
       this.bsModal.show();
     }
@@ -70,16 +73,27 @@ export class CategoryModalComponent implements OnInit {
 
   resetForm(): void {
     this.categoryForm.reset();
-    this.errorMessage = null;
-    this.successMessage = null;
+    // No longer needed to clear inline messages
+    // this.errorMessage = null;
+    // this.successMessage = null;
   }
 
   async onSubmit(): Promise<void> {
-    this.errorMessage = null;
-    this.successMessage = null;
+    // No longer needed to clear inline messages
+    // this.errorMessage = null;
+    // this.successMessage = null;
+
+    if (this.currentCategoryCount >= 10) {
+      this.translateService.get('CATEGORY_LIMIT_REACHED').subscribe((res: string) => {
+        this.toastService.showError(res); // Show error as toast
+      });
+      return;
+    }
 
     if (this.categoryForm.invalid) {
-      this.errorMessage = 'Category name ကို ဖြည့်ရန်လိုအပ်ပါသည်။';
+      this.translateService.get('CATEGORY_NAME_REQUIRED').subscribe((res: string) => {
+        this.toastService.showError(res); // Show error as toast
+      });
       return;
     }
 
@@ -87,15 +101,18 @@ export class CategoryModalComponent implements OnInit {
 
     try {
       await this.categoryService.addCategory(newCategoryName);
-      this.successMessage = 'Category added successfully!';
+      this.translateService.get('CATEGORY_ADDED_SUCCESS').subscribe((res: string) => {
+        this.toastService.showSuccess(res); // Show success as toast
+      });
       this.categoryForm.reset();
-      this.categoryAdded.emit(); // Emit event to notify parent
-      // Optionally, close modal after a short delay or immediately
+      this.categoryAdded.emit();
       setTimeout(() => {
-        this.close();
-      }, 1500); // Close after 1.5 seconds
+        this.close(); // Close modal after success toast
+      }, 1500); // Give time for the toast to be seen
     } catch (error: any) {
-      this.errorMessage = error.message || ' Category ကို ထည့်ရာတွင် အမှားတစ်ခုဖြစ်သွားသည်။';
+      this.translateService.get('DATA_SAVE_ERROR').subscribe((res: string) => {
+        this.toastService.showError(error.message || res); // Show error as toast
+      });
       console.error('Error adding category:', error);
     }
   }

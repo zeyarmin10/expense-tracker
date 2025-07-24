@@ -31,13 +31,6 @@
             </div>
           </div>
 
-          <div *ngIf="errorMessage" class="alert alert-danger" role="alert">
-            {{ errorMessage }}
-          </div>
-          <div *ngIf="successMessage" class="alert alert-success" role="alert">
-            {{ successMessage }}
-          </div>
-
           <div class="d-grid gap-2 d-flex justify-content-end">
             <button
               type="submit"
@@ -67,15 +60,18 @@
                 class="form-control form-control-sm me-2"
                 [formControl]="editingCategoryFormControl"
                 [class.is-invalid]="editingCategoryFormControl.invalid && editingCategoryFormControl.touched"
-                (keydown.enter)="onUpdateInline(category.id!)" />
+                (keydown.enter)="onUpdateInline(category.id!)"
+              />
               <div
                 *ngIf="editingCategoryFormControl.invalid && editingCategoryFormControl.touched"
-                class="invalid-feedback d-block" >
+                class="invalid-feedback d-block"
+              >
                 {{ 'CATEGORY_NAME_REQUIRED' | translate }}
               </div>
             </ng-container>
             <ng-template #viewMode>
-              <span class="flex-grow-1">{{ category.name }}</span> </ng-template>
+              <span class="flex-grow-1">{{ category.name }}</span>
+            </ng-template>
 
             <div class="d-flex align-items-center">
               <ng-container *ngIf="editingCategoryId === category.id; else defaultButtons">
@@ -99,14 +95,16 @@
                 <button
                   class="btn btn-sm btn-outline-info me-2 ps-4 pe-4"
                   (click)="startEdit(category)"
-                  [disabled]="editingCategoryId !== null" [attr.aria-label]="'EDIT_BUTTON_LABEL' | translate"
+                  [disabled]="editingCategoryId !== null"
+                  [attr.aria-label]="'EDIT_BUTTON_LABEL' | translate"
                 >
                   <fa-icon [icon]="faEdit"></fa-icon>
                 </button>
                 <button
                   class="btn btn-sm btn-outline-danger"
                   (click)="onDelete(category.id!)"
-                  [disabled]="editingCategoryId !== null" [attr.aria-label]="'DELETE_BUTTON_LABEL' | translate"
+                  [disabled]="editingCategoryId !== null"
+                  [attr.aria-label]="'DELETE_BUTTON_LABEL' | translate"
                 >
                   <fa-icon [icon]="faTrash"></fa-icon>
                 </button>
@@ -118,3 +116,9 @@
     </div>
   </div>
 </div>
+
+<app-category-modal
+  #categoryModalComponent
+  [currentCategoryCount]="currentCategoryCount"
+  (categoryAdded)="loadCategories()"
+></app-category-modal>

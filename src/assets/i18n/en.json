@@ -205,6 +205,11 @@
   "CATEGORY_ERROR_UPDATE": "Error updating category.",
   "CATEGORY_ERROR_DELETE": "Error deleting category.",
   "CATEGORY_ERROR_DUPLICATE_NAME": "Category name already exists.",
-  "CATEGORY_CLOSE_BUTTON": "Close"
-
-}
+  "CATEGORY_CLOSE_BUTTON": "Close",
+  "CATEGORY_LIMIT_REACHED": "You have reached the maximum limit of 10 categories. Delete an existing category to add a new one.",
+  "DATA_LOAD_ERROR": "An error occurred while loading data.",
+  "SAVE_BUTTON_LABEL": "Save",
+  "CANCEL_BUTTON_LABEL": "Cancel",
+  "SUCCESS_TITLE": "Success",
+  "ERROR_TITLE": "Error"
+  }

@@ -189,7 +189,7 @@
   "SUMMARY_TITLE_PREFIX": "အကျဉ်းချုပ်",
   "DATE_REQUIRED": "ရက်စွဲ လိုအပ်ပါတယ်။",
   "DATE": "ရက်စွဲ",
-  "CATEGORY_MODAL_TITLE": "အမျိုးအစားများ အသစ်ထည့်သွင်းရန်",
+  "CATEGORY_MODAL_TITLE": "အမျိုးအစား အသစ်ထည့်သွင်းရန်",
   "CATEGORY_ADD_BUTTON": "အမျိုးအစားထည့်ရန်",
   "CATEGORY_NO_CATEGORIES_HINT": "မည်သည့်အမျိုးအစားမှ ထည့်ရသေးခြင်းမရှိပါ။",
   "CATEGORY_ACTIONS_COLUMN": "လုပ်ဆောင်ချက်များ",
@@ -205,6 +205,11 @@
   "CATEGORY_ERROR_UPDATE": "အမျိုးအစားပြင်ဆင်ရာတွင် အမှားပေါ်ပေါက်ခဲ့သည်။",
   "CATEGORY_ERROR_DELETE": "အမျိုးအစားဖျက်ရာတွင် အမှားပေါ်ပေါက်ခဲ့သည်။",
   "CATEGORY_ERROR_DUPLICATE_NAME": "အမျိုးအစားအမည် ရှိပြီးသားဖြစ်သည်။",
-  "CATEGORY_CLOSE_BUTTON": "ပိတ်ရန်"
-
+  "CATEGORY_CLOSE_BUTTON": "ပိတ်ရန်",
+  "CATEGORY_LIMIT_REACHED": "အမျိုးအစား ၁၀ ခုထိသာ ထည့်သွင်းနိုင်ပါတယ်။ အသစ်ထည့်ရန် အမျိုးအစားတစ်ခုဖျက်ပါ။",
+  "DATA_LOAD_ERROR": "ဒေတာတင်ရာတွင် အမှားတစ်ခု ဖြစ်ပေါ်ခဲ့ပါသည်။",
+  "SAVE_BUTTON_LABEL": "သိမ်းရန်",
+  "CANCEL_BUTTON_LABEL": "ဖျက်ရန်",
+  "SUCCESS_TITLE": "အောင်မြင်သည်",
+  "ERROR_TITLE": "အမှား"
 }

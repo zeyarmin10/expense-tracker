@@ -8,6 +8,7 @@ import { CommonModule } from '@angular/common';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { UserDataService, UserProfile } from './services/user-data'; // Import UserDataService and UserProfile
 import { switchMap, map } from 'rxjs/operators'; // Import operators
+import { Toast } from './components/toast/toast';
 
 @Component({
   selector: 'app-root',
@@ -16,7 +17,8 @@ import { switchMap, map } from 'rxjs/operators'; // Import operators
     RouterLink,
     RouterLinkActive,
     CommonModule,
-    TranslateModule
+    TranslateModule,
+    Toast
   ],
   templateUrl: './app.html',
   styleUrl: './app.css',
