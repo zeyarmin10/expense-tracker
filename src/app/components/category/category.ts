@@ -1,35 +1,32 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ViewChild } from '@angular/core'; // Add ViewChild
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { ServiceICategory, CategoryService } from '../../services/category';
 import { Observable, BehaviorSubject, firstValueFrom } from 'rxjs';
 
-// Font Awesome Imports
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faPlus, faEdit, faTrash, faSave, faTimes } from '@fortawesome/free-solid-svg-icons';
 
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { ToastService } from '../../services/toast';
+import { ConfirmationModal } from '../common/confirmation-modal/confirmation-modal'; // Import the new modal
 
 @Component({
   selector: 'app-category',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FontAwesomeModule, TranslateModule],
+  imports: [CommonModule, ReactiveFormsModule, FontAwesomeModule, TranslateModule, ConfirmationModal], // Add ConfirmationModalComponent
   templateUrl: './category.html',
   styleUrls: ['./category.css']
 })
 export class Category implements OnInit {
+  @ViewChild('deleteConfirmationModal') deleteConfirmationModal!: ConfirmationModal; // Reference to the confirmation modal
+
   addCategoryForm: FormGroup;
   editingCategoryFormControl: FormControl | null = null;
   editingCategoryId: string | null = null;
 
   private _categoriesSubject: BehaviorSubject<ServiceICategory[]> = new BehaviorSubject<ServiceICategory[]>([]);
   categories$: Observable<ServiceICategory[]> = this._categoriesSubject.asObservable();
-
-  // No longer need currentCategoryCount getter here as the modal fetches it directly
-  // get currentCategoryCount(): number {
-  //   return this._categoriesSubject.value.length;
-  // }
 
   categoryService = inject(CategoryService);
   translateService = inject(TranslateService);
@@ -64,7 +61,6 @@ export class Category implements OnInit {
   }
 
   async onAddSubmit(): Promise<void> {
-    // Check category limit using the directly maintained subject value
     if (this._categoriesSubject.value.length >= 10) {
       this.translateService.get('CATEGORY_LIMIT_REACHED').subscribe((res: string) => {
         this.toastService.showError(res);
@@ -136,25 +132,39 @@ export class Category implements OnInit {
     }
   }
 
-  async onDelete(categoryId: string): Promise<void> {
-    this.translateService.get('CONFIRM_DELETE_CATEGORY').subscribe(async (confirmMsg: string) => {
-      if (confirm(confirmMsg)) {
-        try {
-          await this.categoryService.deleteCategory(categoryId);
-          this.translateService.get('CATEGORY_DELETED_SUCCESS').subscribe((res: string) => {
-            this.toastService.showSuccess(res);
-          });
-          if (this.editingCategoryId === categoryId) {
-              this.cancelEdit();
+  // Modified onDelete to use the custom confirmation modal
+  onDelete(categoryId: string): void { // No longer async directly
+    this.translateService.get('CONFIRM_DELETE_CATEGORY').subscribe((confirmMsg: string) => {
+      // Set the message and open the custom confirmation modal
+      this.deleteConfirmationModal.title = this.translateService.instant('CONFIRM_DELETE_TITLE'); // Or a custom title
+      this.deleteConfirmationModal.message = confirmMsg;
+      this.deleteConfirmationModal.confirmButtonText = this.translateService.instant('DELETE_BUTTON'); // Or specific text
+      this.deleteConfirmationModal.cancelButtonText = this.translateService.instant('CANCEL_BUTTON');
+      this.deleteConfirmationModal.messageColor = 'text-danger'; // Make the message text red
+
+      this.deleteConfirmationModal.open();
+
+      // Subscribe to the confirmed event of the modal
+      const subscription = this.deleteConfirmationModal.confirmed.subscribe(async (confirmed: boolean) => {
+        if (confirmed) {
+          try {
+            await this.categoryService.deleteCategory(categoryId);
+            this.translateService.get('CATEGORY_DELETED_SUCCESS').subscribe((res: string) => {
+              this.toastService.showSuccess(res);
+            });
+            if (this.editingCategoryId === categoryId) {
+                this.cancelEdit();
+            }
+            await this.loadCategories();
+          } catch (error: any) {
+            this.translateService.get('DATA_DELETE_ERROR').subscribe((res: string) => {
+              this.toastService.showError(error.message || res);
+            });
+            console.error('Category delete error:', error);
           }
-          await this.loadCategories();
-        } catch (error: any) {
-          this.translateService.get('DATA_DELETE_ERROR').subscribe((res: string) => {
-            this.toastService.showError(error.message || res);
-          });
-          console.error('Category delete error:', error);
         }
-      }
+        subscription.unsubscribe(); // Unsubscribe to prevent memory leaks
+      });
     });
   }
 }

@@ -211,5 +211,8 @@
   "SAVE_BUTTON_LABEL": "Save",
   "CANCEL_BUTTON_LABEL": "Cancel",
   "SUCCESS_TITLE": "Success",
-  "ERROR_TITLE": "Error"
+  "ERROR_TITLE": "Error",
+  "CONFIRM_DELETE_TITLE": "Confirm Deletion",
+  "DELETE_BUTTON": "Delete",
+  "CONFIRMATION_TITLE": "Confirmation"
   }

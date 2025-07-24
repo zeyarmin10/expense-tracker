@@ -98,7 +98,7 @@
   "CATEGORY_NAME_REQUIRED": "အမျိုးအစားအမည်ကို ဖြည့်ရန် လိုအပ်ပါသည်။",
   "UPDATE_CATEGORY_BUTTON": "အမျိုးအစား အပ်ဒိတ်လုပ်ရန်",
   "ADD_CATEGORY_BUTTON": "အမျိုးအစားထည့်ရန်",
-  "CANCEL_BUTTON": "ဖျက်သိမ်းရန်",
+  "CANCEL_BUTTON": "မလုပ်တော့ပါ",
   "EXISTING_CATEGORIES_TITLE": "ရှိပြီးသားအမျိုးအစားများ",
   "NO_CATEGORIES_FOUND": "အမျိုးအစားမရှိသေးပါ။ အပေါ်မှာထည့်ပါ။",
   "EDIT_BUTTON_LABEL": "ပြင်ဆင်ရန်",
@@ -211,5 +211,8 @@
   "SAVE_BUTTON_LABEL": "သိမ်းရန်",
   "CANCEL_BUTTON_LABEL": "ဖျက်ရန်",
   "SUCCESS_TITLE": "အောင်မြင်သည်",
-  "ERROR_TITLE": "အမှား"
+  "ERROR_TITLE": "အမှား",
+  "CONFIRM_DELETE_TITLE": "ဖျက်ရန် အတည်ပြုပါ",
+  "DELETE_BUTTON": "ဖျက်မည်",
+  "CONFIRMATION_TITLE": "အတည်ပြုချက်"
 }
