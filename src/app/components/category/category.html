@@ -38,8 +38,7 @@
               [disabled]="addCategoryForm.invalid"
             >
               <fa-icon [icon]="faSave"></fa-icon>
-              <!-- {{ 'ADD_CATEGORY_BUTTON' | translate }} -->
-            </button>
+              </button>
           </div>
         </form>
 
@@ -117,8 +116,3 @@
   </div>
 </div>
 
-<app-category-modal
-  #categoryModalComponent
-  [currentCategoryCount]="currentCategoryCount"
-  (categoryAdded)="loadCategories()"
-></app-category-modal>

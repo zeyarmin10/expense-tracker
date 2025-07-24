@@ -9,13 +9,12 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faPlus, faEdit, faTrash, faSave, faTimes } from '@fortawesome/free-solid-svg-icons';
 
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
-import { CategoryModalComponent } from '../common/category-modal/category-modal';
-import { ToastService } from '../../services/toast'; // Import ToastService
+import { ToastService } from '../../services/toast';
 
 @Component({
   selector: 'app-category',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FontAwesomeModule, TranslateModule, CategoryModalComponent],
+  imports: [CommonModule, ReactiveFormsModule, FontAwesomeModule, TranslateModule],
   templateUrl: './category.html',
   styleUrls: ['./category.css']
 })
@@ -27,13 +26,14 @@ export class Category implements OnInit {
   private _categoriesSubject: BehaviorSubject<ServiceICategory[]> = new BehaviorSubject<ServiceICategory[]>([]);
   categories$: Observable<ServiceICategory[]> = this._categoriesSubject.asObservable();
 
-  get currentCategoryCount(): number {
-    return this._categoriesSubject.value.length;
-  }
+  // No longer need currentCategoryCount getter here as the modal fetches it directly
+  // get currentCategoryCount(): number {
+  //   return this._categoriesSubject.value.length;
+  // }
 
   categoryService = inject(CategoryService);
   translateService = inject(TranslateService);
-  toastService = inject(ToastService); // Inject ToastService
+  toastService = inject(ToastService);
 
   faPlus = faPlus;
   faEdit = faEdit;
@@ -51,30 +51,30 @@ export class Category implements OnInit {
     this.loadCategories();
   }
 
-  // Changed from private to public
   public async loadCategories(): Promise<void> {
     try {
       const categories = await firstValueFrom(this.categoryService.getCategories());
       this._categoriesSubject.next(categories);
     } catch (error) {
       this.translateService.get('DATA_LOAD_ERROR').subscribe((res: string) => {
-        this.toastService.showError((error as any).message || res); // Show error as toast
+        this.toastService.showError((error as any).message || res);
       });
       console.error('Error loading categories:', error);
     }
   }
 
   async onAddSubmit(): Promise<void> {
-    if (this.currentCategoryCount >= 10) {
+    // Check category limit using the directly maintained subject value
+    if (this._categoriesSubject.value.length >= 10) {
       this.translateService.get('CATEGORY_LIMIT_REACHED').subscribe((res: string) => {
-        this.toastService.showError(res); // Show error as toast
+        this.toastService.showError(res);
       });
       return;
     }
 
     if (this.addCategoryForm.invalid) {
       this.translateService.get('CATEGORY_NAME_REQUIRED').subscribe((res: string) => {
-        this.toastService.showError(res); // Show error as toast
+        this.toastService.showError(res);
       });
       return;
     }
@@ -84,13 +84,13 @@ export class Category implements OnInit {
     try {
       await this.categoryService.addCategory(categoryName);
       this.translateService.get('CATEGORY_ADDED_SUCCESS').subscribe((res: string) => {
-        this.toastService.showSuccess(res); // Show success as toast
+        this.toastService.showSuccess(res);
       });
       this.addCategoryForm.reset();
       await this.loadCategories();
     } catch (error: any) {
       this.translateService.get('DATA_SAVE_ERROR').subscribe((res: string) => {
-        this.toastService.showError(error.message || res); // Show error as toast
+        this.toastService.showError(error.message || res);
       });
       console.error('Category add error:', error);
     }
@@ -113,7 +113,7 @@ export class Category implements OnInit {
   async onUpdateInline(categoryId: string): Promise<void> {
     if (!this.editingCategoryFormControl || this.editingCategoryFormControl.invalid) {
       this.translateService.get('CATEGORY_NAME_REQUIRED').subscribe((res: string) => {
-        this.toastService.showError(res); // Show error as toast
+        this.toastService.showError(res);
       });
       this.editingCategoryFormControl?.markAsTouched();
       return;
@@ -124,13 +124,13 @@ export class Category implements OnInit {
     try {
       await this.categoryService.updateCategory(categoryId, updatedName);
       this.translateService.get('CATEGORY_UPDATED_SUCCESS').subscribe((res: string) => {
-        this.toastService.showSuccess(res); // Show success as toast
+        this.toastService.showSuccess(res);
       });
       this.cancelEdit();
       await this.loadCategories();
     } catch (error: any) {
       this.translateService.get('DATA_SAVE_ERROR').subscribe((res: string) => {
-        this.toastService.showError(error.message || res); // Show error as toast
+        this.toastService.showError(error.message || res);
       });
       console.error('Category update error:', error);
     }
@@ -142,7 +142,7 @@ export class Category implements OnInit {
         try {
           await this.categoryService.deleteCategory(categoryId);
           this.translateService.get('CATEGORY_DELETED_SUCCESS').subscribe((res: string) => {
-            this.toastService.showSuccess(res); // Show success as toast
+            this.toastService.showSuccess(res);
           });
           if (this.editingCategoryId === categoryId) {
               this.cancelEdit();
@@ -150,7 +150,7 @@ export class Category implements OnInit {
           await this.loadCategories();
         } catch (error: any) {
           this.translateService.get('DATA_DELETE_ERROR').subscribe((res: string) => {
-            this.toastService.showError(error.message || res); // Show error as toast
+            this.toastService.showError(error.message || res);
           });
           console.error('Category delete error:', error);
         }

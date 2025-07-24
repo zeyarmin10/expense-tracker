@@ -1,11 +1,12 @@
-import { Component, ElementRef, EventEmitter, OnInit, Output, ViewChild, inject, Input } from '@angular/core';
+import { Component, ElementRef, EventEmitter, OnInit, Output, ViewChild, inject } from '@angular/core'; // Removed Input
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CategoryService } from '../../../services/category';
 import { CommonModule } from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { faSave, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { FaIconComponent } from "@fortawesome/angular-fontawesome";
-import { ToastService } from '../../../services/toast'; // Import ToastService
+import { ToastService } from '../../../services/toast'; // Ensure this path is correct: services/toast.service
+import { firstValueFrom } from 'rxjs'; // Import firstValueFrom
 
 declare const bootstrap: any;
 
@@ -20,16 +21,16 @@ export class CategoryModalComponent implements OnInit {
   @ViewChild('categoryModal') modalElementRef!: ElementRef;
   @Output() categoryAdded = new EventEmitter<void>();
 
-  @Input() currentCategoryCount: number = 0;
+  // Removed @Input() currentCategoryCount: number = 0;
+  // We will manage the count internally
 
   categoryForm: FormGroup;
   categoryService = inject(CategoryService);
   translateService = inject(TranslateService);
-  toastService = inject(ToastService); // Inject ToastService
+  toastService = inject(ToastService);
 
-  // No longer needed for inline messages
-  // errorMessage: string | null = null;
-  // successMessage: string | null = null;
+  // Add an internal property to hold the current category count specific to the modal
+  private _modalCurrentCategoryCount: number = 0;
 
   faSave = faSave;
   faTimes = faTimes;
@@ -55,11 +56,21 @@ export class CategoryModalComponent implements OnInit {
     }
   }
 
-  open(): void {
-    // No longer needed to clear inline messages
-    // this.errorMessage = null;
-    // this.successMessage = null;
+  async open(): Promise<void> { // Made async to await category count fetch
     this.resetForm();
+    try {
+      // Fetch the latest category count when the modal opens
+      const categories = await firstValueFrom(this.categoryService.getCategories());
+      this._modalCurrentCategoryCount = categories.length;
+      console.log('Modal opened. Current categories in service:', this._modalCurrentCategoryCount); // For debugging
+    } catch (error) {
+      this.translateService.get('DATA_LOAD_ERROR').subscribe((res: string) => {
+        this.toastService.showError((error as any).message || res);
+      });
+      console.error('Error loading categories for modal:', error);
+      this._modalCurrentCategoryCount = 0; // Default to 0 on error
+    }
+
     if (this.bsModal) {
       this.bsModal.show();
     }
@@ -73,21 +84,15 @@ export class CategoryModalComponent implements OnInit {
 
   resetForm(): void {
     this.categoryForm.reset();
-    // No longer needed to clear inline messages
-    // this.errorMessage = null;
-    // this.successMessage = null;
   }
 
   async onSubmit(): Promise<void> {
-    // No longer needed to clear inline messages
-    // this.errorMessage = null;
-    // this.successMessage = null;
-
-    if (this.currentCategoryCount >= 10) {
+    // Check category limit using the internally fetched count
+    if (this._modalCurrentCategoryCount >= 10) {
       this.translateService.get('CATEGORY_LIMIT_REACHED').subscribe((res: string) => {
         this.toastService.showError(res); // Show error as toast
       });
-      return;
+      return; // Stop execution if limit is reached
     }
 
     if (this.categoryForm.invalid) {
@@ -105,7 +110,11 @@ export class CategoryModalComponent implements OnInit {
         this.toastService.showSuccess(res); // Show success as toast
       });
       this.categoryForm.reset();
-      this.categoryAdded.emit();
+      this.categoryAdded.emit(); // Emit event for parent to re-load categories
+
+      // Increment internal count for immediate display consistency
+      this._modalCurrentCategoryCount++;
+
       setTimeout(() => {
         this.close(); // Close modal after success toast
       }, 1500); // Give time for the toast to be seen
