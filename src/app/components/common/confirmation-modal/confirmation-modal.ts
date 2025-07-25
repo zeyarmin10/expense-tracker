@@ -17,19 +17,31 @@ export class ConfirmationModal implements OnInit, AfterViewInit {
 
   @Input() title: string = '';
   @Input() message: string = '';
-  @Input() confirmButtonText: string = 'Confirm';
-  @Input() cancelButtonText: string = 'Cancel';
+  @Input() confirmButtonText: string = ''; // Initialize as empty to allow defaults based on type
+  @Input() cancelButtonText: string = ''; // Initialize as empty
   @Input() messageColor: string = 'text-dark'; // Default to dark, can be 'text-danger' for red
+  @Input() modalType: 'confirm' | 'alert' = 'confirm'; // New input: 'confirm' for two buttons, 'alert' for one
 
   private bsModal!: any;
 
   constructor(private translateService: TranslateService) {}
 
   ngOnInit(): void {
-    // You can set default translated texts here if needed
-    if (!this.title) this.translateService.get('CONFIRMATION_TITLE').subscribe(res => this.title = res);
-    if (!this.confirmButtonText) this.translateService.get('CONFIRM_BUTTON').subscribe(res => this.confirmButtonText = res);
-    if (!this.cancelButtonText) this.translateService.get('CANCEL_BUTTON').subscribe(res => this.cancelButtonText = res);
+    // Set default translated texts based on modalType if not provided by parent component
+    if (!this.title) {
+      this.translateService.get(this.modalType === 'alert' ? 'ALERT_TITLE' : 'CONFIRMATION_TITLE')
+        .subscribe(res => this.title = res);
+    }
+
+    if (!this.confirmButtonText) {
+      this.translateService.get(this.modalType === 'alert' ? 'OK_BUTTON' : 'CONFIRM_BUTTON')
+        .subscribe(res => this.confirmButtonText = res);
+    }
+
+    if (this.modalType === 'confirm' && !this.cancelButtonText) {
+      this.translateService.get('CANCEL_BUTTON')
+        .subscribe(res => this.cancelButtonText = res);
+    }
   }
 
   ngAfterViewInit(): void {
@@ -37,8 +49,12 @@ export class ConfirmationModal implements OnInit, AfterViewInit {
       this.bsModal = new bootstrap.Modal(this.modalElementRef.nativeElement);
       // Optional: Add event listener if you need to perform actions after modal hides
       this.modalElementRef.nativeElement.addEventListener('hidden.bs.modal', () => {
-        // You might want to emit 'false' if the modal is closed without explicit confirm/cancel
-        // but for simplicity, we'll rely on button clicks
+        // If the modal is closed without explicit confirm/cancel (e.g., by pressing ESC or clicking backdrop)
+        // and it's a 'confirm' type, we might want to emit false.
+        // For 'alert' type, it's usually just a dismissal.
+        if (this.modalType === 'confirm' && this.confirmed.observers.length > 0) {
+            this.confirmed.emit(false);
+        }
       });
     }
   }

@@ -216,5 +216,7 @@
   "CATEGORY_ALREADY_EXISTS": "ဤအမည်ဖြင့် အမျိုးအစားတစ်ခု ရှိပြီးသားဖြစ်သည်။ အခြားအမည်တစ်ခု ရွေးချယ်ပါ။",
   "CONFIRM_DELETE_TITLE": "ဖျက်ခြင်းကို အတည်ပြုပါ",
   "DELETE_BUTTON": "ဖျက်မည်",
-  "SAVE_BUTTON_LABEL": "သိမ်းဆည်းမည်"
+  "SAVE_BUTTON_LABEL": "သိမ်းဆည်းမည်",
+  "OK_BUTTON": "OK",
+  "ALERT_TITLE": "သတိပေးချက်"
 }

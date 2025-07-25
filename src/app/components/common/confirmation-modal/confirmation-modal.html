@@ -9,8 +9,10 @@
         <p [ngClass]="messageColor">{{ message }}</p>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" (click)="onCancel()">{{ cancelButtonText }}</button>
-        <button type="button" class="btn btn-danger" (click)="onConfirm()">{{ confirmButtonText }}</button>
+        <!-- Conditionally render the Cancel button based on modalType -->
+        <button type="button" class="btn btn-secondary" (click)="onCancel()" *ngIf="modalType === 'confirm'">{{ cancelButtonText }}</button>
+        <!-- For alert type, the confirm button acts as an OK button -->
+        <button type="button" class="btn" [ngClass]="{'btn-danger': modalType === 'confirm', 'btn-primary': modalType === 'alert'}" (click)="onConfirm()">{{ confirmButtonText }}</button>
       </div>
     </div>
   </div>

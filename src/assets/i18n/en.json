@@ -216,6 +216,7 @@
   "CATEGORY_ALREADY_EXISTS": "A category with this name already exists. Please choose a different name.",
   "CONFIRM_DELETE_TITLE": "Confirm Deletion",
   "DELETE_BUTTON": "Delete",
-  "SAVE_BUTTON_LABEL": "Save"
-  
+  "SAVE_BUTTON_LABEL": "Save",
+  "OK_BUTTON": "OK",
+  "ALERT_TITLE": "Alert"
 }

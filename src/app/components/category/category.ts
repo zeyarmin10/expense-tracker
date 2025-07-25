@@ -20,6 +20,7 @@ import { ConfirmationModal } from '../common/confirmation-modal/confirmation-mod
 })
 export class Category implements OnInit {
   @ViewChild('deleteConfirmationModal') deleteConfirmationModal!: ConfirmationModal; // Reference to the confirmation modal
+  @ViewChild('errorModal') errorModal!: ConfirmationModal; // New: Reference to the error modal
 
   addCategoryForm: FormGroup;
   editingCategoryFormControl: FormControl | null = null;
@@ -53,25 +54,31 @@ export class Category implements OnInit {
       const categories = await firstValueFrom(this.categoryService.getCategories());
       this._categoriesSubject.next(categories);
     } catch (error) {
-      this.translateService.get('DATA_LOAD_ERROR').subscribe((res: string) => {
-        this.toastService.showError((error as any).message || res);
-      });
+      // Use the new error modal instead of toastService
+      this.showErrorModal(
+        this.translateService.instant('ERROR_TITLE'),
+        (error as any).message || this.translateService.instant('DATA_LOAD_ERROR')
+      );
       console.error('Error loading categories:', error);
     }
   }
 
   async onAddSubmit(): Promise<void> {
     if (this._categoriesSubject.value.length >= 10) {
-      this.translateService.get('CATEGORY_LIMIT_REACHED').subscribe((res: string) => {
-        this.toastService.showError(res);
-      });
+      // Use the new error modal instead of toastService
+      this.showErrorModal(
+        this.translateService.instant('ERROR_TITLE'),
+        this.translateService.instant('CATEGORY_LIMIT_REACHED')
+      );
       return;
     }
 
     if (this.addCategoryForm.invalid) {
-      this.translateService.get('CATEGORY_NAME_REQUIRED').subscribe((res: string) => {
-        this.toastService.showError(res);
-      });
+      // Use the new error modal instead of toastService
+      this.showErrorModal(
+        this.translateService.instant('ERROR_TITLE'),
+        this.translateService.instant('CATEGORY_NAME_REQUIRED')
+      );
       return;
     }
 
@@ -82,23 +89,25 @@ export class Category implements OnInit {
     const isDuplicate = categories.some(category => category.name.toLowerCase() === categoryName.toLowerCase());
 
     if (isDuplicate) {
-        this.translateService.get('CATEGORY_ALREADY_EXISTS').subscribe((res: string) => {
-            this.toastService.showError(res);
-        });
+        // Use the new error modal instead of toastService
+        this.showErrorModal(
+          this.translateService.instant('ERROR_TITLE'),
+          this.translateService.instant('CATEGORY_ALREADY_EXISTS')
+        );
         return;
     }
 
     try {
       await this.categoryService.addCategory(categoryName);
-      this.translateService.get('CATEGORY_ADDED_SUCCESS').subscribe((res: string) => {
-        this.toastService.showSuccess(res);
-      });
+      this.toastService.showSuccess(this.translateService.instant('CATEGORY_ADDED_SUCCESS'));
       this.addCategoryForm.reset();
       await this.loadCategories();
     } catch (error: any) {
-      this.translateService.get('DATA_SAVE_ERROR').subscribe((res: string) => {
-        this.toastService.showError(error.message || res);
-      });
+      // Use the new error modal instead of toastService
+      this.showErrorModal(
+        this.translateService.instant('ERROR_TITLE'),
+        error.message || this.translateService.instant('DATA_SAVE_ERROR')
+      );
       console.error('Category add error:', error);
     }
   }
@@ -118,11 +127,19 @@ export class Category implements OnInit {
 
   async onUpdateInline(categoryId: string, oldCategoryName: string): Promise<void> { // Added oldCategoryName
     if (this.editingCategoryFormControl && this.editingCategoryFormControl.invalid) {
-      this.toastService.showError(this.translateService.instant('CATEGORY_NAME_REQUIRED'));
+      // Use the new error modal instead of toastService
+      this.showErrorModal(
+        this.translateService.instant('ERROR_TITLE'),
+        this.translateService.instant('CATEGORY_NAME_REQUIRED')
+      );
       return;
     }
     if (!this.editingCategoryFormControl || !categoryId) {
-      this.toastService.showError(this.translateService.instant('CATEGORY_ERROR_UPDATE_INVALID'));
+      // Use the new error modal instead of toastService
+      this.showErrorModal(
+        this.translateService.instant('ERROR_TITLE'),
+        this.translateService.instant('CATEGORY_ERROR_UPDATE_INVALID')
+      );
       return;
     }
 
@@ -133,7 +150,11 @@ export class Category implements OnInit {
       this.cancelEdit();
       this.loadCategories(); // Reload to reflect changes
     } catch (error: any) {
-      this.toastService.showError(error.message || this.translateService.instant('CATEGORY_ERROR_UPDATE'));
+      // Use the new error modal instead of toastService
+      this.showErrorModal(
+        this.translateService.instant('ERROR_TITLE'),
+        error.message || this.translateService.instant('CATEGORY_ERROR_UPDATE')
+      );
       console.error('Error updating category:', error);
     }
   }
@@ -142,11 +163,12 @@ export class Category implements OnInit {
   onDelete(categoryId: string): void { // No longer async directly
     this.translateService.get('CONFIRM_DELETE_CATEGORY').subscribe((confirmMsg: string) => {
       // Set the message and open the custom confirmation modal
-      this.deleteConfirmationModal.title = this.translateService.instant('CONFIRM_DELETE_TITLE'); // Or a custom title
+      this.deleteConfirmationModal.title = this.translateService.instant('CONFIRM_DELETE_TITLE');
       this.deleteConfirmationModal.message = confirmMsg;
-      this.deleteConfirmationModal.confirmButtonText = this.translateService.instant('DELETE_BUTTON'); // Or specific text
+      this.deleteConfirmationModal.confirmButtonText = this.translateService.instant('DELETE_BUTTON');
       this.deleteConfirmationModal.cancelButtonText = this.translateService.instant('CANCEL_BUTTON');
-      this.deleteConfirmationModal.messageColor = 'text-danger'; // Make the message text red
+      this.deleteConfirmationModal.messageColor = 'text-danger';
+      this.deleteConfirmationModal.modalType = 'confirm'; // Explicitly set to confirm type
 
       this.deleteConfirmationModal.open();
 
@@ -155,22 +177,37 @@ export class Category implements OnInit {
         if (confirmed) {
           try {
             await this.categoryService.deleteCategory(categoryId);
-            this.translateService.get('CATEGORY_DELETED_SUCCESS').subscribe((res: string) => {
-              this.toastService.showSuccess(res);
-            });
+            this.toastService.showSuccess(this.translateService.instant('CATEGORY_DELETED_SUCCESS'));
             if (this.editingCategoryId === categoryId) {
                 this.cancelEdit();
             }
             await this.loadCategories();
           } catch (error: any) {
-            this.translateService.get('DATA_DELETE_ERROR').subscribe((res: string) => {
-              this.toastService.showError(error.message || res);
-            });
+            // Use the new error modal instead of toastService
+            this.showErrorModal(
+              this.translateService.instant('ERROR_TITLE'),
+              error.message || this.translateService.instant('DATA_DELETE_ERROR')
+            );
             console.error('Category delete error:', error);
           }
         }
         subscription.unsubscribe(); // Unsubscribe to prevent memory leaks
       });
     });
+  }
+
+  /**
+   * Displays an error modal with a dynamic title and message.
+   * @param title The title of the error modal.
+   * @param message The error message to display.
+   */
+  showErrorModal(title: string, message: string): void {
+    this.errorModal.title = title;
+    this.errorModal.message = message;
+    this.errorModal.confirmButtonText = this.translateService.instant('OK_BUTTON'); // Set to 'OK'
+    this.errorModal.cancelButtonText = ''; // Ensure cancel button is not shown for error
+    this.errorModal.messageColor = 'text-danger'; // Error messages are typically red
+    this.errorModal.modalType = 'alert'; // Set modal type to alert (single button)
+    this.errorModal.open();
   }
 }
