@@ -116,42 +116,25 @@ export class Category implements OnInit {
     this.editingCategoryFormControl = null;
   }
 
-  async onUpdateInline(categoryId: string): Promise<void> {
-    if (!this.editingCategoryFormControl || this.editingCategoryFormControl.invalid) {
-      this.translateService.get('CATEGORY_NAME_REQUIRED').subscribe((res: string) => {
-        this.toastService.showError(res);
-      });
-      this.editingCategoryFormControl?.markAsTouched();
+  async onUpdateInline(categoryId: string, oldCategoryName: string): Promise<void> { // Added oldCategoryName
+    if (this.editingCategoryFormControl && this.editingCategoryFormControl.invalid) {
+      this.toastService.showError(this.translateService.instant('CATEGORY_NAME_REQUIRED'));
+      return;
+    }
+    if (!this.editingCategoryFormControl || !categoryId) {
+      this.toastService.showError(this.translateService.instant('CATEGORY_ERROR_UPDATE_INVALID'));
       return;
     }
 
-    const updatedName = this.editingCategoryFormControl.value.trim(); // Trim whitespace
-
-    // Check for duplicate category name (case-insensitive), excluding the current category being edited
-    const categories = this._categoriesSubject.value;
-    const isDuplicate = categories.some(category =>
-      category.id !== categoryId && category.name.toLowerCase() === updatedName.toLowerCase()
-    );
-
-    if (isDuplicate) {
-      this.translateService.get('CATEGORY_ALREADY_EXISTS').subscribe((res: string) => {
-        this.toastService.showError(res);
-      });
-      return;
-    }
-
+    const newCategoryName = this.editingCategoryFormControl.value;
     try {
-      await this.categoryService.updateCategory(categoryId, updatedName);
-      this.translateService.get('CATEGORY_UPDATED_SUCCESS').subscribe((res: string) => {
-        this.toastService.showSuccess(res);
-      });
+      await this.categoryService.updateCategory(categoryId, oldCategoryName, newCategoryName); // Pass oldCategoryName
+      this.toastService.showSuccess(this.translateService.instant('CATEGORY_SUCCESS_UPDATED'));
       this.cancelEdit();
-      await this.loadCategories();
+      this.loadCategories(); // Reload to reflect changes
     } catch (error: any) {
-      this.translateService.get('DATA_SAVE_ERROR').subscribe((res: string) => {
-        this.toastService.showError(error.message || res);
-      });
-      console.error('Category update error:', error);
+      this.toastService.showError(error.message || this.translateService.instant('CATEGORY_ERROR_UPDATE'));
+      console.error('Error updating category:', error);
     }
   }
 

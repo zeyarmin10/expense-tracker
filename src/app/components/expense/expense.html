@@ -236,6 +236,7 @@
                         class="btn btn-outline-info text-wrap total-btn mb-2"
                         *ngFor="let total of (totals | keyvalue)"
                         (click)="filterByCurrency(total.key)"
+                        style="padding: 3px 5px;"
                     >
                         <strong>{{ 'TOTAL_FOR_CURRENCY' | translate: {currency: total.key} }}:</strong>
                         {{ formatAmountWithSymbol(total.value, total.key) }}
@@ -252,6 +253,7 @@
                         class="btn btn-outline-secondary total-btn text-wrap"
                         *ngFor="let categoryTotal of (categoryTotals | keyvalue)"
                         (click)="filterByCategory(categoryTotal.key)"
+                        style="padding: 3px 5px;"
                     >
                         {{ 'TOTAL_FOR_CATEGORY_CURRENCY' | translate: {category: categoryTotal.key} }} :
                         <ng-container *ngFor="let currencyTotal of (categoryTotal.value | keyvalue)">

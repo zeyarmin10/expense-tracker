@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Database, ref, push, remove, update, listVal, query, orderByChild, equalTo, DatabaseReference } from '@angular/fire/database';
-import { Observable, switchMap, firstValueFrom, map, of } from 'rxjs';
-import { AuthService } from './auth'; // Assuming you have an AuthService to get the current user's UID
+import { Observable, switchMap, firstValueFrom, map, of, Subject } from 'rxjs'; // Import Subject
+import { AuthService } from './auth';
 
 export interface ServiceICategory {
   id?: string; // Firebase push key
@@ -14,7 +14,11 @@ export interface ServiceICategory {
 })
 export class CategoryService {
   private db: Database = inject(Database);
-  private authService = inject(AuthService); // Inject your AuthService
+  private authService = inject(AuthService);
+
+  // Add a Subject to emit category updates
+  private categoryUpdatedSource = new Subject<{ oldName: string; newName: string; userId: string }>();
+  categoryUpdated$ = this.categoryUpdatedSource.asObservable(); // Public observable
 
   private getCategoriesRef(userId: string): DatabaseReference {
     return ref(this.db, `expenseprofit/users/${userId}/categories`);
@@ -62,7 +66,7 @@ export class CategoryService {
    * @param newCategoryName The new name for the category.
    * @returns A Promise that resolves when the category is updated.
    */
-  async updateCategory(categoryId: string, newCategoryName: string): Promise<void> {
+  async updateCategory(categoryId: string, oldCategoryName: string, newCategoryName: string): Promise<void> {
     const userId = (await firstValueFrom(
       this.authService.currentUser$.pipe(map((user) => user?.uid))
     ))!;
@@ -74,6 +78,9 @@ export class CategoryService {
     }
     const categoryRef = ref(this.db, `expenseprofit/users/${userId}/categories/${categoryId}`);
     await update(categoryRef, { name: newCategoryName });
+
+    // Emit event after successful update
+    this.categoryUpdatedSource.next({ oldName: oldCategoryName, newName: newCategoryName, userId: userId });
   }
 
   /**

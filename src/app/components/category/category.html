@@ -59,7 +59,7 @@
                 class="form-control form-control-sm me-2"
                 [formControl]="editingCategoryFormControl"
                 [class.is-invalid]="editingCategoryFormControl.invalid && editingCategoryFormControl.touched"
-                (keydown.enter)="onUpdateInline(category.id!)"
+                (keydown.enter)="onUpdateInline(category.id!, category.name)"
               />
               <div
                 *ngIf="editingCategoryFormControl.invalid && editingCategoryFormControl.touched"
@@ -76,8 +76,7 @@
               <ng-container *ngIf="editingCategoryId === category.id; else defaultButtons">
                 <button
                   class="btn btn-sm btn-outline-success me-2 ps-4 pe-4"
-                  (click)="onUpdateInline(category.id!)"
-                  [disabled]="editingCategoryFormControl?.invalid"
+                  (click)="onUpdateInline(category.id!, category.name)" [disabled]="editingCategoryFormControl?.invalid"
                   [attr.aria-label]="'SAVE_BUTTON_LABEL' | translate"
                 >
                   <fa-icon [icon]="faSave"></fa-icon>

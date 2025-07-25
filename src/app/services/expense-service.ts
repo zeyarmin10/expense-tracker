@@ -2,7 +2,6 @@ import { Injectable, inject } from '@angular/core';
 import { Database, ref, push, remove, update, listVal, query, orderByChild, equalTo, DatabaseReference, objectVal, get } from '@angular/fire/database';
 import { Observable, switchMap, map, of, firstValueFrom } from 'rxjs';
 import { AuthService } from './auth';
-import { CategoryService } from './category'; // Import CategoryService
 
 // services/expense.ts (Example - adjust based on your actual interface)
 export interface ServiceIExpense {
@@ -25,14 +24,6 @@ export interface ServiceIExpense {
 export class ExpenseService {
   private db: Database = inject(Database);
   private authService = inject(AuthService);
-  private categoryService = inject(CategoryService); // Inject CategoryService
-
-  constructor() {
-    this.categoryService.categoryUpdated$.subscribe(async ({ oldName, newName, userId }) => {
-      // Logic to update expenses with the new category name
-      await this.updateExpensesCategory(userId, oldName, newName);
-    });
-  }
 
   private getExpensesRef(userId: string): DatabaseReference {
     return ref(this.db, `expenseprofit/users/${userId}/expenses`);
@@ -84,6 +75,7 @@ export class ExpenseService {
    * @returns A Promise that resolves when the expense is updated.
    */
   async updateExpense(expenseId: string, updatedData: Partial<Omit<ServiceIExpense, 'id' | 'userId' | 'createdAt'>>): Promise<void> {
+    // const userId = (await this.authService.currentUser$.pipe(map(user => user?.uid)).toPromise())!;
     const userId = (await firstValueFrom(
         this.authService.currentUser$.pipe(map((user) => user?.uid))
     ))!;
@@ -97,6 +89,9 @@ export class ExpenseService {
 
     // Recalculate totalCost if quantity or price is being updated
     if (updatedData.quantity !== undefined || updatedData.price !== undefined) {
+      // You might need to fetch the current expense to get existing quantity/price
+      // or pass all required fields in updatedData to calculate totalCost accurately.
+      // For simplicity, let's assume `updatedData` has `quantity` and `price` if they are changing.
       const currentExpenseRef = ref(this.db, `expenseprofit/users/${userId}/expenses/${expenseId}`);
       const snapshot = await get(currentExpenseRef);
       const currentExpense = snapshot.val() as ServiceIExpense;
@@ -116,6 +111,7 @@ export class ExpenseService {
    * @returns A Promise that resolves when the expense is deleted.
    */
   async deleteExpense(expenseId: string): Promise<void> {
+    // const userId = (await this.authService.currentUser$.pipe(map(user => user?.uid)).toPromise())!;
     const userId = (await firstValueFrom(
         this.authService.currentUser$.pipe(map((user) => user?.uid))
     ))!;
@@ -128,30 +124,5 @@ export class ExpenseService {
     }
     const expenseRef = ref(this.db, `expenseprofit/users/${userId}/expenses/${expenseId}`);
     await remove(expenseRef);
-  }
-
-  /**
-   * Updates the category name for all expenses belonging to a specific user
-   * that match the old category name.
-   * @param userId The ID of the user whose expenses are to be updated.
-   * @param oldCategoryName The old category name to search for.
-   * @param newCategoryName The new category name to set.
-   * @returns A Promise that resolves when all matching expenses are updated.
-   */
-  private async updateExpensesCategory(userId: string, oldCategoryName: string, newCategoryName: string): Promise<void> {
-    const expensesRef = this.getExpensesRef(userId);
-    const snapshot = await get(query(expensesRef, orderByChild('category'), equalTo(oldCategoryName)));
-
-    const updates: { [key: string]: any } = {};
-    snapshot.forEach(childSnapshot => {
-      updates[`${childSnapshot.key}/category`] = newCategoryName;
-    });
-
-    if (Object.keys(updates).length > 0) {
-      await update(expensesRef, updates);
-      console.log(`Updated ${Object.keys(updates).length} expenses from category '${oldCategoryName}' to '${newCategoryName}' for user ${userId}.`);
-    } else {
-      console.log(`No expenses found with category '${oldCategoryName}' for user ${userId}.`);
-    }
   }
 }
