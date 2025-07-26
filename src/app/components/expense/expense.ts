@@ -53,6 +53,8 @@ import { ToastService } from '../../services/toast';
 export class Expense implements OnInit {
   @ViewChild(CategoryModalComponent) categoryModal!: CategoryModalComponent;
   @ViewChild('deleteConfirmationModal') deleteConfirmationModal!: ConfirmationModal;
+  @ViewChild('errorModal') errorModal!: ConfirmationModal; // New: Reference to the error modal
+
   newExpenseForm: FormGroup;
   editingForm: FormGroup | null = null;
 
@@ -254,8 +256,11 @@ export class Expense implements OnInit {
         this.resetFilter();
         await this.loadExpenses();
         } catch (error: any) {
-        this.errorMessage =
-            error.message || this.translate.instant('EXPENSE_ERROR_ADD');
+        // Use error modal instead of errorMessage
+        this.showErrorModal(
+            this.translate.instant('ERROR_TITLE'),
+            error.message || this.translate.instant('EXPENSE_ERROR_ADD')
+        );
         console.error('New expense save error:', error);
         }
         this.cdr.detectChanges();
@@ -311,14 +316,18 @@ export class Expense implements OnInit {
     async saveEdit(): Promise<void> {
         this.clearMessages();
         if (this.editingForm && this.editingForm.invalid) {
-        this.errorMessage = this.translate.instant(
-            'EXPENSE_ERROR_EDIT_FORM_INVALID'
+        // Use error modal instead of errorMessage
+        this.showErrorModal(
+            this.translate.instant('ERROR_TITLE'),
+            this.translate.instant('EXPENSE_ERROR_EDIT_FORM_INVALID')
         );
         return;
         }
         if (!this.editingForm || !this.editingExpenseId) {
-        this.errorMessage = this.translate.instant(
-            'EXPENSE_ERROR_NO_EXPENSE_SELECTED'
+        // Use error modal instead of errorMessage
+        this.showErrorModal(
+            this.translate.instant('ERROR_TITLE'),
+            this.translate.instant('EXPENSE_ERROR_NO_EXPENSE_SELECTED')
         );
         return;
         }
@@ -335,8 +344,11 @@ export class Expense implements OnInit {
         this.cancelEdit();
         await this.loadExpenses();
         } catch (error: any) {
-        this.errorMessage =
-            error.message || this.translate.instant('EXPENSE_ERROR_UPDATE');
+        // Use error modal instead of errorMessage
+        this.showErrorModal(
+            this.translate.instant('ERROR_TITLE'),
+            error.message || this.translate.instant('EXPENSE_ERROR_UPDATE')
+        );
         console.error('Expense update error:', error);
         }
         this.cdr.detectChanges();
@@ -350,48 +362,59 @@ export class Expense implements OnInit {
     this.cdr.detectChanges();
   }
 
-    onDelete(expenseId: string): void {
-        this.translate.get('CONFIRM_DELETE_EXPENSE').subscribe((confirmMsg: string) => {
-        this.deleteConfirmationModal.title = this.translate.instant('CONFIRM_DELETE_TITLE');
-        this.deleteConfirmationModal.message = confirmMsg;
-        this.deleteConfirmationModal.confirmButtonText = this.translate.instant('DELETE_BUTTON');
-        this.deleteConfirmationModal.cancelButtonText = this.translate.instant('CANCEL_BUTTON');
-        this.deleteConfirmationModal.messageColor = 'text-danger';
+  /**
+   * Handles the deletion of an expense using the confirmation modal.
+   * @param expenseId The ID of the expense to delete.
+   */
+  onDelete(expenseId: string): void {
+    this.translate.get('CONFIRM_DELETE_EXPENSE').subscribe((confirmMsg: string) => {
+      this.deleteConfirmationModal.title = this.translate.instant('CONFIRM_DELETE_TITLE');
+      this.deleteConfirmationModal.message = confirmMsg;
+      this.deleteConfirmationModal.confirmButtonText = this.translate.instant('DELETE_BUTTON');
+      this.deleteConfirmationModal.cancelButtonText = this.translate.instant('CANCEL_BUTTON');
+      this.deleteConfirmationModal.messageColor = 'text-danger';
+      this.deleteConfirmationModal.modalType = 'confirm'; // Explicitly set to confirm type
 
+      // Force change detection to ensure @Input properties are updated in the DOM
+      this.cdr.detectChanges();
+      console.log('onDelete (Expense) - cdr.detectChanges() called for deleteConfirmationModal.');
+
+      setTimeout(() => {
         this.deleteConfirmationModal.open();
+        console.log('onDelete (Expense) - Confirmation modal.open() called via setTimeout.');
+      }, 0);
 
-        const subscription = this.deleteConfirmationModal.confirmed.subscribe(async (confirmed: boolean) => {
-            if (confirmed) {
-            try {
-                await this.expenseService.deleteExpense(expenseId);
-                // Ensuring all asynchronous operations and UI updates happen within Angular's zone
-                // and explicitly forcing change detection.
-                this.ngZone.run(async () => { // Use async here to await loadExpenses
-                    this.translate.get('EXPENSE_DELETED_SUCCESS').subscribe((res: string) => {
-                        this.toastService.showSuccess(res);
-                        this.cdr.detectChanges(); // Force change detection to render the toast
-                    });
+      const subscription = this.deleteConfirmationModal.confirmed.subscribe(async (confirmed: boolean) => {
+        console.log('onDelete (Expense) - Confirmation modal confirmed event received:', confirmed);
+        if (confirmed) {
+          try {
+            await this.expenseService.deleteExpense(expenseId);
+            this.ngZone.run(async () => {
+              this.translate.get('EXPENSE_DELETED_SUCCESS').subscribe((res: string) => {
+                this.toastService.showSuccess(res);
+                this.cdr.detectChanges();
+              });
 
-                    if (this.editingExpenseId === expenseId) {
-                        this.cancelEdit();
-                    }
-                    // It's crucial to reload expenses and then detect changes
-                    // to ensure the list is updated visually.
-                    await this.loadExpenses(); // Await the reloading of expenses
-                    this.cdr.detectChanges(); // Force change detection after the list is loaded
-                });
-
-            } catch (error: any) {
-                this.translate.get('DATA_DELETE_ERROR').subscribe((res: string) => {
-                this.toastService.showError(error.message || res);
-                });
-                console.error('Expense delete error:', error);
-            }
-            }
-            subscription.unsubscribe(); // Unsubscribe to prevent memory leaks
-        });
-        });
-    }
+              if (this.editingExpenseId === expenseId) {
+                this.cancelEdit();
+              }
+              await this.loadExpenses();
+              this.cdr.detectChanges();
+              console.log('onDelete (Expense) - Expense deleted successfully.');
+            });
+          } catch (error: any) {
+            // Use error modal instead of toastService for delete errors
+            this.showErrorModal(
+              this.translate.instant('ERROR_TITLE'),
+              error.message || this.translate.instant('DATA_DELETE_ERROR')
+            );
+            console.error('onDelete (Expense) - Expense delete error:', error);
+          }
+        }
+        subscription.unsubscribe();
+      });
+    });
+  }
 
 
     public async loadExpenses(): Promise<void> {
@@ -400,12 +423,38 @@ export class Expense implements OnInit {
         this._expensesSubject.next(expenses);
         this.applyDateFilter(); // Re-apply filter to update displayed expenses based on the current date
         } catch (error) {
-        this.translate.get('DATA_LOAD_ERROR').subscribe((res: string) => {
-            this.toastService.showError((error as any).message || res);
-        });
+        // Use error modal instead of toastService for load errors
+        this.showErrorModal(
+            this.translate.instant('ERROR_TITLE'),
+            (error as any).message || this.translate.instant('DATA_LOAD_ERROR')
+        );
         console.error('Error loading expenses:', error);
         }
     }
+
+  /**
+   * Displays an error modal with a dynamic title and message.
+   * @param title The title of the error modal.
+   * @param message The error message to display.
+   */
+  showErrorModal(title: string, message: string): void {
+    this.errorModal.title = title;
+    this.errorModal.message = message;
+    this.errorModal.confirmButtonText = this.translate.instant('OK_BUTTON'); // Set to 'OK'
+    this.errorModal.cancelButtonText = ''; // Ensure cancel button is not shown for error
+    this.errorModal.messageColor = 'text-danger'; // Error messages are typically red
+    this.errorModal.modalType = 'alert'; // Set modal type to alert (single button)
+
+    // Force change detection to ensure @Input properties are updated in the DOM
+    this.cdr.detectChanges();
+    console.log('showErrorModal (Expense) - cdr.detectChanges() called for errorModal.');
+
+    // Add a small delay using setTimeout(0) to ensure Bootstrap's show() method is called.
+    setTimeout(() => {
+      this.errorModal.open();
+      console.log('showErrorModal (Expense) - Error modal.open() called via setTimeout.');
+    }, 0);
+  }
 
   /**
    * Handles the focus event for input fields.

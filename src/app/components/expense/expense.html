@@ -185,12 +185,13 @@
             </div>
           </div>
 
-          <div *ngIf="errorMessage" class="alert alert-danger" role="alert">
+          <!-- Removed direct errorMessage/successMessage display, now handled by modals/toasts -->
+          <!-- <div *ngIf="errorMessage" class="alert alert-danger" role="alert">
             {{ errorMessage }}
           </div>
           <div *ngIf="successMessage" class="alert alert-success" role="alert">
             {{ successMessage }}
-          </div>
+          </div> -->
 
           <div class="d-grid gap-2 d-flex justify-content-end">
             <button
@@ -400,3 +401,4 @@
 
 <app-category-modal (categoryAdded)="loadCategories()"></app-category-modal>
 <app-confirmation-modal #deleteConfirmationModal></app-confirmation-modal>
+<app-confirmation-modal #errorModal></app-confirmation-modal> <!-- Added error modal -->
