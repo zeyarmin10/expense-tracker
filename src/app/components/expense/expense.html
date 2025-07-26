@@ -61,8 +61,8 @@
                 newExpenseForm.controls['itemName'].invalid &&
                 newExpenseForm.controls['itemName'].touched
               "
-              (focus)="onFocusInput($event, 'itemName')"
-              (blur)="onBlurInput($event, 'itemName')"
+              (focus)="onFocusInput($event, 'itemName', newExpenseForm)"
+              (blur)="onBlurInput($event, 'itemName', newExpenseForm)"
 
             />
             <div
@@ -84,13 +84,13 @@
                 class="form-control"
                 id="quantity"
                 formControlName="quantity"
-                min="1"
+                min="0.01"
                 [class.is-invalid]="
                   newExpenseForm.controls['quantity'].invalid &&
                   newExpenseForm.controls['quantity'].touched
                 "
-                (focus)="onFocusInput($event, 'quantity')"
-                (blur)="onBlurInput($event, 'quantity')"
+                (focus)="onFocusInput($event, 'quantity', newExpenseForm)"
+                (blur)="onBlurInput($event, 'quantity', newExpenseForm)"
               />
               <div
                 *ngIf="
@@ -111,23 +111,9 @@
                 id="unit"
                 formControlName="unit"
                 placeholder="{{ 'EXPENSE_UNIT_PLACEHOLDER' | translate }}"
-                [class.is-invalid]="
-                  newExpenseForm.controls['unit'].invalid &&
-                  newExpenseForm.controls['unit'].touched
-                "
-                (focus)="onFocusInput($event, 'unit')"
-                (blur)="onBlurInput($event, 'unit')"
-
+                (focus)="onFocusInput($event, 'unit', newExpenseForm)"
+                (blur)="onBlurInput($event, 'unit', newExpenseForm)"
               />
-              <div
-                *ngIf="
-                  newExpenseForm.controls['unit'].invalid &&
-                  newExpenseForm.controls['unit'].touched
-                "
-                class="invalid-feedback"
-              >
-                {{ 'EXPENSE_UNIT_REQUIRED' | translate }}
-              </div>
             </div>
 
             <div class="col-12 col-md-4 mb-3">
@@ -146,8 +132,8 @@
                   placeholder="{{ 'EXPENSE_PRICE_PLACEHOLDER' | translate }}"
                   [attr.aria-label]="'EXPENSE_PRICE_LABEL' | translate"
                   style="border-top-right-radius: 0;border-bottom-right-radius: 0;"
-                  (focus)="onFocusInput($event, 'price')"
-                  (blur)="onBlurInput($event, 'price')"
+                  (focus)="onFocusInput($event, 'price', newExpenseForm)"
+                  (blur)="onBlurInput($event, 'price', newExpenseForm)"
                 />
                 <select
                   class="form-select"
@@ -185,14 +171,6 @@
             </div>
           </div>
 
-          <!-- Removed direct errorMessage/successMessage display, now handled by modals/toasts -->
-          <!-- <div *ngIf="errorMessage" class="alert alert-danger" role="alert">
-            {{ errorMessage }}
-          </div>
-          <div *ngIf="successMessage" class="alert alert-success" role="alert">
-            {{ successMessage }}
-          </div> -->
-
           <div class="d-grid gap-2 d-flex justify-content-end">
             <button
               type="submit"
@@ -200,7 +178,6 @@
               [disabled]="newExpenseForm.invalid"
             >
               <fa-icon [icon]="faSave"></fa-icon>
-              <!-- {{ 'EXPENSE_ADD_BUTTON' | translate }} -->
             </button>
           </div>
 
@@ -292,7 +269,7 @@
                 <th>{{ 'EXPENSE_QTY_UNIT_COLUMN' | translate }}</th>
                 <th>{{ 'EXPENSE_PRICE_COLUMN' | translate }}</th>
                 <th>{{ 'EXPENSE_TOTAL_COLUMN' | translate }}</th>
-                <th>{{ 'EXPENSE_ACTIONS_COLUMN' | translate }}</th>
+                <th class="text-nowrap" style="width: 1%;">{{ 'EXPENSE_ACTIONS_COLUMN' | translate }}</th>
               </tr>
             </thead>
             <tbody>
@@ -304,7 +281,7 @@
                   <td>{{ expense.quantity }} {{ expense.unit }}</td>
                   <td>{{ formatAmountWithSymbol(expense.price, expense.currency) }}</td>
                   <td class="fw-bold">{{ formatAmountWithSymbol(expense.totalCost, expense.currency) }}</td>
-                  <td class="text-end">
+                  <td class="text-end text-nowrap">
                     <button
                       class="btn btn-sm btn-outline-info me-2 ps-4 pe-4"
                       (click)="startEdit(expense)"
@@ -341,10 +318,11 @@
                   </td>
                   <td>
                     <div class="input-group input-group-sm">
-                        <input type="number" class="form-control" formControlName="quantity" min="1"
+                        <input type="number" class="form-control" formControlName="quantity" min="0.01"
                         [class.is-invalid]="editingForm.controls['quantity'].invalid && editingForm.controls['quantity'].touched" />
                         <input type="text" class="form-control" formControlName="unit" placeholder="{{ 'EXPENSE_UNIT_PLACEHOLDER' | translate }}"
-                        [class.is-invalid]="editingForm.controls['unit'].invalid && editingForm.controls['unit'].touched" />
+                        (focus)="onFocusInput($event, 'unit', editingForm)"
+                        (blur)="onBlurInput($event, 'unit', editingForm)"/>
                     </div>
                   </td>
                   <td>
@@ -360,7 +338,7 @@
                   <td class="fw-bold">
                     {{ formatAmountWithSymbol(editingForm.value.price * editingForm.value.quantity, editingForm.value.currency) }}
                   </td>
-                  <td class="text-end">
+                  <td class="text-end text-nowrap">
                     <button
                       class="btn btn-sm btn-outline-success me-2 ps-4 pe-4"
                       (click)="saveEdit()"
@@ -389,7 +367,6 @@
             <li *ngIf="editingForm.controls['category'].invalid && editingForm.controls['category'].touched">{{ 'EXPENSE_CATEGORY_REQUIRED' | translate }}</li>
             <li *ngIf="editingForm.controls['itemName'].invalid && editingForm.controls['itemName'].touched">{{ 'EXPENSE_ITEM_NAME_REQUIRED' | translate }}</li>
             <li *ngIf="editingForm.controls['quantity'].invalid && editingForm.controls['quantity'].touched">{{ 'EXPENSE_QUANTITY_MIN' | translate }}</li>
-            <li *ngIf="editingForm.controls['unit'].invalid && editingForm.controls['unit'].touched">{{ 'EXPENSE_UNIT_REQUIRED' | translate }}</li>
             <li *ngIf="editingForm.controls['price'].invalid && editingForm.controls['price'].touched">{{ 'EXPENSE_PRICE_NON_NEGATIVE' | translate }}</li>
             <li *ngIf="editingForm.controls['currency'].invalid && editingForm.controls['currency'].touched">{{ 'EXPENSE_CURRENCY_REQUIRED' | translate }}</li>
           </ul>

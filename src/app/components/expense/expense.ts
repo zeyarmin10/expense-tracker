@@ -101,7 +101,8 @@ export class Expense implements OnInit {
     { code: 'THB', symbol: '฿' }
   ];
 
-  expenseForm!: FormGroup;
+  // expenseForm is not directly used for input binding, can be removed or kept for other purposes if needed
+  // expenseForm!: FormGroup;
   // Store original values when input is focused
   private originalItemName: string | null = null;
   private originalUnit: string | null = null;
@@ -117,8 +118,8 @@ export class Expense implements OnInit {
       date: [todayFormatted, Validators.required],
       category: ['', Validators.required],
       itemName: ['', Validators.required],
-      quantity: [1, [Validators.required, Validators.min(1)]],
-      unit: ['', Validators.required],
+      quantity: [1, [Validators.required, Validators.min(0.01)]], // Changed min to 0.01
+      unit: [''], // 'unit' is no longer required
       price: [0, [Validators.required, Validators.min(0)]],
       currency: ['MMK', Validators.required],
       selectedDate: [todayFormatted],
@@ -193,12 +194,13 @@ export class Expense implements OnInit {
 
   ngOnInit(): void {
     this.applyDateFilter();
-    this.expenseForm = this.fb.group({
-      itemName: ['', Validators.required],
-      unit: [''],
-      quantity: ['', [Validators.required, Validators.min(0.01)]],
-      price: ['', [Validators.required, Validators.min(0.01)]],
-    });
+    // expenseForm is not directly used for input binding, can be removed or kept for other purposes if needed
+    // this.expenseForm = this.fb.group({
+    //   itemName: ['', Validators.required],
+    //   unit: [''],
+    //   quantity: ['', [Validators.required, Validators.min(0.01)]],
+    //   price: ['', [Validators.required, Validators.min(0.01)]],
+    // });
     // Initial load of expenses
     this.loadExpenses();
   }
@@ -237,9 +239,15 @@ export class Expense implements OnInit {
 
     async onSubmitNewExpense(): Promise<void> {
         this.clearMessages();
+        // Mark all controls as touched to display validation messages
+        this.newExpenseForm.markAllAsTouched();
         if (this.newExpenseForm.invalid) {
-        this.errorMessage = this.translate.instant('ERROR_FILL_ALL_FIELDS');
-        return;
+            // Use error modal instead of errorMessage
+            this.showErrorModal(
+                this.translate.instant('ERROR_TITLE'),
+                this.translate.instant('ERROR_FILL_ALL_FIELDS')
+            );
+            return;
         }
 
         const formData = this.newExpenseForm.value;
@@ -305,8 +313,8 @@ export class Expense implements OnInit {
       date: [expense.date, Validators.required],
       category: [expense.category, Validators.required],
       itemName: [expense.itemName, Validators.required],
-      quantity: [expense.quantity, [Validators.required, Validators.min(1)]],
-      unit: [expense.unit, Validators.required],
+      quantity: [expense.quantity, [Validators.required, Validators.min(0.01)]], // Changed min to 0.01
+      unit: [expense.unit], // 'unit' is no longer required
       price: [expense.price, [Validators.required, Validators.min(0)]],
       currency: [expense.currency || 'MMK', Validators.required],
     });
@@ -315,6 +323,11 @@ export class Expense implements OnInit {
 
     async saveEdit(): Promise<void> {
         this.clearMessages();
+        // Mark all controls as touched to display validation messages
+        if (this.editingForm) {
+            this.editingForm.markAllAsTouched();
+        }
+
         if (this.editingForm && this.editingForm.invalid) {
         // Use error modal instead of errorMessage
         this.showErrorModal(
@@ -459,13 +472,17 @@ export class Expense implements OnInit {
   /**
    * Handles the focus event for input fields.
    * Stores the current value of the input before it's cleared.
+   * @param event The focus event.
+   * @param controlName The name of the form control ('itemName' | 'unit' | 'quantity' | 'price').
+   * @param formGroup The FormGroup instance (newExpenseForm or editingForm).
    */
   onFocusInput(
     event: Event,
-    controlName: 'itemName' | 'unit' | 'quantity' | 'price'
+    controlName: 'itemName' | 'unit' | 'quantity' | 'price',
+    formGroup: FormGroup // Added formGroup parameter
   ): void {
     const inputElement = event.target as HTMLInputElement;
-    const currentControl = this.expenseForm.get(controlName);
+    const currentControl = formGroup.get(controlName); // Use the passed formGroup
 
     if (currentControl) {
       if (controlName === 'itemName') {
@@ -485,27 +502,43 @@ export class Expense implements OnInit {
 
   /**
    * Handles the blur event for input fields.
-   * Restores the original value if the input is left empty.
+   * Restores the original value if the input is left empty and valid.
+   * Otherwise, ensures validation messages appear if invalid.
+   * @param event The blur event.
+   * @param controlName The name of the form control ('itemName' | 'unit' | 'quantity' | 'price').
+   * @param formGroup The FormGroup instance (newExpenseForm or editingForm).
    */
   onBlurInput(
     event: Event,
-    controlName: 'itemName' | 'unit' | 'quantity' | 'price'
+    controlName: 'itemName' | 'unit' | 'quantity' | 'price',
+    formGroup: FormGroup // Added formGroup parameter
   ): void {
     const inputElement = event.target as HTMLInputElement;
     const currentValue = inputElement.value;
-    const currentControl = this.expenseForm.get(controlName);
+    const currentControl = formGroup.get(controlName); // Use the passed formGroup
 
     if (currentValue === '' && currentControl) {
-      if (controlName === 'itemName' && this.originalItemName !== null) {
-        currentControl.setValue(this.originalItemName);
-      } else if (controlName === 'unit' && this.originalUnit !== null) {
-        currentControl.setValue(this.originalUnit);
-      } else if (controlName === 'quantity' && this.originalQuantity !== null) {
-        currentControl.setValue(this.originalQuantity);
-      } else if (controlName === 'price' && this.originalPrice !== null) {
-        currentControl.setValue(this.originalPrice);
-      }
+        // If the current value is empty, check if it's valid or invalid.
+        if (currentControl.valid) {
+            // If valid (e.g., optional field, or min value is 0 and user cleared it),
+            // restore original value if one exists.
+            if (controlName === 'itemName' && this.originalItemName !== null) {
+                currentControl.setValue(this.originalItemName);
+            } else if (controlName === 'unit' && this.originalUnit !== null) {
+                currentControl.setValue(this.originalUnit);
+            } else if (controlName === 'quantity' && this.originalQuantity !== null) {
+                currentControl.setValue(this.originalQuantity);
+            } else if (controlName === 'price' && this.originalPrice !== null) {
+                currentControl.setValue(this.originalPrice);
+            }
+        } else {
+            // If the current value is empty AND the control is invalid (e.g., required field cleared),
+            // we want the validation message to show. Do NOT restore the original value.
+            // Instead, explicitly mark it as touched to ensure validation message appears.
+            currentControl.markAsTouched();
+        }
     }
+
 
     // Reset all original stored values
     this.originalItemName = null;
