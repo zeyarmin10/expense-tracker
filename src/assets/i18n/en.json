@@ -218,5 +218,9 @@
   "DELETE_BUTTON": "Delete",
   "SAVE_BUTTON_LABEL": "Save",
   "OK_BUTTON": "OK",
-  "ALERT_TITLE": "Alert"
+  "ALERT_TITLE": "Alert",
+  "DELETE_CATEGORY_ERROR_TITLE": "Deletion Error",
+  "CATEGORY_IN_USE_ERROR": "This category cannot be deleted because it is linked to existing expenses.",
+  "FAILED_CHECK_CATEGORY_USAGE": "Failed to check if category is in use. Please try again.",
+  "CONFIRM_BUTTON": "Confirm"
 }

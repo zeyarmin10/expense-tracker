@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, ViewChild } from '@angular/core';
+import { Component, OnInit, inject, ViewChild, ChangeDetectorRef } from '@angular/core'; // ChangeDetectorRef ကို ထည့်သွင်းပါ။
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { ServiceICategory, CategoryService } from '../../services/category';
@@ -32,6 +32,7 @@ export class Category implements OnInit {
   categoryService = inject(CategoryService);
   translateService = inject(TranslateService);
   toastService = inject(ToastService);
+  private cdr = inject(ChangeDetectorRef); // ChangeDetectorRef ကို ထည့်သွင်းပါ။
 
   faPlus = faPlus;
   faEdit = faEdit;
@@ -159,21 +160,67 @@ export class Category implements OnInit {
     }
   }
 
-  // Modified onDelete to use the custom confirmation modal
-  onDelete(categoryId: string): void { // No longer async directly
-    this.translateService.get('CONFIRM_DELETE_CATEGORY').subscribe((confirmMsg: string) => {
-      // Set the message and open the custom confirmation modal
+  /**
+   * Handles the deletion of a category.
+   * First, checks if the category is used in any expenses.
+   * If used, shows an error modal. Otherwise, shows a confirmation modal before deleting.
+   * @param categoryId The ID of the category to delete.
+   */
+  async onDelete(categoryId: string): Promise<void> {
+    console.log('onDelete called for categoryId:', categoryId);
+    try {
+      const isUsed = await this.categoryService.isCategoryUsedInExpenses(categoryId);
+      console.log('onDelete - isUsed result from service:', isUsed);
+
+      if (isUsed) {
+        console.log('onDelete - Category IS in use. Showing error modal.');
+        this.showErrorModal(
+          this.translateService.instant('DELETE_CATEGORY_ERROR_TITLE'),
+          this.translateService.instant('CATEGORY_IN_USE_ERROR')
+        );
+        return; // Stop further execution
+      }
+
+      // If not in use, proceed with confirmation
+      console.log('onDelete - Category NOT in use. Proceeding to show confirmation modal.');
+
+      // Ensure the modal is ready before trying to open it
+      if (!this.deleteConfirmationModal) {
+        console.error('onDelete - deleteConfirmationModal is not initialized!');
+        // Fallback or error handling if modal isn't ready
+        this.showErrorModal(
+          this.translateService.instant('ERROR_TITLE'),
+          this.translateService.instant('MODAL_INIT_ERROR') || 'Modal not ready. Please try again.'
+        );
+        return;
+      }
+
+      // Get translated message synchronously using await firstValueFrom
+      const confirmMsg = await firstValueFrom(this.translateService.get('CONFIRM_DELETE_CATEGORY'));
+      console.log('onDelete - confirmMsg obtained synchronously:', confirmMsg);
+
       this.deleteConfirmationModal.title = this.translateService.instant('CONFIRM_DELETE_TITLE');
-      this.deleteConfirmationModal.message = confirmMsg;
+      this.deleteConfirmationModal.message = confirmMsg; // Set the message here
       this.deleteConfirmationModal.confirmButtonText = this.translateService.instant('DELETE_BUTTON');
       this.deleteConfirmationModal.cancelButtonText = this.translateService.instant('CANCEL_BUTTON');
       this.deleteConfirmationModal.messageColor = 'text-danger';
       this.deleteConfirmationModal.modalType = 'confirm'; // Explicitly set to confirm type
 
-      this.deleteConfirmationModal.open();
+      // Force change detection to ensure @Input properties are updated in the DOM
+      this.cdr.detectChanges(); // <--- Added this line
+      console.log('onDelete - cdr.detectChanges() called for deleteConfirmationModal.');
 
-      // Subscribe to the confirmed event of the modal
+      // Add a small delay using setTimeout(0) to ensure Bootstrap's show() method is called.
+      setTimeout(() => {
+        this.deleteConfirmationModal.open();
+        console.log('onDelete - Confirmation modal.open() called via setTimeout.');
+      }, 0);
+
+
+      // Re-subscribe to confirmed event each time to ensure fresh subscription
+      // and prevent multiple emissions from old subscriptions
       const subscription = this.deleteConfirmationModal.confirmed.subscribe(async (confirmed: boolean) => {
+        console.log('onDelete - Confirmation modal confirmed event received:', confirmed);
         if (confirmed) {
           try {
             await this.categoryService.deleteCategory(categoryId);
@@ -182,18 +229,25 @@ export class Category implements OnInit {
                 this.cancelEdit();
             }
             await this.loadCategories();
+            console.log('onDelete - Category deleted successfully.');
           } catch (error: any) {
-            // Use the new error modal instead of toastService
             this.showErrorModal(
               this.translateService.instant('ERROR_TITLE'),
               error.message || this.translateService.instant('DATA_DELETE_ERROR')
             );
-            console.error('Category delete error:', error);
+            console.error('onDelete - Category delete error:', error);
           }
         }
         subscription.unsubscribe(); // Unsubscribe to prevent memory leaks
       });
-    });
+    } catch (error: any) {
+      // Handle errors during the check itself (e.g., network issues)
+      this.showErrorModal(
+        this.translateService.instant('ERROR_TITLE'),
+        error.message || this.translateService.instant('FAILED_CHECK_CATEGORY_USAGE')
+      );
+      console.error('onDelete - Error checking category usage in catch block:', error);
+    }
   }
 
   /**
@@ -208,6 +262,15 @@ export class Category implements OnInit {
     this.errorModal.cancelButtonText = ''; // Ensure cancel button is not shown for error
     this.errorModal.messageColor = 'text-danger'; // Error messages are typically red
     this.errorModal.modalType = 'alert'; // Set modal type to alert (single button)
-    this.errorModal.open();
+
+    // Force change detection to ensure @Input properties are updated in the DOM
+    this.cdr.detectChanges();
+    console.log('showErrorModal - cdr.detectChanges() called for errorModal.');
+
+    // Add a small delay using setTimeout(0) to ensure Bootstrap's show() method is called.
+    setTimeout(() => {
+      this.errorModal.open();
+      console.log('showErrorModal - Error modal.open() called via setTimeout.');
+    }, 0);
   }
 }
