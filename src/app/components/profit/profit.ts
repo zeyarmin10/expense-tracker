@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ViewChild } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Observable, BehaviorSubject, combineLatest, map } from 'rxjs';
@@ -6,12 +6,13 @@ import { ServiceIExpense, ExpenseService } from '../../services/expense';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ServiceIIncome, IncomeService } from '../../services/income';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faEdit, faTrashAlt, faTrash, faSave, faTimes } from '@fortawesome/free-solid-svg-icons'; // Ensure faTrashAlt is imported
+import { faTrash, faSave } from '@fortawesome/free-solid-svg-icons';
+import { ConfirmationModal } from '../common/confirmation-modal/confirmation-modal'; // Import the ConfirmationModal
 
 @Component({
   selector: 'app-profit',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslateModule, FontAwesomeModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslateModule, FontAwesomeModule, ConfirmationModal], // Add ConfirmationModal here
   providers: [DatePipe],
   templateUrl: './profit.html',
   styleUrls: ['./profit.css']
@@ -23,8 +24,9 @@ export class Profit implements OnInit {
   private incomeService = inject(IncomeService);
   private translate = inject(TranslateService);
 
+  @ViewChild('deleteConfirmationModal') private deleteConfirmationModal!: ConfirmationModal; // Reference to the modal
+
   incomeForm: FormGroup;
-  currentIncomeIdBeingEdited: string | null = null; // To store the ID of the income being edited
 
   incomes$: Observable<ServiceIIncome[]>;
   expenses$: Observable<ServiceIExpense[]>;
@@ -43,12 +45,11 @@ export class Profit implements OnInit {
   };
 
   // FontAwesome icons
-  faEdit = faEdit;
-  faTrashAlt = faTrashAlt;
   faTrash = faTrash;
   faSave = faSave;
-  faTimes = faTimes;
-  
+
+  private incomeIdToDelete: string | undefined; // Temporarily store the ID of the income to be deleted
+
   constructor() {
     this.incomeForm = this.fb.group({
       amount: ['', [Validators.required, Validators.min(0.01)]],
@@ -229,53 +230,41 @@ export class Profit implements OnInit {
         description: this.incomeForm.value.description
       };
 
-      if (this.currentIncomeIdBeingEdited) {
-        // Update existing income
-        this.incomeService.updateIncome(this.currentIncomeIdBeingEdited, incomeData)
-          .then(() => {
-            console.log('Income updated successfully!');
-            this.resetForm(); // Reset form and clear edit state
-          })
-          .catch(error => {
-            console.error('Error updating income:', error);
-          });
-      } else {
-        // Add new income
-        this.incomeService.addIncome(incomeData)
-          .then(() => {
-            console.log('Income added successfully!');
-            this.resetForm(); // Reset form
-          })
-          .catch(error => {
-            console.error('Error adding income:', error);
-          });
-      }
+      // Always add new income
+      this.incomeService.addIncome(incomeData)
+        .then(() => {
+          console.log('Income added successfully!');
+          this.resetForm(); // Reset form
+        })
+        .catch(error => {
+          console.error('Error adding income:', error);
+        });
     }
   }
 
-  // Method to populate the form for editing an income
-  editIncome(income: ServiceIIncome): void {
-    this.currentIncomeIdBeingEdited = income.id || null; // Store the ID
-    this.incomeForm.patchValue({
-      amount: income.amount,
-      currency: income.currency,
-      date: income.date,
-      description: income.description
-    });
+  // Method to trigger the confirmation modal for income deletion
+  confirmDeleteIncome(incomeId: string | undefined): void {
+    if (incomeId) {
+      this.incomeIdToDelete = incomeId; // Store the ID temporarily
+      this.deleteConfirmationModal.open(); // Open the modal
+    }
   }
 
-  // New method to handle income deletion
-  deleteIncome(incomeId: string | undefined): void {
-    if (incomeId && confirm(this.translate.instant('CONFIRM_DELETE_INCOME'))) {
-      this.incomeService.deleteIncome(incomeId).then(() => {
+  // Method called when the confirmation modal emits a 'confirmed' event
+  onDeleteConfirmed(confirmed: boolean): void {
+    if (confirmed && this.incomeIdToDelete) {
+      this.incomeService.deleteIncome(this.incomeIdToDelete).then(() => {
         console.log('Income deleted successfully!');
+        this.incomeIdToDelete = undefined; // Clear the stored ID
       }).catch(error => {
         console.error('Error deleting income:', error);
       });
+    } else {
+      this.incomeIdToDelete = undefined; // Clear the stored ID if not confirmed
     }
   }
 
-  // Helper method to reset the form and clear edit state
+  // Helper method to reset the form
   resetForm(): void {
     this.incomeForm.reset({
       amount: '',
@@ -283,7 +272,6 @@ export class Profit implements OnInit {
       date: this.datePipe.transform(new Date(), 'yyyy-MM-dd'),
       description: ''
     });
-    this.currentIncomeIdBeingEdited = null; // Clear the ID being edited
   }
 
   formatAmountWithSymbol(amount: number, currencyCode: string): string {

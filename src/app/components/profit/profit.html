@@ -5,8 +5,7 @@
                     <h2 class="card-title text-center mb-4">{{ 'PROFIT_LOSS_TITLE' | translate }}</h2>
 
                     <div class="card mb-4">
-                        <div class="card-header">{{ currentIncomeIdBeingEdited ? ('EDIT_INCOME' | translate) :
-                            ('ADD_INCOME' | translate) }}</div>
+                        <div class="card-header">{{ 'ADD_INCOME' | translate }}</div>
                         <div class="card-body">
                             <form [formGroup]="incomeForm" (ngSubmit)="onSubmitIncome()">
                                 <div class="mb-3">
@@ -41,14 +40,9 @@
                                 </div>
                                 <div class="d-grid gap-2 d-flex justify-content-end">
                                     <button type="submit" class="btn btn-outline-info ps-4 pe-4"
+                                        [ngClass]="{'btn-outline-info': true, 'shine-effect': incomeForm.valid}"
                                         [disabled]="incomeForm.invalid">
-                                        <!-- {{ currentIncomeIdBeingEdited ? ('UPDATE_INCOME' | translate) : ('ADD_INCOME' | translate) }} -->
                                         <fa-icon [icon]="faSave"></fa-icon>
-                                    </button>
-                                    <button *ngIf="currentIncomeIdBeingEdited" type="button"
-                                        class="btn btn-outline-secondary" (click)="resetForm()">
-                                        <!-- {{ 'CANCEL_EDIT' | translate }} -->
-                                        <fa-icon [icon]="faTimes"></fa-icon>
                                     </button>
                                 </div>
                             </form>
@@ -74,11 +68,8 @@
                                                 </span>
                                             </div>
                                             <div class="text-end" style="min-width: 5rem;">
-                                                <fa-icon class="btn btn-sm btn-outline-info me-1" [icon]="faEdit"
-                                                    (click)="editIncome(income)"
-                                                    title="{{ 'EDIT' | translate }}"></fa-icon>
                                                 <fa-icon class="btn btn-sm btn-outline-danger" [icon]="faTrash"
-                                                    (click)="deleteIncome(income.id)"
+                                                    (click)="confirmDeleteIncome(income.id)"
                                                     title="{{ 'DELETE' | translate }}"></fa-icon>
                                             </div>
                                         </li>
@@ -171,3 +162,13 @@
         </div>
     </div>
 </div>
+
+<app-confirmation-modal #deleteConfirmationModal
+  [title]="'CONFIRMATION_TITLE' | translate"
+  [message]="'CONFIRM_DELETE_INCOME' | translate"
+  [confirmButtonText]="'DELETE_BUTTON' | translate"
+  [cancelButtonText]="'CANCEL_BUTTON' | translate"
+  messageColor="text-danger"
+  modalType="confirm"
+  (confirmed)="onDeleteConfirmed($event)">
+</app-confirmation-modal>
