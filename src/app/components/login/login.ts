@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, HostListener, OnInit, inject, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -6,6 +6,7 @@ import { AuthService } from '../../services/auth';
 import { UserDataService, UserProfile } from '../../services/user-data';
 import { debounceTime, Subject, takeUntil } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { SessionManagement } from '../../services/session-management'; // Import the new service
 
 @Component({
   selector: 'app-login',
@@ -14,7 +15,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
   templateUrl: './login.html',
   styleUrls: ['./login.css']
 })
-export class LoginComponent implements OnInit {
+export class LoginComponent implements OnInit, OnDestroy { // Implement OnDestroy
   isMobileView: boolean = false;
   private destroy$ = new Subject<void>();
   private resizeSubject = new Subject<number>();
@@ -25,6 +26,7 @@ export class LoginComponent implements OnInit {
   authService = inject(AuthService);
   userDataService = inject(UserDataService);
   router = inject(Router);
+  sessionService = inject(SessionManagement);
   errorMessage: string | null = null;
   successMessage: string | null = null;
   isLoginMode: boolean = true;
@@ -32,22 +34,23 @@ export class LoginComponent implements OnInit {
   translate = inject(TranslateService);
   private cdr = inject(ChangeDetectorRef);
 
-  currentLang: string; // Add this property to track the current language
+  currentLang: string;
 
   constructor(private fb: FormBuilder) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
-      name: [''] // Name is not required for login, only for register
+      name: ['']
     });
 
-    // Initialize currentLang with the currently used language
     this.currentLang = this.translate.currentLang || this.translate.getDefaultLang();
   }
 
   ngOnInit(): void {
     this.authService.currentUser$.subscribe(user => {
       if (user) {
+        // User is logged in, but we still navigate to dashboard.
+        // SessionManagementService will handle starting its timer via its constructor
         this.router.navigate(['/dashboard']);
       }
     });
@@ -76,11 +79,10 @@ export class LoginComponent implements OnInit {
     this.isMobileView = width < this.MOBILE_BREAKPOINT;
   }
 
-  // Method to switch language
   switchLanguage(lang: string) {
     this.translate.use(lang);
-    this.currentLang = lang; // Update currentLang when language is switched
-    localStorage.setItem('selectedLanguage', lang); // Persist
+    this.currentLang = lang;
+    localStorage.setItem('selectedLanguage', lang);
   }
 
   toggleMode(): void {
@@ -111,6 +113,7 @@ export class LoginComponent implements OnInit {
     try {
       if (this.isLoginMode) {
         await this.authService.login(email, password);
+        this.sessionService.recordActivity(); // Record activity on successful login
         this.router.navigate(['/dashboard']);
       } else {
         const user = await this.authService.register(email, password);
@@ -122,6 +125,7 @@ export class LoginComponent implements OnInit {
             createdAt: new Date().toISOString()
           };
           await this.userDataService.createUserProfile(newUserProfile);
+          this.sessionService.recordActivity(); // Record activity on successful registration
           this.router.navigate(['/dashboard']);
         }
       }
@@ -157,12 +161,16 @@ export class LoginComponent implements OnInit {
                 createdAt: new Date().toISOString()
               };
               this.userDataService.createUserProfile(newUserProfile)
-                .then(() => this.router.navigate(['/dashboard']))
+                .then(() => {
+                  this.sessionService.recordActivity(); // Record activity on successful Google sign-in (new user)
+                  this.router.navigate(['/dashboard']);
+                })
                 .catch(err => {
                   this.errorMessage = this.translate.instant('ERROR_SAVING_USER_DATA');
                   console.error('Error saving user data:', err);
                 });
             } else {
+              this.sessionService.recordActivity(); // Record activity on successful Google sign-in (existing user)
               this.router.navigate(['/dashboard']);
             }
           });
@@ -174,15 +182,12 @@ export class LoginComponent implements OnInit {
       });
   }
 
-  /**
-   * Toggles the active language between 'my' (Burmese) and 'en' (English).
-   */
   toggleLanguage(): void {
     const newLang = this.currentLang === 'my' ? 'en' : 'my';
     this.translate.use(newLang).subscribe(() => {
-      this.currentLang = newLang; // Update currentLang after successful language change
-      localStorage.setItem('selectedLanguage', newLang); // Persist the selected language
-      this.cdr.detectChanges(); // Manually trigger change detection to update view
+      this.currentLang = newLang;
+      localStorage.setItem('selectedLanguage', newLang);
+      this.cdr.detectChanges();
     });
   }
 }

@@ -150,7 +150,7 @@ fa-icon {
   @keyframes shine {
     0% { box-shadow: 0 0 5px rgba(0, 123, 255, 0.2); } /* Initial subtle glow for info button */
     50% { box-shadow: 0 0 5px rgba(0, 123, 255, 0.4), 0 0 20px rgba(0, 123, 255, 0.3); } /* Brighter glow */
-    100% { box-shadow: 0 0 5px rgba(0, 123, 255, 0.2); } /* Return to subtle glow */
+    100% { box-shadow: 0 0 5px rgba(209, 244, 251, 0.2); } /* Return to subtle glow */
   }
 
   /* Define the shine effect animation for success button */
