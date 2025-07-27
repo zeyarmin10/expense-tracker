@@ -103,13 +103,13 @@ export class App {
     this.activitySubject.next();
   }
 
-  async logout(): Promise<void> {
+  async logout(): Promise<void> { // This method would be tied to your "Logout" button
     try {
-      await this.authService.logout();
-      this.router.navigate(['/login']); // Redirect to login after logout
+      await this.authService.logout(true); // Pass true for manual logout
+      // No need to navigate here, SessionManagementService will handle it via logoutSuccess$
     } catch (error) {
       console.error('Logout failed:', error);
-      // Handle error (e.g., show a toast notification)
+      // Handle logout error (e.g., show a toast)
     }
   }
 }

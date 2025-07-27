@@ -30,36 +30,29 @@ export class SessionManagement implements OnDestroy {
   constructor() {
     this.authService = inject(forwardRef(() => AuthService));
 
-    // Listen for storage events to synchronize across tabs/windows
     window.addEventListener('storage', this.handleStorageChange);
 
-    // Primary subscription for authentication state changes to manage session
     this.authStateSubscription = this.authService.currentUser$.pipe(
-      // Use distinctUntilChanged to prevent redundant emissions if the user object reference doesn't change
-      // or if the UID is the same (e.g., token refresh)
       distinctUntilChanged((prev, curr) => prev?.uid === curr?.uid),
       tap(user => {
-        this.currentUserSubject.next(user); // Update internal subject first
+        this.currentUserSubject.next(user);
         if (user) {
-          // User is logged in or just logged in
-          this.ensureLoginTimeSet(user); // Make sure login time is established
-          this.startSessionMonitoring(); // Start/restart monitoring
+          this.ensureLoginTimeSet(user);
+          this.startSessionMonitoring();
         } else {
-          // User is logged out. Important: Only clear loginTime if it was indeed cleared, not just on initial null emission.
-          // The logoutSuccess$ subscription handles the stopMonitoring and clearing.
-          // This tap ensures that if current user becomes null for any reason (e.g. Firebase internal),
-          // session monitoring stops, but loginTime isn't immediately cleared unless explicit logout.
-          this.stopSessionMonitoring(false); // Do not clear loginTime here, it's done on actual logout.
+          this.stopSessionMonitoring(false);
         }
       })
     ).subscribe();
 
-    // Subscribe to successful logout events from AuthService (for explicit logouts)
-    this.authService.logoutSuccess$.subscribe(() => {
-      // This is triggered ONLY when authService.logout() successfully completes.
-      this.stopSessionMonitoring(true); // Explicitly clear login time on actual logout.
+    // Modified: Subscribe to successful logout events and check the flag
+    this.authService.logoutSuccess$.subscribe((isManualLogout: boolean) => {
+      this.stopSessionMonitoring(true); // Always clear session keys on successful logout
       this.router.navigate(['/login']);
-      alert('သင်၏ session ကုန်ဆုံးသွားပြီဖြစ်သောကြောင့် အလိုအလျောက် ထွက်ခဲ့သည်။');
+
+      if (!isManualLogout) { // Only show alert if it was NOT a manual logout
+        alert('သင်၏ session ကုန်ဆုံးသွားပြီဖြစ်သောကြောင့် အလိုအလျောက် ထွက်ခဲ့သည်။');
+      }
     });
   }
 
@@ -193,9 +186,8 @@ export class SessionManagement implements OnDestroy {
    */
   async logoutAndRedirect(): Promise<void> {
     try {
-      // This will trigger AuthService to log out, which then emits logoutSuccess$.
-      // SessionManagementService's subscription to logoutSuccess$ will handle the rest.
-      await this.authService.logout();
+      // This is an automatic logout, so set isManualLogout to false
+      await this.authService.logout(false);
     } catch (error: any) {
       console.error('Error during automatic logout:', error);
       alert(`အလိုအလျောက် လော့အောက်လုပ်ရာတွင် ပြဿနာတခု ကြုံတွေ့နေရသည်: ${this.authService.getFirebaseErrorMessage(error)}`);

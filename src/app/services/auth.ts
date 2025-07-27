@@ -25,8 +25,8 @@ export class AuthService {
   currentUser$: Observable<User | null>;
 
   // New: Subject to emit when a logout successfully completes
-  private logoutSuccessSubject = new Subject<void>();
-  logoutSuccess$: Observable<void> = this.logoutSuccessSubject.asObservable();
+  private _logoutSuccess = new Subject<boolean>();
+  logoutSuccess$: Observable<boolean> = this._logoutSuccess.asObservable();
 
   constructor() {
     this.currentUser$ = new Observable<User | null>(observer => {
@@ -69,14 +69,20 @@ export class AuthService {
     }
   }
 
-  async logout(): Promise<void> {
+  /**
+   * Logs out the current user.
+   * @param isManualLogout True if this logout was triggered by a user's manual action.
+   * @returns A Promise that resolves when logout is complete.
+   * @throws Error on failure.
+   */
+  async logout(isManualLogout: boolean = false): Promise<void> { // Added isManualLogout parameter
     try {
       await signOut(this.auth);
-      // Emit an event upon successful logout
-      this.logoutSuccessSubject.next();
+      this._logoutSuccess.next(isManualLogout); // Emit with the flag
     } catch (error: any) {
-      console.error('Full logout error object:', error);
-      throw new Error(this.getFirebaseErrorMessage(error));
+      // You might still want to emit false on error, or handle errors differently
+      // For now, we only emit on success.
+      throw new Error(this.getFirebaseErrorMessage(error.code));
     }
   }
 
