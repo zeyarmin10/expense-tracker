@@ -25,7 +25,7 @@
           </form>
       </div>
       <div class="modal-footer">
-        <button type="submit" class="btn btn-outline-info ps-4 pe-4" [disabled]="categoryForm.invalid" (click)="onSubmit()"><fa-icon [icon]="faSave"></fa-icon></button>
+        <button type="submit" class="btn btn-outline-info ps-4 pe-4" [ngClass]="{'btn-outline-info': true, 'shine-effect': categoryForm.valid}" [disabled]="categoryForm.invalid" (click)="onSubmit()"><fa-icon [icon]="faSave"></fa-icon></button>
       </div>
     </div>
   </div>
