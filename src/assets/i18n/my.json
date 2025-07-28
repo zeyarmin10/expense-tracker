@@ -222,5 +222,17 @@
   "DELETE_CATEGORY_ERROR_TITLE": "ဖျက်ရာတွင် အမှား",
   "CATEGORY_IN_USE_ERROR": "ဤအမျိုးအစားကို ဖျက်၍မရပါ၊ ၎င်းသည် လက်ရှိအသုံးစရိတ်များတွင်  အသုံးပြုထားသောကြောင့် ဖြစ်သည်။",
   "FAILED_CHECK_CATEGORY_USAGE": "အမျိုးအစား အသုံးပြုနေခြင်း ရှိမရှိ စစ်ဆေးခြင်း မအောင်မြင်ပါ။ ကျေးဇူးပြု၍ ထပ်ကြိုးစားပါ။",
-  "CONFIRM_BUTTON": "အတည်ပြုမည်"
+  "CONFIRM_BUTTON": "အတည်ပြုမည်",
+  "OPERATION_NOT_ALLOWED": "Email/password sign-in is not enabled. Please check Firebase settings.",
+  "EMAIL_ALREADY_IN_USE": "ဒီအီးမေးလ်လိပ်စာက သုံးနေပြီးသားဖြစ်သည်။ အသစ်တခုနဲ့ လော့ဂင်လုပ်ပါ။",
+  "INVALID_EMAIL": "မမှန်ကန်သော အီးမေးလ်လိပ်စာ။",
+  "WEAK_PASSWORD": "စကားဝှက်က လုံခြုံရေးအရ အားနည်းနေပါတယ်။ အနည်းဆုံး ၈ လုံးရှိရပါမယ်။",
+  "USER_DISABLED": "ဒီအကောင့်ကို ပိတ်ထားလိုက်ပါပြီ။",
+  "USER_NOT_FOUND": "ဒီအီးမေးလ်လိပ်စာနဲ့ သုံးစွဲသူမရှိပါ။",
+  "WRONG_PASSWORD": "စကားဝှက်မှားနေပါတယ်။",
+  "POPUP_CLOSED_BY_USER": "Google sign-in popup ပိတ်သွားပါပြီ။",
+  "CANCELLED_POPUP_REQUEST": "Google sign-in popup ဖွင့်ထားပြီးပါပြီ။",
+  "NETWORK_REQUEST_FAILED": "နက်ဝပ်ချိတ်ဆက်မှု ပြဿနာကြောင့် လော့အောက်လုပ်မရပါ။",
+  "INVALID_CREDENTIAL": "အီးမေးလ် သို့ စကားဝှက် မှားယွင်းနေပါတယ်။",
+  "GENERIC": "အကောင့်ဝင်ခြင်းဆိုင်ရာပြဿနာ တခုဖြစ်သွားပါတယ်။"
 }

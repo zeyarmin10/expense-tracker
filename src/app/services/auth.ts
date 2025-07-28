@@ -11,6 +11,7 @@ import {
   signInWithPopup,
   AuthErrorCodes
 } from '@angular/fire/auth';
+import { TranslateService } from '@ngx-translate/core';
 import { Observable, Subject } from 'rxjs';
 @Injectable({
   providedIn: 'root'
@@ -27,6 +28,8 @@ export class AuthService {
   // New: Subject to emit when a logout successfully completes
   private _logoutSuccess = new Subject<boolean>();
   logoutSuccess$: Observable<boolean> = this._logoutSuccess.asObservable();
+
+  translateService = inject(TranslateService);
 
   constructor() {
     this.currentUser$ = new Observable<User | null>(observer => {
@@ -90,27 +93,29 @@ export class AuthService {
     if (error && typeof error.code === 'string') {
         switch (error.code) {
             case 'auth/email-already-in-use':
-                return 'ဒီအီးမေးလ်လိပ်စာက သုံးနေပြီးသားဖြစ်သည်။ အသစ်တခုနဲ့ လော့ဂင်လုပ်ပါ။';
+                return this.translateService.instant('EMAIL_ALREADY_IN_USE');
             case 'auth/invalid-email':
-                return 'မမှန်ကန်သော အီးမေးလ်လိပ်စာ။';
+                return this.translateService.instant('INVALID_EMAIL');
             case 'auth/operation-not-allowed':
-                return 'Email/password sign-in is not enabled. Please check Firebase settings.';
+                return this.translateService.instant('OPERATION_NOT_ALLOWED');
             case 'auth/weak-password':
-                return 'စကားဝှက်က လုံခြုံရေးအရ အားနည်းနေပါတယ်။ အနည်းဆုံး ၈ လုံးရှိရပါမယ်။';
+                return this.translateService.instant('WEAK_PASSWORD');
             case 'auth/user-disabled':
-                return 'ဒီအကောင့်ကို ပိတ်ထားလိုက်ပါပြီ။';
+                return this.translateService.instant('USER_DISABLED');
             case 'auth/user-not-found':
-                return 'ဒီအီးမေးလ်လိပ်စာနဲ့ သုံးစွဲသူမရှိပါ။';
+                return this.translateService.instant('USER_NOT_FOUND');
             case 'auth/wrong-password':
-                return 'စကားဝှက်မှားနေပါတယ်။';
+                return this.translateService.instant('WRONG_PASSWORD');
             case 'auth/popup-closed-by-user':
-                return 'Google sign-in popup was closed.';
+                return this.translateService.instant('POPUP_CLOSED_BY_USER');
             case 'auth/cancelled-popup-request':
-                return 'Google sign-in popup was already open.';
+                return this.translateService.instant('CANCELLED_POPUP_REQUEST');
             case 'auth/network-request-failed':
-                return 'နက်ဝပ်ချိတ်ဆက်မှု ပြဿနာကြောင့် လော့အောက်လုပ်မရပါ။';
+                return this.translateService.instant('NETWORK_REQUEST_FAILED');
+            case 'auth/invalid-credential':
+                return this.translateService.instant('INVALID_CREDENTIAL');
             default:
-                return `အကောင့်ဝင်ခြင်းဆိုင်ရာ ပြဿနာတခု ဖြစ်သွားပါတယ်။ Error Code: ${error.code}`;
+                return this.translateService.instant('GENERIC', { code: error.code });
         }
     } else if (error && typeof error.message === 'string') {
         return `အမှားတစ်ခု ဖြစ်ပေါ်ခဲ့သည်: ${error.message}`;

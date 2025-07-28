@@ -1,4 +1,5 @@
-import { Component, HostListener, OnInit, inject, ChangeDetectorRef, OnDestroy } from '@angular/core';
+// login.ts
+import { Component, HostListener, OnInit, inject, ChangeDetectorRef, OnDestroy, ViewChild } from '@angular/core'; // Import ViewChild
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -6,21 +7,23 @@ import { AuthService } from '../../services/auth';
 import { UserDataService, UserProfile } from '../../services/user-data';
 import { debounceTime, Subject, takeUntil } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { SessionManagement } from '../../services/session-management'; // Import the new service
+import { SessionManagement } from '../../services/session-management';
+import { ConfirmationModal } from '../common/confirmation-modal/confirmation-modal'; // Import your ConfirmationModal
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslateModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslateModule, ConfirmationModal], // Add ConfirmationModal to imports
   templateUrl: './login.html',
   styleUrls: ['./login.css']
 })
-export class LoginComponent implements OnInit, OnDestroy { // Implement OnDestroy
+export class LoginComponent implements OnInit, OnDestroy {
+  @ViewChild('errorModal') errorModal!: ConfirmationModal; // Add a ViewChild for the modal
+
   isMobileView: boolean = false;
   private destroy$ = new Subject<void>();
   private resizeSubject = new Subject<number>();
   private readonly MOBILE_BREAKPOINT = 768;
-
 
   loginForm: FormGroup;
   authService = inject(AuthService);
@@ -49,8 +52,6 @@ export class LoginComponent implements OnInit, OnDestroy { // Implement OnDestro
   ngOnInit(): void {
     this.authService.currentUser$.subscribe(user => {
       if (user) {
-        // User is logged in, but we still navigate to dashboard.
-        // SessionManagementService will handle starting its timer via its constructor
         this.router.navigate(['/dashboard']);
       }
     });
@@ -104,7 +105,8 @@ export class LoginComponent implements OnInit, OnDestroy { // Implement OnDestro
     this.successMessage = null;
     this.loginForm.markAllAsTouched();
     if (this.loginForm.invalid) {
-      this.errorMessage = this.translate.instant('ERROR_FILL_ALL_FIELDS');
+      // Use the modal to show the validation error
+      this.showErrorModal(this.translate.instant('ERROR_FILL_ALL_FIELDS'));
       return;
     }
 
@@ -113,7 +115,7 @@ export class LoginComponent implements OnInit, OnDestroy { // Implement OnDestro
     try {
       if (this.isLoginMode) {
         await this.authService.login(email, password);
-        this.sessionService.recordActivity(); // Record activity on successful login
+        this.sessionService.recordActivity();
         this.router.navigate(['/dashboard']);
       } else {
         const user = await this.authService.register(email, password);
@@ -125,23 +127,15 @@ export class LoginComponent implements OnInit, OnDestroy { // Implement OnDestro
             createdAt: new Date().toISOString()
           };
           await this.userDataService.createUserProfile(newUserProfile);
-          this.sessionService.recordActivity(); // Record activity on successful registration
+          this.sessionService.recordActivity();
           this.router.navigate(['/dashboard']);
         }
       }
     } catch (error: any) {
       console.error('Authentication error:', error);
-      if (error.code === 'auth/email-already-in-use') {
-        this.errorMessage = this.translate.instant('ERROR_EMAIL_IN_USE');
-      } else if (error.code === 'auth/invalid-email') {
-        this.errorMessage = this.translate.instant('ERROR_INVALID_EMAIL');
-      } else if (error.code === 'auth/weak-password') {
-        this.errorMessage = this.translate.instant('ERROR_WEAK_PASSWORD');
-      } else if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-        this.errorMessage = this.translate.instant('ERROR_INVALID_CREDENTIALS');
-      } else {
-        this.errorMessage = this.translate.instant('ERROR_UNEXPECTED');
-      }
+      // Get the translated error message from the auth service
+      const translatedErrorMessage = this.authService.getFirebaseErrorMessage(error);
+      this.showErrorModal(translatedErrorMessage); // Show error in modal
     }
   }
 
@@ -162,15 +156,15 @@ export class LoginComponent implements OnInit, OnDestroy { // Implement OnDestro
               };
               this.userDataService.createUserProfile(newUserProfile)
                 .then(() => {
-                  this.sessionService.recordActivity(); // Record activity on successful Google sign-in (new user)
+                  this.sessionService.recordActivity();
                   this.router.navigate(['/dashboard']);
                 })
                 .catch(err => {
-                  this.errorMessage = this.translate.instant('ERROR_SAVING_USER_DATA');
+                  this.showErrorModal(this.translate.instant('ERROR_SAVING_USER_DATA')); // Show error in modal
                   console.error('Error saving user data:', err);
                 });
             } else {
-              this.sessionService.recordActivity(); // Record activity on successful Google sign-in (existing user)
+              this.sessionService.recordActivity();
               this.router.navigate(['/dashboard']);
             }
           });
@@ -178,7 +172,8 @@ export class LoginComponent implements OnInit, OnDestroy { // Implement OnDestro
       })
       .catch(error => {
         console.error('Google sign-in error:', error);
-        this.errorMessage = this.translate.instant('ERROR_GOOGLE_SIGNIN_FAILED');
+        const translatedErrorMessage = this.authService.getFirebaseErrorMessage(error); // Get translated error
+        this.showErrorModal(translatedErrorMessage); // Show error in modal
       });
   }
 
@@ -189,5 +184,24 @@ export class LoginComponent implements OnInit, OnDestroy { // Implement OnDestro
       localStorage.setItem('selectedLanguage', newLang);
       this.cdr.detectChanges();
     });
+  }
+
+  // New method to show the error modal
+  private showErrorModal(message: string): void {
+    if (this.errorModal) {
+      this.errorModal.title = this.translate.instant('ERROR_TITLE'); // You'll need to add 'ERROR_TITLE' to your translation files
+      this.errorModal.message = message;
+      this.errorModal.confirmButtonText = this.translate.instant('OK_BUTTON'); // You'll need to add 'OK_BUTTON' to your translation files
+      this.errorModal.messageColor = 'text-danger'; // Make the message red
+      this.errorModal.modalType = 'alert'; // Use 'alert' type for single button
+      
+      // Force change detection to ensure @Input properties are updated in the DOM
+      this.cdr.detectChanges();
+
+      // Add a small delay using setTimeout(0) to ensure Bootstrap's show() method is called.
+      setTimeout(() => {
+        this.errorModal.open();
+      }, 0);
+    }
   }
 }

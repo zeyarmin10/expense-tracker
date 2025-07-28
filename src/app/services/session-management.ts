@@ -12,7 +12,7 @@ import { User } from '@angular/fire/auth';
 export class SessionManagement implements OnDestroy {
   // Constants for session management
 //   private readonly SESSION_TIMEOUT_MS = 60 * 1000; // Testing: 1 minute for auto-logout
-  private readonly SESSION_TIMEOUT_MS = 12 * 60 * 60 * 1000; // Production: 12 hours in milliseconds
+  private readonly SESSION_TIMEOUT_MS = 5 * 60 * 60 * 1000; // Production: 5 hours in milliseconds
 
   private readonly LAST_ACTIVITY_KEY = 'lastActivityTime';
   private readonly LOGIN_TIME_KEY = 'loginTime'; // Stores the initial login timestamp
@@ -76,9 +76,9 @@ export class SessionManagement implements OnDestroy {
       if (!storedLoginTime || isNaN(parsedLoginTime) || parsedLoginTime === 0) {
         const currentTime = Date.now();
         localStorage.setItem(this.LOGIN_TIME_KEY, currentTime.toString());
-        console.log('LOGIN_TIME_KEY set to:', new Date(currentTime).toLocaleTimeString());
+        // console.log('LOGIN_TIME_KEY set to:', new Date(currentTime).toLocaleTimeString());
       } else {
-        console.log('LOGIN_TIME_KEY already set to:', new Date(parsedLoginTime).toLocaleTimeString());
+        // console.log('LOGIN_TIME_KEY already set to:', new Date(parsedLoginTime).toLocaleTimeString());
       }
       this.recordActivity();
     } else {
@@ -115,7 +115,7 @@ export class SessionManagement implements OnDestroy {
             // Re-check currentUser within the pipe to be absolutely sure we should proceed
             const user = this.currentUserSubject.getValue();
             if (!user) {
-              console.log('User is null within timer, stopping monitoring via filter.');
+            //   console.log('User is null within timer, stopping monitoring via filter.');
               this.stopSessionMonitoring(true); // Ensure full cleanup if user becomes null unexpectedly
               return false;
             }
@@ -128,7 +128,7 @@ export class SessionManagement implements OnDestroy {
             this.checkSessionExpiration();
           });
         });
-      console.log('Session monitoring started.');
+    //   console.log('Session monitoring started.');
     });
   }
 
@@ -140,12 +140,12 @@ export class SessionManagement implements OnDestroy {
     if (this.sessionTimerSubscription) {
       this.sessionTimerSubscription.unsubscribe();
       this.sessionTimerSubscription = null;
-      console.log('Session monitoring stopped.');
+    //   console.log('Session monitoring stopped.');
     }
     if (clearKeys) {
       localStorage.removeItem(this.LAST_ACTIVITY_KEY);
       localStorage.removeItem(this.LOGIN_TIME_KEY);
-      console.log('Session keys cleared from localStorage.');
+    //   console.log('Session keys cleared from localStorage.');
     }
   }
 
@@ -172,10 +172,10 @@ export class SessionManagement implements OnDestroy {
     const currentTime = Date.now();
     const elapsedTimeSinceLogin = currentTime - loginTime;
 
-    console.log(`Checking session: LoginTime: ${new Date(loginTime).toLocaleTimeString()}, CurrentTime: ${new Date(currentTime).toLocaleTimeString()}, Elapsed: ${Math.floor(elapsedTimeSinceLogin / 1000)}s, Timeout: ${this.SESSION_TIMEOUT_MS / 1000}s`);
+    // console.log(`Checking session: LoginTime: ${new Date(loginTime).toLocaleTimeString()}, CurrentTime: ${new Date(currentTime).toLocaleTimeString()}, Elapsed: ${Math.floor(elapsedTimeSinceLogin / 1000)}s, Timeout: ${this.SESSION_TIMEOUT_MS / 1000}s`);
 
     if (elapsedTimeSinceLogin >= this.SESSION_TIMEOUT_MS) {
-      console.log('Session expired due to time limit. Logging out...');
+    //   console.log('Session expired due to time limit. Logging out...');
       this.logoutAndRedirect();
     }
   }
@@ -201,7 +201,7 @@ export class SessionManagement implements OnDestroy {
     // If LOGIN_TIME_KEY is cleared in another tab (e.g., by manual logout)
     if (event.key === this.LOGIN_TIME_KEY && event.newValue === null) {
       if (this.currentUserSubject.getValue()) {
-        console.log('LOGIN_TIME_KEY cleared in another tab. Forcing logout in this tab.');
+        // console.log('LOGIN_TIME_KEY cleared in another tab. Forcing logout in this tab.');
         this.logoutAndRedirect(); // This will trigger cleanup via logoutSuccess$
       }
     } else if (event.key === this.LOGIN_TIME_KEY && event.newValue !== null) {
@@ -211,7 +211,7 @@ export class SessionManagement implements OnDestroy {
 
         // Only react if the new time is truly newer and a user is present
         if (!isNaN(newLoginTime) && newLoginTime > currentLoginTime && this.currentUserSubject.getValue()) {
-            console.log('LOGIN_TIME_KEY updated in another tab. Restarting monitoring.');
+            // console.log('LOGIN_TIME_KEY updated in another tab. Restarting monitoring.');
             this.ensureLoginTimeSet(this.currentUserSubject.getValue()); // Re-evaluate based on current state
             this.startSessionMonitoring(); // Restart timer based on new/updated login time
         }

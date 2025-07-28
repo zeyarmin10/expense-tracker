@@ -149,9 +149,9 @@ export class ExpenseService {
 
     if (Object.keys(updates).length > 0) {
       await update(expensesRef, updates);
-      console.log(`Updated ${Object.keys(updates).length} expenses from category '${oldCategoryName}' to '${newCategoryName}' for user ${userId}.`);
+    //   console.log(`Updated ${Object.keys(updates).length} expenses from category '${oldCategoryName}' to '${newCategoryName}' for user ${userId}.`);
     } else {
-      console.log(`No expenses found with category '${oldCategoryName}' for user ${userId}.`);
+    //   console.log(`No expenses found with category '${oldCategoryName}' for user ${userId}.`);
     }
   }
 }

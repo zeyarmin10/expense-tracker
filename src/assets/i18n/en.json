@@ -222,5 +222,17 @@
   "DELETE_CATEGORY_ERROR_TITLE": "Deletion Error",
   "CATEGORY_IN_USE_ERROR": "This category cannot be deleted because it is linked to existing expenses.",
   "FAILED_CHECK_CATEGORY_USAGE": "Failed to check if category is in use. Please try again.",
-  "CONFIRM_BUTTON": "Confirm"
+  "CONFIRM_BUTTON": "Confirm",
+  "OPERATION_NOT_ALLOWED": "Email/password sign-in is not enabled. Please check Firebase settings.",
+  "EMAIL_ALREADY_IN_USE": "This email address is already in use. Please log in with a new one.",
+  "INVALID_EMAIL": "Invalid email address.",
+  "WEAK_PASSWORD": "The password is too weak. It must be at least 8 characters long.",
+  "USER_DISABLED": "This account has been disabled.",
+  "USER_NOT_FOUND": "No user found with this email address.",
+  "WRONG_PASSWORD": "Wrong password.",
+  "POPUP_CLOSED_BY_USER": "The Google sign-in popup was closed by the user.",
+  "CANCELLED_POPUP_REQUEST": "A Google sign-in popup is already open.",
+  "NETWORK_REQUEST_FAILED": "Unable to log out due to a network connection issue.",
+  "INVALID_CREDENTIAL": "Invalid email or password.",
+  "GENERIC": "An account login issue occurred."
 }

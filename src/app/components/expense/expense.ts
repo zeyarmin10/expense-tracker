@@ -390,15 +390,15 @@ export class Expense implements OnInit {
 
       // Force change detection to ensure @Input properties are updated in the DOM
       this.cdr.detectChanges();
-      console.log('onDelete (Expense) - cdr.detectChanges() called for deleteConfirmationModal.');
+    //   console.log('onDelete (Expense) - cdr.detectChanges() called for deleteConfirmationModal.');
 
       setTimeout(() => {
         this.deleteConfirmationModal.open();
-        console.log('onDelete (Expense) - Confirmation modal.open() called via setTimeout.');
+        // console.log('onDelete (Expense) - Confirmation modal.open() called via setTimeout.');
       }, 0);
 
       const subscription = this.deleteConfirmationModal.confirmed.subscribe(async (confirmed: boolean) => {
-        console.log('onDelete (Expense) - Confirmation modal confirmed event received:', confirmed);
+        // console.log('onDelete (Expense) - Confirmation modal confirmed event received:', confirmed);
         if (confirmed) {
           try {
             await this.expenseService.deleteExpense(expenseId);
@@ -413,7 +413,7 @@ export class Expense implements OnInit {
               }
               await this.loadExpenses();
               this.cdr.detectChanges();
-              console.log('onDelete (Expense) - Expense deleted successfully.');
+            //   console.log('onDelete (Expense) - Expense deleted successfully.');
             });
           } catch (error: any) {
             // Use error modal instead of toastService for delete errors
@@ -460,12 +460,10 @@ export class Expense implements OnInit {
 
     // Force change detection to ensure @Input properties are updated in the DOM
     this.cdr.detectChanges();
-    console.log('showErrorModal (Expense) - cdr.detectChanges() called for errorModal.');
 
     // Add a small delay using setTimeout(0) to ensure Bootstrap's show() method is called.
     setTimeout(() => {
       this.errorModal.open();
-      console.log('showErrorModal (Expense) - Error modal.open() called via setTimeout.');
     }, 0);
   }
 
