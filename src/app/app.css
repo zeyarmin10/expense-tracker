@@ -1,6 +1,6 @@
 /* Mobile-First Approach: Define default (small screen) styles first */
 #navbarLogo {
-  height: 30px; /* Set a fixed height for mobile, width will scale proportionally */
+  height: 2rem;
   width: auto;  /* Let the width adjust automatically to maintain aspect ratio */
 }
 
