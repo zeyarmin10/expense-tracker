@@ -1,0 +1,25 @@
+@font-face {
+  font-family: 'MyanmarUIFont'; /* Give your font a logical name */
+  src: url('assets/fonts/MyanmarUI.ttf') format('truetype'); /* Path to your .ttf file */
+  font-weight: normal; /* Adjust based on the font file's weight */
+  font-style: normal;  /* Adjust based on the font file's style */
+  font-display: swap;  /* Important for performance: prevents FOIT */
+}
+
+@font-face {
+  font-family: 'MyanmarUIFont';
+  src: url('assets/fonts/MyanmarUI.ttf') format('truetype');
+  font-weight: bold; /* This file is for the bold weight */
+  font-style: normal;
+  font-display: swap;
+}
+
+
+body {
+  font-family: 'MyanmarUIFont', sans-serif; /* Add fallback fonts */
+}
+
+/* If using Angular Material, ensure this comes after your font declaration */
+.mat-typography {
+  font-family: 'MyanmarUIFont', sans-serif;
+}

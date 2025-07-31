@@ -1,4 +1,9 @@
 {
+  "NAV_DASHBOARD": "Dashboard",
+  "NAV_EXPENSE": "Expense",
+  "NAV_PROFIT": "Profit",
+  "NAV_CATEGORY": "Category",
+  "NAV_LOGOUT": "Logout",
   "LOGIN_TITLE": "Login",
   "REGISTER_TITLE": "Register",
   "EMAIL_LABEL": "Email address",

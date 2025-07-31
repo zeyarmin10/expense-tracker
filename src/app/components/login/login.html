@@ -3,7 +3,7 @@
         <div class="col-md-6 col-lg-5">
             <div class="login-bg-image"></div>
             <div class="card shadow-lg p-4">
-                <div class="language-switcher">
+                <span class="language-switcher mt-1">
                     <button
                     class="btn btn-link p-0"
                     (click)="toggleLanguage()"
@@ -16,7 +16,7 @@
                         class="flag-icon"
                     />
                     </button>
-                </div>
+                </span>
                 <h2 class="card-title text-center mb-4">
                     {{ isLoginMode ? ('LOGIN_TITLE' | translate) : ('REGISTER_TITLE' | translate) }}
                 </h2>

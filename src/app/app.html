@@ -13,16 +13,16 @@
         <div class="collapse navbar-collapse" id="navbarColor03">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                 <li class="nav-item">
-                    <a class="nav-link" aria-current="page" routerLink="/dashboard" routerLinkActive="active-link">Dashboard</a>
+                    <a class="nav-link" aria-current="page" routerLink="/dashboard" routerLinkActive="active-link">{{ 'NAV_DASHBOARD' | translate }}</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" routerLink="/expense" routerLinkActive="active-link">Expense</a>
+                    <a class="nav-link" routerLink="/expense" routerLinkActive="active-link">{{ 'NAV_EXPENSE' | translate }}</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link"  routerLink="/profit" routerLinkActive="active-link">Profit</a>
+                    <a class="nav-link"  routerLink="/profit" routerLinkActive="active-link">{{ 'NAV_PROFIT' | translate }}</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" routerLink="/category" routerLinkActive="active-link">Category</a>
+                    <a class="nav-link" routerLink="/category" routerLinkActive="active-link">{{ 'NAV_CATEGORY' | translate }}</a>
                 </li>
             </ul>
 
@@ -33,7 +33,7 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" (click)="logout()" style="cursor: pointer;">Logout</a>
+                    <a class="nav-link" (click)="logout()" style="cursor: pointer;">{{ 'NAV_LOGOUT' | translate }}</a>
                 </li>
             </ul>
         </div>

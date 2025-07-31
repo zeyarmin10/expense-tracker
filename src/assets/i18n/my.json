@@ -1,4 +1,9 @@
 {
+  "NAV_DASHBOARD": "ဒက်ရှ်ဘုတ်",
+  "NAV_EXPENSE": "ကုန်ကျစရိတ်",
+  "NAV_PROFIT": "အမြတ်",
+  "NAV_CATEGORY": "အမျိုးအစား",
+  "NAV_LOGOUT": "ထွက်ရန်",
   "LOGIN_TITLE": "ဝင်မည်",
   "REGISTER_TITLE": "အကောင့်ဖွင့်မည်",
   "EMAIL_LABEL": "အီးမေးလ်",
