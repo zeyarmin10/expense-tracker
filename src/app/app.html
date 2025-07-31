@@ -1,16 +1,10 @@
 <nav class="navbar navbar-expand-lg" style="background-color: #e3f2fd;" *ngIf="currentUser$ | async">
     <div class="container-fluid">
-        <svg routerLink="/dashboard" xmlns="http://www.w3.org/2000/svg" version="1.0" width="30pt" height="30pt"
-            viewBox="0 0 96.000000 96.000000" preserveAspectRatio="xMidYMid meet">
-            <g transform="translate(0.000000,96.000000) scale(0.100000,-0.100000)" fill="#17cc17" stroke="none">
-                <path
-                    d="M387 870 c-142 -36 -255 -149 -293 -294 -46 -173 41 -366 201 -449 232 -118 504 4 571 257 64 238 -115 480 -364 492 -42 2 -94 -1 -115 -6z m205 -41 c20 -5 65 -28 99 -52 80 -54 132 -136 150 -237 35 -198 -99 -384 -303 -421 -135 -25 -277 35 -355 150 -51 75 -67 125 -66 211 0 86 16 137 61 204 58 86 128 131 247 160 26 6 120 -2 167 -15z">
-                </path>
-                <path
-                    d="M447 772 c-10 -10 -17 -23 -17 -28 0 -6 -14 -20 -31 -33 -44 -33 -69 -79 -69 -129 0 -50 11 -75 53 -119 l31 -33 -37 0 c-28 0 -40 -6 -53 -25 -30 -46 9 -121 88 -172 7 -4 18 -17 24 -27 25 -46 67 -46 88 1 5 10 27 29 48 42 82 47 101 133 47 214 -17 26 -35 47 -40 47 -5 0 -9 5 -9 10 0 6 11 10 25 10 33 0 60 41 50 77 -11 46 -42 88 -80 109 -19 10 -35 24 -35 30 0 15 -33 44 -52 44 -8 0 -22 -8 -31 -18z m53 -42 c0 -20 5 -30 15 -30 49 0 105 -64 105 -119 0 -18 -6 -21 -37 -21 -33 0 -40 5 -53 33 -17 37 -49 46 -74 21 -33 -32 -17 -66 49 -101 33 -17 73 -46 89 -64 25 -28 28 -37 23 -82 -5 -57 -36 -93 -88 -104 -24 -4 -29 -11 -29 -34 0 -22 -5 -29 -20 -29 -15 0 -20 7 -20 29 0 24 -5 31 -29 36 -43 9 -91 69 -91 114 0 18 6 21 38 21 32 0 39 -5 52 -33 12 -26 21 -33 52 -35 33 -3 40 0 50 23 16 36 4 52 -73 96 -81 46 -102 77 -96 143 4 40 10 55 36 78 17 15 38 28 46 28 10 0 15 10 15 30 0 23 4 30 20 30 16 0 20 -7 20 -30z m-2 -348 c8 -26 -34 -10 -51 19 l-17 31 32 -19 c17 -10 33 -24 36 -31z">
-                </path>
-            </g>
-        </svg>
+        <a class="navbar-brand" routerLink="/">
+            <img src="assets/images/Expense-Tracker-Logo.png" alt="Expense Tracker Logo" 
+           class="img-fluid d-inline-block align-text-top"
+           id="navbarLogo">
+        </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarColor03"
             aria-controls="navbarColor03" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>

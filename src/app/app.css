@@ -1,0 +1,31 @@
+/* Mobile-First Approach: Define default (small screen) styles first */
+#navbarLogo {
+  height: 30px; /* Set a fixed height for mobile, width will scale proportionally */
+  width: auto;  /* Let the width adjust automatically to maintain aspect ratio */
+}
+
+/* Medium devices (tablets, 768px and up) */
+@media (min-width: 768px) {
+  #navbarLogo {
+    /* height: 40px; */
+    width: auto;
+  }
+}
+
+/* Large devices (desktops, 992px and up) */
+@media (min-width: 992px) {
+  #navbarLogo {
+    /* height: 50px; */
+    width: auto;
+  }
+}
+
+/* Optional: If you also want text next to the logo on larger screens */
+.navbar-brand .ms-2 {
+  margin-left: 0.5rem !important; /* Adjust spacing as needed */
+}
+
+.active-link {
+    /* font-weight: bold; */
+    color: #2574b8 !important; /* Example active link color */
+}
