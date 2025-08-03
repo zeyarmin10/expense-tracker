@@ -150,14 +150,14 @@ export class Profit implements OnInit {
     ]).pipe(
       map(([incomes, expenses, year]) => {
         const halfYearlyData: { [period: string]: { income: { [currency: string]: number }, expense: { [currency: string]: number } } } = {
-          'H1': { income: {}, expense: {} },
-          'H2': { income: {}, expense: {} }
+          'Jan~Jun': { income: {}, expense: {} },
+          'Jul~Dec': { income: {}, expense: {} }
         };
 
         incomes.forEach(income => {
           const incomeDate = new Date(income.date);
           if (incomeDate.getFullYear() === year) {
-            const period = incomeDate.getMonth() < 6 ? 'H1' : 'H2';
+            const period = incomeDate.getMonth() < 6 ? 'Jan~Jun' : 'Jul~Dec';
             halfYearlyData[period].income[income.currency] = (halfYearlyData[period].income[income.currency] || 0) + income.amount;
           }
         });
@@ -165,7 +165,7 @@ export class Profit implements OnInit {
         expenses.forEach(expense => {
           const expenseDate = new Date(expense.date);
           if (expenseDate.getFullYear() === year) {
-            const period = expenseDate.getMonth() < 6 ? 'H1' : 'H2';
+            const period = expenseDate.getMonth() < 6 ? 'Jan~Jun' : 'Jul~Dec';
             halfYearlyData[period].expense[expense.currency] = (halfYearlyData[period].expense[expense.currency] || 0) + expense.totalCost;
           }
         });

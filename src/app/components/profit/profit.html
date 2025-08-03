@@ -126,11 +126,12 @@
                             <div *ngIf="(halfYearlyProfitLoss$ | async) as halfYearlyTotals; else noHalfYearlyData">
                                 <div *ngIf="halfYearlyTotals.length > 0">
                                     <div *ngFor="let total of halfYearlyTotals">
-                                        <p [class.text-success]="total.profitLoss >= 0"
+                                        <span class="me-3">{{ total.period }}:</span>
+                                        <span [class.text-success]="total.profitLoss >= 0"
                                             [class.text-danger]="total.profitLoss < 0">
-                                            {{ total.period }}: {{ formatAmountWithSymbol(total.profitLoss,
+                                             {{ formatAmountWithSymbol(total.profitLoss,
                                             total.currency) }}
-                                        </p>
+                                        </span>
                                     </div>
                                 </div>
                                 <div *ngIf="halfYearlyTotals.length === 0">
@@ -154,7 +155,7 @@
                                                 </span>
                                                 <div class="d-flex flex-column">
                                                     <span *ngFor="let total of month.totals" [class.text-success]="total.profitLoss >= 0"
-                                                    [class.text-danger]="total.profitLoss < 0" class="w-100 text-end">
+                                                    [class.text-danger]="total.profitLoss < 0" class="w-100">
                                                         {{ formatAmountWithSymbol(total.profitLoss, total.currency) }}
                                                     </span>
                                                 </div>
@@ -165,21 +166,6 @@
                                             </div>
                                         </ng-container>
                                     </ul>
-                                    <!-- <div *ngFor="let month of monthlyTotals" class="monthly-profit-loss">
-                                        <h6>{{ month.month }}</h6>
-                                        <div *ngIf="month.totals.length > 0">
-                                            <p *ngFor="let total of month.totals"
-                                                [class.text-success]="total.profitLoss >= 0"
-                                                [class.text-danger]="total.profitLoss < 0"
-                                                style="margin:0"
-                                            >
-                                                {{ formatAmountWithSymbol(total.profitLoss, total.currency) }}
-                                            </p>
-                                        </div>
-                                        <div *ngIf="month.totals.length === 0">
-                                            <p>{{ 'NO_DATA_FOR_MONTH' | translate }}</p>
-                                        </div>
-                                    </div> -->
                                 </div>
                                 <div *ngIf="monthlyTotals.length === 0">
                                     <p>{{ 'NO_DATA_FOR_MONTH_YEAR' | translate }}</p>
