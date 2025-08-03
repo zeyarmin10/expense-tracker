@@ -3,14 +3,14 @@ body {
   font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
-/* .expense-overview-page {
-  max-width: 1200px;
-  margin: 0 auto;
-} */
+.expense-overview-page {
+  /* max-width: 1200px; */
+  /* margin: 0 auto; */
+}
 
 .card {
   /* border: none; */
-  border-radius: 12px;
+  /* border-radius: 12px; */
 }
 
 .card-title {
@@ -90,4 +90,71 @@ body {
   .form-label {
     margin-bottom: 0.25rem;
   }
+}
+
+body {
+  background-color: #f0f2f5;
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.card-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #333;
+}
+
+/* New styles for the chart container */
+.chart-container {
+  position: relative;
+  height: 400px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+@media (max-width: 767.98px) {
+  .chart-container {
+    height: auto;
+    max-width: 100%;
+  }
+}
+
+/* Summary Card specific styles */
+.summary-card .card-body {
+  padding: 1rem;
+}
+
+.summary-card h6 {
+  font-size: 0.9rem;
+}
+
+.summary-card h4 {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+/* Mobile-first layout adjustments */
+@media (max-width: 575.98px) {
+  .summary-card h4 {
+    font-size: 1.1rem;
+  }
+}
+
+/* For small screens, the filter/search section stacks */
+@media (max-width: 991.98px) {
+  .form-label {
+    margin-bottom: 0.25rem;
+  }
+}
+
+/* Styles for the expense list table */
+/* Mobile-only font size change */
+@media (max-width: 767.98px) {
+  .table {
+    font-size: 0.9em;
+  }
+}
+
+/* Light background color for even rows */
+.table tbody tr td:nth-child(even) {
+  background-color: #e2efff; /* A very light gray color */
 }
