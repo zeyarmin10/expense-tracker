@@ -6,6 +6,7 @@ import { LoginComponent } from './components/login/login';
 import { DashboardComponent } from './components/dashboard/dashboard';
 import { AuthGuard } from './guards/auth-guard'; // Import your auth guard
 import { UserProfileComponent } from './components/user-profile/user-profile';
+import { ExpenseOverview } from './components/expense-overview/expense-overview'
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' }, // Default route
@@ -34,6 +35,10 @@ export const routes: Routes = [
     path: 'profile',
     component: UserProfileComponent,
     canActivate: [AuthGuard],
+  },
+  { 
+    path: 'expense-overview', 
+    component: ExpenseOverview 
   },
   // Move the wildcard route to the very end of the array
   { path: '**', redirectTo: '/login' },

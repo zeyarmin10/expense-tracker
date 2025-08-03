@@ -240,5 +240,22 @@
   "NETWORK_REQUEST_FAILED": "Unable to log out due to a network connection issue.",
   "INVALID_CREDENTIAL": "Invalid email or password.",
   "GENERIC": "An account login issue occurred.",
-  "TOTAL_INCOME": "Total incomes"
+  "TOTAL_INCOME": "Total incomes",
+  "NAV_EXPENSE_OVERVIEW": "Expense Overview",
+  "EXPENSE_OVERVIEW_TITLE": "Expense Overview",
+  "CURRENT_MONTH": "Current Month",
+  "LAST_30_DAYS": "Last 30 Days",
+  "CURRENT_YEAR": "Current Year",
+  "LAST_YEAR": "Last Year",
+  "CUSTOM_DATE": "Custom Date",
+  "SEARCH_PLACEHOLDER": "Search by category or item name",
+  "SEARCH": "Search",
+  "MOST_EXPENSIVE_CATEGORY": "Most Expensive Category",
+  "DAILY_AVERAGE_EXPENSE": "Daily Average Expense",
+  "EXPENSE_BREAKDOWN_BY_CATEGORY": "Expense Breakdown by Category",
+  "CATEGORY_LABEL": "Category",
+  "ITEM_NAME_LABEL": "Item Name",
+  "TOTAL_COST_LABEL": "Total Cost",
+  "DATE_FILTER": "Date Filter",
+  "EXPENSE_LIST": "Expense List"
 }

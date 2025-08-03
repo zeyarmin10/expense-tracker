@@ -1,0 +1,93 @@
+body {
+  background-color: #f0f2f5;
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.expense-overview-page {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.card {
+  border: none;
+  border-radius: 12px;
+}
+
+.card-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #333;
+}
+
+/* Summary Card specific styles */
+.summary-card .card-body {
+  padding: 1rem;
+}
+
+.summary-card h6 {
+  font-size: 0.9rem;
+}
+
+.summary-card h4 {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+/* Mobile-first layout adjustments */
+@media (max-width: 575.98px) {
+  .summary-card h4 {
+    font-size: 1.1rem;
+  }
+}
+
+/* For small screens, the filter/search section stacks */
+@media (max-width: 991.98px) {
+  .form-label {
+    margin-bottom: 0.25rem;
+  }
+}
+
+/* Other styles from the previous response... */
+
+/* New styles for the chart container */
+.chart-container {
+  position: relative;
+  height: 400px; /* Default height for desktop */
+  max-width: 600px; /* Max width to prevent stretching on large screens */
+  margin: 0 auto; /* Center the container */
+}
+
+@media (max-width: 767.98px) {
+  .chart-container {
+    height: auto; /* Allow height to be auto on mobile for responsiveness */
+    max-width: 100%;
+  }
+}
+
+/* Summary Card specific styles */
+.summary-card .card-body {
+  padding: 1rem;
+}
+
+.summary-card h6 {
+  font-size: 0.9rem;
+}
+
+.summary-card h4 {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+/* Mobile-first layout adjustments */
+@media (max-width: 575.98px) {
+  .summary-card h4 {
+    font-size: 1.1rem;
+  }
+}
+
+/* For small screens, the filter/search section stacks */
+@media (max-width: 991.98px) {
+  .form-label {
+    margin-bottom: 0.25rem;
+  }
+}

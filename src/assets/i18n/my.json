@@ -240,5 +240,22 @@
   "NETWORK_REQUEST_FAILED": "နက်ဝပ်ချိတ်ဆက်မှု ပြဿနာကြောင့် လော့အောက်လုပ်မရပါ။",
   "INVALID_CREDENTIAL": "အီးမေးလ် သို့ စကားဝှက် မှားယွင်းနေပါတယ်။",
   "GENERIC": "အကောင့်ဝင်ခြင်းဆိုင်ရာပြဿနာ တခုဖြစ်သွားပါတယ်။",
-  "TOTAL_INCOME": "ဝင်ငွေစုစုပေါင်း"
+  "TOTAL_INCOME": "ဝင်ငွေစုစုပေါင်း",
+  "NAV_EXPENSE_OVERVIEW": "အသုံးစရိတ်သုံးသပ်ချက်",
+  "EXPENSE_OVERVIEW_TITLE": "အသုံးစရိတ် ခြုံငုံသုံးသပ်ချက်",
+  "CURRENT_MONTH": "ဒီလ",
+  "LAST_30_DAYS": "လွန်ခဲ့သော ရက် ၃၀",
+  "CURRENT_YEAR": "ဒီနှစ်",
+  "LAST_YEAR": "မနှစ်က",
+  "CUSTOM_DATE": "စိတ်ကြိုက်ရက်စွဲ",
+  "SEARCH_PLACEHOLDER": "အမျိုးအစား သို့မဟုတ် ပစ္စည်းအမည်ဖြင့် ရှာဖွေပါ",
+  "SEARCH": "ရှာရန်",
+  "MOST_EXPENSIVE_CATEGORY": "အကုန်အကျအများဆုံး အမျိုးအစား",
+  "DAILY_AVERAGE_EXPENSE": "နေ့စဥ်ပျမ်းမျှအသုံးစရိတ်",
+  "EXPENSE_BREAKDOWN_BY_CATEGORY": "အမျိုးအစားအလိုက် အသုံးစရိတ်",
+  "CATEGORY_LABEL": "အမျိုးအစား",
+  "ITEM_NAME_LABEL": "ပစ္စည်းအမည်",
+  "TOTAL_COST_LABEL": "စုစုပေါင်းကုန်ကျစရိတ်",
+  "DATE_FILTER": "ရက်စွဲ စစ်ထုတ်ခြင်း",
+  "EXPENSE_LIST": "အသုံးစရိတ်စာရင်း"
 }
