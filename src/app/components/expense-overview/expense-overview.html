@@ -1,105 +1,112 @@
-<div class="container-fluid py-4 expense-overview-page">
-  <div class="card shadow-sm p-3 p-md-4">
-    <h2 class="card-title text-center mb-4">{{ 'EXPENSE_OVERVIEW_TITLE' | translate }}</h2>
+<div class="container mt-3 mb-5">
+  <div class="row d-flex justify-content-center">
+    <div class="col-12 col-md-10 col-lg-8">
+      <div class="card shadow-sm p-3 p-md-4">
+            <h2 class="card-title text-center mb-4">{{ 'EXPENSE_OVERVIEW_TITLE' | translate }}</h2>
 
-    <div class="row g-3 mb-4">
-      <div class="col-12 col-lg-4">
-        <label class="form-label d-block d-lg-none">{{ 'DATE_FILTER' | translate }}</label>
-        <select class="form-select" [(ngModel)]="selectedDateFilter" (change)="setDateFilter(selectedDateFilter)">
-          <option value="currentMonth">{{ 'CURRENT_MONTH' | translate }}</option>
-          <option value="last30Days">{{ 'LAST_30_DAYS' | translate }}</option>
-          <option value="currentYear">{{ 'CURRENT_YEAR' | translate }}</option>
-          <option value="lastYear">{{ 'LAST_YEAR' | translate }}</option>
-          <option value="custom">{{ 'CUSTOM_DATE' | translate }}</option>
-        </select>
-      </div>
+            <div class="row g-3 mb-4">
+            <div class="col-12 col-lg-4">
+                <label class="form-label d-block d-lg-none">{{ 'DATE_FILTER' | translate }}</label>
+                <select class="form-select" [(ngModel)]="selectedDateFilter" (change)="setDateFilter(selectedDateFilter)">
+                <option value="currentMonth">{{ 'CURRENT_MONTH' | translate }}</option>
+                <option value="last30Days">{{ 'LAST_30_DAYS' | translate }}</option>
+                <option value="currentYear">{{ 'CURRENT_YEAR' | translate }}</option>
+                <option value="lastYear">{{ 'LAST_YEAR' | translate }}</option>
+                <option value="custom">{{ 'CUSTOM_DATE' | translate }}</option>
+                </select>
+            </div>
 
-      <ng-container *ngIf="selectedDateFilter === 'custom'">
-        <div class="col-6 col-lg-4">
-          <label class="form-label d-block d-lg-none">{{ 'START_DATE' | translate }}</label>
-          <input type="date" class="form-control" [(ngModel)]="startDate" (change)="setDateFilter('custom')" />
-        </div>
-        <div class="col-6 col-lg-4">
-          <label class="form-label d-block d-lg-none">{{ 'END_DATE' | translate }}</label>
-          <input type="date" class="form-control" [(ngModel)]="endDate" (change)="setDateFilter('custom')" />
-        </div>
-      </ng-container>
+            <ng-container *ngIf="selectedDateFilter === 'custom'">
+                <div class="col-6 col-lg-4">
+                <label class="form-label d-block d-lg-none">{{ 'START_DATE' | translate }}</label>
+                <input type="date" class="form-control" [(ngModel)]="startDate" (change)="setDateFilter('custom')" />
+                </div>
+                <div class="col-6 col-lg-4">
+                <label class="form-label d-block d-lg-none">{{ 'END_DATE' | translate }}</label>
+                <input type="date" class="form-control" [(ngModel)]="endDate" (change)="setDateFilter('custom')" />
+                </div>
+            </ng-container>
 
-      <div class="col-12 col-lg-8">
-        <label class="form-label d-block d-lg-none">{{ 'SEARCH' | translate }}</label>
-        <div class="input-group">
-          <input
-            type="text"
-            class="form-control"
-            placeholder="{{ 'SEARCH_PLACEHOLDER' | translate }}"
-            [(ngModel)]="searchTerm"
-            (keyup.enter)="onSearch()"
-          />
-          <button class="btn btn-primary" type="button" (click)="onSearch()">
-            {{ 'SEARCH' | translate }}
-          </button>
-        </div>
-      </div>
-    </div>
+            <div class="col-12 col-lg-8">
+                <label class="form-label d-block d-lg-none">{{ 'SEARCH' | translate }}</label>
+                <div class="input-group">
+                <input
+                    type="text"
+                    class="form-control"
+                    placeholder="{{ 'SEARCH_PLACEHOLDER' | translate }}"
+                    [(ngModel)]="searchTerm"
+                    (keyup.enter)="onSearch()"
+                />
+                <button class="btn btn-primary" type="button" (click)="onSearch()">
+                    {{ 'SEARCH' | translate }}
+                </button>
+                </div>
+            </div>
+            </div>
 
-    <div class="row g-3 mb-4">
-      <div class="col-12 col-sm-6 col-md-4">
-        <div class="card h-100 summary-card">
-          <div class="card-body text-center">
-            <h6 class="text-muted mb-2">{{ 'TOTAL_EXPENSES' | translate }}</h6>
-            <h4 class="card-title text-danger">{{ totalExpenses | number: '1.2-2' }}</h4>
-          </div>
-        </div>
-      </div>
-      <div class="col-12 col-sm-6 col-md-4">
-        <div class="card h-100 summary-card">
-          <div class="card-body text-center">
-            <h6 class="text-muted mb-2">{{ 'MOST_EXPENSIVE_CATEGORY' | translate }}</h6>
-            <h4 class="card-title">{{ mostExpenseCategory }}</h4>
-          </div>
-        </div>
-      </div>
-      <div class="col-12 col-md-4">
-        <div class="card h-100 summary-card">
-          <div class="card-body text-center">
-            <h6 class="text-muted mb-2">{{ 'DAILY_AVERAGE_EXPENSE' | translate }}</h6>
-            <h4 class="card-title text-info">{{ dailyAverageExpense | number: '1.2-2' }}</h4>
-          </div>
-        </div>
-      </div>
-    </div>
+            <div class="row g-3 mb-4">
+            <div class="col-12 col-sm-6 col-md-4">
+                <div class="card h-100 summary-card">
+                <div class="card-body text-center">
+                    <h6 class="text-muted mb-2">{{ 'TOTAL_EXPENSES' | translate }}</h6>
+                    <h4 class="card-title text-danger">{{ totalExpenses | number: '1.2-2' }}</h4>
+                </div>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-4">
+                <div class="card h-100 summary-card">
+                <div class="card-body text-center">
+                    <h6 class="text-muted mb-2">{{ 'MOST_EXPENSIVE_CATEGORY' | translate }}</h6>
+                    <h4 class="card-title">{{ mostExpenseCategory }}</h4>
+                </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-4">
+                <div class="card h-100 summary-card">
+                <div class="card-body text-center">
+                    <h6 class="text-muted mb-2">{{ 'DAILY_AVERAGE_EXPENSE' | translate }}</h6>
+                    <h4 class="card-title text-info">{{ dailyAverageExpense | number: '1.2-2' }}</h4>
+                </div>
+                </div>
+            </div>
+            </div>
 
-    <div class="row g-3 mb-4">
-      <div class="col-12">
-        <div class="card h-100 p-3">
-          <h5 class="text-center mb-3">{{ 'EXPENSE_BREAKDOWN_BY_CATEGORY' | translate }}</h5>
-          <div class="chart-container">
-            <canvas baseChart [data]="pieChartData" [options]="pieChartOptions" type="pie"></canvas>
-          </div>
-        </div>
-      </div>
-    </div>
+            <div class="row g-3 mb-4">
+            <div class="col-12">
+                <div class="card h-100 p-3">
+                <h5 class="text-center mb-3">{{ 'EXPENSE_BREAKDOWN_BY_CATEGORY' | translate }}</h5>
+                <div class="chart-container">
+                    <canvas baseChart [data]="pieChartData" [options]="pieChartOptions" type="pie"></canvas>
+                </div>
+                </div>
+            </div>
+            </div>
 
-    <div class="table-responsive">
-      <h5 class="mb-3">{{ 'EXPENSE_LIST' | translate }}</h5>
-      <table class="table table-hover align-middle" *ngIf="(filteredExpenses$ | async) as expenses">
-        <thead>
-          <tr>
-            <th scope="col" class="d-none d-md-table-cell">{{ 'DATE_LABEL' | translate }}</th>
-            <th scope="col">{{ 'CATEGORY_LABEL' | translate }}</th>
-            <th scope="col">{{ 'ITEM_NAME_LABEL' | translate }}</th>
-            <th scope="col" class="text-end">{{ 'TOTAL_COST_LABEL' | translate }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let expense of expenses">
-            <td class="d-none d-md-table-cell">{{ expense.date | date }}</td>
-            <td>{{ expense.category }}</td>
-            <td>{{ expense.itemName }}</td>
-            <td class="text-end text-danger">{{ expense.totalCost | number: '1.2-2' }}</td>
-          </tr>
-        </tbody>
-      </table>
+            <div class="table-responsive">
+            <h5 class="mb-3">{{ 'EXPENSE_LIST' | translate }}</h5>
+            <table class="table table-hover align-middle" *ngIf="(filteredExpenses$ | async) as expenses">
+                <thead>
+                <tr>
+                    <th scope="col" class="d-none d-md-table-cell">{{ 'DATE_LABEL' | translate }}</th>
+                    <th scope="col" class="d-md-none">{{ 'DATE_LABEL' | translate }}</th>
+                    <th scope="col">{{ 'CATEGORY_LABEL' | translate }}</th>
+                    <th scope="col">{{ 'ITEM_NAME_LABEL' | translate }}</th>
+                    <th scope="col" class="text-end">{{ 'TOTAL_COST_LABEL' | translate }}</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr *ngFor="let expense of expenses">
+                    <td class="d-none d-md-table-cell">{{ expense.date | date }}</td>
+                    <td class="d-md-none">{{ expense.date | date: 'MMM d' }}</td>
+                    <td>{{ expense.category }}</td>
+                    <td>{{ expense.itemName }}</td>
+                    <td class="text-end text-danger">{{ expense.totalCost | number: '1.2-2' }}</td>
+                </tr>
+                </tbody>
+            </table>
+            </div>
+
+      </div>
     </div>
   </div>
 </div>

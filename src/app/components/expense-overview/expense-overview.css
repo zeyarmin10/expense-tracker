@@ -3,13 +3,13 @@ body {
   font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
-.expense-overview-page {
+/* .expense-overview-page {
   max-width: 1200px;
   margin: 0 auto;
-}
+} */
 
 .card {
-  border: none;
+  /* border: none; */
   border-radius: 12px;
 }
 
