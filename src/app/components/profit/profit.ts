@@ -6,13 +6,13 @@ import { ServiceIExpense, ExpenseService } from '../../services/expense';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ServiceIIncome, IncomeService } from '../../services/income';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faTrash, faSave } from '@fortawesome/free-solid-svg-icons';
-import { ConfirmationModal } from '../common/confirmation-modal/confirmation-modal'; // Import the ConfirmationModal
+import { faTrash, faSave, faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
+import { ConfirmationModal } from '../common/confirmation-modal/confirmation-modal';
 
 @Component({
   selector: 'app-profit',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslateModule, FontAwesomeModule, ConfirmationModal], // Add ConfirmationModal here
+  imports: [CommonModule, ReactiveFormsModule, TranslateModule, FontAwesomeModule, ConfirmationModal],
   providers: [DatePipe],
   templateUrl: './profit.html',
   styleUrls: ['./profit.css']
@@ -24,7 +24,7 @@ export class Profit implements OnInit {
   private incomeService = inject(IncomeService);
   private translate = inject(TranslateService);
 
-  @ViewChild('deleteConfirmationModal') private deleteConfirmationModal!: ConfirmationModal; // Reference to the modal
+  @ViewChild('deleteConfirmationModal') private deleteConfirmationModal!: ConfirmationModal;
 
   incomeForm: FormGroup;
 
@@ -33,7 +33,9 @@ export class Profit implements OnInit {
 
   public _selectedYear$ = new BehaviorSubject<number>(new Date().getFullYear());
 
-  monthlyProfitLoss$: Observable<{ [month: string]: { profitLoss: number, currency: string }[] }>;
+  filteredAndSortedIncomes$: Observable<ServiceIIncome[]>;
+  totalIncome$: Observable<{ currency: string, total: number }[]>;
+  monthlyProfitLoss$: Observable<{ month: string, totals: { profitLoss: number, currency: string }[] }[]>;
   halfYearlyProfitLoss$: Observable<{ period: string, profitLoss: number, currency: string }[]>;
   yearlyProfitLoss$: Observable<{ profitLoss: number, currency: string }[]>;
 
@@ -44,11 +46,20 @@ export class Profit implements OnInit {
     THB: '฿'
   };
 
-  // FontAwesome icons
+  isIncomeFormCollapsed: boolean = true;
+  isRecordedIncomesCollapsed: boolean = true;
+
   faTrash = faTrash;
   faSave = faSave;
+  faChevronDown = faChevronDown;
+  faChevronUp = faChevronUp;
 
-  private incomeIdToDelete: string | undefined; // Temporarily store the ID of the income to be deleted
+  private incomeIdToDelete: string | undefined;
+
+  private monthOrder = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
 
   constructor() {
     this.incomeForm = this.fb.group({
@@ -62,6 +73,28 @@ export class Profit implements OnInit {
     this.expenses$ = this.expenseService.getExpenses();
     this.generateYears();
 
+    this.filteredAndSortedIncomes$ = combineLatest([this.incomes$, this._selectedYear$]).pipe(
+      map(([incomes, year]) => {
+        return incomes
+          .filter(income => new Date(income.date).getFullYear() === year)
+          .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      })
+    );
+
+    // New observable to calculate the total income for the selected year
+    this.totalIncome$ = this.filteredAndSortedIncomes$.pipe(
+      map(incomes => {
+        const totals: { [currency: string]: number } = {};
+        incomes.forEach(income => {
+          totals[income.currency] = (totals[income.currency] || 0) + income.amount;
+        });
+        return Object.keys(totals).map(currency => ({
+          currency,
+          total: totals[currency]
+        }));
+      })
+    );
+
     this.monthlyProfitLoss$ = combineLatest([
       this.incomes$,
       this.expenses$,
@@ -73,7 +106,7 @@ export class Profit implements OnInit {
         incomes.forEach(income => {
           const incomeDate = new Date(income.date);
           if (incomeDate.getFullYear() === year) {
-            const monthKey = this.datePipe.transform(incomeDate, 'MMMM yyyy') || '';
+            const monthKey = this.datePipe.transform(incomeDate, 'MMMM') || '';
             if (!monthlyData[monthKey]) {
               monthlyData[monthKey] = { income: {}, expense: {} };
             }
@@ -84,7 +117,7 @@ export class Profit implements OnInit {
         expenses.forEach(expense => {
           const expenseDate = new Date(expense.date);
           if (expenseDate.getFullYear() === year) {
-            const monthKey = this.datePipe.transform(expenseDate, 'MMMM yyyy') || '';
+            const monthKey = this.datePipe.transform(expenseDate, 'MMMM') || '';
             if (!monthlyData[monthKey]) {
               monthlyData[monthKey] = { income: {}, expense: {} };
             }
@@ -92,23 +125,22 @@ export class Profit implements OnInit {
           }
         });
 
-        const result: { [month: string]: { profitLoss: number, currency: string }[] } = {};
-        for (const monthKey in monthlyData) {
+        const monthlyTotalsArray = Object.keys(monthlyData).map(monthKey => {
           const allCurrencies = new Set([...Object.keys(monthlyData[monthKey].income), ...Object.keys(monthlyData[monthKey].expense)]);
+          const totals = Array.from(allCurrencies).map(currency => {
+            const totalIncome = monthlyData[monthKey].income[currency] || 0;
+            const totalExpense = monthlyData[monthKey].expense[currency] || 0;
+            return {
+              profitLoss: totalIncome - totalExpense,
+              currency: currency
+            };
+          });
+          return { month: monthKey, totals: totals };
+        });
 
-          if (allCurrencies.size > 0) {
-            result[monthKey] = [];
-            allCurrencies.forEach(currency => {
-              const totalIncome = monthlyData[monthKey].income[currency] || 0;
-              const totalExpense = monthlyData[monthKey].expense[currency] || 0;
-              result[monthKey].push({
-                profitLoss: totalIncome - totalExpense,
-                currency: currency
-              });
-            });
-          }
-        }
-        return result;
+        return monthlyTotalsArray.sort((a, b) => {
+          return this.monthOrder.indexOf(a.month) - this.monthOrder.indexOf(b.month);
+        });
       })
     );
 
@@ -230,11 +262,10 @@ export class Profit implements OnInit {
         description: this.incomeForm.value.description
       };
 
-      // Always add new income
       this.incomeService.addIncome(incomeData)
         .then(() => {
           console.log('Income added successfully!');
-          this.resetForm(); // Reset form
+          this.resetForm();
         })
         .catch(error => {
           console.error('Error adding income:', error);
@@ -242,29 +273,26 @@ export class Profit implements OnInit {
     }
   }
 
-  // Method to trigger the confirmation modal for income deletion
   confirmDeleteIncome(incomeId: string | undefined): void {
     if (incomeId) {
-      this.incomeIdToDelete = incomeId; // Store the ID temporarily
-      this.deleteConfirmationModal.open(); // Open the modal
+      this.incomeIdToDelete = incomeId;
+      this.deleteConfirmationModal.open();
     }
   }
 
-  // Method called when the confirmation modal emits a 'confirmed' event
   onDeleteConfirmed(confirmed: boolean): void {
     if (confirmed && this.incomeIdToDelete) {
       this.incomeService.deleteIncome(this.incomeIdToDelete).then(() => {
         console.log('Income deleted successfully!');
-        this.incomeIdToDelete = undefined; // Clear the stored ID
+        this.incomeIdToDelete = undefined;
       }).catch(error => {
         console.error('Error deleting income:', error);
       });
     } else {
-      this.incomeIdToDelete = undefined; // Clear the stored ID if not confirmed
+      this.incomeIdToDelete = undefined;
     }
   }
 
-  // Helper method to reset the form
   resetForm(): void {
     this.incomeForm.reset({
       amount: '',
@@ -294,5 +322,13 @@ export class Profit implements OnInit {
 
   formatDate(dateString: string): string {
     return this.datePipe.transform(dateString, 'mediumDate') || dateString;
+  }
+
+  toggleVisibility(section: 'incomeForm' | 'recordedIncomes'): void {
+    if (section === 'incomeForm') {
+      this.isIncomeFormCollapsed = !this.isIncomeFormCollapsed;
+    } else if (section === 'recordedIncomes') {
+      this.isRecordedIncomesCollapsed = !this.isRecordedIncomesCollapsed;
+    }
   }
 }

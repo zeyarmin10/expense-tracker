@@ -239,5 +239,6 @@
   "CANCELLED_POPUP_REQUEST": "A Google sign-in popup is already open.",
   "NETWORK_REQUEST_FAILED": "Unable to log out due to a network connection issue.",
   "INVALID_CREDENTIAL": "Invalid email or password.",
-  "GENERIC": "An account login issue occurred."
+  "GENERIC": "An account login issue occurred.",
+  "TOTAL_INCOME": "Total incomes"
 }
