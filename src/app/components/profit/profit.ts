@@ -81,7 +81,6 @@ export class Profit implements OnInit {
       })
     );
 
-    // New observable to calculate the total income for the selected year
     this.totalIncome$ = this.filteredAndSortedIncomes$.pipe(
       map(incomes => {
         const totals: { [currency: string]: number } = {};
@@ -321,7 +320,7 @@ export class Profit implements OnInit {
   }
 
   formatDate(dateString: string): string {
-    return this.datePipe.transform(dateString, 'mediumDate') || dateString;
+    return this.datePipe.transform(dateString, 'mediumDate', this.translate.currentLang) || dateString;
   }
 
   toggleVisibility(section: 'incomeForm' | 'recordedIncomes'): void {

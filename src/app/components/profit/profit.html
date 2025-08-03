@@ -149,18 +149,20 @@
                                     <ul class="list-group">
                                         <ng-container *ngFor="let month of monthlyTotals">
                                             <li class="list-group-item d-flex justify-content-between align-items-center">
-                                                <div class="d-flex flex-column" 
-                                                *ngFor="let total of month.totals"
-                                                [class.text-success]="total.profitLoss >= 0"
-                                                [class.text-danger]="total.profitLoss < 0">
-                                                    <span>
-                                                        <strong>{{ month.month }}</strong>:
-                                                    </span>
-                                                    <span>
+                                                <span>
+                                                    <strong>{{ month.month }}</strong>:
+                                                </span>
+                                                <div class="d-flex flex-column">
+                                                    <span *ngFor="let total of month.totals" [class.text-success]="total.profitLoss >= 0"
+                                                    [class.text-danger]="total.profitLoss < 0" class="w-100 text-end">
                                                         {{ formatAmountWithSymbol(total.profitLoss, total.currency) }}
                                                     </span>
                                                 </div>
                                             </li>
+                                            
+                                            <div *ngIf="month.totals.length === 0">
+                                                <p>{{ 'NO_DATA_FOR_MONTH' | translate }}</p>
+                                            </div>
                                         </ng-container>
                                     </ul>
                                     <!-- <div *ngFor="let month of monthlyTotals" class="monthly-profit-loss">
