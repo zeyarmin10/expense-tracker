@@ -257,5 +257,7 @@
   "ITEM_NAME_LABEL": "Item Name",
   "TOTAL_COST_LABEL": "Total Cost",
   "DATE_FILTER": "Date Filter",
-  "EXPENSE_LIST": "Expense List"
+  "EXPENSE_LIST": "Expense List",
+  "START_DATE": "Start Date",
+  "END_DATE": "End Date"
 }

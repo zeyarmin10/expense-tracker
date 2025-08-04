@@ -248,7 +248,7 @@
   "CURRENT_YEAR": "ဒီနှစ်",
   "LAST_YEAR": "မနှစ်က",
   "CUSTOM_DATE": "စိတ်ကြိုက်ရက်စွဲ",
-  "SEARCH_PLACEHOLDER": "အမျိုးအစား သို့မဟုတ် ပစ္စည်းအမည်ဖြင့် ရှာဖွေပါ",
+  "SEARCH_PLACEHOLDER": "အမျိုးအစား(သို့)ပစ္စည်းအမည်ဖြင့် ရှာပါ",
   "SEARCH": "ရှာရန်",
   "MOST_EXPENSIVE_CATEGORY": "အကုန်အကျအများဆုံး အမျိုးအစား",
   "DAILY_AVERAGE_EXPENSE": "နေ့စဥ်ပျမ်းမျှအသုံးစရိတ်",
@@ -257,5 +257,7 @@
   "ITEM_NAME_LABEL": "ပစ္စည်းအမည်",
   "TOTAL_COST_LABEL": "စုစုပေါင်းအသုံးစရိတ်",
   "DATE_FILTER": "ရက်စွဲ စစ်ထုတ်ခြင်း",
-  "EXPENSE_LIST": "အသုံးစရိတ်စာရင်း"
+  "EXPENSE_LIST": "အသုံးစရိတ်စာရင်း",
+  "START_DATE": "စတင်ရက်စွဲ",
+  "END_DATE": "ပြီးဆုံးရက်စွဲ"
 }

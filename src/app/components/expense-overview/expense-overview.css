@@ -1,6 +1,6 @@
 body {
-  background-color: #f0f2f5;
-  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  /* background-color: #f0f2f5;
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; */
 }
 
 .expense-overview-page {
@@ -28,18 +28,6 @@ body {
   font-size: 0.9rem;
 }
 
-.summary-card h4 {
-  font-size: 1.25rem;
-  font-weight: 600;
-}
-
-/* Mobile-first layout adjustments */
-@media (max-width: 575.98px) {
-  .summary-card h4 {
-    font-size: 1.1rem;
-  }
-}
-
 /* For small screens, the filter/search section stacks */
 @media (max-width: 991.98px) {
   .form-label {
@@ -52,7 +40,8 @@ body {
 /* New styles for the chart container */
 .chart-container {
   position: relative;
-  height: 400px; /* Default height for desktop */
+  /*  Default height for desktop */
+  /* height: 400px;  */
   max-width: 600px; /* Max width to prevent stretching on large screens */
   margin: 0 auto; /* Center the container */
 }
@@ -64,67 +53,12 @@ body {
   }
 }
 
-/* Summary Card specific styles */
-.summary-card .card-body {
-  padding: 1rem;
-}
-
-.summary-card h6 {
-  font-size: 0.9rem;
-}
-
-.summary-card h4 {
-  font-size: 1.25rem;
-  font-weight: 600;
-}
-
-/* Mobile-first layout adjustments */
-@media (max-width: 575.98px) {
-  .summary-card h4 {
-    font-size: 1.1rem;
-  }
-}
 
 /* For small screens, the filter/search section stacks */
 @media (max-width: 991.98px) {
   .form-label {
     margin-bottom: 0.25rem;
   }
-}
-
-body {
-  background-color: #f0f2f5;
-  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-}
-
-.card-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #333;
-}
-
-/* New styles for the chart container */
-.chart-container {
-  position: relative;
-  height: 400px;
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-@media (max-width: 767.98px) {
-  .chart-container {
-    height: auto;
-    max-width: 100%;
-  }
-}
-
-/* Summary Card specific styles */
-.summary-card .card-body {
-  padding: 1rem;
-}
-
-.summary-card h6 {
-  font-size: 0.9rem;
 }
 
 .summary-card h4 {
@@ -152,9 +86,28 @@ body {
   .table {
     font-size: 0.9em;
   }
+  .hide-mobile-views {
+    display: none;
+  }
 }
 
-/* Light background color for even rows */
-.table tbody tr td:nth-child(even) {
-  background-color: #e2efff; /* A very light gray color */
+.table:not(caption) * * {
+    /* background-color: #eeeeee; */
 }
+
+.table thead tr:nth-child(odd) th {
+  background-color: #f3f8ff !important;
+}
+
+/* .table thead tr:nth-child(even) {
+  background-color: #f3f8ff !important;
+} */
+
+.table tbody tr:nth-child(odd) td {
+  background-color: #eeeeee !important;
+}
+
+.table tbody tr:nth-child(even) td {
+  background-color: #f3f8ff !important;
+}
+

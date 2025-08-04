@@ -1,3 +1,5 @@
+// expense-overview.ts
+
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -25,22 +27,24 @@ export class ExpenseOverview implements OnInit {
 
   // --- Filtering and Search Properties ---
   allExpenses$: Observable<ServiceIExpense[]> = this.expenseService.getExpenses();
-  
-  // FIX: Initialize the property to resolve TS2564 error
   filteredExpenses$: Observable<ServiceIExpense[]> = of([]);
-
-  // Filter properties
   selectedDateFilter: string = 'currentMonth';
   startDate: string = '';
   endDate: string = '';
-
-  // Search properties
   searchTerm: string = '';
 
   // --- Summary Statistics Properties ---
   totalExpenses: number = 0;
   mostExpenseCategory: string = 'N/A';
   dailyAverageExpense: number = 0;
+
+  // --- Currency Properties ---
+  // Assuming a default currency, this could be fetched from a service or user settings.
+  currentCurrency: 'MMK' | 'USD' = 'MMK';
+  currencySymbols: { [key: string]: string } = {
+    MMK: 'Ks',
+    USD: '$'
+  };
 
   // --- Pie Chart Properties ---
   public pieChartData: ChartData<'pie'> = {
@@ -57,8 +61,6 @@ export class ExpenseOverview implements OnInit {
   public pieChartType: ChartType = 'pie';
 
   ngOnInit(): void {
-    // This is where you would typically register chart controllers if you hadn't done so globally.
-    // Since we've already done it above, you can proceed with your existing logic.
     this.setDateFilter('currentMonth');
 
     this.filteredExpenses$ = combineLatest([
@@ -176,6 +178,25 @@ export class ExpenseOverview implements OnInit {
         hoverBackgroundColor: this.generateRandomColors(labels.length),
       }]
     };
+  }
+
+  // --- Currency Formatting Method ---
+  formatCurrency(value: number): string {
+    const symbol = this.currencySymbols[this.currentCurrency];
+    let formattedValue: string;
+
+    if (this.currentCurrency === 'MMK') {
+      formattedValue = Math.round(value).toLocaleString();
+    } else {
+      formattedValue = value.toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+
+    // For better readability, especially with Myanmar Kyat, place the symbol after the value.
+    // This is also common for other currencies, and makes the code simpler.
+    return `${formattedValue} ${symbol}`;
   }
 
   private generateRandomColors(count: number): string[] {
