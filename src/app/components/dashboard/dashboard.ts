@@ -44,7 +44,7 @@ export class DashboardComponent implements OnInit {
 
   faSync = faSync;
 
-  private _currentViewModeSubject = new BehaviorSubject<'yearly' | 'first-half-yearly' | 'second-half-yearly' | 'monthly'>('monthly');
+  private _currentViewModeSubject = new BehaviorSubject<'yearly' | 'first-half-yearly' | 'second-half-yearly' | 'monthly'>('yearly');
   currentViewMode$ = this._currentViewModeSubject.asObservable();
 
   // Removed isTitleClicked, replaced with dynamic background color
@@ -151,7 +151,8 @@ export class DashboardComponent implements OnInit {
                     ` (${this.datePipe.transform(startDate, 'MMMM yyyy', '', currentLang)})`;
             break;
           default:
-            title = this.translate.instant('SUMMARY_TITLE_PREFIX');
+            // title = this.translate.instant('SUMMARY_TITLE_PREFIX');
+            title = this.translate.instant('YEARLY_SUMMARY_TITLE') + ` (${startDate.getFullYear()})`;
         }
         return title;
       })
@@ -408,15 +409,15 @@ export class DashboardComponent implements OnInit {
     let nextMode: 'yearly' | 'first-half-yearly' | 'second-half-yearly' | 'monthly';
     switch (currentMode) {
       case 'yearly':
+        nextMode = 'monthly';
+        break;
+      case 'monthly':
         nextMode = 'first-half-yearly';
         break;
       case 'first-half-yearly':
         nextMode = 'second-half-yearly';
         break;
       case 'second-half-yearly':
-        nextMode = 'monthly';
-        break;
-      case 'monthly':
         nextMode = 'yearly';
         break;
       default:
