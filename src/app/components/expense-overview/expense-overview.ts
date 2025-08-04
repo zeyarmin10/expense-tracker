@@ -1,5 +1,3 @@
-// expense-overview.ts
-
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -11,6 +9,12 @@ import { ChartData, ChartOptions, ChartType, Chart, PieController, ArcElement, T
 
 // Register the required chart components
 Chart.register(PieController, ArcElement, Tooltip, Legend);
+
+interface CurrencySummary {
+  currency: string;
+  totalExpenses: number;
+  dailyAverage: number;
+}
 
 @Component({
   selector: 'app-expense-overview',
@@ -34,16 +38,14 @@ export class ExpenseOverview implements OnInit {
   searchTerm: string = '';
 
   // --- Summary Statistics Properties ---
-  totalExpenses: number = 0;
+  currencySummaries: CurrencySummary[] = [];
   mostExpenseCategory: string = 'N/A';
-  dailyAverageExpense: number = 0;
 
   // --- Currency Properties ---
-  // Assuming a default currency, this could be fetched from a service or user settings.
-  currentCurrency: 'MMK' | 'USD' = 'MMK';
   currencySymbols: { [key: string]: string } = {
     MMK: 'Ks',
-    USD: '$'
+    USD: '$',
+    THB: '฿'
   };
 
   // --- Pie Chart Properties ---
@@ -85,6 +87,9 @@ export class ExpenseOverview implements OnInit {
             expense.category.toLowerCase().includes(lowerCaseSearch)
           );
         }
+
+        // Sort expenses by date in descending order
+        filtered.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
         this.calculateSummary(filtered);
         this.updatePieChart(filtered);
@@ -142,16 +147,33 @@ export class ExpenseOverview implements OnInit {
 
   calculateSummary(expenses: ServiceIExpense[]): void {
     if (!expenses || expenses.length === 0) {
-      this.totalExpenses = 0;
+      this.currencySummaries = [];
       this.mostExpenseCategory = 'N/A';
-      this.dailyAverageExpense = 0;
       return;
     }
+    
+    // Group expenses by currency
+    const groupedByCurrency = expenses.reduce((acc, expense) => {
+      const currency = expense.currency;
+      if (!acc[currency]) {
+        acc[currency] = [];
+      }
+      acc[currency].push(expense);
+      return acc;
+    }, {} as { [key: string]: ServiceIExpense[] });
+    
+    this.currencySummaries = Object.keys(groupedByCurrency).map(currency => {
+      const currencyExpenses = groupedByCurrency[currency];
+      const totalExpenses = currencyExpenses.reduce((sum, e) => sum + e.totalCost, 0);
+      const uniqueDays = new Set(currencyExpenses.map(e => this.datePipe.transform(e.date, 'yyyy-MM-dd'))).size;
+      const dailyAverage = uniqueDays > 0 ? totalExpenses / uniqueDays : 0;
 
-    this.totalExpenses = expenses.reduce((sum, expense) => sum + expense.totalCost, 0);
-
-    const uniqueDays = new Set(expenses.map(expense => this.datePipe.transform(expense.date, 'yyyy-MM-dd'))).size;
-    this.dailyAverageExpense = uniqueDays > 0 ? this.totalExpenses / uniqueDays : 0;
+      return {
+        currency,
+        totalExpenses,
+        dailyAverage
+      };
+    });
 
     const categoryTotals = expenses.reduce((acc, expense) => {
       acc[expense.category] = (acc[expense.category] || 0) + expense.totalCost;
@@ -181,11 +203,11 @@ export class ExpenseOverview implements OnInit {
   }
 
   // --- Currency Formatting Method ---
-  formatCurrency(value: number): string {
-    const symbol = this.currencySymbols[this.currentCurrency];
+  formatCurrency(value: number, currency: string): string {
+    const symbol = this.currencySymbols[currency] || '';
     let formattedValue: string;
 
-    if (this.currentCurrency === 'MMK') {
+    if (currency === 'MMK') {
       formattedValue = Math.round(value).toLocaleString();
     } else {
       formattedValue = value.toLocaleString(undefined, {
@@ -194,8 +216,6 @@ export class ExpenseOverview implements OnInit {
       });
     }
 
-    // For better readability, especially with Myanmar Kyat, place the symbol after the value.
-    // This is also common for other currencies, and makes the code simpler.
     return `${formattedValue} ${symbol}`;
   }
 

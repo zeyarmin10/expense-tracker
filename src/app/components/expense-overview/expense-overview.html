@@ -79,25 +79,22 @@
         </div>
 
         <div class="row g-3 mb-4">
-          <div class="col-12 col-sm-6 col-md-4">
+          <div
+            class="col-12 col-sm-6 col-md-4"
+            *ngFor="let summary of currencySummaries"
+          >
             <div class="card h-100 summary-card">
               <div class="card-body text-center">
                 <h6 class="text-muted mb-2">
-                  {{ "TOTAL_EXPENSES" | translate }}
+                  {{ "TOTAL_EXPENSES" | translate}} ({{ summary.currency }})
                 </h6>
                 <h4 class="card-title text-danger">
-                  {{ formatCurrency(totalExpenses) }}
+                  {{ formatCurrency(summary.totalExpenses, summary.currency) }}
                 </h4>
-              </div>
-            </div>
-          </div>
-          <div class="col-12 col-sm-6 col-md-4">
-            <div class="card h-100 summary-card">
-              <div class="card-body text-center">
-                <h6 class="text-muted mb-2">
-                  {{ "MOST_EXPENSIVE_CATEGORY" | translate }}
-                </h6>
-                <h4 class="card-title">{{ mostExpenseCategory }}</h4>
+                <h6 class="text-muted mt-2">Daily Average</h6>
+                <h4 class="card-title text-info">
+                  {{ formatCurrency(summary.dailyAverage, summary.currency) }}
+                </h4>
               </div>
             </div>
           </div>
@@ -105,11 +102,9 @@
             <div class="card h-100 summary-card">
               <div class="card-body text-center">
                 <h6 class="text-muted mb-2">
-                  {{ "DAILY_AVERAGE_EXPENSE" | translate }}
+                  {{ "MOST_EXPENSIVE_CATEGORY" | translate }}
                 </h6>
-                <h4 class="card-title text-info">
-                  {{ formatCurrency(dailyAverageExpense) }}
-                </h4>
+                <h4 class="card-title">{{ mostExpenseCategory }}</h4>
               </div>
             </div>
           </div>
@@ -163,7 +158,7 @@
                 <td class="hide-mobile-views">{{ expense.category }}</td>
                 <td>{{ expense.itemName }}</td>
                 <td class="text-end text-danger">
-                  {{ formatCurrency(expense.totalCost) }}
+                  {{ formatCurrency(expense.totalCost, expense.currency) }}
                 </td>
               </tr>
             </tbody>
