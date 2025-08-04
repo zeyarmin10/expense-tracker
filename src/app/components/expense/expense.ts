@@ -34,7 +34,7 @@ import {
 import { CategoryModalComponent } from '../common/category-modal/category-modal';
 import { ConfirmationModal } from '../common/confirmation-modal/confirmation-modal';
 import { ToastService } from '../../services/toast';
-
+import { ActivatedRoute, Router } from '@angular/router';
 @Component({
   selector: 'app-expense',
   standalone: true,
@@ -109,6 +109,10 @@ export class Expense implements OnInit {
   private originalQuantity: number | null = null;
   private originalPrice: number | null = null;
   private _expensesSubject: BehaviorSubject<ServiceIExpense[]> = new BehaviorSubject<ServiceIExpense[]>([]);
+
+  router = inject(Router);
+  route = inject(ActivatedRoute);
+//   pageTitle: string = 'ADD_NEW_EXPENSE';
 
   constructor(private fb: FormBuilder) {
     const todayFormatted = this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
@@ -203,6 +207,22 @@ export class Expense implements OnInit {
     // });
     // Initial load of expenses
     this.loadExpenses();
+
+    // --- STEP 1: Check for date in URL on component initialization ---
+    // We subscribe to the route parameters to see if a 'date' exists.
+    this.route.paramMap.subscribe(params => {
+      const date = params.get('date');
+      if (date) {
+        // If a date is in the URL, use it to update the component state.
+        // this.pageTitle = 'EDIT_EXPENSE_FOR_DAY';
+        this.newExpenseForm.patchValue({ selectedDate: date });
+        this._selectedDate$.next(date);
+      } else {
+        // If no date is in the URL, use the default date from the form.
+        // this.pageTitle = 'ADD_NEW_EXPENSE';
+        this._selectedDate$.next(this.newExpenseForm.get('selectedDate')?.value || null);
+      }
+    });
   }
 
   loadCategories(): void {
@@ -275,11 +295,23 @@ export class Expense implements OnInit {
     }
 
 
+//   applyDateFilter(): void {
+
+//     const selectedDate = this.newExpenseForm.get('selectedDate')?.value;
+//     if (selectedDate) {
+//       this._selectedDate$.next(selectedDate);
+//       this.resetActiveFilters();
+//     }
+//   }
+
+// --- STEP 2: Function to handle user-driven date changes from the form ---
+  
+
   applyDateFilter(): void {
     const selectedDate = this.newExpenseForm.get('selectedDate')?.value;
     if (selectedDate) {
+      // Update the BehaviorSubject, which will trigger the expensesForDay$ observable.
       this._selectedDate$.next(selectedDate);
-      this.resetActiveFilters();
     }
   }
 

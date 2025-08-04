@@ -1,5 +1,7 @@
+/* expense-overview.css */
+
 body {
-  /* background-color: #f0f2f5;
+  /* background-color: #f0f2f5;\
   font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; */
 }
 
@@ -19,15 +21,6 @@ body {
   color: #333;
 }
 
-/* Summary Card specific styles */
-.summary-card .card-body {
-  padding: 1rem;
-}
-
-.summary-card h6 {
-  font-size: 0.9rem;
-}
-
 /* For small screens, the filter/search section stacks */
 @media (max-width: 991.98px) {
   .form-label {
@@ -40,7 +33,7 @@ body {
 /* New styles for the chart container */
 .chart-container {
   position: relative;
-  /*  Default height for desktop */
+  /* Default height for desktop */
   /* height: 400px;  */
   max-width: 600px; /* Max width to prevent stretching on large screens */
   margin: 0 auto; /* Center the container */
@@ -53,14 +46,31 @@ body {
   }
 }
 
-
-/* For small screens, the filter/search section stacks */
-@media (max-width: 991.98px) {
-  .form-label {
-    margin-bottom: 0.25rem;
-  }
+/* Styles for the category buttons with totals */
+.total-btn {
+    white-space: nowrap;
 }
-
+.category-buttons {
+    overflow-x: auto;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+}
+.category-buttons::-webkit-scrollbar {
+    height: 8px;
+}
+.category-buttons::-webkit-scrollbar-thumb {
+    background-color: #dee2e6;
+    border-radius: 4px;
+}
+.category-buttons .total-btn {
+    flex: 0 0 auto;
+}
+.category-buttons .total-btn.active {
+    background-color: #007bff;
+    border-color: #007bff;
+    color: white;
+}
+/* Summary Card specific styles */
 .summary-card h4 {
   font-size: 1.25rem;
   font-weight: 600;
@@ -80,15 +90,16 @@ body {
   }
 }
 
-/* Styles for the expense list table */
-/* Mobile-only font size change */
+/* Styles for the expense table to improve readability on smaller screens */
 @media (max-width: 767.98px) {
-  .table {
-    font-size: 0.9em;
-  }
   .hide-mobile-views {
     display: none;
   }
+}
+
+/* New style for clickable rows */
+.clickable-row {
+    cursor: pointer;
 }
 
 .table:not(caption) * * {
@@ -104,7 +115,7 @@ body {
 } */
 
 .table tbody tr:nth-child(odd) td {
-  background-color: #eeeeee !important;
+  /* background-color: #eeeeee !important; */
 }
 
 .table tbody tr:nth-child(even) td {

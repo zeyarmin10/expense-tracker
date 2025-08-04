@@ -6,6 +6,7 @@ import { Observable, BehaviorSubject, combineLatest, map, of } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartData, ChartOptions, ChartType, Chart, PieController, ArcElement, Tooltip, Legend } from 'chart.js';
+import { Router } from '@angular/router';
 
 // Register the required chart components
 Chart.register(PieController, ArcElement, Tooltip, Legend);
@@ -61,6 +62,8 @@ export class ExpenseOverview implements OnInit {
     responsive: true,
   };
   public pieChartType: ChartType = 'pie';
+
+  router = inject(Router);
 
   ngOnInit(): void {
     this.setDateFilter('last30Days');
@@ -231,5 +234,10 @@ export class ExpenseOverview implements OnInit {
       colors.push(color);
     }
     return colors;
+  }
+
+  onRowClick(expense: ServiceIExpense): void {
+    // Navigate to the 'expense' page and pass the expenseId as a URL parameter
+    this.router.navigate(['/expense', expense.date]); 
   }
 }

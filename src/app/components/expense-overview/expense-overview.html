@@ -157,7 +157,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr *ngFor="let expense of expenses">
+                  <tr *ngFor="let expense of expenses" (click)="onRowClick(expense)" class="clickable-row">
                     <td class="d-none d-md-table-cell">
                       {{ expense.date | date }}
                     </td>

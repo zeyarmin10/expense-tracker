@@ -21,6 +21,11 @@ export const routes: Routes = [
     component: Profit,
     canActivate: [AuthGuard],
   },
+  { 
+    path: 'expense/:date', 
+    component: Expense,
+    canActivate: [AuthGuard]
+  },
   {
     path: 'expense',
     component: Expense,
