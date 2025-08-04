@@ -134,15 +134,20 @@ export class ExpenseOverview implements OnInit {
         break;
       case 'custom':
       default:
-        // Prevent creating an invalid date if start or end dates are not set
+        // // Prevent creating an invalid date if start or end dates are not set
+        // Set default to "1 year ago" if custom dates are not set
         if (!this.startDate || !this.endDate) {
-          this.dateFilter$.next({ start: '', end: '' });
-          return;
+          const oneYearAgo = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
+          this.startDate = this.datePipe.transform(oneYearAgo, 'yyyy-MM-dd') || '';
+          this.endDate = this.datePipe.transform(now, 'yyyy-MM-dd') || '';
         }
         startDate = new Date(this.startDate);
         endDate = new Date(this.endDate);
         break;
     }
+    // Ensure the end date includes the full day
+    endDate.setHours(23, 59, 59, 999);
+
     this.dateFilter$.next({
       start: this.datePipe.transform(startDate, 'yyyy-MM-dd') || '',
       end: this.datePipe.transform(endDate, 'yyyy-MM-dd') || ''
