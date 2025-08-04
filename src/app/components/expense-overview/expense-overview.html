@@ -16,11 +16,11 @@
               [(ngModel)]="selectedDateFilter"
               (change)="setDateFilter(selectedDateFilter)"
             >
-              <option value="currentMonth">
-                {{ "CURRENT_MONTH" | translate }}
-              </option>
               <option value="last30Days">
                 {{ "LAST_30_DAYS" | translate }}
+              </option>
+              <option value="currentMonth">
+                {{ "CURRENT_MONTH" | translate }}
               </option>
               <option value="currentYear">
                 {{ "CURRENT_YEAR" | translate }}
@@ -78,92 +78,108 @@
           </div>
         </div>
 
-        <div class="row g-3 mb-4">
-          <div
-            class="col-12 col-sm-6 col-md-4"
-            *ngFor="let summary of currencySummaries"
-          >
-            <div class="card h-100 summary-card">
-              <div class="card-body text-center">
-                <h6 class="text-muted mb-2">
-                  {{ "TOTAL_EXPENSES" | translate}} ({{ summary.currency }})
-                </h6>
-                <h4 class="card-title text-danger">
-                  {{ formatCurrency(summary.totalExpenses, summary.currency) }}
-                </h4>
-                <h6 class="text-muted mt-2">Daily Average</h6>
-                <h4 class="card-title text-info">
-                  {{ formatCurrency(summary.dailyAverage, summary.currency) }}
-                </h4>
+        <ng-container *ngIf="filteredExpenses$ | async as expenses">
+          <div *ngIf="expenses.length > 0; else noData">
+            <div class="row g-3 mb-4">
+              <div
+                class="col-12 col-sm-6 col-md-4"
+                *ngFor="let summary of currencySummaries"
+              >
+                <div class="card h-100 summary-card">
+                  <div class="card-body text-center">
+                    <h6 class="text-muted fw-bold mb-2">
+                      {{ "TOTAL_EXPENSES" | translate }} ({{
+                        summary.currency
+                      }})
+                    </h6>
+                    <h4 class="card-title text-danger">
+                      {{
+                        formatCurrency(summary.totalExpenses, summary.currency)
+                      }}
+                    </h4>
+                    <h6 class="text-muted fw-bold mt-2">{{"DAILY_AVERAGE" | translate}}</h6>
+                    <h4 class="card-title text-info">
+                      {{
+                        formatCurrency(summary.dailyAverage, summary.currency)
+                      }}
+                    </h4>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12 col-md-4">
+                <div class="card h-100 summary-card">
+                  <div class="card-body text-center">
+                    <h6 class="text-muted mb-2">
+                      {{ "MOST_EXPENSIVE_CATEGORY" | translate }}
+                    </h6>
+                    <h4 class="card-title">{{ mostExpenseCategory }}</h4>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-          <div class="col-12 col-md-4">
-            <div class="card h-100 summary-card">
-              <div class="card-body text-center">
-                <h6 class="text-muted mb-2">
-                  {{ "MOST_EXPENSIVE_CATEGORY" | translate }}
-                </h6>
-                <h4 class="card-title">{{ mostExpenseCategory }}</h4>
-              </div>
-            </div>
-          </div>
-        </div>
 
-        <div class="row g-3 mb-4">
-          <div class="col-12">
-            <div class="card h-100 p-3">
-              <h5 class="text-center mb-3">
-                {{ "EXPENSE_BREAKDOWN_BY_CATEGORY" | translate }}
-              </h5>
-              <div class="chart-container">
-                <canvas
-                  baseChart
-                  [data]="pieChartData"
-                  [options]="pieChartOptions"
-                  type="pie"
-                ></canvas>
+            <div class="row g-3 mb-4">
+              <div class="col-12">
+                <div class="card h-100 p-3">
+                  <h5 class="text-center mb-3">
+                    {{ "EXPENSE_BREAKDOWN_BY_CATEGORY" | translate }}
+                  </h5>
+                  <div class="chart-container">
+                    <canvas
+                      baseChart
+                      [data]="pieChartData"
+                      [options]="pieChartOptions"
+                      type="pie"
+                    ></canvas>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
 
-        <div class="table-responsive">
-          <h5 class="mb-3">{{ "EXPENSE_LIST" | translate }}</h5>
-          <table
-            class="table table-hover align-middle"
-            *ngIf="filteredExpenses$ | async as expenses"
-          >
-            <thead>
-              <tr>
-                <th scope="col" class="d-none d-md-table-cell">
-                  {{ "DATE_LABEL" | translate }}
-                </th>
-                <th scope="col" class="d-md-none">
-                  {{ "DATE_LABEL" | translate }}
-                </th>
-                <th scope="col" class="hide-mobile-views">{{ "CATEGORY_LABEL" | translate }}</th>
-                <th scope="col">{{ "ITEM_NAME_LABEL" | translate }}</th>
-                <th scope="col" class="text-end">
-                  {{ "TOTAL_COST_LABEL" | translate }}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let expense of expenses">
-                <td class="d-none d-md-table-cell">
-                  {{ expense.date | date }}
-                </td>
-                <td class="d-md-none">{{ expense.date | date : "MMM d" }}</td>
-                <td class="hide-mobile-views">{{ expense.category }}</td>
-                <td>{{ expense.itemName }}</td>
-                <td class="text-end text-danger">
-                  {{ formatCurrency(expense.totalCost, expense.currency) }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+            <div class="table-responsive">
+              <h5 class="mb-3">{{ "EXPENSE_LIST" | translate }}</h5>
+              <table class="table table-hover align-middle">
+                <thead>
+                  <tr>
+                    <th scope="col" class="d-none d-md-table-cell">
+                      {{ "DATE_LABEL" | translate }}
+                    </th>
+                    <th scope="col" class="d-md-none">
+                      {{ "DATE_LABEL" | translate }}
+                    </th>
+                    <th scope="col" class="hide-mobile-views">
+                      {{ "CATEGORY_LABEL" | translate }}
+                    </th>
+                    <th scope="col">{{ "ITEM_NAME_LABEL" | translate }}</th>
+                    <th scope="col" class="text-end">
+                      {{ "TOTAL_COST_LABEL" | translate }}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let expense of expenses">
+                    <td class="d-none d-md-table-cell">
+                      {{ expense.date | date }}
+                    </td>
+                    <td class="d-md-none">
+                      {{ expense.date | date : "MMM d" }}
+                    </td>
+                    <td class="hide-mobile-views">{{ expense.category }}</td>
+                    <td>{{ expense.itemName }}</td>
+                    <td class="text-end text-danger">
+                      {{ formatCurrency(expense.totalCost, expense.currency) }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <ng-template #noData>
+            <div class="text-center text-danger py-4">
+              {{ "NO_EXPENSES_FOUND" | translate }}
+            </div>
+          </ng-template>
+        </ng-container>
       </div>
     </div>
   </div>

@@ -38,7 +38,8 @@ export const routes: Routes = [
   },
   { 
     path: 'expense-overview', 
-    component: ExpenseOverview 
+    component: ExpenseOverview ,
+    canActivate: [AuthGuard]
   },
   // Move the wildcard route to the very end of the array
   { path: '**', redirectTo: '/login' },

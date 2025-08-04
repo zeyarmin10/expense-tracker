@@ -32,7 +32,7 @@ export class ExpenseOverview implements OnInit {
   // --- Filtering and Search Properties ---
   allExpenses$: Observable<ServiceIExpense[]> = this.expenseService.getExpenses();
   filteredExpenses$: Observable<ServiceIExpense[]> = of([]);
-  selectedDateFilter: string = 'currentMonth';
+  selectedDateFilter: string = 'last30Days';
   startDate: string = '';
   endDate: string = '';
   searchTerm: string = '';
@@ -63,7 +63,7 @@ export class ExpenseOverview implements OnInit {
   public pieChartType: ChartType = 'pie';
 
   ngOnInit(): void {
-    this.setDateFilter('currentMonth');
+    this.setDateFilter('last30Days');
 
     this.filteredExpenses$ = combineLatest([
       this.allExpenses$,
@@ -131,6 +131,11 @@ export class ExpenseOverview implements OnInit {
         break;
       case 'custom':
       default:
+        // Prevent creating an invalid date if start or end dates are not set
+        if (!this.startDate || !this.endDate) {
+          this.dateFilter$.next({ start: '', end: '' });
+          return;
+        }
         startDate = new Date(this.startDate);
         endDate = new Date(this.endDate);
         break;
