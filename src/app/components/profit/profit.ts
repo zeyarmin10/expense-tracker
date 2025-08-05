@@ -39,13 +39,16 @@ export class Profit implements OnInit {
   monthlyProfitLoss$: Observable<{ month: string, totals: { profitLoss: number, currency: string }[] }[]>;
   halfYearlyProfitLoss$: Observable<{ period: string, profitLoss: number, currency: string }[]>;
   yearlyProfitLoss$: Observable<{ profitLoss: number, currency: string }[]>;
+  remainingBalanceByCurrency$: Observable<{ [currency: string]: number }>;
+  totalExpensesByCurrency$: Observable<{ [currency: string]: number }>;
+  totalIncomesByCurrency$: Observable<{ [currency: string]: number }>;
 
   currencySymbols: { [key: string]: string } = {
     MMK: 'Ks',
     USD: '$',
     THB: '฿'
   };
-  
+
   availableCurrencies = [
     { code: 'MMK', symbol: 'Ks' },
     { code: 'USD', symbol: '$' },
@@ -61,11 +64,6 @@ export class Profit implements OnInit {
   faChevronUp = faChevronUp;
 
   private incomeIdToDelete: string | undefined;
-
-  private monthOrder = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
-  ];
 
   selectedDateFilter: string = 'last30Days'; // default filter value
   startDate: string = '';
@@ -152,6 +150,50 @@ export class Profit implements OnInit {
       })
     );
 
+    this.totalIncomesByCurrency$ = this.filteredData$.pipe(
+        map(({ incomes }) => {
+            return incomes.reduce((acc, income) => {
+                acc[income.currency] = (acc[income.currency] || 0) + income.amount;
+                return acc;
+            }, {} as { [currency: string]: number });
+        })
+    );
+
+    this.totalExpensesByCurrency$ = this.filteredData$.pipe(
+        map(({ expenses }) => {
+            return expenses.reduce((acc, expense) => {
+                acc[expense.currency] = (acc[expense.currency] || 0) + expense.totalCost;
+                return acc;
+            }, {} as { [currency: string]: number });
+        })
+    );
+
+    this.remainingBalanceByCurrency$ = this.filteredData$.pipe(
+        map(({ incomes, expenses }) => {
+            const balance: { [currency: string]: number } = {};
+            const allCurrencies = new Set<string>();
+
+            incomes.forEach(income => {
+                allCurrencies.add(income.currency);
+                balance[income.currency] = (balance[income.currency] || 0) + income.amount;
+            });
+
+            expenses.forEach(expense => {
+                allCurrencies.add(expense.currency);
+                balance[expense.currency] = (balance[expense.currency] || 0) - expense.totalCost;
+            });
+
+            // Ensure all currencies are represented, even if the balance is 0
+            allCurrencies.forEach(currency => {
+                if (balance[currency] === undefined) {
+                    balance[currency] = 0;
+                }
+            });
+
+            return balance;
+        })
+    );
+
     this.filteredAndSortedIncomes$ = this.filteredData$.pipe(
         map(({ incomes }) => {
             return incomes.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -177,57 +219,65 @@ export class Profit implements OnInit {
 
             incomes.forEach(income => {
                 const incomeDate = new Date(income.date);
-                const monthKey = this.datePipe.transform(incomeDate, 'MMMM') || '';
-                if (!monthlyData[monthKey]) {
-                    monthlyData[monthKey] = { income: {}, expense: {} };
+                console.log('incomeDate => ', incomeDate);
+                // const monthKey = this.datePipe.transform(incomeDate, 'MMMM') || '';
+                const monthYear = this.datePipe.transform(incomeDate, 'MMMM y') || '';
+                console.log('monthYear => ', monthYear);
+                if (!monthlyData[monthYear]) {
+                    monthlyData[monthYear] = { income: {}, expense: {} };
                 }
-                monthlyData[monthKey].income[income.currency] = (monthlyData[monthKey].income[income.currency] || 0) + income.amount;
+                monthlyData[monthYear].income[income.currency] = (monthlyData[monthYear].income[income.currency] || 0) + income.amount;
             });
 
             expenses.forEach(expense => {
                 const expenseDate = new Date(expense.date);
-                const monthKey = this.datePipe.transform(expenseDate, 'MMMM') || '';
-                if (!monthlyData[monthKey]) {
-                    monthlyData[monthKey] = { income: {}, expense: {} };
+                // const monthKey = this.datePipe.transform(expenseDate, 'MMMM') || '';
+                const monthYear = this.datePipe.transform(expenseDate, 'MMMM y') || '';
+
+                if (!monthlyData[monthYear]) {
+                    monthlyData[monthYear] = { income: {}, expense: {} };
                 }
-                monthlyData[monthKey].expense[expense.currency] = (monthlyData[monthKey].expense[expense.currency] || 0) + expense.totalCost;
+                monthlyData[monthYear].expense[expense.currency] = (monthlyData[monthYear].expense[expense.currency] || 0) + expense.totalCost;
             });
 
-            const monthlyTotalsArray = Object.keys(monthlyData).map(monthKey => {
-                const allCurrencies = new Set([...Object.keys(monthlyData[monthKey].income), ...Object.keys(monthlyData[monthKey].expense)]);
+            const monthlyTotalsArray = Object.keys(monthlyData).map(monthYear => {
+                const allCurrencies = new Set([...Object.keys(monthlyData[monthYear].income), ...Object.keys(monthlyData[monthYear].expense)]);
                 const totals = Array.from(allCurrencies).map(currency => {
-                    const totalIncome = monthlyData[monthKey].income[currency] || 0;
-                    const totalExpense = monthlyData[monthKey].expense[currency] || 0;
+                    const totalIncome = monthlyData[monthYear].income[currency] || 0;
+                    const totalExpense = monthlyData[monthYear].expense[currency] || 0;
                     return {
                         profitLoss: totalIncome - totalExpense,
                         currency: currency
                     };
                 });
-                return { month: monthKey, totals: totals };
+                return { month: monthYear, totals: totals };
             });
 
             return monthlyTotalsArray.sort((a, b) => {
-                return this.monthOrder.indexOf(a.month) - this.monthOrder.indexOf(b.month);
+                const dateA = new Date(a.month + ' 1'); // "December 2024 1" => Dec 1, 2024
+                const dateB = new Date(b.month + ' 1');
+                return dateA.getTime() - dateB.getTime();
             });
+
         })
     );
 
     this.halfYearlyProfitLoss$ = this.filteredData$.pipe(
         map(({ incomes, expenses }) => {
             const halfYearlyData: { [period: string]: { income: { [currency: string]: number }, expense: { [currency: string]: number } } } = {
-                'Jan~Jun': { income: {}, expense: {} },
-                'Jul~Dec': { income: {}, expense: {} }
+                'First Half': { income: {}, expense: {} },
+                'Second Half': { income: {}, expense: {} }
             };
 
             incomes.forEach(income => {
                 const incomeDate = new Date(income.date);
-                const period = incomeDate.getMonth() < 6 ? 'Jan~Jun' : 'Jul~Dec';
+                const period = incomeDate.getMonth() < 6 ? 'First Half' : 'Second Half';
                 halfYearlyData[period].income[income.currency] = (halfYearlyData[period].income[income.currency] || 0) + income.amount;
             });
 
             expenses.forEach(expense => {
                 const expenseDate = new Date(expense.date);
-                const period = expenseDate.getMonth() < 6 ? 'Jan~Jun' : 'Jul~Dec';
+                const period = expenseDate.getMonth() < 6 ? 'First Half' : 'Second Half';
                 halfYearlyData[period].expense[expense.currency] = (halfYearlyData[period].expense[expense.currency] || 0) + expense.totalCost;
             });
 

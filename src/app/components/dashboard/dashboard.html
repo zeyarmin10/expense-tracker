@@ -17,13 +17,13 @@
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-lg-6 col-md-6 col-sm-12 mb-3">
-                                    <div class="card h-100">
+                                    <div class="card h-100 border border-warning">
                                         <div class="card-body">
                                             <h6 class="text-start fw-bold">{{ 'ALL_TOTAL_EXPENSES' | translate }}</h6>
                                             <div class="pt-2" *ngIf="(totalExpensesByCurrency$ | async) as totals; else loading">
                                                 <div *ngIf="totals && (totals | keyvalue).length > 0; else noData">
                                                     <p *ngFor="let total of (totals | keyvalue)" class="d-flex justify-content-between" style="margin-bottom: 0;">
-                                                        <strong>{{ total.key }}:</strong> <span>{{ formatAmountWithSymbol(total.value, total.key) }}</span>
+                                                        <strong>{{ total.key }}:</strong> <span style="color: #007786;">{{ formatAmountWithSymbol(total.value, total.key) }}</span>
                                                     </p>
                                                 </div>
                                                 <ng-template #noData>
@@ -38,13 +38,13 @@
                                 </div>
 
                                 <div class="col-lg-6 col-md-6 col-sm-12 mb-3">
-                                    <div class="card h-100">
+                                    <div class="card h-100 border border-success">
                                         <div class="card-body">
                                             <h6 class="text-start fw-bold">{{ 'ALL_TOTAL_INCOMES' | translate }}</h6>
                                             <div class="pt-2" *ngIf="(totalIncomesByCurrency$ | async) as totals; else loading">
                                                 <div *ngIf="totals && (totals | keyvalue).length > 0; else noData">
                                                     <p *ngFor="let total of (totals | keyvalue)" class="d-flex justify-content-between" style="margin-bottom: 0;">
-                                                        <strong>{{ total.key }}:</strong> <span>{{ formatAmountWithSymbol(total.value, total.key) }}</span>
+                                                        <strong>{{ total.key }}:</strong> <span style="color: green;">{{ formatAmountWithSymbol(total.value, total.key) }}</span>
                                                     </p>
                                                 </div>
                                                 <ng-template #noData>
@@ -59,7 +59,7 @@
                                 </div>
 
                                 <div class="col-lg-6 col-md-6 col-sm-12 mb-3">
-                                    <div class="card h-100">
+                                    <div class="card h-100 border border-primary-subtle">
                                         <div class="card-body">
                                             <h6 class="text-start fw-bold">{{ 'PROFIT_LOSS_SUMMARY' | translate }}</h6>
                                             <div class="pt-2" *ngIf="(monthlyProfitLoss$ | async) as profitLossData; else loading">
@@ -88,7 +88,7 @@
                                 </div>
 
                                 <div class="col-lg-6 col-md-6 col-sm-12 mb-3">
-                                    <div class="card h-100">
+                                    <div class="card h-100 border border-info">
                                         <div class="card-body">
                                             <h6 class="text-start fw-bold">{{ 'REMAINING_BALANCE' | translate }}</h6>
                                             <div class="pt-2" *ngIf="(remainingBalanceByCurrency$ | async) as balances; else loading">
