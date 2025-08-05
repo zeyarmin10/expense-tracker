@@ -68,11 +68,11 @@
                 (keyup.enter)="onSearch()"
               />
               <button
-                class="btn btn-primary"
+                class="btn btn-outline-info pb-1"
                 type="button"
                 (click)="onSearch()"
               >
-                {{ "SEARCH" | translate }}
+                <fa-icon [icon]="faMagnifyingGlass"></fa-icon>
               </button>
             </div>
           </div>
@@ -82,10 +82,10 @@
           <div *ngIf="expenses.length > 0; else noData">
             <div class="row g-3 mb-4">
               <div
-                class="col-12 col-sm-6 col-md-4"
+                class="col-12 col-sm-6 col-md-6"
                 *ngFor="let summary of currencySummaries"
               >
-                <div class="card h-100 summary-card">
+                <div class="card h-100 summary-card border border-warning">
                   <div class="card-body text-center">
                     <h6 class="text-muted fw-bold mb-2">
                       {{ "TOTAL_EXPENSES" | translate }} ({{
@@ -106,8 +106,8 @@
                   </div>
                 </div>
               </div>
-              <div class="col-12 col-md-4">
-                <div class="card h-100 summary-card">
+              <div class="col-12 col-md-6">
+                <div class="card h-100 summary-card border border-primary-subtle">
                   <div class="card-body text-center">
                     <h6 class="text-muted mb-2">
                       {{ "MOST_EXPENSIVE_CATEGORY" | translate }}
@@ -136,8 +136,38 @@
               </div>
             </div>
 
+            <div class="d-flex flex-wrap gap-2 mb-2">
+                <button
+                    type="button"
+                    class="btn btn-outline-secondary total-btn text-wrap pt-1 pb-1"
+                    *ngFor="let total of categoryTotals"
+                >
+                    {{ total.category }} : <span class="text-danger">{{ formatCurrency(total.total, total.currency) }}</span>
+                </button>
+            </div>
+            
             <div class="table-responsive">
               <h5 class="mb-3">{{ "EXPENSE_LIST" | translate }}</h5>
+              <!-- <div *ngIf="categoryTotals.length > 0; else noData">
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm">
+                        <thead>
+                        <tr>
+                            <th scope="col">{{'CATEGORY' | translate}}</th>
+                            <th scope="col" class="text-end">{{'TOTAL_COST_LABEL' | translate}}</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr *ngFor="let total of categoryTotals">
+                            <td>{{ total.category }}</td>
+                            <td class="text-end">
+                            <span class="text-danger">{{ formatCurrency(total.total, total.currency) }}</span>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+              </div> -->
               <table class="table table-hover align-middle">
                 <thead>
                   <tr>

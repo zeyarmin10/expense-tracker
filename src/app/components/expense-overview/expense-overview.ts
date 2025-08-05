@@ -7,6 +7,8 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartData, ChartOptions, ChartType, Chart, PieController, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Router } from '@angular/router';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
 
 // Register the required chart components
 Chart.register(PieController, ArcElement, Tooltip, Legend);
@@ -17,10 +19,16 @@ interface CurrencySummary {
   dailyAverage: number;
 }
 
+interface CategoryTotal {
+  category: string;
+  total: number;
+  currency: string;
+}
+
 @Component({
   selector: 'app-expense-overview',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, BaseChartDirective],
+  imports: [CommonModule, FormsModule, TranslateModule, BaseChartDirective, FontAwesomeModule ],
   providers: [DatePipe],
   templateUrl: './expense-overview.html',
   styleUrls: ['./expense-overview.css'],
@@ -29,6 +37,8 @@ export class ExpenseOverview implements OnInit {
   expenseService = inject(ExpenseService);
   datePipe = inject(DatePipe);
   translate = inject(TranslateService);
+
+  faMagnifyingGlass = faMagnifyingGlass;
 
   // --- Filtering and Search Properties ---
   allExpenses$: Observable<ServiceIExpense[]> = this.expenseService.getExpenses();
@@ -48,6 +58,8 @@ export class ExpenseOverview implements OnInit {
     USD: '$',
     THB: '฿'
   };
+
+  categoryTotals: CategoryTotal[] = [];
 
   // --- Pie Chart Properties ---
   public pieChartData: ChartData<'pie'> = {
@@ -188,11 +200,19 @@ export class ExpenseOverview implements OnInit {
       };
     });
 
-    const categoryTotals = expenses.reduce((acc, expense) => {
-      acc[expense.category] = (acc[expense.category] || 0) + expense.totalCost;
+    const categoryTotalsMap = expenses.reduce((acc, expense) => {
+      if (!acc[expense.category]) {
+        acc[expense.category] = { category: expense.category, total: 0, currency: expense.currency };
+      }
+      acc[expense.category].total += expense.totalCost;
       return acc;
-    }, {} as { [key: string]: number });
-    const mostExpensive = Object.keys(categoryTotals).sort((a, b) => categoryTotals[b] - categoryTotals[a])[0];
+    }, {} as { [key: string]: CategoryTotal });
+
+    // Convert the map to an array and sort by total expense in descending order
+    this.categoryTotals = Object.values(categoryTotalsMap).sort((a, b) => b.total - a.total);
+
+    // Keep the most expensive category logic for the chart and other summaries
+    const mostExpensive = this.categoryTotals[0]?.category;
     this.mostExpenseCategory = mostExpensive || 'N/A';
   }
 
