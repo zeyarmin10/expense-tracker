@@ -67,7 +67,6 @@ export class CategoryModalComponent implements OnInit {
       const categories = await firstValueFrom(this.categoryService.getCategories());
       this._modalCurrentCategoryCount = categories.length;
       this._categoriesSubject.next(categories);
-      console.log('Modal opened. Current categories in service:', this._modalCurrentCategoryCount); // For debugging
     } catch (error) {
       this.translateService.get('DATA_LOAD_ERROR').subscribe((res: string) => {
         this.toastService.showError((error as any).message || res);
@@ -116,7 +115,6 @@ export class CategoryModalComponent implements OnInit {
 
     if (isDuplicate) {
         this.translateService.get('CATEGORY_ALREADY_EXISTS').subscribe((res: string) => {
-            console.log('translate service', res);
             this.toastService.showError(res);
         });
         this.close();

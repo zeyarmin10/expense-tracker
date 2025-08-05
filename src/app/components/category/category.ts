@@ -167,13 +167,10 @@ export class Category implements OnInit {
    * @param categoryId The ID of the category to delete.
    */
   async onDelete(categoryId: string): Promise<void> {
-    console.log('onDelete called for categoryId:', categoryId);
     try {
       const isUsed = await this.categoryService.isCategoryUsedInExpenses(categoryId);
-      console.log('onDelete - isUsed result from service:', isUsed);
 
       if (isUsed) {
-        console.log('onDelete - Category IS in use. Showing error modal.');
         this.showErrorModal(
           this.translateService.instant('DELETE_CATEGORY_ERROR_TITLE'),
           this.translateService.instant('CATEGORY_IN_USE_ERROR')
@@ -181,12 +178,9 @@ export class Category implements OnInit {
         return; // Stop further execution
       }
 
-      // If not in use, proceed with confirmation
-      console.log('onDelete - Category NOT in use. Proceeding to show confirmation modal.');
 
       // Ensure the modal is ready before trying to open it
       if (!this.deleteConfirmationModal) {
-        console.error('onDelete - deleteConfirmationModal is not initialized!');
         // Fallback or error handling if modal isn't ready
         this.showErrorModal(
           this.translateService.instant('ERROR_TITLE'),
@@ -197,7 +191,6 @@ export class Category implements OnInit {
 
       // Get translated message synchronously using await firstValueFrom
       const confirmMsg = await firstValueFrom(this.translateService.get('CONFIRM_DELETE_CATEGORY'));
-      console.log('onDelete - confirmMsg obtained synchronously:', confirmMsg);
 
       this.deleteConfirmationModal.title = this.translateService.instant('CONFIRM_DELETE_TITLE');
       this.deleteConfirmationModal.message = confirmMsg; // Set the message here
@@ -208,19 +201,16 @@ export class Category implements OnInit {
 
       // Force change detection to ensure @Input properties are updated in the DOM
       this.cdr.detectChanges(); // <--- Added this line
-      console.log('onDelete - cdr.detectChanges() called for deleteConfirmationModal.');
 
       // Add a small delay using setTimeout(0) to ensure Bootstrap's show() method is called.
       setTimeout(() => {
         this.deleteConfirmationModal.open();
-        console.log('onDelete - Confirmation modal.open() called via setTimeout.');
       }, 0);
 
 
       // Re-subscribe to confirmed event each time to ensure fresh subscription
       // and prevent multiple emissions from old subscriptions
       const subscription = this.deleteConfirmationModal.confirmed.subscribe(async (confirmed: boolean) => {
-        console.log('onDelete - Confirmation modal confirmed event received:', confirmed);
         if (confirmed) {
           try {
             await this.categoryService.deleteCategory(categoryId);
@@ -229,13 +219,11 @@ export class Category implements OnInit {
                 this.cancelEdit();
             }
             await this.loadCategories();
-            console.log('onDelete - Category deleted successfully.');
           } catch (error: any) {
             this.showErrorModal(
               this.translateService.instant('ERROR_TITLE'),
               error.message || this.translateService.instant('DATA_DELETE_ERROR')
             );
-            console.error('onDelete - Category delete error:', error);
           }
         }
         subscription.unsubscribe(); // Unsubscribe to prevent memory leaks
@@ -246,7 +234,6 @@ export class Category implements OnInit {
         this.translateService.instant('ERROR_TITLE'),
         error.message || this.translateService.instant('FAILED_CHECK_CATEGORY_USAGE')
       );
-      console.error('onDelete - Error checking category usage in catch block:', error);
     }
   }
 
@@ -265,12 +252,10 @@ export class Category implements OnInit {
 
     // Force change detection to ensure @Input properties are updated in the DOM
     this.cdr.detectChanges();
-    console.log('showErrorModal - cdr.detectChanges() called for errorModal.');
 
     // Add a small delay using setTimeout(0) to ensure Bootstrap's show() method is called.
     setTimeout(() => {
       this.errorModal.open();
-      console.log('showErrorModal - Error modal.open() called via setTimeout.');
     }, 0);
   }
 }

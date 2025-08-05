@@ -219,10 +219,8 @@ export class Profit implements OnInit {
 
             incomes.forEach(income => {
                 const incomeDate = new Date(income.date);
-                console.log('incomeDate => ', incomeDate);
                 // const monthKey = this.datePipe.transform(incomeDate, 'MMMM') || '';
                 const monthYear = this.datePipe.transform(incomeDate, 'MMMM y') || '';
-                console.log('monthYear => ', monthYear);
                 if (!monthlyData[monthYear]) {
                     monthlyData[monthYear] = { income: {}, expense: {} };
                 }

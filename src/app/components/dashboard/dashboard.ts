@@ -558,12 +558,10 @@ export class DashboardComponent implements OnInit {
   }
 
   goToExpensePage(): void {
-    console.log('Clicked Add First Expense button...');
     this.router.navigate(['/expense']);
   }
 
   goToProfitPage(): void {
-    console.log('Clicked Add First Income button...');
     this.router.navigate(['/profit']);
   }
 }
