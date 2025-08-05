@@ -95,6 +95,9 @@ body {
   .hide-mobile-views {
     display: none;
   }
+  .table {
+    font-size: 0.9em;
+  }
 }
 
 /* New style for clickable rows */

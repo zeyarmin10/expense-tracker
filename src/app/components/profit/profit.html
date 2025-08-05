@@ -10,21 +10,15 @@
                             "DATE_FILTER" | translate
                             }}</label>
                             <select
-                            class="form-select"
-                            [(ngModel)]="selectedDateFilter"
-                            (change)="setDateFilter(selectedDateFilter)"
+                                class="form-select"
+                                [(ngModel)]="selectedDateFilter"
+                                (change)="setDateFilter(selectedDateFilter)"
                             >
-                            <option value="last30Days">
-                                {{ "LAST_30_DAYS" | translate }}
-                            </option>
-                            <option value="currentMonth">
-                                {{ "CURRENT_MONTH" | translate }}
-                            </option>
-                            <option value="currentYear">
-                                {{ "CURRENT_YEAR" | translate }}
-                            </option>
-                            <option value="lastYear">{{ "LAST_YEAR" | translate }}</option>
-                            <option value="custom">{{ "CUSTOM_DATE" | translate }}</option>
+                                <option value="last30Days">{{ "LAST_30_DAYS" | translate }}</option>
+                                <option value="currentMonth">{{ "CURRENT_MONTH" | translate }}</option>
+                                <option value="currentYear">{{ "CURRENT_YEAR" | translate }}</option>
+                                <option value="lastYear">{{ "LAST_YEAR" | translate }}</option>
+                                <option value="custom">{{ "CUSTOM_DATE" | translate }}</option>
                             </select>
                         </div>
 
@@ -143,13 +137,13 @@
                     <div class="row g-3 mb-3">
                         <div class="col-12 col-lg-4">
                             <div class="card h-100 border border-success">
-                                <div class="card-body">
-                                    <h6 class="text-start fw-bold">{{ 'ALL_TOTAL_INCOMES' | translate }}</h6>
-                                    <div class="pt-2" *ngIf="(totalIncomesByCurrency$ | async) as totals; else loading">
+                                <div class="card-body pt-1 pb-1">
+                                    <div class="text-start fw-bold p-0">{{ 'ALL_TOTAL_INCOMES' | translate }}</div>
+                                    <div class="" *ngIf="(totalIncomesByCurrency$ | async) as totals; else loading">
                                         <div *ngIf="totals && (totals | keyvalue).length > 0; else noData">
-                                            <p *ngFor="let total of (totals | keyvalue)" class="d-flex justify-content-between" style="margin-bottom: 0;">
-                                                <strong>{{ total.key }}:</strong> <span style="color: green;">{{ formatAmountWithSymbol(total.value, total.key) }}</span>
-                                            </p>
+                                            <span *ngFor="let total of (totals | keyvalue)" class="d-flex justify-content-between" style="margin-bottom: 0;">
+                                                <span>{{ total.key }}:</span><span style="color: green;">{{ formatAmountWithSymbol(total.value, total.key) }}</span>
+                                            </span>
                                         </div>
                                         <ng-template #noData>
                                             <p class="text-muted text-center">{{ 'NO_INCOME_DATA' | translate }}</p>
@@ -163,13 +157,13 @@
                         </div>
                         <div class="col-12 col-lg-4">
                             <div class="card h-100 border border-warning">
-                                <div class="card-body">
-                                    <h6 class="text-start fw-bold">{{ 'ALL_TOTAL_EXPENSES' | translate }}</h6>
-                                    <div class="pt-2" *ngIf="(totalExpensesByCurrency$ | async) as totals; else loading">
-                                        <div *ngIf="totals && (totals | keyvalue).length > 0; else noData">
-                                            <p *ngFor="let total of (totals | keyvalue)" class="d-flex justify-content-between" style="margin-bottom: 0;">
-                                                <strong>{{ total.key }}:</strong> <span style="color: #007786;">{{ formatAmountWithSymbol(total.value, total.key) }}</span>
-                                            </p>
+                                <div class="card-body pt-1 pb-1">
+                                    <div class="text-start fw-bold p-0">{{ 'ALL_TOTAL_EXPENSES' | translate }}</div>
+                                    <div class="" *ngIf="(totalExpensesByCurrency$ | async) as totals; else loading">
+                                        <div *ngIf="totals && (totals | keyvalue).length > 0; else noData" class="p-0">
+                                            <span *ngFor="let total of (totals | keyvalue)" class="d-flex justify-content-between" style="margin-bottom: 0;">
+                                                <span>{{ total.key }}:</span> <span style="color: #007786;">{{ formatAmountWithSymbol(total.value, total.key) }}</span>
+                                            </span>
                                         </div>
                                         <ng-template #noData>
                                             <p class="text-muted text-center">{{ 'NO_EXPENSE_DATA' | translate }}</p>
@@ -183,16 +177,16 @@
                         </div>
                         <div class="col-12 col-lg-4">
                             <div class="card h-100 border border-info">
-                                <div class="card-body">
-                                    <h6 class="text-start fw-bold">{{ 'REMAINING_BALANCE' | translate }}</h6>
-                                    <div class="pt-2" *ngIf="(remainingBalanceByCurrency$ | async) as balances; else loading">
+                                <div class="card-body pt-1 pb-1">
+                                    <div class="text-start fw-bold p-0">{{ 'REMAINING_BALANCE' | translate }}</div>
+                                    <div class="" *ngIf="(remainingBalanceByCurrency$ | async) as balances; else loading">
                                         <div *ngIf="balances && (balances | keyvalue).length > 0; else noData">
-                                            <p *ngFor="let balance of (balances | keyvalue)" class="d-flex justify-content-between" style="margin-bottom: 0;">
-                                                <strong>{{ balance.key }}:</strong>
+                                            <span *ngFor="let balance of (balances | keyvalue)" class="d-flex justify-content-between" style="margin-bottom: 0;">
+                                                <span>{{ balance.key }}:</span>
                                                 <span [class.text-success]="balance.value >= 0" [class.text-danger]="balance.value < 0">
                                                     {{ formatAmountWithSymbol(balance.value, balance.key) }}
                                                 </span>
-                                            </p>
+                                            </span>
                                         </div>
                                         <ng-template #noData>
                                             <p class="text-muted text-center">{{ 'NO_BALANCE_DATA' | translate }}</p>
