@@ -1,5 +1,4 @@
-// src/app/app.ts
-import { Component, signal, inject, HostListener } from '@angular/core';
+import { Component, signal, inject, HostListener, ElementRef } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from './services/auth';
 import { Observable, of, Subject, takeUntil, debounceTime } from 'rxjs'; // Import 'of'
@@ -41,7 +40,7 @@ export class App {
   private activitySubject = new Subject<void>();
 
 
-  constructor() {
+  constructor(private elementRef: ElementRef) {
     // Set default language and add languages
     this.translateService.addLangs(['my', 'en']);
     this.translateService.setDefaultLang('my');
@@ -110,6 +109,13 @@ export class App {
     } catch (error) {
       console.error('Logout failed:', error);
       // Handle logout error (e.g., show a toast)
+    }
+  }
+
+  closeNavbarMenu(): void {
+    const navbarToggler = this.elementRef.nativeElement.querySelector('.navbar-toggler');
+    if (navbarToggler && window.getComputedStyle(navbarToggler).display !== 'none') {
+        navbarToggler.click();
     }
   }
 }
