@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, ViewChild } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { Observable, BehaviorSubject, combineLatest, map } from 'rxjs';
 import { ServiceIExpense, ExpenseService } from '../../services/expense';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -12,7 +12,7 @@ import { ConfirmationModal } from '../common/confirmation-modal/confirmation-mod
 @Component({
   selector: 'app-profit',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslateModule, FontAwesomeModule, ConfirmationModal],
+  imports: [CommonModule, ReactiveFormsModule, TranslateModule, FontAwesomeModule, ConfirmationModal, FormsModule],
   providers: [DatePipe],
   templateUrl: './profit.html',
   styleUrls: ['./profit.css']
@@ -31,7 +31,8 @@ export class Profit implements OnInit {
   incomes$: Observable<ServiceIIncome[]>;
   expenses$: Observable<ServiceIExpense[]>;
 
-  public _selectedYear$ = new BehaviorSubject<number>(new Date().getFullYear());
+//   public _selectedYear$ = new BehaviorSubject<number>(new Date().getFullYear());
+//   years: number[] = [];
 
   filteredAndSortedIncomes$: Observable<ServiceIIncome[]>;
   totalIncome$: Observable<{ currency: string, total: number }[]>;
@@ -39,12 +40,17 @@ export class Profit implements OnInit {
   halfYearlyProfitLoss$: Observable<{ period: string, profitLoss: number, currency: string }[]>;
   yearlyProfitLoss$: Observable<{ profitLoss: number, currency: string }[]>;
 
-  years: number[] = [];
   currencySymbols: { [key: string]: string } = {
     MMK: 'Ks',
     USD: '$',
     THB: '฿'
   };
+  
+  availableCurrencies = [
+    { code: 'MMK', symbol: 'Ks' },
+    { code: 'USD', symbol: '$' },
+    { code: 'THB', symbol: '฿' }
+  ];
 
   isIncomeFormCollapsed: boolean = true;
   isRecordedIncomesCollapsed: boolean = true;
@@ -61,6 +67,16 @@ export class Profit implements OnInit {
     'July', 'August', 'September', 'October', 'November', 'December'
   ];
 
+  selectedDateFilter: string = 'last30Days'; // default filter value
+  startDate: string = '';
+  endDate: string = '';
+
+  // New BehaviorSubjects to drive the observables
+  private _startDate$ = new BehaviorSubject<string>('');
+  private _endDate$ = new BehaviorSubject<string>('');
+  private _selectedDateRange$ = new BehaviorSubject<string>('last30Days');
+  private filteredData$: Observable<{incomes: ServiceIIncome[], expenses: ServiceIExpense[]}>;
+
   constructor() {
     this.incomeForm = this.fb.group({
       amount: ['', [Validators.required, Validators.min(0.01)]],
@@ -71,14 +87,75 @@ export class Profit implements OnInit {
 
     this.incomes$ = this.incomeService.getIncomes();
     this.expenses$ = this.expenseService.getExpenses();
-    this.generateYears();
+    // this.generateYears();
 
-    this.filteredAndSortedIncomes$ = combineLatest([this.incomes$, this._selectedYear$]).pipe(
-      map(([incomes, year]) => {
-        return incomes
-          .filter(income => new Date(income.date).getFullYear() === year)
-          .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    // Initialize the date range to one year ago
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+    this.startDate = this.datePipe.transform(oneYearAgo, 'yyyy-MM-dd') || '';
+    this.endDate = this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
+
+    // Set initial values for the new BehaviorSubjects
+    this._startDate$.next(this.startDate);
+    this._endDate$.next(this.endDate);
+    this._selectedDateRange$.next(this.selectedDateFilter);
+
+    this.filteredData$ = combineLatest([
+      this.incomes$,
+      this.expenses$,
+      this._selectedDateRange$,
+      this._startDate$,
+      this._endDate$,
+    ]).pipe(
+      map(([incomes, expenses, dateRange, startDate, endDate]) => {
+        const now = new Date();
+        let start: Date;
+        let end: Date = now;
+
+        switch (dateRange) {
+          case 'last30Days':
+            start = new Date(
+              now.getFullYear(),
+              now.getMonth(),
+              now.getDate() - 30
+            );
+            break;
+          case 'currentMonth':
+            start = new Date(now.getFullYear(), now.getMonth(), 1);
+            break;
+          case 'lastYear':
+            start = new Date(now.getFullYear() - 1, 0, 1);
+            end = new Date(now.getFullYear() - 1, 11, 31);
+            break;
+          case 'custom':
+            start = new Date(startDate);
+            end = new Date(endDate);
+            break;
+          case 'currentYear':
+          default:
+            start = new Date(now.getFullYear(), 0, 1);
+            break;
+        }
+
+        // Filtering logic
+        const filteredIncomes = incomes.filter((income) => {
+          const incomeDate = new Date(income.date);
+          return incomeDate >= start && incomeDate <= end;
+        });
+
+        const filteredExpenses = expenses.filter((expense) => {
+          const expenseDate = new Date(expense.date);
+          return expenseDate >= start && expenseDate <= end;
+        });
+
+        return { incomes: filteredIncomes, expenses: filteredExpenses };
       })
+    );
+
+    this.filteredAndSortedIncomes$ = this.filteredData$.pipe(
+        map(({ incomes }) => {
+            return incomes.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        })
     );
 
     this.totalIncome$ = this.filteredAndSortedIncomes$.pipe(
@@ -94,121 +171,95 @@ export class Profit implements OnInit {
       })
     );
 
-    this.monthlyProfitLoss$ = combineLatest([
-      this.incomes$,
-      this.expenses$,
-      this._selectedYear$
-    ]).pipe(
-      map(([incomes, expenses, year]) => {
-        const monthlyData: { [month: string]: { income: { [currency: string]: number }, expense: { [currency: string]: number } } } = {};
+    this.monthlyProfitLoss$ = this.filteredData$.pipe(
+        map(({ incomes, expenses }) => {
+            const monthlyData: { [month: string]: { income: { [currency: string]: number }, expense: { [currency: string]: number } } } = {};
 
-        incomes.forEach(income => {
-          const incomeDate = new Date(income.date);
-          if (incomeDate.getFullYear() === year) {
-            const monthKey = this.datePipe.transform(incomeDate, 'MMMM') || '';
-            if (!monthlyData[monthKey]) {
-              monthlyData[monthKey] = { income: {}, expense: {} };
-            }
-            monthlyData[monthKey].income[income.currency] = (monthlyData[monthKey].income[income.currency] || 0) + income.amount;
-          }
-        });
-
-        expenses.forEach(expense => {
-          const expenseDate = new Date(expense.date);
-          if (expenseDate.getFullYear() === year) {
-            const monthKey = this.datePipe.transform(expenseDate, 'MMMM') || '';
-            if (!monthlyData[monthKey]) {
-              monthlyData[monthKey] = { income: {}, expense: {} };
-            }
-            monthlyData[monthKey].expense[expense.currency] = (monthlyData[monthKey].expense[expense.currency] || 0) + expense.totalCost;
-          }
-        });
-
-        const monthlyTotalsArray = Object.keys(monthlyData).map(monthKey => {
-          const allCurrencies = new Set([...Object.keys(monthlyData[monthKey].income), ...Object.keys(monthlyData[monthKey].expense)]);
-          const totals = Array.from(allCurrencies).map(currency => {
-            const totalIncome = monthlyData[monthKey].income[currency] || 0;
-            const totalExpense = monthlyData[monthKey].expense[currency] || 0;
-            return {
-              profitLoss: totalIncome - totalExpense,
-              currency: currency
-            };
-          });
-          return { month: monthKey, totals: totals };
-        });
-
-        return monthlyTotalsArray.sort((a, b) => {
-          return this.monthOrder.indexOf(a.month) - this.monthOrder.indexOf(b.month);
-        });
-      })
-    );
-
-    this.halfYearlyProfitLoss$ = combineLatest([
-      this.incomes$,
-      this.expenses$,
-      this._selectedYear$
-    ]).pipe(
-      map(([incomes, expenses, year]) => {
-        const halfYearlyData: { [period: string]: { income: { [currency: string]: number }, expense: { [currency: string]: number } } } = {
-          'Jan~Jun': { income: {}, expense: {} },
-          'Jul~Dec': { income: {}, expense: {} }
-        };
-
-        incomes.forEach(income => {
-          const incomeDate = new Date(income.date);
-          if (incomeDate.getFullYear() === year) {
-            const period = incomeDate.getMonth() < 6 ? 'Jan~Jun' : 'Jul~Dec';
-            halfYearlyData[period].income[income.currency] = (halfYearlyData[period].income[income.currency] || 0) + income.amount;
-          }
-        });
-
-        expenses.forEach(expense => {
-          const expenseDate = new Date(expense.date);
-          if (expenseDate.getFullYear() === year) {
-            const period = expenseDate.getMonth() < 6 ? 'Jan~Jun' : 'Jul~Dec';
-            halfYearlyData[period].expense[expense.currency] = (halfYearlyData[period].expense[expense.currency] || 0) + expense.totalCost;
-          }
-        });
-
-        const result: { period: string, profitLoss: number, currency: string }[] = [];
-        for (const period in halfYearlyData) {
-          const allCurrencies = new Set([...Object.keys(halfYearlyData[period].income), ...Object.keys(halfYearlyData[period].expense)]);
-          if (allCurrencies.size > 0) {
-            allCurrencies.forEach(currency => {
-              const totalIncome = halfYearlyData[period].income[currency] || 0;
-              const totalExpense = halfYearlyData[period].expense[currency] || 0;
-              result.push({
-                period: period,
-                profitLoss: totalIncome - totalExpense,
-                currency: currency
-              });
+            incomes.forEach(income => {
+                const incomeDate = new Date(income.date);
+                const monthKey = this.datePipe.transform(incomeDate, 'MMMM') || '';
+                if (!monthlyData[monthKey]) {
+                    monthlyData[monthKey] = { income: {}, expense: {} };
+                }
+                monthlyData[monthKey].income[income.currency] = (monthlyData[monthKey].income[income.currency] || 0) + income.amount;
             });
-          }
-        }
-        return result;
-      })
+
+            expenses.forEach(expense => {
+                const expenseDate = new Date(expense.date);
+                const monthKey = this.datePipe.transform(expenseDate, 'MMMM') || '';
+                if (!monthlyData[monthKey]) {
+                    monthlyData[monthKey] = { income: {}, expense: {} };
+                }
+                monthlyData[monthKey].expense[expense.currency] = (monthlyData[monthKey].expense[expense.currency] || 0) + expense.totalCost;
+            });
+
+            const monthlyTotalsArray = Object.keys(monthlyData).map(monthKey => {
+                const allCurrencies = new Set([...Object.keys(monthlyData[monthKey].income), ...Object.keys(monthlyData[monthKey].expense)]);
+                const totals = Array.from(allCurrencies).map(currency => {
+                    const totalIncome = monthlyData[monthKey].income[currency] || 0;
+                    const totalExpense = monthlyData[monthKey].expense[currency] || 0;
+                    return {
+                        profitLoss: totalIncome - totalExpense,
+                        currency: currency
+                    };
+                });
+                return { month: monthKey, totals: totals };
+            });
+
+            return monthlyTotalsArray.sort((a, b) => {
+                return this.monthOrder.indexOf(a.month) - this.monthOrder.indexOf(b.month);
+            });
+        })
     );
 
-    this.yearlyProfitLoss$ = combineLatest([
-      this.incomes$,
-      this.expenses$,
-      this._selectedYear$
-    ]).pipe(
-      map(([incomes, expenses, year]) => {
+    this.halfYearlyProfitLoss$ = this.filteredData$.pipe(
+        map(({ incomes, expenses }) => {
+            const halfYearlyData: { [period: string]: { income: { [currency: string]: number }, expense: { [currency: string]: number } } } = {
+                'Jan~Jun': { income: {}, expense: {} },
+                'Jul~Dec': { income: {}, expense: {} }
+            };
+
+            incomes.forEach(income => {
+                const incomeDate = new Date(income.date);
+                const period = incomeDate.getMonth() < 6 ? 'Jan~Jun' : 'Jul~Dec';
+                halfYearlyData[period].income[income.currency] = (halfYearlyData[period].income[income.currency] || 0) + income.amount;
+            });
+
+            expenses.forEach(expense => {
+                const expenseDate = new Date(expense.date);
+                const period = expenseDate.getMonth() < 6 ? 'Jan~Jun' : 'Jul~Dec';
+                halfYearlyData[period].expense[expense.currency] = (halfYearlyData[period].expense[expense.currency] || 0) + expense.totalCost;
+            });
+
+            const result: { period: string, profitLoss: number, currency: string }[] = [];
+            for (const period in halfYearlyData) {
+                const allCurrencies = new Set([...Object.keys(halfYearlyData[period].income), ...Object.keys(halfYearlyData[period].expense)]);
+                if (allCurrencies.size > 0) {
+                    allCurrencies.forEach(currency => {
+                        const totalIncome = halfYearlyData[period].income[currency] || 0;
+                        const totalExpense = halfYearlyData[period].expense[currency] || 0;
+                        result.push({
+                            period: period,
+                            profitLoss: totalIncome - totalExpense,
+                            currency: currency
+                        });
+                    });
+                }
+            }
+            return result;
+        })
+    );
+
+    this.yearlyProfitLoss$ = this.filteredData$.pipe(
+    map(({ incomes, expenses }) => {
         const yearlyData: { income: { [currency: string]: number }, expense: { [currency: string]: number } } = { income: {}, expense: {} };
 
         incomes.forEach(income => {
-          const incomeDate = new Date(income.date);
-          if (incomeDate.getFullYear() === year) {
-            yearlyData.income[income.currency] = (yearlyData.income[income.currency] || 0) + income.amount;
-          }
+          yearlyData.income[income.currency] = (yearlyData.income[income.currency] || 0) + income.amount;
         });
 
         expenses.forEach(expense => {
-          const expenseDate = new Date(expense.date);
-          if (expenseDate.getFullYear() === year) {
-            yearlyData.expense[expense.currency] = (yearlyData.expense[expense.currency] || 0) + expense.totalCost;
-          }
+          yearlyData.expense[expense.currency] = (yearlyData.expense[expense.currency] || 0) + expense.totalCost;
         });
 
         const result: { profitLoss: number, currency: string }[] = [];
@@ -224,8 +275,8 @@ export class Profit implements OnInit {
           });
         }
         return result;
-      })
-    );
+    })
+);
 
     const storedLang = localStorage.getItem('selectedLanguage');
     if (storedLang) {
@@ -240,17 +291,17 @@ export class Profit implements OnInit {
 
   ngOnInit(): void {}
 
-  generateYears(): void {
-    const currentYear = new Date().getFullYear();
-    for (let i = currentYear; i >= currentYear - 5; i--) {
-      this.years.push(i);
-    }
-  }
+//   generateYears(): void {
+//     const currentYear = new Date().getFullYear();
+//     for (let i = currentYear; i >= currentYear - 5; i--) {
+//       this.years.push(i);
+//     }
+//   }
 
-  onYearChange(event: Event): void {
-    const year = (event.target as HTMLSelectElement).value;
-    this._selectedYear$.next(parseInt(year, 10));
-  }
+//   onYearChange(event: Event): void {
+//     const year = (event.target as HTMLSelectElement).value;
+//     this._selectedYear$.next(parseInt(year, 10));
+//   }
 
   onSubmitIncome(): void {
     if (this.incomeForm.valid) {
@@ -330,4 +381,13 @@ export class Profit implements OnInit {
       this.isRecordedIncomesCollapsed = !this.isRecordedIncomesCollapsed;
     }
   }
+
+  setDateFilter(filter: string): void {
+    this._selectedDateRange$.next(filter);
+    if (filter === 'custom') {
+        this._startDate$.next(this.startDate);
+        this._endDate$.next(this.endDate);
+    }
+  }
+
 }

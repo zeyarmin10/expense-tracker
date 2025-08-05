@@ -4,6 +4,56 @@
             <div class="card shadow-sm p-3 p-md-4">
                     <h2 class="card-title text-center mb-4">{{ 'PROFIT_LOSS_TITLE' | translate }}</h2>
 
+                    <div class="row g-2 d-flex justify-content-end align-items-center mb-3">
+                        <div class="col-12 col-lg-4">
+                            <label class="form-label d-block d-lg-none">{{
+                            "DATE_FILTER" | translate
+                            }}</label>
+                            <select
+                            class="form-select"
+                            [(ngModel)]="selectedDateFilter"
+                            (change)="setDateFilter(selectedDateFilter)"
+                            >
+                            <option value="last30Days">
+                                {{ "LAST_30_DAYS" | translate }}
+                            </option>
+                            <option value="currentMonth">
+                                {{ "CURRENT_MONTH" | translate }}
+                            </option>
+                            <option value="currentYear">
+                                {{ "CURRENT_YEAR" | translate }}
+                            </option>
+                            <option value="lastYear">{{ "LAST_YEAR" | translate }}</option>
+                            <option value="custom">{{ "CUSTOM_DATE" | translate }}</option>
+                            </select>
+                        </div>
+
+                        <ng-container *ngIf="selectedDateFilter === 'custom'">
+                            <div class="col-6 col-lg-4">
+                                <label class="form-label d-block d-lg-none">{{
+                                    "START_DATE" | translate
+                                }}</label>
+                                <input
+                                    type="date"
+                                    class="form-control"
+                                    [(ngModel)]="startDate"
+                                    (change)="setDateFilter('custom')"
+                                />
+                            </div>
+                            <div class="col-6 col-lg-4">
+                                <label class="form-label d-block d-lg-none">{{
+                                    "END_DATE" | translate
+                                }}</label>
+                                <input
+                                    type="date"
+                                    class="form-control"
+                                    [(ngModel)]="endDate"
+                                    (change)="setDateFilter('custom')"
+                                />
+                            </div>
+                        </ng-container>
+                    </div>
+
                     <div class="card mb-4">
                         <div class="card-header d-flex justify-content-between align-items-center" role="button" (click)="toggleVisibility('incomeForm')">
                             {{ 'ADD_INCOME' | translate }}
@@ -13,20 +63,17 @@
                             <form [formGroup]="incomeForm" (ngSubmit)="onSubmitIncome()" class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="amount" class="form-label">{{ 'AMOUNT' | translate }}</label>
-                                    <input type="number" id="amount" formControlName="amount" class="form-control"
+                                    <div class="input-group">
+                                        <input type="number" id="amount" formControlName="amount" class="form-control w-75"
                                         step="0.01">
+                                        <select id="currency" formControlName="currency" class="form-select w-25">
+                                            <option *ngFor="let curr of availableCurrencies" [value]="curr.code">{{ curr.symbol }}</option>
+                                        </select>
+                                    </div>
                                     <div *ngIf="incomeForm.controls['amount'].invalid && incomeForm.controls['amount'].touched"
                                         class="text-danger">
                                         {{ 'AMOUNT_REQUIRED' | translate }}
                                     </div>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="currency" class="form-label">{{ 'CURRENCY' | translate }}</label>
-                                    <select id="currency" formControlName="currency" class="form-select">
-                                        <option value="MMK">MMK</option>
-                                        <option value="USD">USD</option>
-                                        <option value="THB">THB</option>
-                                    </select>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="date" class="form-label">{{ 'DATE' | translate }}</label>
@@ -54,7 +101,7 @@
 
                     <div class="card mb-4">
                         <div class="card-header d-flex justify-content-between align-items-center" role="button" (click)="toggleVisibility('recordedIncomes')">
-                            {{ 'RECORDED_INCOMES' | translate }} ({{ _selectedYear$ | async }})
+                            {{ 'RECORDED_INCOMES' | translate }}
                             <fa-icon [icon]="isRecordedIncomesCollapsed ? faChevronDown : faChevronUp"></fa-icon>
                         </div>
                         <div class="card-body" *ngIf="!isRecordedIncomesCollapsed">
@@ -93,16 +140,12 @@
                         </div>
                     </div>
 
-                    <div class="card">
+                    <div class="card mb-4">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             {{ 'SUMMARY' | translate }}
-                            <select class="form-select w-auto" (change)="onYearChange($event)"
-                                [value]="_selectedYear$ | async">
-                                <option *ngFor="let year of years" [value]="year">{{ year }}</option>
-                            </select>
                         </div>
                         <div class="card-body">
-                            <h5 class="mb-3">{{ 'YEARLY_PROFIT_LOSS' | translate }} ({{ _selectedYear$ | async }})</h5>
+                            <h5 class="mb-3">{{ 'YEARLY_PROFIT_LOSS' | translate }}</h5>
                             <div *ngIf="(yearlyProfitLoss$ | async) as yearlyTotals; else noYearlyData">
                                 <div *ngIf="yearlyTotals.length > 0">
                                     <p *ngFor="let total of yearlyTotals" [class.text-success]="total.profitLoss >= 0"
