@@ -61,6 +61,8 @@ export class ExpenseOverview implements OnInit {
 
   categoryTotals: CategoryTotal[] = [];
 
+  public _selectedCategory$ = new BehaviorSubject<string>('');
+
   // --- Pie Chart Properties ---
   public pieChartData: ChartData<'pie'> = {
     labels: [],
@@ -84,23 +86,30 @@ export class ExpenseOverview implements OnInit {
       this.allExpenses$,
       this.dateFilter$,
       this.searchFilter$,
+      this._selectedCategory$ // <-- Add this new stream
     ]).pipe(
-      map(([expenses, { start, end }, searchTerm]) => {
+      map(([expenses, { start, end }, searchTerm, selectedCategory]) => { // <-- Add selectedCategory here
         let filtered = expenses;
 
-        const startDateObj = new Date(start);
-        const endDateObj = new Date(end);
+        // Date filtering logic
         filtered = filtered.filter(expense => {
-          const expenseDate = new Date(expense.date);
-          return expenseDate >= startDateObj && expenseDate <= endDateObj;
+          return expense.date >= start && expense.date <= end;
         });
 
+        // Search term filtering logic
         if (searchTerm) {
           const lowerCaseSearch = searchTerm.toLowerCase();
           filtered = filtered.filter(expense =>
             expense.itemName.toLowerCase().includes(lowerCaseSearch) ||
             expense.category.toLowerCase().includes(lowerCaseSearch)
           );
+        }
+
+        // Add the new category filtering logic here
+        if (selectedCategory) {
+            filtered = filtered.filter(expense =>
+                expense.category.toLowerCase() === selectedCategory.toLowerCase()
+            );
         }
 
         // Sort expenses by date in descending order
@@ -265,4 +274,9 @@ export class ExpenseOverview implements OnInit {
     // Navigate to the 'expense' page and pass the expenseId as a URL parameter
     this.router.navigate(['/expense', expense.date]); 
   }
+
+  filterByCategory(category: string): void {
+  // Pass an empty string to clear the filter, or the category name to filter
+  this._selectedCategory$.next(category);
+}
 }

@@ -260,5 +260,6 @@
   "EXPENSE_LIST": "Expense List",
   "START_DATE": "Start Date",
   "END_DATE": "End Date",
-  "DAILY_AVERAGE": "Daily Average"
+  "DAILY_AVERAGE": "Daily Average",
+  "ALL_CATEGORIES": "All Categories"
 }
