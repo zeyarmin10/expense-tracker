@@ -105,7 +105,7 @@
                 <div class="d-flex justify-content-center align-item-center">
                     <div class="card mb-4 profit-card border border-info col-xl-6 col-lg-6 col-md-12 col-sm-12 col-xs-12">
                     <div class="card-header border border-info">{{ 'PROFIT_LOSS_REPORT' | translate }}</div>
-                    <div class="card-body">
+                    <div class="card-body border border-info">
                         <div *ngIf="(totalProfitLossByCurrency$ | async) as profitLosses; else loading">
                             <div *ngIf="(netProfitByCurrency$ | async) as netProfits">
                                 <div *ngIf="(profitLosses && (profitLosses | keyvalue).length > 0) || (netProfits && (netProfits | keyvalue).length > 0); else noData">
