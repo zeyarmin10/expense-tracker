@@ -22,6 +22,9 @@
         max-width: 800px;
         margin: 0 1rem;
     }
+    .profit-card {
+        width: 100% !important;
+    }
 
 }
 
