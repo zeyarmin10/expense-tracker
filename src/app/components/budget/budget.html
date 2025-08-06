@@ -80,27 +80,32 @@
                         <fa-icon [icon]="isRecordedBudgetsCollapsed ? faChevronDown : faChevronUp"></fa-icon>
                     </div>
                     <div class="card-body" *ngIf="!isRecordedBudgetsCollapsed">
-                        <ng-container *ngIf="(filteredBudgets$ | async) as budgets; else noBudgetsTemplate">
-                            <ul class="list-group" *ngIf="budgets.length > 0">
-                                <li class="list-group-item d-flex justify-content-between align-items-center" *ngFor="let budget of budgets">
-                                    <div class="d-flex flex-column">
-                                        <span>
-                                            <strong>{{ datePipe.transform(budget.period, 'MMM d, yyyy') }}</strong>:
-                                        </span>
-                                        <span>
-                                            {{ formatAmountWithSymbol(budget.amount, budget.currency) }}
-                                        </span>
-                                    </div>
-                                    <div class="text-end" style="min-width: 5rem;">
-                                        <fa-icon class="btn btn-sm btn-outline-danger" [icon]="faTrash"
-                                            (click)="confirmDeleteBudget(budget.id)"
-                                            title="{{ 'DELETE' | translate }}"></fa-icon>
-                                    </div>
-                                </li>
-                            </ul>
+                        <ng-container *ngIf="(filteredBudgets$ | async) as budgets; else loadingBudget">
+                            <ng-container *ngIf="budgets.length > 0; else noBudgetsTemplate">
+                                <ul class="list-group">
+                                    <li class="list-group-item d-flex justify-content-between align-items-center" *ngFor="let budget of budgets">
+                                        <div class="d-flex flex-column">
+                                            <span>
+                                                <strong>{{ datePipe.transform(budget.period, 'MMM d, yyyy') }}</strong>:
+                                            </span>
+                                            <span>
+                                                {{ formatAmountWithSymbol(budget.amount, budget.currency) }}
+                                            </span>
+                                        </div>
+                                        <div class="text-end" style="min-width: 5rem;">
+                                            <fa-icon class="btn btn-sm btn-outline-danger" [icon]="faTrash"
+                                                (click)="confirmDeleteBudget(budget.id)"
+                                                title="{{ 'DELETE' | translate }}"></fa-icon>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </ng-container>
+                            <ng-template #noBudgetsTemplate>
+                                <p class="text-muted text-center mb-0">{{ 'NO_BUDGETS_FOUND' | translate }}</p>
+                            </ng-template>
                         </ng-container>
-                        <ng-template #noBudgetsTemplate>
-                            <p>{{ 'NO_BUDGETS_FOUND' | translate }}</p>
+                        <ng-template #loadingBudget>
+                            <p class="text-muted text-center">{{ 'LOADING_DATA' | translate }}</p>
                         </ng-template>
                     </div>
                 </div>

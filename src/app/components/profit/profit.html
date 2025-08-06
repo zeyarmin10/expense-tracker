@@ -111,14 +111,14 @@
                                     <ng-container *ngFor="let currency of availableCurrencies">
                                         <ng-container *ngIf="profitLosses[currency.code] !== undefined">
                                             <div class="mb-0">
-                                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                                <div class="d-flex justify-content-between align-items-center mb-1">
                                                     <span>{{ (profitLosses[currency.code] >= 0 ? 'PROFIT' : 'LOSS') | translate }}</span>
                                                     <!-- ({{ currency.code }}): -->
                                                     <span class="font-large fw-bold" [ngClass]="{'text-success': profitLosses[currency.code] >= 0, 'text-danger': profitLosses[currency.code] < 0}">
                                                         {{ formatAmountWithSymbol(profitLosses[currency.code], currency.code) }}
                                                     </span>
                                                 </div>
-                                                <div class="d-flex justify-content-between align-items-center">
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
                                                     <span>{{ (netProfits[currency.code] >= 0 ? 'NET_PROFIT' : 'NET_LOSS') | translate }}</span>
                                                      <!-- ({{ currency.code }}): -->
                                                     <span class="font-large fw-bold" [ngClass]="{'text-success': netProfits[currency.code] >= 0, 'text-danger': netProfits[currency.code] < 0}">
