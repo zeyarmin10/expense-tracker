@@ -1,3 +1,5 @@
+// src/app/components/budget/budget.ts
+
 import { Component, OnInit, inject, ViewChild, OnDestroy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
@@ -40,7 +42,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
   totalExpensesByCurrency$: Observable<{ [currency: string]: number }>;
   remainingBalanceByCurrency$: Observable<{ [currency: string]: number }>;
   
-  monthlySummary$: Observable<{ month: string, budget: number, expense: number, balance: number }[]>;
+  monthlySummary$: Observable<{ month: string, currency: string, budget: number, expense: number, balance: number }[]>;
 
   faTrash = faTrash;
   faSave = faSave;
@@ -146,34 +148,47 @@ export class BudgetComponent implements OnInit, OnDestroy {
 
     this.monthlySummary$ = filteredData$.pipe(
       map(({ budgets, expenses }) => {
-        const monthlyData: { [month: string]: { budget: number, expense: number } } = {};
+        const monthlyData: { [key: string]: { budget: number, expense: number } } = {};
+        const allMonthsAndCurrencies: Set<string> = new Set();
         
         budgets.forEach(budget => {
           const monthYear = this.datePipe.transform(new Date(`${budget.period}-01`), 'MMM yyyy') || '';
-          if (!monthlyData[monthYear]) {
-            monthlyData[monthYear] = { budget: 0, expense: 0 };
+          const key = `${monthYear}_${budget.currency}`;
+          allMonthsAndCurrencies.add(key);
+          if (!monthlyData[key]) {
+            monthlyData[key] = { budget: 0, expense: 0 };
           }
-          monthlyData[monthYear].budget += budget.amount;
+          monthlyData[key].budget += budget.amount;
         });
         
         expenses.forEach(expense => {
           const monthYear = this.datePipe.transform(new Date(expense.date), 'MMM yyyy') || '';
-          if (!monthlyData[monthYear]) {
-            monthlyData[monthYear] = { budget: 0, expense: 0 };
+          const key = `${monthYear}_${expense.currency}`;
+          allMonthsAndCurrencies.add(key);
+          if (!monthlyData[key]) {
+            monthlyData[key] = { budget: 0, expense: 0 };
           }
-          monthlyData[monthYear].expense += expense.totalCost;
+          monthlyData[key].expense += expense.totalCost;
         });
         
-        const sortedMonths = Object.keys(monthlyData).sort((a, b) => {
-          const dateA = new Date(a);
-          const dateB = new Date(b);
-          return dateA.getTime() - dateB.getTime();
+        const sortedKeys = Array.from(allMonthsAndCurrencies).sort((a, b) => {
+          const [monthA, currencyA] = a.split('_');
+          const [monthB, currencyB] = b.split('_');
+          const dateA = new Date(monthA);
+          const dateB = new Date(monthB);
+          
+          if (dateA.getTime() !== dateB.getTime()) {
+            return dateA.getTime() - dateB.getTime();
+          }
+          return currencyA.localeCompare(currencyB);
         });
 
-        return sortedMonths.map(month => {
-          const data = monthlyData[month];
+        return sortedKeys.map(key => {
+          const [month, currency] = key.split('_');
+          const data = monthlyData[key];
           return {
             month,
+            currency,
             budget: data.budget,
             expense: data.expense,
             balance: data.budget - data.expense,

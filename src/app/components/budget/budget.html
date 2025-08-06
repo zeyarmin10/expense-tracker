@@ -87,7 +87,7 @@
                                         <span>
                                             <strong>{{ datePipe.transform(budget.period, 'MMM yyyy') }}</strong>:
                                         </span>
-                                        <span class="text-success">
+                                        <span>
                                             {{ formatAmountWithSymbol(budget.amount, budget.currency) }}
                                         </span>
                                     </div>
@@ -190,17 +190,17 @@
                                 <li class="list-group-item" *ngFor="let month of monthlySummary">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <div class="d-flex flex-column flex-grow-1">
-                                            <strong>{{ month.month }}</strong>
-                                            <small class="text-muted">{{ 'BUDGET' | translate }} </small>
-                                            <small class="text-muted">{{ formatAmountWithSymbol(month.budget, 'MMK') }}</small>
-                                            <small class="text-muted">{{ 'EXPENSE' | translate }} </small>
-                                            <small class="text-muted">{{ formatAmountWithSymbol(month.expense, 'MMK') }}</small>
-
+                                            <strong>{{ month.month }} ({{ month.currency }})</strong>
+                                            <small class="text-muted">
+                                                {{ 'BUDGET' | translate }}: {{ formatAmountWithSymbol(month.budget, month.currency) }}
+                                            </small>
+                                            <small class="text-muted">
+                                                {{ 'EXPENSE' | translate }}: {{ formatAmountWithSymbol(month.expense, month.currency) }}
+                                            </small>
                                         </div>
                                         <div class="text-end">
-                                            <span class="d-block w-100">{{ 'BALANCE' | translate }} </span>
-                                            <span class="d-block w-100" [ngClass]="{'text-success': month.balance >= 0, 'text-danger': month.balance < 0}">
-                                                {{ formatAmountWithSymbol(month.balance, 'MMK') }}
+                                            <span [ngClass]="{'text-success': month.balance >= 0, 'text-danger': month.balance < 0}">
+                                                {{ 'BALANCE' | translate }}: {{ formatAmountWithSymbol(month.balance, month.currency) }}
                                             </span>
                                         </div>
                                     </div>
