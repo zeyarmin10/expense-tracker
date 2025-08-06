@@ -39,8 +39,7 @@
                                 <label for="type" class="form-label">{{ 'BUDGET_TYPE' | translate }}</label>
                                 <select id="type" formControlName="type" class="form-select">
                                     <option value="monthly">{{ 'MONTHLY_BUDGET' | translate }}</option>
-                                    <!-- <option value="category">{{ 'CATEGORY_BUDGET' | translate }}</option> -->
-                                </select>
+                                    </select>
                             </div>
 
                             <div class="col-md-6 mb-3" *ngIf="budgetForm.value.type === 'monthly'">
@@ -81,34 +80,98 @@
                         <fa-icon [icon]="isRecordedBudgetsCollapsed ? faChevronDown : faChevronUp"></fa-icon>
                     </div>
                     <div class="card-body" *ngIf="!isRecordedBudgetsCollapsed">
-                        <div *ngIf="(budgets$ | async) as budgets; else noBudgetsTemplate">
-                            <ul class="list-group" *ngIf="budgets.length > 0; else noBudgetsTemplate">
-                                <ng-container *ngFor="let budget of budgets">
-                                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        <div class="d-flex flex-column">
-                                            <span>
-                                                <strong>{{ budget.period }}</strong>:
-                                            </span>
-                                            <span>
-                                                {{ formatAmountWithSymbol(budget.amount, budget.currency) }}
-                                            </span>
-                                        </div>
-                                        <div class="text-end" style="min-width: 5rem;">
-                                            <fa-icon class="btn btn-sm btn-outline-danger" [icon]="faTrash"
-                                                (click)="confirmDeleteBudget(budget.id)"
-                                                title="{{ 'DELETE' | translate }}"></fa-icon>
-                                        </div>
-                                    </li>
-                                </ng-container>
+                        <ng-container *ngIf="(budgets$ | async) as budgets; else noBudgetsTemplate">
+                            <ul class="list-group" *ngIf="budgets.length > 0">
+                                <li class="list-group-item d-flex justify-content-between align-items-center" *ngFor="let budget of budgets">
+                                    <div class="d-flex flex-column">
+                                        <span>
+                                            <strong>{{ datePipe.transform(budget.period, 'MMM yyyy') }}</strong>:
+                                        </span>
+                                        <span class="text-success">
+                                            {{ formatAmountWithSymbol(budget.amount, budget.currency) }}
+                                        </span>
+                                    </div>
+                                    <div class="text-end" style="min-width: 5rem;">
+                                        <fa-icon class="btn btn-sm btn-outline-danger" [icon]="faTrash"
+                                            (click)="confirmDeleteBudget(budget.id)"
+                                            title="{{ 'DELETE' | translate }}"></fa-icon>
+                                    </div>
+                                </li>
                             </ul>
-                        </div>
+                        </ng-container>
                         <ng-template #noBudgetsTemplate>
                             <p>{{ 'NO_BUDGETS_FOUND' | translate }}</p>
                         </ng-template>
                     </div>
                 </div>
 
-                <div class="card mb-4 p-0">
+                <div class="row g-3 mb-3">
+                    <div class="col-12 col-lg-4">
+                        <div class="card h-100 border border-success">
+                            <div class="card-body pt-1 pb-1">
+                                <div class="text-start fw-bold p-0">{{ 'TOTAL_BUDGETS' | translate }}</div>
+                                <div *ngIf="(totalBudgetByCurrency$ | async) as totals; else loading">
+                                    <div *ngIf="totals && (totals | keyvalue).length > 0; else noData">
+                                        <span *ngFor="let total of (totals | keyvalue)" class="d-flex justify-content-between" style="margin-bottom: 0;">
+                                            <span>{{ total.key }}:</span><span style="color: green;">{{ formatAmountWithSymbol(total.value, total.key) }}</span>
+                                        </span>
+                                    </div>
+                                    <ng-template #noData>
+                                        <p class="text-muted text-center">{{ 'NO_BUDGET_DATA' | translate }}</p>
+                                    </ng-template>
+                                </div>
+                                <ng-template #loading>
+                                    <p class="text-muted text-center">{{ 'LOADING_DATA' | translate }}</p>
+                                </ng-template>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-4">
+                        <div class="card h-100 border border-warning">
+                            <div class="card-body pt-1 pb-1">
+                                <div class="text-start fw-bold p-0">{{ 'TOTAL_EXPENSES' | translate }}</div>
+                                <div *ngIf="(totalExpensesByCurrency$ | async) as totals; else loading">
+                                    <div *ngIf="totals && (totals | keyvalue).length > 0; else noData" class="p-0">
+                                        <span *ngFor="let total of (totals | keyvalue)" class="d-flex justify-content-between" style="margin-bottom: 0;">
+                                            <span>{{ total.key }}:</span> <span style="color: #007786;">{{ formatAmountWithSymbol(total.value, total.key) }}</span>
+                                        </span>
+                                    </div>
+                                    <ng-template #noData>
+                                        <p class="text-muted text-center">{{ 'NO_EXPENSE_DATA' | translate }}</p>
+                                    </ng-template>
+                                </div>
+                                <ng-template #loading>
+                                    <p class="text-muted text-center">{{ 'LOADING_DATA' | translate }}</p>
+                                </ng-template>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-4">
+                        <div class="card h-100 border border-info">
+                            <div class="card-body pt-1 pb-1">
+                                <div class="text-start fw-bold p-0">{{ 'REMAINING_BALANCE' | translate }}</div>
+                                <div *ngIf="(remainingBalanceByCurrency$ | async) as balances; else loading">
+                                    <div *ngIf="balances && (balances | keyvalue).length > 0; else noData">
+                                        <span *ngFor="let balance of (balances | keyvalue)" class="d-flex justify-content-between" style="margin-bottom: 0;">
+                                            <span>{{ balance.key }}:</span>
+                                            <span [class.text-success]="balance.value >= 0" [class.text-danger]="balance.value < 0">
+                                                {{ formatAmountWithSymbol(balance.value, balance.key) }}
+                                            </span>
+                                        </span>
+                                    </div>
+                                    <ng-template #noData>
+                                        <p class="text-muted text-center">{{ 'NO_BALANCE_DATA' | translate }}</p>
+                                    </ng-template>
+                                </div>
+                                <ng-template #loading>
+                                    <p class="text-muted text-center">{{ 'LOADING_DATA' | translate }}</p>
+                                </ng-template>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         {{ 'BUDGET_COMPARISON' | translate }}
                     </div>
@@ -116,6 +179,40 @@
                         <canvas id="budgetChart"></canvas>
                     </div>
                 </div>
+
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        {{ 'MONTHLY_SUMMARY' | translate }}
+                    </div>
+                    <div class="card-body">
+                        <div *ngIf="(monthlySummary$ | async) as monthlySummary; else noSummaryTemplate">
+                            <ul class="list-group">
+                                <li class="list-group-item" *ngFor="let month of monthlySummary">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="d-flex flex-column flex-grow-1">
+                                            <strong>{{ month.month }}</strong>
+                                            <small class="text-muted">{{ 'BUDGET' | translate }} </small>
+                                            <small class="text-muted">{{ formatAmountWithSymbol(month.budget, 'MMK') }}</small>
+                                            <small class="text-muted">{{ 'EXPENSE' | translate }} </small>
+                                            <small class="text-muted">{{ formatAmountWithSymbol(month.expense, 'MMK') }}</small>
+
+                                        </div>
+                                        <div class="text-end">
+                                            <span class="d-block w-100">{{ 'BALANCE' | translate }} </span>
+                                            <span class="d-block w-100" [ngClass]="{'text-success': month.balance >= 0, 'text-danger': month.balance < 0}">
+                                                {{ formatAmountWithSymbol(month.balance, 'MMK') }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                        <ng-template #noSummaryTemplate>
+                            <p>{{ 'NO_DATA_FOR_SUMMARY' | translate }}</p>
+                        </ng-template>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>

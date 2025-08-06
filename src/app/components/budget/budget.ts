@@ -22,7 +22,7 @@ Chart.register(...registerables);
 })
 export class BudgetComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
-  private datePipe = inject(DatePipe);
+  public datePipe = inject(DatePipe);
   private budgetService = inject(BudgetService);
   private expenseService = inject(ExpenseService);
   private translate = inject(TranslateService);
@@ -36,6 +36,12 @@ export class BudgetComponent implements OnInit, OnDestroy {
   
   budgetChartData$: Observable<{ labels: string[], datasets: any[] }>;
 
+  totalBudgetByCurrency$: Observable<{ [currency: string]: number }>;
+  totalExpensesByCurrency$: Observable<{ [currency: string]: number }>;
+  remainingBalanceByCurrency$: Observable<{ [currency: string]: number }>;
+  
+  monthlySummary$: Observable<{ month: string, budget: number, expense: number, balance: number }[]>;
+
   faTrash = faTrash;
   faSave = faSave;
   faChevronDown = faChevronDown;
@@ -46,12 +52,11 @@ export class BudgetComponent implements OnInit, OnDestroy {
   isBudgetFormCollapsed: boolean = true;
   isRecordedBudgetsCollapsed: boolean = true;
 
-  // New BehaviorSubjects for date filtering
   private _startDate$ = new BehaviorSubject<string>('');
   private _endDate$ = new BehaviorSubject<string>('');
-  private _selectedDateRange$ = new BehaviorSubject<string>('last30Days');
+  private _selectedDateRange$ = new BehaviorSubject<string>('currentMonth');
 
-  selectedDateFilter: string = 'last30Days';
+  selectedDateFilter: string = 'currentMonth';
   startDate: string = '';
   endDate: string = '';
 
@@ -74,7 +79,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
     this.budgets$ = this.budgetService.getBudgets();
     this.expenses$ = this.expenseService.getExpenses();
     
-    // Set initial custom date range to one year ago
     const oneYearAgo = new Date();
     oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
     this.startDate = this.datePipe.transform(oneYearAgo, 'yyyy-MM-dd') || '';
@@ -100,9 +104,11 @@ export class BudgetComponent implements OnInit, OnDestroy {
             break;
           case 'currentMonth':
             start = new Date(now.getFullYear(), now.getMonth(), 1);
+            end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
             break;
           case 'currentYear':
             start = new Date(now.getFullYear(), 0, 1);
+            end = new Date(now.getFullYear(), 11, 31);
             break;
           case 'lastYear':
             start = new Date(now.getFullYear() - 1, 0, 1);
@@ -115,6 +121,10 @@ export class BudgetComponent implements OnInit, OnDestroy {
           default:
             start = new Date(now.getFullYear(), 0, 1);
             break;
+        }
+        
+        if (dateRange !== 'last30Days') {
+            end.setHours(23, 59, 59, 999);
         }
         
         const filteredBudgets = budgets.filter(b => {
@@ -134,6 +144,87 @@ export class BudgetComponent implements OnInit, OnDestroy {
       })
     );
 
+    this.monthlySummary$ = filteredData$.pipe(
+      map(({ budgets, expenses }) => {
+        const monthlyData: { [month: string]: { budget: number, expense: number } } = {};
+        
+        budgets.forEach(budget => {
+          const monthYear = this.datePipe.transform(new Date(`${budget.period}-01`), 'MMM yyyy') || '';
+          if (!monthlyData[monthYear]) {
+            monthlyData[monthYear] = { budget: 0, expense: 0 };
+          }
+          monthlyData[monthYear].budget += budget.amount;
+        });
+        
+        expenses.forEach(expense => {
+          const monthYear = this.datePipe.transform(new Date(expense.date), 'MMM yyyy') || '';
+          if (!monthlyData[monthYear]) {
+            monthlyData[monthYear] = { budget: 0, expense: 0 };
+          }
+          monthlyData[monthYear].expense += expense.totalCost;
+        });
+        
+        const sortedMonths = Object.keys(monthlyData).sort((a, b) => {
+          const dateA = new Date(a);
+          const dateB = new Date(b);
+          return dateA.getTime() - dateB.getTime();
+        });
+
+        return sortedMonths.map(month => {
+          const data = monthlyData[month];
+          return {
+            month,
+            budget: data.budget,
+            expense: data.expense,
+            balance: data.budget - data.expense,
+          };
+        });
+      })
+    );
+    
+    this.totalBudgetByCurrency$ = filteredData$.pipe(
+      map(({ budgets }) => {
+        return budgets.reduce((acc, budget) => {
+          acc[budget.currency] = (acc[budget.currency] || 0) + budget.amount;
+          return acc;
+        }, {} as { [currency: string]: number });
+      })
+    );
+    
+    this.totalExpensesByCurrency$ = filteredData$.pipe(
+      map(({ expenses }) => {
+        return expenses.reduce((acc, expense) => {
+          acc[expense.currency] = (acc[expense.currency] || 0) + expense.totalCost;
+          return acc;
+        }, {} as { [currency: string]: number });
+      })
+    );
+    
+    this.remainingBalanceByCurrency$ = filteredData$.pipe(
+      map(({ budgets, expenses }) => {
+        const balance: { [currency: string]: number } = {};
+        const allCurrencies = new Set<string>();
+        
+        budgets.forEach(budget => {
+          allCurrencies.add(budget.currency);
+          balance[budget.currency] = (balance[budget.currency] || 0) + budget.amount;
+        });
+
+        expenses.forEach(expense => {
+          allCurrencies.add(expense.currency);
+          balance[expense.currency] = (balance[expense.currency] || 0) - expense.totalCost;
+        });
+        
+        allCurrencies.forEach(currency => {
+          if (balance[currency] === undefined) {
+            balance[currency] = 0;
+          }
+        });
+        
+        return balance;
+      })
+    );
+    
     this.budgetChartData$ = filteredData$.pipe(
       map(({ budgets, expenses }) => {
         const monthlyData: { [month: string]: { budget: number, expense: number } } = {};
@@ -265,9 +356,21 @@ export class BudgetComponent implements OnInit, OnDestroy {
     });
   }
 
+  /**
+   * Formats the amount with the correct symbol and decimal points.
+   * Removes decimals for MMK currency and adds thousands separators.
+   */
   formatAmountWithSymbol(amount: number, currencyCode: string): string {
     const symbol = this.availableCurrencies.find(c => c.code === currencyCode)?.symbol || currencyCode;
-    return `${amount.toFixed(2)}${symbol}`;
+    let formattedAmount: string;
+
+    if (currencyCode === 'MMK') {
+      formattedAmount = amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    } else {
+      formattedAmount = amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    return `${formattedAmount} ${symbol}`;
   }
 
   toggleVisibility(section: 'budgetForm' | 'recordedBudgets'): void {
@@ -291,26 +394,26 @@ export class BudgetComponent implements OnInit, OnDestroy {
   renderChart(data: any): void {
     const canvas = document.getElementById('budgetChart') as HTMLCanvasElement;
     if (this.chartInstance) {
-        this.chartInstance.destroy();
-    }  
+      this.chartInstance.destroy();
+    }
+    
     if (canvas) {
         this.chartInstance = new Chart(canvas, {
-        type: 'bar',
-        data: data,
-        options: {
+          type: 'bar',
+          data: data,
+          options: {
             responsive: true,
-            // Add this line to allow the chart to fill the container's height
-            maintainAspectRatio: false, 
+            maintainAspectRatio: false,
             scales: {
-            x: {
+              x: {
                 stacked: false,
-            },
-            y: {
+              },
+              y: {
                 stacked: false,
                 beginAtZero: true
+              }
             }
-            }
-        }
+          }
         });
     }
   }
