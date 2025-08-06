@@ -154,4 +154,23 @@ export class ExpenseService {
     //   console.log(`No expenses found with category '${oldCategoryName}' for user ${userId}.`);
     }
   }
+
+  /**
+   * Gets all unique categories for the current user from Firebase.
+   * @returns An Observable of a string array of categories.
+   */
+  getCategories(): Observable<string[]> {
+    return this.authService.currentUser$.pipe(
+        switchMap(user => {
+        if (user?.uid) {
+            // listVal with keyField 'id' returns an array of objects.
+            // We need to map this to an array of category names.
+            return listVal<{ name: string }>(ref(this.db, `expenseprofit/users/${user.uid}/categories`)).pipe(
+            map(categories => categories.map(category => category.name))
+            );
+        }
+        return of([]);
+        })
+    );
+  }
 }
