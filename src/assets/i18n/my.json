@@ -125,7 +125,7 @@
   "YEARLY_PROFIT_LOSS": "နှစ်အလိုက်အမြတ်နှင့်အရှုံး",
   "HALF_YEARLY_PROFIT_LOSS": "ခြောက်လပတ်အလိုက်အမြတ်နှင့်အရှုံး",
   "MONTHLY_PROFIT_LOSS": "လအလိုက်အမြတ်နှင့်အရှုံး",
-  "NET_PROFIT": "အသားတင်အမြတ်/အရှုံး",
+  "NET_PROFIT": "အသားတင်အမြတ်",
   "NO_DATA_FOR_YEAR": "ဒီနှစ်အတွက် ဒေတာမရှိသေးပါဘူး။",
   "NO_DATA_FOR_HALF_YEAR": "ဒီခြောက်လပတ်အတွက် ဒေတာမရှိသေးပါဘူး။",
   "NO_DATA_FOR_MONTH_YEAR": "ဒီလနဲ့ဒီနှစ်အတွက် အမြတ် (သို့) အရှုံးဒေတာမရှိပါ။",
@@ -286,5 +286,13 @@
   "REMAINING_BALANCE": "လက်ကျန်",
   "NO_BUDGET_DATA": "ဘတ်ဂျက်ဒေတာမရှိပါ။",
   "NO_EXPENSE_DATA": "အသုံးစရိတ်ဒေတာမရှိပါ။",
-  "NO_BALANCE_DATA": "လက်ကျန်ဒေတာမရှိပါ။"
+  "NO_BALANCE_DATA": "လက်ကျန်ဒေတာမရှိပါ။",
+  "PROFIT_LOSS_REPORT": "အမြတ်အရှုံးစာရင်း",
+  "PROFIT_LOSS": "အမြတ်အရှုံး",
+  "TOTAL_INCOMES": "စုစုပေါင်းဝင်ငွေ",
+  "ADD_REVENUE": "ဝင်ငွေထည့်ရန်",
+  "INCOME_DESCRIPTION_PLACEHOLDER": "ဝင်ငွေအမျိုးအမည် ထည့်ရန်",
+  "NO_INCOMES_FOR_SELECTED_DATE": "ရွေးချယ်ထားသောနေ့စွဲအတွက် ဝင်ငွေမရှိပါ",
+  "LOSS": "အရှုံး",
+  "NET_LOSS": "အသားတင်အရှုံး"
 }

@@ -125,7 +125,7 @@
   "YEARLY_PROFIT_LOSS": "Yearly Profit and Loss",
   "HALF_YEARLY_PROFIT_LOSS": "Half-Yearly Profit and Loss",
   "MONTHLY_PROFIT_LOSS": "Monthly Profit and Loss",
-  "NET_PROFIT": "Net Profit/Loss",
+  "NET_PROFIT": "Net Profit",
   "NO_DATA_FOR_YEAR": "No data available for this year.",
   "NO_DATA_FOR_HALF_YEAR": "No data available for this half-year.",
   "NO_DATA_FOR_MONTH_YEAR": "No profit or loss data for this month and year.",
@@ -286,5 +286,14 @@
   "REMAINING_BALANCE": "Remaining Balance",
   "NO_BUDGET_DATA": "No budget data.",
   "NO_EXPENSE_DATA": "No expense data.",
-  "NO_BALANCE_DATA": "No balance data."
+  "NO_BALANCE_DATA": "No balance data.",
+  "PROFIT_LOSS_REPORT": "Profit and Loss Report",
+  "PROFIT_LOSS": "Profit and Loss",
+  "TOTAL_INCOMES": "Total Incomes",
+  "ADD_REVENUE": "Add Revenue",
+  "INCOME_DESCRIPTION_PLACEHOLDER": "Enter income description",
+  "NO_INCOMES_FOR_SELECTED_DATE": "No incomes for the selected date",
+  "LOSS": "Loss",
+  "NET_LOSS": "Net Loss"
+  
 }

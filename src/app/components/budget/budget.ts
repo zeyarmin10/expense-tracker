@@ -56,9 +56,9 @@ export class BudgetComponent implements OnInit, OnDestroy {
 
   private _startDate$ = new BehaviorSubject<string>('');
   private _endDate$ = new BehaviorSubject<string>('');
-  private _selectedDateRange$ = new BehaviorSubject<string>('currentMonth');
+  private _selectedDateRange$ = new BehaviorSubject<string>('last30Days');
 
-  selectedDateFilter: string = 'currentMonth';
+  selectedDateFilter: string = 'last30Days';
   startDate: string = '';
   endDate: string = '';
 

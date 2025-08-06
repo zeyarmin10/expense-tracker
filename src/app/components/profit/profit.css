@@ -65,3 +65,32 @@
     padding: 1rem;
     margin-bottom: 0.5rem;
   } */
+
+
+
+.card-body p {
+    margin-bottom: 0;
+}
+
+.profit-card .card-body {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+
+.text-info {
+    color: #17a2b8 !important;
+}
+
+.btn-outline-info {
+    color: #17a2b8;
+    border-color: #17a2b8;
+}
+
+.btn-outline-info:hover {
+    color: #fff;
+    background-color: #17a2b8;
+}
+
+.font-large {
+    font-size: 1.1em;
+}
