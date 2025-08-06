@@ -78,7 +78,14 @@ export class BudgetComponent implements OnInit, OnDestroy {
       period: [this.datePipe.transform(new Date(), 'yyyy-MM'), Validators.required],
     });
 
-    this.budgets$ = this.budgetService.getBudgets();
+    this.budgets$ = this.budgetService.getBudgets().pipe(
+      map(budgets => budgets.sort((a, b) => {
+        const dateA = a.period ? new Date(a.period).getTime() : 0;
+        const dateB = b.period ? new Date(b.period).getTime() : 0;
+        return dateB - dateA;
+      }))
+    );
+
     this.expenses$ = this.expenseService.getExpenses();
     
     const oneYearAgo = new Date();
@@ -177,8 +184,8 @@ export class BudgetComponent implements OnInit, OnDestroy {
           const dateA = new Date(monthA);
           const dateB = new Date(monthB);
           
-          if (dateA.getTime() !== dateB.getTime()) {
-            return dateA.getTime() - dateB.getTime();
+          if (dateB.getTime() !== dateA.getTime()) {
+            return dateB.getTime() - dateA.getTime();
           }
           return currencyA.localeCompare(currencyB);
         });
@@ -263,7 +270,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
         const sortedMonths = Object.keys(monthlyData).sort((a, b) => {
           const dateA = new Date(a);
           const dateB = new Date(b);
-          return dateA.getTime() - dateB.getTime();
+          return dateB.getTime() - dateA.getTime();
         });
         
         const labels: string[] = sortedMonths;
