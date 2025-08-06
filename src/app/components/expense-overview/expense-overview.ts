@@ -43,7 +43,7 @@ export class ExpenseOverview implements OnInit {
   // --- Filtering and Search Properties ---
   allExpenses$: Observable<ServiceIExpense[]> = this.expenseService.getExpenses();
   filteredExpenses$: Observable<ServiceIExpense[]> = of([]);
-  selectedDateFilter: string = 'last30Days';
+  selectedDateFilter: string = 'custom';
   startDate: string = '';
   endDate: string = '';
   searchTerm: string = '';
@@ -80,7 +80,7 @@ export class ExpenseOverview implements OnInit {
   router = inject(Router);
 
   ngOnInit(): void {
-    this.setDateFilter('last30Days');
+    this.setDateFilter('custom');
 
     this.filteredExpenses$ = combineLatest([
       this.allExpenses$,
