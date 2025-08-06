@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Database, ref, push, remove, update, listVal, query, orderByChild, equalTo, DatabaseReference, get, child } from '@angular/fire/database';
-import { Observable, switchMap, firstValueFrom, map, of, Subject } from 'rxjs'; // Import Subject
+import { Observable, switchMap, firstValueFrom, map, of, Subject } from 'rxjs';
 import { AuthService } from './auth';
 
 export interface ServiceICategory {
@@ -147,17 +147,13 @@ export class CategoryService {
       return false;
     }
 
-    // Normalize the category name for comparison (trim spaces, convert to lowercase)
-    const normalizedCategoryName = categoryName.trim(); // .toLowerCase() removed for Burmese text comparison
+    // Normalize the category name for comparison (trimmed)
+    const normalizedCategoryName = categoryName.trim();
     console.log('isCategoryUsedInExpenses - Normalized categoryName:', normalizedCategoryName);
 
     // Now, query expenses where categoryId (which holds the name) matches the normalized name
     const expensesRef = this.getExpensesRef(userId);
-    // Note: orderByChild and equalTo perform exact matches. For truly robust case-insensitive
-    // and space-insensitive matching, you might need to store normalized names in expenses
-    // or fetch all expenses and filter client-side (less efficient for large datasets).
-    // For now, we'll assume the expense 'category' field is also consistently trimmed.
-    const expensesQuery = query(expensesRef, orderByChild('category'), equalTo(normalizedCategoryName)); // Changed 'categoryId' to 'category' based on your image
+    const expensesQuery = query(expensesRef, orderByChild('category'), equalTo(normalizedCategoryName));
     console.log('isCategoryUsedInExpenses - expensesQuery for normalizedCategoryName:', normalizedCategoryName);
 
     try {
@@ -170,5 +166,46 @@ export class CategoryService {
       console.error('Error checking category usage in expenses:', error);
       throw new Error('Failed to check category usage.');
     }
+  }
+
+  // --- New methods for default categories ---
+
+  /**
+   * Checks if a user already has any categories.
+   * @param userId The UID of the user.
+   * @returns A Promise that resolves to true if categories exist, false otherwise.
+   */
+  async hasCategories(userId: string): Promise<boolean> {
+    const categoriesRef = this.getCategoriesRef(userId);
+    const snapshot = await get(categoriesRef);
+    return snapshot.exists() && snapshot.size > 0;
+  }
+
+  /**
+   * Adds 5 default categories for a given user ID based on the specified language.
+   * This function should be called only once per user upon their first login/registration.
+   * @param userId The UID of the user for whom to add default categories.
+   * @param language The language to use for category names ('en' for English, 'my' for Burmese).
+   * @returns A Promise that resolves when all default categories are added.
+   */
+  async addDefaultCategories(userId: string, language: string): Promise<void> {
+    const defaultCategories = [
+      { en: 'Food', my: 'အစားအသောက်' },
+      { en: 'Transportation', my: 'သယ်ယူပို့ဆောင်ရေး' },
+      { en: 'Utilities', my: 'အသုံးစရိတ်' },
+      { en: 'Entertainment', my: 'ဖျော်ဖြေရေး' },
+      { en: 'Shopping', my: 'စျေးဝယ်' }
+    ];
+
+    for (const categoryData of defaultCategories) {
+      const categoryName = language === 'my' ? categoryData.my : categoryData.en;
+      const newCategory: Omit<ServiceICategory, 'id'> = {
+        name: categoryName.trim(),
+        userId: userId
+      };
+      await push(this.getCategoriesRef(userId), newCategory);
+      console.log(`Default category "${categoryName}" added for user: ${userId} in ${language} language.`);
+    }
+    console.log('All default categories added for user:', userId);
   }
 }
