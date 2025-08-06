@@ -191,16 +191,15 @@
                                     <div class="d-flex justify-content-between align-items-center">
                                         <div class="d-flex flex-column flex-grow-1">
                                             <strong>{{ month.month }} ({{ month.currency }})</strong>
-                                            <small class="text-muted">
-                                                {{ 'BUDGET' | translate }}: {{ formatAmountWithSymbol(month.budget, month.currency) }}
-                                            </small>
-                                            <small class="text-muted">
-                                                {{ 'EXPENSE' | translate }}: {{ formatAmountWithSymbol(month.expense, month.currency) }}
-                                            </small>
+                                            <small class="text-muted">{{ 'BUDGET' | translate }} </small>
+                                            <small class="text-muted">{{ formatAmountWithSymbol(month.budget, month.currency) }}</small>
+                                            <small class="text-muted">{{ 'EXPENSE' | translate }} </small>
+                                            <small class="text-muted">{{ formatAmountWithSymbol(month.expense, month.currency) }}</small>
                                         </div>
                                         <div class="text-end">
-                                            <span [ngClass]="{'text-success': month.balance >= 0, 'text-danger': month.balance < 0}">
-                                                {{ 'BALANCE' | translate }}: {{ formatAmountWithSymbol(month.balance, month.currency) }}
+                                            <span class="d-block w-100">{{ 'BALANCE' | translate }}</span>
+                                            <span class="d-block w-100" [ngClass]="{'text-success': month.balance >= 0, 'text-danger': month.balance < 0}">
+                                                {{ formatAmountWithSymbol(month.balance, month.currency) }}
                                             </span>
                                         </div>
                                     </div>
