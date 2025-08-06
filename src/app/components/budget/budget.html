@@ -4,6 +4,30 @@
             <div class="card shadow-sm p-3 p-md-4">
                 <h2 class="card-title text-center mb-4">{{ 'BUDGET_TITLE' | translate }}</h2>
 
+                <div class="row g-2 d-flex align-items-center mb-3">
+                    <div class="col-12 col-lg-4">
+                        <label class="form-label d-block d-lg-none">{{ "DATE_FILTER" | translate }}</label>
+                        <select class="form-select" [(ngModel)]="selectedDateFilter" (change)="setDateFilter(selectedDateFilter)">
+                            <option value="last30Days">{{ "LAST_30_DAYS" | translate }}</option>
+                            <option value="currentMonth">{{ "CURRENT_MONTH" | translate }}</option>
+                            <option value="currentYear">{{ "CURRENT_YEAR" | translate }}</option>
+                            <option value="lastYear">{{ "LAST_YEAR" | translate }}</option>
+                            <option value="custom">{{ "CUSTOM_DATE" | translate }}</option>
+                        </select>
+                    </div>
+
+                    <ng-container *ngIf="selectedDateFilter === 'custom'">
+                        <div class="col-6 col-lg-4">
+                            <label class="form-label d-block d-lg-none">{{ "START_DATE" | translate }}</label>
+                            <input type="date" class="form-control" [(ngModel)]="startDate" (change)="setDateFilter('custom')" />
+                        </div>
+                        <div class="col-6 col-lg-4">
+                            <label class="form-label d-block d-lg-none">{{ "END_DATE" | translate }}</label>
+                            <input type="date" class="form-control" [(ngModel)]="endDate" (change)="setDateFilter('custom')" />
+                        </div>
+                    </ng-container>
+                </div>
+
                 <div class="card mb-4">
                     <div class="card-header d-flex justify-content-between align-items-center" role="button" (click)="toggleVisibility('budgetForm')">
                         {{ 'ADD_BUDGET' | translate }}
@@ -15,8 +39,16 @@
                                 <label for="type" class="form-label">{{ 'BUDGET_TYPE' | translate }}</label>
                                 <select id="type" formControlName="type" class="form-select">
                                     <option value="monthly">{{ 'MONTHLY_BUDGET' | translate }}</option>
-                                    <option value="category">{{ 'CATEGORY_BUDGET' | translate }}</option>
+                                    <!-- <option value="category">{{ 'CATEGORY_BUDGET' | translate }}</option> -->
                                 </select>
+                            </div>
+
+                            <div class="col-md-6 mb-3" *ngIf="budgetForm.value.type === 'monthly'">
+                                <label for="period" class="form-label">{{ 'MONTH' | translate }}</label>
+                                <input type="month" id="period" formControlName="period" class="form-control">
+                                <div *ngIf="budgetForm.controls['period'].invalid && budgetForm.controls['period'].touched" class="text-danger">
+                                    {{ 'MONTH_REQUIRED' | translate }}
+                                </div>
                             </div>
 
                             <div class="col-md-6 mb-3">
@@ -29,27 +61,6 @@
                                 </div>
                                 <div *ngIf="budgetForm.controls['amount'].invalid && budgetForm.controls['amount'].touched" class="text-danger">
                                     {{ 'AMOUNT_REQUIRED' | translate }}
-                                </div>
-                            </div>
-
-                            <div class="col-md-6 mb-3" *ngIf="selectedBudgetType === 'monthly'">
-                                <label for="period" class="form-label">{{ 'MONTH' | translate }}</label>
-                                <input type="month" id="period" formControlName="period" class="form-control">
-                                <div *ngIf="budgetForm.controls['period'].invalid && budgetForm.controls['period'].touched" class="text-danger">
-                                    {{ 'MONTH_REQUIRED' | translate }}
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-6 mb-3" *ngIf="selectedBudgetType === 'category'">
-                                <label for="category" class="form-label">{{ 'CATEGORY' | translate }}</label>
-                                <select id="category" formControlName="category" class="form-select">
-                                    <option value="">----- {{ "SELECT_CATEGORY" | translate}} -----</option>
-                                    <option *ngFor="let category of expenseCategories" [value]="category">
-                                        {{ category }}
-                                    </option>
-                                </select>
-                                <div *ngIf="budgetForm.controls['category'].invalid && budgetForm.controls['category'].touched" class="text-danger">
-                                    {{ 'CATEGORY_REQUIRED' | translate }}
                                 </div>
                             </div>
 
@@ -76,7 +87,7 @@
                                     <li class="list-group-item d-flex justify-content-between align-items-center">
                                         <div class="d-flex flex-column">
                                             <span>
-                                                <strong>{{ budget.type === 'monthly' ? budget.period : budget.category }}</strong>:
+                                                <strong>{{ budget.period }}</strong>:
                                             </span>
                                             <span>
                                                 {{ formatAmountWithSymbol(budget.amount, budget.currency) }}
@@ -97,30 +108,12 @@
                     </div>
                 </div>
 
-                <div class="card mb-4">
+                <div class="card mb-4 p-0">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         {{ 'BUDGET_COMPARISON' | translate }}
                     </div>
-                    <div class="card-body">
-                        <div class="row g-2 mb-3 d-flex align-items-center">
-                            <div class="col-6 col-lg-3">
-                                <label class="form-label d-block d-lg-none">{{ 'YEAR' | translate }}</label>
-                                <select class="form-select" #yearSelect (change)="onPeriodChange(+yearSelect.value, +monthSelect.value)">
-                                    <option *ngFor="let year of years" [value]="year">{{ year }}</option>
-                                </select>
-                            </div>
-                            <div class="col-6 col-lg-3">
-                                <label class="form-label d-block d-lg-none">{{ 'MONTH' | translate }}</label>
-                                <select class="form-select" #monthSelect (change)="onPeriodChange(+yearSelect.value, +monthSelect.value)">
-                                    <option value="">{{ 'ALL' | translate }}</option>
-                                    <option *ngFor="let month of months" [value]="month">{{ 'MONTH_' + month | translate }}</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="chart-container">
-                            <canvas id="budgetChart"></canvas>
-                        </div>
+                    <div class="card-body chart-container">
+                        <canvas id="budgetChart"></canvas>
                     </div>
                 </div>
             </div>

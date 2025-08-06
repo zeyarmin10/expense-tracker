@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, ViewChild, OnDestroy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
-import { Observable, BehaviorSubject, combineLatest, map, Subscription } from 'rxjs';
+import { Observable, BehaviorSubject, combineLatest, map, Subscription, of } from 'rxjs';
 import { ServiceIBudget, BudgetService } from '../../services/budget';
 import { ServiceIExpense, ExpenseService } from '../../services/expense';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -30,8 +30,10 @@ export class BudgetComponent implements OnInit, OnDestroy {
   @ViewChild('deleteConfirmationModal') private deleteConfirmationModal!: ConfirmationModal;
 
   budgetForm: FormGroup;
+  
   budgets$: Observable<ServiceIBudget[]>;
   expenses$: Observable<ServiceIExpense[]>;
+  
   budgetChartData$: Observable<{ labels: string[], datasets: any[] }>;
 
   faTrash = faTrash;
@@ -44,11 +46,14 @@ export class BudgetComponent implements OnInit, OnDestroy {
   isBudgetFormCollapsed: boolean = true;
   isRecordedBudgetsCollapsed: boolean = true;
 
-  private _selectedPeriod$ = new BehaviorSubject<{ year: number, month?: number }>({ year: new Date().getFullYear(), month: new Date().getMonth() + 1 });
-  selectedBudgetType: string = '';
-  
-  years: number[] = [];
-  months = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+  // New BehaviorSubjects for date filtering
+  private _startDate$ = new BehaviorSubject<string>('');
+  private _endDate$ = new BehaviorSubject<string>('');
+  private _selectedDateRange$ = new BehaviorSubject<string>('last30Days');
+
+  selectedDateFilter: string = 'last30Days';
+  startDate: string = '';
+  endDate: string = '';
 
   availableCurrencies = [
     { code: 'MMK', symbol: 'Ks' },
@@ -56,88 +61,108 @@ export class BudgetComponent implements OnInit, OnDestroy {
     { code: 'THB', symbol: '฿' }
   ];
 
-  expenseCategories: string[] = [];
-
   private subscriptions: Subscription = new Subscription();
 
   constructor() {
-    const currentMonthYear = this.datePipe.transform(new Date(), 'yyyy-MM');
-    
     this.budgetForm = this.fb.group({
       type: ['monthly', Validators.required],
       amount: ['', [Validators.required, Validators.min(0.01)]],
       currency: ['MMK', Validators.required],
-      period: [currentMonthYear],
-      category: ['']
+      period: [this.datePipe.transform(new Date(), 'yyyy-MM'), Validators.required],
     });
 
     this.budgets$ = this.budgetService.getBudgets();
     this.expenses$ = this.expenseService.getExpenses();
     
-    this.generateYears();
-
-    // The subscription to ensure 'selectedBudgetType' is always in sync with the form
-    this.subscriptions.add(
-      this.budgetForm.get('type')!.valueChanges.subscribe(type => {
-        this.selectedBudgetType = type;
-        this.onBudgetTypeChange(type);
-      })
-    );
+    // Set initial custom date range to one year ago
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+    this.startDate = this.datePipe.transform(oneYearAgo, 'yyyy-MM-dd') || '';
+    this.endDate = this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
+    this._startDate$.next(this.startDate);
+    this._endDate$.next(this.endDate);
     
-    // Explicitly set the initial value after the form is created
-    this.selectedBudgetType = this.budgetForm.get('type')!.value;
-
-    this.budgetChartData$ = combineLatest([
+    const filteredData$ = combineLatest([
       this.budgets$,
       this.expenses$,
-      this._selectedPeriod$
+      this._selectedDateRange$,
+      this._startDate$,
+      this._endDate$
     ]).pipe(
-      map(([budgets, expenses, period]) => {
-        const year = period.year;
-        const month = period.month;
+      map(([budgets, expenses, dateRange, startDate, endDate]) => {
+        const now = new Date();
+        let start: Date;
+        let end: Date = now;
 
+        switch (dateRange) {
+          case 'last30Days':
+            start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 30);
+            break;
+          case 'currentMonth':
+            start = new Date(now.getFullYear(), now.getMonth(), 1);
+            break;
+          case 'currentYear':
+            start = new Date(now.getFullYear(), 0, 1);
+            break;
+          case 'lastYear':
+            start = new Date(now.getFullYear() - 1, 0, 1);
+            end = new Date(now.getFullYear() - 1, 11, 31);
+            break;
+          case 'custom':
+            start = new Date(startDate);
+            end = new Date(endDate);
+            break;
+          default:
+            start = new Date(now.getFullYear(), 0, 1);
+            break;
+        }
+        
         const filteredBudgets = budgets.filter(b => {
-          if (b.type === 'monthly') {
-            return b.period === `${year}-${String(month).padStart(2, '0')}`;
+          if (b.type === 'monthly' && b.period) {
+            const budgetDate = new Date(`${b.period}-01`);
+            return budgetDate >= start && budgetDate <= end;
           }
-          return true;
+          return false;
         });
 
         const filteredExpenses = expenses.filter(e => {
           const expenseDate = new Date(e.date);
-          const expenseYear = expenseDate.getFullYear();
-          const expenseMonth = expenseDate.getMonth() + 1;
-          return expenseYear === year && (month ? expenseMonth === month : true);
+          return expenseDate >= start && expenseDate <= end;
+        });
+
+        return { budgets: filteredBudgets, expenses: filteredExpenses };
+      })
+    );
+
+    this.budgetChartData$ = filteredData$.pipe(
+      map(({ budgets, expenses }) => {
+        const monthlyData: { [month: string]: { budget: number, expense: number } } = {};
+        
+        budgets.forEach(budget => {
+          const monthYear = this.datePipe.transform(new Date(`${budget.period}-01`), 'MMM yyyy') || '';
+          if (!monthlyData[monthYear]) {
+            monthlyData[monthYear] = { budget: 0, expense: 0 };
+          }
+          monthlyData[monthYear].budget += budget.amount;
         });
         
-        const expensesByCategory = filteredExpenses.reduce((acc, expense) => {
-          acc[expense.category] = (acc[expense.category] || 0) + expense.totalCost;
-          return acc;
-        }, {} as { [key: string]: number });
-        
-        const budgetsGrouped = filteredBudgets.reduce((acc, budget) => {
-            if (budget.type === 'category') {
-                acc[budget.category!] = budget.amount;
-            } else {
-                acc[`monthly-${budget.period}`] = budget.amount;
-            }
-            return acc;
-        }, {} as { [key: string]: number });
-        
-        const labels: string[] = [];
-        const budgetedAmounts: number[] = [];
-        const expenseAmounts: number[] = [];
-        
-        const allCategories = new Set([...Object.keys(budgetsGrouped), ...Object.keys(expensesByCategory)]);
-        
-        allCategories.forEach(key => {
-            labels.push(key);
-            const budgetAmount = budgetsGrouped[key] || 0;
-            const expenseAmount = expensesByCategory[key] || 0;
-            
-            budgetedAmounts.push(budgetAmount);
-            expenseAmounts.push(expenseAmount);
+        expenses.forEach(expense => {
+          const monthYear = this.datePipe.transform(new Date(expense.date), 'MMM yyyy') || '';
+          if (!monthlyData[monthYear]) {
+            monthlyData[monthYear] = { budget: 0, expense: 0 };
+          }
+          monthlyData[monthYear].expense += expense.totalCost;
         });
+        
+        const sortedMonths = Object.keys(monthlyData).sort((a, b) => {
+          const dateA = new Date(a);
+          const dateB = new Date(b);
+          return dateA.getTime() - dateB.getTime();
+        });
+        
+        const labels: string[] = sortedMonths;
+        const budgetedAmounts: number[] = sortedMonths.map(month => monthlyData[month].budget);
+        const expenseAmounts: number[] = sortedMonths.map(month => monthlyData[month].expense);
 
         return {
           labels,
@@ -164,12 +189,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
     this.budgetChartData$.subscribe(data => {
         this.renderChart(data);
     });
-    // new subscription to fetch categories from the database
-    this.subscriptions.add(
-      this.expenseService.getCategories().subscribe(categories => {
-        this.expenseCategories = categories;
-      })
-    );
   }
 
   ngOnInit(): void {
@@ -186,51 +205,31 @@ export class BudgetComponent implements OnInit, OnDestroy {
     this.subscriptions.unsubscribe();
   }
 
-  generateYears(): void {
-    const currentYear = new Date().getFullYear();
-    for (let i = currentYear; i >= currentYear - 5; i--) {
-      this.years.push(i);
-    }
-  }
-
-  onPeriodChange(year: number, month?: number): void {
-    this._selectedPeriod$.next({ year, month });
-  }
-
   onBudgetTypeChange(type: string): void {
-    this.selectedBudgetType = type;
     if (type === 'monthly') {
-      this.budgetForm.get('category')?.clearValidators();
       this.budgetForm.get('period')?.setValidators(Validators.required);
-      this.budgetForm.get('category')?.updateValueAndValidity();
     } else {
       this.budgetForm.get('period')?.clearValidators();
-      this.budgetForm.get('category')?.setValidators(Validators.required);
-      this.budgetForm.get('period')?.updateValueAndValidity();
     }
+    this.budgetForm.get('period')?.updateValueAndValidity();
   }
 
   onSubmitBudget(): void {
     if (this.budgetForm.valid) {
-        let budgetData: Partial<ServiceIBudget> = {
+      const budgetData: Omit<ServiceIBudget, 'id' | 'userId' | 'createdAt'> = {
         type: this.budgetForm.value.type,
         amount: this.budgetForm.value.amount,
         currency: this.budgetForm.value.currency,
-        };
+        period: this.budgetForm.value.type === 'monthly' ? this.budgetForm.value.period : undefined,
+      };
 
-        if (this.budgetForm.value.type === 'monthly') {
-        budgetData.period = this.budgetForm.value.period;
-        } else if (this.budgetForm.value.type === 'category') {
-        budgetData.category = this.budgetForm.value.category;
-        }
-
-        this.budgetService.addBudget(budgetData as Omit<ServiceIBudget, 'id' | 'userId' | 'createdAt'>)
+      this.budgetService.addBudget(budgetData as Omit<ServiceIBudget, 'id' | 'userId' | 'createdAt'>)
         .then(() => {
-            console.log('Budget added successfully!');
-            this.resetForm();
+          console.log('Budget added successfully!');
+          this.resetForm();
         })
         .catch(error => {
-            console.error('Error adding budget:', error);
+          console.error('Error adding budget:', error);
         });
     }
   }
@@ -263,7 +262,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
       amount: '',
       currency: 'MMK',
       period: this.datePipe.transform(new Date(), 'yyyy-MM'),
-      category: ''
     });
   }
 
@@ -279,31 +277,40 @@ export class BudgetComponent implements OnInit, OnDestroy {
       this.isRecordedBudgetsCollapsed = !this.isRecordedBudgetsCollapsed;
     }
   }
+
+  setDateFilter(filter: string): void {
+    this._selectedDateRange$.next(filter);
+    if (filter === 'custom') {
+        this._startDate$.next(this.startDate);
+        this._endDate$.next(this.endDate);
+    }
+  }
   
   private chartInstance: Chart | undefined;
 
   renderChart(data: any): void {
     const canvas = document.getElementById('budgetChart') as HTMLCanvasElement;
     if (this.chartInstance) {
-      this.chartInstance.destroy();
-    }
-    
+        this.chartInstance.destroy();
+    }  
     if (canvas) {
         this.chartInstance = new Chart(canvas, {
-          type: 'bar',
-          data: data,
-          options: {
+        type: 'bar',
+        data: data,
+        options: {
             responsive: true,
+            // Add this line to allow the chart to fill the container's height
+            maintainAspectRatio: false, 
             scales: {
-              x: {
+            x: {
                 stacked: false,
-              },
-              y: {
+            },
+            y: {
                 stacked: false,
                 beginAtZero: true
-              }
             }
-          }
+            }
+        }
         });
     }
   }

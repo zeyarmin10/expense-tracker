@@ -1,0 +1,42 @@
+
+/* Add a subtle shine effect to valid buttons */
+.shine-effect {
+    position: relative;
+    overflow: hidden;
+}
+
+.shine-effect::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
+    transition: transform 0.5s ease-in-out;
+    transform: rotate(45deg);
+}
+
+.shine-effect:hover::after {
+    transform: rotate(45deg) translate(25%, 25%);
+}
+
+.total-incomes {
+  margin-bottom: 0.5rem;
+}
+
+.chart-container {
+  position: relative;
+  /* Default height for larger screens */
+  height: 400px; 
+  width: 100%;
+  margin-top: 1rem;
+  padding: 5px;
+}
+
+/* For mobile devices, increase the chart height for better readability */
+@media (max-width: 767px) {
+  .chart-container {
+    height: 450px; /* Adjust this value as needed */
+  }
+}
