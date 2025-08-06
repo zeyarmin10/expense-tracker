@@ -43,10 +43,10 @@
                             </div>
 
                             <div class="col-md-6 mb-3" *ngIf="budgetForm.value.type === 'monthly'">
-                                <label for="period" class="form-label">{{ 'MONTH' | translate }}</label>
-                                <input type="month" id="period" formControlName="period" class="form-control">
+                                <label for="period" class="form-label">{{ 'DATE' | translate }}</label>
+                                <input type="date" id="period" formControlName="period" class="form-control">
                                 <div *ngIf="budgetForm.controls['period'].invalid && budgetForm.controls['period'].touched" class="text-danger">
-                                    {{ 'MONTH_REQUIRED' | translate }}
+                                    {{ 'DATE_REQUIRED' | translate }}
                                 </div>
                             </div>
 
@@ -80,12 +80,12 @@
                         <fa-icon [icon]="isRecordedBudgetsCollapsed ? faChevronDown : faChevronUp"></fa-icon>
                     </div>
                     <div class="card-body" *ngIf="!isRecordedBudgetsCollapsed">
-                        <ng-container *ngIf="(budgets$ | async) as budgets; else noBudgetsTemplate">
+                        <ng-container *ngIf="(filteredBudgets$ | async) as budgets; else noBudgetsTemplate">
                             <ul class="list-group" *ngIf="budgets.length > 0">
                                 <li class="list-group-item d-flex justify-content-between align-items-center" *ngFor="let budget of budgets">
                                     <div class="d-flex flex-column">
                                         <span>
-                                            <strong>{{ datePipe.transform(budget.period, 'MMM yyyy') }}</strong>:
+                                            <strong>{{ datePipe.transform(budget.period, 'MMM d, yyyy') }}</strong>:
                                         </span>
                                         <span>
                                             {{ formatAmountWithSymbol(budget.amount, budget.currency) }}

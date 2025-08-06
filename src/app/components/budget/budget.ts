@@ -1,5 +1,3 @@
-// src/app/components/budget/budget.ts
-
 import { Component, OnInit, inject, ViewChild, OnDestroy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
@@ -44,6 +42,8 @@ export class BudgetComponent implements OnInit, OnDestroy {
   
   monthlySummary$: Observable<{ month: string, currency: string, budget: number, expense: number, balance: number }[]>;
 
+  filteredBudgets$: Observable<ServiceIBudget[]>;
+
   faTrash = faTrash;
   faSave = faSave;
   faChevronDown = faChevronDown;
@@ -75,7 +75,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
       type: ['monthly', Validators.required],
       amount: ['', [Validators.required, Validators.min(0.01)]],
       currency: ['MMK', Validators.required],
-      period: [this.datePipe.transform(new Date(), 'yyyy-MM'), Validators.required],
+      period: [this.datePipe.transform(new Date(), 'yyyy-MM-dd'), Validators.required],
     });
 
     this.budgets$ = this.budgetService.getBudgets().pipe(
@@ -138,7 +138,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
         
         const filteredBudgets = budgets.filter(b => {
           if (b.type === 'monthly' && b.period) {
-            const budgetDate = new Date(`${b.period}-01`);
+            const budgetDate = new Date(b.period);
             return budgetDate >= start && budgetDate <= end;
           }
           return false;
@@ -152,6 +152,10 @@ export class BudgetComponent implements OnInit, OnDestroy {
         return { budgets: filteredBudgets, expenses: filteredExpenses };
       })
     );
+    
+    this.filteredBudgets$ = filteredData$.pipe(
+      map(data => data.budgets)
+    );
 
     this.monthlySummary$ = filteredData$.pipe(
       map(({ budgets, expenses }) => {
@@ -159,13 +163,15 @@ export class BudgetComponent implements OnInit, OnDestroy {
         const allMonthsAndCurrencies: Set<string> = new Set();
         
         budgets.forEach(budget => {
-          const monthYear = this.datePipe.transform(new Date(`${budget.period}-01`), 'MMM yyyy') || '';
-          const key = `${monthYear}_${budget.currency}`;
-          allMonthsAndCurrencies.add(key);
-          if (!monthlyData[key]) {
-            monthlyData[key] = { budget: 0, expense: 0 };
+          if (budget.period) {
+            const monthYear = this.datePipe.transform(new Date(budget.period), 'MMM yyyy') || '';
+            const key = `${monthYear}_${budget.currency}`;
+            allMonthsAndCurrencies.add(key);
+            if (!monthlyData[key]) {
+              monthlyData[key] = { budget: 0, expense: 0 };
+            }
+            monthlyData[key].budget += budget.amount;
           }
-          monthlyData[key].budget += budget.amount;
         });
         
         expenses.forEach(expense => {
@@ -181,6 +187,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
         const sortedKeys = Array.from(allMonthsAndCurrencies).sort((a, b) => {
           const [monthA, currencyA] = a.split('_');
           const [monthB, currencyB] = b.split('_');
+          
           const dateA = new Date(monthA);
           const dateB = new Date(monthB);
           
@@ -252,11 +259,13 @@ export class BudgetComponent implements OnInit, OnDestroy {
         const monthlyData: { [month: string]: { budget: number, expense: number } } = {};
         
         budgets.forEach(budget => {
-          const monthYear = this.datePipe.transform(new Date(`${budget.period}-01`), 'MMM yyyy') || '';
-          if (!monthlyData[monthYear]) {
-            monthlyData[monthYear] = { budget: 0, expense: 0 };
+          if (budget.period) {
+            const monthYear = this.datePipe.transform(new Date(budget.period), 'MMM yyyy') || '';
+            if (!monthlyData[monthYear]) {
+              monthlyData[monthYear] = { budget: 0, expense: 0 };
+            }
+            monthlyData[monthYear].budget += budget.amount;
           }
-          monthlyData[monthYear].budget += budget.amount;
         });
         
         expenses.forEach(expense => {
@@ -374,7 +383,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
       type: 'monthly',
       amount: '',
       currency: 'MMK',
-      period: this.datePipe.transform(new Date(), 'yyyy-MM'),
+      period: this.datePipe.transform(new Date(), 'yyyy-MM-dd'),
     });
   }
 
