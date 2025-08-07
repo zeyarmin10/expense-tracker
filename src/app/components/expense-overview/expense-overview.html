@@ -152,7 +152,7 @@
                     [ngClass]="{'btn-outline-secondary': total.category !== (_selectedCategory$ | async), 'btn-secondary': total.category === (_selectedCategory$ | async)}"
                     (click)="filterByCategory(total.category)"
                 >
-                    {{ total.category }} : <span class="text-danger">{{ formatCurrency(total.total, total.currency) }}</span>
+                    {{ total.category }} : <span>{{ formatCurrency(total.total, total.currency) }}</span>
                 </button>
             </div>
             
