@@ -34,8 +34,8 @@ export class Profit implements OnInit, OnDestroy {
   incomes$: Observable<ServiceIIncome[]>;
   budgets$: Observable<ServiceIBudget[]>;
 
-  filteredBudgets$: Observable<ServiceIBudget[]>; // Added this to pass filtered budgets to the template
-
+  filteredBudgets$: Observable<ServiceIBudget[]>;
+  
   totalExpensesByCurrency$: Observable<{ [currency: string]: number }>;
   totalIncomesByCurrency$: Observable<{ [currency: string]: number }>;
   totalProfitLossByCurrency$: Observable<{ [currency: string]: number }>;
@@ -153,7 +153,6 @@ export class Profit implements OnInit, OnDestroy {
       })
     );
     
-    // This is the new observable for the template
     this.filteredBudgets$ = filteredData$.pipe(
       map(data => data.budgets)
     );
@@ -176,7 +175,6 @@ export class Profit implements OnInit, OnDestroy {
       })
     );
     
-    // Corrected logic to sum all budgets in a month
     this.totalBudgetsByCurrency$ = filteredData$.pipe(
       map(({ budgets }) => {
         const totalBudgets = budgets.reduce((acc, budget) => {
@@ -204,7 +202,6 @@ export class Profit implements OnInit, OnDestroy {
       })
     );
 
-    // Calculate Remaining Balance: Total Budgets - Total Expenses
     this.remainingBalanceByCurrency$ = combineLatest([this.totalBudgetsByCurrency$, this.totalExpensesByCurrency$]).pipe(
         map(([budgets, expenses]) => {
             const balance: { [currency: string]: number } = {};
@@ -220,7 +217,6 @@ export class Profit implements OnInit, OnDestroy {
         })
     );
     
-    // Calculate Net Profit: Profit/Loss - Remaining Balance (absolute value)
     this.netProfitByCurrency$ = combineLatest([this.totalProfitLossByCurrency$, this.remainingBalanceByCurrency$]).pipe(
       map(([profitLoss, remainingBalance]) => {
         const netProfit: { [currency: string]: number } = {};
@@ -245,6 +241,13 @@ export class Profit implements OnInit, OnDestroy {
       const browserLang = this.translate.getBrowserLang();
       this.translate.use(browserLang && browserLang.match(/my|en/) ? browserLang : 'my');
     }
+
+    this.subscriptions.add(this.translate.onLangChange.subscribe(() => {
+        // Trigger a refresh of the data streams to force the view to re-render with the new locale.
+        this.expenses$ = this.expenseService.getExpenses();
+        this.incomes$ = this.incomeService.getIncomes();
+        this.budgets$ = this.budgetService.getBudgets();
+    }));
   }
 
   ngOnDestroy(): void {
@@ -329,11 +332,14 @@ export class Profit implements OnInit, OnDestroy {
   formatAmountWithSymbol(amount: number, currencyCode: string): string {
     const symbol = this.availableCurrencies.find(c => c.code === currencyCode)?.symbol || currencyCode;
     let formattedAmount: string;
+    
+    const currentLang = this.translate.currentLang;
+    const locale = currentLang === 'my' ? 'my-MM' : currentLang;
 
     if (currencyCode === 'MMK') {
-      formattedAmount = amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+      formattedAmount = amount.toLocaleString(locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
     } else {
-      formattedAmount = amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      formattedAmount = amount.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
     return `${formattedAmount} ${symbol}`;
