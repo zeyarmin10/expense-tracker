@@ -24,6 +24,7 @@
     }
     .profit-card {
         width: 100% !important;
+        border-radius: 1rem !important;
     }
 
 }

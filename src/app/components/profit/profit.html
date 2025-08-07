@@ -103,43 +103,43 @@
                 </div>
 
                 <div class="d-flex justify-content-center align-item-center">
-                    <div class="card mb-4 profit-card border border-info col-xl-6 col-lg-6 col-md-12 col-sm-12 col-xs-12">
-                    <div class="card-header border border-info">{{ 'PROFIT_LOSS_REPORT' | translate }}</div>
-                    <div class="card-body border border-info">
-                        <div *ngIf="(totalProfitLossByCurrency$ | async) as profitLosses; else loading">
-                            <div *ngIf="(netProfitByCurrency$ | async) as netProfits">
-                                <div *ngIf="(profitLosses && (profitLosses | keyvalue).length > 0) || (netProfits && (netProfits | keyvalue).length > 0); else noData">
-                                    <ng-container *ngFor="let currency of availableCurrencies">
-                                        <ng-container *ngIf="profitLosses[currency.code] !== undefined">
-                                            <div class="mb-0">
-                                                <div class="d-flex justify-content-between align-items-center mb-1">
-                                                    <span>{{ (profitLosses[currency.code] >= 0 ? 'PROFIT' : 'LOSS') | translate }}</span>
-                                                    <!-- ({{ currency.code }}): -->
-                                                    <span class="font-large fw-bold" [ngClass]="{'text-success': profitLosses[currency.code] >= 0, 'text-danger': profitLosses[currency.code] < 0}">
-                                                        {{ formatAmountWithSymbol(profitLosses[currency.code], currency.code) }}
-                                                    </span>
+                    <div class="card shadow mb-4 profit-card border border-info col-xl-6 col-lg-6 col-md-12 col-sm-12 col-xs-12">
+                        <!-- <div class="card-header border border-info">{{ 'PROFIT_LOSS_REPORT' | translate }}</div> -->
+                        <div class="card-body">
+                            <div *ngIf="(totalProfitLossByCurrency$ | async) as profitLosses; else loading">
+                                <div *ngIf="(netProfitByCurrency$ | async) as netProfits">
+                                    <div *ngIf="(profitLosses && (profitLosses | keyvalue).length > 0) || (netProfits && (netProfits | keyvalue).length > 0); else noData">
+                                        <ng-container *ngFor="let currency of availableCurrencies">
+                                            <ng-container *ngIf="profitLosses[currency.code] !== undefined">
+                                                <div class="row mb-0">
+                                                    <div class="d-flex flex-column justify-content-between align-items-center">
+                                                        <h6 class="fs-5 text-muted text-center w-100">{{ (profitLosses[currency.code] >= 0 ? 'NET_PROFIT' : 'NET_LOSS') | translate }}</h6>
+                                                        <!-- ({{ currency.code }}): -->
+                                                        <h4 class="fs-1 fw-bold text-center w-100" [ngClass]="{'text-success': profitLosses[currency.code] >= 0, 'text-danger': profitLosses[currency.code] < 0}">
+                                                            {{ formatAmountWithSymbol(profitLosses[currency.code], currency.code) }}
+                                                        </h4>
+                                                    </div>
+                                                    <!-- <div class="col-6 d-flex justify-content-between align-items-center">
+                                                        <span>{{ (netProfits[currency.code] >= 0 ? 'NET_PROFIT' : 'NET_LOSS') | translate }}</span>
+                                                        ({{ currency.code }}):
+                                                        <span class="font-large fw-bold" [ngClass]="{'text-success': netProfits[currency.code] >= 0, 'text-danger': netProfits[currency.code] < 0}">
+                                                            {{ formatAmountWithSymbol(netProfits[currency.code], currency.code) }}
+                                                        </span>
+                                                    </div> -->
                                                 </div>
-                                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                                    <span>{{ (netProfits[currency.code] >= 0 ? 'NET_PROFIT' : 'NET_LOSS') | translate }}</span>
-                                                     <!-- ({{ currency.code }}): -->
-                                                    <span class="font-large fw-bold" [ngClass]="{'text-success': netProfits[currency.code] >= 0, 'text-danger': netProfits[currency.code] < 0}">
-                                                        {{ formatAmountWithSymbol(netProfits[currency.code], currency.code) }}
-                                                    </span>
-                                                </div>
-                                            </div>
+                                            </ng-container>
                                         </ng-container>
-                                    </ng-container>
+                                    </div>
+                                    <ng-template #noData>
+                                        <p class="text-muted text-center">{{ 'NO_PROFIT_LOSS_DATA' | translate }}</p>
+                                    </ng-template>
                                 </div>
-                                <ng-template #noData>
-                                    <p class="text-muted text-center">{{ 'NO_PROFIT_LOSS_DATA' | translate }}</p>
-                                </ng-template>
                             </div>
+                            <ng-template #loading>
+                                <p class="text-muted text-center">{{ 'LOADING_DATA' | translate }}</p>
+                            </ng-template>
                         </div>
-                        <ng-template #loading>
-                            <p class="text-muted text-center">{{ 'LOADING_DATA' | translate }}</p>
-                        </ng-template>
                     </div>
-                </div>
                 </div>
 
                 <div class="row g-3 mb-3">

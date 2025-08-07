@@ -32,16 +32,6 @@ export const routes: Routes = [
     component: Expense,
     canActivate: [AuthGuard],
   },
-  {
-    path: 'category',
-    component: Category,
-    canActivate: [AuthGuard],
-  },
-  {
-    path: 'profile',
-    component: UserProfileComponent,
-    canActivate: [AuthGuard],
-  },
   { 
     path: 'expense-overview', 
     component: ExpenseOverview ,
@@ -51,6 +41,16 @@ export const routes: Routes = [
     path: 'budget', 
     component: BudgetComponent, 
     canActivate: [AuthGuard]
+  },
+  {
+    path: 'profile',
+    component: UserProfileComponent,
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'category',
+    component: Category,
+    canActivate: [AuthGuard],
   },
   // Move the wildcard route to the very end of the array
   { path: '**', redirectTo: '/login' },
