@@ -147,7 +147,7 @@
 
                 <button
                     type="button"
-                    class="btn total-btn text-wrap pt-1 pb-1"
+                    class="btn total-btn text-wrap gap-2 pt-1 pb-1"
                     *ngFor="let total of categoryTotals"
                     [ngClass]="{'btn-outline-secondary': total.category !== (_selectedCategory$ | async), 'btn-secondary': total.category === (_selectedCategory$ | async)}"
                     (click)="filterByCategory(total.category)"

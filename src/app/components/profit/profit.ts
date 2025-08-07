@@ -5,7 +5,7 @@ import { Observable, BehaviorSubject, combineLatest, map, Subscription } from 'r
 import { ServiceIExpense, ExpenseService } from '../../services/expense';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ServiceIIncome, IncomeService } from '../../services/income';
-import { ServiceIBudget, BudgetService } from '../../services/budget'; // Import BudgetService and ServiceIBudget
+import { ServiceIBudget, BudgetService } from '../../services/budget';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faTrash, faSave, faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { ConfirmationModal } from '../common/confirmation-modal/confirmation-modal';
@@ -23,7 +23,7 @@ export class Profit implements OnInit, OnDestroy {
   public datePipe = inject(DatePipe);
   private expenseService = inject(ExpenseService);
   private incomeService = inject(IncomeService);
-  private budgetService = inject(BudgetService); // Inject BudgetService
+  private budgetService = inject(BudgetService);
   private translate = inject(TranslateService);
 
   @ViewChild('deleteConfirmationModal') private deleteConfirmationModal!: ConfirmationModal;
@@ -32,14 +32,16 @@ export class Profit implements OnInit, OnDestroy {
 
   expenses$: Observable<ServiceIExpense[]>;
   incomes$: Observable<ServiceIIncome[]>;
-  budgets$: Observable<ServiceIBudget[]>; // Add budgets$ observable
+  budgets$: Observable<ServiceIBudget[]>;
+
+  filteredBudgets$: Observable<ServiceIBudget[]>; // Added this to pass filtered budgets to the template
 
   totalExpensesByCurrency$: Observable<{ [currency: string]: number }>;
   totalIncomesByCurrency$: Observable<{ [currency: string]: number }>;
   totalProfitLossByCurrency$: Observable<{ [currency: string]: number }>;
-  totalBudgetsByCurrency$: Observable<{ [currency: string]: number }>; // Add totalBudgetsByCurrency$
-  netProfitByCurrency$: Observable<{ [currency: string]: number }>; // Add netProfitByCurrency$
-  remainingBalanceByCurrency$: Observable<{ [currency: string]: number }>; // Re-added this observable
+  totalBudgetsByCurrency$: Observable<{ [currency: string]: number }>;
+  netProfitByCurrency$: Observable<{ [currency: string]: number }>;
+  remainingBalanceByCurrency$: Observable<{ [currency: string]: number }>;
 
   faTrash = faTrash;
   faSave = faSave;
@@ -50,6 +52,7 @@ export class Profit implements OnInit, OnDestroy {
 
   isIncomeFormCollapsed: boolean = true;
   isRecordedIncomesCollapsed: boolean = true;
+  isRecordedBudgetsCollapsed: boolean = true;
 
   private _startDate$ = new BehaviorSubject<string>('');
   private _endDate$ = new BehaviorSubject<string>('');
@@ -69,7 +72,7 @@ export class Profit implements OnInit, OnDestroy {
 
   constructor() {
     this.incomeForm = this.fb.group({
-      description: [''], // Made description not required
+      description: [''],
       amount: ['', [Validators.required, Validators.min(0.01)]],
       currency: ['MMK', Validators.required],
       date: [this.datePipe.transform(new Date(), 'yyyy-MM-dd'), Validators.required]
@@ -77,7 +80,7 @@ export class Profit implements OnInit, OnDestroy {
 
     this.expenses$ = this.expenseService.getExpenses();
     this.incomes$ = this.incomeService.getIncomes();
-    this.budgets$ = this.budgetService.getBudgets(); // Get budgets
+    this.budgets$ = this.budgetService.getBudgets();
 
     const oneYearAgo = new Date();
     oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
@@ -89,7 +92,7 @@ export class Profit implements OnInit, OnDestroy {
     const filteredData$ = combineLatest([
       this.expenses$,
       this.incomes$,
-      this.budgets$, // Combine with budgets$
+      this.budgets$,
       this._selectedDateRange$,
       this._startDate$,
       this._endDate$
@@ -138,17 +141,21 @@ export class Profit implements OnInit, OnDestroy {
           return incomeDate >= start && incomeDate <= end;
         });
 
-        // Filter budgets. The budget period is 'YYYY-MM'
         const filteredBudgets = budgets.filter(b => {
           if (b.type === 'monthly' && b.period) {
-            const budgetDate = new Date(b.period + '-01');
-            return budgetDate >= new Date(start.getFullYear(), start.getMonth(), 1) && budgetDate <= new Date(end.getFullYear(), end.getMonth(), 1);
+            const budgetDate = new Date(b.period);
+            return budgetDate >= start && budgetDate <= end;
           }
           return false;
         });
 
         return { expenses: filteredExpenses, incomes: filteredIncomes, budgets: filteredBudgets };
       })
+    );
+    
+    // This is the new observable for the template
+    this.filteredBudgets$ = filteredData$.pipe(
+      map(data => data.budgets)
     );
 
     this.totalExpensesByCurrency$ = filteredData$.pipe(
@@ -168,15 +175,17 @@ export class Profit implements OnInit, OnDestroy {
         }, {} as { [currency: string]: number });
       })
     );
-
+    
+    // Corrected logic to sum all budgets in a month
     this.totalBudgetsByCurrency$ = filteredData$.pipe(
       map(({ budgets }) => {
-        return budgets.reduce((acc, budget) => {
-          if (budget.type === 'monthly') {
+        const totalBudgets = budgets.reduce((acc, budget) => {
+          if (budget.currency) {
             acc[budget.currency] = (acc[budget.currency] || 0) + budget.amount;
           }
           return acc;
         }, {} as { [currency: string]: number });
+        return totalBudgets;
       })
     );
 
@@ -283,6 +292,30 @@ export class Profit implements OnInit, OnDestroy {
       this.incomeIdToDelete = undefined;
     }
   }
+  
+  @ViewChild('deleteBudgetConfirmationModal') private deleteBudgetConfirmationModal!: ConfirmationModal;
+  private budgetIdToDelete: string | undefined;
+
+  confirmDeleteBudget(budgetId: string | undefined): void {
+    if (budgetId) {
+      this.budgetIdToDelete = budgetId;
+    }
+  }
+
+  onDeleteBudgetConfirmed(confirmed: boolean): void {
+    if (confirmed && this.budgetIdToDelete) {
+      this.budgetService.deleteBudget(this.budgetIdToDelete)
+        .then(() => {
+          console.log('Budget deleted successfully!');
+          this.budgetIdToDelete = undefined;
+        })
+        .catch(error => {
+          console.error('Error deleting budget:', error);
+        });
+    } else {
+      this.budgetIdToDelete = undefined;
+    }
+  }
 
   resetForm(): void {
     this.incomeForm.reset({
@@ -306,11 +339,13 @@ export class Profit implements OnInit, OnDestroy {
     return `${formattedAmount} ${symbol}`;
   }
 
-  toggleVisibility(section: 'incomeForm' | 'recordedIncomes'): void {
+  toggleVisibility(section: 'incomeForm' | 'recordedIncomes' | 'recordedBudgets'): void {
     if (section === 'incomeForm') {
       this.isIncomeFormCollapsed = !this.isIncomeFormCollapsed;
     } else if (section === 'recordedIncomes') {
       this.isRecordedIncomesCollapsed = !this.isRecordedIncomesCollapsed;
+    } else if (section === 'recordedBudgets') {
+      this.isRecordedBudgetsCollapsed = !this.isRecordedBudgetsCollapsed;
     }
   }
 
