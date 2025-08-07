@@ -195,7 +195,7 @@
                                 <li class="list-group-item" *ngFor="let month of monthlySummary">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <div class="d-flex flex-column flex-grow-1">
-                                            <strong>{{ formatLocalizedDate(month.month, 'MMM d, yyyy') }} ({{ month.currency }})</strong>
+                                            <strong>{{ month.month }} ({{ month.currency }})</strong>
                                             <small class="text-muted">{{ 'BUDGET' | translate }} </small>
                                             <small class="text-muted">{{ formatAmountWithSymbol(month.budget, month.currency) }}</small>
                                             <small class="text-muted">{{ 'EXPENSE' | translate }} </small>
