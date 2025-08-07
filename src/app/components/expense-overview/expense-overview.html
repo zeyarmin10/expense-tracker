@@ -136,10 +136,10 @@
               </div>
             </div>
 
-            <div class="d-flex flex-wrap gap-2 mb-2">
+            <div class="d-flex flex-wrap gap-1 mb-2">
                 <button
                     type="button"
-                    class="btn btn-outline-secondary total-btn text-wrap pt-1 pb-1"
+                    class="btn btn-outline-secondary total-btn text-wrap"
                     (click)="filterByCategory('')"
                 >
                     {{ 'ALL_CATEGORIES' | translate }}
@@ -147,7 +147,7 @@
 
                 <button
                     type="button"
-                    class="btn total-btn text-wrap gap-2 pt-1 pb-1"
+                    class="btn total-btn text-wrap"
                     *ngFor="let total of categoryTotals"
                     [ngClass]="{'btn-outline-secondary': total.category !== (_selectedCategory$ | async), 'btn-secondary': total.category === (_selectedCategory$ | async)}"
                     (click)="filterByCategory(total.category)"

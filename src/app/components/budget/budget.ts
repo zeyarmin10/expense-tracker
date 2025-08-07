@@ -395,10 +395,13 @@ export class BudgetComponent implements OnInit, OnDestroy {
     const symbol = this.availableCurrencies.find(c => c.code === currencyCode)?.symbol || currencyCode;
     let formattedAmount: string;
 
+    const currentLang = this.translate.currentLang;
+    const locale = currentLang === 'my' ? 'my-MM' : currentLang; // Use 'my-MM' for Burmese numbers
+
     if (currencyCode === 'MMK') {
-      formattedAmount = amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+      formattedAmount = amount.toLocaleString(locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
     } else {
-      formattedAmount = amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      formattedAmount = amount.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
     return `${formattedAmount} ${symbol}`;

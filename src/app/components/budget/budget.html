@@ -138,7 +138,7 @@
                                 <div *ngIf="(totalExpensesByCurrency$ | async) as totals; else loading">
                                     <div *ngIf="totals && (totals | keyvalue).length > 0; else noData" class="p-0">
                                         <span *ngFor="let total of (totals | keyvalue)" class="d-flex justify-content-between" style="margin-bottom: 0;">
-                                            <span>{{ total.key }}:</span> <span class="text-success fs-5">{{ formatAmountWithSymbol(total.value, total.key) }}</span>
+                                            <span>{{ total.key }}:</span> <span class="text-info fs-5">{{ formatAmountWithSymbol(total.value, total.key) }}</span>
                                         </span>
                                     </div>
                                     <ng-template #noData>

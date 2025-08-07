@@ -49,6 +49,7 @@ body {
 /* Styles for the category buttons with totals */
 .total-btn {
     white-space: nowrap;
+    padding: 0.2em 0.4em;
 }
 .category-buttons {
     overflow-x: auto;
