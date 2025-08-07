@@ -69,7 +69,7 @@
 
                 <div class="card mb-4">
                     <div class="card-header d-flex justify-content-between align-items-center" (click)="toggleVisibility('recordedIncomes')">
-                        <span>{{ 'RECORDED_INCOMES' | translate }}</span>
+                        <span>{{ 'RECORDED_REVENUE' | translate }}</span>
                         <fa-icon [icon]="isRecordedIncomesCollapsed ? faChevronDown : faChevronUp"></fa-icon>
                     </div>
                     <div class="card-body" [class.collapse]="isRecordedIncomesCollapsed">
@@ -79,7 +79,7 @@
                                     <li *ngFor="let income of incomes" class="list-group-item d-flex justify-content-between align-items-center">
                                         <div class="d-flex flex-column">
                                             <span>
-                                                <small class="text-muted">{{ datePipe.transform(income.date, 'MMM d, yyyy') }}</small>
+                                                <small class="text-muted">{{ formatLocalizedDate(income.date, 'MMM d, yyyy') }}</small>
                                             </span>
                                             <span>
                                                 <span class="text-success">{{ formatAmountWithSymbol(income.amount, income.currency) }}</span>

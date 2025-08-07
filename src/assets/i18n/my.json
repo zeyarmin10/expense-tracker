@@ -294,5 +294,6 @@
   "INCOME_DESCRIPTION_PLACEHOLDER": "ဝင်ငွေအမျိုးအမည် ထည့်ရန်",
   "NO_INCOMES_FOR_SELECTED_DATE": "ရွေးချယ်ထားသောနေ့စွဲအတွက် ဝင်ငွေမရှိပါ",
   "LOSS": "အရှုံး",
-  "NET_LOSS": "အသားတင်အရှုံး"
+  "NET_LOSS": "အသားတင်အရှုံး",
+  "RECORDED_REVENUE": "မှတ်တမ်းတင်ပြီးသော ဝင်ငွေ"
 }

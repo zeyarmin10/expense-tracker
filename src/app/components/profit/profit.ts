@@ -362,4 +362,11 @@ export class Profit implements OnInit, OnDestroy {
       this._endDate$.next(this.endDate);
     }
   }
+
+  formatLocalizedDate(date: string | Date | null | undefined, format: string): string {
+      // Get the current language from the translation service
+      const currentLang = this.translate.currentLang;  
+      // Use DatePipe to transform the date, passing the language as the locale
+      return this.datePipe.transform(date, format, undefined, currentLang) || '';
+  }
 }

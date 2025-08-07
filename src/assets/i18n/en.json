@@ -294,6 +294,6 @@
   "INCOME_DESCRIPTION_PLACEHOLDER": "Enter income description",
   "NO_INCOMES_FOR_SELECTED_DATE": "No incomes for the selected date",
   "LOSS": "Loss",
-  "NET_LOSS": "Net Loss"
-  
+  "NET_LOSS": "Net Loss",
+  "RECORDED_REVENUE": "RECORDED_REVENUE"
 }
