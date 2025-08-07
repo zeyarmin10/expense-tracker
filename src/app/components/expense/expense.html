@@ -303,6 +303,7 @@
                 </tr>
 
                 <tr *ngIf="editingExpenseId === expense.id && editingForm" [formGroup]="editingForm">
+                  <input type="hidden" formControlName="updatedAt"/>
                   <td>
                     <input type="date" class="form-control form-control-sm" formControlName="date"
                     [class.is-invalid]="editingForm.controls['date'].invalid && editingForm.controls['date'].touched" />

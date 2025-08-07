@@ -16,6 +16,7 @@ export interface ServiceIExpense {
   currency: string; // <== ADD THIS
   totalCost: number; // Assuming this is derived
   createdAt: string;
+  updatedAt: [''],
   userId: string;
 }
 

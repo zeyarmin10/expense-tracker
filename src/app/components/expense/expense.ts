@@ -349,6 +349,7 @@ export class Expense implements OnInit {
       unit: [expense.unit], // 'unit' is no longer required
       price: [expense.price, [Validators.required, Validators.min(0)]],
       currency: [expense.currency || 'MMK', Validators.required],
+      updatedAt: new Date().toISOString().split('T')[0]
     });
     this.cdr.detectChanges();
   }
