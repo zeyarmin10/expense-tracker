@@ -295,5 +295,12 @@
   "NO_INCOMES_FOR_SELECTED_DATE": "No incomes for the selected date",
   "LOSS": "Loss",
   "NET_LOSS": "Net Loss",
-  "RECORDED_REVENUE": "Recorded Revenue"
+  "RECORDED_REVENUE": "Recorded Revenue",
+  "NO_INCOME_YET": "No income yet.",
+  "TOTAL_BUDGET": "Total Budget",
+  "NO_BUDGET_YET": "No budget yet.",
+  "NO_EXPENSE_YET": "No expenses yet.",
+  "NO_DATA_YET": "No data yet.",
+  "DASHBOARD_EXPENSES_CHART_TITLE": "Expenses",
+  "NO_DATA_AVAILABLE_FOR_CHART": "No data available for chart."
 }

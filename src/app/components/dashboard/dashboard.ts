@@ -1,160 +1,112 @@
-import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { AuthService } from '../../services/auth';
-import { Router } from '@angular/router';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Observable, BehaviorSubject, combineLatest, map, startWith, switchMap, of } from 'rxjs';
 import { ServiceIExpense, ExpenseService } from '../../services/expense';
-import { ServiceICategory, CategoryService } from '../../services/category';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faSync } from '@fortawesome/free-solid-svg-icons';
+import { ServiceIBudget, BudgetService } from '../../services/budget';
+import { FormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { Observable, combineLatest, map, Subscription, of, BehaviorSubject, switchMap, startWith } from 'rxjs';
+import { Chart, registerables } from 'chart.js';
 import { ServiceIIncome, IncomeService } from '../../services/income';
 import { trigger, state, style, animate, transition, keyframes } from '@angular/animations';
+import { Router } from '@angular/router';
 
+Chart.register(...registerables);
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslateModule, FontAwesomeModule],
+  imports: [CommonModule, FormsModule, TranslateModule],
   providers: [DatePipe],
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.css'],
   animations: [
     trigger('titleRollAnimation', [
-      transition('* => roll', [ // Trigger on transition to 'roll' state
-        animate('150ms ease-out', keyframes([ // Animate over 150ms
-          style({ transform: 'translateY(0)', offset: 0 }), // Start at normal position
-          style({ transform: 'translateY(5px)', offset: 0.5 }), // Move down 5px in the middle
-          style({ transform: 'translateY(0)', offset: 1.0 }) // Return to normal position
+      transition('* => roll', [
+        animate('150ms ease-out', keyframes([
+          style({ transform: 'translateY(0)', offset: 0 }),
+          style({ transform: 'translateY(-100%)', offset: 0.5 }),
+          style({ transform: 'translateY(100%)', offset: 0.501 }),
+          style({ transform: 'translateY(0)', offset: 1 }),
         ]))
       ])
     ])
   ]
 })
-export class DashboardComponent implements OnInit {
-  authService = inject(AuthService);
-  expenseService = inject(ExpenseService);
-  categoryService = inject(CategoryService);
-  incomeService = inject(IncomeService);
-  datePipe = inject(DatePipe);
-  translate = inject(TranslateService);
-  private cdr = inject(ChangeDetectorRef);
-  router = inject(Router);
+export class DashboardComponent implements OnInit, OnDestroy {
+  private authService = inject(AuthService);
+  private expenseService = inject(ExpenseService);
+  private budgetService = inject(BudgetService);
+  private incomeService = inject(IncomeService);
+  private translate = inject(TranslateService);
+  private formBuilder = inject(FormBuilder);
+  public datePipe = inject(DatePipe);
+  private router = inject(Router);
 
-  faSync = faSync;
+  @ViewChild('expenseChartCanvas') private expenseChartCanvas!: ElementRef<HTMLCanvasElement>;
 
-  private _currentViewModeSubject = new BehaviorSubject<'yearly' | 'first-half-yearly' | 'second-half-yearly' | 'monthly'>('yearly');
-  currentViewMode$ = this._currentViewModeSubject.asObservable();
+  userDisplayName$!: Observable<string | null>;
+  expenses$!: Observable<ServiceIExpense[]>;
+  budgets$!: Observable<ServiceIBudget[]>;
 
-  // Removed isTitleClicked, replaced with dynamic background color
-  // NEW: Array of colors to cycle through
-  headerBackgroundColors: string[] = [
-    '#90e0ef', // Default/light grey (Bootstrap's card-header default if not overridden)
-    '#e0f2f7', // Light blue
-    '#e6ffe6', // Light green
-    '#fff0e6', // Light orange
-    '#f5e6ff'  // Light purple
-  ];
-  // NEW: Index to track the current color
-  currentHeaderColorIndex: number = 0;
-  // NEW: Property to hold the current background color
-  currentHeaderBackgroundColor: string = this.headerBackgroundColors[0];
+  totalExpensesByCurrency$!: Observable<{ [currency: string]: number }>;
+  totalBudgetsByCurrency$!: Observable<{ [currency: string]: number }>;
+  remainingBalanceByCurrency$!: Observable<{ [currency: string]: number }>;
+  monthlyExpenseChartData$!: Observable<{ labels: string[], datasets: any[] }>;
+  hasExpenseDataForChart$!: Observable<boolean>;
 
+  expenseFilterForm!: FormGroup;
+  categoryFilterForm!: FormGroup;
+  currentSummaryTitle$!: Observable<string>;
+  filteredExpensesAndIncomes$!: Observable<{ expenses: ServiceIExpense[], incomes: ServiceIIncome[] }>;
+  totalIncomesByCurrency$!: Observable<{ [currency: string]: number }>;
 
+  _startDate$: BehaviorSubject<string> = new BehaviorSubject<string>(this.datePipe.transform(new Date(new Date().getFullYear(), 0, 1), 'yyyy-MM-dd') || '');
+  _endDate$: BehaviorSubject<string> = new BehaviorSubject<string>(this.datePipe.transform(new Date(new Date().getFullYear(), 11, 31), 'yyyy-MM-dd') || '');
+
+  currentHeaderBackgroundColor: string = '#f8f9fa';
   titleAnimTrigger: string = 'initial';
 
-  currentSummaryTitle$: Observable<string>;
+  availableCurrencies = [
+    { code: 'MMK', symbol: 'Ks' },
+    { code: 'USD', symbol: '$' },
+    { code: 'THB', symbol: '฿' }
+  ];
 
-  private _startDate$ = new BehaviorSubject<string>(this.getFormattedDate(this.getStartOfYear()));
-  private _endDate$ = new BehaviorSubject<string>(this.getFormattedDate(new Date()));
+  private subscriptions = new Subscription();
+  private expenseChartInstance: Chart | undefined;
 
-  expenseFilterForm: FormGroup;
-  categoryFilterForm: FormGroup;
+  constructor(private cdr: ChangeDetectorRef) {}
 
-  filteredExpensesAndIncomes$: Observable<{
-    expenses: ServiceIExpense[];
-    incomes: ServiceIIncome[];
-  }>;
+  ngOnInit(): void {
+    const storedLang = localStorage.getItem('selectedLanguage');
+    if (storedLang) {
+      this.translate.use(storedLang);
+    } else {
+      const browserLang = this.translate.getBrowserLang();
+      this.translate.use(browserLang && browserLang.match(/my|en/) ? browserLang : 'my');
+    }
 
-  totalExpensesByCurrency$: Observable<{ [currency: string]: number }>;
-  totalIncomesByCurrency$: Observable<{ [currency: string]: number }>;
-  remainingBalanceByCurrency$: Observable<{ [currency: string]: number }>;
+    this.userDisplayName$ = this.authService.currentUser$.pipe(
+      map(user => user ? user.displayName : null)
+    );
+    this.expenses$ = this.expenseService.getExpenses();
+    this.budgets$ = this.budgetService.getBudgets();
 
-  dailyExpensesAndIncomes$: Observable<
-    { date: string; totalExpenses: number; totalIncomes: number; currency: string }[]
-  >;
-  monthlyProfitLoss$: Observable<{ [period: string]: { profitLoss: number; currency: string }[] }>;
-
-  currencySymbols: { [key: string]: string } = {
-    USD: '$',
-    EUR: '€',
-    GBP: '£',
-    JPY: '¥',
-    MMK: 'Ks',
-    THB: '฿',
-    SGD: 'S$',
-  };
-
-  burmeseCurrencyNames: { [key: string]: string } = {
-    USD: 'ဒေါ်လာ',
-    MMK: 'ကျပ်',
-    EUR: 'ယူရို',
-    GBP: 'ပေါင်',
-    JPY: 'ယန်း',
-    THB: 'ဘတ်',
-    SGD: 'စင်ကာပူဒေါ်လာ',
-  };
-
-  private _activeCategoryFilter$ = new BehaviorSubject<string | null>(null);
-  private _activeCurrencyFilter$ = new BehaviorSubject<string | null>(null);
-
-  hasDataNext$: Observable<boolean>;
-
-
-  constructor() {
-    this.expenseFilterForm = inject(FormBuilder).group({
-      startDate: [this._startDate$.getValue(), Validators.required],
-      endDate: [this._endDate$.getValue(), Validators.required],
+    this.expenseFilterForm = this.formBuilder.group({
+        startDate: [this._startDate$.getValue(), Validators.required],
+        endDate: [this._endDate$.getValue(), Validators.required],
     });
 
-    this.categoryFilterForm = inject(FormBuilder).group({
-      currency: ['all'],
-      category: ['all'],
+    this.categoryFilterForm = this.formBuilder.group({
+        currency: ['all'],
+        category: ['all'],
     });
 
-    this.currentSummaryTitle$ = combineLatest([
-      this.currentViewMode$,
-      this._startDate$,
-      this._endDate$,
-    ]).pipe(
-      map(([mode, startDateStr, endDateStr]) => {
+    this.currentSummaryTitle$ = this._startDate$.pipe(
+      map(startDateStr => {
         const startDate = new Date(startDateStr);
-        const endDate = new Date(endDateStr);
-        let title = '';
-        const currentLang = this.translate.currentLang;
-
-        switch (mode) {
-          case 'yearly':
-            title = this.translate.instant('YEARLY_SUMMARY_TITLE') + ` (${startDate.getFullYear()})`;
-            break;
-          case 'first-half-yearly':
-            title = this.translate.instant('SUMMARY_TITLE_PREFIX') +
-                    ` (${this.datePipe.transform(startDate, 'MMM', '', currentLang)} - ${this.datePipe.transform(endDate, 'MMM yyyy', '', currentLang)})`;
-            break;
-          case 'second-half-yearly':
-            title = this.translate.instant('SUMMARY_TITLE_PREFIX') +
-                    ` (${this.datePipe.transform(startDate, 'MMM', '', currentLang)} - ${this.datePipe.transform(endDate, 'MMM yyyy', '', currentLang)})`;
-            break;
-          case 'monthly':
-            title = this.translate.instant('SUMMARY_TITLE_PREFIX') +
-                    ` (${this.datePipe.transform(startDate, 'MMMM yyyy', '', currentLang)})`;
-            break;
-          default:
-            // title = this.translate.instant('SUMMARY_TITLE_PREFIX');
-            title = this.translate.instant('YEARLY_SUMMARY_TITLE') + ` (${startDate.getFullYear()})`;
-        }
-        return title;
+        return this.translate.instant('YEARLY_SUMMARY_TITLE') + ` (${startDate.getFullYear()})`;
       })
     );
 
@@ -164,6 +116,10 @@ export class DashboardComponent implements OnInit {
 
     const allIncomes$ = this.authService.currentUser$.pipe(
       switchMap(user => (user && user.uid) ? this.incomeService.getIncomes() : of([] as ServiceIIncome[])),
+    );
+
+    const allBudgets$ = this.authService.currentUser$.pipe(
+      switchMap(user => (user && user.uid) ? this.budgetService.getBudgets() : of([] as ServiceIBudget[])),
     );
 
     this.filteredExpensesAndIncomes$ = combineLatest([
@@ -207,361 +163,160 @@ export class DashboardComponent implements OnInit {
         }, {} as { [currency: string]: number });
       })
     );
+    
+    this.totalBudgetsByCurrency$ = combineLatest([allBudgets$, this._startDate$]).pipe(
+      map(([budgets, startDateStr]) => {
+        const currentYear = new Date(startDateStr).getFullYear().toString();
+        return budgets.filter(budget => {
+            const budgetYear = budget.period?.split('-')[0]; // Extract the year from 'YYYY-MM'
+            return budgetYear === currentYear;
+        }).reduce((acc, budget) => {
+          acc[budget.currency] = (acc[budget.currency] || 0) + budget.amount;
+          return acc;
+        }, {} as { [currency: string]: number });
+      })
+    );
 
+    // FIX: Balance is now calculated as Budget - Expense
     this.remainingBalanceByCurrency$ = combineLatest([
-      this.totalIncomesByCurrency$,
+      this.totalBudgetsByCurrency$,
       this.totalExpensesByCurrency$
     ]).pipe(
-      map(([incomes, expenses]) => {
+      map(([budgets, expenses]) => {
         const balance: { [currency: string]: number } = {};
-        const allCurrencies = new Set([...Object.keys(incomes), ...Object.keys(expenses)]);
+        const allCurrencies = new Set([...Object.keys(budgets), ...Object.keys(expenses)]);
 
         allCurrencies.forEach(currency => {
-          const totalIncome = incomes[currency] || 0;
+          const totalBudget = budgets[currency] || 0;
           const totalExpense = expenses[currency] || 0;
-          balance[currency] = totalIncome - totalExpense;
+          balance[currency] = totalBudget - totalExpense;
         });
         return balance;
       })
     );
 
-    this.monthlyProfitLoss$ = combineLatest([
-      this.filteredExpensesAndIncomes$,
-      this.currentViewMode$,
-    ]).pipe(
-      map(([{ expenses, incomes }, viewMode]) => {
-        const profitLossMap: { [period: string]: { profitLoss: number; currency: string }[] } = {};
+    this.monthlyExpenseChartData$ = this.filteredExpensesAndIncomes$.pipe(
+      map(({ expenses }) => {
+        const monthlyExpensesMap: { [month: string]: number } = {};
+        const labels: string[] = [];
+        const currentYear = new Date(this._startDate$.getValue()).getFullYear();
+        const currentLang = this.translate.currentLang;
 
-        const aggregateData = (data: (ServiceIExpense | ServiceIIncome)[], isExpense: boolean) => {
-          data.forEach(item => {
-            const itemDate = new Date(item.date);
-            let periodKey: string;
+        for (let i = 0; i < 12; i++) {
+          const date = new Date(currentYear, i, 1);
+          labels.push(this.datePipe.transform(date, 'MMM', undefined, currentLang) || '');
+        }
 
-            if (viewMode === 'monthly') {
-              periodKey = this.datePipe.transform(itemDate, 'MMM yyyy', '', this.translate.currentLang) || '';
-            } else if (viewMode === 'first-half-yearly') {
-                const year = this.datePipe.transform(itemDate, 'yyyy', '', this.translate.currentLang);
-                periodKey = `${year} H1`;
-            } else if (viewMode === 'second-half-yearly') {
-                const year = this.datePipe.transform(itemDate, 'yyyy', '', this.translate.currentLang);
-                periodKey = `${year} H2`;
-            }
-            else {
-                periodKey = this.datePipe.transform(itemDate, 'yyyy', '', this.translate.currentLang) || '';
-            }
-
-            if (!profitLossMap[periodKey]) {
-              profitLossMap[periodKey] = [];
-            }
-
-            const existingCurrency = profitLossMap[periodKey].find(
-              (entry) => entry.currency === item.currency
-            );
-
-            const amount = (isExpense ? (item as ServiceIExpense).totalCost : (item as ServiceIIncome).amount) || 0;
-
-            if (existingCurrency) {
-              existingCurrency.profitLoss += isExpense ? -amount : amount;
-            } else {
-              profitLossMap[periodKey].push({
-                profitLoss: isExpense ? -amount : amount,
-                currency: item.currency,
-              });
-            }
-          });
-        };
-
-        aggregateData(expenses, true);
-        aggregateData(incomes, false);
-
-        const sortedPeriods = Object.keys(profitLossMap).sort((a, b) => {
-          if (viewMode === 'monthly') {
-              const dateA = new Date(a);
-              const dateB = new Date(b);
-              return dateA.getTime() - dateB.getTime();
-          } else if (viewMode.includes('half-yearly')) {
-              const yearA = parseInt(a.substring(0, 4));
-              const yearB = parseInt(b.substring(0, 4));
-              const halfA = parseInt(a.substring(5));
-              const halfB = parseInt(b.substring(5));
-              if (yearA !== yearB) return yearA - yearB;
-              return halfA - halfB;
-          } else {
-              return parseInt(a) - parseInt(b);
+        expenses.forEach(expense => {
+          const expenseDate = new Date(expense.date);
+          if (expenseDate.getFullYear() === currentYear) {
+            const periodKey = this.datePipe.transform(expenseDate, 'MMM', undefined, currentLang) || '';
+            monthlyExpensesMap[periodKey] = (monthlyExpensesMap[periodKey] || 0) + expense.totalCost;
           }
         });
 
-        const sortedProfitLossMap: typeof profitLossMap = {};
-        sortedPeriods.forEach(key => {
-            profitLossMap[key].sort((a, b) => a.currency.localeCompare(b.currency));
-            sortedProfitLossMap[key] = profitLossMap[key];
-        });
+        const expenseData = labels.map(label => monthlyExpensesMap[label] || 0);
 
-        return sortedProfitLossMap;
-      })
-    );
-
-    this.dailyExpensesAndIncomes$ = combineLatest([
-      allExpenses$,
-      allIncomes$,
-      this._startDate$,
-      this._endDate$,
-    ]).pipe(
-      map(([expenses, incomes, startDateStr, endDateStr]) => {
-        const startDate = new Date(startDateStr);
-        const endDate = new Date(endDateStr);
-
-        const dailyTotals: {
-          [date: string]: {
-            totalExpenses: number;
-            totalIncomes: number;
-            currency: string;
-          }[];
-        } = {};
-
-        const aggregate = (items: (ServiceIExpense | ServiceIIncome)[], isExpense: boolean) => {
-          items.forEach((item) => {
-            const itemDate = this.datePipe.transform(item.date, 'yyyy-MM-dd');
-            if (itemDate) {
-              const dateObj = new Date(itemDate);
-              if (dateObj >= startDate && dateObj <= endDate) {
-                if (!dailyTotals[itemDate]) {
-                  dailyTotals[itemDate] = [];
-                }
-                let currencyEntry = dailyTotals[itemDate].find(
-                  (entry) => entry.currency === item.currency
-                );
-                if (!currencyEntry) {
-                  currencyEntry = {
-                    totalExpenses: 0,
-                    totalIncomes: 0,
-                    currency: item.currency,
-                  };
-                  dailyTotals[itemDate].push(currencyEntry);
-                }
-
-                if (isExpense) {
-                  currencyEntry.totalExpenses += (item as ServiceIExpense).totalCost;
-                } else {
-                  currencyEntry.totalIncomes += (item as ServiceIIncome).amount;
-                }
-              }
+        return {
+          labels,
+          datasets: [
+            {
+              label: this.translate.instant('EXPENSE_AMOUNT'),
+              data: expenseData,
+              backgroundColor: 'rgba(255, 99, 132, 0.5)',
+              borderColor: 'rgba(255, 99, 132, 1)',
+              borderWidth: 1,
             }
-          });
+          ]
         };
-
-        aggregate(expenses, true);
-        aggregate(incomes, false);
-
-        const result = Object.keys(dailyTotals)
-          .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
-          .flatMap((date) =>
-            dailyTotals[date].map((entry) => ({
-              date: date,
-              totalExpenses: entry.totalExpenses,
-              totalIncomes: entry.totalIncomes,
-              currency: entry.currency,
-            }))
-          );
-        return result;
       })
     );
 
-    const uid$ = this.authService.currentUser$.pipe(
-      map(user => user?.uid || null)
+    this.hasExpenseDataForChart$ = this.monthlyExpenseChartData$.pipe(
+      map(data => data.datasets[0].data.some((val: number) => val > 0))
     );
 
-    this.hasDataNext$ = uid$.pipe(
-      switchMap(uid => {
-        if (uid) {
-          return combineLatest([
-            this.expenseService.getExpenses(),
-            this.incomeService.getIncomes()
-          ]).pipe(
-            map(([expenses, incomes]) => expenses.length > 0 || incomes.length > 0),
-            startWith(false)
-          );
-        }
-        return of(false);
-      })
-    );
+    this.subscriptions.add(this.monthlyExpenseChartData$.subscribe(data => {
+      this.cdr.detectChanges();
+      this.renderExpenseChart(data);
+    }));
   }
 
-  ngOnInit(): void {
-    this.currentViewMode$.subscribe(mode => {
-      const { startDate, endDate } = this.getDatesForViewMode(mode);
-      this._startDate$.next(startDate);
-      this._endDate$.next(endDate);
-      this.expenseFilterForm.patchValue({
-        startDate: startDate,
-        endDate: endDate
-      }, { emitEvent: false });
-    });
-
-    this.expenseFilterForm.valueChanges.subscribe((value) => {
-      this._startDate$.next(value.startDate);
-      this._endDate$.next(value.endDate);
-    });
-  }
-
-  toggleSummaryView(): void {
-    const currentMode = this._currentViewModeSubject.getValue();
-    let nextMode: 'yearly' | 'first-half-yearly' | 'second-half-yearly' | 'monthly';
-    switch (currentMode) {
-      case 'yearly':
-        nextMode = 'monthly';
-        break;
-      case 'monthly':
-        nextMode = 'first-half-yearly';
-        break;
-      case 'first-half-yearly':
-        nextMode = 'second-half-yearly';
-        break;
-      case 'second-half-yearly':
-        nextMode = 'yearly';
-        break;
-      default:
-        nextMode = 'yearly';
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
+    if (this.expenseChartInstance) {
+      this.expenseChartInstance.destroy();
     }
-    this._currentViewModeSubject.next(nextMode);
-
-    // NEW: Cycle through background colors
-    this.currentHeaderColorIndex = (this.currentHeaderColorIndex + 1) % this.headerBackgroundColors.length;
-    this.currentHeaderBackgroundColor = this.headerBackgroundColors[this.currentHeaderColorIndex];
-
-
-    // Trigger the title animation by changing its state
-    this.titleAnimTrigger = 'roll';
-    setTimeout(() => {
-      this.titleAnimTrigger = 'initial';
-    }, 150);
   }
 
-  private getFormattedDate(date: Date): string {
-    return this.datePipe.transform(date, 'yyyy-MM-dd') || '';
+  goToExpensePage(expenseId: string): void {
+    this.router.navigate(['/expense', expenseId]);
   }
 
-  private addDays(date: Date, days: number): Date {
-    const result = new Date(date);
-    result.setDate(result.getDate() + days);
-    return result;
-  }
-
-  private getStartOfYear(): Date {
-    const now = new Date();
-    return new Date(now.getFullYear(), 0, 1);
-  }
-
-  private getStartOfFirstHalfYear(date: Date): Date {
-    return new Date(date.getFullYear(), 0, 1);
-  }
-
-  private getEndOfFirstHalfYear(date: Date): Date {
-    return new Date(date.getFullYear(), 5, 30);
-  }
-
-  private getStartOfSecondHalfYear(date: Date): Date {
-    return new Date(date.getFullYear(), 6, 1);
-  }
-
-  private getEndOfSecondHalfYear(date: Date): Date {
-    return new Date(date.getFullYear(), 11, 31);
-  }
-
-  private getStartOfMonth(date: Date): Date {
-    return new Date(date.getFullYear(), date.getMonth(), 1);
-  }
-
-  private getEndOfMonth(date: Date): Date {
-    return new Date(date.getFullYear(), date.getMonth() + 1, 0);
-  }
-
-  private getDatesForViewMode(mode: 'yearly' | 'first-half-yearly' | 'second-half-yearly' | 'monthly'): { startDate: string, endDate: string } {
+  formatDailyDate(dateStr: string): string {
+    const date = new Date(dateStr);
     const today = new Date();
-    let startDate: Date;
-    let endDate: Date;
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
 
-    switch (mode) {
-      case 'yearly':
-        startDate = this.getStartOfYear();
-        endDate = today;
-        break;
-      case 'first-half-yearly':
-        startDate = this.getStartOfFirstHalfYear(today);
-        endDate = this.getEndOfFirstHalfYear(today);
-        break;
-      case 'second-half-yearly':
-        startDate = this.getStartOfSecondHalfYear(today);
-        endDate = this.getEndOfSecondHalfYear(today);
-        break;
-      case 'monthly':
-        startDate = this.getStartOfMonth(today);
-        endDate = this.getEndOfMonth(today);
-        break;
-      default:
-        startDate = this.getStartOfYear();
-        endDate = today;
+    if (this.datePipe.transform(date, 'yyyy-MM-dd') === this.datePipe.transform(today, 'yyyy-MM-dd')) {
+      return this.translate.instant('TODAY');
+    } else if (this.datePipe.transform(date, 'yyyy-MM-dd') === this.datePipe.transform(yesterday, 'yyyy-MM-dd')) {
+      return this.translate.instant('YESTERDAY');
+    } else {
+      const currentLang = this.translate.currentLang;
+      return this.datePipe.transform(date, 'fullDate', '', currentLang) || dateStr;
     }
-    return { startDate: this.getFormattedDate(startDate), endDate: this.getFormattedDate(endDate) };
-  }
-
-  filterByCurrency(currency: string): void {
-    this._activeCategoryFilter$.next(null);
-    this._activeCurrencyFilter$.next(currency);
-  }
-
-  filterByCategory(category: string): void {
-    this._activeCurrencyFilter$.next(null);
-    this._activeCategoryFilter$.next(category);
   }
 
   formatAmountWithSymbol(amount: number, currencyCode: string): string {
-    let options: Intl.NumberFormatOptions = {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    };
-
-    if (currencyCode === 'MMK') {
-      options = {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-      };
-    }
-
-    const currentLang = this.translate.currentLang;
-
+    const symbol = this.availableCurrencies.find(c => c.code === currencyCode)?.symbol || currencyCode;
     let formattedAmount: string;
 
-    if (currentLang === 'my') {
-      formattedAmount = new Intl.NumberFormat('my-MM', {
-        numberingSystem: 'mymr',
-        ...options
-      }).format(amount);
+    const currentLang = this.translate.currentLang;
+    const locale = currentLang === 'my' ? 'my-MM' : currentLang;
 
-      const burmeseCurrencyName = this.burmeseCurrencyNames[currencyCode] || currencyCode;
-      return `${formattedAmount} ${burmeseCurrencyName}`;
+    if (currencyCode === 'MMK') {
+      formattedAmount = amount.toLocaleString(locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
     } else {
-      formattedAmount = new Intl.NumberFormat(currentLang, options).format(amount);
-      const symbol = this.currencySymbols[currencyCode] || currencyCode;
-
-      if (['USD', 'EUR', 'GBP'].includes(currencyCode)) {
-        return `${symbol}${formattedAmount}`;
-      } else {
-        return `${formattedAmount}${symbol}`;
-      }
+      formattedAmount = amount.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
+
+    return `${formattedAmount} ${symbol}`;
   }
 
-  formatDailyDate(dateString: string): string {
-    const date = new Date(dateString);
-    return this.datePipe.transform(date, 'MMM d, yyyy', '', this.translate.currentLang) || dateString;
+  onTimeRangeChange(): void {
+    this.cdr.detectChanges();
   }
 
-  goToExpensePage(): void {
-    this.router.navigate(['/expense']);
+  private addDays(date: Date, days: number): Date {
+      const result = new Date(date);
+      result.setDate(result.getDate() + days);
+      return result;
   }
 
-  goToProfitPage(): void {
-    this.router.navigate(['/profit']);
+  private renderExpenseChart(data: any): void {
+    const canvas = this.expenseChartCanvas?.nativeElement;
+    if (!canvas) {
+      return;
+    }
+
+    if (this.expenseChartInstance) {
+      this.expenseChartInstance.destroy();
+    }
+
+    this.expenseChartInstance = new Chart(canvas, {
+      type: 'bar',
+      data: data,
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
   }
 }
