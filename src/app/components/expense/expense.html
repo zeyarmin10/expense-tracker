@@ -256,124 +256,127 @@
         </div>
 
 
-        <h3 class="h5 text-center mb-3">{{ 'EXPENSE_YOUR_EXPENSES_TITLE' | translate }}</h3>
-        <div *ngIf="(displayedExpenses$ | async)?.length === 0" class="alert alert-info text-center">
-            {{ 'EXPENSE_NO_EXPENSES_HINT' | translate }}
-        </div>
-        <div class="table-responsive">
-          <table class="table table-striped table-hover">
-            <thead>
-              <tr>
-                <th>{{ 'EXPENSE_DATE_COLUMN' | translate }}</th>
-                <th>{{ 'EXPENSE_CATEGORY_COLUMN' | translate }}</th>
-                <th>{{ 'EXPENSE_ITEM_COLUMN' | translate }}</th>
-                <th>{{ 'EXPENSE_QTY_UNIT_COLUMN' | translate }}</th>
-                <th>{{ 'EXPENSE_PRICE_COLUMN' | translate }}</th>
-                <th>{{ 'EXPENSE_TOTAL_COLUMN' | translate }}</th>
-                <th class="text-nowrap" style="width: 1%;">{{ 'EXPENSE_ACTIONS_COLUMN' | translate }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <ng-container *ngFor="let expense of displayedExpenses$ | async">
-                <tr *ngIf="editingExpenseId !== expense.id">
-                  <td>{{ expense.date }}</td>
-                  <td>{{ expense.category }}</td>
-                  <td>{{ expense.itemName }}</td>
-                  <td>{{ expense.quantity }} {{ expense.unit }}</td>
-                  <td>{{ formatAmountWithSymbol(expense.price, expense.currency) }}</td>
-                  <td class="fw-bold">{{ formatAmountWithSymbol(expense.totalCost, expense.currency) }}</td>
-                  <td class="text-end text-nowrap">
-                    <button
-                      class="btn btn-sm btn-outline-info me-2 ps-4 pe-4"
-                      (click)="startEdit(expense)"
-                      [attr.aria-label]="'EXPENSE_EDIT_BUTTON' | translate"
-                      [disabled]="editingExpenseId !== null"
-                    >
-                      <fa-icon [icon]="faEdit"></fa-icon>
-                    </button>
-                    <button
-                      class="btn btn-sm btn-outline-danger"
-                      (click)="onDelete(expense.id!);"
-                      [attr.aria-label]="'EXPENSE_DELETE_BUTTON' | translate"
-                      [disabled]="editingExpenseId !== null"
-                    >
-                      <fa-icon [icon]="faTrash"></fa-icon>
-                    </button>
-                  </td>
-                </tr>
+            <h3 class="h5 text-center mb-3">{{ 'EXPENSE_YOUR_EXPENSES_TITLE' | translate }}</h3>
 
-                <tr *ngIf="editingExpenseId === expense.id && editingForm" [formGroup]="editingForm">
-                  <input type="hidden" formControlName="updatedAt"/>
-                  <td>
-                    <input type="date" class="form-control form-control-sm" formControlName="date"
-                    [class.is-invalid]="editingForm.controls['date'].invalid && editingForm.controls['date'].touched" />
-                  </td>
-                  <td>
-                    <select class="form-select form-select-sm" formControlName="category"
-                    [class.is-invalid]="editingForm.controls['category'].invalid && editingForm.controls['category'].touched" >
-                      <option *ngFor="let cat of categories$ | async" [value]="cat.name">{{ cat.name }}</option>
-                    </select>
-                  </td>
-                  <td>
-                    <input type="text" class="form-control form-control-sm" formControlName="itemName"
-                    [class.is-invalid]="editingForm.controls['itemName'].invalid && editingForm.controls['itemName'].touched" />
-                  </td>
-                  <td>
-                    <div class="input-group input-group-sm">
-                        <input type="number" class="form-control" formControlName="quantity" min="0.01"
-                        [class.is-invalid]="editingForm.controls['quantity'].invalid && editingForm.controls['quantity'].touched" />
-                        <input type="text" class="form-control" formControlName="unit" placeholder="{{ 'EXPENSE_UNIT_PLACEHOLDER' | translate }}"
-                        (focus)="onFocusInput($event, 'unit', editingForm)"
-                        (blur)="onBlurInput($event, 'unit', editingForm)"/>
-                    </div>
-                  </td>
-                  <td>
-                    <div class="input-group input-group-sm">
-                      <input type="number" class="form-control" formControlName="price" min="0"
-                      [class.is-invalid]="editingForm.controls['price'].invalid && editingForm.controls['price'].touched" />
-                      <select class="form-select" formControlName="currency" style="max-width: 30%;"
-                      [class.is-invalid]="editingForm.controls['currency'].invalid && editingForm.controls['currency'].touched" >
-                        <option *ngFor="let curr of availableCurrencies" [value]="curr.code">{{ curr.symbol }}</option>
-                      </select>
-                    </div>
-                  </td>
-                  <td class="fw-bold">
-                    {{ formatAmountWithSymbol(editingForm.value.price * editingForm.value.quantity, editingForm.value.currency) }}
-                  </td>
-                  <td class="text-end text-nowrap">
-                    <button
-                      class="btn btn-sm me-2 ps-4 pe-4"
-                      [ngClass]="{'btn-outline-success': true, 'shine-effect': !editingForm.invalid}"
-                      (click)="saveEdit()"
-                      [disabled]="editingForm.invalid"
-                      [attr.aria-label]="'EXPENSE_SAVE_BUTTON' | translate"
-                    >
-                      <fa-icon [icon]="faSave"></fa-icon>
-                    </button>
-                    <button
-                      class="btn btn-sm btn-outline-danger"
-                      (click)="cancelEdit()"
-                      [attr.aria-label]="'EXPENSE_CANCEL_BUTTON' | translate"
-                    >
-                      <fa-icon [icon]="faTimes"></fa-icon>
-                    </button>
-                  </td>
-                </tr>
-              </ng-container>
-            </tbody>
-          </table>
-        </div>
-        <div *ngIf="editingForm && editingForm.invalid && (editingForm.dirty || editingForm.touched)" class="alert alert-warning mt-3">
-          {{ 'EXPENSE_ERROR_EDIT_FORM_INVALID' | translate }}
-          <ul>
-            <li *ngIf="editingForm.controls['date'].invalid && editingForm.controls['date'].touched">{{ 'EXPENSE_DATE_REQUIRED' | translate }}</li>
-            <li *ngIf="editingForm.controls['category'].invalid && editingForm.controls['category'].touched">{{ 'EXPENSE_CATEGORY_REQUIRED' | translate }}</li>
-            <li *ngIf="editingForm.controls['itemName'].invalid && editingForm.controls['itemName'].touched">{{ 'EXPENSE_ITEM_NAME_REQUIRED' | translate }}</li>
-            <li *ngIf="editingForm.controls['quantity'].invalid && editingForm.controls['quantity'].touched">{{ 'EXPENSE_QUANTITY_MIN' | translate }}</li>
-            <li *ngIf="editingForm.controls['price'].invalid && editingForm.controls['price'].touched">{{ 'EXPENSE_PRICE_NON_NEGATIVE' | translate }}</li>
-            <li *ngIf="editingForm.controls['currency'].invalid && editingForm.controls['currency'].touched">{{ 'EXPENSE_CURRENCY_REQUIRED' | translate }}</li>
-          </ul>
-        </div>
+            <div *ngIf="(displayedExpenses$ | async) as expenses">
+                <div *ngIf="expenses.length === 0" class="alert alert-info text-center">
+                    {{ 'EXPENSE_NO_EXPENSES_HINT' | translate }}
+                </div>
+
+                <div class="table-responsive" *ngIf="expenses.length > 0">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>{{ 'EXPENSE_DATE_COLUMN' | translate }}</th>
+                                <th>{{ 'EXPENSE_CATEGORY_COLUMN' | translate }}</th>
+                                <th>{{ 'EXPENSE_ITEM_COLUMN' | translate }}</th>
+                                <th>{{ 'EXPENSE_QTY_UNIT_COLUMN' | translate }}</th>
+                                <th>{{ 'EXPENSE_PRICE_COLUMN' | translate }}</th>
+                                <th>{{ 'EXPENSE_TOTAL_COLUMN' | translate }}</th>
+                                <th class="text-nowrap" style="width: 1%;">{{ 'EXPENSE_ACTIONS_COLUMN' | translate }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <ng-container *ngFor="let expense of expenses">
+                                <tr *ngIf="editingExpenseId !== expense.id">
+                                    <td>{{ expense.date }}</td>
+                                    <td>{{ expense.category }}</td>
+                                    <td>{{ expense.itemName }}</td>
+                                    <td>{{ expense.quantity }} {{ expense.unit }}</td>
+                                    <td>{{ formatAmountWithSymbol(expense.price, expense.currency) }}</td>
+                                    <td class="fw-bold">{{ formatAmountWithSymbol(expense.totalCost, expense.currency) }}</td>
+                                    <td class="text-end text-nowrap">
+                                        <button
+                                        class="btn btn-sm btn-outline-info me-2 ps-4 pe-4"
+                                        (click)="startEdit(expense)"
+                                        [attr.aria-label]="'EXPENSE_EDIT_BUTTON' | translate"
+                                        [disabled]="editingExpenseId !== null"
+                                        >
+                                            <fa-icon [icon]="faEdit"></fa-icon>
+                                        </button>
+                                        <button
+                                        class="btn btn-sm btn-outline-danger"
+                                        (click)="onDelete(expense.id!);"
+                                        [attr.aria-label]="'EXPENSE_DELETE_BUTTON' | translate"
+                                        [disabled]="editingExpenseId !== null"
+                                        >
+                                            <fa-icon [icon]="faTrash"></fa-icon>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr *ngIf="editingExpenseId === expense.id && editingForm" [formGroup]="editingForm">
+                                    <input type="hidden" formControlName="updatedAt"/>
+                                    <td>
+                                        <input type="date" class="form-control form-control-sm" formControlName="date"
+                                        [class.is-invalid]="editingForm.controls['date'].invalid && editingForm.controls['date'].touched" />
+                                    </td>
+                                    <td>
+                                        <select class="form-select form-select-sm" formControlName="category"
+                                        [class.is-invalid]="editingForm.controls['category'].invalid && editingForm.controls['category'].touched" >
+                                            <option *ngFor="let cat of categories$ | async" [value]="cat.name">{{ cat.name }}</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input type="text" class="form-control form-control-sm" formControlName="itemName"
+                                        [class.is-invalid]="editingForm.controls['itemName'].invalid && editingForm.controls['itemName'].touched" />
+                                    </td>
+                                    <td>
+                                        <div class="input-group input-group-sm">
+                                            <input type="number" class="form-control" formControlName="quantity" min="0.01"
+                                            [class.is-invalid]="editingForm.controls['quantity'].invalid && editingForm.controls['quantity'].touched" />
+                                            <input type="text" class="form-control" formControlName="unit" placeholder="{{ 'EXPENSE_UNIT_PLACEHOLDER' | translate }}"
+                                            (focus)="onFocusInput($event, 'unit', editingForm)"
+                                            (blur)="onBlurInput($event, 'unit', editingForm)"/>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="input-group input-group-sm">
+                                        <input type="number" class="form-control" formControlName="price" min="0"
+                                        [class.is-invalid]="editingForm.controls['price'].invalid && editingForm.controls['price'].touched" />
+                                        <select class="form-select" formControlName="currency" style="max-width: 30%;"
+                                        [class.is-invalid]="editingForm.controls['currency'].invalid && editingForm.controls['currency'].touched" >
+                                            <option *ngFor="let curr of availableCurrencies" [value]="curr.code">{{ curr.symbol }}</option>
+                                        </select>
+                                        </div>
+                                    </td>
+                                    <td class="fw-bold">
+                                        {{ formatAmountWithSymbol(editingForm.value.price * editingForm.value.quantity, editingForm.value.currency) }}
+                                    </td>
+                                    <td class="text-end text-nowrap">
+                                        <button
+                                        class="btn btn-sm me-2 ps-4 pe-4"
+                                        [ngClass]="{'btn-outline-success': true, 'shine-effect': !editingForm.invalid}"
+                                        (click)="saveEdit()"
+                                        [disabled]="editingForm.invalid"
+                                        [attr.aria-label]="'EXPENSE_SAVE_BUTTON' | translate"
+                                        >
+                                            <fa-icon [icon]="faSave"></fa-icon>
+                                        </button>
+                                        <button
+                                        class="btn btn-sm btn-outline-danger"
+                                        (click)="cancelEdit()"
+                                        [attr.aria-label]="'EXPENSE_CANCEL_BUTTON' | translate"
+                                        >
+                                            <fa-icon [icon]="faTimes"></fa-icon>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </ng-container>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div *ngIf="editingForm && editingForm.invalid && (editingForm.dirty || editingForm.touched)" class="alert alert-warning mt-3">
+                {{ 'EXPENSE_ERROR_EDIT_FORM_INVALID' | translate }}
+                <ul>
+                    <li *ngIf="editingForm.controls['date'].invalid && editingForm.controls['date'].touched">{{ 'EXPENSE_DATE_REQUIRED' | translate }}</li>
+                    <li *ngIf="editingForm.controls['category'].invalid && editingForm.controls['category'].touched">{{ 'EXPENSE_CATEGORY_REQUIRED' | translate }}</li>
+                    <li *ngIf="editingForm.controls['itemName'].invalid && editingForm.controls['itemName'].touched">{{ 'EXPENSE_ITEM_NAME_REQUIRED' | translate }}</li>
+                    <li *ngIf="editingForm.controls['quantity'].invalid && editingForm.controls['quantity'].touched">{{ 'EXPENSE_QUANTITY_MIN' | translate }}</li>
+                    <li *ngIf="editingForm.controls['price'].invalid && editingForm.controls['price'].touched">{{ 'EXPENSE_PRICE_NON_NEGATIVE' | translate }}</li>
+                    <li *ngIf="editingForm.controls['currency'].invalid && editingForm.controls['currency'].touched">{{ 'EXPENSE_CURRENCY_REQUIRED' | translate }}</li>
+                </ul>
+            </div>
       </div>
     </div>
   </div>
