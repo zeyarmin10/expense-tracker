@@ -12,6 +12,19 @@ import { Chart, registerables } from 'chart.js';
 
 Chart.register(...registerables);
 
+// Define interfaces for better type checking and clarity
+interface BudgetSummary {
+  amount: number;
+  currency: string;
+  balance: number;
+}
+
+interface MonthlySummaryItem {
+  month: string; // Formatted date string (e.g., "Nov 28, 2025")
+  total: { [currency: string]: number }; // Total expenses by currency for the month
+  budget: BudgetSummary | null; // Budget details for the month, or null if no budget
+}
+
 @Component({
   selector: 'app-budget',
   standalone: true,
@@ -40,7 +53,8 @@ export class BudgetComponent implements OnInit, OnDestroy {
   totalExpensesByCurrency$: Observable<{ [currency: string]: number }>;
   remainingBalanceByCurrency$: Observable<{ [currency: string]: number }>;
   
-  monthlySummary$: Observable<{ month: string, currency: string, budget: number, expense: number, balance: number }[]>;
+  // Updated type declaration to match the emitted structure
+  monthlySummary$: Observable<MonthlySummaryItem[]>;
 
   filteredBudgets$: Observable<ServiceIBudget[]>;
 
@@ -158,57 +172,55 @@ export class BudgetComponent implements OnInit, OnDestroy {
     );
 
     this.monthlySummary$ = filteredData$.pipe(
-      map(({ budgets, expenses }) => {
-        const monthlyData: { [key: string]: { budget: number, expense: number } } = {};
-        const allMonthsAndCurrencies: Set<string> = new Set();
-        
-        budgets.forEach(budget => {
-          if (budget.period) {
-            const monthYear = this.datePipe.transform(new Date(budget.period), 'MMM yyyy') || '';
-            const key = `${monthYear}_${budget.currency}`;
-            allMonthsAndCurrencies.add(key);
-            if (!monthlyData[key]) {
-              monthlyData[key] = { budget: 0, expense: 0 };
-            }
-            monthlyData[key].budget += budget.amount;
-          }
-        });
-        
-        expenses.forEach(expense => {
-          const monthYear = this.datePipe.transform(new Date(expense.date), 'MMM yyyy') || '';
-          const key = `${monthYear}_${expense.currency}`;
-          allMonthsAndCurrencies.add(key);
-          if (!monthlyData[key]) {
-            monthlyData[key] = { budget: 0, expense: 0 };
-          }
-          monthlyData[key].expense += expense.totalCost;
-        });
-        
-        const sortedKeys = Array.from(allMonthsAndCurrencies).sort((a, b) => {
-          const [monthA, currencyA] = a.split('_');
-          const [monthB, currencyB] = b.split('_');
-          
-          const dateA = new Date(monthA);
-          const dateB = new Date(monthB);
-          
-          if (dateB.getTime() !== dateA.getTime()) {
-            return dateB.getTime() - dateA.getTime();
-          }
-          return currencyA.localeCompare(currencyB);
-        });
+        map(({ budgets, expenses }) => {
+            const monthlyDataMap = new Map<string, { budgetAmount: number, expenseAmount: number, currency: string }>();
 
-        return sortedKeys.map(key => {
-          const [month, currency] = key.split('_');
-          const data = monthlyData[key];
-          return {
-            month,
-            currency,
-            budget: data.budget,
-            expense: data.expense,
-            balance: data.budget - data.expense,
-          };
-        });
-      })
+            expenses.forEach(expense => {
+            const monthYear = this.datePipe.transform(new Date(expense.date), 'yyyy-MM')!;
+            const key = `${monthYear}_${expense.currency}`;
+            const currentData = monthlyDataMap.get(key) || { budgetAmount: 0, expenseAmount: 0, currency: expense.currency };
+            currentData.expenseAmount += expense.totalCost;
+            monthlyDataMap.set(key, currentData);
+            });
+
+            budgets.forEach(budget => {
+            if (budget.period) {
+                const monthYear = this.datePipe.transform(new Date(budget.period), 'yyyy-MM')!;
+                const key = `${monthYear}_${budget.currency}`;
+                const currentData = monthlyDataMap.get(key) || { budgetAmount: 0, expenseAmount: 0, currency: budget.currency };
+                currentData.budgetAmount += budget.amount;
+                monthlyDataMap.set(key, currentData);
+            }
+            });
+
+            // Create a temporary array to sort by the machine-readable date string
+            const temporarySummaryArray = Array.from(monthlyDataMap.entries()).map(([key, data]) => {
+            const [monthYearStr, currency] = key.split('_');
+            const monthDate = new Date(monthYearStr + '-01');
+            const balance = data.budgetAmount - data.expenseAmount;
+
+            return {
+                sortDate: monthDate, // Use the Date object for sorting
+                month: this.formatLocalizedDate(monthDate, 'MMM d, yyyy'), // Use the formatted string for display
+                total: { [currency]: data.expenseAmount },
+                budget: {
+                amount: data.budgetAmount,
+                currency: currency,
+                balance: balance
+                }
+            };
+            });
+
+            // Sort the temporary array by the 'sortDate' property
+            temporarySummaryArray.sort((a, b) => b.sortDate.getTime() - a.sortDate.getTime());
+
+            // Map the sorted array to the final structure, excluding the temporary 'sortDate' property
+            return temporarySummaryArray.map(item => ({
+            month: item.month,
+            total: item.total,
+            budget: item.budget
+            }));
+        })
     );
     
     this.totalBudgetByCurrency$ = filteredData$.pipe(
