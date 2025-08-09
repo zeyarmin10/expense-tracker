@@ -324,83 +324,88 @@ export class BudgetComponent implements OnInit, OnDestroy {
     );
 
     this.budgetChartData$ = filteredData$.pipe(
-      map(({ budgets, expenses }) => {
-        const monthlyData: {
-          [month: string]: { budget: number; expense: number; date: Date };
-        } = {};
+        map(({ budgets, expenses }) => {
+            const monthlyData: {
+                [month: string]: { budget: number; expense: number; date: Date };
+            } = {};
 
-        budgets.forEach((budget) => {
-          if (budget.period) {
-            const monthYear =
-              this.datePipe.transform(new Date(budget.period), 'MMM yyyy') ||
-              '';
-            const monthDate = new Date(budget.period);
-            if (!monthlyData[monthYear]) {
-              monthlyData[monthYear] = {
-                budget: 0,
-                expense: 0,
-                date: monthDate,
-              };
-            }
-            monthlyData[monthYear].budget += budget.amount;
-          }
-        });
+            const currentLang = this.translate.currentLang;
+            const locale = currentLang === 'my' ? 'my-MM' : currentLang;
+            // Changed to 'MMM, yy' for abbreviated month and year
+            const dateFormat = 'MMM, yy';
 
-        expenses.forEach((expense) => {
-          const monthYear =
-            this.datePipe.transform(new Date(expense.date), 'MMM yyyy') || '';
-          const monthDate = new Date(expense.date);
-          if (!monthlyData[monthYear]) {
-            monthlyData[monthYear] = { budget: 0, expense: 0, date: monthDate };
-          }
-          monthlyData[monthYear].expense += expense.totalCost;
-        });
+            budgets.forEach((budget) => {
+                if (budget.period) {
+                    const monthYear =
+                        this.datePipe.transform(new Date(budget.period), dateFormat, undefined, locale) || '';
+                    const monthDate = new Date(budget.period);
+                    if (!monthlyData[monthYear]) {
+                        monthlyData[monthYear] = {
+                            budget: 0,
+                            expense: 0,
+                            date: monthDate,
+                        };
+                    }
+                    monthlyData[monthYear].budget += budget.amount;
+                }
+            });
 
-        // Get an array of objects to sort
-        const sortedMonthlyData = Object.keys(monthlyData).map((month) => ({
-          month: month,
-          data: monthlyData[month],
-        }));
+            expenses.forEach((expense) => {
+                const monthYear =
+                    this.datePipe.transform(new Date(expense.date), dateFormat, undefined, locale) || '';
+                const monthDate = new Date(expense.date);
+                if (!monthlyData[monthYear]) {
+                    monthlyData[monthYear] = { budget: 0, expense: 0, date: monthDate };
+                }
+                monthlyData[monthYear].expense += expense.totalCost;
+            });
 
-        // Sort the array in ascending chronological order
-        sortedMonthlyData.sort(
-          (a, b) => a.data.date.getTime() - b.data.date.getTime()
-        );
+            // Get an array of objects to sort
+            const sortedMonthlyData = Object.keys(monthlyData).map((month) => ({
+                month: month,
+                data: monthlyData[month],
+            }));
 
-        const labels: string[] = sortedMonthlyData.map((item) => item.month);
-        const budgetedAmounts: number[] = sortedMonthlyData.map(
-          (item) => item.data.budget
-        );
-        const expenseAmounts: number[] = sortedMonthlyData.map(
-          (item) => item.data.expense
-        );
+            // Sort the array in ascending chronological order
+            sortedMonthlyData.sort(
+                (a, b) => a.data.date.getTime() - b.data.date.getTime()
+            );
 
-        return {
-          labels,
-          datasets: [
-            {
-              label: this.translate.instant('BUDGET_AMOUNT'),
-              data: budgetedAmounts,
-              backgroundColor: 'rgba(54, 162, 235, 0.5)',
-              borderColor: 'rgba(54, 162, 235, 1)',
-              borderWidth: 1,
-            },
-            {
-              label: this.translate.instant('EXPENSE_AMOUNT'),
-              data: expenseAmounts,
-              backgroundColor: 'rgba(255, 99, 132, 0.5)',
-              borderColor: 'rgba(255, 99, 132, 1)',
-              borderWidth: 1,
-            },
-          ],
-        };
-      })
+            const labels: string[] = sortedMonthlyData.map((item) => item.month);
+            const budgetedAmounts: number[] = sortedMonthlyData.map(
+                (item) => item.data.budget
+            );
+            const expenseAmounts: number[] = sortedMonthlyData.map(
+                (item) => item.data.expense
+            );
+
+            return {
+                labels,
+                datasets: [
+                    {
+                        label: this.translate.instant('BUDGET_AMOUNT'),
+                        data: budgetedAmounts,
+                        backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1,
+                    },
+                    {
+                        label: this.translate.instant('EXPENSE_AMOUNT'),
+                        data: expenseAmounts,
+                        backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1,
+                    },
+                ],
+            };
+        })
     );
 
     this.budgetChartData$.subscribe((data) => {
-      this.renderChart(data);
+    this.renderChart(data);
     });
-  }
+    
+}
 
   ngOnInit(): void {
     const storedLang = localStorage.getItem('selectedLanguage');
@@ -542,11 +547,13 @@ export class BudgetComponent implements OnInit, OnDestroy {
         type: 'bar',
         data: data,
         options: {
+          indexAxis: 'y',
           responsive: true,
           maintainAspectRatio: false,
           scales: {
             x: {
               stacked: false,
+              beginAtZero: true,
             },
             y: {
               stacked: false,
@@ -558,10 +565,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
     }
   }
 
-  formatLocalizedDate(
-    date: string | Date | null | undefined,
-    format: string
-  ): string {
+  formatLocalizedDate( date: string | Date | null | undefined, format: string ): string {
     // Get the current language from the translation service
     const currentLang = this.translate.currentLang;
     // Use DatePipe to transform the date, passing the language as the locale

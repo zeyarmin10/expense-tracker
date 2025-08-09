@@ -5,13 +5,15 @@
                 <div class="dashboard-header d-flex justify-content-between align-items-center mb-4 p-3 rounded" [ngStyle]="{'background-color': currentHeaderBackgroundColor}">
                     <div>
                         <h2 class="fw-bold">{{ currentSummaryTitle$ | async }}</h2>
-                        <!-- <h5 class="text-secondary" *ngIf="userDisplayName$ | async as displayName">{{ 'WELCOME_MESSAGE' | translate }} {{ displayName }}!</h5> -->
+                        <!-- <h5 class="text-secondary" *ngIf="!(hasData$ | async) && (userDisplayName$ | async) as displayName">
+                            {{ 'WELCOME_MESSAGE' | translate }} {{ displayName }}!
+                        </h5> -->
                     </div>
                 </div>
                 <div class="row mb-4 text-center">
                     <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 col-12 mb-3">
                         <div class="card h-100 border border-success">
-                            <div class="card-body p-1">
+                            <div class="card-body pt-1 pb-1">
                                 
                                 <div class="d-flex flex-column justify-content-center align-items-center" *ngIf="(totalIncomesByCurrency$ | async) as totals; else loading">
                                     <h6 class="text-muted">{{ 'TOTAL_INCOMES' | translate }}</h6>
@@ -34,7 +36,7 @@
 
                     <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 col-12 mb-3">
                         <div class="card h-100 border border-success">
-                            <div class="card-body p-1">
+                            <div class="card-body pt-1 pb-1">
                                 <div class="d-flex flex-column justify-content-center align-items-center" *ngIf="(totalBudgetsByCurrency$ | async) as totals; else loading">
                                     <h6 class="text-muted">{{ 'TOTAL_BUDGET' | translate }}</h6>
                                     <div *ngIf="totals && (totals | keyvalue).length > 0; else noData">
@@ -56,7 +58,7 @@
 
                     <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 col-12 mb-3">
                         <div class="card h-100 border border-warning">
-                            <div class="card-body p-1">
+                            <div class="card-body pt-1 pb-1">
                                 <div class="d-flex flex-column justify-content-center align-items-center" *ngIf="(totalExpensesByCurrency$ | async) as totals; else loading">
                                     <h6 class="text-muted">{{ 'TOTAL_EXPENSES' | translate }}</h6>
                                     <div *ngIf="totals && (totals | keyvalue).length > 0; else noData">
@@ -78,7 +80,7 @@
 
                     <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 col-12 mb-3">
                         <div class="card h-100 border border-info">
-                            <div class="card-body p-1">
+                            <div class="card-body pt-1 pb-11">
                                 
                                 <div class="d-flex flex-column justify-content-center align-items-center" *ngIf="(remainingBalanceByCurrency$ | async) as balances; else loading">
                                     <h6 class="text-muted">{{ 'REMAINING_BALANCE' | translate }}</h6>

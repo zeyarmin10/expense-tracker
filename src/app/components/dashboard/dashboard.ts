@@ -54,6 +54,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   remainingBalanceByCurrency$!: Observable<{ [currency: string]: number }>;
   monthlyExpenseChartData$!: Observable<{ labels: string[], datasets: any[] }>;
   hasExpenseDataForChart$!: Observable<boolean>;
+  hasData$!: Observable<boolean>;
+
 
   expenseFilterForm!: FormGroup;
   categoryFilterForm!: FormGroup;
@@ -195,6 +197,75 @@ export class DashboardComponent implements OnInit, OnDestroy {
       })
     );
 
+    this.hasData$ = combineLatest([
+      this.totalIncomesByCurrency$,
+      this.totalExpensesByCurrency$,
+      this.totalBudgetsByCurrency$
+    ]).pipe(
+      map(([incomes, expenses, budgets]) => {
+        const hasIncomes = Object.keys(incomes).length > 0;
+        const hasExpenses = Object.keys(expenses).length > 0;
+        const hasBudgets = Object.keys(budgets).length > 0;
+        return hasIncomes || hasExpenses || hasBudgets;
+      })
+    );
+
+    // monthly income and expense data for bar chart
+    // this.monthlyExpenseChartData$ = this.filteredExpensesAndIncomes$.pipe(
+    //     map(({ expenses, incomes }) => {
+    //         const monthlyExpensesMap: { [month: string]: number } = {};
+    //         const monthlyIncomesMap: { [month: string]: number } = {};
+    //         const labels: string[] = [];
+    //         const currentYear = new Date(this._startDate$.getValue()).getFullYear();
+    //         const currentLang = this.translate.currentLang;
+
+    //         for (let i = 0; i < 12; i++) {
+    //             const date = new Date(currentYear, i, 1);
+    //             labels.push(this.datePipe.transform(date, 'MMM', undefined, currentLang) || '');
+    //         }
+
+    //         expenses.forEach(expense => {
+    //             const expenseDate = new Date(expense.date);
+    //             if (expenseDate.getFullYear() === currentYear) {
+    //                 const periodKey = this.datePipe.transform(expenseDate, 'MMM', undefined, currentLang) || '';
+    //                 monthlyExpensesMap[periodKey] = (monthlyExpensesMap[periodKey] || 0) + expense.totalCost;
+    //             }
+    //         });
+
+    //         incomes.forEach(income => {
+    //             const incomeDate = new Date(income.date);
+    //             if (incomeDate.getFullYear() === currentYear) {
+    //                 const periodKey = this.datePipe.transform(incomeDate, 'MMM', undefined, currentLang) || '';
+    //                 monthlyIncomesMap[periodKey] = (monthlyIncomesMap[periodKey] || 0) + income.amount;
+    //             }
+    //         });
+
+    //         const expenseData = labels.map(label => monthlyExpensesMap[label] || 0);
+    //         const incomeData = labels.map(label => monthlyIncomesMap[label] || 0);
+
+    //         return {
+    //             labels,
+    //             datasets: [
+    //                 {
+    //                     label: this.translate.instant('EXPENSE_AMOUNT'),
+    //                     data: expenseData,
+    //                     backgroundColor: 'rgba(255, 99, 132, 0.5)',
+    //                     borderColor: 'rgba(255, 99, 132, 1)',
+    //                     borderWidth: 1,
+    //                 },
+    //                 {
+    //                     label: this.translate.instant('INCOME_AMOUNT'),
+    //                     data: incomeData,
+    //                     backgroundColor: 'rgba(75, 192, 192, 0.5)',
+    //                     borderColor: 'rgba(75, 192, 192, 1)',
+    //                     borderWidth: 1,
+    //                 }
+    //             ]
+    //         };
+    //     })
+    // );
+
+    // only expense data for bar chart
     this.monthlyExpenseChartData$ = this.filteredExpensesAndIncomes$.pipe(
       map(({ expenses }) => {
         const monthlyExpensesMap: { [month: string]: number } = {};
@@ -233,12 +304,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
     );
 
     this.hasExpenseDataForChart$ = this.monthlyExpenseChartData$.pipe(
-      map(data => data.datasets[0].data.some((val: number) => val > 0))
+        map(data => data.datasets[0].data.some((val: number) => val > 0) || data.datasets[1].data.some((val: number) => val > 0))
     );
 
     this.subscriptions.add(this.monthlyExpenseChartData$.subscribe(data => {
-      this.cdr.detectChanges();
-      this.renderExpenseChart(data);
+        this.cdr.detectChanges();
+        this.renderExpenseChart(data);
     }));
   }
 
@@ -298,25 +369,29 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private renderExpenseChart(data: any): void {
     const canvas = this.expenseChartCanvas?.nativeElement;
     if (!canvas) {
-      return;
+        return;
     }
 
     if (this.expenseChartInstance) {
-      this.expenseChartInstance.destroy();
+        this.expenseChartInstance.destroy();
     }
 
     this.expenseChartInstance = new Chart(canvas, {
-      type: 'bar',
-      data: data,
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          y: {
-            beginAtZero: true
-          }
+        type: 'bar',
+        data: data,
+        options: {
+            indexAxis: 'y', // This is the key change to make the bars horizontal
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: { // 'x' axis now represents the amount
+                    beginAtZero: true
+                },
+                y: { // 'y' axis now represents the months
+                    beginAtZero: true
+                }
+            }
         }
-      }
     });
   }
 }
