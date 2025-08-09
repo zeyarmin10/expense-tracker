@@ -433,10 +433,8 @@
                       }}</small>
                       <span
                         class="text-end"
-                        [ngClass]="{
-                          'text-success': (monthData.budget?.balance ?? 0) >= 0,
-                          'text-danger': (monthData.budget?.balance ?? 0) < 0
-                        }"
+                        [class.text-success]="(monthData.budget.balance) >= 0"
+                        [class.text-danger]="(monthData.budget.balance) < 0"
                       >
                         {{
                           formatAmountWithSymbol(
