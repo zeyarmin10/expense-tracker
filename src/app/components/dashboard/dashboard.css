@@ -46,3 +46,18 @@ body {
     font-size: 1.1rem;
     font-weight: 600;
 }
+
+.chart-container {
+    position: relative;
+    min-height: 50vh;
+    margin-bottom: 20px;
+}
+
+/* For mobile devices, increase the chart height for better readability */
+@media (max-width: 767px) {
+  .chart-container {
+    position: relative;
+    min-height: 60vh;
+    margin-bottom: 20px;
+  }
+}
