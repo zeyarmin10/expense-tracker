@@ -6,7 +6,7 @@ import {
   ViewChild,
   ChangeDetectorRef,
   viewChild,
-  NgZone
+  NgZone,
 } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import {
@@ -17,7 +17,13 @@ import {
 } from '@angular/forms';
 import { ServiceIExpense, ExpenseService } from '../../services/expense';
 import { ServiceICategory, CategoryService } from '../../services/category';
-import { Observable, BehaviorSubject, combineLatest, map, firstValueFrom } from 'rxjs';
+import {
+  Observable,
+  BehaviorSubject,
+  combineLatest,
+  map,
+  firstValueFrom,
+} from 'rxjs';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
@@ -27,9 +33,8 @@ import {
   faTrash,
   faSave,
   faTimes,
-  faSync
+  faSync,
 } from '@fortawesome/free-solid-svg-icons';
-
 
 import { CategoryModalComponent } from '../common/category-modal/category-modal';
 import { ConfirmationModal } from '../common/confirmation-modal/confirmation-modal';
@@ -44,7 +49,7 @@ import { ActivatedRoute, Router } from '@angular/router';
     FontAwesomeModule,
     CategoryModalComponent,
     TranslateModule,
-    ConfirmationModal
+    ConfirmationModal,
   ],
   providers: [DatePipe],
   templateUrl: './expense.html',
@@ -52,7 +57,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 })
 export class Expense implements OnInit {
   @ViewChild(CategoryModalComponent) categoryModal!: CategoryModalComponent;
-  @ViewChild('deleteConfirmationModal') deleteConfirmationModal!: ConfirmationModal;
+  @ViewChild('deleteConfirmationModal')
+  deleteConfirmationModal!: ConfirmationModal;
   @ViewChild('errorModal') errorModal!: ConfirmationModal; // New: Reference to the error modal
 
   newExpenseForm: FormGroup;
@@ -67,8 +73,9 @@ export class Expense implements OnInit {
 
   displayedExpenses$: Observable<ServiceIExpense[]>;
   totalExpensesByCurrency$: Observable<{ [key: string]: number }>;
-  totalExpensesByCategoryAndCurrency$: Observable<{ [category: string]: { [currency: string]: number } }>;
-
+  totalExpensesByCategoryAndCurrency$: Observable<{
+    [category: string]: { [currency: string]: number };
+  }>;
 
   expenseService = inject(ExpenseService);
   categoryService = inject(CategoryService);
@@ -92,13 +99,13 @@ export class Expense implements OnInit {
   currencySymbols: { [key: string]: string } = {
     MMK: 'Ks',
     USD: '$',
-    THB: '฿'
+    THB: '฿',
   };
 
   availableCurrencies = [
     { code: 'MMK', symbol: 'Ks' },
     { code: 'USD', symbol: '$' },
-    { code: 'THB', symbol: '฿' }
+    { code: 'THB', symbol: '฿' },
   ];
 
   // expenseForm is not directly used for input binding, can be removed or kept for other purposes if needed
@@ -108,14 +115,16 @@ export class Expense implements OnInit {
   private originalUnit: string | null = null;
   private originalQuantity: number | null = null;
   private originalPrice: number | null = null;
-  private _expensesSubject: BehaviorSubject<ServiceIExpense[]> = new BehaviorSubject<ServiceIExpense[]>([]);
+  private _expensesSubject: BehaviorSubject<ServiceIExpense[]> =
+    new BehaviorSubject<ServiceIExpense[]>([]);
 
   router = inject(Router);
   route = inject(ActivatedRoute);
-//   pageTitle: string = 'ADD_NEW_EXPENSE';
+  //   pageTitle: string = 'ADD_NEW_EXPENSE';
 
   constructor(private fb: FormBuilder) {
-    const todayFormatted = this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
+    const todayFormatted =
+      this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
     this.ngZone = inject(NgZone);
 
     this.newExpenseForm = this.fb.group({
@@ -137,33 +146,43 @@ export class Expense implements OnInit {
       this.expenses$,
       this._selectedDate$,
       this._activeCurrencyFilter$,
-      this._activeCategoryFilter$
+      this._activeCategoryFilter$,
     ]).pipe(
       map(([expenses, selectedDate, activeCurrency, activeCategory]) => {
-        let filtered = expenses.filter(expense => {
+        let filtered = expenses.filter((expense) => {
           return expense.date === selectedDate;
         });
 
         if (activeCurrency) {
-          filtered = filtered.filter(expense => expense.currency === activeCurrency);
+          filtered = filtered.filter(
+            (expense) => expense.currency === activeCurrency
+          );
         }
 
         if (activeCategory) {
-          filtered = filtered.filter(expense => expense.category === activeCategory);
+          filtered = filtered.filter(
+            (expense) => expense.category === activeCategory
+          );
         }
         // MODIFIED: Sort by creation date descending to display the latest content first
-        return filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        return filtered.sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
       })
     );
 
     this.totalExpensesByCurrency$ = combineLatest([
       this.expenses$,
-      this._selectedDate$
+      this._selectedDate$,
     ]).pipe(
       map(([expenses, selectedDate]) => {
-        const dailyExpenses = expenses.filter(expense => expense.date === selectedDate);
+        const dailyExpenses = expenses.filter(
+          (expense) => expense.date === selectedDate
+        );
         return dailyExpenses.reduce((acc, expense) => {
-          acc[expense.currency] = (acc[expense.currency] || 0) + expense.totalCost;
+          acc[expense.currency] =
+            (acc[expense.currency] || 0) + expense.totalCost;
           return acc;
         }, {} as { [key: string]: number });
       })
@@ -171,15 +190,18 @@ export class Expense implements OnInit {
 
     this.totalExpensesByCategoryAndCurrency$ = combineLatest([
       this.expenses$,
-      this._selectedDate$
+      this._selectedDate$,
     ]).pipe(
-      map( ([expenses, selectedDate]) => {
-        const dailyExpenses = expenses.filter(expense => expense.date === selectedDate);
+      map(([expenses, selectedDate]) => {
+        const dailyExpenses = expenses.filter(
+          (expense) => expense.date === selectedDate
+        );
         return dailyExpenses.reduce((acc, expense) => {
           if (!acc[expense.category]) {
             acc[expense.category] = {};
           }
-          acc[expense.category][expense.currency] = (acc[expense.category][expense.currency] || 0) + expense.totalCost;
+          acc[expense.category][expense.currency] =
+            (acc[expense.category][expense.currency] || 0) + expense.totalCost;
           return acc;
         }, {} as { [category: string]: { [currency: string]: number } });
       })
@@ -210,7 +232,7 @@ export class Expense implements OnInit {
 
     // --- STEP 1: Check for date in URL on component initialization ---
     // We subscribe to the route parameters to see if a 'date' exists.
-    this.route.paramMap.subscribe(params => {
+    this.route.paramMap.subscribe((params) => {
       const date = params.get('date');
       if (date) {
         // If a date is in the URL, use it to update the component state.
@@ -220,7 +242,9 @@ export class Expense implements OnInit {
       } else {
         // If no date is in the URL, use the default date from the form.
         // this.pageTitle = 'ADD_NEW_EXPENSE';
-        this._selectedDate$.next(this.newExpenseForm.get('selectedDate')?.value || null);
+        this._selectedDate$.next(
+          this.newExpenseForm.get('selectedDate')?.value || null
+        );
       }
     });
   }
@@ -252,60 +276,66 @@ export class Expense implements OnInit {
       };
     }
 
-    const formattedAmount = new Intl.NumberFormat(this.translate.currentLang, options).format(amount);
+    const formattedAmount = new Intl.NumberFormat(
+      this.translate.currentLang,
+      options
+    ).format(amount);
     const symbol = this.currencySymbols[currencyCode] || currencyCode;
     return `${formattedAmount} ${symbol}`;
   }
 
-    async onSubmitNewExpense(): Promise<void> {
-        this.clearMessages();
-        // Mark all controls as touched to display validation messages
-        this.newExpenseForm.markAllAsTouched();
-        if (this.newExpenseForm.invalid) {
-            // Use error modal instead of errorMessage
-            this.showErrorModal(
-                this.translate.instant('ERROR_TITLE'),
-                this.translate.instant('ERROR_FILL_ALL_FIELDS')
-            );
-            return;
-        }
-
-        const formData = this.newExpenseForm.value;
-
-        try {
-        await this.expenseService.addExpense(formData);
-        // Use toast service instead of successMessage
-        this.translate.get('EXPENSE_SUCCESS_ADDED').subscribe((res: string) => {
-            this.toastService.showSuccess(res);
-        });
-        this.newExpenseForm.reset();
-        const todayFormatted = this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
-        this.newExpenseForm.patchValue({ date: todayFormatted, currency: 'MMK', selectedDate: todayFormatted });
-        this.resetFilter();
-        await this.loadExpenses();
-        } catch (error: any) {
-        // Use error modal instead of errorMessage
-        this.showErrorModal(
-            this.translate.instant('ERROR_TITLE'),
-            error.message || this.translate.instant('EXPENSE_ERROR_ADD')
-        );
-        console.error('New expense save error:', error);
-        }
-        this.cdr.detectChanges();
+  async onSubmitNewExpense(): Promise<void> {
+    this.clearMessages();
+    // Mark all controls as touched to display validation messages
+    this.newExpenseForm.markAllAsTouched();
+    if (this.newExpenseForm.invalid) {
+      // Use error modal instead of errorMessage
+      this.showErrorModal(
+        this.translate.instant('ERROR_TITLE'),
+        this.translate.instant('ERROR_FILL_ALL_FIELDS')
+      );
+      return;
     }
 
+    const formData = this.newExpenseForm.value;
 
-//   applyDateFilter(): void {
+    try {
+      await this.expenseService.addExpense(formData);
+      // Use toast service instead of successMessage
+      this.translate.get('EXPENSE_SUCCESS_ADDED').subscribe((res: string) => {
+        this.toastService.showSuccess(res);
+      });
+      this.newExpenseForm.reset();
+      const todayFormatted =
+        this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
+      this.newExpenseForm.patchValue({
+        date: todayFormatted,
+        currency: 'MMK',
+        selectedDate: todayFormatted,
+      });
+      this.resetFilter();
+      await this.loadExpenses();
+    } catch (error: any) {
+      // Use error modal instead of errorMessage
+      this.showErrorModal(
+        this.translate.instant('ERROR_TITLE'),
+        error.message || this.translate.instant('EXPENSE_ERROR_ADD')
+      );
+      console.error('New expense save error:', error);
+    }
+    this.cdr.detectChanges();
+  }
 
-//     const selectedDate = this.newExpenseForm.get('selectedDate')?.value;
-//     if (selectedDate) {
-//       this._selectedDate$.next(selectedDate);
-//       this.resetActiveFilters();
-//     }
-//   }
+  //   applyDateFilter(): void {
 
-// --- STEP 2: Function to handle user-driven date changes from the form ---
-  
+  //     const selectedDate = this.newExpenseForm.get('selectedDate')?.value;
+  //     if (selectedDate) {
+  //       this._selectedDate$.next(selectedDate);
+  //       this.resetActiveFilters();
+  //     }
+  //   }
+
+  // --- STEP 2: Function to handle user-driven date changes from the form ---
 
   applyDateFilter(): void {
     const selectedDate = this.newExpenseForm.get('selectedDate')?.value;
@@ -321,7 +351,8 @@ export class Expense implements OnInit {
   }
 
   resetFilter(): void {
-    const todayFormatted = this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
+    const todayFormatted =
+      this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
     this.newExpenseForm.patchValue({ selectedDate: todayFormatted });
     this._selectedDate$.next(todayFormatted);
     this.resetActiveFilters();
@@ -337,7 +368,6 @@ export class Expense implements OnInit {
     this._activeCategoryFilter$.next(category);
   }
 
-
   startEdit(expense: ServiceIExpense): void {
     this.clearMessages();
     this.editingExpenseId = expense.id!;
@@ -349,57 +379,56 @@ export class Expense implements OnInit {
       unit: [expense.unit], // 'unit' is no longer required
       price: [expense.price, [Validators.required, Validators.min(0)]],
       currency: [expense.currency || 'MMK', Validators.required],
-      updatedAt: new Date().toISOString().split('T')[0]
+      updatedAt: new Date().toISOString().split('T')[0],
     });
     this.cdr.detectChanges();
   }
 
-    async saveEdit(): Promise<void> {
-        this.clearMessages();
-        // Mark all controls as touched to display validation messages
-        if (this.editingForm) {
-            this.editingForm.markAllAsTouched();
-        }
-
-        if (this.editingForm && this.editingForm.invalid) {
-        // Use error modal instead of errorMessage
-        this.showErrorModal(
-            this.translate.instant('ERROR_TITLE'),
-            this.translate.instant('EXPENSE_ERROR_EDIT_FORM_INVALID')
-        );
-        return;
-        }
-        if (!this.editingForm || !this.editingExpenseId) {
-        // Use error modal instead of errorMessage
-        this.showErrorModal(
-            this.translate.instant('ERROR_TITLE'),
-            this.translate.instant('EXPENSE_ERROR_NO_EXPENSE_SELECTED')
-        );
-        return;
-        }
-
-        try {
-        await this.expenseService.updateExpense(
-            this.editingExpenseId,
-            this.editingForm.value
-        );
-        // Use toast service instead of successMessage
-        this.translate.get('EXPENSE_SUCCESS_UPDATED').subscribe((res: string) => {
-            this.toastService.showSuccess(res);
-        });
-        this.cancelEdit();
-        await this.loadExpenses();
-        } catch (error: any) {
-        // Use error modal instead of errorMessage
-        this.showErrorModal(
-            this.translate.instant('ERROR_TITLE'),
-            error.message || this.translate.instant('EXPENSE_ERROR_UPDATE')
-        );
-        console.error('Expense update error:', error);
-        }
-        this.cdr.detectChanges();
+  async saveEdit(): Promise<void> {
+    this.clearMessages();
+    // Mark all controls as touched to display validation messages
+    if (this.editingForm) {
+      this.editingForm.markAllAsTouched();
     }
 
+    if (this.editingForm && this.editingForm.invalid) {
+      // Use error modal instead of errorMessage
+      this.showErrorModal(
+        this.translate.instant('ERROR_TITLE'),
+        this.translate.instant('EXPENSE_ERROR_EDIT_FORM_INVALID')
+      );
+      return;
+    }
+    if (!this.editingForm || !this.editingExpenseId) {
+      // Use error modal instead of errorMessage
+      this.showErrorModal(
+        this.translate.instant('ERROR_TITLE'),
+        this.translate.instant('EXPENSE_ERROR_NO_EXPENSE_SELECTED')
+      );
+      return;
+    }
+
+    try {
+      await this.expenseService.updateExpense(
+        this.editingExpenseId,
+        this.editingForm.value
+      );
+      // Use toast service instead of successMessage
+      this.translate.get('EXPENSE_SUCCESS_UPDATED').subscribe((res: string) => {
+        this.toastService.showSuccess(res);
+      });
+      this.cancelEdit();
+      await this.loadExpenses();
+    } catch (error: any) {
+      // Use error modal instead of errorMessage
+      this.showErrorModal(
+        this.translate.instant('ERROR_TITLE'),
+        error.message || this.translate.instant('EXPENSE_ERROR_UPDATE')
+      );
+      console.error('Expense update error:', error);
+    }
+    this.cdr.detectChanges();
+  }
 
   cancelEdit(): void {
     this.clearMessages();
@@ -413,70 +442,82 @@ export class Expense implements OnInit {
    * @param expenseId The ID of the expense to delete.
    */
   onDelete(expenseId: string): void {
-    this.translate.get('CONFIRM_DELETE_EXPENSE').subscribe((confirmMsg: string) => {
-      this.deleteConfirmationModal.title = this.translate.instant('CONFIRM_DELETE_TITLE');
-      this.deleteConfirmationModal.message = confirmMsg;
-      this.deleteConfirmationModal.confirmButtonText = this.translate.instant('DELETE_BUTTON');
-      this.deleteConfirmationModal.cancelButtonText = this.translate.instant('CANCEL_BUTTON');
-      this.deleteConfirmationModal.messageColor = 'text-danger';
-      this.deleteConfirmationModal.modalType = 'confirm'; // Explicitly set to confirm type
+    this.translate
+      .get('CONFIRM_DELETE_EXPENSE')
+      .subscribe((confirmMsg: string) => {
+        this.deleteConfirmationModal.title = this.translate.instant(
+          'CONFIRM_DELETE_TITLE'
+        );
+        this.deleteConfirmationModal.message = confirmMsg;
+        this.deleteConfirmationModal.confirmButtonText =
+          this.translate.instant('DELETE_BUTTON');
+        this.deleteConfirmationModal.cancelButtonText =
+          this.translate.instant('CANCEL_BUTTON');
+        this.deleteConfirmationModal.messageColor = 'text-danger';
+        this.deleteConfirmationModal.modalType = 'confirm'; // Explicitly set to confirm type
 
-      // Force change detection to ensure @Input properties are updated in the DOM
-      this.cdr.detectChanges();
-    //   console.log('onDelete (Expense) - cdr.detectChanges() called for deleteConfirmationModal.');
+        // Force change detection to ensure @Input properties are updated in the DOM
+        this.cdr.detectChanges();
+        //   console.log('onDelete (Expense) - cdr.detectChanges() called for deleteConfirmationModal.');
 
-      setTimeout(() => {
-        this.deleteConfirmationModal.open();
-        // console.log('onDelete (Expense) - Confirmation modal.open() called via setTimeout.');
-      }, 0);
+        setTimeout(() => {
+          this.deleteConfirmationModal.open();
+          // console.log('onDelete (Expense) - Confirmation modal.open() called via setTimeout.');
+        }, 0);
 
-      const subscription = this.deleteConfirmationModal.confirmed.subscribe(async (confirmed: boolean) => {
-        // console.log('onDelete (Expense) - Confirmation modal confirmed event received:', confirmed);
-        if (confirmed) {
-          try {
-            await this.expenseService.deleteExpense(expenseId);
-            this.ngZone.run(async () => {
-              this.translate.get('EXPENSE_DELETED_SUCCESS').subscribe((res: string) => {
-                this.toastService.showSuccess(res);
-                this.cdr.detectChanges();
-              });
+        const subscription = this.deleteConfirmationModal.confirmed.subscribe(
+          async (confirmed: boolean) => {
+            // console.log('onDelete (Expense) - Confirmation modal confirmed event received:', confirmed);
+            if (confirmed) {
+              try {
+                await this.expenseService.deleteExpense(expenseId);
+                this.ngZone.run(async () => {
+                  this.translate
+                    .get('EXPENSE_DELETED_SUCCESS')
+                    .subscribe((res: string) => {
+                      this.toastService.showSuccess(res);
+                      this.cdr.detectChanges();
+                    });
 
-              if (this.editingExpenseId === expenseId) {
-                this.cancelEdit();
+                  if (this.editingExpenseId === expenseId) {
+                    this.cancelEdit();
+                  }
+                  await this.loadExpenses();
+                  this.cdr.detectChanges();
+                  //   console.log('onDelete (Expense) - Expense deleted successfully.');
+                });
+              } catch (error: any) {
+                // Use error modal instead of toastService for delete errors
+                this.showErrorModal(
+                  this.translate.instant('ERROR_TITLE'),
+                  error.message || this.translate.instant('DATA_DELETE_ERROR')
+                );
+                console.error(
+                  'onDelete (Expense) - Expense delete error:',
+                  error
+                );
               }
-              await this.loadExpenses();
-              this.cdr.detectChanges();
-            //   console.log('onDelete (Expense) - Expense deleted successfully.');
-            });
-          } catch (error: any) {
-            // Use error modal instead of toastService for delete errors
-            this.showErrorModal(
-              this.translate.instant('ERROR_TITLE'),
-              error.message || this.translate.instant('DATA_DELETE_ERROR')
-            );
-            console.error('onDelete (Expense) - Expense delete error:', error);
+            }
+            subscription.unsubscribe();
           }
-        }
-        subscription.unsubscribe();
+        );
       });
-    });
   }
 
-
-    public async loadExpenses(): Promise<void> {
-        try {
-        const expenses = await firstValueFrom(this.expenseService.getExpenses());
-        this._expensesSubject.next(expenses);
-        this.applyDateFilter(); // Re-apply filter to update displayed expenses based on the current date
-        } catch (error) {
-        // Use error modal instead of toastService for load errors
-        this.showErrorModal(
-            this.translate.instant('ERROR_TITLE'),
-            (error as any).message || this.translate.instant('DATA_LOAD_ERROR')
-        );
-        console.error('Error loading expenses:', error);
-        }
+  public async loadExpenses(): Promise<void> {
+    try {
+      const expenses = await firstValueFrom(this.expenseService.getExpenses());
+      this._expensesSubject.next(expenses);
+      this.applyDateFilter(); // Re-apply filter to update displayed expenses based on the current date
+    } catch (error) {
+      // Use error modal instead of toastService for load errors
+      this.showErrorModal(
+        this.translate.instant('ERROR_TITLE'),
+        (error as any).message || this.translate.instant('DATA_LOAD_ERROR')
+      );
+      console.error('Error loading expenses:', error);
     }
+  }
 
   /**
    * Displays an error modal with a dynamic title and message.
@@ -549,27 +590,29 @@ export class Expense implements OnInit {
     const currentControl = formGroup.get(controlName); // Use the passed formGroup
 
     if (currentValue === '' && currentControl) {
-        // If the current value is empty, check if it's valid or invalid.
-        if (currentControl.valid) {
-            // If valid (e.g., optional field, or min value is 0 and user cleared it),
-            // restore original value if one exists.
-            if (controlName === 'itemName' && this.originalItemName !== null) {
-                currentControl.setValue(this.originalItemName);
-            } else if (controlName === 'unit' && this.originalUnit !== null) {
-                currentControl.setValue(this.originalUnit);
-            } else if (controlName === 'quantity' && this.originalQuantity !== null) {
-                currentControl.setValue(this.originalQuantity);
-            } else if (controlName === 'price' && this.originalPrice !== null) {
-                currentControl.setValue(this.originalPrice);
-            }
-        } else {
-            // If the current value is empty AND the control is invalid (e.g., required field cleared),
-            // we want the validation message to show. Do NOT restore the original value.
-            // Instead, explicitly mark it as touched to ensure validation message appears.
-            currentControl.markAsTouched();
+      // If the current value is empty, check if it's valid or invalid.
+      if (currentControl.valid) {
+        // If valid (e.g., optional field, or min value is 0 and user cleared it),
+        // restore original value if one exists.
+        if (controlName === 'itemName' && this.originalItemName !== null) {
+          currentControl.setValue(this.originalItemName);
+        } else if (controlName === 'unit' && this.originalUnit !== null) {
+          currentControl.setValue(this.originalUnit);
+        } else if (
+          controlName === 'quantity' &&
+          this.originalQuantity !== null
+        ) {
+          currentControl.setValue(this.originalQuantity);
+        } else if (controlName === 'price' && this.originalPrice !== null) {
+          currentControl.setValue(this.originalPrice);
         }
+      } else {
+        // If the current value is empty AND the control is invalid (e.g., required field cleared),
+        // we want the validation message to show. Do NOT restore the original value.
+        // Instead, explicitly mark it as touched to ensure validation message appears.
+        currentControl.markAsTouched();
+      }
     }
-
 
     // Reset all original stored values
     this.originalItemName = null;

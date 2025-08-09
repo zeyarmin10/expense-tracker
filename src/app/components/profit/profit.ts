@@ -1,13 +1,40 @@
-import { Component, OnInit, inject, ViewChild, OnDestroy, ElementRef, ChangeDetectorRef } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  inject,
+  ViewChild,
+  OnDestroy,
+  ElementRef,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
-import { Observable, BehaviorSubject, combineLatest, map, Subscription, switchMap, of } from 'rxjs';
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+  FormsModule,
+} from '@angular/forms';
+import {
+  Observable,
+  BehaviorSubject,
+  combineLatest,
+  map,
+  Subscription,
+  switchMap,
+  of,
+} from 'rxjs';
 import { ServiceIExpense, ExpenseService } from '../../services/expense';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ServiceIIncome, IncomeService } from '../../services/income';
 import { ServiceIBudget, BudgetService } from '../../services/budget';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faTrash, faSave, faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
+import {
+  faTrash,
+  faSave,
+  faChevronDown,
+  faChevronUp,
+} from '@fortawesome/free-solid-svg-icons';
 import { ConfirmationModal } from '../common/confirmation-modal/confirmation-modal';
 import { AuthService } from '../../services/auth';
 import { Chart, registerables } from 'chart.js';
@@ -17,10 +44,17 @@ Chart.register(...registerables);
 @Component({
   selector: 'app-profit',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslateModule, FontAwesomeModule, ConfirmationModal, FormsModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    TranslateModule,
+    FontAwesomeModule,
+    ConfirmationModal,
+    FormsModule,
+  ],
   providers: [DatePipe],
   templateUrl: './profit.html',
-  styleUrls: ['./profit.css']
+  styleUrls: ['./profit.css'],
 })
 export class Profit implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
@@ -34,8 +68,10 @@ export class Profit implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private cdr = inject(ChangeDetectorRef);
 
-  @ViewChild('deleteConfirmationModal') private deleteConfirmationModal!: ConfirmationModal;
-  @ViewChild('profitChartCanvas') private profitChartCanvas!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('deleteConfirmationModal')
+  private deleteConfirmationModal!: ConfirmationModal;
+  @ViewChild('profitChartCanvas')
+  private profitChartCanvas!: ElementRef<HTMLCanvasElement>;
 
   incomeForm: FormGroup;
 
@@ -44,7 +80,7 @@ export class Profit implements OnInit, OnDestroy {
   budgets$: Observable<ServiceIBudget[]>;
 
   filteredBudgets$: Observable<ServiceIBudget[]>;
-  
+
   totalExpensesByCurrency$: Observable<{ [currency: string]: number }>;
   totalIncomesByCurrency$: Observable<{ [currency: string]: number }>;
   totalProfitLossByCurrency$: Observable<{ [currency: string]: number }>;
@@ -74,7 +110,7 @@ export class Profit implements OnInit, OnDestroy {
   availableCurrencies = [
     { code: 'MMK', symbol: 'Ks' },
     { code: 'USD', symbol: '$' },
-    { code: 'THB', symbol: '฿' }
+    { code: 'THB', symbol: '฿' },
   ];
 
   private subscriptions: Subscription = new Subscription();
@@ -86,7 +122,10 @@ export class Profit implements OnInit, OnDestroy {
       description: [''],
       amount: ['', [Validators.required, Validators.min(0.01)]],
       currency: ['MMK', Validators.required],
-      date: [this.datePipe.transform(new Date(), 'yyyy-MM-dd'), Validators.required]
+      date: [
+        this.datePipe.transform(new Date(), 'yyyy-MM-dd'),
+        Validators.required,
+      ],
     });
 
     this.expenses$ = this.expenseService.getExpenses();
@@ -106,7 +145,7 @@ export class Profit implements OnInit, OnDestroy {
       this.budgets$,
       this._selectedDateRange$,
       this._startDate$,
-      this._endDate$
+      this._endDate$,
     ]).pipe(
       map(([expenses, incomes, budgets, dateRange, startDate, endDate]) => {
         const now = new Date();
@@ -115,7 +154,11 @@ export class Profit implements OnInit, OnDestroy {
 
         switch (dateRange) {
           case 'last30Days':
-            start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 30);
+            start = new Date(
+              now.getFullYear(),
+              now.getMonth(),
+              now.getDate() - 30
+            );
             break;
           case 'currentMonth':
             start = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -142,17 +185,17 @@ export class Profit implements OnInit, OnDestroy {
           end.setHours(23, 59, 59, 999);
         }
 
-        const filteredExpenses = expenses.filter(e => {
+        const filteredExpenses = expenses.filter((e) => {
           const expenseDate = new Date(e.date);
           return expenseDate >= start && expenseDate <= end;
         });
 
-        const filteredIncomes = incomes.filter(i => {
+        const filteredIncomes = incomes.filter((i) => {
           const incomeDate = new Date(i.date);
           return incomeDate >= start && incomeDate <= end;
         });
 
-        const filteredBudgets = budgets.filter(b => {
+        const filteredBudgets = budgets.filter((b) => {
           if (b.type === 'monthly' && b.period) {
             const budgetDate = new Date(b.period);
             return budgetDate >= start && budgetDate <= end;
@@ -160,18 +203,21 @@ export class Profit implements OnInit, OnDestroy {
           return false;
         });
 
-        return { expenses: filteredExpenses, incomes: filteredIncomes, budgets: filteredBudgets };
+        return {
+          expenses: filteredExpenses,
+          incomes: filteredIncomes,
+          budgets: filteredBudgets,
+        };
       })
     );
-    
-    this.filteredBudgets$ = filteredData$.pipe(
-      map(data => data.budgets)
-    );
+
+    this.filteredBudgets$ = filteredData$.pipe(map((data) => data.budgets));
 
     this.totalExpensesByCurrency$ = filteredData$.pipe(
       map(({ expenses }) => {
         return expenses.reduce((acc, expense) => {
-          acc[expense.currency] = (acc[expense.currency] || 0) + expense.totalCost;
+          acc[expense.currency] =
+            (acc[expense.currency] || 0) + expense.totalCost;
           return acc;
         }, {} as { [currency: string]: number });
       })
@@ -185,7 +231,7 @@ export class Profit implements OnInit, OnDestroy {
         }, {} as { [currency: string]: number });
       })
     );
-    
+
     this.totalBudgetsByCurrency$ = filteredData$.pipe(
       map(({ budgets }) => {
         const totalBudgets = budgets.reduce((acc, budget) => {
@@ -198,12 +244,18 @@ export class Profit implements OnInit, OnDestroy {
       })
     );
 
-    this.totalProfitLossByCurrency$ = combineLatest([this.totalIncomesByCurrency$, this.totalExpensesByCurrency$]).pipe(
+    this.totalProfitLossByCurrency$ = combineLatest([
+      this.totalIncomesByCurrency$,
+      this.totalExpensesByCurrency$,
+    ]).pipe(
       map(([incomes, expenses]) => {
         const profitLoss: { [currency: string]: number } = {};
-        const allCurrencies = new Set([...Object.keys(incomes), ...Object.keys(expenses)]);
+        const allCurrencies = new Set([
+          ...Object.keys(incomes),
+          ...Object.keys(expenses),
+        ]);
 
-        allCurrencies.forEach(currency => {
+        allCurrencies.forEach((currency) => {
           const totalIncome = incomes[currency] || 0;
           const totalExpense = expenses[currency] || 0;
           profitLoss[currency] = totalIncome - totalExpense;
@@ -213,42 +265,54 @@ export class Profit implements OnInit, OnDestroy {
       })
     );
 
-    this.remainingBalanceByCurrency$ = combineLatest([this.totalBudgetsByCurrency$, this.totalExpensesByCurrency$]).pipe(
-        map(([budgets, expenses]) => {
-            const balance: { [currency: string]: number } = {};
-            const allCurrencies = new Set([...Object.keys(budgets), ...Object.keys(expenses)]);
+    this.remainingBalanceByCurrency$ = combineLatest([
+      this.totalBudgetsByCurrency$,
+      this.totalExpensesByCurrency$,
+    ]).pipe(
+      map(([budgets, expenses]) => {
+        const balance: { [currency: string]: number } = {};
+        const allCurrencies = new Set([
+          ...Object.keys(budgets),
+          ...Object.keys(expenses),
+        ]);
 
-            allCurrencies.forEach(currency => {
-                const totalBudget = budgets[currency] || 0;
-                const totalExpense = expenses[currency] || 0;
-                balance[currency] = totalBudget - totalExpense;
-            });
+        allCurrencies.forEach((currency) => {
+          const totalBudget = budgets[currency] || 0;
+          const totalExpense = expenses[currency] || 0;
+          balance[currency] = totalBudget - totalExpense;
+        });
 
-            return balance;
-        })
+        return balance;
+      })
     );
-    
-    this.netProfitByCurrency$ = combineLatest([this.totalProfitLossByCurrency$, this.remainingBalanceByCurrency$]).pipe(
+
+    this.netProfitByCurrency$ = combineLatest([
+      this.totalProfitLossByCurrency$,
+      this.remainingBalanceByCurrency$,
+    ]).pipe(
       map(([profitLoss, remainingBalance]) => {
         const netProfit: { [currency: string]: number } = {};
-        const allCurrencies = new Set([...Object.keys(profitLoss), ...Object.keys(remainingBalance)]);
+        const allCurrencies = new Set([
+          ...Object.keys(profitLoss),
+          ...Object.keys(remainingBalance),
+        ]);
 
-        allCurrencies.forEach(currency => {
+        allCurrencies.forEach((currency) => {
           const totalProfitLoss = profitLoss[currency] || 0;
           const totalRemainingBalance = remainingBalance[currency] || 0;
-          netProfit[currency] = totalProfitLoss - Math.abs(totalRemainingBalance);
+          netProfit[currency] =
+            totalProfitLoss - Math.abs(totalRemainingBalance);
         });
 
         return netProfit;
       })
     );
-
   }
 
   private addDays(date: Date, days: number): Date {
-      const result = new Date(date);
-      result.setDate(result.getDate() + days);
-      return result;
+    const result = new Date(date);
+    result.setDate(result.getDate() + days);
+    return result;
   }
 
   onDateChange(): void {
@@ -259,91 +323,126 @@ export class Profit implements OnInit, OnDestroy {
   ngOnInit(): void {
     const storedLang = localStorage.getItem('selectedLanguage');
     if (storedLang) {
-        this.translate.use(storedLang);
+      this.translate.use(storedLang);
     } else {
-        const browserLang = this.translate.getBrowserLang();
-        this.translate.use(browserLang && browserLang.match(/my|en/) ? browserLang : 'my');
+      const browserLang = this.translate.getBrowserLang();
+      this.translate.use(
+        browserLang && browserLang.match(/my|en/) ? browserLang : 'my'
+      );
     }
 
     const allExpenses$ = this.authService.currentUser$.pipe(
-        switchMap(user => (user && user.uid) ? this.expenseService.getExpenses() : of([] as ServiceIExpense[])),
+      switchMap((user) =>
+        user && user.uid
+          ? this.expenseService.getExpenses()
+          : of([] as ServiceIExpense[])
+      )
     );
 
     const allIncomes$ = this.authService.currentUser$.pipe(
-        switchMap(user => (user && user.uid) ? this.incomeService.getIncomes() : of([] as ServiceIIncome[])),
+      switchMap((user) =>
+        user && user.uid
+          ? this.incomeService.getIncomes()
+          : of([] as ServiceIIncome[])
+      )
     );
 
-    Chart.defaults.font.family = 'MyanmarUIFont, Arial, sans-serif'; 
+    Chart.defaults.font.family = 'MyanmarUIFont, Arial, sans-serif';
 
     this.filteredExpensesAndIncomes$ = combineLatest([
-        allExpenses$,
-        allIncomes$,
-        this._startDate$,
-        this._endDate$,
+      allExpenses$,
+      allIncomes$,
+      this._startDate$,
+      this._endDate$,
     ]).pipe(
-        map(([expenses, incomes, startDateStr, endDateStr]) => {
-            const startDate = new Date(startDateStr);
-            const endDate = new Date(endDateStr);
+      map(([expenses, incomes, startDateStr, endDateStr]) => {
+        const startDate = new Date(startDateStr);
+        const endDate = new Date(endDateStr);
 
-            const filteredExpenses = expenses.filter(expense => {
-                const expenseDate = new Date(expense.date);
-                return expenseDate >= startDate && expenseDate <= this.addDays(endDate, 1);
-            });
+        const filteredExpenses = expenses.filter((expense) => {
+          const expenseDate = new Date(expense.date);
+          return (
+            expenseDate >= startDate && expenseDate <= this.addDays(endDate, 1)
+          );
+        });
 
-            const filteredIncomes = incomes.filter(income => {
-                const incomeDate = new Date(income.date);
-                return incomeDate >= startDate && incomeDate <= this.addDays(endDate, 1);
-            });
+        const filteredIncomes = incomes.filter((income) => {
+          const incomeDate = new Date(income.date);
+          return (
+            incomeDate >= startDate && incomeDate <= this.addDays(endDate, 1)
+          );
+        });
 
-            return { expenses: filteredExpenses, incomes: filteredIncomes };
-        })
+        return { expenses: filteredExpenses, incomes: filteredIncomes };
+      })
     );
 
     this.profitChartData$ = this.filteredExpensesAndIncomes$.pipe(
-        map(({ incomes, expenses }) => {
-            const totalIncome = incomes.reduce((sum: number, income: ServiceIIncome) => sum + income.amount, 0);
-            const totalExpense = expenses.reduce((sum: number, expense: ServiceIExpense) => sum + expense.totalCost, 0);
-            const profit = totalIncome - totalExpense;
+      map(({ incomes, expenses }) => {
+        const totalIncome = incomes.reduce(
+          (sum: number, income: ServiceIIncome) => sum + income.amount,
+          0
+        );
+        const totalExpense = expenses.reduce(
+          (sum: number, expense: ServiceIExpense) => sum + expense.totalCost,
+          0
+        );
+        const profit = totalIncome - totalExpense;
 
-            // Determine the label and color based on profit value
-            const profitLossLabel = profit >= 0 ? this.translate.instant('PROFIT') : this.translate.instant('LOSS');
-            const profitLossColor = profit >= 0 ? 'rgba(54, 162, 235, 0.5)' : 'rgba(255, 0, 0, 0.5)';
-            const profitLossBorderColor = profit >= 0 ? 'rgba(54, 162, 235, 1)' : 'rgba(255, 0, 0, 1)';
+        // Determine the label and color based on profit value
+        const profitLossLabel =
+          profit >= 0
+            ? this.translate.instant('PROFIT')
+            : this.translate.instant('LOSS');
+        const profitLossColor =
+          profit >= 0 ? 'rgba(54, 162, 235, 0.5)' : 'rgba(255, 0, 0, 0.5)';
+        const profitLossBorderColor =
+          profit >= 0 ? 'rgba(54, 162, 235, 1)' : 'rgba(255, 0, 0, 1)';
 
-            return {
-            labels: [this.translate.instant('REVENUE'), this.translate.instant('EXPENSE'), profitLossLabel],
-            datasets: [{
-                label: this.translate.instant('SUMMARY'),
-                data: [totalIncome, totalExpense, profit],
-                backgroundColor: [
+        return {
+          labels: [
+            this.translate.instant('REVENUE'),
+            this.translate.instant('EXPENSE'),
+            profitLossLabel,
+          ],
+          datasets: [
+            {
+              label: this.translate.instant('SUMMARY'),
+              data: [totalIncome, totalExpense, profit],
+              backgroundColor: [
                 'rgba(75, 192, 192, 0.5)', // Income
                 'rgba(255, 99, 132, 0.5)', // Expense
                 profitLossColor, // Profit/Loss
-                ],
-                borderColor: [
+              ],
+              borderColor: [
                 'rgba(75, 192, 192, 1)',
                 'rgba(255, 99, 132, 1)',
                 profitLossBorderColor,
-                ],
-                borderWidth: 1
-            }]
-            };
-        })
+              ],
+              borderWidth: 1,
+            },
+          ],
+        };
+      })
     );
 
     this.hasChartData$ = this.profitChartData$.pipe(
-        map(data => data.datasets[0].data.some((val: number) => val > 0))
+      map((data) => data.datasets[0].data.some((val: number) => val > 0))
     );
 
-    this.subscriptions.add(this.profitChartData$.subscribe(data => {
+    this.subscriptions.add(
+      this.profitChartData$.subscribe((data) => {
         this.cdr.detectChanges();
         this.renderProfitChart(data);
-    }));
+      })
+    );
 
-    this.subscriptions.add(this.translate.onLangChange.subscribe(() => {
+    this.subscriptions.add(
+      this.translate.onLangChange.subscribe(() => {
         this.cdr.detectChanges();
-    }));
-}
+      })
+    );
+  }
 
   ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
@@ -355,15 +454,16 @@ export class Profit implements OnInit, OnDestroy {
         description: this.incomeForm.value.description,
         amount: this.incomeForm.value.amount,
         currency: this.incomeForm.value.currency,
-        date: this.incomeForm.value.date
+        date: this.incomeForm.value.date,
       };
 
-      this.incomeService.addIncome(incomeData)
+      this.incomeService
+        .addIncome(incomeData)
         .then(() => {
           console.log('Income added successfully!');
           this.resetForm();
         })
-        .catch(error => {
+        .catch((error) => {
           console.error('Error adding income:', error);
         });
     }
@@ -378,20 +478,22 @@ export class Profit implements OnInit, OnDestroy {
 
   onDeleteConfirmed(confirmed: boolean): void {
     if (confirmed && this.incomeIdToDelete) {
-      this.incomeService.deleteIncome(this.incomeIdToDelete)
+      this.incomeService
+        .deleteIncome(this.incomeIdToDelete)
         .then(() => {
           console.log('Income deleted successfully!');
           this.incomeIdToDelete = undefined;
         })
-        .catch(error => {
+        .catch((error) => {
           console.error('Error deleting income:', error);
         });
     } else {
       this.incomeIdToDelete = undefined;
     }
   }
-  
-  @ViewChild('deleteBudgetConfirmationModal') private deleteBudgetConfirmationModal!: ConfirmationModal;
+
+  @ViewChild('deleteBudgetConfirmationModal')
+  private deleteBudgetConfirmationModal!: ConfirmationModal;
   private budgetIdToDelete: string | undefined;
 
   confirmDeleteBudget(budgetId: string | undefined): void {
@@ -402,12 +504,13 @@ export class Profit implements OnInit, OnDestroy {
 
   onDeleteBudgetConfirmed(confirmed: boolean): void {
     if (confirmed && this.budgetIdToDelete) {
-      this.budgetService.deleteBudget(this.budgetIdToDelete)
+      this.budgetService
+        .deleteBudget(this.budgetIdToDelete)
         .then(() => {
           console.log('Budget deleted successfully!');
           this.budgetIdToDelete = undefined;
         })
-        .catch(error => {
+        .catch((error) => {
           console.error('Error deleting budget:', error);
         });
     } else {
@@ -420,27 +523,37 @@ export class Profit implements OnInit, OnDestroy {
       description: '',
       amount: '',
       currency: 'MMK',
-      date: this.datePipe.transform(new Date(), 'yyyy-MM-dd')
+      date: this.datePipe.transform(new Date(), 'yyyy-MM-dd'),
     });
   }
 
   formatAmountWithSymbol(amount: number, currencyCode: string): string {
-    const symbol = this.availableCurrencies.find(c => c.code === currencyCode)?.symbol || currencyCode;
+    const symbol =
+      this.availableCurrencies.find((c) => c.code === currencyCode)?.symbol ||
+      currencyCode;
     let formattedAmount: string;
-    
+
     const currentLang = this.translate.currentLang;
     const locale = currentLang === 'my' ? 'my-MM' : currentLang;
 
     if (currencyCode === 'MMK') {
-      formattedAmount = amount.toLocaleString(locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+      formattedAmount = amount.toLocaleString(locale, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      });
     } else {
-      formattedAmount = amount.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      formattedAmount = amount.toLocaleString(locale, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
     }
 
     return `${formattedAmount} ${symbol}`;
   }
 
-  toggleVisibility(section: 'incomeForm' | 'recordedIncomes' | 'recordedBudgets'): void {
+  toggleVisibility(
+    section: 'incomeForm' | 'recordedIncomes' | 'recordedBudgets'
+  ): void {
     if (section === 'incomeForm') {
       this.isIncomeFormCollapsed = !this.isIncomeFormCollapsed;
     } else if (section === 'recordedIncomes') {
@@ -457,7 +570,11 @@ export class Profit implements OnInit, OnDestroy {
 
     switch (filter) {
       case 'last30Days':
-        startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 30);
+        startDate = new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate() - 30
+        );
         break;
       case 'currentMonth':
         startDate = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -481,15 +598,20 @@ export class Profit implements OnInit, OnDestroy {
         break;
     }
 
-    this._startDate$.next(this.datePipe.transform(startDate, 'yyyy-MM-dd') || '');
+    this._startDate$.next(
+      this.datePipe.transform(startDate, 'yyyy-MM-dd') || ''
+    );
     this._endDate$.next(this.datePipe.transform(endDate, 'yyyy-MM-dd') || '');
   }
 
-  formatLocalizedDate(date: string | Date | null | undefined, format: string): string {
-      // Get the current language from the translation service
-      const currentLang = this.translate.currentLang;  
-      // Use DatePipe to transform the date, passing the language as the locale
-      return this.datePipe.transform(date, format, undefined, currentLang) || '';
+  formatLocalizedDate(
+    date: string | Date | null | undefined,
+    format: string
+  ): string {
+    // Get the current language from the translation service
+    const currentLang = this.translate.currentLang;
+    // Use DatePipe to transform the date, passing the language as the locale
+    return this.datePipe.transform(date, format, undefined, currentLang) || '';
   }
 
   private renderProfitChart(data: any): void {
@@ -501,7 +623,7 @@ export class Profit implements OnInit, OnDestroy {
     if (this.profitChartInstance) {
       this.profitChartInstance.destroy();
     }
-    
+
     const component = this;
 
     this.profitChartInstance = new Chart(canvas, {
@@ -511,29 +633,32 @@ export class Profit implements OnInit, OnDestroy {
         responsive: true,
         maintainAspectRatio: false,
         scales: {
-        //   x: { // Labels axis
-        //     ticks: {
-        //       font: {
-        //         size: 13
-        //       }
-        //     }
-        //   },
+          //   x: { // Labels axis
+          //     ticks: {
+          //       font: {
+          //         size: 13
+          //       }
+          //     }
+          //   },
           y: {
             beginAtZero: true,
             ticks: {
-              callback: function(value: any) {
+              callback: function (value: any) {
                 const currentLang = component.translate?.currentLang;
+                console.log('current language => ', currentLang);
                 if (currentLang === 'my') {
                   // Localize numbers to Burmese using Intl.NumberFormat
-                  return new Intl.NumberFormat('my-MM', { numberingSystem: 'mymr' }).format(value);
+                  return new Intl.NumberFormat('my-MM', {
+                    numberingSystem: 'mymr',
+                  }).format(value);
                 }
                 // Default to English locale
                 return new Intl.NumberFormat().format(value);
-              }
-            }
-          }
-        }
-      }
+              },
+            },
+          },
+        },
+      },
     });
   }
 }

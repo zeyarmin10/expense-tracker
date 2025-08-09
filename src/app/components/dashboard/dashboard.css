@@ -49,7 +49,7 @@ body {
 
 .chart-container {
     position: relative;
-    min-height: 50vh;
+    min-height: 40vh;
     margin-bottom: 20px;
 }
 
@@ -57,7 +57,7 @@ body {
 @media (max-width: 767px) {
   .chart-container {
     position: relative;
-    min-height: 60vh;
+    min-height: 45vh;
     margin-bottom: 20px;
   }
 }

@@ -324,88 +324,97 @@ export class BudgetComponent implements OnInit, OnDestroy {
     );
 
     this.budgetChartData$ = filteredData$.pipe(
-        map(({ budgets, expenses }) => {
-            const monthlyData: {
-                [month: string]: { budget: number; expense: number; date: Date };
-            } = {};
+      map(({ budgets, expenses }) => {
+        const monthlyData: {
+          [month: string]: { budget: number; expense: number; date: Date };
+        } = {};
 
-            const currentLang = this.translate.currentLang;
-            const locale = currentLang === 'my' ? 'my-MM' : currentLang;
-            // Changed to 'MMM, yy' for abbreviated month and year
-            const dateFormat = 'MMM, yy';
+        const currentLang = this.translate.currentLang;
+        const locale = currentLang === 'my' ? 'my-MM' : currentLang;
+        // Changed to 'MMM, yy' for abbreviated month and year
+        const dateFormat = 'MMM, yy';
 
-            budgets.forEach((budget) => {
-                if (budget.period) {
-                    const monthYear =
-                        this.datePipe.transform(new Date(budget.period), dateFormat, undefined, locale) || '';
-                    const monthDate = new Date(budget.period);
-                    if (!monthlyData[monthYear]) {
-                        monthlyData[monthYear] = {
-                            budget: 0,
-                            expense: 0,
-                            date: monthDate,
-                        };
-                    }
-                    monthlyData[monthYear].budget += budget.amount;
-                }
-            });
+        budgets.forEach((budget) => {
+          if (budget.period) {
+            const monthYear =
+              this.datePipe.transform(
+                new Date(budget.period),
+                dateFormat,
+                undefined,
+                locale
+              ) || '';
+            const monthDate = new Date(budget.period);
+            if (!monthlyData[monthYear]) {
+              monthlyData[monthYear] = {
+                budget: 0,
+                expense: 0,
+                date: monthDate,
+              };
+            }
+            monthlyData[monthYear].budget += budget.amount;
+          }
+        });
 
-            expenses.forEach((expense) => {
-                const monthYear =
-                    this.datePipe.transform(new Date(expense.date), dateFormat, undefined, locale) || '';
-                const monthDate = new Date(expense.date);
-                if (!monthlyData[monthYear]) {
-                    monthlyData[monthYear] = { budget: 0, expense: 0, date: monthDate };
-                }
-                monthlyData[monthYear].expense += expense.totalCost;
-            });
+        expenses.forEach((expense) => {
+          const monthYear =
+            this.datePipe.transform(
+              new Date(expense.date),
+              dateFormat,
+              undefined,
+              locale
+            ) || '';
+          const monthDate = new Date(expense.date);
+          if (!monthlyData[monthYear]) {
+            monthlyData[monthYear] = { budget: 0, expense: 0, date: monthDate };
+          }
+          monthlyData[monthYear].expense += expense.totalCost;
+        });
 
-            // Get an array of objects to sort
-            const sortedMonthlyData = Object.keys(monthlyData).map((month) => ({
-                month: month,
-                data: monthlyData[month],
-            }));
+        // Get an array of objects to sort
+        const sortedMonthlyData = Object.keys(monthlyData).map((month) => ({
+          month: month,
+          data: monthlyData[month],
+        }));
 
-            // Sort the array in ascending chronological order
-            sortedMonthlyData.sort(
-                (a, b) => a.data.date.getTime() - b.data.date.getTime()
-            );
+        // Sort the array in ascending chronological order
+        sortedMonthlyData.sort(
+          (a, b) => a.data.date.getTime() - b.data.date.getTime()
+        );
 
-            const labels: string[] = sortedMonthlyData.map((item) => item.month);
-            const budgetedAmounts: number[] = sortedMonthlyData.map(
-                (item) => item.data.budget
-            );
-            const expenseAmounts: number[] = sortedMonthlyData.map(
-                (item) => item.data.expense
-            );
+        const labels: string[] = sortedMonthlyData.map((item) => item.month);
+        const budgetedAmounts: number[] = sortedMonthlyData.map(
+          (item) => item.data.budget
+        );
+        const expenseAmounts: number[] = sortedMonthlyData.map(
+          (item) => item.data.expense
+        );
 
-            return {
-                labels,
-                datasets: [
-                    {
-                        label: this.translate.instant('BUDGET_AMOUNT'),
-                        data: budgetedAmounts,
-                        backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                        borderColor: 'rgba(54, 162, 235, 1)',
-                        borderWidth: 1,
-                    },
-                    {
-                        label: this.translate.instant('EXPENSE_AMOUNT'),
-                        data: expenseAmounts,
-                        backgroundColor: 'rgba(255, 99, 132, 0.5)',
-                        borderColor: 'rgba(255, 99, 132, 1)',
-                        borderWidth: 1,
-                    },
-                ],
-            };
-        })
+        return {
+          labels,
+          datasets: [
+            {
+              label: this.translate.instant('BUDGET_AMOUNT'),
+              data: budgetedAmounts,
+              backgroundColor: 'rgba(54, 162, 235, 0.5)',
+              borderColor: 'rgba(54, 162, 235, 1)',
+              borderWidth: 1,
+            },
+            {
+              label: this.translate.instant('EXPENSE_AMOUNT'),
+              data: expenseAmounts,
+              backgroundColor: 'rgba(255, 99, 132, 0.5)',
+              borderColor: 'rgba(255, 99, 132, 1)',
+              borderWidth: 1,
+            },
+          ],
+        };
+      })
     );
 
     this.budgetChartData$.subscribe((data) => {
-    this.renderChart(data);
+      this.renderChart(data);
     });
-    
-}
+  }
 
   ngOnInit(): void {
     const storedLang = localStorage.getItem('selectedLanguage');
@@ -417,7 +426,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
         browserLang && browserLang.match(/my|en/) ? browserLang : 'my'
       );
     }
-    Chart.defaults.font.family = 'MyanmarUIFont, Arial, sans-serif'; 
+    Chart.defaults.font.family = 'MyanmarUIFont, Arial, sans-serif';
   }
 
   ngOnDestroy(): void {
@@ -541,47 +550,55 @@ export class BudgetComponent implements OnInit, OnDestroy {
     const canvas = document.getElementById('budgetChart') as HTMLCanvasElement;
 
     if (this.chartInstance) {
-        this.chartInstance.destroy();
+      this.chartInstance.destroy();
     }
 
     if (canvas) {
-        // A reference to the component instance is needed to access its properties.
-        // If you are using a class, 'this' refers to the component instance.
-        const component = this;
+      // A reference to the component instance is needed to access its properties.
+      // If you are using a class, 'this' refers to the component instance.
+      const component = this;
 
-        this.chartInstance = new Chart(canvas, {
+      this.chartInstance = new Chart(canvas, {
         type: 'bar',
         data: data,
         options: {
-            indexAxis: 'y',
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-            x: { // 'x' axis now represents the amount
-                stacked: false,
-                beginAtZero: true,
-                ticks: {
-                callback: function(value: any) {
-                    // Use the component reference to access the translate service
-                    const currentLang = component.translate?.currentLang;
-                    if (currentLang === 'my') {
-                    return new Intl.NumberFormat('my-MM', { numberingSystem: 'mymr' }).format(value);
-                    }
-                    return new Intl.NumberFormat().format(value);
-                }
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: {
+              // 'x' axis now represents the amount
+              stacked: false,
+              beginAtZero: true,
+              ticks: {
+                callback: function (value: any) {
+                  // Use the component reference to access the translate service
+                  const currentLang = component.translate?.currentLang;
+                  console.log('current language => ', currentLang);
+                  if (currentLang === 'my') {
+                    return new Intl.NumberFormat('my-MM', {
+                      numberingSystem: 'mymr',
+                    }).format(value);
+                  }
+                  return new Intl.NumberFormat().format(value);
                 },
+              },
             },
-            y: { // 'y' axis now represents the months
-                stacked: false,
-                beginAtZero: true,
+            y: {
+              // 'y' axis now represents the months
+              stacked: false,
+              beginAtZero: true,
             },
-            },
+          },
         },
-        });
+      });
     }
   }
 
-  formatLocalizedDate( date: string | Date | null | undefined, format: string ): string {
+  formatLocalizedDate(
+    date: string | Date | null | undefined,
+    format: string
+  ): string {
     // Get the current language from the translation service
     const currentLang = this.translate.currentLang;
     // Use DatePipe to transform the date, passing the language as the locale

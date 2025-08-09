@@ -1,11 +1,29 @@
-import { Component, OnInit, inject, ViewChild, ChangeDetectorRef } from '@angular/core'; // ChangeDetectorRef ကို ထည့်သွင်းပါ။
+import {
+  Component,
+  OnInit,
+  inject,
+  ViewChild,
+  ChangeDetectorRef,
+} from '@angular/core'; // ChangeDetectorRef ကို ထည့်သွင်းပါ။
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormControl } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  Validators,
+  ReactiveFormsModule,
+  FormControl,
+} from '@angular/forms';
 import { ServiceICategory, CategoryService } from '../../services/category';
 import { Observable, BehaviorSubject, firstValueFrom } from 'rxjs';
 
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faPlus, faEdit, faTrash, faSave, faTimes } from '@fortawesome/free-solid-svg-icons';
+import {
+  faPlus,
+  faEdit,
+  faTrash,
+  faSave,
+  faTimes,
+} from '@fortawesome/free-solid-svg-icons';
 
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { ToastService } from '../../services/toast';
@@ -14,20 +32,29 @@ import { ConfirmationModal } from '../common/confirmation-modal/confirmation-mod
 @Component({
   selector: 'app-category',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FontAwesomeModule, TranslateModule, ConfirmationModal],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    FontAwesomeModule,
+    TranslateModule,
+    ConfirmationModal,
+  ],
   templateUrl: './category.html',
-  styleUrls: ['./category.css']
+  styleUrls: ['./category.css'],
 })
 export class Category implements OnInit {
-  @ViewChild('deleteConfirmationModal') deleteConfirmationModal!: ConfirmationModal; // Reference to the confirmation modal
+  @ViewChild('deleteConfirmationModal')
+  deleteConfirmationModal!: ConfirmationModal; // Reference to the confirmation modal
   @ViewChild('errorModal') errorModal!: ConfirmationModal; // New: Reference to the error modal
 
   addCategoryForm: FormGroup;
   editingCategoryFormControl: FormControl | null = null;
   editingCategoryId: string | null = null;
 
-  private _categoriesSubject: BehaviorSubject<ServiceICategory[]> = new BehaviorSubject<ServiceICategory[]>([]);
-  categories$: Observable<ServiceICategory[]> = this._categoriesSubject.asObservable();
+  private _categoriesSubject: BehaviorSubject<ServiceICategory[]> =
+    new BehaviorSubject<ServiceICategory[]>([]);
+  categories$: Observable<ServiceICategory[]> =
+    this._categoriesSubject.asObservable();
 
   categoryService = inject(CategoryService);
   translateService = inject(TranslateService);
@@ -42,7 +69,7 @@ export class Category implements OnInit {
 
   constructor(private fb: FormBuilder) {
     this.addCategoryForm = this.fb.group({
-      name: ['', Validators.required]
+      name: ['', Validators.required],
     });
   }
 
@@ -52,13 +79,16 @@ export class Category implements OnInit {
 
   public async loadCategories(): Promise<void> {
     try {
-      const categories = await firstValueFrom(this.categoryService.getCategories());
+      const categories = await firstValueFrom(
+        this.categoryService.getCategories()
+      );
       this._categoriesSubject.next(categories);
     } catch (error) {
       // Use the new error modal instead of toastService
       this.showErrorModal(
         this.translateService.instant('ERROR_TITLE'),
-        (error as any).message || this.translateService.instant('DATA_LOAD_ERROR')
+        (error as any).message ||
+          this.translateService.instant('DATA_LOAD_ERROR')
       );
       console.error('Error loading categories:', error);
     }
@@ -87,20 +117,24 @@ export class Category implements OnInit {
 
     // Check for duplicate category name (case-insensitive)
     const categories = this._categoriesSubject.value;
-    const isDuplicate = categories.some(category => category.name.toLowerCase() === categoryName.toLowerCase());
+    const isDuplicate = categories.some(
+      (category) => category.name.toLowerCase() === categoryName.toLowerCase()
+    );
 
     if (isDuplicate) {
-        // Use the new error modal instead of toastService
-        this.showErrorModal(
-          this.translateService.instant('ERROR_TITLE'),
-          this.translateService.instant('CATEGORY_ALREADY_EXISTS')
-        );
-        return;
+      // Use the new error modal instead of toastService
+      this.showErrorModal(
+        this.translateService.instant('ERROR_TITLE'),
+        this.translateService.instant('CATEGORY_ALREADY_EXISTS')
+      );
+      return;
     }
 
     try {
       await this.categoryService.addCategory(categoryName);
-      this.toastService.showSuccess(this.translateService.instant('CATEGORY_ADDED_SUCCESS'));
+      this.toastService.showSuccess(
+        this.translateService.instant('CATEGORY_ADDED_SUCCESS')
+      );
       this.addCategoryForm.reset();
       await this.loadCategories();
     } catch (error: any) {
@@ -118,7 +152,10 @@ export class Category implements OnInit {
       return;
     }
     this.editingCategoryId = category.id!;
-    this.editingCategoryFormControl = new FormControl(category.name, Validators.required);
+    this.editingCategoryFormControl = new FormControl(
+      category.name,
+      Validators.required
+    );
   }
 
   cancelEdit(): void {
@@ -126,8 +163,15 @@ export class Category implements OnInit {
     this.editingCategoryFormControl = null;
   }
 
-  async onUpdateInline(categoryId: string, oldCategoryName: string): Promise<void> { // Added oldCategoryName
-    if (this.editingCategoryFormControl && this.editingCategoryFormControl.invalid) {
+  async onUpdateInline(
+    categoryId: string,
+    oldCategoryName: string
+  ): Promise<void> {
+    // Added oldCategoryName
+    if (
+      this.editingCategoryFormControl &&
+      this.editingCategoryFormControl.invalid
+    ) {
       // Use the new error modal instead of toastService
       this.showErrorModal(
         this.translateService.instant('ERROR_TITLE'),
@@ -146,8 +190,14 @@ export class Category implements OnInit {
 
     const newCategoryName = this.editingCategoryFormControl.value;
     try {
-      await this.categoryService.updateCategory(categoryId, oldCategoryName, newCategoryName); // Pass oldCategoryName
-      this.toastService.showSuccess(this.translateService.instant('CATEGORY_SUCCESS_UPDATED'));
+      await this.categoryService.updateCategory(
+        categoryId,
+        oldCategoryName,
+        newCategoryName
+      ); // Pass oldCategoryName
+      this.toastService.showSuccess(
+        this.translateService.instant('CATEGORY_SUCCESS_UPDATED')
+      );
       this.cancelEdit();
       this.loadCategories(); // Reload to reflect changes
     } catch (error: any) {
@@ -168,7 +218,9 @@ export class Category implements OnInit {
    */
   async onDelete(categoryId: string): Promise<void> {
     try {
-      const isUsed = await this.categoryService.isCategoryUsedInExpenses(categoryId);
+      const isUsed = await this.categoryService.isCategoryUsedInExpenses(
+        categoryId
+      );
 
       if (isUsed) {
         this.showErrorModal(
@@ -178,24 +230,30 @@ export class Category implements OnInit {
         return; // Stop further execution
       }
 
-
       // Ensure the modal is ready before trying to open it
       if (!this.deleteConfirmationModal) {
         // Fallback or error handling if modal isn't ready
         this.showErrorModal(
           this.translateService.instant('ERROR_TITLE'),
-          this.translateService.instant('MODAL_INIT_ERROR') || 'Modal not ready. Please try again.'
+          this.translateService.instant('MODAL_INIT_ERROR') ||
+            'Modal not ready. Please try again.'
         );
         return;
       }
 
       // Get translated message synchronously using await firstValueFrom
-      const confirmMsg = await firstValueFrom(this.translateService.get('CONFIRM_DELETE_CATEGORY'));
+      const confirmMsg = await firstValueFrom(
+        this.translateService.get('CONFIRM_DELETE_CATEGORY')
+      );
 
-      this.deleteConfirmationModal.title = this.translateService.instant('CONFIRM_DELETE_TITLE');
+      this.deleteConfirmationModal.title = this.translateService.instant(
+        'CONFIRM_DELETE_TITLE'
+      );
       this.deleteConfirmationModal.message = confirmMsg; // Set the message here
-      this.deleteConfirmationModal.confirmButtonText = this.translateService.instant('DELETE_BUTTON');
-      this.deleteConfirmationModal.cancelButtonText = this.translateService.instant('CANCEL_BUTTON');
+      this.deleteConfirmationModal.confirmButtonText =
+        this.translateService.instant('DELETE_BUTTON');
+      this.deleteConfirmationModal.cancelButtonText =
+        this.translateService.instant('CANCEL_BUTTON');
       this.deleteConfirmationModal.messageColor = 'text-danger';
       this.deleteConfirmationModal.modalType = 'confirm'; // Explicitly set to confirm type
 
@@ -207,32 +265,37 @@ export class Category implements OnInit {
         this.deleteConfirmationModal.open();
       }, 0);
 
-
       // Re-subscribe to confirmed event each time to ensure fresh subscription
       // and prevent multiple emissions from old subscriptions
-      const subscription = this.deleteConfirmationModal.confirmed.subscribe(async (confirmed: boolean) => {
-        if (confirmed) {
-          try {
-            await this.categoryService.deleteCategory(categoryId);
-            this.toastService.showSuccess(this.translateService.instant('CATEGORY_DELETED_SUCCESS'));
-            if (this.editingCategoryId === categoryId) {
+      const subscription = this.deleteConfirmationModal.confirmed.subscribe(
+        async (confirmed: boolean) => {
+          if (confirmed) {
+            try {
+              await this.categoryService.deleteCategory(categoryId);
+              this.toastService.showSuccess(
+                this.translateService.instant('CATEGORY_DELETED_SUCCESS')
+              );
+              if (this.editingCategoryId === categoryId) {
                 this.cancelEdit();
+              }
+              await this.loadCategories();
+            } catch (error: any) {
+              this.showErrorModal(
+                this.translateService.instant('ERROR_TITLE'),
+                error.message ||
+                  this.translateService.instant('DATA_DELETE_ERROR')
+              );
             }
-            await this.loadCategories();
-          } catch (error: any) {
-            this.showErrorModal(
-              this.translateService.instant('ERROR_TITLE'),
-              error.message || this.translateService.instant('DATA_DELETE_ERROR')
-            );
           }
+          subscription.unsubscribe(); // Unsubscribe to prevent memory leaks
         }
-        subscription.unsubscribe(); // Unsubscribe to prevent memory leaks
-      });
+      );
     } catch (error: any) {
       // Handle errors during the check itself (e.g., network issues)
       this.showErrorModal(
         this.translateService.instant('ERROR_TITLE'),
-        error.message || this.translateService.instant('FAILED_CHECK_CATEGORY_USAGE')
+        error.message ||
+          this.translateService.instant('FAILED_CHECK_CATEGORY_USAGE')
       );
     }
   }
@@ -245,7 +308,8 @@ export class Category implements OnInit {
   showErrorModal(title: string, message: string): void {
     this.errorModal.title = title;
     this.errorModal.message = message;
-    this.errorModal.confirmButtonText = this.translateService.instant('OK_BUTTON'); // Set to 'OK'
+    this.errorModal.confirmButtonText =
+      this.translateService.instant('OK_BUTTON'); // Set to 'OK'
     this.errorModal.cancelButtonText = ''; // Ensure cancel button is not shown for error
     this.errorModal.messageColor = 'text-danger'; // Error messages are typically red
     this.errorModal.modalType = 'alert'; // Set modal type to alert (single button)

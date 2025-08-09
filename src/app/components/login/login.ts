@@ -1,7 +1,20 @@
 // login.ts
-import { Component, HostListener, OnInit, inject, ChangeDetectorRef, OnDestroy, ViewChild } from '@angular/core';
+import {
+  Component,
+  HostListener,
+  OnInit,
+  inject,
+  ChangeDetectorRef,
+  OnDestroy,
+  ViewChild,
+} from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  Validators,
+  ReactiveFormsModule,
+} from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth';
 import { UserDataService, UserProfile } from '../../services/user-data';
@@ -14,9 +27,14 @@ import { ConfirmationModal } from '../common/confirmation-modal/confirmation-mod
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslateModule, ConfirmationModal],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    TranslateModule,
+    ConfirmationModal,
+  ],
   templateUrl: './login.html',
-  styleUrls: ['./login.css']
+  styleUrls: ['./login.css'],
 })
 export class LoginComponent implements OnInit, OnDestroy {
   @ViewChild('errorModal') errorModal!: ConfirmationModal;
@@ -45,25 +63,23 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
-      name: ['']
+      name: [''],
     });
 
-    this.currentLang = this.translate.currentLang || this.translate.getDefaultLang();
+    this.currentLang =
+      this.translate.currentLang || this.translate.getDefaultLang();
   }
 
   ngOnInit(): void {
-    this.authService.currentUser$.subscribe(user => {
+    this.authService.currentUser$.subscribe((user) => {
       if (user) {
         this.router.navigate(['/dashboard']);
       }
     });
     this.checkMobileView(window.innerWidth);
     this.resizeSubject
-      .pipe(
-        debounceTime(100),
-        takeUntil(this.destroy$)
-      )
-      .subscribe(width => {
+      .pipe(debounceTime(100), takeUntil(this.destroy$))
+      .subscribe((width) => {
         this.checkMobileView(width);
       });
   }
@@ -118,9 +134,14 @@ export class LoginComponent implements OnInit, OnDestroy {
         const user = await this.authService.login(email, password);
         this.sessionService.recordActivity();
         // Check if user has categories, if not, add default ones
-        const hasCategories = await this.categoryService.hasCategories(user.uid);
+        const hasCategories = await this.categoryService.hasCategories(
+          user.uid
+        );
         if (!hasCategories) {
-          await this.categoryService.addDefaultCategories(user.uid, this.currentLang); // Pass currentLang
+          await this.categoryService.addDefaultCategories(
+            user.uid,
+            this.currentLang
+          ); // Pass currentLang
         }
         this.router.navigate(['/dashboard']);
       } else {
@@ -130,18 +151,22 @@ export class LoginComponent implements OnInit, OnDestroy {
             uid: user.uid,
             email: user.email || email,
             displayName: name,
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
           };
           await this.userDataService.createUserProfile(newUserProfile);
           // Add default categories for the newly registered user
-          await this.categoryService.addDefaultCategories(user.uid, this.currentLang); // Pass currentLang
+          await this.categoryService.addDefaultCategories(
+            user.uid,
+            this.currentLang
+          ); // Pass currentLang
           this.sessionService.recordActivity();
           this.router.navigate(['/dashboard']);
         }
       }
     } catch (error: any) {
       console.error('Authentication error:', error);
-      const translatedErrorMessage = this.authService.getFirebaseErrorMessage(error);
+      const translatedErrorMessage =
+        this.authService.getFirebaseErrorMessage(error);
       this.showErrorModal(translatedErrorMessage);
     }
   }
@@ -149,38 +174,50 @@ export class LoginComponent implements OnInit, OnDestroy {
   signInWithGoogle(): void {
     this.errorMessage = null;
     this.successMessage = null;
-    this.authService.signInWithGoogle()
+    this.authService
+      .signInWithGoogle()
       .then(async (userCredential: any) => {
         if (userCredential.user) {
           const user = userCredential.user;
-          this.userDataService.getUserProfile(user.uid).subscribe(async profile => {
-            if (!profile) {
-              const newUserProfile: UserProfile = {
-                uid: user.uid,
-                email: user.email || '',
-                displayName: user.displayName || 'Google User',
-                createdAt: new Date().toISOString()
-              };
-              await this.userDataService.createUserProfile(newUserProfile);
-              // Add default categories for the new Google user
-              await this.categoryService.addDefaultCategories(user.uid, this.currentLang); // Pass currentLang
-              this.sessionService.recordActivity();
-              this.router.navigate(['/dashboard']);
-            } else {
-              // If user profile exists, check for categories and add if not present
-              const hasCategories = await this.categoryService.hasCategories(user.uid);
-              if (!hasCategories) {
-                await this.categoryService.addDefaultCategories(user.uid, this.currentLang); // Pass currentLang
+          this.userDataService
+            .getUserProfile(user.uid)
+            .subscribe(async (profile) => {
+              if (!profile) {
+                const newUserProfile: UserProfile = {
+                  uid: user.uid,
+                  email: user.email || '',
+                  displayName: user.displayName || 'Google User',
+                  createdAt: new Date().toISOString(),
+                };
+                await this.userDataService.createUserProfile(newUserProfile);
+                // Add default categories for the new Google user
+                await this.categoryService.addDefaultCategories(
+                  user.uid,
+                  this.currentLang
+                ); // Pass currentLang
+                this.sessionService.recordActivity();
+                this.router.navigate(['/dashboard']);
+              } else {
+                // If user profile exists, check for categories and add if not present
+                const hasCategories = await this.categoryService.hasCategories(
+                  user.uid
+                );
+                if (!hasCategories) {
+                  await this.categoryService.addDefaultCategories(
+                    user.uid,
+                    this.currentLang
+                  ); // Pass currentLang
+                }
+                this.sessionService.recordActivity();
+                this.router.navigate(['/dashboard']);
               }
-              this.sessionService.recordActivity();
-              this.router.navigate(['/dashboard']);
-            }
-          });
+            });
         }
       })
-      .catch(error => {
+      .catch((error) => {
         console.error('Google sign-in error:', error);
-        const translatedErrorMessage = this.authService.getFirebaseErrorMessage(error);
+        const translatedErrorMessage =
+          this.authService.getFirebaseErrorMessage(error);
         this.showErrorModal(translatedErrorMessage);
       });
   }

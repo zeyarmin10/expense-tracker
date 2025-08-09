@@ -5,7 +5,16 @@ import { ExpenseService, ServiceIExpense } from '../../services/expense';
 import { Observable, BehaviorSubject, combineLatest, map, of } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { BaseChartDirective } from 'ng2-charts';
-import { ChartData, ChartOptions, ChartType, Chart, PieController, ArcElement, Tooltip, Legend } from 'chart.js';
+import {
+  ChartData,
+  ChartOptions,
+  ChartType,
+  Chart,
+  PieController,
+  ArcElement,
+  Tooltip,
+  Legend,
+} from 'chart.js';
 import { Router } from '@angular/router';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
@@ -28,7 +37,13 @@ interface CategoryTotal {
 @Component({
   selector: 'app-expense-overview',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, BaseChartDirective, FontAwesomeModule ],
+  imports: [
+    CommonModule,
+    FormsModule,
+    TranslateModule,
+    BaseChartDirective,
+    FontAwesomeModule,
+  ],
   providers: [DatePipe],
   templateUrl: './expense-overview.html',
   styleUrls: ['./expense-overview.css'],
@@ -41,7 +56,8 @@ export class ExpenseOverview implements OnInit {
   faMagnifyingGlass = faMagnifyingGlass;
 
   // --- Filtering and Search Properties ---
-  allExpenses$: Observable<ServiceIExpense[]> = this.expenseService.getExpenses();
+  allExpenses$: Observable<ServiceIExpense[]> =
+    this.expenseService.getExpenses();
   filteredExpenses$: Observable<ServiceIExpense[]> = of([]);
   selectedDateFilter: string = 'custom';
   startDate: string = '';
@@ -56,7 +72,7 @@ export class ExpenseOverview implements OnInit {
   currencySymbols: { [key: string]: string } = {
     MMK: 'Ks',
     USD: '$',
-    THB: '฿'
+    THB: '฿',
   };
 
   categoryTotals: CategoryTotal[] = [];
@@ -66,11 +82,13 @@ export class ExpenseOverview implements OnInit {
   // --- Pie Chart Properties ---
   public pieChartData: ChartData<'pie'> = {
     labels: [],
-    datasets: [{
-      data: [],
-      backgroundColor: [],
-      hoverBackgroundColor: []
-    }]
+    datasets: [
+      {
+        data: [],
+        backgroundColor: [],
+        hoverBackgroundColor: [],
+      },
+    ],
   };
   public pieChartOptions: ChartOptions<'pie'> = {
     responsive: true,
@@ -86,34 +104,39 @@ export class ExpenseOverview implements OnInit {
       this.allExpenses$,
       this.dateFilter$,
       this.searchFilter$,
-      this._selectedCategory$ // <-- Add this new stream
+      this._selectedCategory$, // <-- Add this new stream
     ]).pipe(
-      map(([expenses, { start, end }, searchTerm, selectedCategory]) => { // <-- Add selectedCategory here
+      map(([expenses, { start, end }, searchTerm, selectedCategory]) => {
+        // <-- Add selectedCategory here
         let filtered = expenses;
 
         // Date filtering logic
-        filtered = filtered.filter(expense => {
+        filtered = filtered.filter((expense) => {
           return expense.date >= start && expense.date <= end;
         });
 
         // Search term filtering logic
         if (searchTerm) {
           const lowerCaseSearch = searchTerm.toLowerCase();
-          filtered = filtered.filter(expense =>
-            expense.itemName.toLowerCase().includes(lowerCaseSearch) ||
-            expense.category.toLowerCase().includes(lowerCaseSearch)
+          filtered = filtered.filter(
+            (expense) =>
+              expense.itemName.toLowerCase().includes(lowerCaseSearch) ||
+              expense.category.toLowerCase().includes(lowerCaseSearch)
           );
         }
 
         // Add the new category filtering logic here
         if (selectedCategory) {
-            filtered = filtered.filter(expense =>
-                expense.category.toLowerCase() === selectedCategory.toLowerCase()
-            );
+          filtered = filtered.filter(
+            (expense) =>
+              expense.category.toLowerCase() === selectedCategory.toLowerCase()
+          );
         }
 
         // Sort expenses by date in descending order
-        filtered.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        filtered.sort(
+          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+        );
 
         this.calculateSummary(filtered);
         this.updatePieChart(filtered);
@@ -124,9 +147,9 @@ export class ExpenseOverview implements OnInit {
   }
 
   // --- Methods for Filtering and Calculations ---
-  dateFilter$ = new BehaviorSubject<{ start: string, end: string }>({
+  dateFilter$ = new BehaviorSubject<{ start: string; end: string }>({
     start: '',
-    end: ''
+    end: '',
   });
   searchFilter$ = new BehaviorSubject<string>('');
 
@@ -158,8 +181,13 @@ export class ExpenseOverview implements OnInit {
         // // Prevent creating an invalid date if start or end dates are not set
         // Set default to "1 year ago" if custom dates are not set
         if (!this.startDate || !this.endDate) {
-          const oneYearAgo = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
-          this.startDate = this.datePipe.transform(oneYearAgo, 'yyyy-MM-dd') || '';
+          const oneYearAgo = new Date(
+            now.getFullYear() - 1,
+            now.getMonth(),
+            now.getDate()
+          );
+          this.startDate =
+            this.datePipe.transform(oneYearAgo, 'yyyy-MM-dd') || '';
           this.endDate = this.datePipe.transform(now, 'yyyy-MM-dd') || '';
         }
         startDate = new Date(this.startDate);
@@ -171,7 +199,7 @@ export class ExpenseOverview implements OnInit {
 
     this.dateFilter$.next({
       start: this.datePipe.transform(startDate, 'yyyy-MM-dd') || '',
-      end: this.datePipe.transform(endDate, 'yyyy-MM-dd') || ''
+      end: this.datePipe.transform(endDate, 'yyyy-MM-dd') || '',
     });
   }
 
@@ -185,7 +213,7 @@ export class ExpenseOverview implements OnInit {
       this.mostExpenseCategory = 'N/A';
       return;
     }
-    
+
     // Group expenses by currency
     const groupedByCurrency = expenses.reduce((acc, expense) => {
       const currency = expense.currency;
@@ -195,30 +223,43 @@ export class ExpenseOverview implements OnInit {
       acc[currency].push(expense);
       return acc;
     }, {} as { [key: string]: ServiceIExpense[] });
-    
-    this.currencySummaries = Object.keys(groupedByCurrency).map(currency => {
+
+    this.currencySummaries = Object.keys(groupedByCurrency).map((currency) => {
       const currencyExpenses = groupedByCurrency[currency];
-      const totalExpenses = currencyExpenses.reduce((sum, e) => sum + e.totalCost, 0);
-      const uniqueDays = new Set(currencyExpenses.map(e => this.datePipe.transform(e.date, 'yyyy-MM-dd'))).size;
+      const totalExpenses = currencyExpenses.reduce(
+        (sum, e) => sum + e.totalCost,
+        0
+      );
+      const uniqueDays = new Set(
+        currencyExpenses.map((e) =>
+          this.datePipe.transform(e.date, 'yyyy-MM-dd')
+        )
+      ).size;
       const dailyAverage = uniqueDays > 0 ? totalExpenses / uniqueDays : 0;
 
       return {
         currency,
         totalExpenses,
-        dailyAverage
+        dailyAverage,
       };
     });
 
     const categoryTotalsMap = expenses.reduce((acc, expense) => {
       if (!acc[expense.category]) {
-        acc[expense.category] = { category: expense.category, total: 0, currency: expense.currency };
+        acc[expense.category] = {
+          category: expense.category,
+          total: 0,
+          currency: expense.currency,
+        };
       }
       acc[expense.category].total += expense.totalCost;
       return acc;
     }, {} as { [key: string]: CategoryTotal });
 
     // Convert the map to an array and sort by total expense in descending order
-    this.categoryTotals = Object.values(categoryTotalsMap).sort((a, b) => b.total - a.total);
+    this.categoryTotals = Object.values(categoryTotalsMap).sort(
+      (a, b) => b.total - a.total
+    );
 
     // Keep the most expensive category logic for the chart and other summaries
     const mostExpensive = this.categoryTotals[0]?.category;
@@ -236,11 +277,13 @@ export class ExpenseOverview implements OnInit {
 
     this.pieChartData = {
       labels: labels,
-      datasets: [{
-        data: data,
-        backgroundColor: this.generateRandomColors(labels.length),
-        hoverBackgroundColor: this.generateRandomColors(labels.length),
-      }]
+      datasets: [
+        {
+          data: data,
+          backgroundColor: this.generateRandomColors(labels.length),
+          hoverBackgroundColor: this.generateRandomColors(labels.length),
+        },
+      ],
     };
   }
 
@@ -254,7 +297,7 @@ export class ExpenseOverview implements OnInit {
     } else {
       formattedValue = value.toLocaleString(undefined, {
         minimumFractionDigits: 2,
-        maximumFractionDigits: 2
+        maximumFractionDigits: 2,
       });
     }
 
@@ -264,7 +307,11 @@ export class ExpenseOverview implements OnInit {
   private generateRandomColors(count: number): string[] {
     const colors = [];
     for (let i = 0; i < count; i++) {
-      const color = '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
+      const color =
+        '#' +
+        Math.floor(Math.random() * 16777215)
+          .toString(16)
+          .padStart(6, '0');
       colors.push(color);
     }
     return colors;
@@ -272,11 +319,11 @@ export class ExpenseOverview implements OnInit {
 
   onRowClick(expense: ServiceIExpense): void {
     // Navigate to the 'expense' page and pass the expenseId as a URL parameter
-    this.router.navigate(['/expense', expense.date]); 
+    this.router.navigate(['/expense', expense.date]);
   }
 
   filterByCategory(category: string): void {
-  // Pass an empty string to clear the filter, or the category name to filter
-  this._selectedCategory$.next(category);
-}
+    // Pass an empty string to clear the filter, or the category name to filter
+    this._selectedCategory$.next(category);
+  }
 }
