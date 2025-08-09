@@ -92,6 +92,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.userDisplayName$ = this.authService.currentUser$.pipe(
       map(user => user ? user.displayName : null)
     );
+
+    Chart.defaults.font.family = 'MyanmarUIFont, Arial, sans-serif'; 
+
     this.expenses$ = this.expenseService.getExpenses();
     this.budgets$ = this.budgetService.getBudgets();
 
@@ -376,21 +379,33 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.expenseChartInstance.destroy();
     }
 
+    const component = this;
+
     this.expenseChartInstance = new Chart(canvas, {
         type: 'bar',
         data: data,
         options: {
-            indexAxis: 'y', // This is the key change to make the bars horizontal
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                x: { // 'x' axis now represents the amount
-                    beginAtZero: true
-                },
-                y: { // 'y' axis now represents the months
-                    beginAtZero: true
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            x: { // 'x' axis now represents the amount
+            beginAtZero: true,
+            ticks: {
+                callback: function(value: any) {
+                const currentLang = component.translate?.currentLang;
+                if (currentLang === 'my') {
+                    return new Intl.NumberFormat('my-MM', { numberingSystem: 'mymr' }).format(value);
+                }
+                // Default to English locale
+                return new Intl.NumberFormat().format(value);
                 }
             }
+            },
+            y: { // 'y' axis now represents the months
+            beginAtZero: true
+            }
+        }
         }
     });
   }

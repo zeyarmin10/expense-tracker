@@ -111,7 +111,7 @@
                                     <div class="chart-container">
                                         <canvas #expenseChartCanvas></canvas>
                                         <div *ngIf="!(hasExpenseDataForChart$ | async)" class="text-center text-muted mt-3">
-                                        <p>{{ 'NO_DATA_AVAILABLE_FOR_CHART' | translate }}</p>
+                                            <p>{{ 'NO_DATA_AVAILABLE_FOR_CHART' | translate }}</p>
                                         </div>
                                     </div>
                                 </div>

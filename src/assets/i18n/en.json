@@ -302,5 +302,7 @@
   "NO_EXPENSE_YET": "No expenses yet.",
   "NO_DATA_YET": "No data yet.",
   "DASHBOARD_EXPENSES_CHART_TITLE": "Expenses",
-  "NO_DATA_AVAILABLE_FOR_CHART": "No data available for chart."
+  "NO_DATA_AVAILABLE_FOR_CHART": "No data available for chart.",
+  "PROFIT_CHART_TITLE": "Profit/Loss Report",
+  "REVENUE": "ဝင်ငွေ"
 }

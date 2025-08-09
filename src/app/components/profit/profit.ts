@@ -1,7 +1,7 @@
-import { Component, OnInit, inject, ViewChild, OnDestroy } from '@angular/core';
+import { Component, OnInit, inject, ViewChild, OnDestroy, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
-import { Observable, BehaviorSubject, combineLatest, map, Subscription } from 'rxjs';
+import { Observable, BehaviorSubject, combineLatest, map, Subscription, switchMap, of } from 'rxjs';
 import { ServiceIExpense, ExpenseService } from '../../services/expense';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ServiceIIncome, IncomeService } from '../../services/income';
@@ -9,6 +9,10 @@ import { ServiceIBudget, BudgetService } from '../../services/budget';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faTrash, faSave, faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { ConfirmationModal } from '../common/confirmation-modal/confirmation-modal';
+import { AuthService } from '../../services/auth';
+import { Chart, registerables } from 'chart.js';
+
+Chart.register(...registerables);
 
 @Component({
   selector: 'app-profit',
@@ -25,8 +29,13 @@ export class Profit implements OnInit, OnDestroy {
   private incomeService = inject(IncomeService);
   private budgetService = inject(BudgetService);
   private translate = inject(TranslateService);
+  profitChartData$!: Observable<any>;
+  private profitChartInstance: Chart | undefined;
+  private authService = inject(AuthService);
+  private cdr = inject(ChangeDetectorRef);
 
   @ViewChild('deleteConfirmationModal') private deleteConfirmationModal!: ConfirmationModal;
+  @ViewChild('profitChartCanvas') private profitChartCanvas!: ElementRef<HTMLCanvasElement>;
 
   incomeForm: FormGroup;
 
@@ -69,6 +78,8 @@ export class Profit implements OnInit, OnDestroy {
   ];
 
   private subscriptions: Subscription = new Subscription();
+  hasChartData$!: Observable<any>;
+  filteredExpensesAndIncomes$: any;
 
   constructor() {
     this.incomeForm = this.fb.group({
@@ -231,24 +242,108 @@ export class Profit implements OnInit, OnDestroy {
         return netProfit;
       })
     );
+
+  }
+
+  private addDays(date: Date, days: number): Date {
+      const result = new Date(date);
+      result.setDate(result.getDate() + days);
+      return result;
+  }
+
+  onDateChange(): void {
+    this._startDate$.next(this._startDate$.getValue());
+    this._endDate$.next(this._endDate$.getValue());
   }
 
   ngOnInit(): void {
     const storedLang = localStorage.getItem('selectedLanguage');
     if (storedLang) {
-      this.translate.use(storedLang);
+        this.translate.use(storedLang);
     } else {
-      const browserLang = this.translate.getBrowserLang();
-      this.translate.use(browserLang && browserLang.match(/my|en/) ? browserLang : 'my');
+        const browserLang = this.translate.getBrowserLang();
+        this.translate.use(browserLang && browserLang.match(/my|en/) ? browserLang : 'my');
     }
 
-    this.subscriptions.add(this.translate.onLangChange.subscribe(() => {
-        // Trigger a refresh of the data streams to force the view to re-render with the new locale.
-        this.expenses$ = this.expenseService.getExpenses();
-        this.incomes$ = this.incomeService.getIncomes();
-        this.budgets$ = this.budgetService.getBudgets();
+    const allExpenses$ = this.authService.currentUser$.pipe(
+        switchMap(user => (user && user.uid) ? this.expenseService.getExpenses() : of([] as ServiceIExpense[])),
+    );
+
+    const allIncomes$ = this.authService.currentUser$.pipe(
+        switchMap(user => (user && user.uid) ? this.incomeService.getIncomes() : of([] as ServiceIIncome[])),
+    );
+
+    Chart.defaults.font.family = 'MyanmarUIFont, Arial, sans-serif'; 
+
+    this.filteredExpensesAndIncomes$ = combineLatest([
+        allExpenses$,
+        allIncomes$,
+        this._startDate$,
+        this._endDate$,
+    ]).pipe(
+        map(([expenses, incomes, startDateStr, endDateStr]) => {
+            const startDate = new Date(startDateStr);
+            const endDate = new Date(endDateStr);
+
+            const filteredExpenses = expenses.filter(expense => {
+                const expenseDate = new Date(expense.date);
+                return expenseDate >= startDate && expenseDate <= this.addDays(endDate, 1);
+            });
+
+            const filteredIncomes = incomes.filter(income => {
+                const incomeDate = new Date(income.date);
+                return incomeDate >= startDate && incomeDate <= this.addDays(endDate, 1);
+            });
+
+            return { expenses: filteredExpenses, incomes: filteredIncomes };
+        })
+    );
+
+    this.profitChartData$ = this.filteredExpensesAndIncomes$.pipe(
+        map(({ incomes, expenses }) => {
+            const totalIncome = incomes.reduce((sum: number, income: ServiceIIncome) => sum + income.amount, 0);
+            const totalExpense = expenses.reduce((sum: number, expense: ServiceIExpense) => sum + expense.totalCost, 0);
+            const profit = totalIncome - totalExpense;
+
+            // Determine the label and color based on profit value
+            const profitLossLabel = profit >= 0 ? this.translate.instant('PROFIT') : this.translate.instant('LOSS');
+            const profitLossColor = profit >= 0 ? 'rgba(54, 162, 235, 0.5)' : 'rgba(255, 0, 0, 0.5)';
+            const profitLossBorderColor = profit >= 0 ? 'rgba(54, 162, 235, 1)' : 'rgba(255, 0, 0, 1)';
+
+            return {
+            labels: [this.translate.instant('REVENUE'), this.translate.instant('EXPENSE'), profitLossLabel],
+            datasets: [{
+                label: this.translate.instant('SUMMARY'),
+                data: [totalIncome, totalExpense, profit],
+                backgroundColor: [
+                'rgba(75, 192, 192, 0.5)', // Income
+                'rgba(255, 99, 132, 0.5)', // Expense
+                profitLossColor, // Profit/Loss
+                ],
+                borderColor: [
+                'rgba(75, 192, 192, 1)',
+                'rgba(255, 99, 132, 1)',
+                profitLossBorderColor,
+                ],
+                borderWidth: 1
+            }]
+            };
+        })
+    );
+
+    this.hasChartData$ = this.profitChartData$.pipe(
+        map(data => data.datasets[0].data.some((val: number) => val > 0))
+    );
+
+    this.subscriptions.add(this.profitChartData$.subscribe(data => {
+        this.cdr.detectChanges();
+        this.renderProfitChart(data);
     }));
-  }
+
+    this.subscriptions.add(this.translate.onLangChange.subscribe(() => {
+        this.cdr.detectChanges();
+    }));
+}
 
   ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
@@ -356,11 +451,38 @@ export class Profit implements OnInit, OnDestroy {
   }
 
   setDateFilter(filter: string): void {
-    this._selectedDateRange$.next(filter);
-    if (filter === 'custom') {
-      this._startDate$.next(this.startDate);
-      this._endDate$.next(this.endDate);
+    const today = new Date();
+    let startDate: Date;
+    let endDate: Date = today;
+
+    switch (filter) {
+      case 'last30Days':
+        startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 30);
+        break;
+      case 'currentMonth':
+        startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+        endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        break;
+      case 'currentYear':
+        startDate = new Date(today.getFullYear(), 0, 1);
+        endDate = new Date(today.getFullYear(), 11, 31);
+        break;
+      case 'lastYear':
+        startDate = new Date(today.getFullYear() - 1, 0, 1);
+        endDate = new Date(today.getFullYear() - 1, 11, 31);
+        break;
+      case 'custom':
+        startDate = new Date(this.startDate);
+        endDate = new Date(this.endDate);
+        break;
+      default:
+        startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+        endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        break;
     }
+
+    this._startDate$.next(this.datePipe.transform(startDate, 'yyyy-MM-dd') || '');
+    this._endDate$.next(this.datePipe.transform(endDate, 'yyyy-MM-dd') || '');
   }
 
   formatLocalizedDate(date: string | Date | null | undefined, format: string): string {
@@ -368,5 +490,50 @@ export class Profit implements OnInit, OnDestroy {
       const currentLang = this.translate.currentLang;  
       // Use DatePipe to transform the date, passing the language as the locale
       return this.datePipe.transform(date, format, undefined, currentLang) || '';
+  }
+
+  private renderProfitChart(data: any): void {
+    const canvas = this.profitChartCanvas?.nativeElement;
+    if (!canvas) {
+      return;
+    }
+
+    if (this.profitChartInstance) {
+      this.profitChartInstance.destroy();
+    }
+    
+    const component = this;
+
+    this.profitChartInstance = new Chart(canvas, {
+      type: 'bar',
+      data: data,
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+        //   x: { // Labels axis
+        //     ticks: {
+        //       font: {
+        //         size: 13
+        //       }
+        //     }
+        //   },
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: function(value: any) {
+                const currentLang = component.translate?.currentLang;
+                if (currentLang === 'my') {
+                  // Localize numbers to Burmese using Intl.NumberFormat
+                  return new Intl.NumberFormat('my-MM', { numberingSystem: 'mymr' }).format(value);
+                }
+                // Default to English locale
+                return new Intl.NumberFormat().format(value);
+              }
+            }
+          }
+        }
+      }
+    });
   }
 }

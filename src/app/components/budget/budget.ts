@@ -417,6 +417,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
         browserLang && browserLang.match(/my|en/) ? browserLang : 'my'
       );
     }
+    Chart.defaults.font.family = 'MyanmarUIFont, Arial, sans-serif'; 
   }
 
   ngOnDestroy(): void {
@@ -538,30 +539,45 @@ export class BudgetComponent implements OnInit, OnDestroy {
 
   renderChart(data: any): void {
     const canvas = document.getElementById('budgetChart') as HTMLCanvasElement;
+
     if (this.chartInstance) {
-      this.chartInstance.destroy();
+        this.chartInstance.destroy();
     }
 
     if (canvas) {
-      this.chartInstance = new Chart(canvas, {
+        // A reference to the component instance is needed to access its properties.
+        // If you are using a class, 'this' refers to the component instance.
+        const component = this;
+
+        this.chartInstance = new Chart(canvas, {
         type: 'bar',
         data: data,
         options: {
-          indexAxis: 'y',
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            x: {
-              stacked: false,
-              beginAtZero: true,
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+            x: { // 'x' axis now represents the amount
+                stacked: false,
+                beginAtZero: true,
+                ticks: {
+                callback: function(value: any) {
+                    // Use the component reference to access the translate service
+                    const currentLang = component.translate?.currentLang;
+                    if (currentLang === 'my') {
+                    return new Intl.NumberFormat('my-MM', { numberingSystem: 'mymr' }).format(value);
+                    }
+                    return new Intl.NumberFormat().format(value);
+                }
+                },
             },
-            y: {
-              stacked: false,
-              beginAtZero: true,
+            y: { // 'y' axis now represents the months
+                stacked: false,
+                beginAtZero: true,
             },
-          },
+            },
         },
-      });
+        });
     }
   }
 
