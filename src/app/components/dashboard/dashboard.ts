@@ -27,6 +27,8 @@ import {
   BehaviorSubject,
   switchMap,
   startWith,
+  takeUntil,
+  Subject,
 } from 'rxjs';
 import { Chart, registerables } from 'chart.js';
 import { ServiceIIncome, IncomeService } from '../../services/income';
@@ -74,6 +76,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private formBuilder = inject(FormBuilder);
   public datePipe = inject(DatePipe);
   private router = inject(Router);
+  private destroy$ = new Subject<void>();
 
   @ViewChild('expenseChartCanvas')
   private expenseChartCanvas!: ElementRef<HTMLCanvasElement>;
@@ -392,23 +395,36 @@ export class DashboardComponent implements OnInit, OnDestroy {
       })
     );
 
-    this.hasExpenseDataForChart$ = this.monthlyExpenseChartData$.pipe(
-      map(
-        (data) =>
-          data.datasets[0].data.some((val: number) => val > 0) ||
-          data.datasets[1].data.some((val: number) => val > 0)
-      )
-    );
+    // this.hasExpenseDataForChart$ = this.monthlyExpenseChartData$.pipe(
+    //   map((data) => {
+    //     // ✅ FIX: Check if the 'data' object and its 'labels' array are valid
+    //     // and that the labels array has at least one element.
+    //     if (!data || !data.labels || data.labels.length === 0) {
+    //         return false;
+    //     }
+    //     // If the data has labels, we assume there is data to display.
+    //     return true;
+    //   })
+    // );
 
+    // Apply the `takeUntil` operator to all your subscriptions
     this.subscriptions.add(
-      this.monthlyExpenseChartData$.subscribe((data) => {
-        this.cdr.detectChanges();
-        this.renderExpenseChart(data);
-      })
+      this.monthlyExpenseChartData$
+            .pipe(takeUntil(this.destroy$))
+        .subscribe((data) => {
+          if (!data) {
+            return;
+          }
+          this.cdr.detectChanges();
+          this.renderExpenseChart(data);
+        })
     );
   }
 
   ngOnDestroy(): void {
+    // ✅ FIX: Emit a value and complete the Subject to signal destruction
+    this.destroy$.next();
+    this.destroy$.complete();
     this.subscriptions.unsubscribe();
     if (this.expenseChartInstance) {
       this.expenseChartInstance.destroy();

@@ -431,6 +431,9 @@ export class BudgetComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
+    if (this.chartInstance) {
+        this.chartInstance.destroy();
+    }
   }
 
   onBudgetTypeChange(type: string): void {

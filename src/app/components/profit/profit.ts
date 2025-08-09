@@ -446,6 +446,9 @@ export class Profit implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
+    if (this.profitChartInstance) {
+        this.profitChartInstance.destroy();
+    }
   }
 
   onSubmitIncome(): void {
