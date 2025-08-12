@@ -27,18 +27,13 @@
 
 .chart-container {
   position: relative;
-  /* Default height for larger screens */
-  height: 400px; 
-  width: 100%;
-  margin-top: 1rem;
-  padding: 5px;
+  min-height: 40vh;
+  margin-bottom: 20px; 
+  /* width: 100%; */
+  margin-top: 0.5rem;
+  padding: 0;
 }
 
-.chart-container {
-    position: relative;
-    min-height: 40vh;
-    margin-bottom: 20px;
-}
 
 /* For mobile devices, increase the chart height for better readability */
 @media (max-width: 767px) {

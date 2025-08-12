@@ -252,7 +252,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
 
             return {
               sortDate: monthDate, // Use the Date object for sorting
-              month: this.formatLocalizedDate(monthDate, 'MMM d, yyyy'), // Use the formatted string for display
+              month: this.formatLocalizedDate(monthDate, 'MMM, yyyy'), // Use the formatted string for display
               total: { [currency]: data.expenseAmount },
               budget: {
                 amount: data.budgetAmount,

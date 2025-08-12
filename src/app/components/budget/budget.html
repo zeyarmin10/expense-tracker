@@ -373,77 +373,105 @@
           </div>
           <div class="card-body">
             <div
-              *ngIf="
-                monthlySummary$ | async as monthlySummary;
-                else noSummaryTemplate
-              "
+              *ngIf="monthlySummary$ | async as monthlySummary; else loading"
             >
               <div class="summary-list">
                 <div
-                  *ngFor="let monthData of monthlySummary"
-                  class="summary-item d-flex justify-content-between align-items-center border-bottom mb-2"
+                  *ngIf="
+                    monthlySummary && (monthlySummary | keyvalue).length > 0;
+                    else noSummaryTemplate
+                  "
                 >
-                  <div class="summary-date">{{ monthData.month }}</div>
-                  <div class="summary-budget d-flex flex-column">
-                    <span
-                      *ngFor="let total of monthData.total | keyvalue"
-                      class="text-end d-flex flex-column"
-                    >
-                      <small class="text-muted">{{
-                        "BUDGET" | translate
-                      }}</small>
+                  <div
+                    *ngFor="let monthData of monthlySummary"
+                    class="summary-item d-flex justify-content-between align-items-center border-bottom mb-3"
+                  >
+                    <div class="summary-date">
+                      <span>{{ monthData.month }}</span>
                       <span
-                        *ngIf="
-                          monthData.budget &&
-                          monthData.budget.currency === total.key
-                        "
-                        class="text-end text-success"
+                        *ngFor="let total of monthData.total | keyvalue"
+                        class="d-flex flex-column"
                       >
-                        {{
-                          formatAmountWithSymbol(
-                            monthData.budget.amount,
-                            monthData.budget.currency
-                          )
-                        }}
+                        <small class="text-muted">{{
+                          "BUDGET" | translate
+                        }}</small>
+                        <span
+                          *ngIf="
+                            monthData.budget &&
+                            monthData.budget.currency === total.key
+                          "
+                          class="text-end text-success"
+                        >
+                          {{
+                            formatAmountWithSymbol(
+                              monthData.budget.amount,
+                              monthData.budget.currency
+                            )
+                          }}
+                        </span>
                       </span>
-                    </span>
-                    <span
-                      *ngFor="let total of monthData.total | keyvalue"
-                      class="text-end d-flex flex-column"
-                    >
-                      <small class="text-muted">{{
-                        "EXPENSE" | translate
-                      }}</small>
+                    </div>
+                    <div class="d-flex flex-column">
+                      <!-- <span
+                        *ngFor="let total of monthData.total | keyvalue"
+                        class="text-end d-flex flex-column"
+                        >
+                        <small class="text-muted">{{
+                            "BUDGET" | translate
+                        }}</small>
+                        <span
+                            *ngIf="
+                            monthData.budget &&
+                            monthData.budget.currency === total.key
+                            "
+                            class="text-end text-success"
+                        >
+                            {{
+                            formatAmountWithSymbol(
+                                monthData.budget.amount,
+                                monthData.budget.currency
+                            )
+                            }}
+                        </span>
+                        </span> -->
                       <span
-                        *ngIf="
-                          monthData.budget &&
-                          monthData.budget.currency === total.key
-                        "
-                        class="text-end text-info"
+                        *ngFor="let total of monthData.total | keyvalue"
+                        class="text-end d-flex flex-column"
                       >
-                        {{ formatAmountWithSymbol(total.value, total.key) }}
+                        <small class="text-muted">{{
+                          "EXPENSE" | translate
+                        }}</small>
+                        <span
+                          *ngIf="
+                            monthData.budget &&
+                            monthData.budget.currency === total.key
+                          "
+                          class="text-end text-info"
+                        >
+                          {{ formatAmountWithSymbol(total.value, total.key) }}
+                        </span>
                       </span>
-                    </span>
-                    <span
-                      *ngIf="monthData.budget"
-                      class="text-end d-flex flex-column"
-                    >
-                      <small class="text-muted">{{
-                        "BALANCE" | translate
-                      }}</small>
                       <span
-                        class="text-end"
-                        [class.text-success]="(monthData.budget.balance) >= 0"
-                        [class.text-danger]="(monthData.budget.balance) < 0"
+                        *ngIf="monthData.budget"
+                        class="text-end d-flex flex-column"
                       >
-                        {{
-                          formatAmountWithSymbol(
-                            monthData.budget.balance,
-                            monthData.budget.currency
-                          )
-                        }}
+                        <small class="text-muted">{{
+                          "BALANCE" | translate
+                        }}</small>
+                        <span
+                          class="text-end"
+                          [class.text-success]="monthData.budget.balance >= 0"
+                          [class.text-danger]="monthData.budget.balance < 0"
+                        >
+                          {{
+                            formatAmountWithSymbol(
+                              monthData.budget.balance,
+                              monthData.budget.currency
+                            )
+                          }}
+                        </span>
                       </span>
-                    </span>
+                    </div>
                   </div>
                 </div>
               </div>
