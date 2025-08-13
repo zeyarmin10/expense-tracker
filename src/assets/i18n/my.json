@@ -283,7 +283,7 @@
   "NO_DATA_FOR_SUMMARY": "လစဉ်ဒေတာမရှိပါ။",
   "TOTAL_BUDGETS": "စုစုပေါင်းဘတ်ဂျက်",
   "TOTAL_EXPENSES": "စုစုပေါင်းအသုံးစရိတ်",
-  "REMAINING_BALANCE": "လက်ကျန် (ဘတ်ဂျက်-အသုံးစရိတ်)",
+  "REMAINING_BALANCE": "လက်ကျန်",
   "NO_BUDGET_DATA": "ဘတ်ဂျက်ဒေတာမရှိပါ။",
   "NO_EXPENSE_DATA": "အသုံးစရိတ်ဒေတာမရှိပါ။",
   "NO_BALANCE_DATA": "လက်ကျန်ဒေတာမရှိပါ။",
@@ -307,5 +307,6 @@
   "REVENUE": "ဝင်ငွေ",
   "ENGLISH_LANGUAGE": "အင်္ဂလိပ်",
   "MYANMAR_LANGUAGE": "ဗမာ",
-  "CURRENCY_LABEL": "ငွေကြေး"
+  "CURRENCY_LABEL": "ငွေကြေး",
+  "BALANCE_SUFFIX": "(ဘတ်ဂျက်-အသုံးစရိတ်)"
 }
