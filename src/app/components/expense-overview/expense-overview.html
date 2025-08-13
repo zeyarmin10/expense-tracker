@@ -85,14 +85,14 @@
                 class="col-12 col-sm-6 col-md-6"
                 *ngFor="let summary of currencySummaries"
               >
-                <div class="card h-100 summary-card border border-warning">
+                <div class="card h-100 expense-card">
                   <div class="card-body text-center">
                     <h6 class="text-muted fw-bold mb-2">
                       {{ "TOTAL_EXPENSES" | translate }} ({{
                         summary.currency
                       }})
                     </h6>
-                    <span class="card-title text-danger fs-1">
+                    <span class="card-title expense-amount fs-1">
                       {{
                         formatCurrency(summary.totalExpenses, summary.currency)
                       }}
@@ -110,7 +110,7 @@
               </div>
               <div class="col-12 col-md-6">
                 <div
-                  class="card h-100 summary-card border border-primary-subtle"
+                  class="card h-100 border border-primary-subtle border-2 most-expense"
                 >
                   <div
                     class="card-body text-center d-flex flex-column justify-content-center align-item-center"

@@ -48,28 +48,28 @@ body {
 
 /* Styles for the category buttons with totals */
 .total-btn {
-    white-space: nowrap;
-    padding: 0.2em 0.4em;
+  white-space: nowrap;
+  padding: 0.2em 0.4em;
 }
 .category-buttons {
-    overflow-x: auto;
-    scrollbar-width: thin;
-    -webkit-overflow-scrolling: touch;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
 }
 .category-buttons::-webkit-scrollbar {
-    height: 8px;
+  height: 8px;
 }
 .category-buttons::-webkit-scrollbar-thumb {
-    background-color: #dee2e6;
-    border-radius: 4px;
+  background-color: #dee2e6;
+  border-radius: 4px;
 }
 .category-buttons .total-btn {
-    flex: 0 0 auto;
+  flex: 0 0 auto;
 }
 .category-buttons .total-btn.active {
-    background-color: #007bff;
-    border-color: #007bff;
-    color: white;
+  background-color: #007bff;
+  border-color: #007bff;
+  color: white;
 }
 /* Summary Card specific styles */
 .summary-card h4 {
@@ -103,11 +103,11 @@ body {
 
 /* New style for clickable rows */
 .clickable-row {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 .table:not(caption) * * {
-    /* background-color: #eeeeee; */
+  /* background-color: #eeeeee; */
 }
 
 .table thead tr:nth-child(odd) th {
@@ -124,4 +124,16 @@ body {
 
 .table tbody tr:nth-child(even) td {
   background-color: #f3f8ff !important;
+}
+
+.expense-card {
+  border: 2px solid #f59e0b;
+  background: linear-gradient(135deg, #fffbeb, #fef3c7);
+}
+.expense-amount {
+  color: #d97706;
+}
+
+.most-expense {
+  background: linear-gradient(135deg, #ebf7ff, #c7e5fe);
 }
