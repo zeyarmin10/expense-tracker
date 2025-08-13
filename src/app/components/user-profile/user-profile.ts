@@ -15,6 +15,7 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faSave, faUserCircle } from '@fortawesome/free-solid-svg-icons';
 import { updateProfile } from '@angular/fire/auth';
 import { User } from '@angular/fire/auth';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-user-profile',
@@ -24,6 +25,7 @@ import { User } from '@angular/fire/auth';
     ReactiveFormsModule,
     TranslateModule,
     FontAwesomeModule,
+    FormsModule,
   ],
   providers: [DatePipe],
   templateUrl: './user-profile.html',
@@ -45,6 +47,7 @@ export class UserProfileComponent implements OnInit {
 
   errorMessage: string | null = null;
   successMessage: string | null = null;
+  selectedLanguage: string = 'my';
 
   faSave = faSave;
   faUserCircle = faUserCircle;
@@ -82,7 +85,6 @@ export class UserProfileComponent implements OnInit {
               }
             }),
             map((profile) => {
-              // CORRECTED: Use the 'user' object from the outer switchMap
               const email = profile?.email || user.email || 'N/A';
               const createdAt = profile?.createdAt
                 ? this.datePipe.transform(profile.createdAt, 'mediumDate')
@@ -123,7 +125,20 @@ export class UserProfileComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // No specific initialization needed beyond constructor setup
+    const storedLang = localStorage.getItem('selectedLanguage');
+    if (storedLang) {
+      this.selectedLanguage = storedLang;
+      this.translate.use(storedLang);
+    } else {
+      this.selectedLanguage = this.translate.getBrowserLang() || 'en';
+      this.translate.use(this.selectedLanguage);
+    }
+  }
+
+  onLanguageChange(language: string): void {
+    this.selectedLanguage = language;
+    this.translate.use(this.selectedLanguage);
+    localStorage.setItem('selectedLanguage', this.selectedLanguage);
   }
 
   onImageError(): void {
@@ -172,5 +187,15 @@ export class UserProfileComponent implements OnInit {
         this.errorMessage = this.translate.instant('NO_CHANGES_TO_SAVE');
       }
     }
+  }
+
+  formatLocalizedDate(
+    date: string | Date | null | undefined,
+    format: string
+  ): string {
+    // Get the current language from the translation service
+    const currentLang = this.translate.currentLang;
+    // Use DatePipe to transform the date, passing the language as the locale
+    return this.datePipe.transform(date, format, undefined, currentLang) || '';
   }
 }

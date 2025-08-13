@@ -2,12 +2,41 @@
   <div class="row d-flex justify-content-center">
     <div class="col-12 col-md-10 col-lg-8">
       <div class="card shadow-sm p-3 p-md-4">
-        <div class="card-body">
-          <h2 class="card-title text-center mb-4">
+        <div
+          class="card-header bg-white border-0 d-flex justify-content-between align-items-center"
+        >
+          <h2 class="card-title mb-0">
             <fa-icon [icon]="faUserCircle"></fa-icon>
             {{ "USER_PROFILE_TITLE" | translate }}
           </h2>
-
+          <div class="language-toggle">
+            <button
+              class="btn btn-outline-info language-btn"
+              [class.active]="selectedLanguage === 'en'"
+              (click)="onLanguageChange('en')"
+            >
+              <img
+                src="../../../assets/flags/en.png"
+                alt="English Flag"
+                class="flag-icon"
+              />
+              EN
+            </button>
+            <button
+              class="btn btn-outline-info language-btn"
+              [class.active]="selectedLanguage === 'my'"
+              (click)="onLanguageChange('my')"
+            >
+              <img
+                src="../../../assets/flags/mm.png"
+                alt="Myanmar Flag"
+                class="flag-icon"
+              />
+              MY
+            </button>
+          </div>
+        </div>
+        <div class="card-body">
           <div class="profile-picture-container text-center mb-4">
             <ng-container *ngIf="userPhotoUrl$ | async as photoURL">
               <img
@@ -47,7 +76,9 @@
                   >{{ "MEMBER_SINCE_LABEL" | translate }} :</strong
                 ></label
               >
-              <p class="form-control-plaintext">{{ userData.createdAt }}</p>
+              <p class="form-control-plaintext">
+                {{ formatLocalizedDate(userData.createdAt, "MMM d, yyyy") }}
+              </p>
             </div>
           </div>
           <div *ngIf="!(userDisplayData$ | async)">
@@ -63,31 +94,24 @@
                   >{{ "DISPLAY_NAME_LABEL" | translate }} :</strong
                 ></label
               >
-              <div class="d-flex align-items-center">
-                <div class="col-md-6 col-sm-10 col-xs-10">
-                  <input
-                    id="displayName"
-                    type="text"
-                    formControlName="displayName"
-                    class="form-control me-2"
-                    [class.is-invalid]="
-                      userProfileForm.get('displayName')?.invalid &&
-                      userProfileForm.get('displayName')?.touched
-                    "
-                  />
-                </div>
-                <div class="col-md-6 col-sm-2 col-xs-2">
-                  <button
-                    type="submit"
-                    class="btn btn-primary ms-1"
-                    [disabled]="
-                      userProfileForm.invalid || !userProfileForm.dirty
-                    "
-                  >
-                    <fa-icon [icon]="faSave"></fa-icon>
-                    <!-- {{ 'SAVE_PROFILE_BUTTON' | translate }} -->
-                  </button>
-                </div>
+              <div class="input-group">
+                <input
+                  id="displayName"
+                  type="text"
+                  formControlName="displayName"
+                  class="form-control"
+                  [class.is-invalid]="
+                    userProfileForm.get('displayName')?.invalid &&
+                    userProfileForm.get('displayName')?.touched
+                  "
+                />
+                <button
+                  type="submit"
+                  class="btn btn-outline-info"
+                  [disabled]="userProfileForm.invalid || !userProfileForm.dirty"
+                >
+                  <fa-icon [icon]="faSave"></fa-icon>
+                </button>
               </div>
               <div
                 *ngIf="

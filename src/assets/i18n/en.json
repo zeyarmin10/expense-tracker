@@ -304,5 +304,7 @@
   "DASHBOARD_EXPENSES_CHART_TITLE": "Expenses",
   "NO_DATA_AVAILABLE_FOR_CHART": "No data available for chart.",
   "PROFIT_CHART_TITLE": "Profit/Loss Report",
-  "REVENUE": "Revenue"
+  "REVENUE": "Revenue",
+  "ENGLISH_LANGUAGE": "English",
+  "MYANMAR_LANGUAGE": "Burmese"
 }

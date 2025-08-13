@@ -1,11 +1,10 @@
-/* src/app/components/user-profile/user-profile.component.css */
 .profile-picture-container {
-  margin-bottom: 20px;
+  margin-bottom: 1.5rem;
 }
 
 .profile-picture-img {
-  width: 120px; /* Adjust size as needed */
-  height: 120px; /* Adjust size as needed */
+  width: 25%; /* Adjust size as needed */
+  height: 25%; /* Adjust size as needed */
   object-fit: cover;
   border: 2px solid var(--bs-primary); /* Example border */
 }
@@ -13,4 +12,59 @@
 .default-profile-icon {
   font-size: 120px; /* Adjust size to match image */
   color: #ccc; /* A default grey color */
+}
+
+@media (max-width: 576px) {
+  .card-header {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+/* ... existing CSS */
+.language-toggle {
+  display: flex;
+  gap: 5px; /* Adds space between the buttons */
+}
+
+.language-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px; /* Adds space between the flag and the text */
+  background-color: #f1f1f1;
+  color: #555;
+  border: 1px solid #ddd;
+  padding: 5px 10px;
+  transition: all 0.2s ease-in-out;
+}
+
+.language-btn.active {
+  background-color: transparent;
+  color: var(--bs-info);
+  border-color: var(--bs-info);
+  box-shadow: 0 0 0.5rem rgba(13, 202, 240, 0.5);
+}
+
+.language-btn:hover {
+  background-color: #e2e2e2;
+  color: #333;
+}
+
+.language-btn.active:hover {
+  background-color: var(--bs-info);
+  color: #fff;
+}
+
+.flag-icon {
+  width: 20px;
+  height: auto;
+}
+
+/* For mobile view, adjust the layout if necessary */
+@media (max-width: 576px) {
+  .language-toggle {
+    margin-top: 10px;
+    justify-content: center;
+    width: 100%;
+  }
 }
