@@ -80,6 +80,22 @@
                 {{ formatLocalizedDate(userData.createdAt, "MMM d, yyyy") }}
               </p>
             </div>
+
+            <!-- ✅ NEW: Currency Setting Section -->
+            <div class="mb-3">
+              <label class="form-label font-weight-bold">
+                <strong>{{ "CURRENCY_LABEL" | translate }} :</strong>
+              </label>
+              <select class="form-select" [(ngModel)]="selectedCurrency">
+                <option
+                  *ngFor="let currency of availableCurrencies"
+                  [value]="currency.code"
+                >
+                  {{ currency.code }} ({{ currency.symbol }})
+                </option>
+              </select>
+            </div>
+            <!-- END Currency Setting Section -->
           </div>
           <div *ngIf="!(userDisplayData$ | async)">
             <p class="text-center text-muted">

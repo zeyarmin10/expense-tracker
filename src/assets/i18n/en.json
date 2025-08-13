@@ -306,5 +306,6 @@
   "PROFIT_CHART_TITLE": "Profit/Loss Report",
   "REVENUE": "Revenue",
   "ENGLISH_LANGUAGE": "English",
-  "MYANMAR_LANGUAGE": "Burmese"
+  "MYANMAR_LANGUAGE": "Burmese",
+  "CURRENCY_LABEL": "Currency"
 }

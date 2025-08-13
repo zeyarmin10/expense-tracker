@@ -9,6 +9,7 @@ import {
 import { Observable, of, map, firstValueFrom } from 'rxjs';
 import { switchMap, tap, catchError } from 'rxjs/operators';
 import { AuthService } from '../../services/auth';
+// Assuming UserProfile now includes a 'currency' property
 import { UserDataService, UserProfile } from '../../services/user-data';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
@@ -42,12 +43,26 @@ export class UserProfileComponent implements OnInit {
   userDisplayData$: Observable<{
     email: string | null;
     createdAt: string | null;
+    currency?: string; // Add currency to this type
   } | null>;
   userPhotoUrl$: Observable<string | null>;
 
   errorMessage: string | null = null;
   successMessage: string | null = null;
   selectedLanguage: string = 'my';
+  selectedCurrency: string = 'MMK';
+
+  // ✅ NEW: Available currencies for the dropdown
+  availableCurrencies = [
+    { code: 'MMK', symbol: 'Ks' },
+    { code: 'USD', symbol: '$' },
+    { code: 'THB', symbol: '฿' },
+    { code: 'EUR', symbol: '€' },
+    { code: 'JPY', symbol: '¥' },
+    { code: 'GBP', symbol: '£' },
+    { code: 'SGD', symbol: 'S$' },
+    { code: 'KHR', symbol: '៛' },
+  ];
 
   faSave = faSave;
   faUserCircle = faUserCircle;
@@ -70,7 +85,11 @@ export class UserProfileComponent implements OnInit {
                 displayName: currentDisplayName,
               });
 
+              // ✅ NEW: Set selectedCurrency from profile or default
+              this.selectedCurrency = profile?.currency || 'MMK';
+
               if (!profile) {
+                // If no profile exists, create one with default currency
                 this.userDataService
                   .createUserProfile({
                     uid: user.uid,
@@ -78,6 +97,7 @@ export class UserProfileComponent implements OnInit {
                     displayName: user.displayName || '',
                     createdAt:
                       user.metadata.creationTime || new Date().toISOString(),
+                    currency: this.selectedCurrency, // Add default currency
                   })
                   .catch((err) =>
                     console.error('Error creating initial user profile:', err)
@@ -86,16 +106,14 @@ export class UserProfileComponent implements OnInit {
             }),
             map((profile) => {
               const email = profile?.email || user.email || 'N/A';
-              const createdAt = profile?.createdAt
-                ? this.datePipe.transform(profile.createdAt, 'mediumDate')
-                : user.metadata.creationTime
-                ? this.datePipe.transform(
-                    user.metadata.creationTime,
-                    'mediumDate'
-                  )
-                : 'N/A';
+              const createdAt =
+                profile?.createdAt ||
+                user.metadata.creationTime ||
+                new Date().toISOString();
 
-              return { email, createdAt };
+              const currency = profile?.currency || 'MMK'; // Pass currency in map
+
+              return { email, createdAt, currency };
             }),
             catchError((err) => {
               console.error('Error fetching user profile data:', err);
@@ -139,6 +157,9 @@ export class UserProfileComponent implements OnInit {
     this.selectedLanguage = language;
     this.translate.use(this.selectedLanguage);
     localStorage.setItem('selectedLanguage', this.selectedLanguage);
+    // You might want to persist the language to the user profile here as well,
+    // if it's considered a user setting that syncs across devices.
+    // e.g., this.userDataService.updateUserProfile(currentUser.uid, { language: this.selectedLanguage });
   }
 
   onImageError(): void {
@@ -164,8 +185,11 @@ export class UserProfileComponent implements OnInit {
             await updateProfile(currentUser, { displayName: displayName });
           }
 
+          // ✅ REVISED: Include currency in the update if it changes (though it's disabled in UI)
+          // If you decide to make it editable later, this is where you'd save it.
           await this.userDataService.updateUserProfile(currentUser.uid, {
             displayName: displayName,
+            currency: this.selectedCurrency, // Save the selected currency
           });
 
           this.successMessage = this.translate.instant(
@@ -193,9 +217,7 @@ export class UserProfileComponent implements OnInit {
     date: string | Date | null | undefined,
     format: string
   ): string {
-    // Get the current language from the translation service
     const currentLang = this.translate.currentLang;
-    // Use DatePipe to transform the date, passing the language as the locale
     return this.datePipe.transform(date, format, undefined, currentLang) || '';
   }
 }

@@ -1,5 +1,15 @@
 import { Injectable, inject } from '@angular/core';
-import { Database, ref, set, get, child, onValue, objectVal, remove, update } from '@angular/fire/database';
+import {
+  Database,
+  ref,
+  set,
+  get,
+  child,
+  onValue,
+  objectVal,
+  remove,
+  update,
+} from '@angular/fire/database';
 import { Observable } from 'rxjs';
 
 // Define a simple user profile interface for type safety
@@ -8,11 +18,12 @@ export interface UserProfile {
   email: string;
   displayName?: string;
   createdAt?: string;
+  currency?: string;
   // Add any other user-specific data you want to store here
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class UserDataService {
   private db: Database = inject(Database);
@@ -45,7 +56,10 @@ export class UserDataService {
    * @param data The partial data to update.
    * @returns A Promise that resolves when the data is updated.
    */
-  async updateUserProfile(uid: string, data: Partial<UserProfile>): Promise<void> {
+  async updateUserProfile(
+    uid: string,
+    data: Partial<UserProfile>
+  ): Promise<void> {
     const userRef = ref(this.db, `users/${uid}`);
     return update(userRef, data);
   }
