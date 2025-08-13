@@ -70,8 +70,10 @@ export class UserProfileComponent implements OnInit {
   imageLoadError: boolean = false;
 
   constructor() {
+    // ✅ FIX: Add 'currency' as a form control with a default value
     this.userProfileForm = this.fb.group({
       displayName: ['', Validators.maxLength(50)],
+      currency: ['MMK', Validators.required],
     });
 
     this.userDisplayData$ = this.authService.currentUser$.pipe(
@@ -81,8 +83,10 @@ export class UserProfileComponent implements OnInit {
             tap((profile) => {
               const currentDisplayName =
                 profile?.displayName || user.displayName || '';
+              const currentCurrency = profile?.currency || 'MMK';
               this.userProfileForm.patchValue({
                 displayName: currentDisplayName,
+                currency: currentCurrency,
               });
 
               // ✅ NEW: Set selectedCurrency from profile or default
@@ -122,7 +126,8 @@ export class UserProfileComponent implements OnInit {
             })
           );
         }
-        this.userProfileForm.patchValue({ displayName: '' });
+        // Handle no user logged in case
+        this.userProfileForm.patchValue({ displayName: '', currency: 'MMK' });
         return of(null);
       })
     );
@@ -176,6 +181,7 @@ export class UserProfileComponent implements OnInit {
 
       if (currentUser && currentUser.uid) {
         const displayName = this.userProfileForm.get('displayName')?.value;
+        const currency = this.userProfileForm.get('currency')?.value;
         try {
           if (
             currentUser.displayName !== displayName &&
@@ -189,7 +195,7 @@ export class UserProfileComponent implements OnInit {
           // If you decide to make it editable later, this is where you'd save it.
           await this.userDataService.updateUserProfile(currentUser.uid, {
             displayName: displayName,
-            currency: this.selectedCurrency, // Save the selected currency
+            currency: currency, // Save the selected currency
           });
 
           this.successMessage = this.translate.instant(
