@@ -1,24 +1,27 @@
-
 /* Add a subtle shine effect to valid buttons */
 .shine-effect {
-    position: relative;
-    overflow: hidden;
+  position: relative;
+  overflow: hidden;
 }
 
 .shine-effect::after {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
-    transition: transform 0.5s ease-in-out;
-    transform: rotate(45deg);
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.2) 0%,
+    transparent 70%
+  );
+  transition: transform 0.5s ease-in-out;
+  transform: rotate(45deg);
 }
 
 .shine-effect:hover::after {
-    transform: rotate(45deg) translate(25%, 25%);
+  transform: rotate(45deg) translate(25%, 25%);
 }
 
 .total-incomes {
@@ -28,12 +31,11 @@
 .chart-container {
   position: relative;
   min-height: 40vh;
-  margin-bottom: 20px; 
+  margin-bottom: 20px;
   /* width: 100%; */
   margin-top: 0.5rem;
   padding: 0;
 }
-
 
 /* For mobile devices, increase the chart height for better readability */
 @media (max-width: 767px) {
@@ -42,4 +44,41 @@
     min-height: 50vh;
     margin-bottom: 20px;
   }
+}
+
+.budget-card {
+  border: 2px solid #3b82f6;
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+}
+.budget-amount {
+  color: #1d4ed8;
+}
+
+/* Expenses */
+.expense-card {
+  border: 2px solid #f59e0b;
+  background: linear-gradient(135deg, #fffbeb, #fef3c7);
+}
+.expense-amount {
+  color: #d97706;
+}
+
+/* Balance (conditional) */
+
+.balance-positive {
+  border: 2px solid #10b981;
+  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+  color: #047857;
+}
+.balance-negative {
+  border: 2px solid #ef4444;
+  background: linear-gradient(135deg, #fef2f2, #fecaca);
+  color: #dc2626;
+}
+
+.balance-positive-amount {
+  color: #047857;
+}
+.balance-negative-amount {
+  color: #dc2626;
 }

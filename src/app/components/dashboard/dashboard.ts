@@ -410,7 +410,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     // Apply the `takeUntil` operator to all your subscriptions
     this.subscriptions.add(
       this.monthlyExpenseChartData$
-            .pipe(takeUntil(this.destroy$))
+        .pipe(takeUntil(this.destroy$))
         .subscribe((data) => {
           if (!data) {
             return;
@@ -537,5 +537,23 @@ export class DashboardComponent implements OnInit, OnDestroy {
         },
       },
     });
+  }
+
+  // Add these methods to your dashboard component
+
+  getBalanceCardClass(balances: any): string {
+    if (!balances) return 'balance-positive';
+
+    const balanceValues = Object.values(balances);
+    const totalBalance = balanceValues.reduce(
+      (sum: number, value: any) => sum + value,
+      0
+    );
+
+    return totalBalance >= 0 ? 'balance-positive' : 'balance-negative';
+  }
+
+  getBalanceAmountClass(value: number): string {
+    return value >= 0 ? 'balance-positive-amount' : 'balance-negative-amount';
   }
 }

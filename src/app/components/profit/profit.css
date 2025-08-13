@@ -1,108 +1,120 @@
 .profit-container {
-    padding: 20px 0;
-    /* max-width: 800px; */
-    margin: 0 auto;
+  padding: 20px 0;
+  /* max-width: 800px; */
+  margin: 0 auto;
 }
 
 .card-header {
-    font-weight: bold;
+  font-weight: bold;
 }
 
 .text-success {
-    color: green !important;
+  color: green !important;
 }
 
 .text-danger {
-    color: red !important;
+  color: red !important;
 }
 
 @media screen and (max-width: 768px) {
-    .profit-container {
-        padding: 20px 0;
-        max-width: 800px;
-        margin: 0 1rem;
-    }
-    .profit-card {
-        width: 100% !important;
-        border-radius: 1rem !important;
-    }
-
+  .profit-container {
+    padding: 20px 0;
+    max-width: 800px;
+    margin: 0 1rem;
+  }
+  .profit-card {
+    width: 100% !important;
+    border-radius: 1rem !important;
+  }
 }
 
 /* Define the shine effect animation */
-  @keyframes shine {
-    0% { box-shadow: 0 0 5px rgba(0, 123, 255, 0.3); } /* Initial subtle glow for info button */
-    50% { box-shadow: 0 0 5px rgba(0, 123, 255, 0.5), 0 0 15px rgba(0, 123, 255, 0.5); } /* Brighter glow */
-    100% { box-shadow: 0 0 5px rgba(209, 244, 251, 0.3); } /* Return to subtle glow */
-  }
+@keyframes shine {
+  0% {
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+  } /* Initial subtle glow for info button */
+  50% {
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5), 0 0 15px rgba(0, 123, 255, 0.5);
+  } /* Brighter glow */
+  100% {
+    box-shadow: 0 0 5px rgba(209, 244, 251, 0.3);
+  } /* Return to subtle glow */
+}
 
-  /* Define the shine effect animation for success button */
-  @keyframes shine-success {
-    0% { box-shadow: 0 0 5px rgba(40, 167, 69, 0.3); } /* Initial subtle glow for success button */
-    50% { box-shadow: 0 0 5px rgba(40, 167, 69, 0.35), 0 0 15px rgba(40, 167, 69, 0.5); } /* Brighter glow */
-    100% { box-shadow: 0 0 5px rgba(40, 167, 69, 0.3); } /* Return to subtle glow */
-  }
+/* Define the shine effect animation for success button */
+@keyframes shine-success {
+  0% {
+    box-shadow: 0 0 5px rgba(40, 167, 69, 0.3);
+  } /* Initial subtle glow for success button */
+  50% {
+    box-shadow: 0 0 5px rgba(40, 167, 69, 0.35), 0 0 15px rgba(40, 167, 69, 0.5);
+  } /* Brighter glow */
+  100% {
+    box-shadow: 0 0 5px rgba(40, 167, 69, 0.3);
+  } /* Return to subtle glow */
+}
 
-  /* Apply the animation to buttons with .shine-effect class */
-  .btn.shine-effect {
-    animation: shine 1.5s infinite ease-in-out;
-    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-  }
+/* Apply the animation to buttons with .shine-effect class */
+.btn.shine-effect {
+  animation: shine 1.5s infinite ease-in-out;
+  transition: background-color 0.3s ease, color 0.3s ease,
+    border-color 0.3s ease;
+}
 
-  /* Override for success button animation */
-  .btn.btn-outline-success.shine-effect { /* Changed to btn-outline-success */
-    animation: shine-success 1.5s infinite ease-in-out;
-  }
+/* Override for success button animation */
+.btn.btn-outline-success.shine-effect {
+  /* Changed to btn-outline-success */
+  animation: shine-success 1.5s infinite ease-in-out;
+}
 
-  /* Ensure smooth transition when disabled */
-  .btn[disabled] {
-    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
-    animation: none !important; /* Stop animation when disabled */
-  }
-  .total-incomes {
-    font-weight: bolder;
-    color: green;
-  }
-  /* .monthly-profit-loss {
+/* Ensure smooth transition when disabled */
+.btn[disabled] {
+  transition: background-color 0.3s ease, color 0.3s ease,
+    border-color 0.3s ease, box-shadow 0.3s ease;
+  animation: none !important; /* Stop animation when disabled */
+}
+.total-incomes {
+  font-weight: bolder;
+  color: green;
+}
+/* .monthly-profit-loss {
     border: 1px solid grey;
     border-radius: 0.5rem;
     padding: 1rem;
     margin-bottom: 0.5rem;
   } */
 
-
-
 .card-body p {
-    margin-bottom: 0;
+  margin-bottom: 0;
 }
 
 .profit-card .card-body {
-    padding-top: 1rem;
-    padding-bottom: 1rem;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
 }
 
 .text-info {
-    color: #17a2b8 !important;
+  color: #17a2b8 !important;
 }
 
 .btn-outline-info {
-    color: #17a2b8;
-    border-color: #17a2b8;
+  color: #17a2b8;
+  border-color: #17a2b8;
 }
 
 .btn-outline-info:hover {
-    color: #fff;
-    background-color: #17a2b8;
+  color: #fff;
+  background-color: #17a2b8;
 }
 
 .font-large {
-    font-size: 1.1em;
+  font-size: 1.1em;
 }
 
 .chart-container {
-    position: relative;
-    min-height: 30vh;
-    margin-bottom: 20px;
+  position: relative;
+  min-height: 30vh;
+  margin-bottom: 20px;
 }
 
 /* For mobile devices, increase the chart height for better readability */
@@ -112,4 +124,42 @@
     min-height: 40vh;
     margin-bottom: 20px;
   }
+}
+
+/* Income */
+.income-card {
+  border: 2px solid #22c55e;
+  background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+}
+.income-amount {
+  color: #15803d;
+}
+
+/* Expenses */
+.expense-card {
+  border: 2px solid #f59e0b;
+  background: linear-gradient(135deg, #fffbeb, #fef3c7);
+}
+.expense-amount {
+  color: #d97706;
+}
+
+/* Balance (conditional) */
+
+.balance-positive {
+  border: 2px solid #10b981;
+  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+  color: #047857;
+}
+.balance-negative {
+  border: 2px solid #ef4444;
+  background: linear-gradient(135deg, #fef2f2, #fecaca);
+  color: #dc2626;
+}
+
+.balance-positive-amount {
+  color: #047857;
+}
+.balance-negative-amount {
+  color: #dc2626;
 }

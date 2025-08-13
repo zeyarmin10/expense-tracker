@@ -222,7 +222,7 @@
 
         <div class="row g-3 mb-3">
           <div class="col-12 col-lg-4">
-            <div class="card h-100 border border-success">
+            <div class="card h-100 budget-card">
               <div class="card-body pt-1 pb-1">
                 <div class="text-start fw-bold p-0">
                   {{ "TOTAL_BUDGETS" | translate }}
@@ -242,7 +242,7 @@
                       style="margin-bottom: 0"
                     >
                       <span>{{ total.key }}:</span
-                      ><span class="text-success fs-5">{{
+                      ><span class="budget-amount">{{
                         formatAmountWithSymbol(total.value, total.key)
                       }}</span>
                     </span>
@@ -262,7 +262,7 @@
             </div>
           </div>
           <div class="col-12 col-lg-4">
-            <div class="card h-100 border border-info">
+            <div class="card h-100 expense-card">
               <div class="card-body pt-1 pb-1">
                 <div class="text-start fw-bold p-0">
                   {{ "TOTAL_EXPENSES" | translate }}
@@ -285,7 +285,7 @@
                       class="d-flex justify-content-between pb-0"
                     >
                       <span>{{ total.key }}:</span>
-                      <span class="text-info fs-5">{{
+                      <span class="expense-amount">{{
                         formatAmountWithSymbol(total.value, total.key)
                       }}</span>
                     </span>
@@ -305,7 +305,12 @@
             </div>
           </div>
           <div class="col-12 col-lg-4">
-            <div class="card h-100 border border-warning">
+            <div
+              class="card h-100"
+              [ngClass]="
+                getBalanceCardClass(remainingBalanceByCurrency$ | async)
+              "
+            >
               <div class="card-body pt-1 pb-1">
                 <div class="text-start fw-bold p-0">
                   {{ "REMAINING_BALANCE" | translate }}
@@ -329,11 +334,7 @@
                       style="margin-bottom: 0"
                     >
                       <span>{{ balance.key }}:</span>
-                      <span
-                        [class.text-success]="balance.value >= 0"
-                        [class.text-danger]="balance.value < 0"
-                        class="fs-5"
-                      >
+                      <span [ngClass]="getBalanceAmountClass(balance.value)">
                         {{ formatAmountWithSymbol(balance.value, balance.key) }}
                       </span>
                     </span>

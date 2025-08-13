@@ -692,4 +692,22 @@ export class Profit implements OnInit, OnDestroy {
       },
     });
   }
+
+  // Add these methods to your dashboard component
+
+  getBalanceCardClass(balances: any): string {
+    if (!balances) return 'balance-positive';
+
+    const balanceValues = Object.values(balances);
+    const totalBalance = balanceValues.reduce(
+      (sum: number, value: any) => sum + value,
+      0
+    );
+
+    return totalBalance >= 0 ? 'balance-positive' : 'balance-negative';
+  }
+
+  getBalanceAmountClass(value: number): string {
+    return value >= 0 ? 'balance-positive-amount' : 'balance-negative-amount';
+  }
 }

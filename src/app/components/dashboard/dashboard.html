@@ -15,7 +15,7 @@
         </div>
         <div class="row mb-4 text-center">
           <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 col-12 mb-3">
-            <div class="card h-100 border border-success">
+            <div class="card h-100 income-card">
               <div class="card-body pt-1 pb-1">
                 <div
                   class="d-flex flex-column justify-content-center align-items-center"
@@ -36,7 +36,7 @@
                       class="d-flex justify-content-between pb-0"
                     >
                       <!-- <strong>{{ total.key }}:</strong> -->
-                      <span class="text-success">{{
+                      <span class="income-amount">{{
                         formatAmountWithSymbol(total.value, total.key)
                       }}</span>
                     </span>
@@ -57,7 +57,7 @@
           </div>
 
           <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 col-12 mb-3">
-            <div class="card h-100 border border-success">
+            <div class="card h-100 budget-card">
               <div class="card-body pt-1 pb-1">
                 <div
                   class="d-flex flex-column justify-content-center align-items-center"
@@ -78,7 +78,7 @@
                       class="d-flex justify-content-between pb-0"
                     >
                       <!-- <strong>{{ total.key }}:</strong> -->
-                      <span class="text-success">{{
+                      <span class="budget-amount">{{
                         formatAmountWithSymbol(total.value, total.key)
                       }}</span>
                     </span>
@@ -99,7 +99,7 @@
           </div>
 
           <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 col-12 mb-3">
-            <div class="card h-100 border border-warning">
+            <div class="card h-100 expense-card">
               <div class="card-body pt-1 pb-1">
                 <div
                   class="d-flex flex-column justify-content-center align-items-center"
@@ -120,7 +120,7 @@
                       class="d-flex justify-content-between pb-0"
                     >
                       <!-- <strong>{{ total.key }}:</strong> -->
-                      <span class="text-danger">{{
+                      <span class="expense-amount">{{
                         formatAmountWithSymbol(total.value, total.key)
                       }}</span>
                     </span>
@@ -141,7 +141,12 @@
           </div>
 
           <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 col-12 mb-3">
-            <div class="card h-100 border border-info">
+            <div
+              class="card h-100"
+              [ngClass]="
+                getBalanceCardClass(remainingBalanceByCurrency$ | async)
+              "
+            >
               <div class="card-body pt-1 pb-1">
                 <div
                   class="d-flex flex-column justify-content-center align-items-center"
@@ -165,10 +170,7 @@
                       class="d-flex justify-content-between pb-0"
                     >
                       <!-- <strong>{{ balance.key }}:</strong> -->
-                      <span
-                        [class.text-success]="balance.value >= 0"
-                        [class.text-danger]="balance.value < 0"
-                      >
+                      <span [ngClass]="getBalanceAmountClass(balance.value)">
                         {{ formatAmountWithSymbol(balance.value, balance.key) }}
                       </span>
                     </span>

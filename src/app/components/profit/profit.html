@@ -216,7 +216,7 @@
 
         <div class="d-flex justify-content-center align-item-center">
           <div
-            class="card shadow mb-4 profit-card border border-info col-xl-6 col-lg-6 col-md-12 col-sm-12 col-xs-12"
+            class="card shadow border-3 mb-4 profit-card border border-info col-xl-6 col-lg-6 col-md-12 col-sm-12 col-xs-12"
           >
             <!-- <div class="card-header border border-info">{{ 'PROFIT_LOSS_REPORT' | translate }}</div> -->
             <div class="card-body">
@@ -296,7 +296,7 @@
 
         <div class="row g-3 mb-3">
           <div class="col-12 col-lg-4">
-            <div class="card h-100 border border-success">
+            <div class="card h-100 income-card">
               <div class="card-body pt-1 pb-1">
                 <div class="text-start fw-bold p-0">
                   {{ "TOTAL_INCOMES" | translate }}
@@ -319,7 +319,7 @@
                       class="d-flex justify-content-between pb-0"
                     >
                       <span>{{ total.key }}:</span>
-                      <span style="color: green">{{
+                      <span class="income-amount">{{
                         formatAmountWithSymbol(total.value, total.key)
                       }}</span>
                     </span>
@@ -339,7 +339,7 @@
             </div>
           </div>
           <div class="col-12 col-lg-4">
-            <div class="card h-100 border border-danger">
+            <div class="card h-100 expense-card">
               <div class="card-body pt-1 pb-1">
                 <div class="text-start fw-bold p-0">
                   {{ "TOTAL_EXPENSES" | translate }}
@@ -363,7 +363,7 @@
                       style="margin-bottom: 0"
                     >
                       <span>{{ total.key }}:</span>
-                      <span style="color: red">{{
+                      <span class="expense-amount">{{
                         formatAmountWithSymbol(total.value, total.key)
                       }}</span>
                     </span>
@@ -383,7 +383,12 @@
             </div>
           </div>
           <div class="col-12 col-lg-4">
-            <div class="card h-100 border border-info">
+            <div
+              class="card h-100"
+              [ngClass]="
+                getBalanceCardClass(remainingBalanceByCurrency$ | async)
+              "
+            >
               <div class="card-body pt-1 pb-1">
                 <div class="text-start fw-bold p-0">
                   {{ "REMAINING_BALANCE" | translate }}
@@ -407,10 +412,7 @@
                       style="margin-bottom: 0"
                     >
                       <span>{{ balance.key }}:</span>
-                      <span
-                        [class.text-success]="balance.value >= 0"
-                        [class.text-danger]="balance.value < 0"
-                      >
+                      <span [ngClass]="getBalanceAmountClass(balance.value)">
                         {{ formatAmountWithSymbol(balance.value, balance.key) }}
                       </span>
                     </span>
