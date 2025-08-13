@@ -23,6 +23,7 @@ import {
   Subscription,
   switchMap,
   of,
+  take,
 } from 'rxjs';
 import { ServiceIExpense, ExpenseService } from '../../services/expense';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -38,6 +39,7 @@ import {
 import { ConfirmationModal } from '../common/confirmation-modal/confirmation-modal';
 import { AuthService } from '../../services/auth';
 import { Chart, registerables } from 'chart.js';
+import { UserDataService } from '../../services/user-data';
 
 Chart.register(...registerables);
 
@@ -67,6 +69,7 @@ export class Profit implements OnInit, OnDestroy {
   private profitChartInstance: Chart | undefined;
   private authService = inject(AuthService);
   private cdr = inject(ChangeDetectorRef);
+  private userDataService = inject(UserDataService);
 
   @ViewChild('deleteConfirmationModal')
   private deleteConfirmationModal!: ConfirmationModal;
@@ -111,6 +114,11 @@ export class Profit implements OnInit, OnDestroy {
     { code: 'MMK', symbol: 'Ks' },
     { code: 'USD', symbol: '$' },
     { code: 'THB', symbol: '฿' },
+    { code: 'EUR', symbol: '€' },
+    { code: 'JPY', symbol: '¥' },
+    { code: 'GBP', symbol: '£' },
+    { code: 'SGD', symbol: 'S$' },
+    { code: 'KHR', symbol: '៛' },
   ];
 
   private subscriptions: Subscription = new Subscription();
@@ -442,12 +450,32 @@ export class Profit implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       })
     );
+
+    // ✅ REVISION: Fetch user profile and set the default currency on form load
+    this.authService.currentUser$
+      .pipe(
+        switchMap((user) => {
+          if (user && user.uid) {
+            // If a user is logged in, fetch their profile
+            return this.userDataService.getUserProfile(user.uid);
+          }
+          // Otherwise, return a null profile
+          return of(null);
+        }),
+        // Only take the first value emitted and then unsubscribe
+        take(1)
+      )
+      .subscribe((profile) => {
+        // Set the currency value based on the profile, or default to 'MMK'
+        const defaultCurrency = profile?.currency || 'MMK';
+        this.incomeForm.get('currency')?.setValue(defaultCurrency);
+      });
   }
 
   ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
     if (this.profitChartInstance) {
-        this.profitChartInstance.destroy();
+      this.profitChartInstance.destroy();
     }
   }
 
