@@ -23,6 +23,9 @@ import {
   combineLatest,
   map,
   firstValueFrom,
+  switchMap,
+  take,
+  of,
 } from 'rxjs';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 
@@ -40,6 +43,8 @@ import { CategoryModalComponent } from '../common/category-modal/category-modal'
 import { ConfirmationModal } from '../common/confirmation-modal/confirmation-modal';
 import { ToastService } from '../../services/toast';
 import { ActivatedRoute, Router } from '@angular/router';
+import { AuthService } from '../../services/auth';
+import { UserDataService } from '../../services/user-data';
 @Component({
   selector: 'app-expense',
   standalone: true,
@@ -71,6 +76,9 @@ export class Expense implements OnInit {
   private _activeCurrencyFilter$ = new BehaviorSubject<string | null>(null);
   private _activeCategoryFilter$ = new BehaviorSubject<string | null>(null);
 
+  private authService = inject(AuthService);
+  private userDataService = inject(UserDataService);
+
   displayedExpenses$: Observable<ServiceIExpense[]>;
   totalExpensesByCurrency$: Observable<{ [key: string]: number }>;
   totalExpensesByCategoryAndCurrency$: Observable<{
@@ -100,12 +108,22 @@ export class Expense implements OnInit {
     MMK: 'Ks',
     USD: '$',
     THB: '฿',
+    EUR: '€',
+    JPY: '¥',
+    GBP: '£',
+    SGD: 'S$',
+    KHR: '៛',
   };
 
   availableCurrencies = [
     { code: 'MMK', symbol: 'Ks' },
     { code: 'USD', symbol: '$' },
     { code: 'THB', symbol: '฿' },
+    { code: 'EUR', symbol: '€' },
+    { code: 'JPY', symbol: '¥' },
+    { code: 'GBP', symbol: '£' },
+    { code: 'SGD', symbol: 'S$' },
+    { code: 'KHR', symbol: '៛' },
   ];
 
   // expenseForm is not directly used for input binding, can be removed or kept for other purposes if needed
@@ -247,6 +265,26 @@ export class Expense implements OnInit {
         );
       }
     });
+
+    // ✅ REVISION: Fetch user profile and set the default currency on form load
+    this.authService.currentUser$
+      .pipe(
+        switchMap((user) => {
+          if (user && user.uid) {
+            // If a user is logged in, fetch their profile
+            return this.userDataService.getUserProfile(user.uid);
+          }
+          // Otherwise, return a null profile
+          return of(null);
+        }),
+        // Only take the first value emitted and then unsubscribe
+        take(1)
+      )
+      .subscribe((profile) => {
+        // Set the currency value based on the profile, or default to 'MMK'
+        const defaultCurrency = profile?.currency || 'MMK';
+        this.newExpenseForm.get('currency')?.setValue(defaultCurrency);
+      });
   }
 
   loadCategories(): void {
