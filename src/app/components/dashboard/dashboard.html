@@ -31,19 +31,18 @@
                       else noData
                     "
                   >
-                    <p
+                    <span
                       *ngFor="let total of totals | keyvalue"
-                      class="d-flex justify-content-between"
-                      style="margin-bottom: 0"
+                      class="d-flex justify-content-between pb-0"
                     >
                       <!-- <strong>{{ total.key }}:</strong> -->
                       <span class="text-success">{{
                         formatAmountWithSymbol(total.value, total.key)
                       }}</span>
-                    </p>
+                    </span>
                   </div>
                   <ng-template #noData>
-                    <p class="text-muted text-center">
+                    <p class="text-muted text-center pb-0">
                       {{ "NO_INCOME_DATA" | translate }}
                     </p>
                   </ng-template>
@@ -74,19 +73,18 @@
                       else noData
                     "
                   >
-                    <p
+                    <span
                       *ngFor="let total of totals | keyvalue"
-                      class="d-flex justify-content-between"
-                      style="margin-bottom: 0"
+                      class="d-flex justify-content-between pb-0"
                     >
                       <!-- <strong>{{ total.key }}:</strong> -->
                       <span class="text-success">{{
                         formatAmountWithSymbol(total.value, total.key)
                       }}</span>
-                    </p>
+                    </span>
                   </div>
                   <ng-template #noData>
-                    <p class="text-muted text-center">
+                    <p class="text-muted text-center pb-0">
                       {{ "NO_BUDGET_YET" | translate }}
                     </p>
                   </ng-template>
@@ -117,19 +115,18 @@
                       else noData
                     "
                   >
-                    <p
+                    <span
                       *ngFor="let total of totals | keyvalue"
-                      class="d-flex justify-content-between"
-                      style="margin-bottom: 0"
+                      class="d-flex justify-content-between pb-0"
                     >
                       <!-- <strong>{{ total.key }}:</strong> -->
                       <span class="text-danger">{{
                         formatAmountWithSymbol(total.value, total.key)
                       }}</span>
-                    </p>
+                    </span>
                   </div>
                   <ng-template #noData>
-                    <p class="text-muted text-center">
+                    <p class="text-muted text-center pb-0">
                       {{ "NO_EXPENSE_DATA" | translate }}
                     </p>
                   </ng-template>
@@ -162,10 +159,9 @@
                       else noData
                     "
                   >
-                    <p
+                    <span
                       *ngFor="let balance of balances | keyvalue"
-                      class="d-flex justify-content-between"
-                      style="margin-bottom: 0"
+                      class="d-flex justify-content-between pb-0"
                     >
                       <!-- <strong>{{ balance.key }}:</strong> -->
                       <span
@@ -174,10 +170,10 @@
                       >
                         {{ formatAmountWithSymbol(balance.value, balance.key) }}
                       </span>
-                    </p>
+                    </span>
                   </div>
                   <ng-template #noData>
-                    <p class="text-muted text-center">
+                    <p class="text-muted text-center pb-0">
                       {{ "NO_BALANCE_DATA" | translate }}
                     </p>
                   </ng-template>

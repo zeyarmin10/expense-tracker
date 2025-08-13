@@ -279,7 +279,7 @@
                     </ng-container>
                   </div>
                   <ng-template #noData>
-                    <p class="text-muted text-center">
+                    <p class="text-muted text-center pb-0">
                       {{ "NO_PROFIT_LOSS_DATA" | translate }}
                     </p>
                   </ng-template>
@@ -316,8 +316,7 @@
                   >
                     <span
                       *ngFor="let total of totals | keyvalue"
-                      class="d-flex justify-content-between"
-                      style="margin-bottom: 0"
+                      class="d-flex justify-content-between pb-0"
                     >
                       <span>{{ total.key }}:</span>
                       <span style="color: green">{{
@@ -326,7 +325,7 @@
                     </span>
                   </div>
                   <ng-template #noData>
-                    <p class="text-muted text-center">
+                    <p class="text-muted text-center pb-0">
                       {{ "NO_INCOME_DATA" | translate }}
                     </p>
                   </ng-template>
@@ -370,7 +369,7 @@
                     </span>
                   </div>
                   <ng-template #noData>
-                    <p class="text-muted text-center">
+                    <p class="text-muted text-center pb-0">
                       {{ "NO_EXPENSE_DATA" | translate }}
                     </p>
                   </ng-template>
@@ -416,7 +415,7 @@
                     </span>
                   </div>
                   <ng-template #noData>
-                    <p class="text-muted text-center">
+                    <p class="text-muted text-center pb-0">
                       {{ "NO_BALANCE_DATA" | translate }}
                     </p>
                   </ng-template>

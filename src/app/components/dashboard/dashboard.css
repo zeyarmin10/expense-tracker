@@ -1,63 +1,63 @@
 body {
-    background-color: #f0f2f5;
-    font-family: 'Poppins', sans-serif;
+  background-color: #f0f2f5;
+  font-family: "Poppins", sans-serif;
 }
 
 .dashboard-container {
-    padding-top: 2rem;
+  padding-top: 2rem;
 }
 
 .dashboard-header {
-    background-color: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .summary-card {
-    border-radius: 8px;
-    transition: transform 0.2s;
-    min-height: 120px;
+  border-radius: 8px;
+  transition: transform 0.2s;
+  min-height: 120px;
 }
 
 .summary-card:hover {
-    transform: translateY(-5px);
+  transform: translateY(-5px);
 }
 
 .chart-container {
-    position: relative;
-    height: 300px;
-    width: 100%;
+  position: relative;
+  height: 300px;
+  width: 100%;
 }
 
 .expense-list-item {
-    cursor: pointer;
-    transition: background-color 0.2s;
+  cursor: pointer;
+  transition: background-color 0.2s;
 }
 
 .expense-list-item:hover {
-    background-color: #f8f9fa;
+  background-color: #f8f9fa;
 }
 
 .profit-loss-card {
-    border-radius: 8px;
+  border-radius: 8px;
 }
 
 .card-header.bg-white {
-    font-size: 1.1rem;
-    font-weight: 600;
+  font-size: 1.1rem;
+  font-weight: 600;
 }
 
 .chart-container {
-    position: relative;
-    min-height: 40vh;
-    margin-bottom: 20px;
+  position: relative;
+  min-height: 45vh;
+  margin-bottom: 20px;
 }
 
 /* For mobile devices, increase the chart height for better readability */
 @media (max-width: 767px) {
   .chart-container {
     position: relative;
-    min-height: 45vh;
+    min-height: 50vh;
     margin-bottom: 20px;
   }
 }
