@@ -1,27 +1,40 @@
 import { Injectable, inject } from '@angular/core';
-import { Database, ref, push, set, update, remove, listVal, query, orderByChild, equalTo } from '@angular/fire/database';
+import {
+  Database,
+  ref,
+  push,
+  set,
+  update,
+  remove,
+  listVal,
+  query,
+  orderByChild,
+  equalTo,
+} from '@angular/fire/database';
 import { Observable, switchMap, firstValueFrom } from 'rxjs';
 import { AuthService } from './auth';
-import { DataICategory, DataIExpense } from '../models/data'; // Import interfaces
+import { DataICategory, DataIExpense } from '../core/models/data'; // Import interfaces
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class DataManagerService {
   private db: Database = inject(Database);
   private authService: AuthService = inject(AuthService);
 
   // Helper to get the user-specific path in RTDB
-  private getUserDataPath(dataType: 'categories' | 'expenses'): Observable<string | null> {
+  private getUserDataPath(
+    dataType: 'categories' | 'expenses'
+  ): Observable<string | null> {
     return this.authService.currentUser$.pipe(
-      switchMap(user => {
+      switchMap((user) => {
         if (user && user.uid) {
-          return new Observable<string>(observer => {
+          return new Observable<string>((observer) => {
             observer.next(`users/${user.uid}/${dataType}`);
             observer.complete();
           });
         }
-        return new Observable<null>(observer => {
+        return new Observable<null>((observer) => {
           observer.next(null);
           observer.complete();
         });
@@ -37,21 +50,21 @@ export class DataManagerService {
    * @returns Promise<void>
    */
   async addCategory(categoryName: string): Promise<void> {
-      const userPathObservable = this.getUserDataPath('categories');
-      const path = await firstValueFrom(userPathObservable); // Convert observable to promise to get value once
-      console.log('path', path);
-      if (!path) throw new Error("User not authenticated or path not found.");
+    const userPathObservable = this.getUserDataPath('categories');
+    const path = await firstValueFrom(userPathObservable); // Convert observable to promise to get value once
+    console.log('path', path);
+    if (!path) throw new Error('User not authenticated or path not found.');
 
     const categoryRef = push(ref(this.db, path)); // Push generates a unique ID
     console.log('categoryRef', categoryRef);
     const newCategory: DataICategory = {
       id: categoryRef.key!, // Get the generated key
       name: categoryName,
-      userId: (await firstValueFrom(this.authService.currentUser$))!.uid // Ensure userId is linked
+      userId: (await firstValueFrom(this.authService.currentUser$))!.uid, // Ensure userId is linked
     };
 
-    console.log('newCategory', newCategory)
-    
+    console.log('newCategory', newCategory);
+
     return set(categoryRef, newCategory);
   }
 
@@ -61,8 +74,12 @@ export class DataManagerService {
    */
   getCategories(): Observable<DataICategory[]> {
     return this.getUserDataPath('categories').pipe(
-      switchMap(path => {
-        if (!path) return new Observable<DataICategory[]>(observer => { observer.next([]); observer.complete(); });
+      switchMap((path) => {
+        if (!path)
+          return new Observable<DataICategory[]>((observer) => {
+            observer.next([]);
+            observer.complete();
+          });
         return listVal<DataICategory>(ref(this.db, path), { keyField: 'id' });
       })
     );
@@ -77,7 +94,7 @@ export class DataManagerService {
   async editCategory(categoryId: string, newName: string): Promise<void> {
     const userPathObservable = this.getUserDataPath('categories');
     const path = await firstValueFrom(userPathObservable);
-    if (!path) throw new Error("User not authenticated or path not found.");
+    if (!path) throw new Error('User not authenticated or path not found.');
 
     const categoryRef = ref(this.db, `${path}/${categoryId}`);
     return update(categoryRef, { name: newName });
@@ -91,7 +108,7 @@ export class DataManagerService {
   async deleteCategory(categoryId: string): Promise<void> {
     const userPathObservable = this.getUserDataPath('categories');
     const path = await firstValueFrom(userPathObservable);
-    if (!path) throw new Error("User not authenticated or path not found.");
+    if (!path) throw new Error('User not authenticated or path not found.');
 
     const categoryRef = ref(this.db, `${path}/${categoryId}`);
     return remove(categoryRef);
@@ -104,16 +121,18 @@ export class DataManagerService {
    * @param expense The expense object to add.
    * @returns Promise<void>
    */
-  async addExpense(expense: Omit<DataIExpense, 'id' | 'userId'>): Promise<void> {
+  async addExpense(
+    expense: Omit<DataIExpense, 'id' | 'userId'>
+  ): Promise<void> {
     const userPathObservable = this.getUserDataPath('expenses');
     const path = await firstValueFrom(userPathObservable);
-    if (!path) throw new Error("User not authenticated or path not found.");
+    if (!path) throw new Error('User not authenticated or path not found.');
 
     const expenseRef = push(ref(this.db, path)); // Generates a unique ID
     const newExpense: DataIExpense = {
       id: expenseRef.key!,
       userId: (await firstValueFrom(this.authService.currentUser$))!.uid,
-      ...expense
+      ...expense,
     };
     return set(expenseRef, newExpense);
   }
@@ -124,8 +143,12 @@ export class DataManagerService {
    */
   getExpenses(): Observable<DataIExpense[]> {
     return this.getUserDataPath('expenses').pipe(
-      switchMap(path => {
-        if (!path) return new Observable<DataIExpense[]>(observer => { observer.next([]); observer.complete(); });
+      switchMap((path) => {
+        if (!path)
+          return new Observable<DataIExpense[]>((observer) => {
+            observer.next([]);
+            observer.complete();
+          });
         // listVal with keyField 'id' will include the Firebase generated key in the object
         return listVal<DataIExpense>(ref(this.db, path), { keyField: 'id' });
       })
@@ -140,7 +163,7 @@ export class DataManagerService {
   async editExpense(expense: DataIExpense): Promise<void> {
     const userPathObservable = this.getUserDataPath('expenses');
     const path = await userPathObservable.toPromise();
-    if (!path) throw new Error("User not authenticated or path not found.");
+    if (!path) throw new Error('User not authenticated or path not found.');
 
     const expenseRef = ref(this.db, `${path}/${expense.id}`);
     // Spread operator to update all fields, excluding id itself from the update object if it's there
@@ -155,7 +178,7 @@ export class DataManagerService {
   async deleteExpense(expenseId: string): Promise<void> {
     const userPathObservable = this.getUserDataPath('expenses');
     const path = await userPathObservable.toPromise();
-    if (!path) throw new Error("User not authenticated or path not found.");
+    if (!path) throw new Error('User not authenticated or path not found.');
 
     const expenseRef = ref(this.db, `${path}/${expenseId}`);
     return remove(expenseRef);

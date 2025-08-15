@@ -1,0 +1,41 @@
+import { Currency } from '../models/currency.model';
+
+export const AVAILABLE_CURRENCIES: Currency[] = [
+  { code: 'USD', symbol: '$', name: 'US Dollar' },
+  { code: 'CNY', symbol: '¥', name: 'Chinese Yuan' },
+  { code: 'MMK', symbol: 'Ks', name: 'Myanmar Kyat' },
+  { code: 'SGD', symbol: 'S$', name: 'Singapore Dollar' },
+  { code: 'MYR', symbol: 'RM', name: 'Malaysian Ringgit' },
+  { code: 'THB', symbol: '฿', name: 'Thai Baht' },
+  { code: 'IDR', symbol: 'Rp', name: 'Indonesian Rupiah' },
+  { code: 'KHR', symbol: '៛', name: 'Cambodia Riel' },
+  { code: 'PHP', symbol: '₱', name: 'Philippine Peso' },
+  { code: 'BDT', symbol: '৳', name: 'Bangladeshi Taka' },
+  { code: 'VND', symbol: '₫', name: 'Vietnamese Dong' },
+  { code: 'LAK', symbol: '₭', name: 'Lao Kip' },
+  { code: 'EUR', symbol: '€', name: 'Euro' },
+  { code: 'JPY', symbol: '¥', name: 'Japan Yen' },
+  { code: 'KRW', symbol: '₩', name: 'South Korean Won' },
+  { code: 'GBP', symbol: '£', name: 'Pound Sterling' },
+  { code: 'INR', symbol: '₹', name: 'Indian Rupee' },
+];
+
+export const CURRENCY_SYMBOLS: { [key: string]: string } = {
+  USD: '$',
+  CNY: '¥',
+  MMK: 'Ks',
+  SGD: 'S$',
+  MYR: 'RM',
+  THB: '฿',
+  IDR: 'Rp',
+  KHR: '៛',
+  PHP: '₱',
+  BDT: '৳',
+  VND: '₫',
+  LAK: '₭',
+  EUR: '€',
+  JPY: '¥',
+  KRW: '₩',
+  GBP: '£',
+  INR: '₹',
+};

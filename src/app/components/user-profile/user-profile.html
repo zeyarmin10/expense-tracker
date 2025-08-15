@@ -92,12 +92,17 @@
               <label class="form-label font-weight-bold">
                 <strong>{{ "CURRENCY_LABEL" | translate }} :</strong>
               </label>
-              <select class="form-select" formControlName="currency">
+              <select
+                class="form-select"
+                formControlName="currency"
+                (change)="onSubmit()"
+              >
                 <option
-                  *ngFor="let currency of availableCurrencies"
+                  *ngFor="let currency of translatedCurrencies"
                   [value]="currency.code"
                 >
-                  {{ currency.code }} ({{ currency.symbol }})
+                  {{ currency.symbol }} ({{ currency.code }}) -
+                  {{ currency.name }}
                 </option>
               </select>
             </div>

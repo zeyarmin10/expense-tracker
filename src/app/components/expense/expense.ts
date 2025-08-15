@@ -45,6 +45,11 @@ import { ToastService } from '../../services/toast';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../services/auth';
 import { UserDataService } from '../../services/user-data';
+import {
+  AVAILABLE_CURRENCIES,
+  CURRENCY_SYMBOLS,
+} from '../../core/constants/app.constants';
+
 @Component({
   selector: 'app-expense',
   standalone: true,
@@ -104,27 +109,9 @@ export class Expense implements OnInit {
   faTimes = faTimes;
   faSync = faSync;
 
-  currencySymbols: { [key: string]: string } = {
-    MMK: 'Ks',
-    USD: '$',
-    THB: '฿',
-    EUR: '€',
-    JPY: '¥',
-    GBP: '£',
-    SGD: 'S$',
-    KHR: '៛',
-  };
+  currencySymbols: { [key: string]: string } = CURRENCY_SYMBOLS;
 
-  availableCurrencies = [
-    { code: 'MMK', symbol: 'Ks' },
-    { code: 'USD', symbol: '$' },
-    { code: 'THB', symbol: '฿' },
-    { code: 'EUR', symbol: '€' },
-    { code: 'JPY', symbol: '¥' },
-    { code: 'GBP', symbol: '£' },
-    { code: 'SGD', symbol: 'S$' },
-    { code: 'KHR', symbol: '៛' },
-  ];
+  availableCurrencies = AVAILABLE_CURRENCIES;
 
   // expenseForm is not directly used for input binding, can be removed or kept for other purposes if needed
   // expenseForm!: FormGroup;
@@ -319,7 +306,8 @@ export class Expense implements OnInit {
       options
     ).format(amount);
     const symbol = this.currencySymbols[currencyCode] || currencyCode;
-    return `${formattedAmount} ${symbol}`;
+    if (currencyCode === 'USD') return `${symbol} ${formattedAmount}`;
+    else return `${formattedAmount} ${symbol}`;
   }
 
   async onSubmitNewExpense(): Promise<void> {

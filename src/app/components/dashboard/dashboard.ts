@@ -41,6 +41,7 @@ import {
   keyframes,
 } from '@angular/animations';
 import { Router } from '@angular/router';
+import { AVAILABLE_CURRENCIES } from '../../core/constants/app.constants';
 
 Chart.register(...registerables);
 
@@ -117,11 +118,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   currentHeaderBackgroundColor: string = '#f8f9fa';
   titleAnimTrigger: string = 'initial';
 
-  availableCurrencies = [
-    { code: 'MMK', symbol: 'Ks' },
-    { code: 'USD', symbol: '$' },
-    { code: 'THB', symbol: '฿' },
-  ];
+  availableCurrencies = AVAILABLE_CURRENCIES;
 
   private subscriptions = new Subscription();
   private expenseChartInstance: Chart | undefined;
@@ -290,61 +287,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
         return hasIncomes || hasExpenses || hasBudgets;
       })
     );
-
-    // monthly income and expense data for bar chart
-    // this.monthlyExpenseChartData$ = this.filteredExpensesAndIncomes$.pipe(
-    //     map(({ expenses, incomes }) => {
-    //         const monthlyExpensesMap: { [month: string]: number } = {};
-    //         const monthlyIncomesMap: { [month: string]: number } = {};
-    //         const labels: string[] = [];
-    //         const currentYear = new Date(this._startDate$.getValue()).getFullYear();
-    //         const currentLang = this.translate.currentLang;
-
-    //         for (let i = 0; i < 12; i++) {
-    //             const date = new Date(currentYear, i, 1);
-    //             labels.push(this.datePipe.transform(date, 'MMM', undefined, currentLang) || '');
-    //         }
-
-    //         expenses.forEach(expense => {
-    //             const expenseDate = new Date(expense.date);
-    //             if (expenseDate.getFullYear() === currentYear) {
-    //                 const periodKey = this.datePipe.transform(expenseDate, 'MMM', undefined, currentLang) || '';
-    //                 monthlyExpensesMap[periodKey] = (monthlyExpensesMap[periodKey] || 0) + expense.totalCost;
-    //             }
-    //         });
-
-    //         incomes.forEach(income => {
-    //             const incomeDate = new Date(income.date);
-    //             if (incomeDate.getFullYear() === currentYear) {
-    //                 const periodKey = this.datePipe.transform(incomeDate, 'MMM', undefined, currentLang) || '';
-    //                 monthlyIncomesMap[periodKey] = (monthlyIncomesMap[periodKey] || 0) + income.amount;
-    //             }
-    //         });
-
-    //         const expenseData = labels.map(label => monthlyExpensesMap[label] || 0);
-    //         const incomeData = labels.map(label => monthlyIncomesMap[label] || 0);
-
-    //         return {
-    //             labels,
-    //             datasets: [
-    //                 {
-    //                     label: this.translate.instant('EXPENSE_AMOUNT'),
-    //                     data: expenseData,
-    //                     backgroundColor: 'rgba(255, 99, 132, 0.5)',
-    //                     borderColor: 'rgba(255, 99, 132, 1)',
-    //                     borderWidth: 1,
-    //                 },
-    //                 {
-    //                     label: this.translate.instant('INCOME_AMOUNT'),
-    //                     data: incomeData,
-    //                     backgroundColor: 'rgba(75, 192, 192, 0.5)',
-    //                     borderColor: 'rgba(75, 192, 192, 1)',
-    //                     borderWidth: 1,
-    //                 }
-    //             ]
-    //         };
-    //     })
-    // );
 
     // only expense data for bar chart
     this.monthlyExpenseChartData$ = this.filteredExpensesAndIncomes$.pipe(

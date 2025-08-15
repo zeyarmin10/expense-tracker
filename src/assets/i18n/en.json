@@ -308,5 +308,24 @@
   "ENGLISH_LANGUAGE": "English",
   "MYANMAR_LANGUAGE": "Burmese",
   "CURRENCY_LABEL": "Currency",
-  "BALANCE_SUFFIX": "(Budget-Expense)"
+  "BALANCE_SUFFIX": "(Budget-Expense)",
+  "CURRENCY_NAMES": {
+    "MMK": "Myanmar Kyat",
+    "USD": "US Dollar",
+    "THB": "Thai Baht",
+    "EUR": "Euro",
+    "JPY": "Yen",
+    "GBP": "Pound Sterling",
+    "SGD": "Singapore Dollar",
+    "KHR": "Cambodai Riel",
+    "MYR": "Malaysian Ringgit",
+    "INR": "Indian Rupee",
+    "IDR": "Indonesian Rupiah",
+    "PHP": "Philippine Peso",
+    "KRW": "South Korean Won",
+    "VND": "Vietnamese Dong",
+    "LAK": "Lao Kip",
+    "BDT": "Bangladeshi Taka",
+    "CNY": "Chinese Yuan"
+  }
 }

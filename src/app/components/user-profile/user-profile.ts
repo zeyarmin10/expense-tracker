@@ -17,6 +17,7 @@ import { faSave, faUserCircle } from '@fortawesome/free-solid-svg-icons';
 import { updateProfile } from '@angular/fire/auth';
 import { User } from '@angular/fire/auth';
 import { FormsModule } from '@angular/forms';
+import { AVAILABLE_CURRENCIES } from '../../core/constants/app.constants';
 
 @Component({
   selector: 'app-user-profile',
@@ -53,16 +54,9 @@ export class UserProfileComponent implements OnInit {
   selectedCurrency: string = 'MMK';
 
   // ✅ NEW: Available currencies for the dropdown
-  availableCurrencies = [
-    { code: 'MMK', symbol: 'Ks' },
-    { code: 'USD', symbol: '$' },
-    { code: 'THB', symbol: '฿' },
-    { code: 'EUR', symbol: '€' },
-    { code: 'JPY', symbol: '¥' },
-    { code: 'GBP', symbol: '£' },
-    { code: 'SGD', symbol: 'S$' },
-    { code: 'KHR', symbol: '៛' },
-  ];
+  availableCurrencies = AVAILABLE_CURRENCIES;
+
+  translatedCurrencies: any[] = [];
 
   faSave = faSave;
   faUserCircle = faUserCircle;
@@ -153,9 +147,26 @@ export class UserProfileComponent implements OnInit {
       this.selectedLanguage = storedLang;
       this.translate.use(storedLang);
     } else {
-      this.selectedLanguage = this.translate.getBrowserLang() || 'en';
+      this.selectedLanguage = this.translate.getBrowserLang() || 'my';
       this.translate.use(this.selectedLanguage);
     }
+
+    // Subscribe to language changes to update the currency names
+    this.translate.onLangChange.subscribe(() => {
+      this.translateCurrencyNames();
+    });
+
+    // Initial translation on component load
+    this.translateCurrencyNames();
+  }
+
+  translateCurrencyNames() {
+    this.translatedCurrencies = this.availableCurrencies.map((currency) => {
+      return {
+        ...currency,
+        name: this.translate.instant('CURRENCY_NAMES.' + currency.code),
+      };
+    });
   }
 
   onLanguageChange(language: string): void {

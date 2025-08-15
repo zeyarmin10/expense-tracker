@@ -31,6 +31,7 @@ import { ConfirmationModal } from '../common/confirmation-modal/confirmation-mod
 import { Chart, registerables } from 'chart.js';
 import { AuthService } from '../../services/auth';
 import { UserDataService } from '../../services/user-data';
+import { AVAILABLE_CURRENCIES } from '../../core/constants/app.constants';
 
 Chart.register(...registerables);
 
@@ -109,16 +110,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
   startDate: string = '';
   endDate: string = '';
 
-  availableCurrencies = [
-    { code: 'MMK', symbol: 'Ks' },
-    { code: 'USD', symbol: '$' },
-    { code: 'THB', symbol: '฿' },
-    { code: 'EUR', symbol: '€' },
-    { code: 'JPY', symbol: '¥' },
-    { code: 'GBP', symbol: '£' },
-    { code: 'SGD', symbol: 'S$' },
-    { code: 'KHR', symbol: '៛' },
-  ];
+  availableCurrencies = AVAILABLE_CURRENCIES;
 
   private subscriptions: Subscription = new Subscription();
 

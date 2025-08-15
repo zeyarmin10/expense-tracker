@@ -18,6 +18,7 @@ import {
 import { Router } from '@angular/router';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
+import { CURRENCY_SYMBOLS } from '../../core/constants/app.constants';
 
 // Register the required chart components
 Chart.register(PieController, ArcElement, Tooltip, Legend);
@@ -69,11 +70,7 @@ export class ExpenseOverview implements OnInit {
   mostExpenseCategory: string = 'N/A';
 
   // --- Currency Properties ---
-  currencySymbols: { [key: string]: string } = {
-    MMK: 'Ks',
-    USD: '$',
-    THB: '฿',
-  };
+  currencySymbols: { [key: string]: string } = CURRENCY_SYMBOLS;
 
   categoryTotals: CategoryTotal[] = [];
 
@@ -301,7 +298,8 @@ export class ExpenseOverview implements OnInit {
       });
     }
 
-    return `${formattedValue} ${symbol}`;
+    if (currency === 'USD') return `${symbol} ${formattedValue}`;
+    else return `${formattedValue} ${symbol}`;
   }
 
   private generateRandomColors(count: number): string[] {
