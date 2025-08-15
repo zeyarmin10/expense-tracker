@@ -39,7 +39,7 @@ import {
 import { ConfirmationModal } from '../common/confirmation-modal/confirmation-modal';
 import { AuthService } from '../../services/auth';
 import { Chart, registerables } from 'chart.js';
-import { UserDataService } from '../../services/user-data';
+import { UserDataService, UserProfile } from '../../services/user-data';
 import { AVAILABLE_CURRENCIES } from '../../core/constants/app.constants';
 
 Chart.register(...registerables);
@@ -116,6 +116,7 @@ export class Profit implements OnInit, OnDestroy {
   private subscriptions: Subscription = new Subscription();
   hasChartData$!: Observable<any>;
   filteredExpensesAndIncomes$: any;
+  userProfile: UserProfile | null = null;
 
   constructor() {
     this.incomeForm = this.fb.group({
@@ -458,6 +459,7 @@ export class Profit implements OnInit, OnDestroy {
         take(1)
       )
       .subscribe((profile) => {
+        this.userProfile = profile;
         // Set the currency value based on the profile, or default to 'MMK'
         const defaultCurrency = profile?.currency || 'MMK';
         this.incomeForm.get('currency')?.setValue(defaultCurrency);
@@ -542,10 +544,11 @@ export class Profit implements OnInit, OnDestroy {
   }
 
   resetForm(): void {
+    const defaultCurrency = this.userProfile?.currency || 'MMK';
     this.incomeForm.reset({
       description: '',
       amount: '',
-      currency: 'MMK',
+      currency: defaultCurrency,
       date: this.datePipe.transform(new Date(), 'yyyy-MM-dd'),
     });
   }

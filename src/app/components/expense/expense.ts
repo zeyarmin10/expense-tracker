@@ -44,7 +44,7 @@ import { ConfirmationModal } from '../common/confirmation-modal/confirmation-mod
 import { ToastService } from '../../services/toast';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../services/auth';
-import { UserDataService } from '../../services/user-data';
+import { UserDataService, UserProfile } from '../../services/user-data';
 import {
   AVAILABLE_CURRENCIES,
   CURRENCY_SYMBOLS,
@@ -122,6 +122,7 @@ export class Expense implements OnInit {
   private originalPrice: number | null = null;
   private _expensesSubject: BehaviorSubject<ServiceIExpense[]> =
     new BehaviorSubject<ServiceIExpense[]>([]);
+  userProfile: UserProfile | null = null;
 
   router = inject(Router);
   route = inject(ActivatedRoute);
@@ -268,6 +269,7 @@ export class Expense implements OnInit {
         take(1)
       )
       .subscribe((profile) => {
+        this.userProfile = profile;
         // Set the currency value based on the profile, or default to 'MMK'
         const defaultCurrency = profile?.currency || 'MMK';
         this.newExpenseForm.get('currency')?.setValue(defaultCurrency);
@@ -351,9 +353,13 @@ export class Expense implements OnInit {
       this.newExpenseForm.reset();
       const todayFormatted =
         this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
+      // ✅ REVISED: Use the user profile's currency to reset the form
+      const defaultCurrency = this.userProfile?.currency || 'MMK';
       this.newExpenseForm.patchValue({
         date: todayFormatted,
-        currency: 'MMK',
+        category: '',
+        quantity: 1,
+        currency: defaultCurrency,
         selectedDate: todayFormatted,
       });
       this.resetFilter();

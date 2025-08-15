@@ -427,7 +427,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     const locale = this.translate.currentLang;
     const currency = currencyCode.toUpperCase();
-    let maxFractionDigits: number =
+    let minimumFractionDigits: number =
       currencyCode === 'MMK' || currencyCode === 'THB' ? 0 : 2;
 
     // Use Intl.NumberFormat to get the correct currency format
@@ -435,7 +435,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       style: 'currency',
       currency: currency,
       currencyDisplay: 'symbol',
-      minimumFractionDigits: maxFractionDigits,
+      minimumFractionDigits: minimumFractionDigits,
     }).format(amount);
   }
 

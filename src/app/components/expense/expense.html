@@ -62,7 +62,7 @@
                 </select>
                 <button
                   type="button"
-                  class="btn btn-outline-secondary"
+                  class="btn btn-outline-info"
                   (click)="openCategoryModal()"
                   [attr.aria-label]="'EXPENSE_ADD_CATEGORY_BTN' | translate"
                 >
@@ -151,7 +151,7 @@
               <div class="input-group has-validation">
                 <input
                   type="number"
-                  class="form-control"
+                  class="form-control rounded-end-0"
                   id="price"
                   formControlName="price"
                   min="0"
@@ -161,10 +161,6 @@
                   "
                   placeholder="{{ 'EXPENSE_PRICE_PLACEHOLDER' | translate }}"
                   [attr.aria-label]="'EXPENSE_PRICE_LABEL' | translate"
-                  style="
-                    border-top-right-radius: 0;
-                    border-bottom-right-radius: 0;
-                  "
                   (focus)="onFocusInput($event, 'price', newExpenseForm)"
                   (blur)="onBlurInput($event, 'price', newExpenseForm)"
                 />
@@ -185,6 +181,7 @@
                   <option
                     *ngFor="let curr of availableCurrencies"
                     [value]="curr.code"
+                    disabled
                   >
                     {{ curr.symbol }}
                   </option>
@@ -464,7 +461,7 @@
                       <div class="input-group input-group-sm">
                         <input
                           type="number"
-                          class="form-control"
+                          class="form-control rounded-end-1"
                           formControlName="price"
                           min="0"
                           [class.is-invalid]="

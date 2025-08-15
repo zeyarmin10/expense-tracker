@@ -30,7 +30,7 @@ import {
 import { ConfirmationModal } from '../common/confirmation-modal/confirmation-modal';
 import { Chart, registerables } from 'chart.js';
 import { AuthService } from '../../services/auth';
-import { UserDataService } from '../../services/user-data';
+import { UserDataService, UserProfile } from '../../services/user-data';
 import { AVAILABLE_CURRENCIES } from '../../core/constants/app.constants';
 
 Chart.register(...registerables);
@@ -109,6 +109,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
   selectedDateFilter: string = 'custom';
   startDate: string = '';
   endDate: string = '';
+  userProfile: UserProfile | null = null;
 
   availableCurrencies = AVAILABLE_CURRENCIES;
 
@@ -447,6 +448,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
         take(1)
       )
       .subscribe((profile) => {
+        this.userProfile = profile;
         // Set the currency value based on the profile, or default to 'MMK'
         const defaultCurrency = profile?.currency || 'MMK';
         this.budgetForm.get('currency')?.setValue(defaultCurrency);
@@ -519,10 +521,11 @@ export class BudgetComponent implements OnInit, OnDestroy {
   }
 
   resetForm(): void {
+    const defaultCurrency = this.userProfile?.currency || 'MMK';
     this.budgetForm.reset({
       type: 'monthly',
       amount: '',
-      currency: 'MMK',
+      currency: defaultCurrency,
       period: this.datePipe.transform(new Date(), 'yyyy-MM-dd'),
     });
   }
