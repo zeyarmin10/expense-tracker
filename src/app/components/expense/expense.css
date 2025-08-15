@@ -13,7 +13,12 @@
   .table-responsive {
     border: 0;
   }
-  table, thead, tbody, th, td, tr {
+  table,
+  thead,
+  tbody,
+  th,
+  td,
+  tr {
     display: block;
   }
   thead tr {
@@ -21,7 +26,10 @@
     top: -9999px;
     left: -9999px;
   }
-  tr { border: 1px solid #dee2e6; margin-bottom: 1rem; }
+  tr {
+    border: 1px solid #dee2e6;
+    margin-bottom: 1rem;
+  }
   td {
     border: none;
     border-bottom: 1px solid #dee2e6;
@@ -40,54 +48,84 @@
     font-weight: bold;
   }
   /* Labels for each cell on mobile */
-  td:nth-of-type(1):before { content: "Date"; }
-  td:nth-of-type(2):before { content: "Category"; }
-  td:nth-of-type(3):before { content: "Item"; }
-  td:nth-of-type(4):before { content: "Qty"; }
+  td:nth-of-type(1):before {
+    content: "Date";
+  }
+  td:nth-of-type(2):before {
+    content: "Category";
+  }
+  td:nth-of-type(3):before {
+    content: "Item";
+  }
+  td:nth-of-type(4):before {
+    content: "Qty";
+  }
   /* td:nth-of-type(5):before { content: "Unit"; } */
-  td:nth-of-type(5):before { content: "Price"; }
-  td:nth-of-type(6):before { content: "Total"; }
-  td:nth-of-type(7):before { content: "Actions"; }
+  td:nth-of-type(5):before {
+    content: "Price";
+  }
+  td:nth-of-type(6):before {
+    content: "Total";
+  }
+  td:nth-of-type(7):before {
+    content: "Actions";
+  }
 
   /* Buttons specific mobile adjustment */
   td:nth-of-type(7) {
-      text-align: left;
-      padding-left: 6px !important;
+    text-align: left;
+    padding-left: 6px !important;
   }
 }
 
 /* Ensure icons are consistently sized */
 fa-icon {
-    width: 1em;
-    height: 1em;
-    vertical-align: -0.125em;
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.125em;
 }
-
 
 /* Adjust table header/data for better mobile readability */
 @media (max-width: 767.98px) {
   /* ... (your existing mobile table styles) ... */
 
   /* Labels for each cell on mobile */
-  td:nth-of-type(1):before { content: "Date"; }
-  td:nth-of-type(2):before { content: "Category"; }
-  td:nth-of-type(3):before { content: "Item"; }
-  td:nth-of-type(4):before { content: "Qty/Unit"; } /* Adjusted for combined Qty/Unit */
-  td:nth-of-type(5):before { content: "Price"; }
-  td:nth-of-type(6):before { content: "Total"; }
-  td:nth-of-type(7):before { content: "Actions"; }
+  td:nth-of-type(1):before {
+    content: "Date";
+  }
+  td:nth-of-type(2):before {
+    content: "Category";
+  }
+  td:nth-of-type(3):before {
+    content: "Item";
+  }
+  td:nth-of-type(4):before {
+    content: "Qty/Unit";
+  } /* Adjusted for combined Qty/Unit */
+  td:nth-of-type(5):before {
+    content: "Price";
+  }
+  td:nth-of-type(6):before {
+    content: "Total";
+  }
+  td:nth-of-type(7):before {
+    content: "Actions";
+  }
 
   /* Buttons specific mobile adjustment */
   td:nth-of-type(7) {
-      text-align: left;
-      padding-left: 6px !important;
+    text-align: left;
+    padding-left: 6px !important;
   }
 }
 
 /* Specific styles for filter date inputs on smaller screens */
 /* This section can be simplified as we now have a single date picker */
-@media (max-width: 575.98px) { /* Extra small devices (phones, 320px and up) */
-  .row.g-2 .col-8, .row.g-2 .col-4 { /* Adjusted for date picker and reset button */
+@media (max-width: 575.98px) {
+  /* Extra small devices (phones, 320px and up) */
+  .row.g-2 .col-8,
+  .row.g-2 .col-4 {
+    /* Adjusted for date picker and reset button */
     flex: 0 0 auto;
     width: auto; /* Allow content to define width */
   }
@@ -98,81 +136,103 @@ fa-icon {
 
 /* Ensure icons are consistently sized */
 fa-icon {
-    width: 1em;
-    height: 1em;
-    vertical-align: -0.125em;
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.125em;
 }
 
 .reset-filter-button {
-    max-width: fit-content;
+  max-width: fit-content;
 }
 
 /* Styling for the total buttons/badges */
-.badge.bg-primary, .badge.bg-secondary {
-    font-size: 0.9em;
-    padding: 0.5em 0.75em;
-    cursor: pointer; /* Indicate clickable */
-    transition: background-color 0.2s ease-in-out;
+.badge.bg-primary,
+.badge.bg-secondary {
+  font-size: 0.9em;
+  padding: 0.5em 0.75em;
+  cursor: pointer; /* Indicate clickable */
+  transition: background-color 0.2s ease-in-out;
 }
 
-.badge.bg-primary:hover, .badge.bg-secondary:hover {
-    filter: brightness(1.1); /* Slightly brighten on hover */
+.badge.bg-primary:hover,
+.badge.bg-secondary:hover {
+  filter: brightness(1.1); /* Slightly brighten on hover */
 }
 
 /* Ensure the flex wrap for badges */
 .d-flex.flex-wrap {
-    flex-wrap: wrap;
+  flex-wrap: wrap;
 }
 
 /* Gap between badges */
 .gap-2 {
-    gap: 0.5rem;
+  gap: 0.5rem;
 }
 
 /* Hide labels for screen readers only on larger screens for filter inputs */
 /* This `visually-hidden` is now primarily for accessibility of placeholders, no longer needed for labels explicitly if using `placeholder` */
 /* You can remove this media query if you prefer the label always visible on small screens */
 @media (min-width: 768px) {
-    .form-label.visually-hidden {
-        position: absolute !important;
-        width: 1px !important;
-        height: 1px !important;
-        padding: 0 !important;
-        margin: -1px !important;
-        overflow: hidden !important;
-        clip: rect(0, 0, 0, 0) !important;
-        white-space: nowrap !important;
-        border: 0 !important;
-    }
+  .form-label.visually-hidden {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+  }
 }
 
 /* Define the shine effect animation */
-  @keyframes shine {
-    0% { box-shadow: 0 0 5px rgba(0, 123, 255, 0.3); } /* Initial subtle glow for info button */
-    50% { box-shadow: 0 0 5px rgba(0, 123, 255, 0.5), 0 0 15px rgba(0, 123, 255, 0.5); } /* Brighter glow */
-    100% { box-shadow: 0 0 5px rgba(209, 244, 251, 0.3); } /* Return to subtle glow */
-  }
+@keyframes shine {
+  0% {
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+  } /* Initial subtle glow for info button */
+  50% {
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5), 0 0 15px rgba(0, 123, 255, 0.5);
+  } /* Brighter glow */
+  100% {
+    box-shadow: 0 0 5px rgba(209, 244, 251, 0.3);
+  } /* Return to subtle glow */
+}
 
-  /* Define the shine effect animation for success button */
-  @keyframes shine-success {
-    0% { box-shadow: 0 0 5px rgba(40, 167, 69, 0.3); } /* Initial subtle glow for success button */
-    50% { box-shadow: 0 0 5px rgba(40, 167, 69, 0.35), 0 0 15px rgba(40, 167, 69, 0.5); } /* Brighter glow */
-    100% { box-shadow: 0 0 5px rgba(40, 167, 69, 0.3); } /* Return to subtle glow */
-  }
+/* Define the shine effect animation for success button */
+@keyframes shine-success {
+  0% {
+    box-shadow: 0 0 5px rgba(40, 167, 69, 0.3);
+  } /* Initial subtle glow for success button */
+  50% {
+    box-shadow: 0 0 5px rgba(40, 167, 69, 0.35), 0 0 15px rgba(40, 167, 69, 0.5);
+  } /* Brighter glow */
+  100% {
+    box-shadow: 0 0 5px rgba(40, 167, 69, 0.3);
+  } /* Return to subtle glow */
+}
 
-  /* Apply the animation to buttons with .shine-effect class */
-  .btn.shine-effect {
-    animation: shine 1.5s infinite ease-in-out;
-    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-  }
+/* Apply the animation to buttons with .shine-effect class */
+.btn.shine-effect {
+  animation: shine 1.5s infinite ease-in-out;
+  transition: background-color 0.3s ease, color 0.3s ease,
+    border-color 0.3s ease;
+}
 
-  /* Override for success button animation */
-  .btn.btn-outline-success.shine-effect { /* Changed to btn-outline-success */
-    animation: shine-success 1.5s infinite ease-in-out;
-  }
+/* Override for success button animation */
+.btn.btn-outline-success.shine-effect {
+  /* Changed to btn-outline-success */
+  animation: shine-success 1.5s infinite ease-in-out;
+}
 
-  /* Ensure smooth transition when disabled */
-  .btn[disabled] {
-    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
-    animation: none !important; /* Stop animation when disabled */
-  }
+/* Ensure smooth transition when disabled */
+.btn[disabled] {
+  transition: background-color 0.3s ease, color 0.3s ease,
+    border-color 0.3s ease, box-shadow 0.3s ease;
+  animation: none !important; /* Stop animation when disabled */
+}
+
+.currency-select {
+  max-width: 20%;
+  display: none;
+}
