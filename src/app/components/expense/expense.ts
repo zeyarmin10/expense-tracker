@@ -289,25 +289,42 @@ export class Expense implements OnInit {
   }
 
   formatAmountWithSymbol(amount: number, currencyCode: string): string {
-    let options: Intl.NumberFormatOptions = {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    };
+    // let options: Intl.NumberFormatOptions = {
+    //   minimumFractionDigits: 2,
+    //   maximumFractionDigits: 2,
+    // };
 
-    if (currencyCode === 'MMK') {
-      options = {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-      };
-    }
+    // if (currencyCode === 'MMK') {
+    //   options = {
+    //     minimumFractionDigits: 0,
+    //     maximumFractionDigits: 0,
+    //   };
+    // }
 
-    const formattedAmount = new Intl.NumberFormat(
-      this.translate.currentLang,
-      options
-    ).format(amount);
-    const symbol = this.currencySymbols[currencyCode] || currencyCode;
-    if (currencyCode === 'USD') return `${symbol} ${formattedAmount}`;
-    else return `${formattedAmount} ${symbol}`;
+    // const formattedAmount = new Intl.NumberFormat(
+    //   this.translate.currentLang,
+    //   options
+    // ).format(amount);
+    // const symbol = this.currencySymbols[currencyCode] || currencyCode;
+
+    // if (currencyCode === 'USD') return `${symbol}${formattedAmount}`;
+    // else return `${formattedAmount} ${symbol}`;
+
+    const locale = this.translate.currentLang;
+    const currency = currencyCode.toUpperCase();
+
+    // Set fraction digits to 0 for MMK and THB, and 2 for all others
+    const minimumFractionDigits =
+      currency === 'MMK' || currency === 'THB' ? 0 : 2;
+
+    // Use Intl.NumberFormat to get the correct currency format
+    // This will automatically handle the placement of the negative sign and symbol
+    return new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency: currency,
+      currencyDisplay: 'symbol',
+      minimumFractionDigits: minimumFractionDigits,
+    }).format(amount);
   }
 
   async onSubmitNewExpense(): Promise<void> {

@@ -532,27 +532,44 @@ export class BudgetComponent implements OnInit, OnDestroy {
    * Removes decimals for MMK currency and adds thousands separators.
    */
   formatAmountWithSymbol(amount: number, currencyCode: string): string {
-    const symbol =
-      this.availableCurrencies.find((c) => c.code === currencyCode)?.symbol ||
-      currencyCode;
-    let formattedAmount: string;
+    // const symbol =
+    //   this.availableCurrencies.find((c) => c.code === currencyCode)?.symbol ||
+    //   currencyCode;
+    // let formattedAmount: string;
 
-    const currentLang = this.translate.currentLang;
-    const locale = currentLang === 'my' ? 'my-MM' : currentLang; // Use 'my-MM' for Burmese numbers
+    // const currentLang = this.translate.currentLang;
+    // const locale = currentLang === 'my' ? 'my-MM' : currentLang; // Use 'my-MM' for Burmese numbers
 
-    if (currencyCode === 'MMK') {
-      formattedAmount = amount.toLocaleString(locale, {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-      });
-    } else {
-      formattedAmount = amount.toLocaleString(locale, {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      });
-    }
+    // if (currencyCode === 'MMK') {
+    //   formattedAmount = amount.toLocaleString(locale, {
+    //     minimumFractionDigits: 0,
+    //     maximumFractionDigits: 0,
+    //   });
+    // } else {
+    //   formattedAmount = amount.toLocaleString(locale, {
+    //     minimumFractionDigits: 2,
+    //     maximumFractionDigits: 2,
+    //   });
+    // }
 
-    return `${formattedAmount} ${symbol}`;
+    // if (currencyCode === 'USD') return `${symbol} ${formattedAmount}`;
+    // else return `${formattedAmount} ${symbol}`;
+
+    const locale = this.translate.currentLang;
+    const currency = currencyCode.toUpperCase();
+
+    // Set fraction digits to 0 for MMK and THB, and 2 for all others
+    const minimumFractionDigits =
+      currency === 'MMK' || currency === 'THB' ? 0 : 2;
+
+    // Use Intl.NumberFormat to get the correct currency format
+    // This will automatically handle the placement of the negative sign and symbol
+    return new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency: currency,
+      currencyDisplay: 'symbol',
+      minimumFractionDigits: minimumFractionDigits,
+    }).format(amount);
   }
 
   toggleVisibility(section: 'budgetForm' | 'recordedBudgets'): void {

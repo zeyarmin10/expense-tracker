@@ -402,27 +402,41 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   formatAmountWithSymbol(amount: number, currencyCode: string): string {
-    const symbol =
-      this.availableCurrencies.find((c) => c.code === currencyCode)?.symbol ||
-      currencyCode;
-    let formattedAmount: string;
+    // const symbol =
+    //   this.availableCurrencies.find((c) => c.code === currencyCode)?.symbol ||
+    //   currencyCode;
+    // let formattedAmount: string;
 
-    const currentLang = this.translate.currentLang;
-    const locale = currentLang === 'my' ? 'my-MM' : currentLang;
+    // const currentLang = this.translate.currentLang;
+    // const locale = currentLang === 'my' ? 'my-MM' : currentLang;
 
-    if (currencyCode === 'MMK') {
-      formattedAmount = amount.toLocaleString(locale, {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-      });
-    } else {
-      formattedAmount = amount.toLocaleString(locale, {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      });
-    }
+    // if (currencyCode === 'MMK') {
+    //   formattedAmount = amount.toLocaleString(locale, {
+    //     minimumFractionDigits: 0,
+    //     maximumFractionDigits: 0,
+    //   });
+    // } else {
+    //   formattedAmount = amount.toLocaleString(locale, {
+    //     minimumFractionDigits: 2,
+    //     maximumFractionDigits: 2,
+    //   });
+    // }
 
-    return `${formattedAmount} ${symbol}`;
+    // if (currencyCode === 'USD') return `${symbol} ${formattedAmount}`;
+    // else return `${formattedAmount} ${symbol}`;
+
+    const locale = this.translate.currentLang;
+    const currency = currencyCode.toUpperCase();
+    let maxFractionDigits: number =
+      currencyCode === 'MMK' || currencyCode === 'THB' ? 0 : 2;
+
+    // Use Intl.NumberFormat to get the correct currency format
+    return new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency: currency,
+      currencyDisplay: 'symbol',
+      minimumFractionDigits: maxFractionDigits,
+    }).format(amount);
   }
 
   onTimeRangeChange(): void {

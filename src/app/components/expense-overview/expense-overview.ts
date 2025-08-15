@@ -285,21 +285,37 @@ export class ExpenseOverview implements OnInit {
   }
 
   // --- Currency Formatting Method ---
-  formatCurrency(value: number, currency: string): string {
-    const symbol = this.currencySymbols[currency] || '';
-    let formattedValue: string;
+  formatCurrency(amount: number, currencyCode: string): string {
+    // const symbol = this.currencySymbols[currency] || '';
+    // let formattedValue: string;
 
-    if (currency === 'MMK') {
-      formattedValue = Math.round(value).toLocaleString();
-    } else {
-      formattedValue = value.toLocaleString(undefined, {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      });
-    }
+    // if (currency === 'MMK') {
+    //   formattedValue = Math.round(value).toLocaleString();
+    // } else {
+    //   formattedValue = value.toLocaleString(undefined, {
+    //     minimumFractionDigits: 2,
+    //     maximumFractionDigits: 2,
+    //   });
+    // }
 
-    if (currency === 'USD') return `${symbol} ${formattedValue}`;
-    else return `${formattedValue} ${symbol}`;
+    // if (currency === 'USD') return `${symbol} ${formattedValue}`;
+    // else return `${formattedValue} ${symbol}`;
+
+    const locale = this.translate.currentLang;
+    const currency = currencyCode.toUpperCase();
+
+    // Set fraction digits to 0 for MMK and THB, and 2 for all others
+    const minimumFractionDigits =
+      currency === 'MMK' || currency === 'THB' ? 0 : 2;
+
+    // Use Intl.NumberFormat to get the correct currency format
+    // This will automatically handle the placement of the negative sign and symbol
+    return new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency: currency,
+      currencyDisplay: 'symbol',
+      minimumFractionDigits: minimumFractionDigits,
+    }).format(amount);
   }
 
   private generateRandomColors(count: number): string[] {
