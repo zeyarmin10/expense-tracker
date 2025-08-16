@@ -689,7 +689,6 @@ export class Profit implements OnInit, OnDestroy {
             ticks: {
               callback: function (value: any) {
                 const currentLang = component.translate?.currentLang;
-                console.log('current language => ', currentLang);
                 if (currentLang === 'my') {
                   // Localize numbers to Burmese using Intl.NumberFormat
                   return new Intl.NumberFormat('my-MM', {

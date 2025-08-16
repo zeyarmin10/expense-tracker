@@ -1,5 +1,11 @@
 // src/app/services/session-management.service.ts
-import { Injectable, inject, forwardRef, NgZone, OnDestroy } from '@angular/core';
+import {
+  Injectable,
+  inject,
+  forwardRef,
+  NgZone,
+  OnDestroy,
+} from '@angular/core';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, timer, Subscription } from 'rxjs';
 import { filter, tap, distinctUntilChanged, takeUntil } from 'rxjs/operators'; // Added takeUntil here
@@ -7,11 +13,11 @@ import { AuthService } from './auth';
 import { User } from '@angular/fire/auth';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class SessionManagement implements OnDestroy {
   // Constants for session management
-//   private readonly SESSION_TIMEOUT_MS = 60 * 1000; // Testing: 1 minute for auto-logout
+  //   private readonly SESSION_TIMEOUT_MS = 60 * 1000; // Testing: 1 minute for auto-logout
   private readonly SESSION_TIMEOUT_MS = 5 * 60 * 60 * 1000; // Production: 5 hours in milliseconds
 
   private readonly LAST_ACTIVITY_KEY = 'lastActivityTime';
@@ -22,7 +28,8 @@ export class SessionManagement implements OnDestroy {
   private authStateSubscription: Subscription; // To manage the currentUser$ subscription
 
   private currentUserSubject = new BehaviorSubject<User | null>(null);
-  currentUser$: Observable<User | null> = this.currentUserSubject.asObservable();
+  currentUser$: Observable<User | null> =
+    this.currentUserSubject.asObservable();
 
   private router = inject(Router);
   private ngZone = inject(NgZone);
@@ -32,26 +39,31 @@ export class SessionManagement implements OnDestroy {
 
     window.addEventListener('storage', this.handleStorageChange);
 
-    this.authStateSubscription = this.authService.currentUser$.pipe(
-      distinctUntilChanged((prev, curr) => prev?.uid === curr?.uid),
-      tap(user => {
-        this.currentUserSubject.next(user);
-        if (user) {
-          this.ensureLoginTimeSet(user);
-          this.startSessionMonitoring();
-        } else {
-          this.stopSessionMonitoring(false);
-        }
-      })
-    ).subscribe();
+    this.authStateSubscription = this.authService.currentUser$
+      .pipe(
+        distinctUntilChanged((prev, curr) => prev?.uid === curr?.uid),
+        tap((user) => {
+          this.currentUserSubject.next(user);
+          if (user) {
+            this.ensureLoginTimeSet(user);
+            this.startSessionMonitoring();
+          } else {
+            this.stopSessionMonitoring(false);
+          }
+        })
+      )
+      .subscribe();
 
     // Modified: Subscribe to successful logout events and check the flag
     this.authService.logoutSuccess$.subscribe((isManualLogout: boolean) => {
       this.stopSessionMonitoring(true); // Always clear session keys on successful logout
       this.router.navigate(['/login']);
 
-      if (!isManualLogout) { // Only show alert if it was NOT a manual logout
-        alert('သင်၏ session ကုန်ဆုံးသွားပြီဖြစ်သောကြောင့် အလိုအလျောက် ထွက်ခဲ့သည်။');
+      if (!isManualLogout) {
+        // Only show alert if it was NOT a manual logout
+        alert(
+          'သင်၏ session ကုန်ဆုံးသွားပြီဖြစ်သောကြောင့် အလိုအလျောက် ထွက်ခဲ့သည်။'
+        );
       }
     });
   }
@@ -115,20 +127,20 @@ export class SessionManagement implements OnDestroy {
             // Re-check currentUser within the pipe to be absolutely sure we should proceed
             const user = this.currentUserSubject.getValue();
             if (!user) {
-            //   console.log('User is null within timer, stopping monitoring via filter.');
+              //   console.log('User is null within timer, stopping monitoring via filter.');
               this.stopSessionMonitoring(true); // Ensure full cleanup if user becomes null unexpectedly
               return false;
             }
             return true;
           }),
-          takeUntil(this.authService.currentUser$.pipe(filter(user => !user))),
+          takeUntil(this.authService.currentUser$.pipe(filter((user) => !user)))
         )
         .subscribe(() => {
           this.ngZone.run(() => {
             this.checkSessionExpiration();
           });
         });
-    //   console.log('Session monitoring started.');
+      //   console.log('Session monitoring started.');
     });
   }
 
@@ -140,12 +152,12 @@ export class SessionManagement implements OnDestroy {
     if (this.sessionTimerSubscription) {
       this.sessionTimerSubscription.unsubscribe();
       this.sessionTimerSubscription = null;
-    //   console.log('Session monitoring stopped.');
+      //   console.log('Session monitoring stopped.');
     }
     if (clearKeys) {
       localStorage.removeItem(this.LAST_ACTIVITY_KEY);
       localStorage.removeItem(this.LOGIN_TIME_KEY);
-    //   console.log('Session keys cleared from localStorage.');
+      //   console.log('Session keys cleared from localStorage.');
     }
   }
 
@@ -159,23 +171,33 @@ export class SessionManagement implements OnDestroy {
 
     // Condition 1: Inconsistent state - user logged in, but no valid login time.
     if (currentUser && (isNaN(loginTime) || loginTime === 0)) {
-      console.warn('Inconsistent session state: User logged in but no valid LOGIN_TIME_KEY found. Forcing logout.');
+      console.warn(
+        'Inconsistent session state: User logged in but no valid LOGIN_TIME_KEY found. Forcing logout.'
+      );
       this.logoutAndRedirect();
       return;
     }
 
     // Condition 2: No user or no valid login time - nothing to check.
     if (!currentUser || loginTime === 0) {
-        return;
+      return;
     }
 
     const currentTime = Date.now();
     const elapsedTimeSinceLogin = currentTime - loginTime;
 
-    // console.log(`Checking session: LoginTime: ${new Date(loginTime).toLocaleTimeString()}, CurrentTime: ${new Date(currentTime).toLocaleTimeString()}, Elapsed: ${Math.floor(elapsedTimeSinceLogin / 1000)}s, Timeout: ${this.SESSION_TIMEOUT_MS / 1000}s`);
+    // console.log(
+    //   `Checking session: LoginTime: ${new Date(
+    //     loginTime
+    //   ).toLocaleTimeString()}, CurrentTime: ${new Date(
+    //     currentTime
+    //   ).toLocaleTimeString()}, Elapsed: ${Math.floor(
+    //     elapsedTimeSinceLogin / 1000
+    //   )}s, Timeout: ${this.SESSION_TIMEOUT_MS / 1000}s`
+    // );
 
     if (elapsedTimeSinceLogin >= this.SESSION_TIMEOUT_MS) {
-    //   console.log('Session expired due to time limit. Logging out...');
+      //   console.log('Session expired due to time limit. Logging out...');
       this.logoutAndRedirect();
     }
   }
@@ -190,7 +212,11 @@ export class SessionManagement implements OnDestroy {
       await this.authService.logout(false);
     } catch (error: any) {
       console.error('Error during automatic logout:', error);
-      alert(`အလိုအလျောက် လော့အောက်လုပ်ရာတွင် ပြဿနာတခု ကြုံတွေ့နေရသည်: ${this.authService.getFirebaseErrorMessage(error)}`);
+      alert(
+        `အလိုအလျောက် လော့အောက်လုပ်ရာတွင် ပြဿနာတခု ကြုံတွေ့နေရသည်: ${this.authService.getFirebaseErrorMessage(
+          error
+        )}`
+      );
     }
   }
 
@@ -205,16 +231,23 @@ export class SessionManagement implements OnDestroy {
         this.logoutAndRedirect(); // This will trigger cleanup via logoutSuccess$
       }
     } else if (event.key === this.LOGIN_TIME_KEY && event.newValue !== null) {
-        // If LOGIN_TIME_KEY is set/updated in another tab (e.g., new login elsewhere)
-        const newLoginTime = parseInt(event.newValue, 10);
-        const currentLoginTime = parseInt(localStorage.getItem(this.LOGIN_TIME_KEY) || '0', 10);
+      // If LOGIN_TIME_KEY is set/updated in another tab (e.g., new login elsewhere)
+      const newLoginTime = parseInt(event.newValue, 10);
+      const currentLoginTime = parseInt(
+        localStorage.getItem(this.LOGIN_TIME_KEY) || '0',
+        10
+      );
 
-        // Only react if the new time is truly newer and a user is present
-        if (!isNaN(newLoginTime) && newLoginTime > currentLoginTime && this.currentUserSubject.getValue()) {
-            // console.log('LOGIN_TIME_KEY updated in another tab. Restarting monitoring.');
-            this.ensureLoginTimeSet(this.currentUserSubject.getValue()); // Re-evaluate based on current state
-            this.startSessionMonitoring(); // Restart timer based on new/updated login time
-        }
+      // Only react if the new time is truly newer and a user is present
+      if (
+        !isNaN(newLoginTime) &&
+        newLoginTime > currentLoginTime &&
+        this.currentUserSubject.getValue()
+      ) {
+        // console.log('LOGIN_TIME_KEY updated in another tab. Restarting monitoring.');
+        this.ensureLoginTimeSet(this.currentUserSubject.getValue()); // Re-evaluate based on current state
+        this.startSessionMonitoring(); // Restart timer based on new/updated login time
+      }
     }
   };
 }

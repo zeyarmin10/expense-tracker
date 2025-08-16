@@ -621,7 +621,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
                 callback: function (value: any) {
                   // Use the component reference to access the translate service
                   const currentLang = component.translate?.currentLang;
-                  console.log('current language => ', currentLang);
                   if (currentLang === 'my') {
                     return new Intl.NumberFormat('my-MM', {
                       numberingSystem: 'mymr',

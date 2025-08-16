@@ -143,7 +143,7 @@ export class LoginComponent implements OnInit, OnDestroy {
             this.currentLang
           ); // Pass currentLang
         }
-        this.router.navigate(['/dashboard']);
+        await this.postLogin();
       } else {
         const user = await this.authService.register(email, password);
         if (user) {
@@ -159,8 +159,7 @@ export class LoginComponent implements OnInit, OnDestroy {
             user.uid,
             this.currentLang
           ); // Pass currentLang
-          this.sessionService.recordActivity();
-          this.router.navigate(['/dashboard']);
+          await this.postLogin();
         }
       }
     } catch (error: any) {
@@ -195,8 +194,7 @@ export class LoginComponent implements OnInit, OnDestroy {
                   user.uid,
                   this.currentLang
                 ); // Pass currentLang
-                this.sessionService.recordActivity();
-                this.router.navigate(['/dashboard']);
+                await this.postLogin();
               } else {
                 // If user profile exists, check for categories and add if not present
                 const hasCategories = await this.categoryService.hasCategories(
@@ -208,8 +206,7 @@ export class LoginComponent implements OnInit, OnDestroy {
                     this.currentLang
                   ); // Pass currentLang
                 }
-                this.sessionService.recordActivity();
-                this.router.navigate(['/dashboard']);
+                await this.postLogin();
               }
             });
         }
@@ -220,6 +217,15 @@ export class LoginComponent implements OnInit, OnDestroy {
           this.authService.getFirebaseErrorMessage(error);
         this.showErrorModal(translatedErrorMessage);
       });
+  }
+
+  private async postLogin() {
+    // Common logic for post-login actions
+    this.sessionService.recordActivity();
+    this.router.navigate(['/dashboard']).then(() => {
+      // ✅ REVISED: Add window.location.reload() to reload the browser
+      window.location.reload();
+    });
   }
 
   toggleLanguage(): void {

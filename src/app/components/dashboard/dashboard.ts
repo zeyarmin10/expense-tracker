@@ -475,7 +475,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
             ticks: {
               callback: function (value: any) {
                 const currentLang = component.translate?.currentLang;
-                console.log('current language => ', currentLang);
                 if (currentLang === 'my') {
                   return new Intl.NumberFormat('my-MM', {
                     numberingSystem: 'mymr',
