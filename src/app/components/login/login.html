@@ -94,23 +94,35 @@
             <label for="password" class="form-label">{{
               "PASSWORD_LABEL" | translate
             }}</label>
-            <input
-              type="password"
-              class="form-control"
-              id="password"
-              formControlName="password"
-              placeholder="{{ 'PASSWORD_PLACEHOLDER' | translate }}"
+            <div
+              class="input-group"
               [class.is-invalid]="
                 loginForm.controls['password'].invalid &&
                 loginForm.controls['password'].touched
               "
-            />
+            >
+              <input
+                [type]="showPassword ? 'text' : 'password'"
+                class="form-control border border-end-0 password-input"
+                id="password"
+                formControlName="password"
+                placeholder="{{ 'PASSWORD_PLACEHOLDER' | translate }}"
+              />
+              <button
+                type="button"
+                class="btn border border-start-0 password-eye"
+                (click)="togglePasswordVisibility()"
+                aria-label="Toggle password visibility"
+              >
+                <fa-icon [icon]="showPassword ? faEyeSlash : faEye"></fa-icon>
+              </button>
+            </div>
             <div
               *ngIf="
                 loginForm.controls['password'].invalid &&
                 loginForm.controls['password'].touched
               "
-              class="invalid-feedback"
+              class="invalid-feedback d-block"
             >
               <span
                 *ngIf="loginForm.controls['password'].errors?.['required']"

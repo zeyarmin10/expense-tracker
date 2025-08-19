@@ -23,6 +23,8 @@ import { debounceTime, Subject, takeUntil } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { SessionManagement } from '../../services/session-management';
 import { ConfirmationModal } from '../common/confirmation-modal/confirmation-modal';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome'; // Import FontAwesomeModule
+import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 
 @Component({
   selector: 'app-login',
@@ -32,6 +34,7 @@ import { ConfirmationModal } from '../common/confirmation-modal/confirmation-mod
     ReactiveFormsModule,
     TranslateModule,
     ConfirmationModal,
+    FontAwesomeModule,
   ],
   templateUrl: './login.html',
   styleUrls: ['./login.css'],
@@ -43,6 +46,10 @@ export class LoginComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private resizeSubject = new Subject<number>();
   private readonly MOBILE_BREAKPOINT = 768;
+
+  showPassword = false;
+  faEye = faEye;
+  faEyeSlash = faEyeSlash;
 
   loginForm: FormGroup;
   authService = inject(AuthService);
@@ -226,6 +233,10 @@ export class LoginComponent implements OnInit, OnDestroy {
       // ✅ REVISED: Add window.location.reload() to reload the browser
       window.location.reload();
     });
+  }
+
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
   }
 
   toggleLanguage(): void {
