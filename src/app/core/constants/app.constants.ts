@@ -18,6 +18,8 @@ export const AVAILABLE_CURRENCIES: Currency[] = [
   { code: 'KRW', symbol: '₩', name: 'South Korean Won' },
   { code: 'GBP', symbol: '£', name: 'Pound Sterling' },
   { code: 'INR', symbol: '₹', name: 'Indian Rupee' },
+  { code: 'AUD', symbol: '$', name: 'Australian Dollar' },
+  { code: 'AED', symbol: 'د.إ', name: 'United Arab Emirates Dirham' },
 ];
 
 export const CURRENCY_SYMBOLS: { [key: string]: string } = {
@@ -38,4 +40,6 @@ export const CURRENCY_SYMBOLS: { [key: string]: string } = {
   KRW: '₩',
   GBP: '£',
   INR: '₹',
+  AUD: '$',
+  AED: 'د.إ',
 };
