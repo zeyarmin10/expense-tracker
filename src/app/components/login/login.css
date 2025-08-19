@@ -68,7 +68,7 @@
   .login-bg-image {
     background-image: url("../../../assets/images/Expense-Tracker-Logo.png");
     background-size: contain;
-    background-position: top;
+    background-position: center;
     background-repeat: no-repeat;
     height: 25%;
     border-top-left-radius: 1rem;
@@ -80,7 +80,7 @@
   .login-bg-image {
     background-image: url("../../../assets/images/Expense-Tracker-Logo.png");
     background-size: contain;
-    background-position: top;
+    background-position: center;
     background-repeat: no-repeat;
     height: 20vh;
     border-top-left-radius: 1rem;
@@ -106,7 +106,7 @@
     background-size: contain;
     background-position: left;
     background-repeat: no-repeat;
-    height: 100%;
+    height: auto;
     border-top-left-radius: 1rem;
     border-top-right-radius: 1rem;
   }
