@@ -48,6 +48,12 @@
   color: #ffffff;
 }
 
+/* ✅ Style the password input and eye button border red on invalid state */
+.input-group.is-invalid .form-control,
+.input-group.is-invalid .password-eye {
+  border-color: #dc3545 !important;
+}
+
 .password-input:focus {
   outline: 0;
   box-shadow: none !important;
