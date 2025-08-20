@@ -18,8 +18,12 @@ export const AVAILABLE_CURRENCIES: Currency[] = [
   { code: 'KRW', symbol: '₩', name: 'South Korean Won' },
   { code: 'GBP', symbol: '£', name: 'Pound Sterling' },
   { code: 'INR', symbol: '₹', name: 'Indian Rupee' },
-  { code: 'AUD', symbol: '$', name: 'Australian Dollar' },
   { code: 'AED', symbol: 'د.إ', name: 'United Arab Emirates Dirham' },
+  { code: 'AUD', symbol: '$', name: 'Australian Dollar' },
+  { code: 'NZD', symbol: '$', name: 'New Zealand Dollar' },
+  { code: 'CAD', symbol: '$', name: 'Canadian Dollar' },
+  { code: 'RUB', symbol: '₽', name: 'Russian Ruble' },
+  { code: 'ZAR', symbol: 'R', name: 'South African Rand' },
 ];
 
 export const CURRENCY_SYMBOLS: { [key: string]: string } = {
@@ -40,6 +44,10 @@ export const CURRENCY_SYMBOLS: { [key: string]: string } = {
   KRW: '₩',
   GBP: '£',
   INR: '₹',
-  AUD: '$',
   AED: 'د.إ',
+  AUD: '$',
+  NZD: '$',
+  CAD: '$',
+  RUB: '₽',
+  ZAR: 'R',
 };

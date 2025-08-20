@@ -98,10 +98,13 @@
     border-top-left-radius: 1rem;
     border-top-right-radius: 1rem; */
   }
+  .lg-bg-image {
+    width: 50% !important;
+  }
 
   .login-bg-image-lg {
     display: flex;
-    justify-content: end !important;
+    justify-content: center !important;
     background-image: url("../../../assets/images/Expense-Tracker-Logo-Large.png");
     background-size: contain;
     background-position: left;
