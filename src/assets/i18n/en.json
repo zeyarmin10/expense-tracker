@@ -326,6 +326,12 @@
     "VND": "Vietnamese Dong",
     "LAK": "Lao Kip",
     "BDT": "Bangladeshi Taka",
-    "CNY": "Chinese Yuan"
+    "CNY": "Chinese Yuan",
+    "AUD": "Australian Dollar",
+    "AED": "UAE Dirham",
+    "NZD": "New Zealand Dollar",
+    "CAD": "Canadian Dollar",
+    "RUB": "Russian Ruble",
+    "ZAR": "South Afracan Rand"
   }
 }
