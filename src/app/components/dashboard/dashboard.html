@@ -33,7 +33,7 @@
                   >
                     <span
                       *ngFor="let total of totals | keyvalue"
-                      class="d-flex justify-content-between pb-0"
+                      class="d-flex justify-content-center pb-0"
                     >
                       <!-- <strong>{{ total.key }}:</strong> -->
                       <span class="income-amount">{{
@@ -75,7 +75,7 @@
                   >
                     <span
                       *ngFor="let total of totals | keyvalue"
-                      class="d-flex justify-content-between pb-0"
+                      class="d-flex justify-content-center pb-0"
                     >
                       <!-- <strong>{{ total.key }}:</strong> -->
                       <span class="budget-amount">{{
@@ -117,7 +117,7 @@
                   >
                     <span
                       *ngFor="let total of totals | keyvalue"
-                      class="d-flex justify-content-between pb-0"
+                      class="d-flex justify-content-center pb-0"
                     >
                       <!-- <strong>{{ total.key }}:</strong> -->
                       <span class="expense-amount">{{
@@ -167,7 +167,7 @@
                   >
                     <span
                       *ngFor="let balance of balances | keyvalue"
-                      class="d-flex justify-content-between pb-0"
+                      class="d-flex justify-content-center pb-0"
                     >
                       <!-- <strong>{{ balance.key }}:</strong> -->
                       <span [ngClass]="getBalanceAmountClass(balance.value)">

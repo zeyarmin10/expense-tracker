@@ -315,12 +315,12 @@
                     "
                     class="text-center mt-1 mb-0 p-0"
                   >
-                    <span *ngFor="let total of totals | keyvalue" class="pb-0">
+                    <div *ngFor="let total of totals | keyvalue" class="pb-0">
                       <!-- <span>{{ total.key }}:</span> -->
                       <span class="income-amount text-center">{{
                         formatAmountWithSymbol(total.value, total.key)
                       }}</span>
-                    </span>
+                    </div>
                   </div>
                   <ng-template #noData>
                     <p class="text-muted text-center pb-0">
@@ -355,12 +355,12 @@
                     "
                     class="text-center mt-1 mb-0 p-0"
                   >
-                    <span *ngFor="let total of totals | keyvalue">
+                    <div *ngFor="let total of totals | keyvalue">
                       <!-- <span>{{ total.key }}:</span> -->
                       <span class="expense-amount text-center">{{
                         formatAmountWithSymbol(total.value, total.key)
                       }}</span>
-                    </span>
+                    </div>
                   </div>
                   <ng-template #noData>
                     <p class="text-muted text-center pb-0">
@@ -401,7 +401,7 @@
                     "
                     class="text-center mt-1 mb-0 p-0"
                   >
-                    <span *ngFor="let balance of balances | keyvalue">
+                    <div *ngFor="let balance of balances | keyvalue">
                       <!-- <span>{{ balance.key }}:</span> -->
                       <span
                         [ngClass]="getBalanceAmountClass(balance.value)"
@@ -409,7 +409,7 @@
                       >
                         {{ formatAmountWithSymbol(balance.value, balance.key) }}
                       </span>
-                    </span>
+                    </div>
                   </div>
                   <ng-template #noData>
                     <p class="text-muted text-center pb-0">

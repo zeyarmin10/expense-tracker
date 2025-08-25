@@ -386,13 +386,86 @@ export class BudgetComponent implements OnInit, OnDestroy {
           (a, b) => a.data.date.getTime() - b.data.date.getTime()
         );
 
-        const labels: string[] = sortedMonthlyData.map((item) => item.month);
-        const budgetedAmounts: number[] = sortedMonthlyData.map(
-          (item) => item.data.budget
+        // const labels: string[] = sortedMonthlyData.map((item) => item.month);
+
+        // Generate all months between startDate and endDate for labels
+        // Use the latest values from the BehaviorSubjects to detect date filter changes
+        const startDateValue = this._startDate$.getValue();
+        const endDateValue = this._endDate$.getValue();
+        const selectedDateRange = this._selectedDateRange$.getValue();
+
+        // Calculate start and end based on selectedDateRange
+        let start: Date;
+        let end: Date = new Date();
+
+        switch (selectedDateRange) {
+          case 'last30Days':
+            start = new Date(
+              end.getFullYear(),
+              end.getMonth(),
+              end.getDate() - 30
+            );
+            break;
+          case 'currentMonth':
+            start = new Date(end.getFullYear(), end.getMonth(), 1);
+            end = new Date(end.getFullYear(), end.getMonth() + 1, 0);
+            break;
+          case 'currentYear':
+            start = new Date(end.getFullYear(), 0, 1);
+            end = new Date(end.getFullYear(), 11, 31);
+            break;
+          case 'lastYear':
+            start = new Date(end.getFullYear() - 1, 0, 1);
+            end = new Date(end.getFullYear() - 1, 11, 31);
+            break;
+          case 'custom':
+            start = new Date(startDateValue);
+            end = new Date(endDateValue);
+            break;
+          default:
+            start = new Date(end.getFullYear(), 0, 1);
+            break;
+        }
+
+        // Normalize start to first day of month, end to first day of month
+        start.setDate(1);
+        end.setDate(1);
+
+        const labels: string[] = [];
+        const monthDates: Date[] = [];
+
+        let current = new Date(start);
+        while (current <= end) {
+          labels.push(
+            this.datePipe.transform(current, dateFormat, undefined, locale) ||
+              ''
+          );
+          monthDates.push(new Date(current));
+          current.setMonth(current.getMonth() + 1);
+        }
+        console.log('labels: ', labels);
+
+        // Map sortedMonthlyData by label for quick lookup
+        const monthlyDataMap = new Map<
+          string,
+          { budget: number; expense: number }
+        >();
+        sortedMonthlyData.forEach((item) => {
+          monthlyDataMap.set(item.month, item.data);
+        });
+
+        // Fill budgetedAmounts and expenseAmounts for all labels, defaulting to 0 if missing
+        const budgetedAmounts: number[] = labels.map(
+          (label) => monthlyDataMap.get(label)?.budget ?? 0
         );
-        const expenseAmounts: number[] = sortedMonthlyData.map(
-          (item) => item.data.expense
+        const expenseAmounts: number[] = labels.map(
+          (label) => monthlyDataMap.get(label)?.expense ?? 0
         );
+        console.log('labels: ', labels);
+
+        // const expenseAmounts: number[] = sortedMonthlyData.map(
+        //   (item) => item.data.expense
+        // );
 
         return {
           labels,
