@@ -333,5 +333,8 @@
     "CAD": "Canadian Dollar",
     "RUB": "Russian Ruble",
     "ZAR": "South Afracan Rand"
-  }
+  },
+  "QUANTITY_LABEL": "Quantity",
+  "PRICE_LABEL": "Price",
+  "ACTIONS_LABEL": "Actions"
 }

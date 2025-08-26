@@ -27,54 +27,34 @@
     left: -9999px;
   }
   tr {
-    border: 1px solid #dee2e6;
+    /* border: 1px solid #dee2e6; */
     margin-bottom: 1rem;
   }
   td {
     border: none;
-    border-bottom: 1px solid #dee2e6;
+    /* border-bottom: 1px solid #dee2e6; */
     position: relative;
-    padding-left: 50% !important;
-    text-align: right;
-  }
-  td:before {
-    position: absolute;
-    top: 6px;
-    left: 6px;
-    width: 45%;
-    padding-right: 10px;
-    white-space: nowrap;
-    text-align: left;
-    font-weight: bold;
-  }
-  /* Labels for each cell on mobile */
-  td:nth-of-type(1):before {
-    content: "Date";
-  }
-  td:nth-of-type(2):before {
-    content: "Category";
-  }
-  td:nth-of-type(3):before {
-    content: "Item";
-  }
-  td:nth-of-type(4):before {
-    content: "Qty";
-  }
-  /* td:nth-of-type(5):before { content: "Unit"; } */
-  td:nth-of-type(5):before {
-    content: "Price";
-  }
-  td:nth-of-type(6):before {
-    content: "Total";
-  }
-  td:nth-of-type(7):before {
-    content: "Actions";
+    /* padding-left: 50% !important; */
+    /* text-align: right; */
   }
 
-  /* Buttons specific mobile adjustment */
-  td:nth-of-type(7) {
-    text-align: left;
-    padding-left: 6px !important;
+  .mobile-label {
+    font-weight: 500;
+    color: #333;
+  }
+
+  .mobile-value {
+    word-break: break-all;
+    text-align: right;
+  }
+  .edit-tr td {
+    padding-bottom: 0;
+  }
+  .mobile-card-view .row {
+    padding-bottom: 0.5rem !important;
+  }
+  .mobile-value {
+    text-wrap: wrap !important;
   }
 }
 
@@ -83,40 +63,6 @@ fa-icon {
   width: 1em;
   height: 1em;
   vertical-align: -0.125em;
-}
-
-/* Adjust table header/data for better mobile readability */
-@media (max-width: 767.98px) {
-  /* ... (your existing mobile table styles) ... */
-
-  /* Labels for each cell on mobile */
-  td:nth-of-type(1):before {
-    content: "Date";
-  }
-  td:nth-of-type(2):before {
-    content: "Category";
-  }
-  td:nth-of-type(3):before {
-    content: "Item";
-  }
-  td:nth-of-type(4):before {
-    content: "Qty/Unit";
-  } /* Adjusted for combined Qty/Unit */
-  td:nth-of-type(5):before {
-    content: "Price";
-  }
-  td:nth-of-type(6):before {
-    content: "Total";
-  }
-  td:nth-of-type(7):before {
-    content: "Actions";
-  }
-
-  /* Buttons specific mobile adjustment */
-  td:nth-of-type(7) {
-    text-align: left;
-    padding-left: 6px !important;
-  }
 }
 
 /* Specific styles for filter date inputs on smaller screens */
