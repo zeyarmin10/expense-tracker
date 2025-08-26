@@ -172,39 +172,25 @@
 
             <div class="table-responsive">
               <h5 class="mb-3">{{ "EXPENSE_LIST" | translate }}</h5>
-              <!-- <div *ngIf="categoryTotals.length > 0; else noData">
-                <div class="table-responsive">
-                    <table class="table table-hover table-sm">
-                        <thead>
-                        <tr>
-                            <th scope="col">{{'CATEGORY' | translate}}</th>
-                            <th scope="col" class="text-end">{{'TOTAL_COST_LABEL' | translate}}</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr *ngFor="let total of categoryTotals">
-                            <td>{{ total.category }}</td>
-                            <td class="text-end">
-                            <span class="text-danger">{{ formatCurrency(total.total, total.currency) }}</span>
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
-              </div> -->
               <table class="table table-hover align-middle">
                 <thead>
                   <tr>
                     <th scope="col" class="d-none d-md-table-cell">
                       {{ "DATE_LABEL" | translate }}
                     </th>
-                    <th scope="col" class="d-md-none">
+                    <th
+                      scope="col"
+                      class="d-md-none ps-1 pe-0"
+                      style="min-width: 5em"
+                    >
                       {{ "DATE_LABEL" | translate }}
                     </th>
                     <th scope="col" class="hide-mobile-views">
                       {{ "CATEGORY_LABEL" | translate }}
                     </th>
-                    <th scope="col">{{ "ITEM_NAME_LABEL" | translate }}</th>
+                    <th scope="col" class="ps-1 pe-1">
+                      {{ "ITEM_NAME_LABEL" | translate }}
+                    </th>
                     <th scope="col" class="text-end">
                       {{ "TOTAL_COST_LABEL" | translate }}
                     </th>
@@ -217,14 +203,14 @@
                     class="clickable-row"
                   >
                     <td class="d-none d-md-table-cell">
-                      {{ expense.date | date }}
+                      {{ formatLocalizedDate(expense.date) }}
                     </td>
-                    <td class="d-md-none">
-                      {{ expense.date | date : "MMM d" }}
+                    <td class="d-md-none ps-1 pe-0">
+                      {{ formatMobileDate(expense.date) }}
                     </td>
                     <td class="hide-mobile-views">{{ expense.category }}</td>
-                    <td>{{ expense.itemName }}</td>
-                    <td class="text-end text-danger">
+                    <td class="ps-1 pe-1">{{ expense.itemName }}</td>
+                    <td class="text-end expense-amount ps-1 pe-1">
                       {{ formatCurrency(expense.totalCost, expense.currency) }}
                     </td>
                   </tr>

@@ -3,7 +3,7 @@ import { Currency } from '../models/currency.model';
 export const AVAILABLE_CURRENCIES: Currency[] = [
   { code: 'USD', symbol: '$', name: 'US Dollar' },
   { code: 'CNY', symbol: '¥', name: 'Chinese Yuan' },
-  { code: 'MMK', symbol: 'Ks', name: 'Myanmar Kyat' },
+  { code: 'MMK', symbol: 'K', name: 'Myanmar Kyat' },
   { code: 'SGD', symbol: 'S$', name: 'Singapore Dollar' },
   { code: 'MYR', symbol: 'RM', name: 'Malaysian Ringgit' },
   { code: 'THB', symbol: '฿', name: 'Thai Baht' },
@@ -29,7 +29,7 @@ export const AVAILABLE_CURRENCIES: Currency[] = [
 export const CURRENCY_SYMBOLS: { [key: string]: string } = {
   USD: '$',
   CNY: '¥',
-  MMK: 'Ks',
+  MMK: 'K',
   SGD: 'S$',
   MYR: 'RM',
   THB: '฿',
@@ -50,4 +50,34 @@ export const CURRENCY_SYMBOLS: { [key: string]: string } = {
   CAD: '$',
   RUB: '₽',
   ZAR: 'R',
+};
+
+export const BURMESE_MONTH_ABBREVIATIONS = {
+  Jan: 'ဇန်',
+  Feb: 'ဖေ',
+  Mar: 'မတ်',
+  Apr: 'ဧ',
+  May: 'မေ',
+  Jun: 'ဇွန်',
+  Jul: 'ဇူ',
+  Aug: 'ဩ',
+  Sep: 'စက်',
+  Oct: 'အောက်',
+  Nov: 'နို',
+  Dec: 'ဒီ',
+};
+
+export const BURMESE_MONTH_FULL_NAMES = {
+  January: 'ဇန်နဝါရီ',
+  February: 'ဖေဖော်ဝါရီ',
+  March: 'မတ်',
+  April: 'ဧပြီ',
+  May: 'မေ',
+  June: 'ဇွန်',
+  July: 'ဇူလိုင်',
+  August: 'ဩဂုတ်',
+  September: 'စက်တင်ဘာ',
+  October: 'အောက်တိုဘာ',
+  November: 'နိုဝင်ဘာ',
+  December: 'ဒီဇင်ဘာ',
 };
