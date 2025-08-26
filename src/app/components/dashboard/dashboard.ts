@@ -43,7 +43,10 @@ import {
 import { Router } from '@angular/router';
 import {
   AVAILABLE_CURRENCIES,
+  BURMESE_CURRENCY_SYMBOL,
+  BURMESE_LOCALE_CODE,
   CURRENCY_SYMBOLS,
+  MMK_CURRENCY_CODE,
 } from '../../core/constants/app.constants';
 
 Chart.register(...registerables);
@@ -443,6 +446,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
     //   // Place the symbol before the amount for all other currencies
     //   return `${symbol}${formattedAmount}`;
     // }
+
+    if (locale === BURMESE_LOCALE_CODE && currency === MMK_CURRENCY_CODE) {
+      return `${formattedAmount} ${BURMESE_CURRENCY_SYMBOL}`;
+    }
 
     return `${formattedAmount} ${symbol}`;
   }

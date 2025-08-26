@@ -21,6 +21,9 @@ import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
 import {
   CURRENCY_SYMBOLS,
   BURMESE_MONTH_ABBREVIATIONS,
+  BURMESE_LOCALE_CODE,
+  MMK_CURRENCY_CODE,
+  BURMESE_CURRENCY_SYMBOL,
 } from '../../core/constants/app.constants';
 
 // Register the required chart components
@@ -322,6 +325,10 @@ export class ExpenseOverview implements OnInit {
     //   // Place the symbol before the amount for all other currencies
     //   return `${symbol}${formattedAmount}`;
     // }
+
+    if (locale === BURMESE_LOCALE_CODE && currency === MMK_CURRENCY_CODE) {
+      return `${formattedAmount} ${BURMESE_CURRENCY_SYMBOL}`;
+    }
 
     return `${formattedAmount} ${symbol}`;
   }

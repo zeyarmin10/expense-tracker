@@ -81,3 +81,7 @@ export const BURMESE_MONTH_FULL_NAMES = {
   November: 'နိုဝင်ဘာ',
   December: 'ဒီဇင်ဘာ',
 };
+
+export const BURMESE_CURRENCY_SYMBOL = 'ကျပ်';
+export const MMK_CURRENCY_CODE = 'MMK';
+export const BURMESE_LOCALE_CODE = 'my';

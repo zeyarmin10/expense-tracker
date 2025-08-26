@@ -47,8 +47,11 @@ import { AuthService } from '../../services/auth';
 import { UserDataService, UserProfile } from '../../services/user-data';
 import {
   AVAILABLE_CURRENCIES,
+  BURMESE_CURRENCY_SYMBOL,
+  BURMESE_LOCALE_CODE,
   BURMESE_MONTH_ABBREVIATIONS,
   CURRENCY_SYMBOLS,
+  MMK_CURRENCY_CODE,
 } from '../../core/constants/app.constants';
 
 @Component({
@@ -330,6 +333,10 @@ export class Expense implements OnInit {
     //   // Place the symbol before the amount for all other currencies
     //   return `${symbol}${formattedAmount}`;
     // }
+
+    if (locale === BURMESE_LOCALE_CODE && currency === MMK_CURRENCY_CODE) {
+      return `${formattedAmount} ${BURMESE_CURRENCY_SYMBOL}`;
+    }
 
     return `${formattedAmount} ${symbol}`;
   }
