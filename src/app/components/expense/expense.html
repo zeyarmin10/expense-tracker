@@ -339,12 +339,22 @@
             <table class="table table-striped table-hover">
               <thead>
                 <tr>
-                  <th>{{ "EXPENSE_DATE_COLUMN" | translate }}</th>
-                  <th>{{ "EXPENSE_CATEGORY_COLUMN" | translate }}</th>
-                  <th>{{ "EXPENSE_ITEM_COLUMN" | translate }}</th>
+                  <th style="min-width: 5em">
+                    {{ "EXPENSE_DATE_COLUMN" | translate }}
+                  </th>
+                  <th>
+                    {{ "EXPENSE_CATEGORY_COLUMN" | translate }}
+                  </th>
+                  <th style="min-width: 6em">
+                    {{ "EXPENSE_ITEM_COLUMN" | translate }}
+                  </th>
                   <th>{{ "EXPENSE_QTY_UNIT_COLUMN" | translate }}</th>
-                  <th>{{ "EXPENSE_PRICE_COLUMN" | translate }}</th>
-                  <th>{{ "EXPENSE_TOTAL_COLUMN" | translate }}</th>
+                  <th style="min-width: 7em">
+                    {{ "EXPENSE_PRICE_COLUMN" | translate }}
+                  </th>
+                  <th style="min-width: 7em">
+                    {{ "EXPENSE_TOTAL_COLUMN" | translate }}
+                  </th>
                   <th class="text-nowrap" style="width: 1%">
                     {{ "EXPENSE_ACTIONS_COLUMN" | translate }}
                   </th>
@@ -353,7 +363,7 @@
               <tbody>
                 <ng-container *ngFor="let expense of expenses">
                   <tr *ngIf="editingExpenseId !== expense.id">
-                    <td>{{ expense.date }}</td>
+                    <td>{{ formatLocalizedDate(expense.date) }}</td>
                     <td>{{ expense.category }}</td>
                     <td>{{ expense.itemName }}</td>
                     <td>{{ expense.quantity }} {{ expense.unit }}</td>

@@ -47,6 +47,7 @@ import { AuthService } from '../../services/auth';
 import { UserDataService, UserProfile } from '../../services/user-data';
 import {
   AVAILABLE_CURRENCIES,
+  BURMESE_MONTH_ABBREVIATIONS,
   CURRENCY_SYMBOLS,
 } from '../../core/constants/app.constants';
 
@@ -290,43 +291,47 @@ export class Expense implements OnInit {
     this.cdr.detectChanges();
   }
 
+  /**
+   * Formats the amount with the correct symbol and decimal points.
+   * Removes decimals for MMK currency and adds thousands separators.
+   */
   formatAmountWithSymbol(amount: number, currencyCode: string): string {
-    // let options: Intl.NumberFormatOptions = {
-    //   minimumFractionDigits: 2,
-    //   maximumFractionDigits: 2,
-    // };
-
-    // if (currencyCode === 'MMK') {
-    //   options = {
-    //     minimumFractionDigits: 0,
-    //     maximumFractionDigits: 0,
-    //   };
-    // }
-
-    // const formattedAmount = new Intl.NumberFormat(
-    //   this.translate.currentLang,
-    //   options
-    // ).format(amount);
-    // const symbol = this.currencySymbols[currencyCode] || currencyCode;
-
-    // if (currencyCode === 'USD') return `${symbol}${formattedAmount}`;
-    // else return `${formattedAmount} ${symbol}`;
-
     const locale = this.translate.currentLang;
     const currency = currencyCode.toUpperCase();
+    const symbol = CURRENCY_SYMBOLS[currency] || currency;
 
     // Set fraction digits to 0 for MMK and THB, and 2 for all others
     const minimumFractionDigits =
       currency === 'MMK' || currency === 'THB' ? 0 : 2;
 
-    // Use Intl.NumberFormat to get the correct currency format
-    // This will automatically handle the placement of the negative sign and symbol
-    return new Intl.NumberFormat(locale, {
-      style: 'currency',
-      currency: currency,
-      currencyDisplay: 'symbol',
-      minimumFractionDigits: minimumFractionDigits,
-    }).format(amount);
+    let formattedAmount: string;
+
+    // ✅ REVISED: Check for Burmese language and format numbers accordingly
+    if (locale === 'my') {
+      formattedAmount = new Intl.NumberFormat('my-MM', {
+        style: 'decimal',
+        minimumFractionDigits: minimumFractionDigits,
+        maximumFractionDigits: minimumFractionDigits,
+        numberingSystem: 'mymr', // This will convert numbers to Burmese numerals
+      }).format(amount);
+    } else {
+      // Use standard formatting for other languages
+      formattedAmount = new Intl.NumberFormat(locale, {
+        style: 'decimal',
+        minimumFractionDigits: minimumFractionDigits,
+        maximumFractionDigits: minimumFractionDigits,
+      }).format(amount);
+    }
+
+    // // Place the symbol after the amount for MMK and THB
+    // if (currency === 'MMK' || currency === 'THB') {
+    //   return `${formattedAmount} ${symbol}`;
+    // } else {
+    //   // Place the symbol before the amount for all other currencies
+    //   return `${symbol}${formattedAmount}`;
+    // }
+
+    return `${formattedAmount} ${symbol}`;
   }
 
   async onSubmitNewExpense(): Promise<void> {
@@ -668,5 +673,43 @@ export class Expense implements OnInit {
     this.originalUnit = null;
     this.originalQuantity = null;
     this.originalPrice = null;
+  }
+
+  formatLocalizedDate(date: string | Date | null | undefined): string {
+    const currentLang = this.translate.currentLang;
+
+    if (!date) {
+      return '';
+    }
+
+    if (currentLang === 'my') {
+      const d = new Date(date);
+      // Get the English month abbreviation and map it to Burmese
+      const month = this.datePipe.transform(d, 'MMM');
+      const burmeseMonth = month
+        ? BURMESE_MONTH_ABBREVIATIONS[
+            month as keyof typeof BURMESE_MONTH_ABBREVIATIONS
+          ]
+        : '';
+
+      // Format the day and year with Burmese numerals
+      const day = new Intl.NumberFormat('my-MM', {
+        numberingSystem: 'mymr',
+        useGrouping: false,
+      }).format(d.getDate());
+      const year = new Intl.NumberFormat('my-MM', {
+        numberingSystem: 'mymr',
+        useGrouping: false,
+      }).format(d.getFullYear());
+
+      // Combine the localized parts
+      return `${day} ${burmeseMonth} ${year}`;
+    } else {
+      // For all other languages, use the standard Angular DatePipe
+      return (
+        this.datePipe.transform(date, 'mediumDate', undefined, currentLang) ||
+        ''
+      );
+    }
   }
 }

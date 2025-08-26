@@ -186,9 +186,8 @@
                     <div class="d-flex flex-column">
                       <span>
                         <strong>{{
-                          formatLocalizedDate(budget.period, "MMM d, yyyy")
-                        }}</strong
-                        >:
+                          formatLocalizedDate(budget.period)
+                        }}</strong>
                       </span>
                       <span class="text-success">
                         {{
@@ -377,10 +376,12 @@
                 >
                   <div
                     *ngFor="let monthData of monthlySummary"
-                    class="summary-item d-flex justify-content-between align-items-center border-bottom mb-3"
+                    class="summary-item d-flex justify-content-between border-bottom mb-3"
                   >
-                    <div class="summary-date">
-                      <span>{{ monthData.month }}</span>
+                    <div
+                      class="summary-date d-flex flex-column justify-content-between mb-2"
+                    >
+                      <strong>{{ monthData.month }}</strong>
                       <span
                         *ngFor="let total of monthData.total | keyvalue"
                         class="d-flex flex-column"
@@ -393,7 +394,7 @@
                             monthData.budget &&
                             monthData.budget.currency === total.key
                           "
-                          class="text-success"
+                          class="budget-amount"
                         >
                           {{
                             formatAmountWithSymbol(
@@ -404,7 +405,7 @@
                         </span>
                       </span>
                     </div>
-                    <div class="d-flex flex-column">
+                    <div class="d-flex flex-column mb-2">
                       <span
                         *ngFor="let total of monthData.total | keyvalue"
                         class="text-end d-flex flex-column"
@@ -417,7 +418,7 @@
                             monthData.budget &&
                             monthData.budget.currency === total.key
                           "
-                          class="text-end text-info"
+                          class="text-end expense-amount"
                         >
                           {{ formatAmountWithSymbol(total.value, total.key) }}
                         </span>

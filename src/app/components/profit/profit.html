@@ -179,7 +179,7 @@
                     <div class="d-flex flex-column">
                       <span>
                         <small class="text-muted">{{
-                          formatLocalizedDate(income.date, "MMM d, yyyy")
+                          formatLocalizedDate(income.date)
                         }}</small>
                       </span>
                       <span>
@@ -215,9 +215,13 @@
           </div>
         </div>
 
-        <div class="d-flex justify-content-center align-item-center">
+        <div
+          class="d-flex justify-content-center align-item-center"
+          *ngIf="totalProfitLossByCurrency$ | async as profitLosses"
+        >
           <div
-            class="card shadow border-3 mb-4 profit-card border border-info col-12 col-sm-12 col-md-12 col-lg-12 col-xl-6 col-xxl-6"
+            class="card shadow border-3 mb-4 profit-card col-12 col-sm-12 col-md-12 col-lg-12 col-xl-6 col-xxl-6"
+            [ngClass]="getProfitCardClass(totalProfitLossByCurrency$ | async)"
           >
             <!-- <div class="card-header border border-info">{{ 'PROFIT_LOSS_REPORT' | translate }}</div> -->
             <div class="card-body">
@@ -255,8 +259,7 @@
                             <h4
                               class="fs-1 fw-bold text-center w-100"
                               [ngClass]="{
-                                'text-success':
-                                  profitLosses[currency.code] >= 0,
+                                'text-info': profitLosses[currency.code] >= 0,
                                 'text-danger': profitLosses[currency.code] < 0
                               }"
                             >
@@ -268,13 +271,6 @@
                               }}
                             </h4>
                           </div>
-                          <!-- <div class="col-6 d-flex justify-content-between align-items-center">
-                                                        <span>{{ (netProfits[currency.code] >= 0 ? 'NET_PROFIT' : 'NET_LOSS') | translate }}</span>
-                                                        ({{ currency.code }}):
-                                                        <span class="font-large fw-bold" [ngClass]="{'text-success': netProfits[currency.code] >= 0, 'text-danger': netProfits[currency.code] < 0}">
-                                                            {{ formatAmountWithSymbol(netProfits[currency.code], currency.code) }}
-                                                        </span>
-                                                    </div> -->
                         </div>
                       </ng-container>
                     </ng-container>

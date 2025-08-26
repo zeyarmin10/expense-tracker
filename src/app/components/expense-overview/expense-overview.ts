@@ -287,7 +287,7 @@ export class ExpenseOverview implements OnInit {
     };
   }
 
-  formatCurrency(amount: number, currencyCode: string): string {
+  formatAmountWithSymbol(amount: number, currencyCode: string): string {
     const locale = this.translate.currentLang;
     const currency = currencyCode.toUpperCase();
     const symbol = CURRENCY_SYMBOLS[currency] || currency;
@@ -315,13 +315,15 @@ export class ExpenseOverview implements OnInit {
       }).format(amount);
     }
 
-    // Place the symbol after the amount for MMK and THB
-    if (currency === 'MMK' || currency === 'THB') {
-      return `${formattedAmount} ${symbol}`;
-    } else {
-      // Place the symbol before the amount for all other currencies
-      return `${symbol}${formattedAmount}`;
-    }
+    // // Place the symbol after the amount for MMK and THB
+    // if (currency === 'MMK' || currency === 'THB') {
+    //   return `${formattedAmount} ${symbol}`;
+    // } else {
+    //   // Place the symbol before the amount for all other currencies
+    //   return `${symbol}${formattedAmount}`;
+    // }
+
+    return `${formattedAmount} ${symbol}`;
   }
 
   private generateRandomColors(count: number): string[] {

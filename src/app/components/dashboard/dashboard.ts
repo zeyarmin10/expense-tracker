@@ -41,7 +41,10 @@ import {
   keyframes,
 } from '@angular/animations';
 import { Router } from '@angular/router';
-import { AVAILABLE_CURRENCIES } from '../../core/constants/app.constants';
+import {
+  AVAILABLE_CURRENCIES,
+  CURRENCY_SYMBOLS,
+} from '../../core/constants/app.constants';
 
 Chart.register(...registerables);
 
@@ -401,42 +404,47 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Formats the amount with the correct symbol and decimal points.
+   * Removes decimals for MMK currency and adds thousands separators.
+   */
   formatAmountWithSymbol(amount: number, currencyCode: string): string {
-    // const symbol =
-    //   this.availableCurrencies.find((c) => c.code === currencyCode)?.symbol ||
-    //   currencyCode;
-    // let formattedAmount: string;
-
-    // const currentLang = this.translate.currentLang;
-    // const locale = currentLang === 'my' ? 'my-MM' : currentLang;
-
-    // if (currencyCode === 'MMK') {
-    //   formattedAmount = amount.toLocaleString(locale, {
-    //     minimumFractionDigits: 0,
-    //     maximumFractionDigits: 0,
-    //   });
-    // } else {
-    //   formattedAmount = amount.toLocaleString(locale, {
-    //     minimumFractionDigits: 2,
-    //     maximumFractionDigits: 2,
-    //   });
-    // }
-
-    // if (currencyCode === 'USD') return `${symbol} ${formattedAmount}`;
-    // else return `${formattedAmount} ${symbol}`;
-
     const locale = this.translate.currentLang;
     const currency = currencyCode.toUpperCase();
-    let minimumFractionDigits: number =
-      currencyCode === 'MMK' || currencyCode === 'THB' ? 0 : 2;
+    const symbol = CURRENCY_SYMBOLS[currency] || currency;
 
-    // Use Intl.NumberFormat to get the correct currency format
-    return new Intl.NumberFormat(locale, {
-      style: 'currency',
-      currency: currency,
-      currencyDisplay: 'symbol',
-      minimumFractionDigits: minimumFractionDigits,
-    }).format(amount);
+    // Set fraction digits to 0 for MMK and THB, and 2 for all others
+    const minimumFractionDigits =
+      currency === 'MMK' || currency === 'THB' ? 0 : 2;
+
+    let formattedAmount: string;
+
+    // ✅ REVISED: Check for Burmese language and format numbers accordingly
+    if (locale === 'my') {
+      formattedAmount = new Intl.NumberFormat('my-MM', {
+        style: 'decimal',
+        minimumFractionDigits: minimumFractionDigits,
+        maximumFractionDigits: minimumFractionDigits,
+        numberingSystem: 'mymr', // This will convert numbers to Burmese numerals
+      }).format(amount);
+    } else {
+      // Use standard formatting for other languages
+      formattedAmount = new Intl.NumberFormat(locale, {
+        style: 'decimal',
+        minimumFractionDigits: minimumFractionDigits,
+        maximumFractionDigits: minimumFractionDigits,
+      }).format(amount);
+    }
+
+    // // Place the symbol after the amount for MMK and THB
+    // if (currency === 'MMK' || currency === 'THB') {
+    //   return `${formattedAmount} ${symbol}`;
+    // } else {
+    //   // Place the symbol before the amount for all other currencies
+    //   return `${symbol}${formattedAmount}`;
+    // }
+
+    return `${formattedAmount} ${symbol}`;
   }
 
   onTimeRangeChange(): void {

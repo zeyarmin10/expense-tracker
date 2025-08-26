@@ -1,3 +1,7 @@
+.card-body p {
+  margin-bottom: 0;
+}
+
 /* Add a subtle shine effect to valid buttons */
 .shine-effect {
   position: relative;

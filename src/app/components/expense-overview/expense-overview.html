@@ -94,7 +94,10 @@
                     </h6>
                     <span class="card-title expense-amount fs-1">
                       {{
-                        formatCurrency(summary.totalExpenses, summary.currency)
+                        formatAmountWithSymbol(
+                          summary.totalExpenses,
+                          summary.currency
+                        )
                       }}
                     </span>
                     <h6 class="text-muted fw-bold mt-2">
@@ -102,7 +105,10 @@
                     </h6>
                     <h5 class="card-title text-info m-0 p-0">
                       {{
-                        formatCurrency(summary.dailyAverage, summary.currency)
+                        formatAmountWithSymbol(
+                          summary.dailyAverage,
+                          summary.currency
+                        )
                       }}
                     </h5>
                   </div>
@@ -120,7 +126,7 @@
                     <h6 class="text-muted mb-2">
                       {{ "MOST_EXPENSIVE_CATEGORY" | translate }}
                     </h6>
-                    <h4 class="card-title">{{ mostExpenseCategory }}</h4>
+                    <h4 class="card-title m-0">{{ mostExpenseCategory }}</h4>
                   </div>
                 </div>
               </div>
@@ -166,7 +172,9 @@
                 (click)="filterByCategory(total.category)"
               >
                 {{ total.category }} :
-                <span>{{ formatCurrency(total.total, total.currency) }}</span>
+                <span>{{
+                  formatAmountWithSymbol(total.total, total.currency)
+                }}</span>
               </button>
             </div>
 
@@ -211,7 +219,12 @@
                     <td class="hide-mobile-views">{{ expense.category }}</td>
                     <td class="ps-1 pe-1">{{ expense.itemName }}</td>
                     <td class="text-end expense-amount ps-1 pe-1">
-                      {{ formatCurrency(expense.totalCost, expense.currency) }}
+                      {{
+                        formatAmountWithSymbol(
+                          expense.totalCost,
+                          expense.currency
+                        )
+                      }}
                     </td>
                   </tr>
                 </tbody>
