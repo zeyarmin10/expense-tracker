@@ -50,6 +50,10 @@
   .edit-tr td {
     padding-bottom: 0;
   }
+  .mobile-card-view {
+    padding: 0;
+    padding-top: 0.5rem;
+  }
   .mobile-card-view .row {
     padding-bottom: 0.5rem !important;
   }
@@ -181,4 +185,8 @@ fa-icon {
 .currency-select {
   max-width: 20%;
   display: none;
+}
+
+.expense-amount {
+  color: #d97706;
 }

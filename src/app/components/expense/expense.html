@@ -255,18 +255,17 @@
               <div class="d-flex flex-wrap gap-2">
                 <button
                   type="button"
-                  class="btn btn-outline-info text-wrap total-btn mb-2"
+                  class="btn btn-outline-warning text-wrap total-btn mb-2"
                   *ngFor="let total of totals | keyvalue"
                   (click)="filterByCurrency(total.key)"
                   style="padding: 3px 5px"
                 >
-                  <strong
-                    >{{
+                  <span class="expense-amount">
+                    {{
                       "TOTAL_FOR_CURRENCY"
                         | translate : { currency: total.key }
-                    }}:</strong
-                  >
-                  {{ formatAmountWithSymbol(total.value, total.key) }}
+                    }}: {{ formatAmountWithSymbol(total.value, total.key) }}
+                  </span>
                 </button>
               </div>
             </div>
@@ -364,7 +363,7 @@
                 <ng-container *ngFor="let expense of expenses">
                   <tr *ngIf="editingExpenseId !== expense.id">
                     <td class="d-md-none mobile-card-view border rounded-2">
-                      <div class="row">
+                      <div class="row p-0 m-0">
                         <div class="col-6 mobile-label">
                           {{ "DATE_LABEL" | translate }}
                         </div>
@@ -372,7 +371,7 @@
                           {{ formatLocalizedDate(expense.date) }}
                         </div>
                       </div>
-                      <div class="row">
+                      <div class="row p-0 m-0">
                         <div class="col-6 mobile-label">
                           {{ "CATEGORY_LABEL" | translate }}
                         </div>
@@ -380,7 +379,7 @@
                           {{ expense.category }}
                         </div>
                       </div>
-                      <div class="row">
+                      <div class="row p-0 m-0">
                         <div class="col-6 mobile-label">
                           {{ "ITEM_NAME_LABEL" | translate }}
                         </div>
@@ -388,7 +387,7 @@
                           {{ expense.itemName }}
                         </div>
                       </div>
-                      <div class="row">
+                      <div class="row p-0 m-0">
                         <div class="col-6 mobile-label">
                           {{ "QUANTITY_LABEL" | translate }}
                         </div>
@@ -396,7 +395,7 @@
                           {{ expense.quantity }}
                         </div>
                       </div>
-                      <div class="row">
+                      <div class="row p-0 m-0">
                         <div class="col-6 mobile-label">
                           {{ "PRICE_LABEL" | translate }}
                         </div>
@@ -409,11 +408,11 @@
                           }}
                         </div>
                       </div>
-                      <div class="row">
+                      <div class="row p-0 m-0">
                         <div class="col-6 mobile-label">
                           {{ "TOTAL_COST_LABEL" | translate }}
                         </div>
-                        <div class="col-6 mobile-value text-end text-danger">
+                        <div class="col-6 mobile-value text-end expense-amount">
                           {{
                             formatAmountWithSymbol(
                               expense.totalCost,
@@ -422,7 +421,7 @@
                           }}
                         </div>
                       </div>
-                      <div class="row">
+                      <div class="row p-0 m-0">
                         <div class="col-6 mobile-label">
                           {{ "ACTIONS_LABEL" | translate }}
                         </div>
@@ -504,7 +503,7 @@
                     <input type="hidden" formControlName="updatedAt" />
                     <td>
                       <div
-                        class="col-6 mobile-label d-flex d-md-none justitify-content-between w-100"
+                        class="mobile-label d-flex d-md-none justitify-content-between w-100"
                       >
                         <strong class="w-100">{{
                           "DATE_LABEL" | translate
@@ -524,7 +523,7 @@
                     </td>
                     <td>
                       <div
-                        class="col-6 mobile-label d-flex d-md-none justitify-content-between w-100"
+                        class="mobile-label d-flex d-md-none justitify-content-between w-100"
                       >
                         <strong class="w-100">{{
                           "CATEGORY_LABEL" | translate
@@ -550,7 +549,7 @@
                     </td>
                     <td>
                       <div
-                        class="col-6 mobile-label d-flex d-md-none justitify-content-between w-100"
+                        class="mobile-label d-flex d-md-none justitify-content-between w-100"
                       >
                         <strong class="w-100">{{
                           "ITEM_NAME_LABEL" | translate
@@ -570,7 +569,7 @@
                     </td>
                     <td>
                       <div
-                        class="col-6 mobile-label d-flex d-md-none justitify-content-between w-100"
+                        class="mobile-label d-flex d-md-none justitify-content-between w-100"
                       >
                         <strong class="w-100">{{
                           "QUANTITY_LABEL" | translate
@@ -601,7 +600,7 @@
                     </td>
                     <td>
                       <div
-                        class="col-6 mobile-label d-flex d-md-none justitify-content-between w-100"
+                        class="mobile-label d-flex d-md-none justitify-content-between w-100"
                       >
                         <strong class="w-100">{{
                           "PRICE_LABEL" | translate
@@ -637,12 +636,12 @@
                     </td>
                     <td class="fw-bold">
                       <div
-                        class="col-6 mobile-label d-flex d-md-none justitify-content-between w-100"
+                        class="mobile-label d-flex d-md-none justitify-content-between w-100"
                       >
                         <strong class="w-100">{{
                           "TOTAL_COST_LABEL" | translate
                         }}</strong>
-                        <span class="w-100 text-end text-danger">
+                        <span class="w-100 text-end expense-amount">
                           {{
                             formatAmountWithSymbol(
                               editingForm.value.price *
@@ -655,7 +654,7 @@
                     </td>
                     <td class="text-end text-nowrap">
                       <div
-                        class="col-6 mobile-label d-flex d-md-none justitify-content-between w-100 pb-2"
+                        class="mobile-label d-flex d-md-none justitify-content-between w-100 pb-2"
                       >
                         <strong class="w-100 text-start">
                           {{ "ACTIONS_LABEL" | translate }}
