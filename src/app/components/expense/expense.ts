@@ -719,4 +719,17 @@ export class Expense implements OnInit {
       );
     }
   }
+  formatLocalizedNumber(amount: number): string {
+    const currentLang = this.translate.currentLang;
+    const currency = this.newExpenseForm.get('currency')?.value || 'MMK';
+    if (currentLang === 'my' && currency === 'MMK') {
+      return new Intl.NumberFormat('my-MM', {
+        numberingSystem: 'mymr',
+        style: 'decimal',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }).format(amount);
+    }
+    return amount.toLocaleString(currentLang);
+  }
 }

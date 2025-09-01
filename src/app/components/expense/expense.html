@@ -392,7 +392,8 @@
                           {{ "QUANTITY_LABEL" | translate }}
                         </div>
                         <div class="col-6 mobile-value">
-                          {{ expense.quantity }}
+                          {{ formatLocalizedNumber(expense.quantity) }}
+                          {{ expense.unit }}
                         </div>
                       </div>
                       <div class="row p-0 m-0">
@@ -461,14 +462,15 @@
                       {{ expense.itemName }}
                     </td>
                     <td class="d-none d-md-table-cell">
-                      {{ expense.quantity }} {{ expense.unit }}
+                      {{ formatLocalizedNumber(expense.quantity) }}
+                      {{ expense.unit }}
                     </td>
                     <td class="d-none d-md-table-cell">
                       {{
                         formatAmountWithSymbol(expense.price, expense.currency)
                       }}
                     </td>
-                    <td class="d-none d-md-table-cell">
+                    <td class="d-none d-md-table-cell expense-amount fw-bold">
                       {{
                         formatAmountWithSymbol(
                           expense.totalCost,
@@ -502,6 +504,9 @@
                   >
                     <input type="hidden" formControlName="updatedAt" />
                     <td>
+                      <span class="d-none d-md-block">
+                        {{ formatLocalizedDate(editingForm.value.date) }}
+                      </span>
                       <div
                         class="mobile-label d-flex d-md-none justitify-content-between w-100"
                       >
@@ -509,19 +514,28 @@
                           "DATE_LABEL" | translate
                         }}</strong>
                         <div class="w-100">
-                          <input
-                            type="date"
-                            class="form-control form-control-sm"
-                            formControlName="date"
-                            [class.is-invalid]="
-                              editingForm.controls['date'].invalid &&
-                              editingForm.controls['date'].touched
-                            "
-                          />
+                          <span class="w-100 text-end d-inline-block">
+                            {{ formatLocalizedDate(editingForm.value.date) }}
+                          </span>
                         </div>
                       </div>
                     </td>
                     <td>
+                      <select
+                        class="d-none d-md-block form-select form-select-sm"
+                        formControlName="category"
+                        [class.is-invalid]="
+                          editingForm.controls['category'].invalid &&
+                          editingForm.controls['category'].touched
+                        "
+                      >
+                        <option
+                          *ngFor="let cat of categories$ | async"
+                          [value]="cat.name"
+                        >
+                          {{ cat.name }}
+                        </option>
+                      </select>
                       <div
                         class="mobile-label d-flex d-md-none justitify-content-between w-100"
                       >
@@ -548,6 +562,15 @@
                       </div>
                     </td>
                     <td>
+                      <input
+                        type="text"
+                        class="d-none d-md-block form-control form-control-sm"
+                        formControlName="itemName"
+                        [class.is-invalid]="
+                          editingForm.controls['itemName'].invalid &&
+                          editingForm.controls['itemName'].touched
+                        "
+                      />
                       <div
                         class="mobile-label d-flex d-md-none justitify-content-between w-100"
                       >
@@ -568,6 +591,21 @@
                       </div>
                     </td>
                     <td>
+                      <div
+                        class="input-group input-group-sm w-100 d-none d-md-block"
+                      >
+                        <input
+                          type="number"
+                          class="form-control w-100 rounded-end-1"
+                          formControlName="quantity"
+                          min="0.01"
+                          [class.is-invalid]="
+                            editingForm.controls['quantity'].invalid &&
+                            editingForm.controls['quantity'].touched
+                          "
+                        />
+                        <span>{{ editingForm.value.uint }}</span>
+                      </div>
                       <div
                         class="mobile-label d-flex d-md-none justitify-content-between w-100"
                       >
@@ -599,6 +637,20 @@
                       </div>
                     </td>
                     <td>
+                      <div
+                        class="input-group input-group-sm w-100 d-none d-md-block"
+                      >
+                        <input
+                          type="number"
+                          class="form-control rounded-end-1 w-100"
+                          formControlName="price"
+                          min="0"
+                          [class.is-invalid]="
+                            editingForm.controls['price'].invalid &&
+                            editingForm.controls['price'].touched
+                          "
+                        />
+                      </div>
                       <div
                         class="mobile-label d-flex d-md-none justitify-content-between w-100"
                       >
@@ -635,6 +687,15 @@
                       </div>
                     </td>
                     <td class="fw-bold">
+                      <span class="w-100 expense-amount d-none d-md-block">
+                        {{
+                          formatAmountWithSymbol(
+                            editingForm.value.price *
+                              editingForm.value.quantity,
+                            editingForm.value.currency
+                          )
+                        }}
+                      </span>
                       <div
                         class="mobile-label d-flex d-md-none justitify-content-between w-100"
                       >
@@ -653,6 +714,31 @@
                       </div>
                     </td>
                     <td class="text-end text-nowrap">
+                      <div
+                        class="w-100 d-flex justify-content-end d-none d-md-block"
+                      >
+                        <button
+                          class="btn btn-sm me-2 ps-4 pe-4"
+                          [ngClass]="{
+                            'btn-outline-success': true,
+                            'shine-effect': !editingForm.invalid
+                          }"
+                          (click)="saveEdit()"
+                          [disabled]="editingForm.invalid"
+                          [attr.aria-label]="'EXPENSE_SAVE_BUTTON' | translate"
+                        >
+                          <fa-icon [icon]="faSave"></fa-icon>
+                        </button>
+                        <button
+                          class="btn btn-sm btn-outline-danger"
+                          (click)="cancelEdit()"
+                          [attr.aria-label]="
+                            'EXPENSE_CANCEL_BUTTON' | translate
+                          "
+                        >
+                          <fa-icon [icon]="faTimes"></fa-icon>
+                        </button>
+                      </div>
                       <div
                         class="mobile-label d-flex d-md-none justitify-content-between w-100 pb-2"
                       >

@@ -1,9 +1,9 @@
 import { Currency } from '../models/currency.model';
 
 export const AVAILABLE_CURRENCIES: Currency[] = [
-  { code: 'USD', symbol: '$', name: 'US Dollar' },
+  { code: 'USD', symbol: 'US$', name: 'US Dollar' },
   { code: 'CNY', symbol: '¥', name: 'Chinese Yuan' },
-  { code: 'MMK', symbol: 'K', name: 'Myanmar Kyat' },
+  { code: 'MMK', symbol: 'Ks', name: 'Myanmar Kyat' },
   { code: 'SGD', symbol: 'S$', name: 'Singapore Dollar' },
   { code: 'MYR', symbol: 'RM', name: 'Malaysian Ringgit' },
   { code: 'THB', symbol: '฿', name: 'Thai Baht' },
@@ -16,20 +16,20 @@ export const AVAILABLE_CURRENCIES: Currency[] = [
   { code: 'EUR', symbol: '€', name: 'Euro' },
   { code: 'JPY', symbol: '¥', name: 'Japan Yen' },
   { code: 'KRW', symbol: '₩', name: 'South Korean Won' },
-  { code: 'AUD', symbol: '$', name: 'Australian Dollar' },
+  { code: 'AUD', symbol: 'AUD$', name: 'Australian Dollar' },
   { code: 'GBP', symbol: '£', name: 'Pound Sterling' },
-  { code: 'NZD', symbol: '$', name: 'New Zealand Dollar' },
+  { code: 'NZD', symbol: 'NZD$', name: 'New Zealand Dollar' },
   { code: 'INR', symbol: '₹', name: 'Indian Rupee' },
   { code: 'AED', symbol: 'د.إ', name: 'United Arab Emirates Dirham' },
-  { code: 'CAD', symbol: '$', name: 'Canadian Dollar' },
+  { code: 'CAD', symbol: 'CAD$', name: 'Canadian Dollar' },
   { code: 'RUB', symbol: '₽', name: 'Russian Ruble' },
   { code: 'ZAR', symbol: 'R', name: 'South African Rand' },
 ];
 
 export const CURRENCY_SYMBOLS: { [key: string]: string } = {
-  USD: '$',
+  USD: 'US$',
   CNY: '¥',
-  MMK: 'K',
+  MMK: 'Ks',
   SGD: 'S$',
   MYR: 'RM',
   THB: '฿',
@@ -42,12 +42,12 @@ export const CURRENCY_SYMBOLS: { [key: string]: string } = {
   EUR: '€',
   JPY: '¥',
   KRW: '₩',
-  AUD: '$',
+  AUD: 'AUD$',
   GBP: '£',
-  NZD: '$',
+  NZD: 'NZD$',
   INR: '₹',
   AED: 'د.إ',
-  CAD: '$',
+  CAD: 'CAD$',
   RUB: '₽',
   ZAR: 'R',
 };
