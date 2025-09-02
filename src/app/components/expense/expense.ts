@@ -78,8 +78,6 @@ export class Expense implements OnInit {
   newExpenseForm: FormGroup;
   editingForm: FormGroup | null = null;
 
-  isSelectDisabled: boolean = true;
-
   expenses$: Observable<ServiceIExpense[]>;
   categories$: Observable<ServiceICategory[]> | undefined;
 
@@ -241,6 +239,9 @@ export class Expense implements OnInit {
     // });
     // Initial load of expenses
     this.loadExpenses();
+
+    // To disable the 'currency' form control
+    this.newExpenseForm.controls['currency'].disable();
 
     // --- STEP 1: Check for date in URL on component initialization ---
     // We subscribe to the route parameters to see if a 'date' exists.

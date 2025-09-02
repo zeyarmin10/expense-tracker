@@ -165,10 +165,10 @@
                   (blur)="onBlurInput($event, 'price', newExpenseForm)"
                 />
                 <select
-                  class="form-select"
+                  class="form-control ps-1 pe-1"
                   id="currency"
                   formControlName="currency"
-                  style="max-width: 5.1rem"
+                  style="max-width: 3rem"
                   [class.is-invalid]="
                     newExpenseForm.controls['currency'].invalid &&
                     newExpenseForm.controls['currency'].touched
