@@ -78,6 +78,8 @@ export class Expense implements OnInit {
   newExpenseForm: FormGroup;
   editingForm: FormGroup | null = null;
 
+  isSelectDisabled: boolean = true;
+
   expenses$: Observable<ServiceIExpense[]>;
   categories$: Observable<ServiceICategory[]> | undefined;
 

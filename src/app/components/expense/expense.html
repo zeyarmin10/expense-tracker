@@ -168,7 +168,7 @@
                   class="form-select"
                   id="currency"
                   formControlName="currency"
-                  style="max-width: 25%"
+                  style="max-width: 5.1rem"
                   [class.is-invalid]="
                     newExpenseForm.controls['currency'].invalid &&
                     newExpenseForm.controls['currency'].touched
@@ -362,7 +362,7 @@
               <tbody>
                 <ng-container *ngFor="let expense of expenses">
                   <tr *ngIf="editingExpenseId !== expense.id">
-                    <td class="d-md-none mobile-card-view border rounded-2">
+                    <td class="d-lg-none mobile-card-view border rounded-2">
                       <div class="row p-0 m-0">
                         <div class="col-6 mobile-label">
                           {{ "DATE_LABEL" | translate }}
@@ -452,25 +452,27 @@
                         </div>
                       </div>
                     </td>
-                    <td class="d-none d-md-table-cell">
+                    <td class="d-none d-lg-table-cell">
                       {{ formatLocalizedDate(expense.date) }}
                     </td>
-                    <td class="d-none d-md-table-cell">
+                    <td class="d-none d-lg-table-cell">
                       {{ expense.category }}
                     </td>
-                    <td class="d-none d-md-table-cell">
+                    <td class="d-none d-lg-table-cell">
                       {{ expense.itemName }}
                     </td>
-                    <td class="d-none d-md-table-cell">
+                    <td class="d-none d-lg-table-cell">
                       {{ formatLocalizedNumber(expense.quantity) }}
                       {{ expense.unit }}
                     </td>
-                    <td class="d-none d-md-table-cell">
+                    <td class="d-none d-lg-table-cell">
                       {{
                         formatAmountWithSymbol(expense.price, expense.currency)
                       }}
                     </td>
-                    <td class="d-none d-md-table-cell expense-amount fw-bold">
+                    <td
+                      class="d-none d-lg-table-cell expense-amount fw-bold text-end"
+                    >
                       {{
                         formatAmountWithSymbol(
                           expense.totalCost,
@@ -478,7 +480,7 @@
                         )
                       }}
                     </td>
-                    <td class="d-none d-md-table-cell text-end text-nowrap">
+                    <td class="d-none d-lg-table-cell text-end text-nowrap">
                       <button
                         class="btn btn-sm btn-outline-info me-2 ps-4 pe-4"
                         (click)="startEdit(expense)"
@@ -504,11 +506,11 @@
                   >
                     <input type="hidden" formControlName="updatedAt" />
                     <td>
-                      <span class="d-none d-md-block">
+                      <span class="d-none d-lg-block">
                         {{ formatLocalizedDate(editingForm.value.date) }}
                       </span>
                       <div
-                        class="mobile-label d-flex d-md-none justitify-content-between w-100"
+                        class="mobile-label d-flex d-lg-none justitify-content-between w-100"
                       >
                         <strong class="w-100">{{
                           "DATE_LABEL" | translate
@@ -522,7 +524,7 @@
                     </td>
                     <td>
                       <select
-                        class="d-none d-md-block form-select form-select-sm"
+                        class="d-none d-lg-block form-select form-select-sm"
                         formControlName="category"
                         [class.is-invalid]="
                           editingForm.controls['category'].invalid &&
@@ -537,7 +539,7 @@
                         </option>
                       </select>
                       <div
-                        class="mobile-label d-flex d-md-none justitify-content-between w-100"
+                        class="mobile-label d-flex d-lg-none justitify-content-between w-100"
                       >
                         <strong class="w-100">{{
                           "CATEGORY_LABEL" | translate
@@ -564,7 +566,7 @@
                     <td>
                       <input
                         type="text"
-                        class="d-none d-md-block form-control form-control-sm"
+                        class="d-none d-lg-block form-control form-control-sm"
                         formControlName="itemName"
                         [class.is-invalid]="
                           editingForm.controls['itemName'].invalid &&
@@ -572,7 +574,7 @@
                         "
                       />
                       <div
-                        class="mobile-label d-flex d-md-none justitify-content-between w-100"
+                        class="mobile-label d-flex d-lg-none justitify-content-between w-100"
                       >
                         <strong class="w-100">{{
                           "ITEM_NAME_LABEL" | translate
@@ -592,7 +594,7 @@
                     </td>
                     <td>
                       <div
-                        class="input-group input-group-sm w-100 d-none d-md-block"
+                        class="input-group input-group-sm w-100 d-none d-lg-block"
                       >
                         <input
                           type="number"
@@ -607,7 +609,7 @@
                         <span>{{ editingForm.value.uint }}</span>
                       </div>
                       <div
-                        class="mobile-label d-flex d-md-none justitify-content-between w-100"
+                        class="mobile-label d-flex d-lg-none justitify-content-between w-100"
                       >
                         <strong class="w-100">{{
                           "QUANTITY_LABEL" | translate
@@ -638,7 +640,7 @@
                     </td>
                     <td>
                       <div
-                        class="input-group input-group-sm w-100 d-none d-md-block"
+                        class="input-group input-group-sm w-100 d-none d-lg-block"
                       >
                         <input
                           type="number"
@@ -652,7 +654,7 @@
                         />
                       </div>
                       <div
-                        class="mobile-label d-flex d-md-none justitify-content-between w-100"
+                        class="mobile-label d-flex d-lg-none justitify-content-between w-100"
                       >
                         <strong class="w-100">{{
                           "PRICE_LABEL" | translate
@@ -687,7 +689,9 @@
                       </div>
                     </td>
                     <td class="fw-bold">
-                      <span class="w-100 expense-amount d-none d-md-block">
+                      <span
+                        class="w-100 expense-amount text-end d-none d-lg-block"
+                      >
                         {{
                           formatAmountWithSymbol(
                             editingForm.value.price *
@@ -697,7 +701,7 @@
                         }}
                       </span>
                       <div
-                        class="mobile-label d-flex d-md-none justitify-content-between w-100"
+                        class="mobile-label d-flex d-lg-none justitify-content-between w-100"
                       >
                         <strong class="w-100">{{
                           "TOTAL_COST_LABEL" | translate
@@ -715,7 +719,7 @@
                     </td>
                     <td class="text-end text-nowrap">
                       <div
-                        class="w-100 d-flex justify-content-end d-none d-md-block"
+                        class="w-100 d-flex justify-content-end d-none d-lg-block"
                       >
                         <button
                           class="btn btn-sm me-2 ps-4 pe-4"
@@ -740,7 +744,7 @@
                         </button>
                       </div>
                       <div
-                        class="mobile-label d-flex d-md-none justitify-content-between w-100 pb-2"
+                        class="mobile-label d-flex d-lg-none justitify-content-between w-100 pb-2"
                       >
                         <strong class="w-100 text-start">
                           {{ "ACTIONS_LABEL" | translate }}
