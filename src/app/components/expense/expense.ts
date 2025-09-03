@@ -357,7 +357,12 @@ export class Expense implements OnInit {
       return;
     }
 
-    const formData = this.newExpenseForm.value;
+    const defaultCurrency = this.userProfile?.currency || 'MMK';
+
+    const formData = {
+      ...this.newExpenseForm.value,
+      currency: defaultCurrency,
+    };
 
     try {
       await this.expenseService.addExpense(formData);
@@ -368,8 +373,7 @@ export class Expense implements OnInit {
       this.newExpenseForm.reset();
       const todayFormatted =
         this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
-      // ✅ REVISED: Use the user profile's currency to reset the form
-      const defaultCurrency = this.userProfile?.currency || 'MMK';
+
       this.newExpenseForm.patchValue({
         date: todayFormatted,
         category: '',
