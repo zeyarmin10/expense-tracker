@@ -507,7 +507,16 @@
                     <input type="hidden" formControlName="updatedAt" />
                     <td>
                       <span class="d-none d-lg-block">
-                        {{ formatLocalizedDate(editingForm.value.date) }}
+                        <input
+                          type="date"
+                          class="form-control form-control-sm"
+                          formControlName="date"
+                          [class.is-invalid]="
+                            editingForm.controls['date'].invalid &&
+                            editingForm.controls['date'].touched
+                          "
+                        />
+                        <!-- {{ formatLocalizedDate(editingForm.value.date) }} -->
                       </span>
                       <div
                         class="mobile-label d-flex d-lg-none justitify-content-between w-100"
@@ -516,9 +525,18 @@
                           "DATE_LABEL" | translate
                         }}</strong>
                         <div class="w-100">
-                          <span class="w-100 text-end d-inline-block">
+                          <input
+                            type="date"
+                            class="form-control form-control-sm"
+                            formControlName="date"
+                            [class.is-invalid]="
+                              editingForm.controls['date'].invalid &&
+                              editingForm.controls['date'].touched
+                            "
+                          />
+                          <!-- <span class="w-100 text-end d-inline-block">
                             {{ formatLocalizedDate(editingForm.value.date) }}
-                          </span>
+                          </span> -->
                         </div>
                       </div>
                     </td>
@@ -734,7 +752,7 @@
                           <fa-icon [icon]="faSave"></fa-icon>
                         </button>
                         <button
-                          class="btn btn-sm btn-outline-danger"
+                          class="btn btn-sm btn-outline-secondary"
                           (click)="cancelEdit()"
                           [attr.aria-label]="
                             'EXPENSE_CANCEL_BUTTON' | translate
@@ -765,7 +783,7 @@
                             <fa-icon [icon]="faSave"></fa-icon>
                           </button>
                           <button
-                            class="btn btn-sm btn-outline-danger"
+                            class="btn btn-sm btn-outline-secondary"
                             (click)="cancelEdit()"
                             [attr.aria-label]="
                               'EXPENSE_CANCEL_BUTTON' | translate
