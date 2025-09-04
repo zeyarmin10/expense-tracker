@@ -329,6 +329,7 @@ export class Profit implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.incomeForm.controls['currency'].disable();
     const storedLang = localStorage.getItem('selectedLanguage');
     if (storedLang) {
       this.translate.use(storedLang);
@@ -481,11 +482,12 @@ export class Profit implements OnInit, OnDestroy {
   }
 
   onSubmitIncome(): void {
+    const defaultCurrency = this.userProfile?.currency || 'MMK';
     if (this.incomeForm.valid) {
       const incomeData: Omit<ServiceIIncome, 'id' | 'userId' | 'createdAt'> = {
         description: this.incomeForm.value.description,
         amount: this.incomeForm.value.amount,
-        currency: this.incomeForm.value.currency,
+        currency: defaultCurrency,
         date: this.incomeForm.value.date,
       };
 

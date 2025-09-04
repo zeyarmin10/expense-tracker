@@ -503,6 +503,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.budgetForm.controls['currency'].disable();
     const storedLang = localStorage.getItem('selectedLanguage');
     if (storedLang) {
       this.translate.use(storedLang);
@@ -553,11 +554,12 @@ export class BudgetComponent implements OnInit, OnDestroy {
   }
 
   onSubmitBudget(): void {
+    const defaultCurrency = this.userProfile?.currency || 'MMK';
     if (this.budgetForm.valid) {
       const budgetData: Omit<ServiceIBudget, 'id' | 'userId' | 'createdAt'> = {
         type: this.budgetForm.value.type,
         amount: this.budgetForm.value.amount,
-        currency: this.budgetForm.value.currency,
+        currency: defaultCurrency,
         period:
           this.budgetForm.value.type === 'monthly'
             ? this.budgetForm.value.period
