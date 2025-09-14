@@ -264,7 +264,13 @@
                     {{
                       "TOTAL_FOR_CURRENCY"
                         | translate : { currency: total.key }
-                    }}: {{ formatAmountWithSymbol(total.value, total.key) }}
+                    }}:
+                    {{
+                      formatService.formatAmountWithSymbol(
+                        total.value,
+                        total.key
+                      )
+                    }}
                   </span>
                 </button>
               </div>
@@ -299,7 +305,7 @@
                     *ngFor="let currencyTotal of categoryTotal.value | keyvalue"
                   >
                     {{
-                      formatAmountWithSymbol(
+                      formatService.formatAmountWithSymbol(
                         currencyTotal.value,
                         currencyTotal.key
                       )
@@ -402,7 +408,7 @@
                         </div>
                         <div class="col-6 mobile-value">
                           {{
-                            formatAmountWithSymbol(
+                            formatService.formatAmountWithSymbol(
                               expense.price,
                               expense.currency
                             )
@@ -415,7 +421,7 @@
                         </div>
                         <div class="col-6 mobile-value text-end expense-amount">
                           {{
-                            formatAmountWithSymbol(
+                            formatService.formatAmountWithSymbol(
                               expense.totalCost,
                               expense.currency
                             )
@@ -467,14 +473,17 @@
                     </td>
                     <td class="d-none d-lg-table-cell">
                       {{
-                        formatAmountWithSymbol(expense.price, expense.currency)
+                        formatService.formatAmountWithSymbol(
+                          expense.price,
+                          expense.currency
+                        )
                       }}
                     </td>
                     <td
                       class="d-none d-lg-table-cell expense-amount fw-bold text-end"
                     >
                       {{
-                        formatAmountWithSymbol(
+                        formatService.formatAmountWithSymbol(
                           expense.totalCost,
                           expense.currency
                         )
@@ -711,7 +720,7 @@
                         class="w-100 expense-amount text-end d-none d-lg-block"
                       >
                         {{
-                          formatAmountWithSymbol(
+                          formatService.formatAmountWithSymbol(
                             editingForm.value.price *
                               editingForm.value.quantity,
                             editingForm.value.currency
@@ -726,7 +735,7 @@
                         }}</strong>
                         <span class="w-100 text-end expense-amount">
                           {{
-                            formatAmountWithSymbol(
+                            formatService.formatAmountWithSymbol(
                               editingForm.value.price *
                                 editingForm.value.quantity,
                               editingForm.value.currency

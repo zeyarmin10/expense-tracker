@@ -85,3 +85,6 @@ export const BURMESE_MONTH_FULL_NAMES = {
 export const BURMESE_CURRENCY_SYMBOL = 'ကျပ်';
 export const MMK_CURRENCY_CODE = 'MMK';
 export const BURMESE_LOCALE_CODE = 'my';
+
+export const THAI_CURRENCY_SYMBOL = 'ဘတ်';
+export const THB_CURRENCY_CODE = 'THB';

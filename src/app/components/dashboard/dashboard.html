@@ -37,7 +37,10 @@
                     >
                       <!-- <strong>{{ total.key }}:</strong> -->
                       <span class="income-amount">{{
-                        formatAmountWithSymbol(total.value, total.key)
+                        formatService.formatAmountWithSymbol(
+                          total.value,
+                          total.key
+                        )
                       }}</span>
                     </span>
                   </div>
@@ -79,7 +82,10 @@
                     >
                       <!-- <strong>{{ total.key }}:</strong> -->
                       <span class="budget-amount">{{
-                        formatAmountWithSymbol(total.value, total.key)
+                        formatService.formatAmountWithSymbol(
+                          total.value,
+                          total.key
+                        )
                       }}</span>
                     </span>
                   </div>
@@ -120,9 +126,14 @@
                       class="d-flex justify-content-center pb-0"
                     >
                       <!-- <strong>{{ total.key }}:</strong> -->
-                      <span class="expense-amount">{{
-                        formatAmountWithSymbol(total.value, total.key)
-                      }}</span>
+                      <span class="expense-amount">
+                        {{
+                          formatService.formatAmountWithSymbol(
+                            total.value,
+                            total.key
+                          )
+                        }}
+                      </span>
                     </span>
                   </div>
                   <ng-template #noData>
@@ -171,7 +182,12 @@
                     >
                       <!-- <strong>{{ balance.key }}:</strong> -->
                       <span [ngClass]="getBalanceAmountClass(balance.value)">
-                        {{ formatAmountWithSymbol(balance.value, balance.key) }}
+                        {{
+                          formatService.formatAmountWithSymbol(
+                            balance.value,
+                            balance.key
+                          )
+                        }}
                       </span>
                     </span>
                   </div>

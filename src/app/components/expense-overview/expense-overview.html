@@ -94,7 +94,7 @@
                     </h6>
                     <span class="card-title expense-amount fs-1">
                       {{
-                        formatAmountWithSymbol(
+                        formatService.formatAmountWithSymbol(
                           summary.totalExpenses,
                           summary.currency
                         )
@@ -105,7 +105,7 @@
                     </h6>
                     <h5 class="card-title text-info m-0 p-0">
                       {{
-                        formatAmountWithSymbol(
+                        formatService.formatAmountWithSymbol(
                           summary.dailyAverage,
                           summary.currency
                         )
@@ -173,7 +173,10 @@
               >
                 {{ total.category }} :
                 <span>{{
-                  formatAmountWithSymbol(total.total, total.currency)
+                  formatService.formatAmountWithSymbol(
+                    total.total,
+                    total.currency
+                  )
                 }}</span>
               </button>
             </div>
@@ -219,7 +222,7 @@
                     <td class="ps-1 pe-1">{{ expense.itemName }}</td>
                     <td class="text-end expense-amount ps-1 pe-1">
                       {{
-                        formatAmountWithSymbol(
+                        formatService.formatAmountWithSymbol(
                           expense.totalCost,
                           expense.currency
                         )

@@ -49,6 +49,8 @@ import {
   MMK_CURRENCY_CODE,
 } from '../../core/constants/app.constants';
 
+import { FormatService } from '../../services/format.service';
+
 Chart.register(...registerables);
 
 @Component({
@@ -84,6 +86,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   public datePipe = inject(DatePipe);
   private router = inject(Router);
   private destroy$ = new Subject<void>();
+  public formatService = inject(FormatService);
 
   @ViewChild('expenseChartCanvas')
   private expenseChartCanvas!: ElementRef<HTMLCanvasElement>;
@@ -405,53 +408,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.datePipe.transform(date, 'fullDate', '', currentLang) || dateStr
       );
     }
-  }
-
-  /**
-   * Formats the amount with the correct symbol and decimal points.
-   * Removes decimals for MMK currency and adds thousands separators.
-   */
-  formatAmountWithSymbol(amount: number, currencyCode: string): string {
-    const locale = this.translate.currentLang;
-    const currency = currencyCode.toUpperCase();
-    const symbol = CURRENCY_SYMBOLS[currency] || currency;
-
-    // Set fraction digits to 0 for MMK and THB, and 2 for all others
-    const minimumFractionDigits =
-      currency === 'MMK' || currency === 'THB' ? 0 : 2;
-
-    let formattedAmount: string;
-
-    // ✅ REVISED: Check for Burmese language and format numbers accordingly
-    if (locale === 'my') {
-      formattedAmount = new Intl.NumberFormat('my-MM', {
-        style: 'decimal',
-        minimumFractionDigits: minimumFractionDigits,
-        maximumFractionDigits: minimumFractionDigits,
-        numberingSystem: 'mymr', // This will convert numbers to Burmese numerals
-      }).format(amount);
-    } else {
-      // Use standard formatting for other languages
-      formattedAmount = new Intl.NumberFormat(locale, {
-        style: 'decimal',
-        minimumFractionDigits: minimumFractionDigits,
-        maximumFractionDigits: minimumFractionDigits,
-      }).format(amount);
-    }
-
-    // // Place the symbol after the amount for MMK and THB
-    // if (currency === 'MMK' || currency === 'THB') {
-    //   return `${formattedAmount} ${symbol}`;
-    // } else {
-    //   // Place the symbol before the amount for all other currencies
-    //   return `${symbol}${formattedAmount}`;
-    // }
-
-    if (locale === BURMESE_LOCALE_CODE && currency === MMK_CURRENCY_CODE) {
-      return `${formattedAmount} ${BURMESE_CURRENCY_SYMBOL}`;
-    }
-
-    return `${formattedAmount} ${symbol}`;
   }
 
   onTimeRangeChange(): void {

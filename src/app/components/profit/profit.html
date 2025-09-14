@@ -185,7 +185,10 @@
                       </span>
                       <span>
                         <span class="text-success">{{
-                          formatAmountWithSymbol(income.amount, income.currency)
+                          formatService.formatAmountWithSymbol(
+                            income.amount,
+                            income.currency
+                          )
                         }}</span>
                         {{ income.description ? " - " : "" }}
                         {{ income.description }}
@@ -265,7 +268,7 @@
                               }"
                             >
                               {{
-                                formatAmountWithSymbol(
+                                formatService.formatAmountWithSymbol(
                                   profitLosses[currency.code],
                                   currency.code
                                 )
@@ -315,7 +318,10 @@
                     <div *ngFor="let total of totals | keyvalue" class="pb-0">
                       <!-- <span>{{ total.key }}:</span> -->
                       <span class="income-amount text-center">{{
-                        formatAmountWithSymbol(total.value, total.key)
+                        formatService.formatAmountWithSymbol(
+                          total.value,
+                          total.key
+                        )
                       }}</span>
                     </div>
                   </div>
@@ -355,7 +361,10 @@
                     <div *ngFor="let total of totals | keyvalue">
                       <!-- <span>{{ total.key }}:</span> -->
                       <span class="expense-amount text-center">{{
-                        formatAmountWithSymbol(total.value, total.key)
+                        formatService.formatAmountWithSymbol(
+                          total.value,
+                          total.key
+                        )
                       }}</span>
                     </div>
                   </div>
@@ -404,7 +413,12 @@
                         [ngClass]="getBalanceAmountClass(balance.value)"
                         class="text-center"
                       >
-                        {{ formatAmountWithSymbol(balance.value, balance.key) }}
+                        {{
+                          formatService.formatAmountWithSymbol(
+                            balance.value,
+                            balance.key
+                          )
+                        }}
                       </span>
                     </div>
                   </div>
