@@ -126,6 +126,11 @@
   }
 }
 
+.net-profit-card {
+  border: 2px solid #32c9ee;
+  background: linear-gradient(135deg, #f1fcff, #dbf7ff);
+}
+
 /* Income */
 .income-card {
   border: 2px solid #22c55e;
