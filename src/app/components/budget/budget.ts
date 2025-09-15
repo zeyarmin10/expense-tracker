@@ -454,7 +454,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
           monthDates.push(new Date(current));
           current.setMonth(current.getMonth() + 1);
         }
-        console.log('labels: ', labels);
 
         // Map sortedMonthlyData by label for quick lookup
         const monthlyDataMap = new Map<
@@ -472,7 +471,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
         const expenseAmounts: number[] = labels.map(
           (label) => monthlyDataMap.get(label)?.expense ?? 0
         );
-        console.log('labels: ', labels);
 
         // const expenseAmounts: number[] = sortedMonthlyData.map(
         //   (item) => item.data.expense

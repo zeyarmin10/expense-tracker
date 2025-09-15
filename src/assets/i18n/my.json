@@ -336,5 +336,7 @@
   },
   "QUANTITY_LABEL": "အရေအတွက်",
   "PRICE_LABEL": "စျေးနှုန်း",
-  "ACTIONS_LABEL": "ပြင်၊ ဖျက်"
+  "ACTIONS_LABEL": "ပြင်၊ ဖျက်",
+  "LAST_MONTH": "ပြီးခဲ့သောလ",
+  "LAST_SIX_MONTHS": "ပြီးခဲ့သော ၆ လ"
 }

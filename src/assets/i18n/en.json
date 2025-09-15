@@ -336,5 +336,7 @@
   },
   "QUANTITY_LABEL": "Quantity",
   "PRICE_LABEL": "Price",
-  "ACTIONS_LABEL": "Actions"
+  "ACTIONS_LABEL": "Actions",
+  "LAST_MONTH": "Last Month",
+  "LAST_SIX_MONTHS": "Last Six Month"
 }

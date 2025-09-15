@@ -27,6 +27,10 @@ import {
 } from '../../core/constants/app.constants';
 
 import { FormatService } from '../../services/format.service';
+import {
+  DateFilterService,
+  DateRange,
+} from '../../services/date-filter.service';
 
 // Register the required chart components
 Chart.register(PieController, ArcElement, Tooltip, Legend);
@@ -59,6 +63,7 @@ interface CategoryTotal {
 })
 export class ExpenseOverview implements OnInit {
   expenseService = inject(ExpenseService);
+  dateFilterService = inject(DateFilterService);
   datePipe = inject(DatePipe);
   translate = inject(TranslateService);
 
@@ -105,6 +110,16 @@ export class ExpenseOverview implements OnInit {
   router = inject(Router);
 
   ngOnInit(): void {
+    // set the default date for custom date selection
+    const now = new Date();
+    const oneYearAgo = new Date(
+      now.getFullYear() - 1,
+      now.getMonth(),
+      now.getDate()
+    );
+    this.startDate = this.datePipe.transform(oneYearAgo, 'yyyy-MM-dd') || '';
+    this.endDate = this.datePipe.transform(now, 'yyyy-MM-dd') || '';
+
     this.setDateFilter('custom');
 
     this.filteredExpenses$ = combineLatest([
@@ -154,60 +169,22 @@ export class ExpenseOverview implements OnInit {
   }
 
   // --- Methods for Filtering and Calculations ---
-  dateFilter$ = new BehaviorSubject<{ start: string; end: string }>({
-    start: '',
-    end: '',
-  });
+  dateFilter$ = new BehaviorSubject<DateRange>({ start: '', end: '' });
   searchFilter$ = new BehaviorSubject<string>('');
 
   setDateFilter(filter: string): void {
     this.selectedDateFilter = filter;
-    let startDate: Date;
-    let endDate: Date;
-    const now = new Date();
 
-    switch (filter) {
-      case 'currentMonth':
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-        endDate = now;
-        break;
-      case 'last30Days':
-        startDate = new Date(now.setDate(now.getDate() - 30));
-        endDate = new Date();
-        break;
-      case 'currentYear':
-        startDate = new Date(now.getFullYear(), 0, 1);
-        endDate = now;
-        break;
-      case 'lastYear':
-        startDate = new Date(now.getFullYear() - 1, 0, 1);
-        endDate = new Date(now.getFullYear() - 1, 11, 31);
-        break;
-      case 'custom':
-      default:
-        // // Prevent creating an invalid date if start or end dates are not set
-        // Set default to "1 year ago" if custom dates are not set
-        if (!this.startDate || !this.endDate) {
-          const oneYearAgo = new Date(
-            now.getFullYear() - 1,
-            now.getMonth(),
-            now.getDate()
-          );
-          this.startDate =
-            this.datePipe.transform(oneYearAgo, 'yyyy-MM-dd') || '';
-          this.endDate = this.datePipe.transform(now, 'yyyy-MM-dd') || '';
-        }
-        startDate = new Date(this.startDate);
-        endDate = new Date(this.endDate);
-        break;
-    }
-    // Ensure the end date includes the full day
-    endDate.setHours(23, 59, 59, 999);
+    // ✅ Pass the injected datePipe instance to the service method
+    const dateRange = this.dateFilterService.getDateRange(
+      this.datePipe,
+      filter,
+      this.startDate,
+      this.endDate
+    );
+    console.log('date range => ', dateRange);
 
-    this.dateFilter$.next({
-      start: this.datePipe.transform(startDate, 'yyyy-MM-dd') || '',
-      end: this.datePipe.transform(endDate, 'yyyy-MM-dd') || '',
-    });
+    this.dateFilter$.next(dateRange);
   }
 
   onSearch(): void {
