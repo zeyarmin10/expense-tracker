@@ -182,7 +182,6 @@ export class ExpenseOverview implements OnInit {
       this.startDate,
       this.endDate
     );
-    console.log('date range => ', dateRange);
 
     this.dateFilter$.next(dateRange);
   }

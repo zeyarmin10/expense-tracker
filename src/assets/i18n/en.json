@@ -241,6 +241,8 @@
   "EXPENSE_OVERVIEW_TITLE": "Expense Overview",
   "CURRENT_MONTH": "Current Month",
   "LAST_30_DAYS": "Last 30 Days",
+  "LAST_MONTH": "Last Month",
+  "LAST_SIX_MONTHS": "Last Six Month",
   "CURRENT_YEAR": "Current Year",
   "LAST_YEAR": "Last Year",
   "CUSTOM_DATE": "Custom Date",
@@ -336,7 +338,5 @@
   },
   "QUANTITY_LABEL": "Quantity",
   "PRICE_LABEL": "Price",
-  "ACTIONS_LABEL": "Actions",
-  "LAST_MONTH": "Last Month",
-  "LAST_SIX_MONTHS": "Last Six Month"
+  "ACTIONS_LABEL": "Actions"
 }

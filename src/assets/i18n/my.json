@@ -240,7 +240,9 @@
   "NAV_EXPENSE_OVERVIEW": "အသုံးစရိတ်သုံးသပ်ချက်",
   "EXPENSE_OVERVIEW_TITLE": "အသုံးစရိတ် ခြုံငုံသုံးသပ်ချက်",
   "CURRENT_MONTH": "ဒီလ",
-  "LAST_30_DAYS": "လွန်ခဲ့သော ရက် ၃၀",
+  "LAST_30_DAYS": "လွန်ခဲ့တဲ့ရက် ၃၀",
+  "LAST_MONTH": "ပြီးခဲ့တဲ့လ",
+  "LAST_SIX_MONTHS": "ပြီးခဲ့တဲ့ ၆ လ",
   "CURRENT_YEAR": "ဒီနှစ်",
   "LAST_YEAR": "မနှစ်က",
   "CUSTOM_DATE": "စိတ်ကြိုက်ရက်စွဲ",
@@ -336,7 +338,5 @@
   },
   "QUANTITY_LABEL": "အရေအတွက်",
   "PRICE_LABEL": "စျေးနှုန်း",
-  "ACTIONS_LABEL": "ပြင်၊ ဖျက်",
-  "LAST_MONTH": "ပြီးခဲ့သောလ",
-  "LAST_SIX_MONTHS": "ပြီးခဲ့သော ၆ လ"
+  "ACTIONS_LABEL": "ပြင်၊ ဖျက်"
 }

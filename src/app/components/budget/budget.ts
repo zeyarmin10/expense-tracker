@@ -42,6 +42,10 @@ import {
 } from '../../core/constants/app.constants';
 
 import { FormatService } from '../../services/format.service';
+import {
+  DateFilterService,
+  DateRange,
+} from '../../services/date-filter.service';
 
 Chart.register(...registerables);
 
@@ -75,6 +79,7 @@ interface MonthlySummaryItem {
 })
 export class BudgetComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
+  private dateFilterService = inject(DateFilterService);
   public datePipe = inject(DatePipe);
   private budgetService = inject(BudgetService);
   private expenseService = inject(ExpenseService);
@@ -117,9 +122,10 @@ export class BudgetComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private userDataService = inject(UserDataService);
 
-  selectedDateFilter: string = 'custom';
-  startDate: string = '';
-  endDate: string = '';
+  public selectedDateFilter: string = 'custom';
+  public startDate: string | null = null;
+  public endDate: string | null = null;
+  public dateFilter$ = new BehaviorSubject<DateRange>({ start: '', end: '' });
   userProfile: UserProfile | null = null;
 
   availableCurrencies = AVAILABLE_CURRENCIES;
@@ -127,6 +133,17 @@ export class BudgetComponent implements OnInit, OnDestroy {
   private subscriptions: Subscription = new Subscription();
 
   constructor() {
+    const now = new Date();
+    const oneYearAgo = new Date(
+      now.getFullYear() - 1,
+      now.getMonth(),
+      now.getDate()
+    );
+
+    // ✅ FIXED: Initialize start and end dates here
+    this.startDate = this.datePipe.transform(oneYearAgo, 'yyyy-MM-dd');
+    this.endDate = this.datePipe.transform(now, 'yyyy-MM-dd');
+
     this.budgetForm = this.fb.group({
       type: ['monthly', Validators.required],
       amount: ['', [Validators.required, Validators.min(0.01)]],
@@ -149,57 +166,83 @@ export class BudgetComponent implements OnInit, OnDestroy {
 
     this.expenses$ = this.expenseService.getExpenses();
 
-    const oneYearAgo = new Date();
-    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
     this.startDate = this.datePipe.transform(oneYearAgo, 'yyyy-MM-dd') || '';
     this.endDate = this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
     this._startDate$.next(this.startDate);
     this._endDate$.next(this.endDate);
 
+    // const filteredData$ = combineLatest([
+    //   this.budgets$,
+    //   this.expenses$,
+    //   this._selectedDateRange$,
+    //   this._startDate$,
+    //   this._endDate$,
+    // ]).pipe(
+    //   map(([budgets, expenses, dateRange, startDate, endDate]) => {
+    //     const now = new Date();
+    //     let start: Date;
+    //     let end: Date = now;
+
+    //     switch (dateRange) {
+    //       case 'last30Days':
+    //         start = new Date(
+    //           now.getFullYear(),
+    //           now.getMonth(),
+    //           now.getDate() - 30
+    //         );
+    //         break;
+    //       case 'currentMonth':
+    //         start = new Date(now.getFullYear(), now.getMonth(), 1);
+    //         end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    //         break;
+    //       case 'currentYear':
+    //         start = new Date(now.getFullYear(), 0, 1);
+    //         end = new Date(now.getFullYear(), 11, 31);
+    //         break;
+    //       case 'lastYear':
+    //         start = new Date(now.getFullYear() - 1, 0, 1);
+    //         end = new Date(now.getFullYear() - 1, 11, 31);
+    //         break;
+    //       case 'custom':
+    //         start = new Date(startDate);
+    //         end = new Date(endDate);
+    //         break;
+    //       default:
+    //         start = new Date(now.getFullYear(), 0, 1);
+    //         break;
+    //     }
+
+    //     if (dateRange !== 'last30Days') {
+    //       end.setHours(23, 59, 59, 999);
+    //     }
+
+    //     const filteredBudgets = budgets.filter((b) => {
+    //       if (b.type === 'monthly' && b.period) {
+    //         const budgetDate = new Date(b.period);
+    //         return budgetDate >= start && budgetDate <= end;
+    //       }
+    //       return false;
+    //     });
+
+    //     const filteredExpenses = expenses.filter((e) => {
+    //       const expenseDate = new Date(e.date);
+    //       return expenseDate >= start && expenseDate <= end;
+    //     });
+
+    //     return { budgets: filteredBudgets, expenses: filteredExpenses };
+    //   })
+    // );
+
+    // ✅ REVISED: Use the dateFilter$ observable to get the date range
     const filteredData$ = combineLatest([
       this.budgets$,
       this.expenses$,
-      this._selectedDateRange$,
-      this._startDate$,
-      this._endDate$,
+      this.dateFilter$, // ✅ Use the new date filter observable
     ]).pipe(
-      map(([budgets, expenses, dateRange, startDate, endDate]) => {
-        const now = new Date();
-        let start: Date;
-        let end: Date = now;
-
-        switch (dateRange) {
-          case 'last30Days':
-            start = new Date(
-              now.getFullYear(),
-              now.getMonth(),
-              now.getDate() - 30
-            );
-            break;
-          case 'currentMonth':
-            start = new Date(now.getFullYear(), now.getMonth(), 1);
-            end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-            break;
-          case 'currentYear':
-            start = new Date(now.getFullYear(), 0, 1);
-            end = new Date(now.getFullYear(), 11, 31);
-            break;
-          case 'lastYear':
-            start = new Date(now.getFullYear() - 1, 0, 1);
-            end = new Date(now.getFullYear() - 1, 11, 31);
-            break;
-          case 'custom':
-            start = new Date(startDate);
-            end = new Date(endDate);
-            break;
-          default:
-            start = new Date(now.getFullYear(), 0, 1);
-            break;
-        }
-
-        if (dateRange !== 'last30Days') {
-          end.setHours(23, 59, 59, 999);
-        }
+      map(([budgets, expenses, dateRange]) => {
+        // ✅ Use the date range directly from the service output
+        const start = new Date(dateRange.start);
+        const end = new Date(dateRange.end);
 
         const filteredBudgets = budgets.filter((b) => {
           if (b.type === 'monthly' && b.period) {
@@ -339,6 +382,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
       })
     );
 
+    // ✅ REVISED: Use filteredData$
     this.budgetChartData$ = filteredData$.pipe(
       map(({ budgets, expenses }) => {
         const monthlyData: {
@@ -397,46 +441,10 @@ export class BudgetComponent implements OnInit, OnDestroy {
           (a, b) => a.data.date.getTime() - b.data.date.getTime()
         );
 
-        // const labels: string[] = sortedMonthlyData.map((item) => item.month);
-
-        // Generate all months between startDate and endDate for labels
-        // Use the latest values from the BehaviorSubjects to detect date filter changes
-        const startDateValue = this._startDate$.getValue();
-        const endDateValue = this._endDate$.getValue();
-        const selectedDateRange = this._selectedDateRange$.getValue();
-
-        // Calculate start and end based on selectedDateRange
-        let start: Date;
-        let end: Date = new Date();
-
-        switch (selectedDateRange) {
-          case 'last30Days':
-            start = new Date(
-              end.getFullYear(),
-              end.getMonth(),
-              end.getDate() - 30
-            );
-            break;
-          case 'currentMonth':
-            start = new Date(end.getFullYear(), end.getMonth(), 1);
-            end = new Date(end.getFullYear(), end.getMonth() + 1, 0);
-            break;
-          case 'currentYear':
-            start = new Date(end.getFullYear(), 0, 1);
-            end = new Date(end.getFullYear(), 11, 31);
-            break;
-          case 'lastYear':
-            start = new Date(end.getFullYear() - 1, 0, 1);
-            end = new Date(end.getFullYear() - 1, 11, 31);
-            break;
-          case 'custom':
-            start = new Date(startDateValue);
-            end = new Date(endDateValue);
-            break;
-          default:
-            start = new Date(end.getFullYear(), 0, 1);
-            break;
-        }
+        // ✅ REVISED: Get start and end dates from the dateFilter$ observable.
+        const dateRange = this.dateFilter$.getValue();
+        let start: Date = new Date(dateRange.start);
+        let end: Date = new Date(dateRange.end);
 
         // Normalize start to first day of month, end to first day of month
         start.setDate(1);
@@ -472,10 +480,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
           (label) => monthlyDataMap.get(label)?.expense ?? 0
         );
 
-        // const expenseAmounts: number[] = sortedMonthlyData.map(
-        //   (item) => item.data.expense
-        // );
-
         return {
           labels,
           datasets: [
@@ -504,6 +508,9 @@ export class BudgetComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    // ✅ FIXED: Set the initial date range when the component initializes
+    this.setDateFilter(this.selectedDateFilter);
+
     this.budgetForm.controls['currency'].disable();
     const storedLang = localStorage.getItem('selectedLanguage');
     if (storedLang) {
@@ -623,11 +630,17 @@ export class BudgetComponent implements OnInit, OnDestroy {
   }
 
   setDateFilter(filter: string): void {
-    this._selectedDateRange$.next(filter);
-    if (filter === 'custom') {
-      this._startDate$.next(this.startDate);
-      this._endDate$.next(this.endDate);
-    }
+    this.selectedDateFilter = filter;
+
+    // Pass the injected DatePipe instance to the service method
+    const dateRange = this.dateFilterService.getDateRange(
+      this.datePipe,
+      filter,
+      this.startDate,
+      this.endDate
+    );
+
+    this.dateFilter$.next(dateRange);
   }
 
   private chartInstance: Chart | undefined;
