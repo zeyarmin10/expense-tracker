@@ -710,7 +710,9 @@ export class Profit implements OnInit, OnDestroy {
     const totalBalance = profit
       ? Object.values(profit).reduce((sum, value) => sum + value, 0)
       : 0;
-    return totalBalance >= 0 ? 'border border-info' : 'border border-danger';
+    return totalBalance >= 0
+      ? 'border border-info net-profit-card'
+      : 'border border-danger net-profit-negative';
   }
 
   getBalanceCardClass(

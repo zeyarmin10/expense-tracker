@@ -131,6 +131,12 @@
   background: linear-gradient(135deg, #f1fcff, #dbf7ff);
 }
 
+.net-profit-negative {
+  border: 2px solid #ef4444;
+  background: linear-gradient(135deg, #fef2f2, #fecaca);
+  color: #dc2626;
+}
+
 /* Income */
 .income-card {
   border: 2px solid #22c55e;
