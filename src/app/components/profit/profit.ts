@@ -50,6 +50,7 @@ import {
 } from '../../core/constants/app.constants';
 
 import { FormatService } from '../../services/format.service';
+import { DateFilterService } from '../../services/date-filter.service';
 
 Chart.register(...registerables);
 
@@ -70,6 +71,7 @@ Chart.register(...registerables);
 })
 export class Profit implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
+  private dateFilterService = inject(DateFilterService);
   public datePipe = inject(DatePipe);
   private expenseService = inject(ExpenseService);
   private incomeService = inject(IncomeService);
@@ -159,42 +161,17 @@ export class Profit implements OnInit, OnDestroy {
       this._endDate$,
     ]).pipe(
       map(([expenses, incomes, budgets, dateRange, startDate, endDate]) => {
-        const now = new Date();
-        let start: Date;
-        let end: Date = now;
+        // Use the service to get the date range
+        const range = this.dateFilterService.getDateRange(
+          this.datePipe,
+          dateRange,
+          startDate,
+          endDate
+        );
 
-        switch (dateRange) {
-          case 'last30Days':
-            start = new Date(
-              now.getFullYear(),
-              now.getMonth(),
-              now.getDate() - 30
-            );
-            break;
-          case 'currentMonth':
-            start = new Date(now.getFullYear(), now.getMonth(), 1);
-            end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-            break;
-          case 'currentYear':
-            start = new Date(now.getFullYear(), 0, 1);
-            end = new Date(now.getFullYear(), 11, 31);
-            break;
-          case 'lastYear':
-            start = new Date(now.getFullYear() - 1, 0, 1);
-            end = new Date(now.getFullYear() - 1, 11, 31);
-            break;
-          case 'custom':
-            start = new Date(startDate);
-            end = new Date(endDate);
-            break;
-          default:
-            start = new Date(now.getFullYear(), 0, 1);
-            break;
-        }
-
-        if (dateRange !== 'last30Days') {
-          end.setHours(23, 59, 59, 999);
-        }
+        const start = new Date(range.start);
+        const end = new Date(range.end);
+        end.setHours(23, 59, 59, 999);
 
         const filteredExpenses = expenses.filter((e) => {
           const expenseDate = new Date(e.date);
@@ -320,12 +297,6 @@ export class Profit implements OnInit, OnDestroy {
     );
   }
 
-  private addDays(date: Date, days: number): Date {
-    const result = new Date(date);
-    result.setDate(result.getDate() + days);
-    return result;
-  }
-
   onDateChange(): void {
     this._startDate$.next(this._startDate$.getValue());
     this._endDate$.next(this._endDate$.getValue());
@@ -333,6 +304,17 @@ export class Profit implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.incomeForm.controls['currency'].disable();
+
+    const initialRange = this.dateFilterService.getDateRange(
+      this.datePipe,
+      'custom'
+    );
+
+    this.startDate = initialRange.start;
+    this.endDate = initialRange.end;
+    this._startDate$.next(this.startDate);
+    this._endDate$.next(this.endDate);
+
     const storedLang = localStorage.getItem('selectedLanguage');
     if (storedLang) {
       this.translate.use(storedLang);
@@ -364,25 +346,31 @@ export class Profit implements OnInit, OnDestroy {
     this.filteredExpensesAndIncomes$ = combineLatest([
       allExpenses$,
       allIncomes$,
+      this._selectedDateRange$,
       this._startDate$,
       this._endDate$,
     ]).pipe(
-      map(([expenses, incomes, startDateStr, endDateStr]) => {
-        const startDate = new Date(startDateStr);
-        const endDate = new Date(endDateStr);
+      map(([expenses, incomes, dateRange, startDateStr, endDateStr]) => {
+        // Use the service to get the date range
+        const range = this.dateFilterService.getDateRange(
+          this.datePipe,
+          dateRange,
+          startDateStr,
+          endDateStr
+        );
+
+        const start = new Date(range.start);
+        const end = new Date(range.end);
+        end.setHours(23, 59, 59, 999);
 
         const filteredExpenses = expenses.filter((expense) => {
           const expenseDate = new Date(expense.date);
-          return (
-            expenseDate >= startDate && expenseDate <= this.addDays(endDate, 1)
-          );
+          return expenseDate >= start && expenseDate <= end;
         });
 
         const filteredIncomes = incomes.filter((income) => {
           const incomeDate = new Date(income.date);
-          return (
-            incomeDate >= startDate && incomeDate <= this.addDays(endDate, 1)
-          );
+          return incomeDate >= start && incomeDate <= end;
         });
 
         return { expenses: filteredExpenses, incomes: filteredIncomes };
@@ -578,44 +566,16 @@ export class Profit implements OnInit, OnDestroy {
   }
 
   setDateFilter(filter: string): void {
-    const today = new Date();
-    let startDate: Date;
-    let endDate: Date = today;
-
-    switch (filter) {
-      case 'last30Days':
-        startDate = new Date(
-          today.getFullYear(),
-          today.getMonth(),
-          today.getDate() - 30
-        );
-        break;
-      case 'currentMonth':
-        startDate = new Date(today.getFullYear(), today.getMonth(), 1);
-        endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-        break;
-      case 'currentYear':
-        startDate = new Date(today.getFullYear(), 0, 1);
-        endDate = new Date(today.getFullYear(), 11, 31);
-        break;
-      case 'lastYear':
-        startDate = new Date(today.getFullYear() - 1, 0, 1);
-        endDate = new Date(today.getFullYear() - 1, 11, 31);
-        break;
-      case 'custom':
-        startDate = new Date(this.startDate);
-        endDate = new Date(this.endDate);
-        break;
-      default:
-        startDate = new Date(today.getFullYear(), today.getMonth(), 1);
-        endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-        break;
-    }
-
-    this._startDate$.next(
-      this.datePipe.transform(startDate, 'yyyy-MM-dd') || ''
+    const dateRange = this.dateFilterService.getDateRange(
+      this.datePipe,
+      filter,
+      this.startDate,
+      this.endDate
     );
-    this._endDate$.next(this.datePipe.transform(endDate, 'yyyy-MM-dd') || '');
+
+    this._startDate$.next(dateRange.start);
+    this._endDate$.next(dateRange.end);
+    this._selectedDateRange$.next(filter);
   }
 
   formatLocalizedDate(date: string | Date | null | undefined): string {
