@@ -86,3 +86,16 @@
 .balance-negative-amount {
   color: #dc2626;
 }
+
+.buget-type {
+  background-color: #d1fae5;
+  padding: 0.1rem 0.5rem;
+  border-radius: 0.25rem;
+}
+
+@media (max-width: 575.98px) {
+  .recorded-budget-body {
+    padding-left: 0.3rem !important;
+    padding-right: 0.3rem !important;
+  }
+}

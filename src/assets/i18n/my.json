@@ -338,5 +338,11 @@
   },
   "QUANTITY_LABEL": "အရေအတွက်",
   "PRICE_LABEL": "စျေးနှုန်း",
-  "ACTIONS_LABEL": "ပြင်၊ ဖျက်"
+  "ACTIONS_LABEL": "ပြင်၊ ဖျက်",
+  "YEARLY_BUDGET": "တစ်နှစ်တာ ဘတ်ဂျက်",
+  "PERIOD_REQUIRED": "ကာလ လိုအပ်သည်",
+  "BUDGET_DESCRIPTION_PLACEHOLDER": "သင်၏ဘတ်ဂျက်အတွက် စိတ်ကြိုက်ဖော်ပြချက်",
+  "ALL_CATEGORY": "အမျိုးအစားအားလုံး",
+  "MONTHLY": "တလ",
+  "YEARLY": "တနှစ်"
 }

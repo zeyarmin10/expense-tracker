@@ -338,5 +338,11 @@
   },
   "QUANTITY_LABEL": "Quantity",
   "PRICE_LABEL": "Price",
-  "ACTIONS_LABEL": "Actions"
+  "ACTIONS_LABEL": "Actions",
+  "YEARLY_BUDGET": "Yearly Budget",
+  "PERIOD_REQUIRED": "Period is required",
+  "BUDGET_DESCRIPTION_PLACEHOLDER": "Optional description for your budget",
+  "ALL_CATEGORY": "All Categories",
+  "MONTHLY": "Monthly",
+  "YEARLY": "Yearly"
 }

@@ -46,6 +46,7 @@ import {
   DateFilterService,
   DateRange,
 } from '../../services/date-filter.service';
+import { CategoryService } from '../../services/category';
 
 Chart.register(...registerables);
 
@@ -85,6 +86,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
   private expenseService = inject(ExpenseService);
   private translate = inject(TranslateService);
   public formatService = inject(FormatService);
+  private categoryService = inject(CategoryService);
 
   @ViewChild('deleteConfirmationModal')
   private deleteConfirmationModal!: ConfirmationModal;
@@ -93,6 +95,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
 
   budgets$: Observable<ServiceIBudget[]>;
   expenses$: Observable<ServiceIExpense[]>;
+  categories$: Observable<any[]> = of([]);
 
   budgetChartData$: Observable<{ labels: string[]; datasets: any[] }>;
 
@@ -131,6 +134,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
   availableCurrencies = AVAILABLE_CURRENCIES;
 
   private subscriptions: Subscription = new Subscription();
+  categories: any[] = [];
 
   constructor() {
     const now = new Date();
@@ -146,14 +150,15 @@ export class BudgetComponent implements OnInit, OnDestroy {
 
     this.budgetForm = this.fb.group({
       type: ['monthly', Validators.required],
+      category: ['all', Validators.required],
       amount: ['', [Validators.required, Validators.min(0.01)]],
       currency: ['MMK', Validators.required],
       period: [
-        this.datePipe.transform(new Date(), 'yyyy-MM-dd'),
+        this.datePipe.transform(new Date(), 'yyyy-MM-dd'), // Full date format
         Validators.required,
       ],
+      description: [''],
     });
-
     this.budgets$ = this.budgetService.getBudgets().pipe(
       map((budgets) =>
         budgets.sort((a, b) => {
@@ -247,6 +252,14 @@ export class BudgetComponent implements OnInit, OnDestroy {
         const filteredBudgets = budgets.filter((b) => {
           if (b.type === 'monthly' && b.period) {
             const budgetDate = new Date(b.period);
+            // For monthly budgets, we need to check if the date falls within the month
+            const budgetMonth = budgetDate.getMonth();
+            const budgetYear = budgetDate.getFullYear();
+            return budgetDate >= start && budgetDate <= end;
+          } else if (b.type === 'yearly' && b.period) {
+            const budgetDate = new Date(b.period);
+            // For yearly budgets, check if the date falls within the year
+            const budgetYear = budgetDate.getFullYear();
             return budgetDate >= start && budgetDate <= end;
           }
           return false;
@@ -271,10 +284,8 @@ export class BudgetComponent implements OnInit, OnDestroy {
         >();
 
         expenses.forEach((expense) => {
-          const monthYear = this.datePipe.transform(
-            new Date(expense.date),
-            'yyyy-MM'
-          )!;
+          const expenseDate = new Date(expense.date);
+          const monthYear = this.datePipe.transform(expenseDate, 'yyyy-MM')!;
           const key = `${monthYear}_${expense.currency}`;
           const currentData = monthlyDataMap.get(key) || {
             budgetAmount: 0,
@@ -287,10 +298,8 @@ export class BudgetComponent implements OnInit, OnDestroy {
 
         budgets.forEach((budget) => {
           if (budget.period) {
-            const monthYear = this.datePipe.transform(
-              new Date(budget.period),
-              'yyyy-MM'
-            )!;
+            const budgetDate = new Date(budget.period);
+            const monthYear = this.datePipe.transform(budgetDate, 'yyyy-MM')!;
             const key = `${monthYear}_${budget.currency}`;
             const currentData = monthlyDataMap.get(key) || {
               budgetAmount: 0,
@@ -503,13 +512,32 @@ export class BudgetComponent implements OnInit, OnDestroy {
     );
 
     this.budgetChartData$.subscribe((data) => {
-      this.renderChart(data);
+      // Add a small delay to ensure DOM is ready
+      setTimeout(() => {
+        this.renderChart(data);
+      }, 100);
     });
   }
 
   ngOnInit(): void {
     // ✅ FIXED: Set the initial date range when the component initializes
     this.setDateFilter(this.selectedDateFilter);
+
+    this.categories$ = this.categoryService
+      .getCategories()
+      .pipe(
+        map((categories) => [
+          { id: 'all', name: this.translate.instant('ALL_CATEGORIES') },
+          ...categories,
+        ])
+      );
+
+    // Subscribe to categories$ and store them in the categories property
+    this.subscriptions.add(
+      this.categories$.subscribe((categories) => {
+        this.categories = categories;
+      })
+    );
 
     this.budgetForm.controls['currency'].disable();
     const storedLang = localStorage.getItem('selectedLanguage');
@@ -549,35 +577,67 @@ export class BudgetComponent implements OnInit, OnDestroy {
     this.subscriptions.unsubscribe();
     if (this.chartInstance) {
       this.chartInstance.destroy();
+      this.chartInstance = undefined;
     }
   }
 
   onBudgetTypeChange(type: string): void {
+    const periodControl = this.budgetForm.get('period');
+    const currentDate = new Date();
+
     if (type === 'monthly') {
-      this.budgetForm.get('period')?.setValidators(Validators.required);
-    } else {
-      this.budgetForm.get('period')?.clearValidators();
+      periodControl?.setValidators(Validators.required);
+      // Set to first day of current month
+      const firstDayOfMonth = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth(),
+        1
+      );
+      periodControl?.setValue(
+        this.datePipe.transform(currentDate, 'yyyy-MM-dd')
+      );
+    } else if (type === 'yearly') {
+      periodControl?.setValidators(Validators.required);
+      // Set to first day of current year
+      const firstDayOfYear = new Date(currentDate.getFullYear(), 0, 1);
+      periodControl?.setValue(
+        this.datePipe.transform(firstDayOfYear, 'yyyy-MM-dd')
+      );
     }
-    this.budgetForm.get('period')?.updateValueAndValidity();
+
+    periodControl?.updateValueAndValidity();
   }
 
   onSubmitBudget(): void {
     const defaultCurrency = this.userProfile?.currency || 'MMK';
     if (this.budgetForm.valid) {
+      const formValue = this.budgetForm.value;
+
+      let categoryName: string | undefined;
+
+      if (formValue.category === 'all') {
+        categoryName = 'all';
+      } else {
+        // Direct lookup in the categories array
+        const selectedCategory = this.categories.find(
+          (c) => c.id === formValue.category
+        );
+        categoryName = selectedCategory
+          ? selectedCategory.name
+          : formValue.category;
+      }
+
       const budgetData: Omit<ServiceIBudget, 'id' | 'userId' | 'createdAt'> = {
-        type: this.budgetForm.value.type,
-        amount: this.budgetForm.value.amount,
+        type: formValue.type,
+        category: categoryName,
+        description: formValue.description || 'all',
+        amount: formValue.amount,
         currency: defaultCurrency,
-        period:
-          this.budgetForm.value.type === 'monthly'
-            ? this.budgetForm.value.period
-            : undefined,
+        period: formValue.period,
       };
 
       this.budgetService
-        .addBudget(
-          budgetData as Omit<ServiceIBudget, 'id' | 'userId' | 'createdAt'>
-        )
+        .addBudget(budgetData)
         .then(() => {
           console.log('Budget added successfully!');
           this.resetForm();
@@ -613,11 +673,20 @@ export class BudgetComponent implements OnInit, OnDestroy {
 
   resetForm(): void {
     const defaultCurrency = this.userProfile?.currency || 'MMK';
+    const currentDate = new Date();
+    const firstDayOfMonth = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      1
+    );
+
     this.budgetForm.reset({
       type: 'monthly',
+      category: 'all',
       amount: '',
       currency: defaultCurrency,
-      period: this.datePipe.transform(new Date(), 'yyyy-MM-dd'),
+      period: this.datePipe.transform(currentDate, 'yyyy-MM-dd'),
+      description: '',
     });
   }
 
@@ -648,15 +717,21 @@ export class BudgetComponent implements OnInit, OnDestroy {
   renderChart(data: any): void {
     const canvas = document.getElementById('budgetChart') as HTMLCanvasElement;
 
-    if (this.chartInstance) {
-      this.chartInstance.destroy();
+    if (!canvas) {
+      console.warn('Canvas element not found');
+      return;
     }
 
-    if (canvas) {
-      // A reference to the component instance is needed to access its properties.
-      // If you are using a class, 'this' refers to the component instance.
-      const component = this;
+    // Destroy previous chart instance if it exists
+    if (this.chartInstance) {
+      this.chartInstance.destroy();
+      this.chartInstance = undefined;
+    }
 
+    // A reference to the component instance is needed to access its properties.
+    const component = this;
+
+    try {
       this.chartInstance = new Chart(canvas, {
         type: 'bar',
         data: data,
@@ -690,9 +765,10 @@ export class BudgetComponent implements OnInit, OnDestroy {
           },
         },
       });
+    } catch (error) {
+      console.error('Error rendering chart:', error);
     }
   }
-
   formatLocalizedDateSummary(date: string | Date | null | undefined): string {
     const currentLang = this.translate.currentLang;
 
@@ -725,17 +801,31 @@ export class BudgetComponent implements OnInit, OnDestroy {
     }
   }
 
+  // Update the formatLocalizedDate method to handle full dates
   formatLocalizedDate(date: string | Date | null | undefined): string {
-    const currentLang = this.translate.currentLang;
-
     if (!date) {
       return '';
     }
 
+    // Handle invalid dates
+    let dateObj: Date;
+    if (typeof date === 'string') {
+      dateObj = new Date(date);
+    } else {
+      dateObj = new Date(date);
+    }
+
+    // Check if the date is valid
+    if (isNaN(dateObj.getTime())) {
+      console.warn('Invalid date:', date);
+      return String(date);
+    }
+
+    const currentLang = this.translate.currentLang;
+
     if (currentLang === 'my') {
-      const d = new Date(date);
       // Get the English month abbreviation and map it to Burmese
-      const month = this.datePipe.transform(d, 'MMM');
+      const month = this.datePipe.transform(dateObj, 'MMM');
       const burmeseMonth = month
         ? BURMESE_MONTH_ABBREVIATIONS[
             month as keyof typeof BURMESE_MONTH_ABBREVIATIONS
@@ -746,22 +836,27 @@ export class BudgetComponent implements OnInit, OnDestroy {
       const day = new Intl.NumberFormat('my-MM', {
         numberingSystem: 'mymr',
         useGrouping: false,
-      }).format(d.getDate());
+      }).format(dateObj.getDate());
       const year = new Intl.NumberFormat('my-MM', {
         numberingSystem: 'mymr',
         useGrouping: false,
-      }).format(d.getFullYear());
+      }).format(dateObj.getFullYear());
 
       // Combine the localized parts
       return `${day} ${burmeseMonth} ${year}`;
     } else {
       // For all other languages, use the standard Angular DatePipe
       return (
-        this.datePipe.transform(date, 'mediumDate', undefined, currentLang) ||
-        ''
+        this.datePipe.transform(
+          dateObj,
+          'mediumDate',
+          undefined,
+          currentLang
+        ) || String(date)
       );
     }
   }
+
   // Add these methods to your dashboard component
 
   getBalanceCardClass(balances: any): string {

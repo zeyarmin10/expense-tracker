@@ -79,21 +79,47 @@
               (ngSubmit)="onSubmitBudget()"
               class="row"
             >
+              <!-- Budget Type -->
               <div class="col-md-6 mb-3">
                 <label for="type" class="form-label">{{
                   "BUDGET_TYPE" | translate
                 }}</label>
-                <select id="type" formControlName="type" class="form-select">
+                <select
+                  id="type"
+                  formControlName="type"
+                  class="form-select"
+                  (change)="onBudgetTypeChange(budgetForm.value.type)"
+                >
                   <option value="monthly">
                     {{ "MONTHLY_BUDGET" | translate }}
+                  </option>
+                  <option value="yearly">
+                    {{ "YEARLY_BUDGET" | translate }}
                   </option>
                 </select>
               </div>
 
-              <div
-                class="col-md-6 mb-3"
-                *ngIf="budgetForm.value.type === 'monthly'"
-              >
+              <!-- Category -->
+              <div class="col-md-6 mb-3">
+                <label for="category" class="form-label">{{
+                  "CATEGORY" | translate
+                }}</label>
+                <select
+                  id="category"
+                  formControlName="category"
+                  class="form-select"
+                >
+                  <option
+                    *ngFor="let category of categories$ | async"
+                    [value]="category.id"
+                  >
+                    {{ category.name }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- Period (Date) -->
+              <div class="col-md-6 mb-3">
                 <label for="period" class="form-label">{{
                   "DATE" | translate
                 }}</label>
@@ -114,6 +140,7 @@
                 </div>
               </div>
 
+              <!-- Amount -->
               <div class="col-md-6 mb-3">
                 <label for="amount" class="form-label">{{
                   "AMOUNT" | translate
@@ -152,6 +179,22 @@
                 </div>
               </div>
 
+              <!-- Description -->
+              <div class="col-12 mb-3">
+                <label for="description" class="form-label">{{
+                  "DESCRIPTION" | translate
+                }}</label>
+                <textarea
+                  id="description"
+                  formControlName="description"
+                  class="form-control"
+                  rows="2"
+                  placeholder="{{
+                    'BUDGET_DESCRIPTION_PLACEHOLDER' | translate
+                  }}"
+                ></textarea>
+              </div>
+
               <div class="d-grid gap-2 d-flex justify-content-end">
                 <button
                   type="submit"
@@ -180,7 +223,10 @@
               [icon]="isRecordedBudgetsCollapsed ? faChevronDown : faChevronUp"
             ></fa-icon>
           </div>
-          <div class="card-body" *ngIf="!isRecordedBudgetsCollapsed">
+          <div
+            class="card-body recorded-budget-body"
+            *ngIf="!isRecordedBudgetsCollapsed"
+          >
             <ng-container
               *ngIf="filteredBudgets$ | async as budgets; else loadingBudget"
             >
@@ -191,12 +237,22 @@
                     *ngFor="let budget of budgets"
                   >
                     <div class="d-flex flex-column">
-                      <span>
-                        <strong>{{
-                          formatLocalizedDate(budget.period)
-                        }}</strong>
+                      <span class="mb-2">
+                        <small class="text-muted">
+                          {{
+                            budget.type === "monthly"
+                              ? formatLocalizedDate(budget.period)
+                              : budget.period || ""
+                          }}
+                        </small>
+                        <small class="ms-2 buget-type">
+                          {{
+                            (budget.type === "monthly" ? "MONTHLY" : "YEARLY")
+                              | translate
+                          }}
+                        </small>
                       </span>
-                      <span class="text-success">
+                      <span class="text-success mb-1">
                         {{
                           formatService.formatAmountWithSymbol(
                             budget.amount,
@@ -204,8 +260,18 @@
                           )
                         }}
                       </span>
+                      <strong *ngIf="budget.category" class="text-muted">
+                        {{
+                          budget.category === "all"
+                            ? ("ALL_CATEGORY" | translate)
+                            : budget.category
+                        }}
+                      </strong>
+                      <small *ngIf="budget.description" class="text-muted">
+                        {{ budget.description }}
+                      </small>
                     </div>
-                    <div class="text-end" style="min-width: 5rem">
+                    <div class="text-end">
                       <fa-icon
                         class="btn btn-sm btn-outline-danger"
                         [icon]="faTrash"

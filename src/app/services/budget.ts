@@ -1,14 +1,24 @@
 import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, Observable, of, firstValueFrom } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
-import { Database, ref, push, remove, update, listVal, DatabaseReference } from '@angular/fire/database';
+import {
+  Database,
+  ref,
+  push,
+  remove,
+  update,
+  listVal,
+  DatabaseReference,
+} from '@angular/fire/database';
 import { AuthService } from './auth';
 
 export interface ServiceIBudget {
   id?: string;
-  type: 'monthly' | 'category';
-  period?: string; // e.g., '2025-08' for monthly budget
-  category?: string; // for category budget
+  type: 'monthly' | 'yearly';
+  period?: string;
+  category?: string;
+  categoryId?: string;
+  description?: string;
   amount: number;
   currency: string;
   userId?: string;
@@ -33,7 +43,9 @@ export class BudgetService {
    * @param budgetData The budget data.
    * @returns A Promise that resolves when the budget is added.
    */
-  async addBudget(budgetData: Omit<ServiceIBudget, 'id' | 'userId' | 'createdAt'>): Promise<void> {
+  async addBudget(
+    budgetData: Omit<ServiceIBudget, 'id' | 'userId' | 'createdAt'>
+  ): Promise<void> {
     const userId = (await firstValueFrom(
       this.authService.currentUser$.pipe(map((user) => user?.uid))
     ))!;
@@ -44,7 +56,7 @@ export class BudgetService {
     const newBudgetToSave: ServiceIBudget = {
       ...budgetData,
       userId,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     };
     await push(this.getBudgetsRef(userId), newBudgetToSave);
   }
@@ -56,9 +68,11 @@ export class BudgetService {
    */
   getBudgets(): Observable<ServiceIBudget[]> {
     return this.authService.currentUser$.pipe(
-      switchMap(user => {
+      switchMap((user) => {
         if (user?.uid) {
-          return listVal<ServiceIBudget>(this.getBudgetsRef(user.uid), { keyField: 'id' });
+          return listVal<ServiceIBudget>(this.getBudgetsRef(user.uid), {
+            keyField: 'id',
+          });
         }
         return of([]);
       })
@@ -71,7 +85,10 @@ export class BudgetService {
    * @param updatedData The partial budget data to update.
    * @returns A Promise that resolves when the budget is updated.
    */
-  async updateBudget(budgetId: string, updatedData: Partial<Omit<ServiceIBudget, 'id' | 'userId' | 'createdAt'>>): Promise<void> {
+  async updateBudget(
+    budgetId: string,
+    updatedData: Partial<Omit<ServiceIBudget, 'id' | 'userId' | 'createdAt'>>
+  ): Promise<void> {
     const userId = (await firstValueFrom(
       this.authService.currentUser$.pipe(map((user) => user?.uid))
     ))!;
@@ -81,7 +98,10 @@ export class BudgetService {
     if (!budgetId) {
       throw new Error('Budget ID is required for update.');
     }
-    const budgetRef = ref(this.db, `expenseprofit/users/${userId}/budgets/${budgetId}`);
+    const budgetRef = ref(
+      this.db,
+      `expenseprofit/users/${userId}/budgets/${budgetId}`
+    );
     await update(budgetRef, updatedData);
   }
 
@@ -100,7 +120,10 @@ export class BudgetService {
     if (!id) {
       throw new Error('Budget ID is required for deletion.');
     }
-    const budgetRef = ref(this.db, `expenseprofit/users/${userId}/budgets/${id}`);
+    const budgetRef = ref(
+      this.db,
+      `expenseprofit/users/${userId}/budgets/${id}`
+    );
     await remove(budgetRef);
   }
 }
