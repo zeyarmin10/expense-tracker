@@ -199,6 +199,7 @@ export class Profit implements OnInit, OnDestroy {
       })
     );
 
+    this.incomes$ = filteredData$.pipe(map((data) => data.incomes));
     this.filteredBudgets$ = filteredData$.pipe(map((data) => data.budgets));
 
     this.totalExpensesByCurrency$ = filteredData$.pipe(
