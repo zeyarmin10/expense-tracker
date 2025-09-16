@@ -64,7 +64,7 @@
 
         <div class="card mb-4">
           <div
-            class="card-header d-flex justify-content-between align-items-center"
+            class="card-header d-flex justify-content-between align-items-center budget-card-header"
             role="button"
             (click)="toggleVisibility('budgetForm')"
           >
@@ -214,7 +214,7 @@
 
         <div class="card mb-4">
           <div
-            class="card-header d-flex justify-content-between align-items-center"
+            class="card-header d-flex justify-content-between align-items-center budget-card-header"
             role="button"
             (click)="toggleVisibility('recordedBudgets')"
           >
@@ -252,7 +252,7 @@
                           }}
                         </small>
                       </span>
-                      <span class="text-success mb-1">
+                      <span class="text-success mb-2">
                         {{
                           formatService.formatAmountWithSymbol(
                             budget.amount,
@@ -435,7 +435,7 @@
 
         <div class="card mb-4">
           <div
-            class="card-header d-flex justify-content-center align-items-center"
+            class="card-header d-flex justify-content-center align-items-center budget-card-header"
           >
             {{ "BUDGET_COMPARISON" | translate }}
           </div>
@@ -446,7 +446,7 @@
 
         <div class="card mb-4">
           <div
-            class="card-header d-flex justify-content-between align-items-center"
+            class="card-header d-flex justify-content-between align-items-center budget-card-header"
           >
             {{ "MONTHLY_SUMMARY" | translate }}
           </div>

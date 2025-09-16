@@ -185,11 +185,11 @@
                   >
                     <div class="d-flex flex-column">
                       <span class="mb-2">
-                        <small class="text-muted">{{
+                        <small class="text-muted mb-2">{{
                           formatLocalizedDate(income.date)
                         }}</small>
                       </span>
-                      <span class="text-success">
+                      <span class="text-success mb-2">
                         {{
                           formatService.formatAmountWithSymbol(
                             income.amount,
@@ -198,7 +198,9 @@
                         }}
                       </span>
                       <span>
-                        {{ income.description }}
+                        <small class="text-muted">{{
+                          income.description
+                        }}</small>
                       </span>
                     </div>
                     <div class="text-end">

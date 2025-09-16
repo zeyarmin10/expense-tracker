@@ -1,3 +1,8 @@
+.budget-card-header {
+  background-color: #dbeafe;
+  border: 1px solid #dbeafe;
+}
+
 .card-body p {
   margin-bottom: 0;
 }
