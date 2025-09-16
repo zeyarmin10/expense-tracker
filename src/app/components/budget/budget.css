@@ -1,6 +1,6 @@
 .budget-card-header {
-  background-color: #dbeafe;
-  border: 1px solid #dbeafe;
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  /* border: 1px solid #dbeafe; */
 }
 
 .card-body p {
@@ -94,7 +94,7 @@
 
 .buget-type {
   background-color: #d1fae5;
-  padding: 0.1rem 0.5rem;
+  padding: 0.25rem 0.5rem;
   border-radius: 0.25rem;
 }
 
