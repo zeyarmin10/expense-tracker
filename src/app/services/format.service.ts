@@ -57,6 +57,9 @@ export class FormatService {
     //   return `${symbol}${formattedAmount}`;
     // }
 
+    if (locale === BURMESE_LOCALE_CODE) {
+      return `${formattedAmount}${symbol}`;
+    }
     if (locale === BURMESE_LOCALE_CODE && currency === MMK_CURRENCY_CODE) {
       return `${formattedAmount} ${BURMESE_CURRENCY_SYMBOL}`;
     }
