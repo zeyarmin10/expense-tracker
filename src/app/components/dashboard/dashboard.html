@@ -36,7 +36,7 @@
                       class="d-flex justify-content-center pb-0"
                     >
                       <!-- <strong>{{ total.key }}:</strong> -->
-                      <span class="income-amount">{{
+                      <span class="income-amount fs-5">{{
                         formatService.formatAmountWithSymbol(
                           total.value,
                           total.key
@@ -81,7 +81,7 @@
                       class="d-flex justify-content-center pb-0"
                     >
                       <!-- <strong>{{ total.key }}:</strong> -->
-                      <span class="budget-amount">{{
+                      <span class="budget-amount fs-5">{{
                         formatService.formatAmountWithSymbol(
                           total.value,
                           total.key
@@ -126,7 +126,7 @@
                       class="d-flex justify-content-center pb-0"
                     >
                       <!-- <strong>{{ total.key }}:</strong> -->
-                      <span class="expense-amount">
+                      <span class="expense-amount fs-5">
                         {{
                           formatService.formatAmountWithSymbol(
                             total.value,
@@ -181,7 +181,10 @@
                       class="d-flex justify-content-center pb-0"
                     >
                       <!-- <strong>{{ balance.key }}:</strong> -->
-                      <span [ngClass]="getBalanceAmountClass(balance.value)">
+                      <span
+                        [ngClass]="getBalanceAmountClass(balance.value)"
+                        class="fs-5"
+                      >
                         {{
                           formatService.formatAmountWithSymbol(
                             balance.value,

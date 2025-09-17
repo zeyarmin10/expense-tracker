@@ -189,7 +189,7 @@
                           formatLocalizedDate(income.date)
                         }}</small>
                       </span>
-                      <span class="text-success mb-2">
+                      <span class="fs-5 text-success mb-2">
                         {{
                           formatService.formatAmountWithSymbol(
                             income.amount,
@@ -324,7 +324,7 @@
                   >
                     <div *ngFor="let total of totals | keyvalue" class="pb-0">
                       <!-- <span>{{ total.key }}:</span> -->
-                      <span class="income-amount text-center">{{
+                      <span class="income-amount text-center fs-5">{{
                         formatService.formatAmountWithSymbol(
                           total.value,
                           total.key
@@ -367,7 +367,7 @@
                   >
                     <div *ngFor="let total of totals | keyvalue">
                       <!-- <span>{{ total.key }}:</span> -->
-                      <span class="expense-amount text-center">{{
+                      <span class="expense-amount text-center fs-5">{{
                         formatService.formatAmountWithSymbol(
                           total.value,
                           total.key
@@ -431,7 +431,7 @@
                               </div>
                               <!-- ({{ currency.code }}): -->
                               <div
-                                class="fw-bold text-center w-100"
+                                class="fw-bold text-center fs-5 w-100"
                                 [ngClass]="{
                                   'text-info': profitLosses[currency.code] >= 0,
                                   'text-danger': profitLosses[currency.code] < 0

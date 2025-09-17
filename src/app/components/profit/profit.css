@@ -6,6 +6,7 @@
 
 .card-header {
   font-weight: bold;
+  cursor: pointer;
   background: linear-gradient(135deg, #f0fdf4, #dcfce7);
   /* border: 1px solid #dcfce7; */
 }

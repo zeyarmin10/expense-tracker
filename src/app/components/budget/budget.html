@@ -315,7 +315,7 @@
                   >
                     <div *ngFor="let total of totals | keyvalue">
                       <!-- <span>{{ total.key }}:</span> -->
-                      <span class="budget-amount text-center mb-0">{{
+                      <span class="budget-amount text-center fs-5 mb-0">{{
                         formatService.formatAmountWithSymbol(
                           total.value,
                           total.key
@@ -358,7 +358,7 @@
                   >
                     <div *ngFor="let total of totals | keyvalue" class="pb-0">
                       <!-- <span>{{ total.key }}:</span> -->
-                      <span class="expense-amount text-center mb-0">{{
+                      <span class="expense-amount text-center fs-5 mb-0">{{
                         formatService.formatAmountWithSymbol(
                           total.value,
                           total.key
@@ -407,7 +407,10 @@
                   >
                     <div *ngFor="let balance of balances | keyvalue">
                       <!-- <span>{{ balance.key }}:</span> -->
-                      <span [ngClass]="getBalanceAmountClass(balance.value)">
+                      <span
+                        [ngClass]="getBalanceAmountClass(balance.value)"
+                        class="fs-5"
+                      >
                         {{
                           formatService.formatAmountWithSymbol(
                             balance.value,
@@ -481,7 +484,7 @@
                             monthData.budget &&
                             monthData.budget.currency === total.key
                           "
-                          class="budget-amount"
+                          class="budget-amount fs-5"
                         >
                           {{
                             formatService.formatAmountWithSymbol(
@@ -505,7 +508,7 @@
                             monthData.budget &&
                             monthData.budget.currency === total.key
                           "
-                          class="text-end expense-amount"
+                          class="text-end expense-amount fs-5"
                         >
                           {{
                             formatService.formatAmountWithSymbol(
@@ -523,7 +526,7 @@
                           "BALANCE" | translate
                         }}</small>
                         <span
-                          class="text-end"
+                          class="text-end fs-5"
                           [class.text-success]="monthData.budget.balance >= 0"
                           [class.text-danger]="monthData.budget.balance < 0"
                         >

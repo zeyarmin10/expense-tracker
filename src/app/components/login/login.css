@@ -64,6 +64,10 @@
   border-bottom-right-radius: 0.375rem !important;
 }
 
+.link-primary {
+  cursor: pointer;
+}
+
 @media screen and (max-width: 576px) {
   .login-bg-image {
     background-image: url("../../../assets/images/Expense-Tracker-Logo.png");
