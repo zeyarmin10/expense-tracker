@@ -173,7 +173,10 @@
               [icon]="isRecordedIncomesCollapsed ? faChevronDown : faChevronUp"
             ></fa-icon>
           </div>
-          <div class="card-body" [class.collapse]="isRecordedIncomesCollapsed">
+          <div
+            class="card-body recorded-income-body"
+            [class.collapse]="isRecordedIncomesCollapsed"
+          >
             <ng-container
               *ngIf="incomes$ | async as incomes; else loadingIncomes"
             >
@@ -189,7 +192,7 @@
                           formatLocalizedDate(income.date)
                         }}</small>
                       </span>
-                      <span class="fs-5 text-success mb-2">
+                      <span class="recorded-income fs-5 text-success mb-2">
                         {{
                           formatService.formatAmountWithSymbol(
                             income.amount,

@@ -11,6 +11,12 @@
   /* border: 1px solid #dcfce7; */
 }
 
+.recorded-income {
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.5rem;
+  background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+}
+
 .text-success {
   color: green !important;
 }
@@ -176,4 +182,11 @@
 }
 .balance-negative-amount {
   color: #dc2626;
+}
+
+@media (max-width: 364.98px) {
+  .recorded-income-body {
+    padding-left: 0.3rem !important;
+    padding-right: 0.3rem !important;
+  }
 }

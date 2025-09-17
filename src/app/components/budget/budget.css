@@ -62,6 +62,11 @@
 .budget-amount {
   color: #1d4ed8;
 }
+.monthly-budget {
+  border-radius: 0.5rem;
+  padding: 0.25rem;
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+}
 
 /* Expenses */
 .expense-card {
@@ -71,9 +76,23 @@
 .expense-amount {
   color: #d97706;
 }
+.monthly-expense {
+  border-radius: 0.5rem;
+  padding: 0.25rem;
+  background: linear-gradient(135deg, #fffbeb, #fef3c7);
+}
 
 /* Balance (conditional) */
-
+.monthly-balance-positive {
+  border-radius: 0.5rem;
+  padding: 0.25rem;
+  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+}
+.monthly-balance-negative {
+  border-radius: 0.5rem;
+  padding: 0.25rem;
+  background: linear-gradient(135deg, #fef2f2, #fecaca);
+}
 .balance-positive {
   border: 2px solid #10b981;
   background: linear-gradient(135deg, #ecfdf5, #d1fae5);
@@ -93,14 +112,22 @@
 }
 
 .buget-type {
-  background-color: #d1fae5;
+  background-color: #fef3c7;
+  padding: 0.1rem 0.75rem;
+  border-radius: 0.5rem;
+}
+.recorded-budget {
   padding: 0.25rem 0.5rem;
-  border-radius: 0.25rem;
+  border-radius: 0.5rem;
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
 }
 
-@media (max-width: 575.98px) {
+@media (max-width: 364.98px) {
   .recorded-budget-body {
     padding-left: 0.3rem !important;
     padding-right: 0.3rem !important;
+  }
+  .budget-monthly-summary {
+    padding: 1rem 0.5rem;
   }
 }
