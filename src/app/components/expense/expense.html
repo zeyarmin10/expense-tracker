@@ -101,23 +101,34 @@
           </div>
 
           <div class="row">
-            <div class="col-12 col-md-4 mb-3">
+            <div class="col-12 col-md-6 mb-3">
               <label for="quantity" class="form-label">{{
                 "EXPENSE_QUANTITY_LABEL" | translate
               }}</label>
-              <input
-                type="number"
-                class="form-control"
-                id="quantity"
-                formControlName="quantity"
-                min="0.01"
-                [class.is-invalid]="
-                  newExpenseForm.controls['quantity'].invalid &&
-                  newExpenseForm.controls['quantity'].touched
-                "
-                (focus)="onFocusInput($event, 'quantity', newExpenseForm)"
-                (blur)="onBlurInput($event, 'quantity', newExpenseForm)"
-              />
+              <div class="input-group has-validation">
+                <input
+                  type="number"
+                  class="form-control rounded-end-0"
+                  id="quantity"
+                  formControlName="quantity"
+                  min="0.01"
+                  [class.is-invalid]="
+                    newExpenseForm.controls['quantity'].invalid &&
+                    newExpenseForm.controls['quantity'].touched
+                  "
+                  (focus)="onFocusInput($event, 'quantity', newExpenseForm)"
+                  (blur)="onBlurInput($event, 'quantity', newExpenseForm)"
+                />
+                <input
+                  type="text"
+                  class="form-control"
+                  id="unit"
+                  formControlName="unit"
+                  placeholder="{{ 'EXPENSE_UNIT_PLACEHOLDER' | translate }}"
+                  (focus)="onFocusInput($event, 'unit', newExpenseForm)"
+                  (blur)="onBlurInput($event, 'unit', newExpenseForm)"
+                />
+              </div>
               <div
                 *ngIf="
                   newExpenseForm.controls['quantity'].invalid &&
@@ -129,7 +140,7 @@
               </div>
             </div>
 
-            <div class="col-12 col-md-4 mb-3">
+            <!-- <div class="col-12 col-md-4 mb-3">
               <label for="unit" class="form-label">{{
                 "EXPENSE_UNIT_LABEL" | translate
               }}</label>
@@ -142,9 +153,9 @@
                 (focus)="onFocusInput($event, 'unit', newExpenseForm)"
                 (blur)="onBlurInput($event, 'unit', newExpenseForm)"
               />
-            </div>
+            </div> -->
 
-            <div class="col-12 col-md-4 mb-3">
+            <div class="col-12 col-md-6 mb-3">
               <label for="price" class="form-label">{{
                 "EXPENSE_PRICE_LABEL" | translate
               }}</label>
