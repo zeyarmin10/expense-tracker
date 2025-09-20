@@ -447,6 +447,232 @@
           </div>
         </div>
 
+        <!-- Add this card after the monthly summary section -->
+        <div class="card mb-4">
+          <div
+            class="card-header d-flex justify-content-center align-items-center budget-card-header"
+          >
+            {{ "SPENDING_MONITOR" | translate }}
+          </div>
+          <div class="card-body">
+            <div
+              *ngIf="
+                spendingMonitorData$ | async as monitorData;
+                else loadingMonitor
+              "
+            >
+              <ng-container *ngIf="monitorData.length > 0; else noMonitorData">
+                <div *ngFor="let monthData of monitorData" class="mb-4">
+                  <h5 class="mb-2">{{ monthData.month }}</h5>
+
+                  <!-- Total Budget Card -->
+                  <div
+                    class="card mb-3 border border-2"
+                    [ngClass]="{
+                      'border-success': monthData.total.remaining >= 0,
+                      'border-danger': monthData.total.remaining < 0
+                    }"
+                  >
+                    <div class="card-body">
+                      <h6 class="card-title d-flex justify-content-between">
+                        <span>{{ "TOTAL_BUDGET" | translate }}</span>
+                        <span
+                          [ngClass]="{
+                            'text-success': monthData.total.remaining >= 0,
+                            'text-danger': monthData.total.remaining < 0
+                          }"
+                        >
+                          <!-- {{
+                            monthData.total.remaining >= 0
+                              ? ("REMAINING" | translate)
+                              : ("OVER_BUDGET" | translate)
+                          }} -->
+                          <fa-icon
+                            [icon]="
+                              monthData.total.remaining >= 0
+                                ? faCircleCheck
+                                : faTriangleExclamation
+                            "
+                          ></fa-icon>
+                        </span>
+                      </h6>
+
+                      <div
+                        class="d-flex flex-row-reverse justify-content-between mb-2"
+                      >
+                        <small class="text-muted">
+                          {{
+                            formatService.formatAmountWithSymbol(
+                              monthData.total.spent,
+                              monthData.currency
+                            )
+                          }}
+                          /
+                          {{
+                            formatService.formatAmountWithSymbol(
+                              monthData.total.budget,
+                              monthData.currency
+                            )
+                          }}
+                        </small>
+                        <small></small>
+                      </div>
+
+                      <div class="progress mb-2" style="height: 8px">
+                        <div
+                          class="progress-bar"
+                          [ngClass]="{
+                            'bg-success': monthData.total.percentage <= 75,
+                            'bg-warning':
+                              monthData.total.percentage > 75 &&
+                              monthData.total.percentage < 100,
+                            'bg-danger': monthData.total.percentage >= 100
+                          }"
+                          [style.width]="
+                            (monthData.total.percentage > 100
+                              ? 100
+                              : monthData.total.percentage) + '%'
+                          "
+                        ></div>
+                      </div>
+
+                      <div class="d-flex justify-content-between">
+                        <small class="text-muted"
+                          >{{ monthData.total.percentage.toFixed(1) }}%</small
+                        >
+                        <small
+                          [ngClass]="{
+                            'text-success': monthData.total.remaining >= 0,
+                            'text-danger': monthData.total.remaining < 0
+                          }"
+                        >
+                          {{
+                            formatService.formatAmountWithSymbol(
+                              getMath().abs(monthData.total.remaining),
+                              monthData.currency
+                            )
+                          }}
+                          {{
+                            monthData.total.remaining >= 0
+                              ? ("REMAINING" | translate)
+                              : ("OVER" | translate)
+                          }}
+                        </small>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Category Budgets - Only show if category has a budget -->
+                  <div
+                    *ngFor="let category of monthData.categories"
+                    class="card mb-2"
+                  >
+                    <div class="card-body">
+                      <div
+                        class="card-title d-flex justify-content-between align-items-center"
+                      >
+                        <small>{{ category.name }}</small>
+                        <small
+                          [ngClass]="{
+                            'text-success': category.remaining >= 0,
+                            'text-danger': category.remaining < 0
+                          }"
+                        >
+                          {{
+                            category.remaining >= 0
+                              ? ("REMAINING" | translate)
+                              : ("OVER_BUDGET" | translate)
+                          }}
+                        </small>
+                      </div>
+
+                      <div
+                        class="d-flex flex-row-reverse justify-content-between mb-2"
+                      >
+                        <small class="text-muted">
+                          {{
+                            formatService.formatAmountWithSymbol(
+                              category.spent,
+                              monthData.currency
+                            )
+                          }}
+                          /
+                          {{
+                            formatService.formatAmountWithSymbol(
+                              category.budget,
+                              monthData.currency
+                            )
+                          }}
+                        </small>
+                      </div>
+
+                      <div class="progress mb-2" style="height: 6px">
+                        <div
+                          class="progress-bar"
+                          [ngClass]="{
+                            'bg-success': category.percentage <= 75,
+                            'bg-warning':
+                              category.percentage > 75 &&
+                              category.percentage < 100,
+                            'bg-danger': category.percentage >= 100
+                          }"
+                          [style.width]="
+                            (category.percentage > 100
+                              ? 100
+                              : category.percentage) + '%'
+                          "
+                        ></div>
+                      </div>
+
+                      <div class="d-flex justify-content-between">
+                        <small class="text-muted"
+                          >{{ category.percentage.toFixed(1) }}%</small
+                        >
+                        <small
+                          [ngClass]="{
+                            'text-success': category.remaining >= 0,
+                            'text-danger': category.remaining < 0
+                          }"
+                        >
+                          {{
+                            formatService.formatAmountWithSymbol(
+                              getMath().abs(category.remaining),
+                              monthData.currency
+                            )
+                          }}
+                          {{
+                            category.remaining >= 0
+                              ? ("REMAINING" | translate)
+                              : ("OVER" | translate)
+                          }}
+                        </small>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- <div
+                    *ngIf="monthData.categories.length === 0"
+                    class="text-center text-muted py-3"
+                  >
+                    <small>{{ "NO_CATEGORY_BUDGETS" | translate }}</small>
+                  </div> -->
+                </div>
+              </ng-container>
+
+              <ng-template #noMonitorData>
+                <p class="text-center text-muted mt-3">
+                  {{ "NO_SPENDING_DATA" | translate }}
+                </p>
+              </ng-template>
+            </div>
+
+            <ng-template #loadingMonitor>
+              <p class="text-muted text-center">
+                {{ "LOADING_DATA" | translate }}
+              </p>
+            </ng-template>
+          </div>
+        </div>
+
         <div class="card mb-4">
           <div
             class="card-header d-flex justify-content-between align-items-center budget-card-header"

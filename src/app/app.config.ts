@@ -1,4 +1,9 @@
-import { ApplicationConfig, importProvidersFrom, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection } from '@angular/core';
+import {
+  ApplicationConfig,
+  importProvidersFrom,
+  provideBrowserGlobalErrorListeners,
+  provideZonelessChangeDetection,
+} from '@angular/core';
 import { provideRouter } from '@angular/router';
 
 import { routes } from './app.routes';
@@ -10,7 +15,10 @@ import { provideHttpClient, HttpClient } from '@angular/common/http';
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 
-import { FaIconLibrary, FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import {
+  FaIconLibrary,
+  FontAwesomeModule,
+} from '@fortawesome/angular-fontawesome';
 import { fas } from '@fortawesome/free-solid-svg-icons';
 import { fab } from '@fortawesome/free-brands-svg-icons';
 import { far } from '@fortawesome/free-regular-svg-icons';
@@ -40,20 +48,20 @@ export const appConfig: ApplicationConfig = {
         loader: {
           provide: TranslateLoader,
           useFactory: HttpLoaderFactory,
-          deps: [HttpClient]
-        }
+          deps: [HttpClient],
+        },
       })
     ),
     // Add a provider to configure FaIconLibrary with icons.
     // This part is correct in its usage with `provide: FaIconLibrary`.
     {
-        provide: FaIconLibrary,
-        useFactory: () => {
-            const library = new FaIconLibrary();
-            library.addIconPacks(fas, fab, far);
-            return library;
-        },
-        multi: true
-    }
-  ]
+      provide: FaIconLibrary,
+      useFactory: () => {
+        const library = new FaIconLibrary();
+        library.addIconPacks(fas, fab, far);
+        return library;
+      },
+      multi: true,
+    },
+  ],
 };

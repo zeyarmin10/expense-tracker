@@ -344,5 +344,10 @@
   "BUDGET_DESCRIPTION_PLACEHOLDER": "Optional description for your budget",
   "ALL_CATEGORY": "All Categories",
   "MONTHLY": "Monthly",
-  "YEARLY": "Yearly"
+  "YEARLY": "Yearly",
+  "SPENDING_MONITOR": "Spending Monitor",
+  "REMAINING": "remaining",
+  "OVER_BUDGET": "over budget",
+  "OVER": "over",
+  "NO_SPENDING_DATA": "No spending data available for the selected period"
 }

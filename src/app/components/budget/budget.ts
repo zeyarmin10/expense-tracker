@@ -26,6 +26,8 @@ import {
   faSave,
   faChevronDown,
   faChevronUp,
+  faTriangleExclamation,
+  faCircleCheck,
 } from '@fortawesome/free-solid-svg-icons';
 import { ConfirmationModal } from '../common/confirmation-modal/confirmation-modal';
 import { Chart, registerables } from 'chart.js';
@@ -61,6 +63,26 @@ interface MonthlySummaryItem {
   month: string; // Formatted date string (e.g., "Nov 28, 2025")
   total: { [currency: string]: number }; // Total expenses by currency for the month
   budget: BudgetSummary | null; // Budget details for the month, or null if no budget
+}
+
+interface SpendingMonitorItem {
+  month: string;
+  sortDate: Date;
+  currency: string;
+  total: {
+    budget: number;
+    spent: number;
+    remaining: number;
+    percentage: number;
+  };
+  categories: Array<{
+    name: string;
+    budget: number;
+    spent: number;
+    remaining: number;
+    percentage: number;
+    hasBudget: boolean;
+  }>;
 }
 
 @Component({
@@ -107,11 +129,14 @@ export class BudgetComponent implements OnInit, OnDestroy {
   monthlySummary$: Observable<MonthlySummaryItem[]>;
 
   filteredBudgets$: Observable<ServiceIBudget[]>;
+  spendingMonitorData$: Observable<SpendingMonitorItem[]>;
 
   faTrash = faTrash;
   faSave = faSave;
   faChevronDown = faChevronDown;
   faChevronUp = faChevronUp;
+  faTriangleExclamation = faTriangleExclamation;
+  faCircleCheck = faCircleCheck;
 
   private budgetIdToDelete: string | undefined;
 
@@ -342,6 +367,135 @@ export class BudgetComponent implements OnInit, OnDestroy {
           total: item.total,
           budget: item.budget,
         }));
+      })
+    );
+
+    this.spendingMonitorData$ = filteredData$.pipe(
+      map(({ budgets, expenses }) => {
+        const monthlyDataMap = new Map<string, SpendingMonitorItem>();
+
+        // Process expenses by month and category
+        expenses.forEach((expense) => {
+          const expenseDate = new Date(expense.date);
+          const monthYear = this.datePipe.transform(expenseDate, 'yyyy-MM')!;
+          const key = `${monthYear}_${expense.currency}`;
+
+          if (!monthlyDataMap.has(key)) {
+            const firstDayOfMonth = new Date(
+              expenseDate.getFullYear(),
+              expenseDate.getMonth(),
+              1
+            );
+
+            monthlyDataMap.set(key, {
+              month: this.formatLocalizedDateSummary(monthYear + '-01'),
+              sortDate: firstDayOfMonth,
+              currency: expense.currency,
+              total: { budget: 0, spent: 0, remaining: 0, percentage: 0 },
+              categories: [],
+            });
+          }
+
+          const monthData = monthlyDataMap.get(key)!;
+          monthData.total.spent += expense.totalCost;
+
+          // Find or create category entry
+          let categoryEntry = monthData.categories.find(
+            (c) => c.name === expense.category
+          );
+          if (!categoryEntry) {
+            categoryEntry = {
+              name: expense.category || 'Uncategorized',
+              budget: 0,
+              spent: 0,
+              remaining: 0,
+              percentage: 0,
+              hasBudget: false,
+            };
+            monthData.categories.push(categoryEntry);
+          }
+          categoryEntry.spent += expense.totalCost;
+        });
+
+        // Process budgets by month and category
+        budgets.forEach((budget) => {
+          if (!budget.period) return;
+
+          const budgetDate = new Date(budget.period);
+          const monthYear = this.datePipe.transform(budgetDate, 'yyyy-MM')!;
+          const key = `${monthYear}_${budget.currency}`;
+
+          if (!monthlyDataMap.has(key)) {
+            const firstDayOfMonth = new Date(
+              budgetDate.getFullYear(),
+              budgetDate.getMonth(),
+              1
+            );
+
+            monthlyDataMap.set(key, {
+              month: this.formatLocalizedDateSummary(monthYear + '-01'),
+              sortDate: firstDayOfMonth,
+              currency: budget.currency,
+              total: { budget: 0, spent: 0, remaining: 0, percentage: 0 },
+              categories: [],
+            });
+          }
+
+          const monthData = monthlyDataMap.get(key)!;
+
+          if (budget.category === 'all') {
+            // Add to total budget
+            monthData.total.budget += budget.amount;
+          } else {
+            // Find or create category entry
+            let categoryEntry = monthData.categories.find(
+              (c) => c.name === budget.category
+            );
+            if (!categoryEntry) {
+              categoryEntry = {
+                name: budget.category || 'Uncategorized',
+                budget: 0,
+                spent: 0,
+                remaining: 0,
+                percentage: 0,
+                hasBudget: false,
+              };
+              monthData.categories.push(categoryEntry);
+            }
+            categoryEntry.budget += budget.amount;
+            categoryEntry.hasBudget = true;
+          }
+        });
+
+        // Calculate remaining amounts and percentages
+        monthlyDataMap.forEach((monthData) => {
+          // Calculate total remaining and percentage
+          monthData.total.remaining =
+            monthData.total.budget - monthData.total.spent;
+          monthData.total.percentage =
+            monthData.total.budget > 0
+              ? (monthData.total.spent / monthData.total.budget) * 100
+              : 0;
+
+          // Calculate for each category
+          monthData.categories.forEach((category) => {
+            category.remaining = category.budget - category.spent;
+            category.percentage =
+              category.budget > 0
+                ? (category.spent / category.budget) * 100
+                : 0;
+          });
+
+          // Filter out categories without budgets
+          monthData.categories = monthData.categories.filter(
+            (category) => category.hasBudget
+          );
+        });
+
+        // Convert to array and sort by date (newest first)
+        return Array.from(monthlyDataMap.values()).sort(
+          (a, b) => b.sortDate.getTime() - a.sortDate.getTime()
+        );
       })
     );
 
@@ -873,5 +1027,9 @@ export class BudgetComponent implements OnInit, OnDestroy {
 
   getBalanceAmountClass(value: number): string {
     return value >= 0 ? 'balance-positive-amount' : 'balance-negative-amount';
+  }
+
+  getMath(): Math {
+    return Math;
   }
 }
