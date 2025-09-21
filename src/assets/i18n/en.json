@@ -349,5 +349,8 @@
   "REMAINING": "remaining",
   "OVER_BUDGET": "over budget",
   "OVER": "over",
-  "NO_SPENDING_DATA": "No spending data available for the selected period"
+  "NO_SPENDING_DATA": "No spending data available for the selected period",
+  "NO_BUDGET": "No Budget",
+  "SET_BUDGET_MESSAGE": "Set a budget to track your spending",
+  "NO_BUDGET_SET": "No budget set"
 }
