@@ -308,7 +308,12 @@ export class BudgetComponent implements OnInit, OnDestroy {
       map(({ budgets, expenses }) => {
         const monthlyDataMap = new Map<
           string,
-          { budgetAmount: number; expenseAmount: number; currency: string }
+          {
+            budgetAmount: number;
+            expenseAmount: number;
+            currency: string;
+            individualBudgets: number;
+          }
         >();
 
         expenses.forEach((expense) => {
@@ -319,6 +324,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
             budgetAmount: 0,
             expenseAmount: 0,
             currency: expense.currency,
+            individualBudgets: 0,
           };
           currentData.expenseAmount += expense.totalCost;
           monthlyDataMap.set(key, currentData);
@@ -333,8 +339,14 @@ export class BudgetComponent implements OnInit, OnDestroy {
               budgetAmount: 0,
               expenseAmount: 0,
               currency: budget.currency,
+              individualBudgets: 0,
             };
-            currentData.budgetAmount += budget.amount;
+
+            if (budget.category === 'all') {
+              currentData.budgetAmount += budget.amount;
+            } else {
+              currentData.individualBudgets += budget.amount;
+            }
             monthlyDataMap.set(key, currentData);
           }
         });
@@ -344,14 +356,20 @@ export class BudgetComponent implements OnInit, OnDestroy {
           ([key, data]) => {
             const [monthYearStr, currency] = key.split('_');
             const monthDate = new Date(monthYearStr + '-01');
-            const balance = data.budgetAmount - data.expenseAmount;
+
+            // Use total budget if available, otherwise use sum of individual budgets
+            const totalBudget =
+              data.budgetAmount > 0
+                ? data.budgetAmount
+                : data.individualBudgets;
+            const balance = totalBudget - data.expenseAmount;
 
             return {
               sortDate: monthDate, // Use the Date object for sorting
               month: this.formatLocalizedDateSummary(monthDate), // Use the formatted string for display
               total: { [currency]: data.expenseAmount },
               budget: {
-                amount: data.budgetAmount,
+                amount: totalBudget,
                 currency: currency,
                 balance: balance,
               },
@@ -472,6 +490,14 @@ export class BudgetComponent implements OnInit, OnDestroy {
 
         // Calculate remaining amounts and percentages
         monthlyDataMap.forEach((monthData) => {
+          // Calculate total budget by summing individual categories if no total budget exists
+          if (monthData.total.budget === 0 && monthData.categories.length > 0) {
+            monthData.total.budget = monthData.categories.reduce(
+              (sum, category) => sum + category.budget,
+              0
+            );
+          }
+
           // Calculate total remaining and percentage
           monthData.total.remaining =
             monthData.total.budget - monthData.total.spent;
@@ -504,10 +530,44 @@ export class BudgetComponent implements OnInit, OnDestroy {
 
     this.totalBudgetByCurrency$ = filteredData$.pipe(
       map(({ budgets }) => {
-        return budgets.reduce((acc, budget) => {
-          acc[budget.currency] = (acc[budget.currency] || 0) + budget.amount;
-          return acc;
-        }, {} as { [currency: string]: number });
+        // First, group budgets by month and currency to calculate aggregated totals
+        const monthlyBudgetsMap = new Map<
+          string,
+          { total: number; individual: number }
+        >();
+
+        budgets.forEach((budget) => {
+          if (!budget.period) return;
+
+          const budgetDate = new Date(budget.period);
+          const monthYear = this.datePipe.transform(budgetDate, 'yyyy-MM')!;
+          const key = `${monthYear}_${budget.currency}`;
+
+          const currentData = monthlyBudgetsMap.get(key) || {
+            total: 0,
+            individual: 0,
+          };
+
+          if (budget.category === 'all') {
+            currentData.total += budget.amount;
+          } else {
+            currentData.individual += budget.amount;
+          }
+
+          monthlyBudgetsMap.set(key, currentData);
+        });
+
+        // Now calculate the final totals by currency
+        return Array.from(monthlyBudgetsMap.entries()).reduce(
+          (acc, [key, data]) => {
+            const [, currency] = key.split('_');
+            // Use total budget if available, otherwise use sum of individual budgets
+            const amount = data.total > 0 ? data.total : data.individual;
+            acc[currency] = (acc[currency] || 0) + amount;
+            return acc;
+          },
+          {} as { [currency: string]: number }
+        );
       })
     );
 
@@ -526,18 +586,49 @@ export class BudgetComponent implements OnInit, OnDestroy {
         const balance: { [currency: string]: number } = {};
         const allCurrencies = new Set<string>();
 
+        // First, calculate the effective budget for each month
+        const monthlyBudgetsMap = new Map<
+          string,
+          { total: number; individual: number }
+        >();
+
         budgets.forEach((budget) => {
+          if (!budget.period) return;
+
+          const budgetDate = new Date(budget.period);
+          const monthYear = this.datePipe.transform(budgetDate, 'yyyy-MM')!;
+          const key = `${monthYear}_${budget.currency}`;
+
+          const currentData = monthlyBudgetsMap.get(key) || {
+            total: 0,
+            individual: 0,
+          };
+
+          if (budget.category === 'all') {
+            currentData.total += budget.amount;
+          } else {
+            currentData.individual += budget.amount;
+          }
+
+          monthlyBudgetsMap.set(key, currentData);
           allCurrencies.add(budget.currency);
-          balance[budget.currency] =
-            (balance[budget.currency] || 0) + budget.amount;
         });
 
+        // Add effective budgets to balance
+        monthlyBudgetsMap.forEach((data, key) => {
+          const [, currency] = key.split('_');
+          const effectiveBudget = data.total > 0 ? data.total : data.individual;
+          balance[currency] = (balance[currency] || 0) + effectiveBudget;
+        });
+
+        // Subtract expenses
         expenses.forEach((expense) => {
           allCurrencies.add(expense.currency);
           balance[expense.currency] =
             (balance[expense.currency] || 0) - expense.totalCost;
         });
 
+        // Ensure all currencies have a value
         allCurrencies.forEach((currency) => {
           if (balance[currency] === undefined) {
             balance[currency] = 0;

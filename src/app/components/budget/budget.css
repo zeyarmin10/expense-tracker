@@ -124,41 +124,14 @@
 
 @media (max-width: 364.98px) {
   .recorded-budget-body {
-    padding-left: 0.3rem !important;
-    padding-right: 0.3rem !important;
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
   }
   .budget-monthly-summary {
     padding: 1rem 0.5rem;
   }
-}
-
-/* Spending Monitor Styles */
-.spending-monitor .card {
-  border-radius: 10px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.spending-monitor .progress {
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.spending-monitor .card-title {
-  font-size: 0.9rem;
-  font-weight: 600;
-}
-
-/* Responsive adjustments */
-@media (max-width: 364.98px) {
-  .spending-monitor .card-body {
-    padding: 0.5rem;
-  }
-
-  .spending-monitor h5 {
-    font-size: 1.1rem;
-  }
-
-  .spending-monitor .card-title {
-    font-size: 0.85rem;
+  .budget-spending-monitor-body {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
   }
 }

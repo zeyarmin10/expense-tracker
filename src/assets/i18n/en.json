@@ -357,5 +357,7 @@
   "INDIVIDUAL_CATEGORIES_EXIST_ERROR": "Cannot add a total budget when individual category budgets already exist for this month. Please delete the existing category budgets instead.",
   "TOTAL_BUDGET_EXISTS_ERROR": "Cannot add an individual category budget when a total budget already exists for this month. Please delete the existing total budget instead.",
   "CATEGORY_BUDGET_EXISTS_ERROR": "This category already has a budget for this month. Please delete the existing budget instead.",
-  "GENERIC_BUDGET_ERROR": "An error occurred while adding the budget."
+  "GENERIC_BUDGET_ERROR": "An error occurred while adding the budget.",
+  "CALCULATED": "Calculated",
+  "CALCULATED_FROM_CATEGORIES": "Calculated from individual category budgets"
 }
