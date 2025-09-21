@@ -359,5 +359,6 @@
   "CATEGORY_BUDGET_EXISTS_ERROR": "This category already has a budget for this month. Please delete the existing budget instead.",
   "GENERIC_BUDGET_ERROR": "An error occurred while adding the budget.",
   "CALCULATED": "Calculated",
-  "CALCULATED_FROM_CATEGORIES": "Calculated from individual category budgets"
+  "CALCULATED_FROM_CATEGORIES": "Calculated from individual category budgets",
+  "MIXED_BUDGET_TYPES_ERROR": "Cannot add a monthly budget when a yearly budget exists for this period, or vice versa. Please use the same budget type for consistency."
 }

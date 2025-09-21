@@ -359,5 +359,6 @@
   "CATEGORY_BUDGET_EXISTS_ERROR": "ဤအမျိုးအစားတွင် ဤလအတွက် ဘတ်ဂျက်ရှိနှင့်ပြီးဖြစ်သောကြောင့် ထပ်မံထည့်၍မရပါ။ ရှိနှင့်ပြီးသား ဘတ်ဂျက်ကို ဖျက်ပြီးမှသာ ထည့်ပါ။",
   "GENERIC_BUDGET_ERROR": "ဘတ်ဂျက်ထည့်သွင်းရာတွင် အမှားတစ်ခုခု ဖြစ်ပေါ်ခဲ့ပါသည်။",
   "CALCULATED": "Calculated",
-  "CALCULATED_FROM_CATEGORIES": "Calculated from individual category budgets"
+  "CALCULATED_FROM_CATEGORIES": "Calculated from individual category budgets",
+  "MIXED_BUDGET_TYPES_ERROR": "ဤကာလအတွက် နှစ်စဉ်ဘတ်ဂျက်ရှိနေပါက လစဉ်ဘတ်ဂျက်ကို ထည့်၍မရပါ သို့မဟုတ် ပြောင်းပြန်လည်း အလားတူဖြစ်သည်။ ကျေးဇူးပြု၍ ဘတ်ဂျက်အမျိုးအစားကို ကိုက်ညီမှုရှိအောင် အတူတူသုံးပါ။"
 }

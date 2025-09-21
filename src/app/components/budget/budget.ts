@@ -873,6 +873,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
             periodDate,
             'yyyy-MM'
           )!;
+          const periodYear = this.datePipe.transform(periodDate, 'yyyy')!;
 
           // Filter budgets for the same period and currency
           const existingBudgets = budgets.filter((budget) => {
@@ -882,11 +883,27 @@ export class BudgetComponent implements OnInit, OnDestroy {
               budgetDate,
               'yyyy-MM'
             )!;
+            const budgetYear = this.datePipe.transform(budgetDate, 'yyyy')!;
+
+            // Check if same currency and either same month (for monthly) or same year (for yearly)
             return (
-              budgetMonthYear === periodMonthYear &&
-              budget.currency === defaultCurrency
+              budget.currency === defaultCurrency &&
+              ((formValue.type === 'monthly' &&
+                budgetMonthYear === periodMonthYear) ||
+                (formValue.type === 'yearly' && budgetYear === periodYear))
             );
           });
+
+          // NEW VALIDATION: Check if there are budgets of different types for the same period
+          const hasDifferentTypeBudget = existingBudgets.some(
+            (budget) => budget.type !== formValue.type
+          );
+
+          if (hasDifferentTypeBudget) {
+            // Show error modal: Cannot mix monthly and yearly budgets
+            this.showBudgetErrorModal('MIXED_BUDGET_TYPES_ERROR');
+            return;
+          }
 
           let categoryName: string | undefined;
 
@@ -961,13 +978,16 @@ export class BudgetComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Add this method to show budget error modal
   private showBudgetErrorModal(errorType: string): void {
     // Set up the modal based on error type
     let title = '';
     let message = '';
 
     switch (errorType) {
+      case 'MIXED_BUDGET_TYPES_ERROR':
+        title = this.translate.instant('BUDGET_ERROR_TITLE');
+        message = this.translate.instant('MIXED_BUDGET_TYPES_ERROR');
+        break;
       case 'INDIVIDUAL_CATEGORIES_EXIST_ERROR':
         title = this.translate.instant('BUDGET_ERROR_TITLE');
         message = this.translate.instant('INDIVIDUAL_CATEGORIES_EXIST_ERROR');
