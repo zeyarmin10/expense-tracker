@@ -122,13 +122,28 @@
   background: linear-gradient(135deg, #eff6ff, #dbeafe);
 }
 
+.total-budget-title {
+  background: linear-gradient(135deg, #e0f2fe, #bae6fd);
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.5rem;
+}
+
 @media (max-width: 364.98px) {
+  .list-group-item {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+  }
   .recorded-budget-body {
     padding-left: 0.5rem !important;
     padding-right: 0.5rem !important;
   }
   .budget-monthly-summary {
     padding: 1rem 0.5rem;
+  }
+  .total-budget-card-body,
+  .category-budget-card-body {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
   }
   .budget-spending-monitor-body {
     padding-left: 0.5rem !important;

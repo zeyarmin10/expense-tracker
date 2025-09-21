@@ -511,9 +511,11 @@
                         'border-danger': monthData.total.percentage >= 100
                       }"
                     >
-                      <div class="card-body">
+                      <div class="card-body total-budget-card-body">
                         <h6 class="card-title d-flex justify-content-between">
-                          <span>{{ "TOTAL_BUDGET" | translate }}</span>
+                          <small class="total-budget-title">{{
+                            "TOTAL_BUDGET" | translate
+                          }}</small>
                           <span
                             [ngClass]="{
                               'text-success': monthData.total.percentage <= 75,
@@ -581,7 +583,7 @@
                               'text-danger': monthData.total.percentage >= 100
                             }"
                           >
-                            {{ monthData.total.percentage.toFixed(1) }}%
+                            {{ formatPercentage(monthData.total.percentage) }}
                           </small>
                           <small
                             [ngClass]="{
@@ -608,7 +610,7 @@
                     <!-- Category Budgets - Only show if category has a budget -->
                     <div
                       *ngFor="let category of monthData.categories"
-                      class="card mb-2 border border-2"
+                      class="card mb-1 border border-2"
                       [ngClass]="{
                         'border-success': category.percentage <= 75,
                         'border-warning':
@@ -616,7 +618,7 @@
                         'border-danger': category.percentage >= 100
                       }"
                     >
-                      <div class="card-body">
+                      <div class="card-body category-budget-card-body">
                         <div
                           class="card-title d-flex justify-content-between align-items-center"
                         >
@@ -688,7 +690,7 @@
                               'text-danger': category.percentage >= 100
                             }"
                           >
-                            {{ category.percentage.toFixed(1) }}%
+                            {{ formatPercentage(category.percentage) }}
                           </small>
                           <small
                             [ngClass]="{

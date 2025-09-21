@@ -1224,4 +1224,30 @@ export class BudgetComponent implements OnInit, OnDestroy {
   getMath(): Math {
     return Math;
   }
+
+  formatPercentage(value: number): string {
+    // Handle invalid values
+    if (isNaN(value) || !isFinite(value)) {
+      return '0%';
+    }
+
+    const currentLang = this.translate.currentLang;
+
+    if (currentLang === 'my') {
+      // For Burmese language, use Burmese numerals
+      return new Intl.NumberFormat('my-MM', {
+        style: 'percent',
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1,
+        numberingSystem: 'mymr',
+      }).format(value / 100);
+    } else {
+      // For other languages, use standard formatting
+      return new Intl.NumberFormat(undefined, {
+        style: 'percent',
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1,
+      }).format(value / 100);
+    }
+  }
 }
