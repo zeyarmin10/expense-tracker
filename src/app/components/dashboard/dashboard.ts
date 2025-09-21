@@ -29,6 +29,8 @@ import {
   startWith,
   takeUntil,
   Subject,
+  take,
+  from,
 } from 'rxjs';
 import { Chart, registerables } from 'chart.js';
 import { ServiceIIncome, IncomeService } from '../../services/income';
@@ -48,6 +50,7 @@ import {
   CURRENCY_SYMBOLS,
   MMK_CURRENCY_CODE,
 } from '../../core/constants/app.constants';
+import { CategoryService } from '../../services/category';
 
 import { FormatService } from '../../services/format.service';
 
@@ -87,6 +90,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private destroy$ = new Subject<void>();
   public formatService = inject(FormatService);
+  private categoryService = inject(CategoryService);
 
   @ViewChild('expenseChartCanvas')
   private expenseChartCanvas!: ElementRef<HTMLCanvasElement>;
@@ -150,6 +154,46 @@ export class DashboardComponent implements OnInit, OnDestroy {
     );
 
     Chart.defaults.font.family = 'MyanmarUIFont, Arial, sans-serif';
+
+    this.authService.currentUser$
+      .pipe(
+        takeUntil(this.destroy$),
+        switchMap((user) => {
+          if (user && user.uid) {
+            return this.categoryService.getCategories().pipe(
+              take(1),
+              switchMap((categories) => {
+                // Check if user has any categories
+                if (categories.length === 0) {
+                  // No categories found, create default ones
+                  const language = this.translate.currentLang;
+                  return from(
+                    this.categoryService.addDefaultCategories(
+                      user.uid,
+                      language
+                    )
+                  ).pipe(
+                    map(() => categories) // Return empty array since we just created them
+                  );
+                }
+                return of(categories);
+              })
+            );
+          }
+          return of([]);
+        })
+      )
+      .subscribe({
+        next: (categories) => {
+          console.log(
+            'Categories check complete. User has categories:',
+            categories.length > 0
+          );
+        },
+        error: (error) => {
+          console.error('Error checking/creating categories:', error);
+        },
+      });
 
     this.expenses$ = this.expenseService.getExpenses();
     this.budgets$ = this.budgetService.getBudgets();
