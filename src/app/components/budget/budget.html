@@ -854,3 +854,13 @@
   (confirmed)="onDeleteConfirmed($event)"
 >
 </app-confirmation-modal>
+
+<app-confirmation-modal
+  #errorModal
+  [title]="'BUDGET_ERROR_TITLE' | translate"
+  [message]="''"
+  [confirmButtonText]="'OK_BUTTON' | translate"
+  messageColor="text-danger"
+  modalType="alert"
+>
+</app-confirmation-modal>

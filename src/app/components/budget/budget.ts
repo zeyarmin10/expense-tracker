@@ -161,6 +161,9 @@ export class BudgetComponent implements OnInit, OnDestroy {
   private subscriptions: Subscription = new Subscription();
   categories: any[] = [];
 
+  private errorModal!: ConfirmationModal;
+  @ViewChild('errorModal') errorModalRef!: ConfirmationModal;
+
   constructor() {
     const now = new Date();
     const oneYearAgo = new Date(
@@ -767,39 +770,137 @@ export class BudgetComponent implements OnInit, OnDestroy {
     if (this.budgetForm.valid) {
       const formValue = this.budgetForm.value;
 
-      let categoryName: string | undefined;
-
-      if (formValue.category === 'all') {
-        categoryName = 'all';
-      } else {
-        // Direct lookup in the categories array
-        const selectedCategory = this.categories.find(
-          (c) => c.id === formValue.category
-        );
-        categoryName = selectedCategory
-          ? selectedCategory.name
-          : formValue.category;
-      }
-
-      const budgetData: Omit<ServiceIBudget, 'id' | 'userId' | 'createdAt'> = {
-        type: formValue.type,
-        category: categoryName,
-        description: formValue.description || '',
-        amount: formValue.amount,
-        currency: defaultCurrency,
-        period: formValue.period,
-      };
-
+      // Check if a budget already exists for this period
       this.budgetService
-        .addBudget(budgetData)
-        .then(() => {
-          console.log('Budget added successfully!');
-          this.resetForm();
-        })
-        .catch((error) => {
-          console.error('Error adding budget:', error);
+        .getBudgets()
+        .pipe(
+          take(1) // Take the first emission and unsubscribe
+        )
+        .subscribe((budgets) => {
+          const periodDate = new Date(formValue.period);
+          const periodMonthYear = this.datePipe.transform(
+            periodDate,
+            'yyyy-MM'
+          )!;
+
+          // Filter budgets for the same period and currency
+          const existingBudgets = budgets.filter((budget) => {
+            if (!budget.period) return false;
+            const budgetDate = new Date(budget.period);
+            const budgetMonthYear = this.datePipe.transform(
+              budgetDate,
+              'yyyy-MM'
+            )!;
+            return (
+              budgetMonthYear === periodMonthYear &&
+              budget.currency === defaultCurrency
+            );
+          });
+
+          let categoryName: string | undefined;
+
+          if (formValue.category === 'all') {
+            categoryName = 'all';
+
+            // Check if individual category budgets already exist for this period
+            const hasIndividualBudgets = existingBudgets.some(
+              (budget) =>
+                budget.category !== 'all' && budget.category !== undefined
+            );
+
+            if (hasIndividualBudgets) {
+              // Show error modal: Cannot add total budget when individual categories exist
+              this.showBudgetErrorModal('INDIVIDUAL_CATEGORIES_EXIST_ERROR');
+              return;
+            }
+          } else {
+            // Direct lookup in the categories array
+            const selectedCategory = this.categories.find(
+              (c) => c.id === formValue.category
+            );
+            categoryName = selectedCategory
+              ? selectedCategory.name
+              : formValue.category;
+
+            // Check if a total budget already exists for this period
+            const hasTotalBudget = existingBudgets.some(
+              (budget) => budget.category === 'all'
+            );
+
+            if (hasTotalBudget) {
+              // Show error modal: Cannot add individual category when total budget exists
+              this.showBudgetErrorModal('TOTAL_BUDGET_EXISTS_ERROR');
+              return;
+            }
+
+            // Check if this specific category already has a budget for this period
+            const hasCategoryBudget = existingBudgets.some(
+              (budget) => budget.category === categoryName
+            );
+
+            if (hasCategoryBudget) {
+              // Show error modal: This category already has a budget for this period
+              this.showBudgetErrorModal('CATEGORY_BUDGET_EXISTS_ERROR');
+              return;
+            }
+          }
+
+          const budgetData: Omit<
+            ServiceIBudget,
+            'id' | 'userId' | 'createdAt'
+          > = {
+            type: formValue.type,
+            category: categoryName,
+            description: formValue.description || '',
+            amount: formValue.amount,
+            currency: defaultCurrency,
+            period: formValue.period,
+          };
+
+          this.budgetService
+            .addBudget(budgetData)
+            .then(() => {
+              console.log('Budget added successfully!');
+              this.resetForm();
+            })
+            .catch((error) => {
+              console.error('Error adding budget:', error);
+            });
         });
     }
+  }
+
+  // Add this method to show budget error modal
+  private showBudgetErrorModal(errorType: string): void {
+    // Set up the modal based on error type
+    let title = '';
+    let message = '';
+
+    switch (errorType) {
+      case 'INDIVIDUAL_CATEGORIES_EXIST_ERROR':
+        title = this.translate.instant('BUDGET_ERROR_TITLE');
+        message = this.translate.instant('INDIVIDUAL_CATEGORIES_EXIST_ERROR');
+        break;
+      case 'TOTAL_BUDGET_EXISTS_ERROR':
+        title = this.translate.instant('BUDGET_ERROR_TITLE');
+        message = this.translate.instant('TOTAL_BUDGET_EXISTS_ERROR');
+        break;
+      case 'CATEGORY_BUDGET_EXISTS_ERROR':
+        title = this.translate.instant('BUDGET_ERROR_TITLE');
+        message = this.translate.instant('CATEGORY_BUDGET_EXISTS_ERROR');
+        break;
+      default:
+        title = this.translate.instant('ERROR_TITLE');
+        message = this.translate.instant('GENERIC_BUDGET_ERROR');
+    }
+
+    // Use the confirmation modal as an alert
+    this.errorModalRef.title = title;
+    this.errorModalRef.message = message;
+    this.errorModalRef.messageColor = 'text-danger';
+    this.errorModalRef.modalType = 'alert';
+    this.errorModalRef.confirmButtonText = this.translate.instant('OK_BUTTON');
+    this.errorModalRef.open();
   }
 
   confirmDeleteBudget(budgetId: string | undefined): void {

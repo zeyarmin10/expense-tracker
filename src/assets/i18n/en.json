@@ -352,5 +352,10 @@
   "NO_SPENDING_DATA": "No spending data available for the selected period",
   "NO_BUDGET": "No Budget",
   "SET_BUDGET_MESSAGE": "Set a budget to track your spending",
-  "NO_BUDGET_SET": "No budget set"
+  "NO_BUDGET_SET": "No budget set",
+  "BUDGET_ERROR_TITLE": "Budget Error",
+  "INDIVIDUAL_CATEGORIES_EXIST_ERROR": "Cannot add a total budget when individual category budgets already exist for this month. Please delete the existing category budgets instead.",
+  "TOTAL_BUDGET_EXISTS_ERROR": "Cannot add an individual category budget when a total budget already exists for this month. Please delete the existing total budget instead.",
+  "CATEGORY_BUDGET_EXISTS_ERROR": "This category already has a budget for this month. Please delete the existing budget instead.",
+  "GENERIC_BUDGET_ERROR": "An error occurred while adding the budget."
 }
