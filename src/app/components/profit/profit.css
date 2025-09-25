@@ -12,6 +12,7 @@
 }
 
 .recorded-income {
+  max-width: fit-content;
   padding: 0.25rem 0.5rem;
   border-radius: 0.5rem;
   background: linear-gradient(135deg, #f0fdf4, #dcfce7);

@@ -156,7 +156,7 @@
                   <select
                     id="currency"
                     formControlName="currency"
-                    class="form-control ps-2 pe-2"
+                    class="form-control text-center ps-2 pe-2"
                     style="max-width: 3em"
                   >
                     <option
@@ -780,7 +780,7 @@
                         </span>
                       </span>
                     </div>
-                    <div class="d-flex flex-column mb-2">
+                    <div class="d-flex justify-content-end flex-column mb-2">
                       <span
                         *ngFor="let total of monthData.total | keyvalue"
                         class="text-end d-flex flex-column mb-2"
@@ -793,7 +793,7 @@
                             monthData.budget &&
                             monthData.budget.currency === total.key
                           "
-                          class="text-end expense-amount monthly-expense"
+                          class="ms-auto expense-amount monthly-expense"
                         >
                           {{
                             formatService.formatAmountWithSymbol(
@@ -805,13 +805,13 @@
                       </span>
                       <span
                         *ngIf="monthData.budget"
-                        class="text-end d-flex flex-column"
+                        class="text-end d-flex justify-content-end flex-column text-end"
                       >
                         <small class="text-muted">{{
                           "BALANCE" | translate
                         }}</small>
                         <span
-                          class="text-end"
+                          class="ms-auto"
                           [class.text-success]="monthData.budget.balance >= 0"
                           [class.text-danger]="monthData.budget.balance < 0"
                           [ngClass]="

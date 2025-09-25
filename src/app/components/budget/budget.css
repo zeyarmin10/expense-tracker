@@ -60,6 +60,7 @@
   background: linear-gradient(135deg, #eff6ff, #dbeafe);
 }
 .budget-amount {
+  max-width: fit-content;
   color: #1d4ed8;
 }
 .monthly-budget {
@@ -74,6 +75,7 @@
   background: linear-gradient(135deg, #fffbeb, #fef3c7);
 }
 .expense-amount {
+  max-width: fit-content;
   color: #d97706;
 }
 .monthly-expense {
@@ -84,11 +86,13 @@
 
 /* Balance (conditional) */
 .monthly-balance-positive {
+  max-width: fit-content;
   border-radius: 0.5rem;
   padding: 0.25rem;
   background: linear-gradient(135deg, #ecfdf5, #d1fae5);
 }
 .monthly-balance-negative {
+  max-width: fit-content;
   border-radius: 0.5rem;
   padding: 0.25rem;
   background: linear-gradient(135deg, #fef2f2, #fecaca);
@@ -117,6 +121,7 @@
   border-radius: 0.5rem;
 }
 .recorded-budget {
+  max-width: fit-content;
   padding: 0.25rem 0.5rem;
   border-radius: 0.5rem;
   background: linear-gradient(135deg, #eff6ff, #dbeafe);
