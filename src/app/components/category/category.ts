@@ -95,7 +95,7 @@ export class Category implements OnInit {
   }
 
   async onAddSubmit(): Promise<void> {
-    if (this._categoriesSubject.value.length >= 10) {
+    if (this._categoriesSubject.value.length >= 100) {
       // Use the new error modal instead of toastService
       this.showErrorModal(
         this.translateService.instant('ERROR_TITLE'),

@@ -213,7 +213,7 @@
   "CONFIRMATION_TITLE": "Confirmation",
   "CONFIRM_DELETE_EXPENSE": "Are you sure you want to delete this expense? This action cannot be undone.",
   "EXPENSE_DELETED_SUCCESS": "Expense deleted successfully!",
-  "CATEGORY_LIMIT_REACHED": "Maximum of 10 categories allowed.",
+  "CATEGORY_LIMIT_REACHED": "Maximum of 100 categories allowed.",
   "CATEGORY_ALREADY_EXISTS": "A category with this name already exists. Please choose a different name.",
   "CONFIRM_DELETE_TITLE": "Confirm Deletion",
   "DELETE_BUTTON": "Delete",
