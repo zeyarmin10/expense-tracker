@@ -483,6 +483,8 @@
                         <div class="d-flex justify-content-center mb-2">
                           <small class="text-muted">
                             {{ "EXPENSE_AMOUNT" | translate }}:
+                          </small>
+                          <small class="expense-amount ms-1">
                             {{
                               formatService.formatAmountWithSymbol(
                                 monthData.total.spent,
@@ -579,7 +581,7 @@
                           <small
                             [ngClass]="{
                               'text-success': monthData.total.percentage <= 75,
-                              'text-warning':
+                              'expense-amount':
                                 monthData.total.percentage > 75 &&
                                 monthData.total.percentage < 100,
                               'text-danger': monthData.total.percentage >= 100
@@ -614,10 +616,12 @@
                       *ngFor="let category of monthData.categories"
                       class="card mb-1 border border-2"
                       [ngClass]="{
-                        'border-success': category.percentage <= 75,
-                        'border-warning':
+                        'border-success less-than-75':
+                          category.percentage <= 75,
+                        'border-warning between-75-and-100':
                           category.percentage > 75 && category.percentage < 100,
-                        'border-danger': category.percentage >= 100
+                        'border-danger more-than-100':
+                          category.percentage >= 100
                       }"
                     >
                       <div class="card-body category-budget-card-body">
@@ -688,7 +692,7 @@
                           <small
                             [ngClass]="{
                               'text-success': category.percentage <= 75,
-                              'text-warning':
+                              'expense-amount':
                                 category.percentage > 75 &&
                                 category.percentage < 100,
                               'text-danger': category.percentage >= 100
