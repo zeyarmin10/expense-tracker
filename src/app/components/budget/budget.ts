@@ -145,12 +145,12 @@ export class BudgetComponent implements OnInit, OnDestroy {
 
   private _startDate$ = new BehaviorSubject<string>('');
   private _endDate$ = new BehaviorSubject<string>('');
-  private _selectedDateRange$ = new BehaviorSubject<string>('custom');
+  private _selectedDateRange$ = new BehaviorSubject<string>('currentMonth');
 
   private authService = inject(AuthService);
   private userDataService = inject(UserDataService);
 
-  public selectedDateFilter: string = 'custom';
+  public selectedDateFilter: string = 'currentMonth';
   public startDate: string | null = null;
   public endDate: string | null = null;
   public dateFilter$ = new BehaviorSubject<DateRange>({ start: '', end: '' });

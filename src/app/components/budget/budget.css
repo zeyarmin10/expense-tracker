@@ -128,9 +128,27 @@
 }
 
 .total-budget-title {
+  color: #1d4ed8;
   background: linear-gradient(135deg, #e0f2fe, #bae6fd);
   padding: 0.25rem 0.5rem;
   border-radius: 0.5rem;
+}
+.category-title {
+  background: linear-gradient(135deg, #f8f8f8, #dddddd);
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.5rem;
+}
+
+.less-than-75 {
+  background: linear-gradient(135deg, #fdfffe, #efffef);
+}
+
+.between-75-and-100 {
+  background: linear-gradient(135deg, #fffefa, #fff8dc);
+}
+
+.more-than-100 {
+  background: linear-gradient(135deg, #fffafa, #ffeaea);
 }
 
 @media (max-width: 364.98px) {

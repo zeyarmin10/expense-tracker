@@ -504,11 +504,13 @@
                       *ngIf="monthData.total.budget > 0"
                       class="card mb-2 border border-2"
                       [ngClass]="{
-                        'border-success': monthData.total.percentage <= 75,
-                        'border-warning':
+                        'border-success less-than-75':
+                          monthData.total.percentage <= 75,
+                        'border-warning between-75-and-100':
                           monthData.total.percentage > 75 &&
                           monthData.total.percentage < 100,
-                        'border-danger': monthData.total.percentage >= 100
+                        'border-danger more-than-100':
+                          monthData.total.percentage >= 100
                       }"
                     >
                       <div class="card-body total-budget-card-body">
@@ -535,17 +537,17 @@
                           </span>
                         </h6>
 
-                        <div
-                          class="d-flex flex-row-reverse justify-content-between mb-1"
-                        >
-                          <small class="text-muted">
+                        <div class="text-end mb-1">
+                          <small class="expense-amount">
                             {{
                               formatService.formatAmountWithSymbol(
                                 monthData.total.spent,
                                 monthData.currency
                               )
                             }}
-                            /
+                          </small>
+                          /
+                          <small class="budget-amount">
                             {{
                               formatService.formatAmountWithSymbol(
                                 monthData.total.budget,
@@ -555,7 +557,7 @@
                           </small>
                         </div>
 
-                        <div class="progress mb-2" style="height: 8px">
+                        <div class="progress mb-1" style="height: 8px">
                           <div
                             class="progress-bar"
                             [ngClass]="{
@@ -622,7 +624,9 @@
                         <div
                           class="card-title d-flex justify-content-between align-items-center"
                         >
-                          <small>{{ category.name }}</small>
+                          <small class="category-title">
+                            {{ category.name }}
+                          </small>
                           <small
                             [ngClass]="{
                               'text-success': category.percentage <= 75,
@@ -642,17 +646,17 @@
                           </small>
                         </div>
 
-                        <div
-                          class="d-flex d-flex flex-row-reverse justify-content-between mb-2"
-                        >
-                          <small class="text-muted">
+                        <div class="text-end mb-1">
+                          <small class="expense-amount">
                             {{
                               formatService.formatAmountWithSymbol(
                                 category.spent,
                                 monthData.currency
                               )
                             }}
-                            /
+                          </small>
+                          /
+                          <small class="budget-amount">
                             {{
                               formatService.formatAmountWithSymbol(
                                 category.budget,
@@ -662,7 +666,7 @@
                           </small>
                         </div>
 
-                        <div class="progress mb-2" style="height: 6px">
+                        <div class="progress mb-1" style="height: 6px">
                           <div
                             class="progress-bar"
                             [ngClass]="{

@@ -73,7 +73,7 @@ export class ExpenseOverview implements OnInit {
   allExpenses$: Observable<ServiceIExpense[]> =
     this.expenseService.getExpenses();
   filteredExpenses$: Observable<ServiceIExpense[]> = of([]);
-  selectedDateFilter: string = 'custom';
+  selectedDateFilter: string = 'currentMonth';
   startDate: string = '';
   endDate: string = '';
   searchTerm: string = '';
@@ -120,7 +120,7 @@ export class ExpenseOverview implements OnInit {
     this.startDate = this.datePipe.transform(oneYearAgo, 'yyyy-MM-dd') || '';
     this.endDate = this.datePipe.transform(now, 'yyyy-MM-dd') || '';
 
-    this.setDateFilter('custom');
+    this.setDateFilter('currentMonth');
 
     this.filteredExpenses$ = combineLatest([
       this.allExpenses$,
