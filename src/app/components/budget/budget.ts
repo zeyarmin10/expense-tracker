@@ -70,6 +70,7 @@ interface SpendingMonitorItem {
   sortDate: Date;
   currency: string;
   total: {
+    budgetType: string;
     budget: number;
     spent: number;
     remaining: number;
@@ -412,7 +413,13 @@ export class BudgetComponent implements OnInit, OnDestroy {
               month: this.formatLocalizedDateSummary(monthYear + '-01'),
               sortDate: firstDayOfMonth,
               currency: expense.currency,
-              total: { budget: 0, spent: 0, remaining: 0, percentage: 0 },
+              total: {
+                budgetType: '',
+                budget: 0,
+                spent: 0,
+                remaining: 0,
+                percentage: 0,
+              },
               categories: [],
             });
           }
@@ -457,7 +464,13 @@ export class BudgetComponent implements OnInit, OnDestroy {
               month: this.formatLocalizedDateSummary(monthYear + '-01'),
               sortDate: firstDayOfMonth,
               currency: budget.currency,
-              total: { budget: 0, spent: 0, remaining: 0, percentage: 0 },
+              total: {
+                budgetType: '',
+                budget: 0,
+                spent: 0,
+                remaining: 0,
+                percentage: 0,
+              },
               categories: [],
             });
           }
@@ -467,6 +480,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
           if (budget.category === 'all') {
             // Add to total budget
             monthData.total.budget += budget.amount;
+            monthData.total.budgetType = 'all';
           } else {
             // Find or create category entry
             let categoryEntry = monthData.categories.find(
@@ -483,6 +497,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
               };
               monthData.categories.push(categoryEntry);
             }
+            monthData.total.budgetType = 'category';
             categoryEntry.budget += budget.amount;
             categoryEntry.hasBudget = true;
           }
