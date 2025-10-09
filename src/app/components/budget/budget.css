@@ -46,15 +46,6 @@
   padding: 0;
 }
 
-/* For mobile devices, increase the chart height for better readability */
-@media (max-width: 767px) {
-  .chart-container {
-    position: relative;
-    min-height: 50vh;
-    margin-bottom: 20px;
-  }
-}
-
 .budget-card {
   border: 2px solid #3b82f6;
   background: linear-gradient(135deg, #eff6ff, #dbeafe);
@@ -163,13 +154,24 @@
   .budget-monthly-summary {
     padding: 1rem 0.5rem;
   }
-  .total-budget-card-body,
-  .category-budget-card-body {
-    padding-left: 0.5rem !important;
-    padding-right: 0.5rem !important;
-  }
   .budget-spending-monitor-body {
     padding-left: 0.5rem !important;
     padding-right: 0.5rem !important;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .smaller-font {
+    font-size: smaller;
+  }
+  .total-budget-card-body {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+  }
+  .category-budget-card-body {
+    padding: 0.25rem 0.5rem !important;
+  }
+  .no-category-budget-card-body {
+    padding: 0.25rem 0.5rem !important;
   }
 }

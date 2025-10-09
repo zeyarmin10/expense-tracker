@@ -516,9 +516,9 @@ export class BudgetComponent implements OnInit, OnDestroy {
           });
 
           // Filter out categories without budgets
-          monthData.categories = monthData.categories.filter(
-            (category) => category.hasBudget
-          );
+          //   monthData.categories = monthData.categories.filter(
+          //     (category) => category.hasBudget
+          //   );
         });
 
         // Convert to array and sort by date (newest first)
@@ -527,6 +527,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
         );
       })
     );
+    console.log('spending monitor data => ', this.spendingMonitorData$);
 
     this.totalBudgetByCurrency$ = filteredData$.pipe(
       map(({ budgets }) => {
