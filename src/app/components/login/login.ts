@@ -141,15 +141,15 @@ export class LoginComponent implements OnInit, OnDestroy {
         const user = await this.authService.login(email, password);
         this.sessionService.recordActivity();
         // Check if user has categories, if not, add default ones
-        const hasCategories = await this.categoryService.hasCategories(
-          user.uid
-        );
-        if (!hasCategories) {
-          await this.categoryService.addDefaultCategories(
-            user.uid,
-            this.currentLang
-          ); // Pass currentLang
-        }
+        // const hasCategories = await this.categoryService.hasCategories(
+        //   user.uid
+        // );
+        // if (!hasCategories) {
+        //   await this.categoryService.addDefaultCategories(
+        //     user.uid,
+        //     this.currentLang
+        //   ); // Pass currentLang
+        // }
         await this.postLogin();
       } else {
         const user = await this.authService.register(email, password);
@@ -162,10 +162,10 @@ export class LoginComponent implements OnInit, OnDestroy {
           };
           await this.userDataService.createUserProfile(newUserProfile);
           // Add default categories for the newly registered user
-          await this.categoryService.addDefaultCategories(
-            user.uid,
-            this.currentLang
-          ); // Pass currentLang
+        //   await this.categoryService.addDefaultCategories(
+        //     user.uid,
+        //     this.currentLang
+        //   ); // Pass currentLang
           await this.postLogin();
         }
       }
@@ -196,23 +196,23 @@ export class LoginComponent implements OnInit, OnDestroy {
                   createdAt: new Date().toISOString(),
                 };
                 await this.userDataService.createUserProfile(newUserProfile);
-                // Add default categories for the new Google user
-                await this.categoryService.addDefaultCategories(
-                  user.uid,
-                  this.currentLang
-                ); // Pass currentLang
+                // // Add default categories for the new Google user
+                // await this.categoryService.addDefaultCategories(
+                //   user.uid,
+                //   this.currentLang
+                // ); // Pass currentLang
                 await this.postLogin();
               } else {
                 // If user profile exists, check for categories and add if not present
-                const hasCategories = await this.categoryService.hasCategories(
-                  user.uid
-                );
-                if (!hasCategories) {
-                  await this.categoryService.addDefaultCategories(
-                    user.uid,
-                    this.currentLang
-                  ); // Pass currentLang
-                }
+                // const hasCategories = await this.categoryService.hasCategories(
+                //   user.uid
+                // );
+                // if (!hasCategories) {
+                //   await this.categoryService.addDefaultCategories(
+                //     user.uid,
+                //     this.currentLang
+                //   ); // Pass currentLang
+                // }
                 await this.postLogin();
               }
             });
@@ -231,7 +231,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.sessionService.recordActivity();
     this.router.navigate(['/dashboard']).then(() => {
       // ✅ REVISED: Add window.location.reload() to reload the browser
-      window.location.reload();
+    //   window.location.reload();
     });
   }
 

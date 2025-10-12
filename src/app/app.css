@@ -29,3 +29,25 @@
     /* font-weight: bold; */
     color: #2574b8 !important; /* Example active link color */
 }
+
+/* LIGHT MODE DEFAULTS */
+:root {
+  --color-primary-accent: #00C0D4;
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f8f9fa; /* For Cards/Panels */
+  --color-text-primary: #212529;
+  --color-border: #dee2e6;
+
+  /* Status Colors */
+  --color-success: #198754;
+  --color-warning: #ffc107;
+  --color-danger: #dc3545;
+}
+
+/* DARK MODE OVERRIDES */
+body.dark-mode {
+  --color-bg-primary: #121212;
+  --color-bg-secondary: #1E1E1E;
+  --color-text-primary: #f8f9fa;
+  --color-border: #333333;
+}

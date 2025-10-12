@@ -155,6 +155,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     Chart.defaults.font.family = 'MyanmarUIFont, Arial, sans-serif';
 
+    // Check if user has categories, if not, add default categories
     this.authService.currentUser$
       .pipe(
         takeUntil(this.destroy$),
