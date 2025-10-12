@@ -156,9 +156,9 @@ export class ExpenseOverview implements OnInit {
         }
 
         // Sort expenses by date in descending order
-        filtered.sort(
-          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-        );
+        // filtered.sort(
+        //   (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+        // );
 
         this.calculateSummary(filtered);
         this.updatePieChart(filtered);
@@ -240,9 +240,12 @@ export class ExpenseOverview implements OnInit {
     }, {} as { [key: string]: CategoryTotal });
 
     // Convert the map to an array and sort by total expense in descending order
-    this.categoryTotals = Object.values(categoryTotalsMap).sort(
-      (a, b) => b.total - a.total
-    );
+    // this.categoryTotals = Object.values(categoryTotalsMap).sort(
+    //   (a, b) => b.total - a.total
+    // );
+    this.categoryTotals = Object.values(categoryTotalsMap);
+        
+
 
     // Keep the most expensive category logic for the chart and other summaries
     const mostExpensive = this.categoryTotals[0]?.category;

@@ -188,15 +188,16 @@ export class BudgetComponent implements OnInit, OnDestroy {
       ],
       description: [''],
     });
-    this.budgets$ = this.budgetService.getBudgets().pipe(
-      map((budgets) =>
-        budgets.sort((a, b) => {
-          const dateA = a.period ? new Date(a.period).getTime() : 0;
-          const dateB = b.period ? new Date(b.period).getTime() : 0;
-          return dateB - dateA;
-        })
-      )
-    );
+    // this.budgets$ = this.budgetService.getBudgets().pipe(
+    //   map((budgets) =>
+    //     budgets.sort((a, b) => {
+    //       const dateA = a.period ? new Date(a.period).getTime() : 0;
+    //       const dateB = b.period ? new Date(b.period).getTime() : 0;
+    //       return dateB - dateA;
+    //     })
+    //   )
+    // );
+    this.budgets$ = this.budgetService.getBudgets();
 
     this.expenses$ = this.expenseService.getExpenses();
 
@@ -379,9 +380,9 @@ export class BudgetComponent implements OnInit, OnDestroy {
         );
 
         // Sort the temporary array by the 'sortDate' property
-        temporarySummaryArray.sort(
-          (a, b) => b.sortDate.getTime() - a.sortDate.getTime()
-        );
+        // temporarySummaryArray.sort(
+        //   (a, b) => b.sortDate.getTime() - a.sortDate.getTime()
+        // );
 
         // Map the sorted array to the final structure, excluding the temporary 'sortDate' property
         return temporarySummaryArray.map((item) => ({
@@ -537,12 +538,12 @@ export class BudgetComponent implements OnInit, OnDestroy {
         });
 
         // Convert to array and sort by date (newest first)
-        return Array.from(monthlyDataMap.values()).sort(
-          (a, b) => b.sortDate.getTime() - a.sortDate.getTime()
-        );
+        // return Array.from(monthlyDataMap.values()).sort(
+        //   (a, b) => b.sortDate.getTime() - a.sortDate.getTime()
+        // );
+        return Array.from(monthlyDataMap.values());
       })
     );
-    console.log('spending monitor data => ', this.spendingMonitorData$);
 
     this.totalBudgetByCurrency$ = filteredData$.pipe(
       map(({ budgets }) => {
@@ -710,9 +711,9 @@ export class BudgetComponent implements OnInit, OnDestroy {
         }));
 
         // Sort the array in ascending chronological order
-        sortedMonthlyData.sort(
-          (a, b) => a.data.date.getTime() - b.data.date.getTime()
-        );
+        // sortedMonthlyData.sort(
+        //   (a, b) => a.data.date.getTime() - b.data.date.getTime()
+        // );
 
         // ✅ REVISED: Get start and end dates from the dateFilter$ observable.
         const dateRange = this.dateFilter$.getValue();

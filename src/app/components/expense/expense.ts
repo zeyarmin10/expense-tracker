@@ -178,10 +178,12 @@ export class Expense implements OnInit {
           );
         }
         // MODIFIED: Sort by creation date descending to display the latest content first
-        return filtered.sort(
-          (a, b) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
+        // return filtered.sort(
+        //   (a, b) =>
+        //     new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        // );
+
+        return filtered;
       })
     );
 
