@@ -156,9 +156,9 @@ export class ExpenseOverview implements OnInit {
         }
 
         // Sort expenses by date in descending order
-        // filtered.sort(
-        //   (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-        // );
+        filtered.sort(
+          (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+        );
 
         this.calculateSummary(filtered);
         this.updatePieChart(filtered);
