@@ -79,6 +79,27 @@
               (ngSubmit)="onSubmitIncome()"
               class="row"
             >
+              
+              <div class="col-md-6 mb-3">
+                <label for="incomeDate" class="form-label">{{
+                  "DATE" | translate
+                }}</label>
+                <input
+                  type="date"
+                  id="incomeDate"
+                  formControlName="date"
+                  class="form-control"
+                />
+                <div
+                  *ngIf="
+                    incomeForm.controls['date'].invalid &&
+                    incomeForm.controls['date'].touched
+                  "
+                  class="text-danger"
+                >
+                  {{ "DATE_REQUIRED" | translate }}
+                </div>
+              </div>
               <div class="col-md-6 mb-3">
                 <label for="incomeAmount" class="form-label">{{
                   "AMOUNT" | translate
@@ -117,38 +138,18 @@
                 </div>
               </div>
               <div class="col-md-6 mb-3">
-                <label for="incomeDate" class="form-label">{{
-                  "DATE" | translate
-                }}</label>
-                <input
-                  type="date"
-                  id="incomeDate"
-                  formControlName="date"
-                  class="form-control"
-                />
-                <div
-                  *ngIf="
-                    incomeForm.controls['date'].invalid &&
-                    incomeForm.controls['date'].touched
-                  "
-                  class="text-danger"
-                >
-                  {{ "DATE_REQUIRED" | translate }}
-                </div>
-              </div>
-              <div class="col-md-6 mb-3">
                 <label for="incomeDescription" class="form-label">{{
                   "DESCRIPTION" | translate
                 }}</label>
-                <input
-                  type="text"
+                <textarea
                   id="incomeDescription"
                   formControlName="description"
                   class="form-control"
+                  rows="2"
                   placeholder="{{
                     'INCOME_DESCRIPTION_PLACEHOLDER' | translate
                   }}"
-                />
+                ></textarea>
               </div>
               <div class="d-grid gap-2 d-flex justify-content-end">
                 <button
