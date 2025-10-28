@@ -19,9 +19,10 @@ export interface UserProfile {
   displayName?: string;
   createdAt?: string;
   currency?: string;
-  // Add any other user-specific data you want to store here
+  budgetPeriod?: 'weekly' | 'monthly' | 'yearly' | 'custom' | null;
+  budgetStartMonth?: number | null;
+  budgetEndMonth?: number | null;
 }
-
 @Injectable({
   providedIn: 'root',
 })

@@ -360,5 +360,29 @@
   "GENERIC_BUDGET_ERROR": "An error occurred while adding the budget.",
   "CALCULATED": "Calculated",
   "CALCULATED_FROM_CATEGORIES": "Calculated from individual category budgets",
-  "MIXED_BUDGET_TYPES_ERROR": "Cannot add a monthly budget when a yearly budget exists for this period, or vice versa. Please use the same budget type for consistency."
+  "MIXED_BUDGET_TYPES_ERROR": "Cannot add a monthly budget when a yearly budget exists for this period, or vice versa. Please use the same budget type for consistency.",
+  "BUDGET_PERIOD_LABEL": "Budget Period",
+  "BUDGET_PERIOD": {
+    "NONE": "None (No enforced period)",
+    "WEEKLY": "Weekly",
+    "MONTHLY": "Monthly",
+    "YEARLY": "Yearly",
+    "CUSTOM": "Custom"
+  },
+  "START_MONTH_LABEL": "Start Month",
+  "END_MONTH_LABEL": "End Month",
+  "MONTHS": {
+    "JANUARY": "January",
+    "FEBRUARY": "February",
+    "MARCH": "March",
+    "APRIL": "April",
+    "MAY": "May",
+    "JUNE": "June",
+    "JULY": "July",
+    "AUGUST": "August",
+    "SEPTEMBER": "September",
+    "OCTOBER": "October",
+    "NOVEMBER": "November",
+    "DECEMBER": "December"
+  }
 }

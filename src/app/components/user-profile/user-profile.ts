@@ -19,6 +19,29 @@ import { User } from '@angular/fire/auth';
 import { FormsModule } from '@angular/forms';
 import { AVAILABLE_CURRENCIES } from '../../core/constants/app.constants';
 
+export const AVAILABLE_BUDGET_PERIODS = [
+  { code: null, nameKey: 'BUDGET_PERIOD.NONE' },
+  { code: 'weekly', nameKey: 'BUDGET_PERIOD.WEEKLY' },
+  { code: 'monthly', nameKey: 'BUDGET_PERIOD.MONTHLY' },
+  { code: 'yearly', nameKey: 'BUDGET_PERIOD.YEARLY' },
+  { code: 'custom', nameKey: 'BUDGET_PERIOD.CUSTOM' },
+];
+
+export const AVAILABLE_MONTHS = [
+  { code: 0, nameKey: 'MONTHS.JANUARY' },
+  { code: 1, nameKey: 'MONTHS.FEBRUARY' },
+  { code: 2, nameKey: 'MONTHS.MARCH' },
+  { code: 3, nameKey: 'MONTHS.APRIL' },
+  { code: 4, nameKey: 'MONTHS.MAY' },
+  { code: 5, nameKey: 'MONTHS.JUNE' },
+  { code: 6, nameKey: 'MONTHS.JULY' },
+  { code: 7, nameKey: 'MONTHS.AUGUST' },
+  { code: 8, nameKey: 'MONTHS.SEPTEMBER' },
+  { code: 9, nameKey: 'MONTHS.OCTOBER' },
+  { code: 10, nameKey: 'MONTHS.NOVEMBER' },
+  { code: 11, nameKey: 'MONTHS.DECEMBER' },
+];
+
 @Component({
   selector: 'app-user-profile',
   standalone: true,
@@ -44,7 +67,10 @@ export class UserProfileComponent implements OnInit {
   userDisplayData$: Observable<{
     email: string | null;
     createdAt: string | null;
-    currency?: string; // Add currency to this type
+    currency?: string;
+    budgetPeriod?: 'weekly' | 'monthly' | 'yearly' | 'custom' | null;
+    budgetStartMonth?: number | null;
+    budgetEndMonth?: number | null;
   } | null>;
   userPhotoUrl$: Observable<string | null>;
 
@@ -53,8 +79,15 @@ export class UserProfileComponent implements OnInit {
   selectedLanguage: string = 'my';
   selectedCurrency: string = 'MMK';
 
+  selectedBudgetPeriod: 'weekly' | 'monthly' | 'yearly' | 'custom' | null =
+    null;
+  availableBudgetPeriods = AVAILABLE_BUDGET_PERIODS;
+  translatedBudgetPeriods: any[] = [];
+
   // ✅ NEW: Available currencies for the dropdown
   availableCurrencies = AVAILABLE_CURRENCIES;
+  availableMonths = AVAILABLE_MONTHS;
+  translatedMonths: any[] = [];
 
   translatedCurrencies: any[] = [];
 
@@ -68,6 +101,9 @@ export class UserProfileComponent implements OnInit {
     this.userProfileForm = this.fb.group({
       displayName: ['', Validators.maxLength(50)],
       currency: ['MMK', Validators.required],
+      budgetPeriod: [null],
+      budgetStartMonth: [null],
+      budgetEndMonth: [null],
     });
 
     this.userDisplayData$ = this.authService.currentUser$.pipe(
@@ -78,13 +114,20 @@ export class UserProfileComponent implements OnInit {
               const currentDisplayName =
                 profile?.displayName || user.displayName || '';
               const currentCurrency = profile?.currency || 'MMK';
+              const currentBudgetPeriod = profile?.budgetPeriod || null;
+              const currentStartMonth = profile?.budgetStartMonth ?? null;
+              const currentEndMonth = profile?.budgetEndMonth ?? null;
               this.userProfileForm.patchValue({
                 displayName: currentDisplayName,
                 currency: currentCurrency,
+                budgetPeriod: currentBudgetPeriod,
+                budgetStartMonth: currentStartMonth,
+                budgetEndMonth: currentEndMonth,
               });
 
               // ✅ NEW: Set selectedCurrency from profile or default
               this.selectedCurrency = profile?.currency || 'MMK';
+              this.selectedBudgetPeriod = currentBudgetPeriod;
 
               if (!profile) {
                 // If no profile exists, create one with default currency
@@ -95,7 +138,10 @@ export class UserProfileComponent implements OnInit {
                     displayName: user.displayName || '',
                     createdAt:
                       user.metadata.creationTime || new Date().toISOString(),
-                    currency: this.selectedCurrency, // Add default currency
+                    currency: this.selectedCurrency,
+                    budgetPeriod: this.selectedBudgetPeriod,
+                    budgetStartMonth: null,
+                    budgetEndMonth: null,
                   })
                   .catch((err) =>
                     console.error('Error creating initial user profile:', err)
@@ -109,9 +155,19 @@ export class UserProfileComponent implements OnInit {
                 user.metadata.creationTime ||
                 new Date().toISOString();
 
-              const currency = profile?.currency || 'MMK'; // Pass currency in map
+              const currency = profile?.currency || 'MMK';
+              const budgetPeriod = profile?.budgetPeriod || null;
+              const budgetStartMonth = profile?.budgetStartMonth ?? null;
+              const budgetEndMonth = profile?.budgetEndMonth ?? null;
 
-              return { email, createdAt, currency };
+              return {
+                email,
+                createdAt,
+                currency,
+                budgetPeriod,
+                budgetStartMonth,
+                budgetEndMonth,
+              };
             }),
             catchError((err) => {
               console.error('Error fetching user profile data:', err);
@@ -121,7 +177,13 @@ export class UserProfileComponent implements OnInit {
           );
         }
         // Handle no user logged in case
-        this.userProfileForm.patchValue({ displayName: '', currency: 'MMK' });
+        this.userProfileForm.patchValue({
+          displayName: '',
+          currency: 'MMK',
+          budgetPeriod: null,
+          budgetStartMonth: null,
+          budgetEndMonth: null,
+        });
         return of(null);
       })
     );
@@ -139,6 +201,13 @@ export class UserProfileComponent implements OnInit {
         return null;
       })
     );
+
+    // ✅ NEW: Subscribe to budgetPeriod changes to clear month values when needed
+    this.userProfileForm
+      .get('budgetPeriod')
+      ?.valueChanges.subscribe((period) => {
+        this.handleBudgetPeriodChange(period);
+      });
   }
 
   ngOnInit(): void {
@@ -154,10 +223,14 @@ export class UserProfileComponent implements OnInit {
     // Subscribe to language changes to update the currency names
     this.translate.onLangChange.subscribe(() => {
       this.translateCurrencyNames();
+      this.translateBudgetPeriodNames();
+      this.translateMonthNames();
     });
 
     // Initial translation on component load
     this.translateCurrencyNames();
+    this.translateBudgetPeriodNames();
+    this.translateMonthNames();
   }
 
   translateCurrencyNames() {
@@ -167,6 +240,60 @@ export class UserProfileComponent implements OnInit {
         name: this.translate.instant('CURRENCY_NAMES.' + currency.code),
       };
     });
+  }
+
+  translateBudgetPeriodNames() {
+    this.translatedBudgetPeriods = this.availableBudgetPeriods.map((period) => {
+      return {
+        ...period,
+        name: this.translate.instant(period.nameKey),
+      };
+    });
+  }
+
+  translateMonthNames() {
+    this.translatedMonths = this.availableMonths.map((month) => {
+      return {
+        ...month,
+        name: this.translate.instant(month.nameKey),
+      };
+    });
+  }
+
+  /**
+   * Clears budget start and end months if the period is not 'custom'.
+   * @param period The new value of budgetPeriod.
+   */
+  handleBudgetPeriodChange(
+    period: 'weekly' | 'monthly' | 'yearly' | 'custom' | null
+  ): void {
+    const startMonthControl = this.userProfileForm.get('budgetStartMonth');
+    const endMonthControl = this.userProfileForm.get('budgetEndMonth');
+
+    if (period !== 'custom') {
+      // Only update if the current value isn't already null to avoid unnecessary markAsDirty()
+      if (startMonthControl?.value !== null) {
+        startMonthControl?.setValue(null);
+        // Mark as dirty so onSubmit is triggered if they change from 'custom' to another period
+        startMonthControl?.markAsDirty();
+      }
+
+      if (endMonthControl?.value !== null) {
+        endMonthControl?.setValue(null);
+        endMonthControl?.markAsDirty();
+      }
+    } else {
+      // When switching to 'custom', reset to the default values (Jan/Dec)
+      // but only if they are currently null.
+      if (startMonthControl?.value === null) {
+        startMonthControl.setValue(0);
+        startMonthControl.markAsDirty();
+      }
+      if (endMonthControl?.value === null) {
+        endMonthControl.setValue(11);
+        endMonthControl.markAsDirty();
+      }
+    }
   }
 
   onLanguageChange(language: string): void {
@@ -193,6 +320,11 @@ export class UserProfileComponent implements OnInit {
       if (currentUser && currentUser.uid) {
         const displayName = this.userProfileForm.get('displayName')?.value;
         const currency = this.userProfileForm.get('currency')?.value;
+        const budgetPeriod = this.userProfileForm.get('budgetPeriod')?.value;
+        const budgetStartMonth =
+          this.userProfileForm.get('budgetStartMonth')?.value;
+        const budgetEndMonth =
+          this.userProfileForm.get('budgetEndMonth')?.value;
         try {
           if (
             currentUser.displayName !== displayName &&
@@ -206,7 +338,10 @@ export class UserProfileComponent implements OnInit {
           // If you decide to make it editable later, this is where you'd save it.
           await this.userDataService.updateUserProfile(currentUser.uid, {
             displayName: displayName,
-            currency: currency, // Save the selected currency
+            currency: currency,
+            budgetPeriod: budgetPeriod,
+            budgetStartMonth: budgetStartMonth,
+            budgetEndMonth: budgetEndMonth,
           });
 
           this.successMessage = this.translate.instant(
