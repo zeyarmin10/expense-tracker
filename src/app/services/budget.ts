@@ -35,7 +35,7 @@ export class BudgetService {
   constructor() {}
 
   private getBudgetsRef(userId: string): DatabaseReference {
-    return ref(this.db, `expenseprofit/users/${userId}/budgets`);
+    return ref(this.db, `users/${userId}/budgets`);
   }
 
   /**
@@ -98,10 +98,7 @@ export class BudgetService {
     if (!budgetId) {
       throw new Error('Budget ID is required for update.');
     }
-    const budgetRef = ref(
-      this.db,
-      `expenseprofit/users/${userId}/budgets/${budgetId}`
-    );
+    const budgetRef = ref(this.db, `users/${userId}/budgets/${budgetId}`);
     await update(budgetRef, updatedData);
   }
 
@@ -120,10 +117,7 @@ export class BudgetService {
     if (!id) {
       throw new Error('Budget ID is required for deletion.');
     }
-    const budgetRef = ref(
-      this.db,
-      `expenseprofit/users/${userId}/budgets/${id}`
-    );
+    const budgetRef = ref(this.db, `users/${userId}/budgets/${id}`);
     await remove(budgetRef);
   }
 }

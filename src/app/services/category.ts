@@ -1,5 +1,18 @@
 import { Injectable, inject } from '@angular/core';
-import { Database, ref, push, remove, update, listVal, query, orderByChild, equalTo, DatabaseReference, get, child } from '@angular/fire/database';
+import {
+  Database,
+  ref,
+  push,
+  remove,
+  update,
+  listVal,
+  query,
+  orderByChild,
+  equalTo,
+  DatabaseReference,
+  get,
+  child,
+} from '@angular/fire/database';
 import { Observable, switchMap, firstValueFrom, map, of, Subject } from 'rxjs';
 import { AuthService } from './auth';
 
@@ -17,22 +30,26 @@ interface ServiceIExpense {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class CategoryService {
   private db: Database = inject(Database);
   private authService = inject(AuthService);
 
   // Add a Subject to emit category updates
-  private categoryUpdatedSource = new Subject<{ oldName: string; newName: string; userId: string }>();
+  private categoryUpdatedSource = new Subject<{
+    oldName: string;
+    newName: string;
+    userId: string;
+  }>();
   categoryUpdated$ = this.categoryUpdatedSource.asObservable(); // Public observable
 
   private getCategoriesRef(userId: string): DatabaseReference {
-    return ref(this.db, `expenseprofit/users/${userId}/categories`);
+    return ref(this.db, `users/${userId}/categories`);
   }
 
   private getExpensesRef(userId: string): DatabaseReference {
-    return ref(this.db, `expenseprofit/users/${userId}/expenses`);
+    return ref(this.db, `users/${userId}/expenses`);
   }
 
   /**
@@ -50,7 +67,7 @@ export class CategoryService {
     // Store category name in a consistent format (trimmed, lowercase)
     const newCategory: Omit<ServiceICategory, 'id'> = {
       name: categoryName.trim(), // Trim spaces when adding
-      userId: userId
+      userId: userId,
     };
     await push(this.getCategoriesRef(userId), newCategory);
   }
@@ -62,10 +79,12 @@ export class CategoryService {
    */
   getCategories(): Observable<ServiceICategory[]> {
     return this.authService.currentUser$.pipe(
-      switchMap(user => {
+      switchMap((user) => {
         if (user?.uid) {
           // Use listVal with keyField to include the Firebase key as 'id'
-          return listVal<ServiceICategory>(this.getCategoriesRef(user.uid), { keyField: 'id' });
+          return listVal<ServiceICategory>(this.getCategoriesRef(user.uid), {
+            keyField: 'id',
+          });
         }
         return of([]); // Return empty array if no user
       })
@@ -78,7 +97,11 @@ export class CategoryService {
    * @param newCategoryName The new name for the category.
    * @returns A Promise that resolves when the category is updated.
    */
-  async updateCategory(categoryId: string, oldCategoryName: string, newCategoryName: string): Promise<void> {
+  async updateCategory(
+    categoryId: string,
+    oldCategoryName: string,
+    newCategoryName: string
+  ): Promise<void> {
     const userId = (await firstValueFrom(
       this.authService.currentUser$.pipe(map((user) => user?.uid))
     ))!;
@@ -88,12 +111,19 @@ export class CategoryService {
     if (!categoryId) {
       throw new Error('Category ID is required for update.');
     }
-    const categoryRef = ref(this.db, `expenseprofit/users/${userId}/categories/${categoryId}`);
+    const categoryRef = ref(
+      this.db,
+      `users/${userId}/categories/${categoryId}`
+    );
     // Update category name in a consistent format (trimmed)
     await update(categoryRef, { name: newCategoryName.trim() }); // Trim spaces when updating
 
     // Emit event after successful update
-    this.categoryUpdatedSource.next({ oldName: oldCategoryName, newName: newCategoryName, userId: userId });
+    this.categoryUpdatedSource.next({
+      oldName: oldCategoryName,
+      newName: newCategoryName,
+      userId: userId,
+    });
   }
 
   /**
@@ -111,7 +141,10 @@ export class CategoryService {
     if (!categoryId) {
       throw new Error('Category ID is required for deletion.');
     }
-    const categoryRef = ref(this.db, `expenseprofit/users/${userId}/categories/${categoryId}`);
+    const categoryRef = ref(
+      this.db,
+      `users/${userId}/categories/${categoryId}`
+    );
     await remove(categoryRef);
   }
 
@@ -123,43 +156,49 @@ export class CategoryService {
    * @returns A Promise that resolves to true if the category is used, false otherwise.
    */
   async isCategoryUsedInExpenses(categoryId: string): Promise<boolean> {
-    console.log('isCategoryUsedInExpenses called for categoryId:', categoryId);
     const userId = (await firstValueFrom(
       this.authService.currentUser$.pipe(map((user) => user?.uid))
     ))!;
-    console.log('isCategoryUsedInExpenses - userId:', userId);
-
     if (!userId) {
       console.error('isCategoryUsedInExpenses - User not authenticated.');
       throw new Error('User not authenticated.');
     }
 
     // First, get the category name from the provided categoryId
-    const categoryRef = ref(this.db, `expenseprofit/users/${userId}/categories/${categoryId}`);
-    console.log('isCategoryUsedInExpenses - categoryRef path:', categoryRef.toString());
+    const categoryRef = ref(
+      this.db,
+      `users/${userId}/categories/${categoryId}`
+    );
 
     const categorySnapshot = await get(categoryRef);
     const categoryName = categorySnapshot.val()?.name;
-    console.log('isCategoryUsedInExpenses - categoryName from snapshot:', categoryName);
 
     if (!categoryName) {
-      console.warn('isCategoryUsedInExpenses - Category name not found for ID:', categoryId);
+      console.warn(
+        'isCategoryUsedInExpenses - Category name not found for ID:',
+        categoryId
+      );
       return false;
     }
 
     // Normalize the category name for comparison (trimmed)
     const normalizedCategoryName = categoryName.trim();
-    console.log('isCategoryUsedInExpenses - Normalized categoryName:', normalizedCategoryName);
 
     // Now, query expenses where categoryId (which holds the name) matches the normalized name
     const expensesRef = this.getExpensesRef(userId);
-    const expensesQuery = query(expensesRef, orderByChild('category'), equalTo(normalizedCategoryName));
-    console.log('isCategoryUsedInExpenses - expensesQuery for normalizedCategoryName:', normalizedCategoryName);
+    const expensesQuery = query(
+      expensesRef,
+      orderByChild('category'),
+      equalTo(normalizedCategoryName)
+    );
 
     try {
       const snapshot = await get(expensesQuery);
       const result = snapshot.exists() && snapshot.size > 0;
-      console.log('isCategoryUsedInExpenses - Query result (snapshot exists and size > 0):', result);
+      console.log(
+        'isCategoryUsedInExpenses - Query result (snapshot exists and size > 0):',
+        result
+      );
       console.log('isCategoryUsedInExpenses - Snapshot value:', snapshot.val()); // Log actual data found
       return result;
     } catch (error) {
@@ -194,17 +233,17 @@ export class CategoryService {
       { en: 'Transportation', my: 'သယ်ယူပို့ဆောင်ရေး' },
       { en: 'Utilities', my: 'အသုံးစရိတ်' },
       { en: 'Entertainment', my: 'ဖျော်ဖြေရေး' },
-      { en: 'Shopping', my: 'စျေးဝယ်' }
+      { en: 'Shopping', my: 'စျေးဝယ်' },
     ];
 
     for (const categoryData of defaultCategories) {
-      const categoryName = language === 'my' ? categoryData.my : categoryData.en;
+      const categoryName =
+        language === 'my' ? categoryData.my : categoryData.en;
       const newCategory: Omit<ServiceICategory, 'id'> = {
         name: categoryName.trim(),
-        userId: userId
+        userId: userId,
       };
       await push(this.getCategoriesRef(userId), newCategory);
-      console.log(`Default category "${categoryName}" added for user: ${userId} in ${language} language.`);
     }
     console.log('All default categories added for user:', userId);
   }

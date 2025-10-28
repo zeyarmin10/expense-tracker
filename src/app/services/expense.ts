@@ -1,5 +1,18 @@
 import { Injectable, inject } from '@angular/core';
-import { Database, ref, push, remove, update, listVal, query, orderByChild, equalTo, DatabaseReference, objectVal, get } from '@angular/fire/database';
+import {
+  Database,
+  ref,
+  push,
+  remove,
+  update,
+  listVal,
+  query,
+  orderByChild,
+  equalTo,
+  DatabaseReference,
+  objectVal,
+  get,
+} from '@angular/fire/database';
 import { Observable, switchMap, map, of, firstValueFrom } from 'rxjs';
 import { AuthService } from './auth';
 import { CategoryService } from './category'; // Import CategoryService
@@ -16,12 +29,12 @@ export interface ServiceIExpense {
   currency: string; // <== ADD THIS
   totalCost: number; // Assuming this is derived
   createdAt: string;
-  updatedAt: [''],
+  updatedAt: [''];
   userId: string;
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ExpenseService {
   private db: Database = inject(Database);
@@ -29,14 +42,16 @@ export class ExpenseService {
   private categoryService = inject(CategoryService); // Inject CategoryService
 
   constructor() {
-    this.categoryService.categoryUpdated$.subscribe(async ({ oldName, newName, userId }) => {
-      // Logic to update expenses with the new category name
-      await this.updateExpensesCategory(userId, oldName, newName);
-    });
+    this.categoryService.categoryUpdated$.subscribe(
+      async ({ oldName, newName, userId }) => {
+        // Logic to update expenses with the new category name
+        await this.updateExpensesCategory(userId, oldName, newName);
+      }
+    );
   }
 
   private getExpensesRef(userId: string): DatabaseReference {
-    return ref(this.db, `expenseprofit/users/${userId}/expenses`);
+    return ref(this.db, `users/${userId}/expenses`);
   }
 
   /**
@@ -44,12 +59,17 @@ export class ExpenseService {
    * @param expenseData The expense data (excluding userId, id, totalCost, createdAt).
    * @returns A Promise that resolves when the expense is added.
    */
-  async addExpense(expenseData: Omit<ServiceIExpense, 'id' | 'userId' | 'totalCost' | 'createdAt'>): Promise<void> {
+  async addExpense(
+    expenseData: Omit<
+      ServiceIExpense,
+      'id' | 'userId' | 'totalCost' | 'createdAt'
+    >
+  ): Promise<void> {
     const userId = (await firstValueFrom(
-        this.authService.currentUser$.pipe(map((user) => user?.uid))
+      this.authService.currentUser$.pipe(map((user) => user?.uid))
     ))!;
     if (!userId) {
-        throw new Error('User not authenticated.');
+      throw new Error('User not authenticated.');
     }
 
     const totalCost = expenseData.quantity * expenseData.price;
@@ -57,7 +77,7 @@ export class ExpenseService {
       ...expenseData,
       userId,
       totalCost,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     };
     await push(this.getExpensesRef(userId), newExpense);
   }
@@ -69,9 +89,11 @@ export class ExpenseService {
    */
   getExpenses(): Observable<ServiceIExpense[]> {
     return this.authService.currentUser$.pipe(
-      switchMap(user => {
+      switchMap((user) => {
         if (user?.uid) {
-          return listVal<ServiceIExpense>(this.getExpensesRef(user.uid), { keyField: 'id' });
+          return listVal<ServiceIExpense>(this.getExpensesRef(user.uid), {
+            keyField: 'id',
+          });
         }
         return of([]); // Return empty array if no user
       })
@@ -84,9 +106,12 @@ export class ExpenseService {
    * @param updatedData The partial expense data to update.
    * @returns A Promise that resolves when the expense is updated.
    */
-  async updateExpense(expenseId: string, updatedData: Partial<Omit<ServiceIExpense, 'id' | 'userId' | 'createdAt'>>): Promise<void> {
+  async updateExpense(
+    expenseId: string,
+    updatedData: Partial<Omit<ServiceIExpense, 'id' | 'userId' | 'createdAt'>>
+  ): Promise<void> {
     const userId = (await firstValueFrom(
-        this.authService.currentUser$.pipe(map((user) => user?.uid))
+      this.authService.currentUser$.pipe(map((user) => user?.uid))
     ))!;
 
     if (!userId) {
@@ -98,16 +123,25 @@ export class ExpenseService {
 
     // Recalculate totalCost if quantity or price is being updated
     if (updatedData.quantity !== undefined || updatedData.price !== undefined) {
-      const currentExpenseRef = ref(this.db, `expenseprofit/users/${userId}/expenses/${expenseId}`);
+      const currentExpenseRef = ref(
+        this.db,
+        `users/${userId}/expenses/${expenseId}`
+      );
       const snapshot = await get(currentExpenseRef);
       const currentExpense = snapshot.val() as ServiceIExpense;
 
-      const quantity = updatedData.quantity !== undefined ? updatedData.quantity : currentExpense.quantity;
-      const price = updatedData.price !== undefined ? updatedData.price : currentExpense.price;
+      const quantity =
+        updatedData.quantity !== undefined
+          ? updatedData.quantity
+          : currentExpense.quantity;
+      const price =
+        updatedData.price !== undefined
+          ? updatedData.price
+          : currentExpense.price;
       updatedData.totalCost = quantity * price;
     }
 
-    const expenseRef = ref(this.db, `expenseprofit/users/${userId}/expenses/${expenseId}`);
+    const expenseRef = ref(this.db, `users/${userId}/expenses/${expenseId}`);
     await update(expenseRef, updatedData);
   }
 
@@ -118,7 +152,7 @@ export class ExpenseService {
    */
   async deleteExpense(expenseId: string): Promise<void> {
     const userId = (await firstValueFrom(
-        this.authService.currentUser$.pipe(map((user) => user?.uid))
+      this.authService.currentUser$.pipe(map((user) => user?.uid))
     ))!;
 
     if (!userId) {
@@ -127,7 +161,7 @@ export class ExpenseService {
     if (!expenseId) {
       throw new Error('Expense ID is required for deletion.');
     }
-    const expenseRef = ref(this.db, `expenseprofit/users/${userId}/expenses/${expenseId}`);
+    const expenseRef = ref(this.db, `users/${userId}/expenses/${expenseId}`);
     await remove(expenseRef);
   }
 
@@ -139,20 +173,26 @@ export class ExpenseService {
    * @param newCategoryName The new category name to set.
    * @returns A Promise that resolves when all matching expenses are updated.
    */
-  private async updateExpensesCategory(userId: string, oldCategoryName: string, newCategoryName: string): Promise<void> {
+  private async updateExpensesCategory(
+    userId: string,
+    oldCategoryName: string,
+    newCategoryName: string
+  ): Promise<void> {
     const expensesRef = this.getExpensesRef(userId);
-    const snapshot = await get(query(expensesRef, orderByChild('category'), equalTo(oldCategoryName)));
+    const snapshot = await get(
+      query(expensesRef, orderByChild('category'), equalTo(oldCategoryName))
+    );
 
     const updates: { [key: string]: any } = {};
-    snapshot.forEach(childSnapshot => {
+    snapshot.forEach((childSnapshot) => {
       updates[`${childSnapshot.key}/category`] = newCategoryName;
     });
 
     if (Object.keys(updates).length > 0) {
       await update(expensesRef, updates);
-    //   console.log(`Updated ${Object.keys(updates).length} expenses from category '${oldCategoryName}' to '${newCategoryName}' for user ${userId}.`);
+      //   console.log(`Updated ${Object.keys(updates).length} expenses from category '${oldCategoryName}' to '${newCategoryName}' for user ${userId}.`);
     } else {
-    //   console.log(`No expenses found with category '${oldCategoryName}' for user ${userId}.`);
+      //   console.log(`No expenses found with category '${oldCategoryName}' for user ${userId}.`);
     }
   }
 
@@ -162,16 +202,18 @@ export class ExpenseService {
    */
   getCategories(): Observable<string[]> {
     return this.authService.currentUser$.pipe(
-        switchMap(user => {
+      switchMap((user) => {
         if (user?.uid) {
-            // listVal with keyField 'id' returns an array of objects.
-            // We need to map this to an array of category names.
-            return listVal<{ name: string }>(ref(this.db, `expenseprofit/users/${user.uid}/categories`)).pipe(
-            map(categories => categories.map(category => category.name))
-            );
+          // listVal with keyField 'id' returns an array of objects.
+          // We need to map this to an array of category names.
+          return listVal<{ name: string }>(
+            ref(this.db, `expenseprofit/users/${user.uid}/categories`)
+          ).pipe(
+            map((categories) => categories.map((category) => category.name))
+          );
         }
         return of([]);
-        })
+      })
     );
   }
 }

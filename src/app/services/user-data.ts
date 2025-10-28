@@ -35,7 +35,7 @@ export class UserDataService {
    * @returns A Promise that resolves when the data is set.
    */
   async createUserProfile(userProfile: UserProfile): Promise<void> {
-    const userRef = ref(this.db, `users/${userProfile.uid}`);
+    const userRef = ref(this.db, `users/${userProfile.uid}/profile`);
     return set(userRef, userProfile);
   }
 
@@ -45,7 +45,7 @@ export class UserDataService {
    * @returns An Observable of the UserProfile or null if not found.
    */
   getUserProfile(uid: string): Observable<UserProfile | null> {
-    const userRef = ref(this.db, `users/${uid}`);
+    const userRef = ref(this.db, `users/${uid}/profile`);
     // objectVal() returns an Observable of the object at the given path
     return objectVal<UserProfile>(userRef);
   }
@@ -60,7 +60,7 @@ export class UserDataService {
     uid: string,
     data: Partial<UserProfile>
   ): Promise<void> {
-    const userRef = ref(this.db, `users/${uid}`);
+    const userRef = ref(this.db, `users/${uid}/profile`);
     return update(userRef, data);
   }
 
@@ -70,7 +70,7 @@ export class UserDataService {
    * @returns A Promise that resolves when the data is removed.
    */
   async deleteUserProfile(uid: string): Promise<void> {
-    const userRef = ref(this.db, `users/${uid}`);
+    const userRef = ref(this.db, `users/${uid}/profile`);
     return remove(userRef);
   }
 }

@@ -1,7 +1,15 @@
 import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, Observable, of, firstValueFrom } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
-import { Database, ref, push, remove, update, listVal, DatabaseReference } from '@angular/fire/database';
+import {
+  Database,
+  ref,
+  push,
+  remove,
+  update,
+  listVal,
+  DatabaseReference,
+} from '@angular/fire/database';
 import { AuthService } from './auth';
 
 export interface ServiceIIncome {
@@ -26,7 +34,7 @@ export class IncomeService {
   }
 
   private getIncomesRef(userId: string): DatabaseReference {
-    return ref(this.db, `expenseprofit/users/${userId}/incomes`);
+    return ref(this.db, `users/${userId}/incomes`);
   }
 
   /**
@@ -34,7 +42,9 @@ export class IncomeService {
    * @param incomeData The income data (excluding userId, id, createdAt).
    * @returns A Promise that resolves when the income is added.
    */
-  async addIncome(incomeData: Omit<ServiceIIncome, 'id' | 'userId' | 'createdAt'>): Promise<void> {
+  async addIncome(
+    incomeData: Omit<ServiceIIncome, 'id' | 'userId' | 'createdAt'>
+  ): Promise<void> {
     const userId = (await firstValueFrom(
       this.authService.currentUser$.pipe(map((user) => user?.uid))
     ))!;
@@ -46,7 +56,7 @@ export class IncomeService {
     const newIncomeToSave: ServiceIIncome = {
       ...incomeData,
       userId,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     };
     await push(this.getIncomesRef(userId), newIncomeToSave);
   }
@@ -58,9 +68,11 @@ export class IncomeService {
    */
   getIncomes(): Observable<ServiceIIncome[]> {
     return this.authService.currentUser$.pipe(
-      switchMap(user => {
+      switchMap((user) => {
         if (user?.uid) {
-          return listVal<ServiceIIncome>(this.getIncomesRef(user.uid), { keyField: 'id' });
+          return listVal<ServiceIIncome>(this.getIncomesRef(user.uid), {
+            keyField: 'id',
+          });
         }
         return of([]); // Return empty array if no user
       })
@@ -73,7 +85,10 @@ export class IncomeService {
    * @param updatedData The partial income data to update.
    * @returns A Promise that resolves when the income is updated.
    */
-  async updateIncome(incomeId: string, updatedData: Partial<Omit<ServiceIIncome, 'id' | 'userId' | 'createdAt'>>): Promise<void> {
+  async updateIncome(
+    incomeId: string,
+    updatedData: Partial<Omit<ServiceIIncome, 'id' | 'userId' | 'createdAt'>>
+  ): Promise<void> {
     const userId = (await firstValueFrom(
       this.authService.currentUser$.pipe(map((user) => user?.uid))
     ))!;
@@ -83,7 +98,7 @@ export class IncomeService {
     if (!incomeId) {
       throw new Error('Income ID is required for update.');
     }
-    const incomeRef = ref(this.db, `expenseprofit/users/${userId}/incomes/${incomeId}`);
+    const incomeRef = ref(this.db, `users/${userId}/incomes/${incomeId}`);
     await update(incomeRef, updatedData);
   }
 
@@ -102,13 +117,14 @@ export class IncomeService {
     if (!id) {
       throw new Error('Income ID is required for deletion.');
     }
-    const incomeRef = ref(this.db, `expenseprofit/users/${userId}/incomes/${id}`);
+    const incomeRef = ref(this.db, `users/${userId}/incomes/${id}`);
     await remove(incomeRef);
   }
 
   // Method to get incomes for a specific year (useful for dashboard) - this will now filter from the Firebase stream
   getIncomesByYear(year: number): Observable<ServiceIIncome[]> {
-    return this.getIncomes().pipe( // Get all incomes from Firebase
+    return this.getIncomes().pipe(
+      // Get all incomes from Firebase
       map((incomes) =>
         incomes.filter((income) => new Date(income.date).getFullYear() === year)
       )
