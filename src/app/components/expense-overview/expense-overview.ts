@@ -129,6 +129,14 @@ export class ExpenseOverview implements OnInit {
       this._selectedCategory$, // <-- Add this new stream
     ]).pipe(
       map(([expenses, { start, end }, searchTerm, selectedCategory]) => {
+        // Calculate the total number of days in the selected date range
+        const startDate = new Date(start);
+        const endDate = new Date(end);
+        // Calculate difference in milliseconds, then convert to days (inclusive)
+        const timeDifference = endDate.getTime() - startDate.getTime();
+        // Add 1 to ensure the count is inclusive of the start and end days
+        const totalDays = Math.ceil(timeDifference / (1000 * 60 * 60 * 24)) + 1;
+
         // <-- Add selectedCategory here
         let filtered = expenses;
 
@@ -160,7 +168,7 @@ export class ExpenseOverview implements OnInit {
           (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
         );
 
-        this.calculateSummary(filtered);
+        this.calculateSummary(filtered, totalDays);
         this.updatePieChart(filtered);
 
         return filtered;
@@ -183,6 +191,8 @@ export class ExpenseOverview implements OnInit {
       this.endDate
     );
 
+    console.log('date range', dateRange);
+
     this.dateFilter$.next(dateRange);
   }
 
@@ -190,7 +200,7 @@ export class ExpenseOverview implements OnInit {
     this.searchFilter$.next(this.searchTerm);
   }
 
-  calculateSummary(expenses: ServiceIExpense[]): void {
+  calculateSummary(expenses: ServiceIExpense[], totalDays: number): void {
     if (!expenses || expenses.length === 0) {
       this.currencySummaries = [];
       this.mostExpenseCategory = 'N/A';
@@ -213,12 +223,13 @@ export class ExpenseOverview implements OnInit {
         (sum, e) => sum + e.totalCost,
         0
       );
-      const uniqueDays = new Set(
-        currencyExpenses.map((e) =>
-          this.datePipe.transform(e.date, 'yyyy-MM-dd')
-        )
-      ).size;
-      const dailyAverage = uniqueDays > 0 ? totalExpenses / uniqueDays : 0;
+      //   const uniqueDays = new Set(
+      //     currencyExpenses.map((e) =>
+      //       this.datePipe.transform(e.date, 'yyyy-MM-dd')
+      //     )
+      //   ).size;
+      //   const dailyAverage = uniqueDays > 0 ? totalExpenses / uniqueDays : 0;
+      const dailyAverage = totalDays > 0 ? totalExpenses / totalDays : 0;
 
       return {
         currency,
@@ -240,12 +251,10 @@ export class ExpenseOverview implements OnInit {
     }, {} as { [key: string]: CategoryTotal });
 
     // Convert the map to an array and sort by total expense in descending order
-    // this.categoryTotals = Object.values(categoryTotalsMap).sort(
-    //   (a, b) => b.total - a.total
-    // );
-    this.categoryTotals = Object.values(categoryTotalsMap);
-        
-
+    this.categoryTotals = Object.values(categoryTotalsMap).sort(
+      (a, b) => b.total - a.total
+    );
+    // this.categoryTotals = Object.values(categoryTotalsMap);
 
     // Keep the most expensive category logic for the chart and other summaries
     const mostExpensive = this.categoryTotals[0]?.category;
