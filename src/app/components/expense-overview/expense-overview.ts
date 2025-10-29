@@ -2,7 +2,14 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ExpenseService, ServiceIExpense } from '../../services/expense';
-import { Observable, BehaviorSubject, combineLatest, map, of } from 'rxjs';
+import {
+  Observable,
+  BehaviorSubject,
+  combineLatest,
+  map,
+  of,
+  switchMap,
+} from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { BaseChartDirective } from 'ng2-charts';
 import {
@@ -31,6 +38,8 @@ import {
   DateFilterService,
   DateRange,
 } from '../../services/date-filter.service';
+import { AuthService } from '../../services/auth';
+import { UserDataService, UserProfile } from '../../services/user-data';
 
 // Register the required chart components
 Chart.register(PieController, ArcElement, Tooltip, Legend);
@@ -66,6 +75,8 @@ export class ExpenseOverview implements OnInit {
   dateFilterService = inject(DateFilterService);
   datePipe = inject(DatePipe);
   translate = inject(TranslateService);
+  authService = inject(AuthService);
+  userDataService = inject(UserDataService);
 
   faMagnifyingGlass = faMagnifyingGlass;
 
@@ -77,6 +88,7 @@ export class ExpenseOverview implements OnInit {
   startDate: string = '';
   endDate: string = '';
   searchTerm: string = '';
+  userProfile$: Observable<UserProfile | null> = of(null);
 
   // --- Summary Statistics Properties ---
   currencySummaries: CurrencySummary[] = [];
@@ -121,6 +133,21 @@ export class ExpenseOverview implements OnInit {
     this.endDate = this.datePipe.transform(now, 'yyyy-MM-dd') || '';
 
     this.setDateFilter('currentMonth');
+
+    // Fetch user profile
+    this.userProfile$ = this.authService.currentUser$.pipe(
+      switchMap((user) => {
+        if (user?.uid) {
+          return this.userDataService.getUserProfile(user.uid);
+        }
+        return of(null);
+      })
+    );
+
+    // Subscribe to userProfile$ once to set the initial date filter
+    this.userProfile$.subscribe((profile) => {
+      this.setInitialDateFilter(profile);
+    });
 
     this.filteredExpenses$ = combineLatest([
       this.allExpenses$,
@@ -180,20 +207,105 @@ export class ExpenseOverview implements OnInit {
   dateFilter$ = new BehaviorSubject<DateRange>({ start: '', end: '' });
   searchFilter$ = new BehaviorSubject<string>('');
 
+  // ✅ NEW: Method to determine and set the initial date filter based on profile
+  setInitialDateFilter(profile: UserProfile | null): void {
+    const budgetPeriod = profile?.budgetPeriod;
+    const startMonth = profile?.budgetStartMonth; // YYYY-MM
+    const endMonth = profile?.budgetEndMonth; // YYYY-MM
+
+    let filterValue: string = 'currentMonth'; // Default filter
+
+    if (budgetPeriod) {
+      if (budgetPeriod === 'custom' && startMonth && endMonth) {
+        // 1. Calculate and set the YYYY-MM-DD range from the YYYY-MM strings
+        this.setCustomBudgetRange(startMonth, endMonth);
+        // 2. Set the UI filter to 'custom' and trigger filtering
+        this.setDateFilter('custom');
+        return; // Exit after setting custom range
+      }
+
+      // Map other budget periods to standard filter strings.
+      switch (budgetPeriod) {
+        case 'weekly':
+          filterValue = 'currentWeek';
+          break;
+        case 'monthly':
+          filterValue = 'currentMonth';
+          break;
+        case 'yearly':
+          filterValue = 'currentYear';
+          break;
+        default:
+          break;
+      }
+    }
+
+    // Apply the standard filter (e.g., 'currentMonth', 'currentYear', or 'currentWeek')
+    this.setDateFilter(filterValue);
+  }
+
+  // ✅ NEW: Method to convert YYYY-MM custom budget months to YYYY-MM-DD dates
+  setCustomBudgetRange(startMonth: string, endMonth: string): void {
+    // Start date: First day of the start month
+    const startDate = `${startMonth}-01`;
+
+    // End date: Last day of the end month
+    // We use the Date constructor trick: new Date(year, monthIndex, 0) gives the last day of the previous month.
+    // The month index is 1-indexed from the YYYY-MM string (e.g., '01' -> 1).
+    const monthIndex = parseInt(endMonth.substring(5), 10);
+    const year = parseInt(endMonth.substring(0, 4), 10);
+
+    // Set to the last day of the month specified by endMonth
+    const lastDayOfMonth = new Date(year, monthIndex, 0);
+    const endDate = this.datePipe.transform(lastDayOfMonth, 'yyyy-MM-dd') || '';
+
+    // Update the component's date properties
+    this.startDate = startDate;
+    this.endDate = endDate;
+  }
+
+  // ✅ REVISED: setDateFilter to handle the new 'currentWeek' filter
   setDateFilter(filter: string): void {
     this.selectedDateFilter = filter;
 
-    // ✅ Pass the injected datePipe instance to the service method
-    const dateRange = this.dateFilterService.getDateRange(
-      this.datePipe,
-      filter,
-      this.startDate,
-      this.endDate
+    // List of filters handled by DateFilterService
+    const serviceFilters = [
+      'last30Days',
+      'currentMonth',
+      'lastMonth',
+      'lastSixMonths',
+      'currentYear',
+      'lastYear',
+      'currentWeek', // Assumes DateFilterService handles 'currentWeek'
+    ];
+
+    if (serviceFilters.includes(filter)) {
+      // Standard filters use the service
+      const dateRange = this.dateFilterService.getDateRange(
+        this.datePipe,
+        filter,
+        this.startDate,
+        this.endDate // Passed but typically ignored for fixed filters
+      );
+      this.dateFilter$.next(dateRange);
+    } else if (filter === 'custom') {
+      // 'custom' filter uses the component's startDate/endDate properties
+      if (this.startDate && this.endDate) {
+        this.dateFilter$.next({
+          start: this.startDate,
+          end: this.endDate,
+        });
+      } else {
+        // Fallback if 'custom' is selected manually but dates are empty
+        this.setDateFilter('currentMonth');
+      }
+    }
+
+    console.log(
+      'date range set by filter:',
+      this.selectedDateFilter,
+      this.dateFilter$.value
     );
-
-    console.log('date range', dateRange);
-
-    this.dateFilter$.next(dateRange);
   }
 
   onSearch(): void {
