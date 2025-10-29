@@ -16,6 +16,9 @@
               [(ngModel)]="selectedDateFilter"
               (change)="setDateFilter(selectedDateFilter)"
             >
+              <option value="currentWeek">
+                {{ "CURRENT_WEEK" | translate }}
+              </option>
               <option value="last30Days">
                 {{ "LAST_30_DAYS" | translate }}
               </option>
