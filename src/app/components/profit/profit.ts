@@ -285,7 +285,6 @@ export class Profit implements OnInit, OnDestroy {
   // --- Initialization Methods ---
 
   private initLanguageAndUserProfile(): void {
-    // Language initialization
     const storedLang = localStorage.getItem('selectedLanguage');
     if (storedLang) {
       this.translate.use(storedLang);
@@ -295,7 +294,7 @@ export class Profit implements OnInit, OnDestroy {
         browserLang && browserLang.match(/my|en/) ? browserLang : 'my'
       );
     }
-    // Language change subscription for chart re-render
+    
     this.subscriptions.add(
       this.translate.onLangChange.subscribe(() => {
         this.cdr.detectChanges();
@@ -318,7 +317,93 @@ export class Profit implements OnInit, OnDestroy {
         // Note: 'currency' is disabled, so we use setValue on the control.
         this.incomeForm.get('currency')?.setValue(defaultCurrency);
         this.resetForm();
+
+        // ✅ NEW: Set default date filter from user profile budget period
+        const budgetPeriod = profile?.budgetPeriod;
+        if (budgetPeriod && budgetPeriod !== 'custom') {
+            // Set the date filter for predefined periods (weekly, monthly, yearly)
+            this.setDateFilter(budgetPeriod);
+        } else if (
+            budgetPeriod === 'custom' &&
+            profile?.budgetStartMonth &&
+            profile?.budgetEndMonth
+        ) {
+            // Set the date filter for custom period
+            this.setCustomDateFilter(
+                profile.budgetStartMonth,
+                profile.budgetEndMonth
+            );
+        }
       });
+  }
+
+  /**
+   * Sets the date filter to 'custom' using budget start/end months.
+   * @param startMonth YYYY-MM string from user profile (budgetStartMonth).
+   * @param endMonth YYYY-MM string from user profile (budgetEndMonth).
+   */
+  private setCustomDateFilter(startMonth: string, endMonth: string): void {
+    // Convert YYYY-MM to YYYY-MM-DD for the date filter inputs
+    // Start of month is the first day (e.g., '2025-01-01')
+    const customStartDate = `${startMonth}-01`;
+
+    // End of month is a bit trickier, but DateFilterService.getDateRange might handle it better if we use the start date of the next month and subtract a day.
+    // However, for initial setting, we can approximate the end of the month
+    // by finding the last day of the 'endMonth'.
+    
+    // A robust way to get the last day of the month is:
+    // 1. Create a date object for the 1st of the *next* month.
+    // 2. Subtract one day.
+    const [year, month] = endMonth.split('-').map(Number);
+    const nextMonth = month === 12 ? 1 : month + 1;
+    const nextYear = month === 12 ? year + 1 : year;
+    // Date: 'yyyy-MM-dd' is required, so we use 'yyyy-MM-01'
+    // new Date(year, monthIndex, day) - monthIndex is 0-based
+    const firstDayOfNextMonth = new Date(nextYear, nextMonth - 1, 1);
+    
+    // Go back one day to get the last day of the current month
+    const lastDayOfMonth = new Date(firstDayOfNextMonth);
+    lastDayOfMonth.setDate(firstDayOfNextMonth.getDate() - 1);
+
+    // Format to 'yyyy-MM-dd'
+    const customEndDate = this.datePipe.transform(
+      lastDayOfMonth,
+      'yyyy-MM-dd'
+    );
+
+    if (customStartDate && customEndDate) {
+      this.selectedDateFilter = 'custom';
+      this.startDate = customStartDate;
+      this.endDate = customEndDate;
+      this._startDate$.next(this.startDate);
+      this._endDate$.next(this.endDate);
+      this._selectedDateRange$.next('custom');
+    }
+  }
+
+  setDateFilter(filter: string): void {
+    // Only proceed if the filter is changing or if the filter is 'custom' and the dates are changing
+    if (this.selectedDateFilter === filter) {
+      if (filter !== 'custom') return; // Exit early if no change for non-custom filters
+      // For 'custom', let the code below handle date updates if needed, though typically custom is set via input
+    }
+    
+    this.selectedDateFilter = filter;
+    const dateRange = this.dateFilterService.getDateRange(
+      this.datePipe,
+      filter,
+      this.startDate,
+      this.endDate // startDate/endDate are only used by getDateRange for 'custom' filter
+    );
+
+    // ✅ REVISED: Update component state fields for display/input
+    this.startDate = dateRange.start;
+    this.endDate = dateRange.end;
+
+    // Update the BehaviorSubjects to trigger data reload
+    this._startDate$.next(dateRange.start);
+    this._endDate$.next(dateRange.end);
+    this._selectedDateRange$.next(filter);
   }
 
   private initChartSubscription(): void {
@@ -428,27 +513,6 @@ export class Profit implements OnInit, OnDestroy {
       this.isRecordedIncomesCollapsed = !this.isRecordedIncomesCollapsed;
     } else if (section === 'recordedBudgets') {
       this.isRecordedBudgetsCollapsed = !this.isRecordedBudgetsCollapsed;
-    }
-  }
-
-  setDateFilter(filter: string): void {
-    this.selectedDateFilter = filter;
-    const dateRange = this.dateFilterService.getDateRange(
-      this.datePipe,
-      filter,
-      this.startDate,
-      this.endDate
-    );
-
-    // Only update the BehaviorSubjects if the date range actually changed
-    if (
-      this._startDate$.getValue() !== dateRange.start ||
-      this._endDate$.getValue() !== dateRange.end ||
-      this._selectedDateRange$.getValue() !== filter
-    ) {
-      this._startDate$.next(dateRange.start);
-      this._endDate$.next(dateRange.end);
-      this._selectedDateRange$.next(filter);
     }
   }
 
