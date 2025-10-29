@@ -294,7 +294,7 @@ export class Profit implements OnInit, OnDestroy {
         browserLang && browserLang.match(/my|en/) ? browserLang : 'my'
       );
     }
-    
+
     this.subscriptions.add(
       this.translate.onLangChange.subscribe(() => {
         this.cdr.detectChanges();
@@ -381,13 +381,7 @@ export class Profit implements OnInit, OnDestroy {
     }
   }
 
-  setDateFilter(filter: string): void {
-    // Only proceed if the filter is changing or if the filter is 'custom' and the dates are changing
-    if (this.selectedDateFilter === filter) {
-      if (filter !== 'custom') return; // Exit early if no change for non-custom filters
-      // For 'custom', let the code below handle date updates if needed, though typically custom is set via input
-    }
-    
+  setDateFilter(filter: string): void {    
     this.selectedDateFilter = filter;
     const dateRange = this.dateFilterService.getDateRange(
       this.datePipe,
@@ -400,10 +394,16 @@ export class Profit implements OnInit, OnDestroy {
     this.startDate = dateRange.start;
     this.endDate = dateRange.end;
 
-    // Update the BehaviorSubjects to trigger data reload
-    this._startDate$.next(dateRange.start);
-    this._endDate$.next(dateRange.end);
-    this._selectedDateRange$.next(filter);
+    // Only update the BehaviorSubjects if the date range actually changed
+    if (
+      this._startDate$.getValue() !== dateRange.start ||
+      this._endDate$.getValue() !== dateRange.end ||
+      this._selectedDateRange$.getValue() !== filter
+    ) {
+      this._startDate$.next(dateRange.start);
+      this._endDate$.next(dateRange.end);
+      this._selectedDateRange$.next(filter);
+    }
   }
 
   private initChartSubscription(): void {
