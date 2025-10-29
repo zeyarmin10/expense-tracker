@@ -67,6 +67,11 @@
     justify-content: center;
     width: 100%;
   }
+  .form-control[type="month"] {
+    font-size: 0.85rem;
+    /* You may also adjust padding slightly to match the smaller font */
+    padding: 0.375rem 0.5rem;
+  }
 }
 
 /* Apply the animation to buttons with .shine-effect class */

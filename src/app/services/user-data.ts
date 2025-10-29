@@ -20,8 +20,8 @@ export interface UserProfile {
   createdAt?: string;
   currency?: string;
   budgetPeriod?: 'weekly' | 'monthly' | 'yearly' | 'custom' | null;
-  budgetStartMonth?: number | null;
-  budgetEndMonth?: number | null;
+  budgetStartMonth?: string | null; 
+  budgetEndMonth?: string | null;
 }
 @Injectable({
   providedIn: 'root',

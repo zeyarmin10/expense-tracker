@@ -27,20 +27,6 @@ export const AVAILABLE_BUDGET_PERIODS = [
   { code: 'custom', nameKey: 'BUDGET_PERIOD.CUSTOM' },
 ];
 
-export const AVAILABLE_MONTHS = [
-  { code: 0, nameKey: 'MONTHS.JANUARY' },
-  { code: 1, nameKey: 'MONTHS.FEBRUARY' },
-  { code: 2, nameKey: 'MONTHS.MARCH' },
-  { code: 3, nameKey: 'MONTHS.APRIL' },
-  { code: 4, nameKey: 'MONTHS.MAY' },
-  { code: 5, nameKey: 'MONTHS.JUNE' },
-  { code: 6, nameKey: 'MONTHS.JULY' },
-  { code: 7, nameKey: 'MONTHS.AUGUST' },
-  { code: 8, nameKey: 'MONTHS.SEPTEMBER' },
-  { code: 9, nameKey: 'MONTHS.OCTOBER' },
-  { code: 10, nameKey: 'MONTHS.NOVEMBER' },
-  { code: 11, nameKey: 'MONTHS.DECEMBER' },
-];
 
 @Component({
   selector: 'app-user-profile',
@@ -69,8 +55,8 @@ export class UserProfileComponent implements OnInit {
     createdAt: string | null;
     currency?: string;
     budgetPeriod?: 'weekly' | 'monthly' | 'yearly' | 'custom' | null;
-    budgetStartMonth?: number | null;
-    budgetEndMonth?: number | null;
+    budgetStartMonth?: string | null; 
+    budgetEndMonth?: string | null;
   } | null>;
   userPhotoUrl$: Observable<string | null>;
 
@@ -86,8 +72,6 @@ export class UserProfileComponent implements OnInit {
 
   // ✅ NEW: Available currencies for the dropdown
   availableCurrencies = AVAILABLE_CURRENCIES;
-  availableMonths = AVAILABLE_MONTHS;
-  translatedMonths: any[] = [];
 
   translatedCurrencies: any[] = [];
 
@@ -224,13 +208,11 @@ export class UserProfileComponent implements OnInit {
     this.translate.onLangChange.subscribe(() => {
       this.translateCurrencyNames();
       this.translateBudgetPeriodNames();
-      this.translateMonthNames();
     });
 
     // Initial translation on component load
     this.translateCurrencyNames();
     this.translateBudgetPeriodNames();
-    this.translateMonthNames();
   }
 
   translateCurrencyNames() {
@@ -251,14 +233,6 @@ export class UserProfileComponent implements OnInit {
     });
   }
 
-  translateMonthNames() {
-    this.translatedMonths = this.availableMonths.map((month) => {
-      return {
-        ...month,
-        name: this.translate.instant(month.nameKey),
-      };
-    });
-  }
 
   /**
    * Clears budget start and end months if the period is not 'custom'.
@@ -269,6 +243,11 @@ export class UserProfileComponent implements OnInit {
   ): void {
     const startMonthControl = this.userProfileForm.get('budgetStartMonth');
     const endMonthControl = this.userProfileForm.get('budgetEndMonth');
+
+    // ✅ REVISED: Get current year in YYYY format to create default 'YYYY-MM' strings
+    const currentYear = this.datePipe.transform(new Date(), 'yyyy');
+    const defaultStartMonth = `${currentYear}-01`; // e.g., '2025-01'
+    const defaultEndMonth = `${currentYear}-12`;   // e.g., '2025-12'
 
     if (period !== 'custom') {
       // Only update if the current value isn't already null to avoid unnecessary markAsDirty()
@@ -283,14 +262,13 @@ export class UserProfileComponent implements OnInit {
         endMonthControl?.markAsDirty();
       }
     } else {
-      // When switching to 'custom', reset to the default values (Jan/Dec)
-      // but only if they are currently null.
+      // When switching to 'custom', set default month strings
       if (startMonthControl?.value === null) {
-        startMonthControl.setValue(0);
+        startMonthControl.setValue(defaultStartMonth);
         startMonthControl.markAsDirty();
       }
       if (endMonthControl?.value === null) {
-        endMonthControl.setValue(11);
+        endMonthControl.setValue(defaultEndMonth);
         endMonthControl.markAsDirty();
       }
     }

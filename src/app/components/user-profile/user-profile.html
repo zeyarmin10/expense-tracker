@@ -121,34 +121,33 @@
             </div>
 
             <div
-              class="row mb-3"
+              class="mb-3"
               *ngIf="userProfileForm.get('budgetPeriod')?.value === 'custom'"
             >
-              <div class="col-6 col-sm-6 col-md-6">
-                <label class="form-label font-weight-bold">
-                  <strong>{{ "START_MONTH_LABEL" | translate }} :</strong>
-                </label>
-                <select class="form-select" formControlName="budgetStartMonth">
-                  <option
-                    *ngFor="let month of translatedMonths"
-                    [value]="month.code"
-                  >
-                    {{ month.name }}
-                  </option>
-                </select>
-              </div>
-              <div class="col-6 col-sm-6 col-md-6">
-                <label class="form-label font-weight-bold">
-                  <strong>{{ "END_MONTH_LABEL" | translate }} :</strong>
-                </label>
-                <select class="form-select" formControlName="budgetEndMonth">
-                  <option
-                    *ngFor="let month of translatedMonths"
-                    [value]="month.code"
-                  >
-                    {{ month.name }}
-                  </option>
-                </select>
+              <label class="form-label font-weight-bold d-block">
+                <strong>
+                  {{ "START_MONTH_LABEL" | translate }} -
+                  {{ "END_MONTH_LABEL" | translate }} :
+                </strong>
+              </label>
+
+              <div class="row g-1">
+                <div class="col-6">
+                  <input
+                    type="month"
+                    class="form-control"
+                    formControlName="budgetStartMonth"
+                    [placeholder]="'START_MONTH_LABEL' | translate"
+                  />
+                </div>
+                <div class="col-6">
+                  <input
+                    type="month"
+                    class="form-control"
+                    formControlName="budgetEndMonth"
+                    [placeholder]="'END_MONTH_LABEL' | translate"
+                  />
+                </div>
               </div>
             </div>
             <div class="mb-3">
