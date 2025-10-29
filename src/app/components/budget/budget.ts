@@ -50,7 +50,6 @@ import {
 } from '../../services/date-filter.service';
 import { CategoryService } from '../../services/category';
 
-
 Chart.register(...registerables);
 
 // Define interfaces for better type checking and clarity
@@ -792,7 +791,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
 
     // ✅ NEW: Fetch user profile
     this.userProfile$ = this.authService.currentUser$.pipe(
-      switchMap(user => {
+      switchMap((user) => {
         if (user?.uid) {
           return this.userDataService.getUserProfile(user.uid);
         }
@@ -801,7 +800,8 @@ export class BudgetComponent implements OnInit, OnDestroy {
     );
 
     // ✅ NEW: Subscribe to userProfile$ once to set the initial date filter
-    this.userProfile$.pipe(take(1)).subscribe(profile => { // Use take(1) if you only need the initial value
+    this.userProfile$.pipe(take(1)).subscribe((profile) => {
+      // Use take(1) if you only need the initial value
       this.setInitialDateFilter(profile);
     });
 
@@ -1098,11 +1098,11 @@ export class BudgetComponent implements OnInit, OnDestroy {
     }
   }
 
- // ✅ NEW: Method to determine and set the initial date filter based on profile
+  // ✅ NEW: Method to determine and set the initial date filter based on profile
   setInitialDateFilter(profile: UserProfile | null): void {
     const budgetPeriod = profile?.budgetPeriod;
     const startMonth = profile?.budgetStartMonth; // YYYY-MM
-    const endMonth = profile?.budgetEndMonth;     // YYYY-MM
+    const endMonth = profile?.budgetEndMonth; // YYYY-MM
 
     let filterValue: string = 'currentMonth'; // Default filter
 
@@ -1119,16 +1119,16 @@ export class BudgetComponent implements OnInit, OnDestroy {
       // Map other budget periods to standard filter strings.
       switch (budgetPeriod) {
         case 'weekly':
-            filterValue = 'currentWeek';
-            break;
+          filterValue = 'currentWeek';
+          break;
         case 'monthly':
-            filterValue = 'currentMonth';
-            break;
+          filterValue = 'currentMonth';
+          break;
         case 'yearly':
-            filterValue = 'currentYear';
-            break;
+          filterValue = 'currentYear';
+          break;
         default:
-            break;
+          break;
       }
     }
 
@@ -1146,47 +1146,56 @@ export class BudgetComponent implements OnInit, OnDestroy {
     // So, we use monthIndex + 1 to get the correct last day of the desired month (month index is 0-11).
     const monthIndex = parseInt(endMonth.substring(5), 10); // e.g., '01' -> 1
     const year = parseInt(endMonth.substring(0, 4), 10);
-    
+
     // Set to the last day of the month specified by endMonth (monthIndex is 1-indexed here)
-    const lastDayOfMonth = new Date(year, monthIndex, 0); 
+    const lastDayOfMonth = new Date(year, monthIndex, 0);
     this.endDate = this.datePipe.transform(lastDayOfMonth, 'yyyy-MM-dd') || '';
 
     // Note: this.startDate and this.endDate are class properties used by setDateFilter('custom')
   }
-  
+
   // ✅ REVISED: setDateFilter to handle 'currentWeek' filter
   setDateFilter(filter: string): void {
     this.selectedDateFilter = filter;
 
     // List of filters handled by DateFilterService
     const serviceFilters = [
-      'last30Days', 'currentMonth', 'lastMonth', 'lastSixMonths', 
-      'currentYear', 'lastYear', 'currentWeek' // Assumes DateFilterService handles 'currentWeek'
+      'last30Days',
+      'currentMonth',
+      'lastMonth',
+      'lastSixMonths',
+      'currentYear',
+      'lastYear',
+      'currentWeek', // Assumes DateFilterService handles 'currentWeek'
     ];
-    
+
     if (serviceFilters.includes(filter)) {
-        // Standard filters use the service
-        const dateRange = this.dateFilterService.getDateRange(
-          this.datePipe,
-          filter,
-          this.startDate, // These are passed, but start/end dates for fixed filters are calculated by the service
-          this.endDate
-        );
-        this.dateFilter$.next(dateRange);
+      // Standard filters use the service
+      const dateRange = this.dateFilterService.getDateRange(
+        this.datePipe,
+        filter,
+        this.startDate, // These are passed, but start/end dates for fixed filters are calculated by the service
+        this.endDate
+      );
+      this.dateFilter$.next(dateRange);
     } else if (filter === 'custom') {
-        // 'custom' filter uses the component's startDate/endDate properties
-        if (this.startDate && this.endDate) {
-          this.dateFilter$.next({
-            start: this.startDate,
-            end: this.endDate,
-          });
-        } else {
-          // Fallback if 'custom' is selected manually but dates are empty
-          this.setDateFilter('currentMonth');
-        }
+      // 'custom' filter uses the component's startDate/endDate properties
+      if (this.startDate && this.endDate) {
+        this.dateFilter$.next({
+          start: this.startDate,
+          end: this.endDate,
+        });
+      } else {
+        // Fallback if 'custom' is selected manually but dates are empty
+        this.setDateFilter('currentMonth');
+      }
     }
-    
-    console.log('Budget date range set by filter:', this.selectedDateFilter, this.dateFilter$.value);
+
+    console.log(
+      'Budget date range set by filter:',
+      this.selectedDateFilter,
+      this.dateFilter$.value
+    );
   }
 
   private chartInstance: Chart | undefined;

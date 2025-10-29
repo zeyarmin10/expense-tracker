@@ -383,6 +383,14 @@ export class Profit implements OnInit, OnDestroy {
 
   setDateFilter(filter: string): void {    
     this.selectedDateFilter = filter;
+    if (filter === 'custom') {
+        // Only call setCustomDateFilter when both start and end months are available as strings
+        const startMonth = this.userProfile?.budgetStartMonth;
+        const endMonth = this.userProfile?.budgetEndMonth;
+        if (startMonth && endMonth) {
+          this.setCustomDateFilter(startMonth, endMonth);
+        }
+    }
     const dateRange = this.dateFilterService.getDateRange(
       this.datePipe,
       filter,
