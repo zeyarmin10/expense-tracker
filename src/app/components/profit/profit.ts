@@ -108,7 +108,7 @@ export class Profit implements OnInit, OnDestroy {
   // Observables for filtered data (likely provided by ProfitLossService)
   incomes$!: Observable<ServiceIIncome[]>;
   filteredBudgets$!: Observable<ServiceIBudget[]>;
-  
+
   // Observables for calculated totals (likely provided by ProfitLossService)
   totalExpensesByCurrency$!: Observable<CurrencyMap>;
   totalIncomesByCurrency$!: Observable<CurrencyMap>;
@@ -191,23 +191,37 @@ export class Profit implements OnInit, OnDestroy {
       dateRange$
     );
 
-    this.incomes$ = profitLossData$.pipe(map(data => data.incomes));
-    this.filteredBudgets$ = profitLossData$.pipe(map(data => data.budgets));
-    this.totalExpensesByCurrency$ = profitLossData$.pipe(map(data => data.totalExpenses));
-    this.totalIncomesByCurrency$ = profitLossData$.pipe(map(data => data.totalIncomes));
-    this.totalBudgetsByCurrency$ = profitLossData$.pipe(map(data => data.totalBudgets));
-    this.totalProfitLossByCurrency$ = profitLossData$.pipe(map(data => data.profitLoss));
-    this.remainingBalanceByCurrency$ = profitLossData$.pipe(map(data => data.remainingBalance));
-    this.netProfitByCurrency$ = profitLossData$.pipe(map(data => data.netProfit));
+    this.incomes$ = profitLossData$.pipe(map((data) => data.incomes));
+    this.filteredBudgets$ = profitLossData$.pipe(map((data) => data.budgets));
+    this.totalExpensesByCurrency$ = profitLossData$.pipe(
+      map((data) => data.totalExpenses)
+    );
+    this.totalIncomesByCurrency$ = profitLossData$.pipe(
+      map((data) => data.totalIncomes)
+    );
+    this.totalBudgetsByCurrency$ = profitLossData$.pipe(
+      map((data) => data.totalBudgets)
+    );
+    this.totalProfitLossByCurrency$ = profitLossData$.pipe(
+      map((data) => data.profitLoss)
+    );
+    this.remainingBalanceByCurrency$ = profitLossData$.pipe(
+      map((data) => data.remainingBalance)
+    );
+    this.netProfitByCurrency$ = profitLossData$.pipe(
+      map((data) => data.netProfit)
+    );
 
     // Chart Data Generation
     this.profitChartData$ = profitLossData$.pipe(
       map(({ incomes, expenses }) => {
         const totalIncome = incomes.reduce(
-          (sum: number, income: ServiceIIncome) => sum + income.amount, 0
+          (sum: number, income: ServiceIIncome) => sum + income.amount,
+          0
         );
         const totalExpense = expenses.reduce(
-          (sum: number, expense: ServiceIExpense) => sum + expense.totalCost, 0
+          (sum: number, expense: ServiceIExpense) => sum + expense.totalCost,
+          0
         );
         const profit = totalIncome - totalExpense;
 
@@ -305,9 +319,7 @@ export class Profit implements OnInit, OnDestroy {
     this.authService.currentUser$
       .pipe(
         switchMap((user) =>
-          user?.uid
-            ? this.userDataService.getUserProfile(user.uid)
-            : of(null)
+          user?.uid ? this.userDataService.getUserProfile(user.uid) : of(null)
         ),
         take(1)
       )
@@ -321,18 +333,18 @@ export class Profit implements OnInit, OnDestroy {
         // ✅ NEW: Set default date filter from user profile budget period
         const budgetPeriod = profile?.budgetPeriod;
         if (budgetPeriod && budgetPeriod !== 'custom') {
-            // Set the date filter for predefined periods (weekly, monthly, yearly)
-            this.setDateFilter(budgetPeriod);
+          // Set the date filter for predefined periods (weekly, monthly, yearly)
+          this.setDateFilter(budgetPeriod);
         } else if (
-            budgetPeriod === 'custom' &&
-            profile?.budgetStartMonth &&
-            profile?.budgetEndMonth
+          budgetPeriod === 'custom' &&
+          profile?.budgetStartMonth &&
+          profile?.budgetEndMonth
         ) {
-            // Set the date filter for custom period
-            this.setCustomDateFilter(
-                profile.budgetStartMonth,
-                profile.budgetEndMonth
-            );
+          // Set the date filter for custom period
+          this.setCustomDateFilter(
+            profile.budgetStartMonth,
+            profile.budgetEndMonth
+          );
         }
       });
   }
@@ -350,7 +362,7 @@ export class Profit implements OnInit, OnDestroy {
     // End of month is a bit trickier, but DateFilterService.getDateRange might handle it better if we use the start date of the next month and subtract a day.
     // However, for initial setting, we can approximate the end of the month
     // by finding the last day of the 'endMonth'.
-    
+
     // A robust way to get the last day of the month is:
     // 1. Create a date object for the 1st of the *next* month.
     // 2. Subtract one day.
@@ -360,16 +372,13 @@ export class Profit implements OnInit, OnDestroy {
     // Date: 'yyyy-MM-dd' is required, so we use 'yyyy-MM-01'
     // new Date(year, monthIndex, day) - monthIndex is 0-based
     const firstDayOfNextMonth = new Date(nextYear, nextMonth - 1, 1);
-    
+
     // Go back one day to get the last day of the current month
     const lastDayOfMonth = new Date(firstDayOfNextMonth);
     lastDayOfMonth.setDate(firstDayOfNextMonth.getDate() - 1);
 
     // Format to 'yyyy-MM-dd'
-    const customEndDate = this.datePipe.transform(
-      lastDayOfMonth,
-      'yyyy-MM-dd'
-    );
+    const customEndDate = this.datePipe.transform(lastDayOfMonth, 'yyyy-MM-dd');
 
     if (customStartDate && customEndDate) {
       this.selectedDateFilter = 'custom';
@@ -381,16 +390,29 @@ export class Profit implements OnInit, OnDestroy {
     }
   }
 
-  setDateFilter(filter: string): void {    
-    this.selectedDateFilter = filter;
+  setDateFilter(filter: string): void {
+    // Determine if we should initialize custom dates from user profile.
+    // Do not overwrite manual custom date edits once the filter is already 'custom'.
     if (filter === 'custom') {
-        // Only call setCustomDateFilter when both start and end months are available as strings
-        const startMonth = this.userProfile?.budgetStartMonth;
-        const endMonth = this.userProfile?.budgetEndMonth;
-        if (startMonth && endMonth) {
-          this.setCustomDateFilter(startMonth, endMonth);
-        }
+      // Only call setCustomDateFilter when both start and end months are available as strings
+      const startMonth = this.userProfile?.budgetStartMonth;
+      const endMonth = this.userProfile?.budgetEndMonth;
+      const currentlyCustom = this._selectedDateRange$.getValue() === 'custom';
+
+      // Only apply profile-defined budget months when we are switching to 'custom'
+      // for the first time (or when no manual dates are set).
+      if (
+        startMonth &&
+        endMonth &&
+        (!currentlyCustom || !this.startDate || !this.endDate)
+      ) {
+        this.setCustomDateFilter(startMonth, endMonth);
+      }
     }
+
+    // Update the selectedDateFilter state after possibly initializing custom dates
+    this.selectedDateFilter = filter;
+
     const dateRange = this.dateFilterService.getDateRange(
       this.datePipe,
       filter,
