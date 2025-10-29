@@ -276,7 +276,7 @@ export class ExpenseOverview implements OnInit {
       'lastSixMonths',
       'currentYear',
       'lastYear',
-      'currentWeek', // Assumes DateFilterService handles 'currentWeek'
+      'currentWeek',
     ];
 
     if (serviceFilters.includes(filter)) {

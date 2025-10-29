@@ -30,6 +30,18 @@ export class DateFilterService {
     const now = new Date();
 
     switch (filter) {
+      case 'currentWeek':
+        // Week starting Monday. (If you want Sunday as start, use `const daysSinceSunday = now.getDay();`)
+        const dayOfWeek = now.getDay(); // 0 (Sun) .. 6 (Sat)
+        const daysSinceMonday = (dayOfWeek + 6) % 7; // converts Sunday(0)->6, Monday(1)->0, etc.
+        startDate = new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate() - daysSinceMonday
+        );
+        startDate.setHours(0, 0, 0, 0);
+        endDate = now;
+        break;
       case 'currentMonth':
         startDate = new Date(now.getFullYear(), now.getMonth(), 1);
         endDate = now;

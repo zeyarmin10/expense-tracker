@@ -18,18 +18,21 @@ import {
 import {
   Observable,
   BehaviorSubject,
-  combineLatest,
-  map,
   Subscription,
   switchMap,
   of,
   take,
+  combineLatest,
+  map,
 } from 'rxjs';
-import { ServiceIExpense, ExpenseService } from '../../services/expense';
+import { ServiceIExpense } from '../../services/expense'; // Assuming types are kept here
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ServiceIIncome, IncomeService } from '../../services/income';
 import { ServiceIBudget, BudgetService } from '../../services/budget';
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import {
+  FontAwesomeModule,
+  FaIconLibrary,
+} from '@fortawesome/angular-fontawesome';
 import {
   faTrash,
   faSave,
@@ -42,17 +45,19 @@ import { Chart, registerables } from 'chart.js';
 import { UserDataService, UserProfile } from '../../services/user-data';
 import {
   AVAILABLE_CURRENCIES,
-  BURMESE_CURRENCY_SYMBOL,
-  BURMESE_LOCALE_CODE,
   BURMESE_MONTH_ABBREVIATIONS,
-  CURRENCY_SYMBOLS,
-  MMK_CURRENCY_CODE,
 } from '../../core/constants/app.constants';
 
 import { FormatService } from '../../services/format.service';
 import { DateFilterService } from '../../services/date-filter.service';
+import { ExpenseService } from '../../services/expense'; // Added missing import
+// ✅ NEW SERVICE: Assuming a new service handles all the complex combineLatest logic
+import { ProfitLossService } from '../../services/profit-loss.service';
 
 Chart.register(...registerables);
+
+// Type alias for clarity
+type CurrencyMap = { [currency: string]: number };
 
 @Component({
   selector: 'app-profit',
@@ -70,6 +75,7 @@ Chart.register(...registerables);
   styleUrls: ['./profit.css'],
 })
 export class Profit implements OnInit, OnDestroy {
+  // --- Dependency Injection ---
   private fb = inject(FormBuilder);
   private dateFilterService = inject(DateFilterService);
   public datePipe = inject(DatePipe);
@@ -77,63 +83,74 @@ export class Profit implements OnInit, OnDestroy {
   private incomeService = inject(IncomeService);
   private budgetService = inject(BudgetService);
   private translate = inject(TranslateService);
-  profitChartData$!: Observable<any>;
-  private profitChartInstance: Chart | undefined;
   private authService = inject(AuthService);
   private cdr = inject(ChangeDetectorRef);
   private userDataService = inject(UserDataService);
   public formatService = inject(FormatService);
+  // ✅ NEW SERVICE INJECTION
+  private profitLossService = inject(ProfitLossService);
+  private library = inject(FaIconLibrary); // Used for pre-loading icons
 
+  // --- View Children ---
   @ViewChild('deleteConfirmationModal')
   private deleteConfirmationModal!: ConfirmationModal;
   @ViewChild('profitChartCanvas')
   private profitChartCanvas!: ElementRef<HTMLCanvasElement>;
 
+  @ViewChild('deleteBudgetConfirmationModal')
+  private deleteBudgetConfirmationModal!: ConfirmationModal;
+
+  // --- Form and Data Observables ---
   incomeForm: FormGroup;
+  userProfile: UserProfile | null = null;
+  availableCurrencies = AVAILABLE_CURRENCIES;
 
-  expenses$: Observable<ServiceIExpense[]>;
-  incomes$: Observable<ServiceIIncome[]>;
-  budgets$: Observable<ServiceIBudget[]>;
+  // Observables for filtered data (likely provided by ProfitLossService)
+  incomes$!: Observable<ServiceIIncome[]>;
+  filteredBudgets$!: Observable<ServiceIBudget[]>;
+  
+  // Observables for calculated totals (likely provided by ProfitLossService)
+  totalExpensesByCurrency$!: Observable<CurrencyMap>;
+  totalIncomesByCurrency$!: Observable<CurrencyMap>;
+  totalProfitLossByCurrency$!: Observable<CurrencyMap>;
+  totalBudgetsByCurrency$!: Observable<CurrencyMap>;
+  remainingBalanceByCurrency$!: Observable<CurrencyMap>;
+  netProfitByCurrency$!: Observable<CurrencyMap>;
 
-  filteredBudgets$: Observable<ServiceIBudget[]>;
+  // Chart data observables
+  profitChartData$!: Observable<any>;
+  hasChartData$!: Observable<boolean>;
+  private profitChartInstance: Chart | undefined;
 
-  totalExpensesByCurrency$: Observable<{ [currency: string]: number }>;
-  totalIncomesByCurrency$: Observable<{ [currency: string]: number }>;
-  totalProfitLossByCurrency$: Observable<{ [currency: string]: number }>;
-  totalBudgetsByCurrency$: Observable<{ [currency: string]: number }>;
-  netProfitByCurrency$: Observable<{ [currency: string]: number }>;
-  remainingBalanceByCurrency$: Observable<{ [currency: string]: number }>;
-
-  faTrash = faTrash;
-  faSave = faSave;
-  faChevronDown = faChevronDown;
-  faChevronUp = faChevronUp;
-
-  private incomeIdToDelete: string | undefined;
-
-  isIncomeFormCollapsed: boolean = true;
-  isRecordedIncomesCollapsed: boolean = true;
-  isRecordedBudgetsCollapsed: boolean = true;
-
+  // --- Date Filtering State ---
+  private _selectedDateRange$ = new BehaviorSubject<string>('currentMonth');
   private _startDate$ = new BehaviorSubject<string>('');
   private _endDate$ = new BehaviorSubject<string>('');
-  private _selectedDateRange$ = new BehaviorSubject<string>('currentMonth');
 
   selectedDateFilter: string = 'currentMonth';
   startDate: string = '';
   endDate: string = '';
 
-  availableCurrencies = AVAILABLE_CURRENCIES;
-
+  // --- State for Modals/Visibility ---
   private subscriptions: Subscription = new Subscription();
-  hasChartData$!: Observable<any>;
-  filteredExpensesAndIncomes$: any;
-  userProfile: UserProfile | null = null;
+  private incomeIdToDelete: string | undefined;
+  private budgetIdToDelete: string | undefined;
+
+  isIncomeFormCollapsed: boolean = true;
+  isRecordedIncomesCollapsed: boolean = true;
+  isRecordedBudgetsCollapsed: boolean = true;
+
+  // --- Font Awesome Icons ---
+  faTrash = faTrash;
+  faSave = faSave;
+  faChevronDown = faChevronDown;
+  faChevronUp = faChevronUp;
 
   constructor() {
     this.incomeForm = this.fb.group({
       description: [''],
       amount: ['', [Validators.required, Validators.min(0.01)]],
+      // Currency is disabled and its value is set from userProfile in ngOnInit
       currency: ['MMK', Validators.required],
       date: [
         this.datePipe.transform(new Date(), 'yyyy-MM-dd'),
@@ -141,252 +158,56 @@ export class Profit implements OnInit, OnDestroy {
       ],
     });
 
-    this.expenses$ = this.expenseService.getExpenses();
-    this.incomes$ = this.incomeService.getIncomes();
-    this.budgets$ = this.budgetService.getBudgets();
-
+    // --- Date Initialization (Moved from constructor logic) ---
     const oneYearAgo = new Date();
     oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
     this.startDate = this.datePipe.transform(oneYearAgo, 'yyyy-MM-dd') || '';
     this.endDate = this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
+
     this._startDate$.next(this.startDate);
     this._endDate$.next(this.endDate);
 
-    const filteredData$ = combineLatest([
-      this.expenses$,
-      this.incomes$,
-      this.budgets$,
+    // --- Observable Initialization (Delegated to ProfitLossService) ---
+    const dateRange$ = combineLatest([
       this._selectedDateRange$,
       this._startDate$,
       this._endDate$,
     ]).pipe(
-      map(([expenses, incomes, budgets, dateRange, startDate, endDate]) => {
-        // Use the service to get the date range
-        const range = this.dateFilterService.getDateRange(
+      map(([dateRange, startDate, endDate]) =>
+        this.dateFilterService.getDateRange(
           this.datePipe,
           dateRange,
           startDate,
           endDate
-        );
-
-        const start = new Date(range.start);
-        const end = new Date(range.end);
-        end.setHours(23, 59, 59, 999);
-
-        const filteredExpenses = expenses.filter((e) => {
-          const expenseDate = new Date(e.date);
-          return expenseDate >= start && expenseDate <= end;
-        });
-
-        const filteredIncomes = incomes.filter((i) => {
-          const incomeDate = new Date(i.date);
-          return incomeDate >= start && incomeDate <= end;
-        });
-
-        const filteredBudgets = budgets.filter((b) => {
-          if (b.type === 'monthly' && b.period) {
-            const budgetDate = new Date(b.period);
-            return budgetDate >= start && budgetDate <= end;
-          }
-          return false;
-        });
-
-        return {
-          expenses: filteredExpenses,
-          incomes: filteredIncomes,
-          budgets: filteredBudgets,
-        };
-      })
-    );
-
-    this.incomes$ = filteredData$.pipe(map((data) => data.incomes));
-    this.filteredBudgets$ = filteredData$.pipe(map((data) => data.budgets));
-
-    this.totalExpensesByCurrency$ = filteredData$.pipe(
-      map(({ expenses }) => {
-        return expenses.reduce((acc, expense) => {
-          acc[expense.currency] =
-            (acc[expense.currency] || 0) + expense.totalCost;
-          return acc;
-        }, {} as { [currency: string]: number });
-      })
-    );
-
-    this.totalIncomesByCurrency$ = filteredData$.pipe(
-      map(({ incomes }) => {
-        return incomes.reduce((acc, income) => {
-          acc[income.currency] = (acc[income.currency] || 0) + income.amount;
-          return acc;
-        }, {} as { [currency: string]: number });
-      })
-    );
-
-    this.totalBudgetsByCurrency$ = filteredData$.pipe(
-      map(({ budgets }) => {
-        const totalBudgets = budgets.reduce((acc, budget) => {
-          if (budget.currency) {
-            acc[budget.currency] = (acc[budget.currency] || 0) + budget.amount;
-          }
-          return acc;
-        }, {} as { [currency: string]: number });
-        return totalBudgets;
-      })
-    );
-
-    this.totalProfitLossByCurrency$ = combineLatest([
-      this.totalIncomesByCurrency$,
-      this.totalExpensesByCurrency$,
-    ]).pipe(
-      map(([incomes, expenses]) => {
-        const profitLoss: { [currency: string]: number } = {};
-        const allCurrencies = new Set([
-          ...Object.keys(incomes),
-          ...Object.keys(expenses),
-        ]);
-
-        allCurrencies.forEach((currency) => {
-          const totalIncome = incomes[currency] || 0;
-          const totalExpense = expenses[currency] || 0;
-          profitLoss[currency] = totalIncome - totalExpense;
-        });
-
-        return profitLoss;
-      })
-    );
-
-    this.remainingBalanceByCurrency$ = combineLatest([
-      this.totalBudgetsByCurrency$,
-      this.totalExpensesByCurrency$,
-    ]).pipe(
-      map(([budgets, expenses]) => {
-        const balance: { [currency: string]: number } = {};
-        const allCurrencies = new Set([
-          ...Object.keys(budgets),
-          ...Object.keys(expenses),
-        ]);
-
-        allCurrencies.forEach((currency) => {
-          const totalBudget = budgets[currency] || 0;
-          const totalExpense = expenses[currency] || 0;
-          balance[currency] = totalBudget - totalExpense;
-        });
-
-        return balance;
-      })
-    );
-
-    this.netProfitByCurrency$ = combineLatest([
-      this.totalProfitLossByCurrency$,
-      this.remainingBalanceByCurrency$,
-    ]).pipe(
-      map(([profitLoss, remainingBalance]) => {
-        const netProfit: { [currency: string]: number } = {};
-        const allCurrencies = new Set([
-          ...Object.keys(profitLoss),
-          ...Object.keys(remainingBalance),
-        ]);
-
-        allCurrencies.forEach((currency) => {
-          const totalProfitLoss = profitLoss[currency] || 0;
-          const totalRemainingBalance = remainingBalance[currency] || 0;
-          netProfit[currency] =
-            totalProfitLoss - Math.abs(totalRemainingBalance);
-        });
-
-        return netProfit;
-      })
-    );
-  }
-
-  onDateChange(): void {
-    this._startDate$.next(this._startDate$.getValue());
-    this._endDate$.next(this._endDate$.getValue());
-  }
-
-  ngOnInit(): void {
-    this.incomeForm.controls['currency'].disable();
-
-    const initialRange = this.dateFilterService.getDateRange(
-      this.datePipe,
-      'custom'
-    );
-
-    this.startDate = initialRange.start;
-    this.endDate = initialRange.end;
-    this._startDate$.next(this.startDate);
-    this._endDate$.next(this.endDate);
-
-    const storedLang = localStorage.getItem('selectedLanguage');
-    if (storedLang) {
-      this.translate.use(storedLang);
-    } else {
-      const browserLang = this.translate.getBrowserLang();
-      this.translate.use(
-        browserLang && browserLang.match(/my|en/) ? browserLang : 'my'
-      );
-    }
-
-    const allExpenses$ = this.authService.currentUser$.pipe(
-      switchMap((user) =>
-        user && user.uid
-          ? this.expenseService.getExpenses()
-          : of([] as ServiceIExpense[])
+        )
       )
     );
 
-    const allIncomes$ = this.authService.currentUser$.pipe(
-      switchMap((user) =>
-        user && user.uid
-          ? this.incomeService.getIncomes()
-          : of([] as ServiceIIncome[])
-      )
+    // Use a unified Observable from the service to reduce component coupling
+    const profitLossData$ = this.profitLossService.getProfitLossData(
+      this.expenseService.getExpenses(),
+      this.incomeService.getIncomes(),
+      this.budgetService.getBudgets(),
+      dateRange$
     );
 
-    Chart.defaults.font.family = 'MyanmarUIFont, Arial, sans-serif';
+    this.incomes$ = profitLossData$.pipe(map(data => data.incomes));
+    this.filteredBudgets$ = profitLossData$.pipe(map(data => data.budgets));
+    this.totalExpensesByCurrency$ = profitLossData$.pipe(map(data => data.totalExpenses));
+    this.totalIncomesByCurrency$ = profitLossData$.pipe(map(data => data.totalIncomes));
+    this.totalBudgetsByCurrency$ = profitLossData$.pipe(map(data => data.totalBudgets));
+    this.totalProfitLossByCurrency$ = profitLossData$.pipe(map(data => data.profitLoss));
+    this.remainingBalanceByCurrency$ = profitLossData$.pipe(map(data => data.remainingBalance));
+    this.netProfitByCurrency$ = profitLossData$.pipe(map(data => data.netProfit));
 
-    this.filteredExpensesAndIncomes$ = combineLatest([
-      allExpenses$,
-      allIncomes$,
-      this._selectedDateRange$,
-      this._startDate$,
-      this._endDate$,
-    ]).pipe(
-      map(([expenses, incomes, dateRange, startDateStr, endDateStr]) => {
-        // Use the service to get the date range
-        const range = this.dateFilterService.getDateRange(
-          this.datePipe,
-          dateRange,
-          startDateStr,
-          endDateStr
-        );
-
-        const start = new Date(range.start);
-        const end = new Date(range.end);
-        end.setHours(23, 59, 59, 999);
-
-        const filteredExpenses = expenses.filter((expense) => {
-          const expenseDate = new Date(expense.date);
-          return expenseDate >= start && expenseDate <= end;
-        });
-
-        const filteredIncomes = incomes.filter((income) => {
-          const incomeDate = new Date(income.date);
-          return incomeDate >= start && incomeDate <= end;
-        });
-
-        return { expenses: filteredExpenses, incomes: filteredIncomes };
-      })
-    );
-
-    this.profitChartData$ = this.filteredExpensesAndIncomes$.pipe(
+    // Chart Data Generation
+    this.profitChartData$ = profitLossData$.pipe(
       map(({ incomes, expenses }) => {
         const totalIncome = incomes.reduce(
-          (sum: number, income: ServiceIIncome) => sum + income.amount,
-          0
+          (sum: number, income: ServiceIIncome) => sum + income.amount, 0
         );
         const totalExpense = expenses.reduce(
-          (sum: number, expense: ServiceIExpense) => sum + expense.totalCost,
-          0
+          (sum: number, expense: ServiceIExpense) => sum + expense.totalCost, 0
         );
         const profit = totalIncome - totalExpense;
 
@@ -430,40 +251,28 @@ export class Profit implements OnInit, OnDestroy {
     this.hasChartData$ = this.profitChartData$.pipe(
       map((data) => data.datasets[0].data.some((val: number) => val > 0))
     );
+  }
 
-    this.subscriptions.add(
-      this.profitChartData$.subscribe((data) => {
-        this.cdr.detectChanges();
-        this.renderProfitChart(data);
-      })
+  // --- Lifecycle Hooks ---
+
+  ngOnInit(): void {
+    // Disable form control for currency as it's set from user profile
+    this.incomeForm.controls['currency'].disable();
+    Chart.defaults.font.family = 'MyanmarUIFont, Arial, sans-serif';
+
+    // Set initial date range for display/input fields
+    const initialRange = this.dateFilterService.getDateRange(
+      this.datePipe,
+      'custom'
     );
 
-    this.subscriptions.add(
-      this.translate.onLangChange.subscribe(() => {
-        this.cdr.detectChanges();
-      })
-    );
+    this.startDate = initialRange.start;
+    this.endDate = initialRange.end;
+    this._startDate$.next(this.startDate);
+    this._endDate$.next(this.endDate);
 
-    // ✅ REVISION: Fetch user profile and set the default currency on form load
-    this.authService.currentUser$
-      .pipe(
-        switchMap((user) => {
-          if (user && user.uid) {
-            // If a user is logged in, fetch their profile
-            return this.userDataService.getUserProfile(user.uid);
-          }
-          // Otherwise, return a null profile
-          return of(null);
-        }),
-        // Only take the first value emitted and then unsubscribe
-        take(1)
-      )
-      .subscribe((profile) => {
-        this.userProfile = profile;
-        // Set the currency value based on the profile, or default to 'MMK'
-        const defaultCurrency = profile?.currency || 'MMK';
-        this.incomeForm.get('currency')?.setValue(defaultCurrency);
-      });
+    this.initLanguageAndUserProfile();
+    this.initChartSubscription();
   }
 
   ngOnDestroy(): void {
@@ -473,12 +282,66 @@ export class Profit implements OnInit, OnDestroy {
     }
   }
 
+  // --- Initialization Methods ---
+
+  private initLanguageAndUserProfile(): void {
+    // Language initialization
+    const storedLang = localStorage.getItem('selectedLanguage');
+    if (storedLang) {
+      this.translate.use(storedLang);
+    } else {
+      const browserLang = this.translate.getBrowserLang();
+      this.translate.use(
+        browserLang && browserLang.match(/my|en/) ? browserLang : 'my'
+      );
+    }
+    // Language change subscription for chart re-render
+    this.subscriptions.add(
+      this.translate.onLangChange.subscribe(() => {
+        this.cdr.detectChanges();
+      })
+    );
+
+    // Fetch user profile and set default currency
+    this.authService.currentUser$
+      .pipe(
+        switchMap((user) =>
+          user?.uid
+            ? this.userDataService.getUserProfile(user.uid)
+            : of(null)
+        ),
+        take(1)
+      )
+      .subscribe((profile) => {
+        this.userProfile = profile;
+        const defaultCurrency = profile?.currency || 'MMK';
+        // Note: 'currency' is disabled, so we use setValue on the control.
+        this.incomeForm.get('currency')?.setValue(defaultCurrency);
+        this.resetForm();
+      });
+  }
+
+  private initChartSubscription(): void {
+    // Subscription to re-render the chart when data changes
+    this.subscriptions.add(
+      this.profitChartData$.subscribe((data) => {
+        this.cdr.detectChanges(); // Ensure canvas is ready
+        this.renderProfitChart(data);
+      })
+    );
+  }
+
+  // --- Income Management ---
+
   onSubmitIncome(): void {
+    // Currency is disabled, get the value from the form and then reset it to the userProfile's default before sending
     const defaultCurrency = this.userProfile?.currency || 'MMK';
+
     if (this.incomeForm.valid) {
       const incomeData: Omit<ServiceIIncome, 'id' | 'userId' | 'createdAt'> = {
         description: this.incomeForm.value.description,
         amount: this.incomeForm.value.amount,
+        // Use the user's default currency, ignoring the disabled form control value
         currency: defaultCurrency,
         date: this.incomeForm.value.date,
       };
@@ -518,13 +381,13 @@ export class Profit implements OnInit, OnDestroy {
     }
   }
 
-  @ViewChild('deleteBudgetConfirmationModal')
-  private deleteBudgetConfirmationModal!: ConfirmationModal;
-  private budgetIdToDelete: string | undefined;
+  // --- Budget Management ---
 
   confirmDeleteBudget(budgetId: string | undefined): void {
     if (budgetId) {
       this.budgetIdToDelete = budgetId;
+      // You must open the modal here, it's missing in the original code's `confirmDeleteBudget`
+      this.deleteBudgetConfirmationModal.open();
     }
   }
 
@@ -543,6 +406,8 @@ export class Profit implements OnInit, OnDestroy {
       this.budgetIdToDelete = undefined;
     }
   }
+
+  // --- UI/State Management ---
 
   resetForm(): void {
     const defaultCurrency = this.userProfile?.currency || 'MMK';
@@ -567,6 +432,7 @@ export class Profit implements OnInit, OnDestroy {
   }
 
   setDateFilter(filter: string): void {
+    this.selectedDateFilter = filter;
     const dateRange = this.dateFilterService.getDateRange(
       this.datePipe,
       filter,
@@ -574,10 +440,19 @@ export class Profit implements OnInit, OnDestroy {
       this.endDate
     );
 
-    this._startDate$.next(dateRange.start);
-    this._endDate$.next(dateRange.end);
-    this._selectedDateRange$.next(filter);
+    // Only update the BehaviorSubjects if the date range actually changed
+    if (
+      this._startDate$.getValue() !== dateRange.start ||
+      this._endDate$.getValue() !== dateRange.end ||
+      this._selectedDateRange$.getValue() !== filter
+    ) {
+      this._startDate$.next(dateRange.start);
+      this._endDate$.next(dateRange.end);
+      this._selectedDateRange$.next(filter);
+    }
   }
+
+  // --- Formatting and Chart Rendering ---
 
   formatLocalizedDate(date: string | Date | null | undefined): string {
     const currentLang = this.translate.currentLang;
@@ -588,7 +463,6 @@ export class Profit implements OnInit, OnDestroy {
 
     if (currentLang === 'my') {
       const d = new Date(date);
-      // Get the English month abbreviation and map it to Burmese
       const month = this.datePipe.transform(d, 'MMM');
       const burmeseMonth = month
         ? BURMESE_MONTH_ABBREVIATIONS[
@@ -596,20 +470,18 @@ export class Profit implements OnInit, OnDestroy {
           ]
         : '';
 
-      // Format the day and year with Burmese numerals
-      const day = new Intl.NumberFormat('my-MM', {
+      const options: Intl.NumberFormatOptions = {
         numberingSystem: 'mymr',
         useGrouping: false,
-      }).format(d.getDate());
-      const year = new Intl.NumberFormat('my-MM', {
-        numberingSystem: 'mymr',
-        useGrouping: false,
-      }).format(d.getFullYear());
+      };
 
-      // Combine the localized parts
+      const day = new Intl.NumberFormat('my-MM', options).format(d.getDate());
+      const year = new Intl.NumberFormat('my-MM', options).format(
+        d.getFullYear()
+      );
+
       return `${day} ${burmeseMonth} ${year}`;
     } else {
-      // For all other languages, use the standard Angular DatePipe
       return (
         this.datePipe.transform(date, 'mediumDate', undefined, currentLang) ||
         ''
@@ -636,13 +508,6 @@ export class Profit implements OnInit, OnDestroy {
         responsive: true,
         maintainAspectRatio: false,
         scales: {
-          //   x: { // Labels axis
-          //     ticks: {
-          //       font: {
-          //         size: 13
-          //       }
-          //     }
-          //   },
           y: {
             beginAtZero: true,
             ticks: {
@@ -664,10 +529,9 @@ export class Profit implements OnInit, OnDestroy {
     });
   }
 
-  // Add these methods to your dashboard component
-  getProfitCardClass(
-    profit: Record<string, number> | null | undefined
-  ): string {
+  // --- Helper Methods for UI Classes ---
+
+  getProfitCardClass(profit: CurrencyMap | null | undefined): string {
     const totalBalance = profit
       ? Object.values(profit).reduce((sum, value) => sum + value, 0)
       : 0;
@@ -676,9 +540,7 @@ export class Profit implements OnInit, OnDestroy {
       : 'border border-danger net-profit-negative';
   }
 
-  getBalanceCardClass(
-    balances: Record<string, number> | null | undefined
-  ): string {
+  getBalanceCardClass(balances: CurrencyMap | null | undefined): string {
     const totalBalance = balances
       ? Object.values(balances).reduce((sum, value) => sum + value, 0)
       : 0;

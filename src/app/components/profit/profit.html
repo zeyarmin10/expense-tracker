@@ -16,6 +16,9 @@
               [(ngModel)]="selectedDateFilter"
               (change)="setDateFilter(selectedDateFilter)"
             >
+              <option value="currentWeek">
+                {{ "CURRENT_WEEK" | translate }}
+              </option>
               <option value="last30Days">
                 {{ "LAST_30_DAYS" | translate }}
               </option>
@@ -79,7 +82,6 @@
               (ngSubmit)="onSubmitIncome()"
               class="row"
             >
-              
               <div class="col-md-6 mb-3">
                 <label for="incomeDate" class="form-label">{{
                   "DATE" | translate
