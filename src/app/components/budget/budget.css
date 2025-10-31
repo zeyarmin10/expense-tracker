@@ -120,9 +120,9 @@
 
 .total-budget-title {
   color: #1d4ed8;
-  background: linear-gradient(135deg, #e0f2fe, #bae6fd);
+  /* background: linear-gradient(135deg, #e0f2fe, #bae6fd);
   padding: 0.25rem 0.5rem;
-  border-radius: 0.5rem;
+  border-radius: 0.5rem; */
 }
 .category-title {
   background: linear-gradient(135deg, #f8f8f8, #dddddd);
