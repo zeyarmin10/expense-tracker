@@ -358,8 +358,46 @@ export class Profit implements OnInit, OnDestroy {
             dateFilter = 'currentMonth';
         }
 
-        this.setDateFilter(dateFilter);
+        this.setDateFilter(dateFilter, true);
       });
+  }
+
+  setDateFilter(filter: string, isInitialLoad: boolean = false): void {
+    this.selectedDateFilter = filter;
+
+    if (filter === 'custom') {
+      const startMonth = this.userProfile?.budgetStartMonth;
+      const endMonth = this.userProfile?.budgetEndMonth;
+
+      if (isInitialLoad && startMonth && endMonth) {
+        this.setCustomDateFilter(startMonth, endMonth);
+      } else if (!isInitialLoad) {
+        const oneYearAgo = new Date();
+        oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+        this.startDate = this.datePipe.transform(oneYearAgo, 'yyyy-MM-dd') || '';
+        this.endDate = this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
+      }
+    }
+
+    const dateRange = this.dateFilterService.getDateRange(
+      this.datePipe,
+      filter,
+      this.startDate,
+      this.endDate
+    );
+
+    this.startDate = dateRange.start;
+    this.endDate = dateRange.end;
+
+    if (
+      this._startDate$.getValue() !== dateRange.start ||
+      this._endDate$.getValue() !== dateRange.end ||
+      this._selectedDateRange$.getValue() !== filter
+    ) {
+      this._startDate$.next(dateRange.start);
+      this._endDate$.next(dateRange.end);
+      this._selectedDateRange$.next(filter);
+    }
   }
 
   /**
@@ -400,52 +438,6 @@ export class Profit implements OnInit, OnDestroy {
       this._startDate$.next(this.startDate);
       this._endDate$.next(this.endDate);
       this._selectedDateRange$.next('custom');
-    }
-  }
-
-  setDateFilter(filter: string): void {
-    // Determine if we should initialize custom dates from user profile.
-    // Do not overwrite manual custom date edits once the filter is already 'custom'.
-    if (filter === 'custom') {
-      // Only call setCustomDateFilter when both start and end months are available as strings
-      const startMonth = this.userProfile?.budgetStartMonth;
-      const endMonth = this.userProfile?.budgetEndMonth;
-      const currentlyCustom = this._selectedDateRange$.getValue() === 'custom';
-
-      // Only apply profile-defined budget months when we are switching to 'custom'
-      // for the first time (or when no manual dates are set).
-      if (
-        startMonth &&
-        endMonth &&
-        (!currentlyCustom || !this.startDate || !this.endDate)
-      ) {
-        this.setCustomDateFilter(startMonth, endMonth);
-      }
-    }
-
-    // Update the selectedDateFilter state after possibly initializing custom dates
-    this.selectedDateFilter = filter;
-
-    const dateRange = this.dateFilterService.getDateRange(
-      this.datePipe,
-      filter,
-      this.startDate,
-      this.endDate // startDate/endDate are only used by getDateRange for 'custom' filter
-    );
-
-    // ✅ REVISED: Update component state fields for display/input
-    this.startDate = dateRange.start;
-    this.endDate = dateRange.end;
-
-    // Only update the BehaviorSubjects if the date range actually changed
-    if (
-      this._startDate$.getValue() !== dateRange.start ||
-      this._endDate$.getValue() !== dateRange.end ||
-      this._selectedDateRange$.getValue() !== filter
-    ) {
-      this._startDate$.next(dateRange.start);
-      this._endDate$.next(dateRange.end);
-      this._selectedDateRange$.next(filter);
     }
   }
 
