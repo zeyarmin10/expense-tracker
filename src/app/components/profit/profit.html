@@ -401,66 +401,64 @@
               class="card h-100 border-2"
               [ngClass]="getProfitCardClass(totalProfitLossByCurrency$ | async)"
             >
-              <div class="card-body pt-1 pb-1 d-flex flex-column justify-content-center align-items-center">
+              <div
+                class="card-body pt-1 pb-1 d-flex flex-column justify-content-center align-items-center"
+              >
                 <div
                   *ngIf="
                     totalProfitLossByCurrency$ | async as profitLosses;
                     else loading
                   "
                 >
-                  <div *ngIf="netProfitByCurrency$ | async as netProfits">
-                    <div
-                      *ngIf="
-                        (profitLosses &&
-                          (profitLosses | keyvalue).length > 0) ||
-                          (netProfits && (netProfits | keyvalue).length > 0);
-                        else noData
-                      "
+                  <div
+                    *ngIf="
+                      profitLosses && (profitLosses | keyvalue).length > 0;
+                      else noData
+                    "
+                  >
+                    <ng-container
+                      *ngFor="let currency of availableCurrencies"
                     >
                       <ng-container
-                        *ngFor="let currency of availableCurrencies"
+                        *ngIf="profitLosses[currency.code] !== undefined"
                       >
-                        <ng-container
-                          *ngIf="profitLosses[currency.code] !== undefined"
-                        >
-                          <div class="row mb-0">
+                        <div class="row mb-0">
+                          <div
+                            class="d-flex flex-column justify-content-center align-items-center"
+                          >
+                            <div class="text-muted text-center w-100">
+                              {{
+                                (profitLosses[currency.code] >= 0
+                                  ? "NET_PROFIT"
+                                  : "NET_LOSS"
+                                ) | translate
+                              }}
+                            </div>
+                            <!-- ({{ currency.code }}): -->
                             <div
-                              class="d-flex flex-column justify-content-center align-items-center"
+                              class="fw-bold text-center fs-5 w-100"
+                              [ngClass]="{
+                                'text-info': profitLosses[currency.code] >= 0,
+                                'text-danger': profitLosses[currency.code] < 0
+                              }"
                             >
-                              <div class="text-muted text-center w-100">
-                                {{
-                                  (profitLosses[currency.code] >= 0
-                                    ? "NET_PROFIT"
-                                    : "NET_LOSS"
-                                  ) | translate
-                                }}
-                              </div>
-                              <!-- ({{ currency.code }}): -->
-                              <div
-                                class="fw-bold text-center fs-5 w-100"
-                                [ngClass]="{
-                                  'text-info': profitLosses[currency.code] >= 0,
-                                  'text-danger': profitLosses[currency.code] < 0
-                                }"
-                              >
-                                {{
-                                  formatService.formatAmountWithSymbol(
-                                    profitLosses[currency.code],
-                                    currency.code
-                                  )
-                                }}
-                              </div>
+                              {{
+                                formatService.formatAmountWithSymbol(
+                                  profitLosses[currency.code],
+                                  currency.code
+                                )
+                              }}
                             </div>
                           </div>
-                        </ng-container>
+                        </div>
                       </ng-container>
-                    </div>
-                    <ng-template #noData>
-                      <p class="text-muted text-center pb-0">
-                        {{ "NO_PROFIT_LOSS_DATA" | translate }}
-                      </p>
-                    </ng-template>
+                    </ng-container>
                   </div>
+                  <ng-template #noData>
+                    <p class="text-muted text-center pb-0">
+                      {{ "NO_PROFIT_LOSS_DATA" | translate }}
+                    </p>
+                  </ng-template>
                 </div>
                 <ng-template #loading>
                   <p class="text-muted text-center">
