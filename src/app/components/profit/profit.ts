@@ -365,16 +365,15 @@ export class Profit implements OnInit, OnDestroy {
   setDateFilter(filter: string, isInitialLoad: boolean = false): void {
     this.selectedDateFilter = filter;
 
-    if (filter === 'custom') {
-      const startMonth = this.userProfile?.budgetStartMonth;
-      const endMonth = this.userProfile?.budgetEndMonth;
-
-      if (isInitialLoad && startMonth && endMonth) {
-        this.setCustomDateFilter(startMonth, endMonth);
-      } else if (!isInitialLoad) {
+    // If the user clicks on 'Custom' and it's not the initial page load, set a default 1-year range.
+    // This allows the date pickers to show a value, which the user can then change.
+    if (filter === 'custom' && !isInitialLoad) {
+      if (!this.startDate) {
         const oneYearAgo = new Date();
         oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
         this.startDate = this.datePipe.transform(oneYearAgo, 'yyyy-MM-dd') || '';
+      }
+      if (!this.endDate) {
         this.endDate = this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
       }
     }
@@ -386,9 +385,7 @@ export class Profit implements OnInit, OnDestroy {
       this.endDate
     );
 
-    this.startDate = dateRange.start;
-    this.endDate = dateRange.end;
-
+    // Only update if the values have actually changed to avoid unnecessary re-renders
     if (
       this._startDate$.getValue() !== dateRange.start ||
       this._endDate$.getValue() !== dateRange.end ||
@@ -399,6 +396,7 @@ export class Profit implements OnInit, OnDestroy {
       this._selectedDateRange$.next(filter);
     }
   }
+
 
   /**
    * Sets the date filter to 'custom' using budget start/end months.
