@@ -371,5 +371,7 @@
     "CUSTOM": "စိတ်ကြိုက်"
   },
   "START_MONTH_LABEL": "စတင်မည့်လ",
-  "END_MONTH_LABEL": "ပြီးဆုံးမည့်လ"
+  "END_MONTH_LABEL": "ပြီးဆုံးမည့်လ",
+  "CUSTOM_SUMMARY_TITLE": "ဘတ်ဂျက်ကာလအကျဉ်းချုပ်",
+  "WEEKLY_SUMMARY_TITLE": "အပတ်စဉ်အကျဉ်းချုပ်"
 }

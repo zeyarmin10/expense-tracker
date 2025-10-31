@@ -20,15 +20,15 @@
   },
   "private": true,
   "dependencies": {
-    "@angular/animations": "^20.1.2",
-    "@angular/common": "^20.1.0",
-    "@angular/compiler": "^20.1.0",
-    "@angular/core": "^20.1.0",
-    "@angular/fire": "^20.0.1",
-    "@angular/forms": "^20.1.0",
-    "@angular/platform-browser": "^20.1.0",
-    "@angular/router": "^20.1.0",
-    "@fortawesome/angular-fontawesome": "^2.0.1",
+    "@angular/animations": "18.2.14",
+    "@angular/common": "18.2.14",
+    "@angular/compiler": "18.2.14",
+    "@angular/core": "18.2.14",
+    "@angular/fire": "18.0.1",
+    "@angular/forms": "18.2.14",
+    "@angular/platform-browser": "18.2.14",
+    "@angular/router": "18.2.14",
+    "@fortawesome/angular-fontawesome": "^0.15.0",
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
     "@fortawesome/free-brands-svg-icons": "^6.7.2",
     "@fortawesome/free-regular-svg-icons": "^6.7.2",
@@ -37,14 +37,15 @@
     "@ngx-translate/http-loader": "^16.0.1",
     "bootstrap": "^5.3.7",
     "chart.js": "^4.5.0",
-    "ng2-charts": "^8.0.0",
+    "ng2-charts": "^7.0.0",
     "rxjs": "~7.8.0",
-    "tslib": "^2.3.0"
+    "tslib": "^2.3.0",
+    "zone.js": "~0.14.0"
   },
   "devDependencies": {
-    "@angular/build": "^20.1.0",
-    "@angular/cli": "^20.1.0",
-    "@angular/compiler-cli": "^20.1.0",
+    "@angular/build": "18.2.14",
+    "@angular/cli": "18.2.14",
+    "@angular/compiler-cli": "18.2.14",
     "@types/jasmine": "~5.1.0",
     "jasmine-core": "~5.8.0",
     "karma": "~6.4.0",
@@ -52,6 +53,6 @@
     "karma-coverage": "~2.2.0",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
-    "typescript": "~5.8.2"
+    "typescript": "~5.5.2"
   }
 }

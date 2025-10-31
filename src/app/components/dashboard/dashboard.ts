@@ -26,11 +26,11 @@ import {
   of,
   BehaviorSubject,
   switchMap,
-  startWith,
   takeUntil,
   Subject,
   take,
   from,
+  filter,
 } from 'rxjs';
 import { Chart, registerables } from 'chart.js';
 import { ServiceIIncome, IncomeService } from '../../services/income';
@@ -45,12 +45,9 @@ import {
 import { Router } from '@angular/router';
 import {
   AVAILABLE_CURRENCIES,
-  BURMESE_CURRENCY_SYMBOL,
-  BURMESE_LOCALE_CODE,
-  CURRENCY_SYMBOLS,
-  MMK_CURRENCY_CODE,
 } from '../../core/constants/app.constants';
 import { CategoryService } from '../../services/category';
+import { UserProfile, UserDataService } from '../../services/user-data';
 
 import { FormatService } from '../../services/format.service';
 
@@ -86,28 +83,22 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private incomeService = inject(IncomeService);
   private translate = inject(TranslateService);
   private formBuilder = inject(FormBuilder);
-  public datePipe = inject(DatePipe);
   private router = inject(Router);
   private destroy$ = new Subject<void>();
   public formatService = inject(FormatService);
   private categoryService = inject(CategoryService);
+  private userDataService = inject(UserDataService);
 
   @ViewChild('expenseChartCanvas')
   private expenseChartCanvas!: ElementRef<HTMLCanvasElement>;
 
+  // Observables for async data
   userDisplayName$!: Observable<string | null>;
-  expenses$!: Observable<ServiceIExpense[]>;
-  budgets$!: Observable<ServiceIBudget[]>;
-
   totalExpensesByCurrency$!: Observable<{ [currency: string]: number }>;
   totalBudgetsByCurrency$!: Observable<{ [currency: string]: number }>;
   remainingBalanceByCurrency$!: Observable<{ [currency: string]: number }>;
   monthlyExpenseChartData$!: Observable<{ labels: string[]; datasets: any[] }>;
-  hasExpenseDataForChart$!: Observable<boolean>;
   hasData$!: Observable<boolean>;
-
-  expenseFilterForm!: FormGroup;
-  categoryFilterForm!: FormGroup;
   currentSummaryTitle$!: Observable<string>;
   filteredExpensesAndIncomes$!: Observable<{
     expenses: ServiceIExpense[];
@@ -115,90 +106,162 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }>;
   totalIncomesByCurrency$!: Observable<{ [currency: string]: number }>;
 
-  _startDate$: BehaviorSubject<string> = new BehaviorSubject<string>(
-    this.datePipe.transform(
-      new Date(new Date().getFullYear(), 0, 1),
-      'yyyy-MM-dd'
-    ) || ''
-  );
-  _endDate$: BehaviorSubject<string> = new BehaviorSubject<string>(
-    this.datePipe.transform(
-      new Date(new Date().getFullYear(), 11, 31),
-      'yyyy-MM-dd'
-    ) || ''
-  );
+  // Forms
+  expenseFilterForm!: FormGroup;
+  categoryFilterForm!: FormGroup;
 
-  currentHeaderBackgroundColor: string = '#f8f9fa';
+  // Date management
+  _startDate$: BehaviorSubject<string>;
+  _endDate$: BehaviorSubject<string>;
+
+  // UI properties
   titleAnimTrigger: string = 'initial';
 
+  // Constants
   availableCurrencies = AVAILABLE_CURRENCIES;
 
+  // Subscriptions
   private subscriptions = new Subscription();
   private expenseChartInstance: Chart | undefined;
 
-  constructor(private cdr: ChangeDetectorRef) {}
+  constructor(
+    private cdr: ChangeDetectorRef,
+    private datePipe: DatePipe
+  ) {
+    const today = new Date();
+    this._startDate$ = new BehaviorSubject<string>(
+      this.datePipe.transform(new Date(today.getFullYear(), 0, 1), 'yyyy-MM-dd') || ''
+    );
+    this._endDate$ = new BehaviorSubject<string>(
+      this.datePipe.transform(new Date(today.getFullYear(), 11, 31), 'yyyy-MM-dd') || ''
+    );
+  }
 
   ngOnInit(): void {
+    this.initializeLanguage();
+    this.initializeForms();
+    this.initializeUserDataAndDateRange();
+    this.initializeDataStreams();
+    this.checkAndCreateDefaultCategories();
+    this.subscribeToChartData();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+    this.subscriptions.unsubscribe();
+    if (this.expenseChartInstance) {
+      this.expenseChartInstance.destroy();
+    }
+  }
+
+  private initializeLanguage(): void {
     const storedLang = localStorage.getItem('selectedLanguage');
-    if (storedLang) {
-      this.translate.use(storedLang);
+    const browserLang = this.translate.getBrowserLang();
+    const defaultLang = browserLang?.match(/my|en/) ? browserLang : 'my';
+    this.translate.use(storedLang || defaultLang);
+    Chart.defaults.font.family = 'MyanmarUIFont, Arial, sans-serif';
+  }
+
+  private initializeUserDataAndDateRange(): void {
+    this.userDisplayName$ = this.authService.currentUser$.pipe(map(user => user?.displayName || null));
+
+    this.authService.currentUser$.pipe(
+      filter((user): user is import('@angular/fire/auth').User => !!user),
+      switchMap(user => this.userDataService.getUserProfile(user.uid)),
+      takeUntil(this.destroy$)
+    ).subscribe(userProfile => {
+      this.setDashboardDateRange(userProfile);
+      this.expenseFilterForm.patchValue({
+          startDate: this._startDate$.getValue(),
+          endDate: this._endDate$.getValue()
+      });
+      this.updateSummaryTitle(userProfile);
+    });
+  }
+
+  private setDashboardDateRange(userProfile: UserProfile | null): void {
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    let startDate: Date;
+    let endDate: Date;
+
+    if (userProfile?.budgetPeriod) {
+      switch (userProfile.budgetPeriod) {
+        case 'weekly':
+          const dayOfWeek = today.getDay(); 
+          const firstDayOfWeek = new Date(today);
+          firstDayOfWeek.setDate(today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1)); 
+
+          startDate = new Date(firstDayOfWeek);
+          endDate = new Date(startDate);
+          endDate.setDate(startDate.getDate() + 6);
+          break;
+        case 'monthly':
+          startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+          endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+          break;
+        case 'yearly':
+          startDate = new Date(currentYear, 0, 1);
+          endDate = new Date(currentYear, 11, 31);
+          break;
+        case 'custom':
+          if (userProfile.budgetStartMonth && userProfile.budgetEndMonth) {
+            const [startYear, startMonth] = userProfile.budgetStartMonth.split('-').map(Number);
+            const [endYear, endMonth] = userProfile.budgetEndMonth.split('-').map(Number);
+            
+            startDate = new Date(startYear, startMonth - 1, 1);
+            endDate = new Date(endYear, endMonth -1 , 1); 
+            endDate.setMonth(endDate.getMonth() + 1);
+            endDate.setDate(0); 
+          } else {
+            startDate = new Date(currentYear, 0, 1);
+            endDate = new Date(currentYear, 11, 31);
+          }
+          break;
+        default:
+          startDate = new Date(currentYear, 0, 1);
+          endDate = new Date(currentYear, 11, 31);
+          break;
+      }
     } else {
-      const browserLang = this.translate.getBrowserLang();
-      this.translate.use(
-        browserLang && browserLang.match(/my|en/) ? browserLang : 'my'
-      );
+      startDate = new Date(currentYear, 0, 1);
+      endDate = new Date(currentYear, 11, 31);
     }
 
-    this.userDisplayName$ = this.authService.currentUser$.pipe(
-      map((user) => (user ? user.displayName : null))
-    );
+    this._startDate$.next(this.datePipe.transform(startDate, 'yyyy-MM-dd') || '');
+    this._endDate$.next(this.datePipe.transform(endDate, 'yyyy-MM-dd') || '');
+  }
 
-    Chart.defaults.font.family = 'MyanmarUIFont, Arial, sans-serif';
+  private updateSummaryTitle(userProfile: UserProfile | null): void {
+      const budgetPeriod = userProfile?.budgetPeriod;
+      let titleKey = 'YEARLY_SUMMARY_TITLE';
+      let summaryDateRange = '';
 
-    // Check if user has categories, if not, add default categories
-    this.authService.currentUser$
-      .pipe(
-        takeUntil(this.destroy$),
-        switchMap((user) => {
-          if (user && user.uid) {
-            return this.categoryService.getCategories().pipe(
-              take(1),
-              switchMap((categories) => {
-                // Check if user has any categories
-                if (categories.length === 0) {
-                  // No categories found, create default ones
-                  const language = this.translate.currentLang;
-                  return from(
-                    this.categoryService.addDefaultCategories(
-                      user.uid,
-                      language
-                    )
-                  ).pipe(
-                    map(() => categories) // Return empty array since we just created them
-                  );
-                }
-                return of(categories);
-              })
-            );
-          }
-          return of([]);
-        })
-      )
-      .subscribe({
-        next: (categories) => {
-          console.log(
-            'Categories check complete. User has categories:',
-            categories.length > 0
-          );
-        },
-        error: (error) => {
-          console.error('Error checking/creating categories:', error);
-        },
-      });
+      const startDateValue = this._startDate$.getValue();
+      const endDateValue = this._endDate$.getValue();
+      if (budgetPeriod === 'weekly') {
+        titleKey = 'WEEKLY_SUMMARY_TITLE';
+        const start = this.datePipe.transform(startDateValue, 'MMM d');
+        const end = this.datePipe.transform(endDateValue, 'MMM d, yyyy');
+        summaryDateRange = `(${start} - ${end})`;
+      } else if (budgetPeriod === 'monthly') {
+          titleKey = 'MONTHLY_SUMMARY_TITLE';
+          summaryDateRange = `(${this.datePipe.transform(startDateValue, 'MMMM yyyy')})`;
+      } else if (budgetPeriod === 'custom') {
+          titleKey = 'CUSTOM_SUMMARY_TITLE';
+          const start = this.datePipe.transform(startDateValue, 'MMM yyyy');
+          const end = this.datePipe.transform(endDateValue, 'MMM yyyy');
+          summaryDateRange = `(${start} - ${end})`;
+      } else { // yearly or default
+          const year = this.safeParseDate(startDateValue).getFullYear();
+          summaryDateRange = `(${year})`;
+      }
 
-    this.expenses$ = this.expenseService.getExpenses();
-    this.budgets$ = this.budgetService.getBudgets();
+      this.currentSummaryTitle$ = of(`${this.translate.instant(titleKey)} ${summaryDateRange}`);
+  }
 
+  private initializeForms(): void {
     this.expenseFilterForm = this.formBuilder.group({
       startDate: [this._startDate$.getValue(), Validators.required],
       endDate: [this._endDate$.getValue(), Validators.required],
@@ -208,41 +271,39 @@ export class DashboardComponent implements OnInit, OnDestroy {
       currency: ['all'],
       category: ['all'],
     });
+  }
 
-    this.currentSummaryTitle$ = this._startDate$.pipe(
-      map((startDateStr) => {
-        const startDate = new Date(startDateStr);
-        return (
-          this.translate.instant('YEARLY_SUMMARY_TITLE') +
-          ` (${startDate.getFullYear()})`
-        );
-      })
+  private createDataStream<T>(streamProvider: () => Observable<T[]>): Observable<T[]> {
+    return this.authService.currentUser$.pipe(
+      switchMap(user => (user ? streamProvider() : of([] as T[])))
     );
+  }
 
-    const allExpenses$ = this.authService.currentUser$.pipe(
-      switchMap((user) =>
-        user && user.uid
-          ? this.expenseService.getExpenses()
-          : of([] as ServiceIExpense[])
-      )
+  private safeParseDate(dateStr: string): Date {
+    const [year, month, day] = dateStr.split('-').map(Number);
+    return new Date(year, month - 1, day, 12, 0, 0); // Use noon to avoid timezone-related day shifts
+  }
+
+  private filterByDateRange<T extends { date: string }>(items: T[], startDate: Date, endDate: Date): T[] {
+    const rangeStart = this.safeParseDate(this.datePipe.transform(startDate, 'yyyy-MM-dd') || '');
+    const rangeEnd = this.safeParseDate(this.datePipe.transform(endDate, 'yyyy-MM-dd') || '');
+    rangeEnd.setDate(rangeEnd.getDate() + 1); 
+
+    return items.filter(item => {
+      const itemDate = this.safeParseDate(item.date);
+      return itemDate >= rangeStart && itemDate < rangeEnd;
+    });
+  }
+
+  private initializeDataStreams(): void {
+    const allExpenses$ = this.createDataStream(() => this.expenseService.getExpenses());
+    const allIncomes$ = this.createDataStream(() => this.incomeService.getIncomes());
+    const allBudgets$ = this.createDataStream(() => this.budgetService.getBudgets());
+    const userProfile$ = this.authService.currentUser$.pipe(
+      filter((user): user is import('@angular/fire/auth').User => !!user),
+      switchMap(user => this.userDataService.getUserProfile(user.uid))
     );
-
-    const allIncomes$ = this.authService.currentUser$.pipe(
-      switchMap((user) =>
-        user && user.uid
-          ? this.incomeService.getIncomes()
-          : of([] as ServiceIIncome[])
-      )
-    );
-
-    const allBudgets$ = this.authService.currentUser$.pipe(
-      switchMap((user) =>
-        user && user.uid
-          ? this.budgetService.getBudgets()
-          : of([] as ServiceIBudget[])
-      )
-    );
-
+    
     this.filteredExpensesAndIncomes$ = combineLatest([
       allExpenses$,
       allIncomes$,
@@ -250,80 +311,97 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this._endDate$,
     ]).pipe(
       map(([expenses, incomes, startDateStr, endDateStr]) => {
-        const startDate = new Date(startDateStr);
-        const endDate = new Date(endDateStr);
-
-        const filteredExpenses = expenses.filter((expense) => {
-          const expenseDate = new Date(expense.date);
-          return (
-            expenseDate >= startDate && expenseDate <= this.addDays(endDate, 1)
-          );
-        });
-
-        const filteredIncomes = incomes.filter((income) => {
-          const incomeDate = new Date(income.date);
-          return (
-            incomeDate >= startDate && incomeDate <= this.addDays(endDate, 1)
-          );
-        });
-
-        return { expenses: filteredExpenses, incomes: filteredIncomes };
+        const startDate = this.safeParseDate(startDateStr);
+        const endDate = this.safeParseDate(endDateStr);
+        return {
+          expenses: this.filterByDateRange(expenses, startDate, endDate),
+          incomes: this.filterByDateRange(incomes, startDate, endDate),
+        };
       })
     );
 
     this.totalExpensesByCurrency$ = this.filteredExpensesAndIncomes$.pipe(
-      map(({ expenses }) => {
-        return expenses.reduce((acc, expense) => {
-          acc[expense.currency] =
-            (acc[expense.currency] || 0) + expense.totalCost;
-          return acc;
-        }, {} as { [currency: string]: number });
-      })
+      map(({ expenses }) => this.calculateTotalByCurrency(expenses, 'totalCost'))
     );
 
     this.totalIncomesByCurrency$ = this.filteredExpensesAndIncomes$.pipe(
-      map(({ incomes }) => {
-        return incomes.reduce((acc, income) => {
-          acc[income.currency] = (acc[income.currency] || 0) + income.amount;
-          return acc;
-        }, {} as { [currency: string]: number });
+      map(({ incomes }) => this.calculateTotalByCurrency(incomes, 'amount'))
+    );
+
+    // PASTE THIS ENTIRE BLOCK TO REPLACE THE OLD ONE
+    this.totalBudgetsByCurrency$ = combineLatest([allBudgets$, this._startDate$, this._endDate$, userProfile$]).pipe(
+      map(([budgets, startDateStr, endDateStr, userProfile]) => {
+          const startDate = this.safeParseDate(startDateStr);
+          const endDate = this.safeParseDate(endDateStr);
+
+          if (userProfile?.budgetPeriod === 'weekly') {
+              const weeklyTotals: { [currency: string]: number } = {};
+
+              // First, get the relevant month periods for the week
+              const startMonthPeriod = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}`;
+              const endMonthPeriod = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}`;
+
+              // Filter budgets to only include those from the relevant month(s)
+              const relevantBudgets = budgets.filter(budget =>
+                  budget.period && (budget.period === startMonthPeriod || budget.period === endMonthPeriod)
+              );
+
+              relevantBudgets.forEach(budget => {
+                  const [year, month] = budget.period!.split('-').map(Number);
+                  const budgetMonthStart = new Date(year, month - 1, 1);
+                  const budgetMonthEnd = new Date(year, month, 0);
+
+                  const weekStart = new Date(startDate);
+                  const weekEnd = new Date(endDate);
+
+                  // Determine the actual overlap between the budget's month and the week
+                  const overlapStart = new Date(Math.max(budgetMonthStart.getTime(), weekStart.getTime()));
+                  const overlapEnd = new Date(Math.min(budgetMonthEnd.getTime(), weekEnd.getTime()));
+
+                  if (overlapStart <= overlapEnd) {
+                      const daysInMonth = budgetMonthEnd.getDate();
+                      const dailyAmount = budget.amount / daysInMonth;
+                      // Calculate days of overlap correctly
+                      const overlapDays = Math.round((overlapEnd.getTime() - overlapStart.getTime()) / (1000 * 3600 * 24)) + 1;
+
+                      if (!weeklyTotals[budget.currency]) {
+                          weeklyTotals[budget.currency] = 0;
+                      }
+                      weeklyTotals[budget.currency] += overlapDays * dailyAmount;
+                  }
+              });
+              return weeklyTotals;
+
+          } else {
+              // This logic for other periods remains the same
+              const rangeStart = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+              const rangeEnd = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
+
+              return budgets
+                .filter(budget => {
+                  if (!budget.period) return false;
+                  const [year, month] = budget.period.split('-').map(Number);
+                  const budgetDate = new Date(year, month - 1, 1);
+                  return budgetDate >= rangeStart && budgetDate <= rangeEnd;
+                })
+                .reduce((acc, budget) => {
+                  acc[budget.currency] = (acc[budget.currency] || 0) + budget.amount;
+                  return acc;
+                }, {} as { [currency: string]: number });
+          }
       })
     );
 
-    this.totalBudgetsByCurrency$ = combineLatest([
-      allBudgets$,
-      this._startDate$,
-    ]).pipe(
-      map(([budgets, startDateStr]) => {
-        const currentYear = new Date(startDateStr).getFullYear().toString();
-        return budgets
-          .filter((budget) => {
-            const budgetYear = budget.period?.split('-')[0]; // Extract the year from 'YYYY-MM'
-            return budgetYear === currentYear;
-          })
-          .reduce((acc, budget) => {
-            acc[budget.currency] = (acc[budget.currency] || 0) + budget.amount;
-            return acc;
-          }, {} as { [currency: string]: number });
-      })
-    );
-
-    // FIX: Balance is now calculated as Budget - Expense
     this.remainingBalanceByCurrency$ = combineLatest([
       this.totalBudgetsByCurrency$,
       this.totalExpensesByCurrency$,
     ]).pipe(
       map(([budgets, expenses]) => {
         const balance: { [currency: string]: number } = {};
-        const allCurrencies = new Set([
-          ...Object.keys(budgets),
-          ...Object.keys(expenses),
-        ]);
+        const allCurrencies = new Set([...Object.keys(budgets), ...Object.keys(expenses)]);
 
         allCurrencies.forEach((currency) => {
-          const totalBudget = budgets[currency] || 0;
-          const totalExpense = expenses[currency] || 0;
-          balance[currency] = totalBudget - totalExpense;
+          balance[currency] = (budgets[currency] || 0) - (expenses[currency] || 0);
         });
         return balance;
       })
@@ -334,97 +412,54 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.totalExpensesByCurrency$,
       this.totalBudgetsByCurrency$,
     ]).pipe(
-      map(([incomes, expenses, budgets]) => {
-        const hasIncomes = Object.keys(incomes).length > 0;
-        const hasExpenses = Object.keys(expenses).length > 0;
-        const hasBudgets = Object.keys(budgets).length > 0;
-        return hasIncomes || hasExpenses || hasBudgets;
-      })
+      map(([incomes, expenses, budgets]) =>
+        Object.keys(incomes).length > 0 ||
+        Object.keys(expenses).length > 0 ||
+        Object.keys(budgets).length > 0
+      )
     );
 
-    // only expense data for bar chart
     this.monthlyExpenseChartData$ = this.filteredExpensesAndIncomes$.pipe(
-      map(({ expenses }) => {
-        const monthlyExpensesMap: { [month: string]: number } = {};
-        const labels: string[] = [];
-        const currentYear = new Date(this._startDate$.getValue()).getFullYear();
-        const currentLang = this.translate.currentLang;
-
-        for (let i = 0; i < 12; i++) {
-          const date = new Date(currentYear, i, 1);
-          labels.push(
-            this.datePipe.transform(date, 'MMM', undefined, currentLang) || ''
-          );
-        }
-
-        expenses.forEach((expense) => {
-          const expenseDate = new Date(expense.date);
-          if (expenseDate.getFullYear() === currentYear) {
-            const periodKey =
-              this.datePipe.transform(
-                expenseDate,
-                'MMM',
-                undefined,
-                currentLang
-              ) || '';
-            monthlyExpensesMap[periodKey] =
-              (monthlyExpensesMap[periodKey] || 0) + expense.totalCost;
-          }
-        });
-
-        const expenseData = labels.map(
-          (label) => monthlyExpensesMap[label] || 0
-        );
-
-        return {
-          labels,
-          datasets: [
-            {
-              label: this.translate.instant('EXPENSE_AMOUNT'),
-              data: expenseData,
-              backgroundColor: 'rgba(255, 99, 132, 0.5)',
-              borderColor: 'rgba(255, 99, 132, 1)',
-              borderWidth: 1,
-            },
-          ],
-        };
-      })
+      map(({ expenses }) => this.createMonthlyExpenseChartData(expenses))
     );
 
-    // this.hasExpenseDataForChart$ = this.monthlyExpenseChartData$.pipe(
-    //   map((data) => {
-    //     // ✅ FIX: Check if the 'data' object and its 'labels' array are valid
-    //     // and that the labels array has at least one element.
-    //     if (!data || !data.labels || data.labels.length === 0) {
-    //         return false;
-    //     }
-    //     // If the data has labels, we assume there is data to display.
-    //     return true;
-    //   })
-    // );
-
-    // Apply the `takeUntil` operator to all your subscriptions
-    this.subscriptions.add(
-      this.monthlyExpenseChartData$
-        .pipe(takeUntil(this.destroy$))
-        .subscribe((data) => {
-          if (!data) {
-            return;
-          }
-          this.cdr.detectChanges();
-          this.renderExpenseChart(data);
-        })
-    );
+    this.currentSummaryTitle$ = of('');
   }
 
-  ngOnDestroy(): void {
-    // ✅ FIX: Emit a value and complete the Subject to signal destruction
-    this.destroy$.next();
-    this.destroy$.complete();
-    this.subscriptions.unsubscribe();
-    if (this.expenseChartInstance) {
-      this.expenseChartInstance.destroy();
-    }
+  private checkAndCreateDefaultCategories(): void {
+    this.authService.currentUser$
+      .pipe(
+        take(1),
+        switchMap((user) => {
+          if (!user) return of(null);
+          return this.categoryService.getCategories().pipe(
+            take(1),
+            switchMap((categories) => {
+              if (categories.length === 0) {
+                return from(
+                  this.categoryService.addDefaultCategories(
+                    user.uid,
+                    this.translate.currentLang
+                  )
+                );
+              }
+              return of(null);
+            })
+          );
+        }),
+        takeUntil(this.destroy$)
+      )
+      .subscribe({error: (err) => console.error('Error checking/creating categories:', err)});
+  }
+
+  private subscribeToChartData(): void {
+    this.monthlyExpenseChartData$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((data) => {
+        if (data) {
+          this.renderExpenseChart(data);
+        }
+      });
   }
 
   goToExpensePage(expenseId: string): void {
@@ -432,50 +467,32 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   formatDailyDate(dateStr: string): string {
-    const date = new Date(dateStr);
+    const date = this.safeParseDate(dateStr);
     const today = new Date();
-    const yesterday = new Date(today);
+    const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
 
-    if (
-      this.datePipe.transform(date, 'yyyy-MM-dd') ===
-      this.datePipe.transform(today, 'yyyy-MM-dd')
-    ) {
-      return this.translate.instant('TODAY');
-    } else if (
-      this.datePipe.transform(date, 'yyyy-MM-dd') ===
-      this.datePipe.transform(yesterday, 'yyyy-MM-dd')
-    ) {
-      return this.translate.instant('YESTERDAY');
-    } else {
-      const currentLang = this.translate.currentLang;
-      return (
-        this.datePipe.transform(date, 'fullDate', '', currentLang) || dateStr
-      );
-    }
+    const isToday = this.datePipe.transform(date, 'yyyy-MM-dd') === this.datePipe.transform(today, 'yyyy-MM-dd');
+    const isYesterday = this.datePipe.transform(date, 'yyyy-MM-dd') === this.datePipe.transform(yesterday, 'yyyy-MM-dd');
+
+    if (isToday) return this.translate.instant('TODAY');
+    if (isYesterday) return this.translate.instant('YESTERDAY');
+    return this.datePipe.transform(date, 'fullDate', '', this.translate.currentLang) || dateStr;
   }
 
   onTimeRangeChange(): void {
+    const newStartDate = this.expenseFilterForm.value.startDate;
+    const newEndDate = this.expenseFilterForm.value.endDate;
+    this._startDate$.next(newStartDate);
+    this._endDate$.next(newEndDate);
     this.cdr.detectChanges();
-  }
-
-  private addDays(date: Date, days: number): Date {
-    const result = new Date(date);
-    result.setDate(result.getDate() + days);
-    return result;
   }
 
   private renderExpenseChart(data: any): void {
     const canvas = this.expenseChartCanvas?.nativeElement;
-    if (!canvas) {
-      return;
-    }
+    if (!canvas) return;
 
-    if (this.expenseChartInstance) {
-      this.expenseChartInstance.destroy();
-    }
-
-    const component = this;
+    this.expenseChartInstance?.destroy();
 
     this.expenseChartInstance = new Chart(canvas, {
       type: 'bar',
@@ -486,45 +503,79 @@ export class DashboardComponent implements OnInit, OnDestroy {
         maintainAspectRatio: false,
         scales: {
           x: {
-            // 'x' axis now represents the amount
             beginAtZero: true,
             ticks: {
-              callback: function (value: any) {
-                const currentLang = component.translate?.currentLang;
-                if (currentLang === 'my') {
-                  return new Intl.NumberFormat('my-MM', {
-                    numberingSystem: 'mymr',
-                  }).format(value);
-                }
-                // Default to English locale
-                return new Intl.NumberFormat().format(value);
-              },
+              callback: (value: any) => new Intl.NumberFormat(
+                this.translate.currentLang === 'my' ? 'my-MM' : undefined
+              ).format(value),
             },
           },
-          y: {
-            // 'y' axis now represents the months
-            beginAtZero: true,
-          },
+          y: { beginAtZero: true },
         },
       },
     });
   }
 
-  // Add these methods to your dashboard component
-
-  getBalanceCardClass(balances: any): string {
+  getBalanceCardClass(balances: { [currency: string]: number } | null): string {
     if (!balances) return 'balance-positive';
-
-    const balanceValues = Object.values(balances);
-    const totalBalance = balanceValues.reduce(
-      (sum: number, value: any) => sum + value,
-      0
-    );
-
+    const totalBalance = Object.values(balances).reduce((sum, value) => sum + value, 0);
     return totalBalance >= 0 ? 'balance-positive' : 'balance-negative';
   }
 
   getBalanceAmountClass(value: number): string {
     return value >= 0 ? 'balance-positive-amount' : 'balance-negative-amount';
+  }
+
+  private createMonthlyExpenseChartData(expenses: ServiceIExpense[]): {
+    labels: string[];
+    datasets: any[];
+  } {
+    const monthlyExpensesMap: { [label: string]: number } = {};
+    const labels: string[] = [];
+    const currentLang = this.translate.currentLang;
+
+    const startDate = this.safeParseDate(this._startDate$.getValue());
+    const endDate = this.safeParseDate(this._endDate$.getValue());
+
+    let currentDate = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+    while (currentDate <= endDate) {
+      const label = this.datePipe.transform(currentDate, 'MMM yyyy', undefined, currentLang) || '';
+      labels.push(label);
+      monthlyExpensesMap[label] = 0;
+      currentDate.setMonth(currentDate.getMonth() + 1);
+    }
+
+    expenses.forEach((expense) => {
+      const expenseDate = this.safeParseDate(expense.date);
+      const periodKey = this.datePipe.transform(expenseDate, 'MMM yyyy', undefined, currentLang) || '';
+      if (monthlyExpensesMap.hasOwnProperty(periodKey)) {
+        monthlyExpensesMap[periodKey] += expense.totalCost;
+      }
+    });
+
+    const expenseData = labels.map((label) => monthlyExpensesMap[label] || 0);
+
+    return {
+      labels,
+      datasets: [
+        {
+          label: this.translate.instant('EXPENSE_AMOUNT'),
+          data: expenseData,
+          backgroundColor: 'rgba(255, 99, 132, 0.5)',
+          borderColor: 'rgba(255, 99, 132, 1)',
+          borderWidth: 1,
+        },
+      ],
+    };
+  }
+
+  private calculateTotalByCurrency(
+    items: any[],
+    amountKey: string
+  ): { [currency: string]: number } {
+    return items.reduce((acc, item) => {
+      acc[item.currency] = (acc[item.currency] || 0) + item[amountKey];
+      return acc;
+    }, {} as { [currency: string]: number });
   }
 }

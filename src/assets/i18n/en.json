@@ -371,5 +371,7 @@
     "CUSTOM": "Custom"
   },
   "START_MONTH_LABEL": "Start Month",
-  "END_MONTH_LABEL": "End Month"
+  "END_MONTH_LABEL": "End Month",
+  "CUSTOM_SUMMARY_TITLE": "Budget Period Summary",
+  "WEEKLY_SUMMARY_TITLE": "Weekly Summary"
 }

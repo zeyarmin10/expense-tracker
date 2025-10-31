@@ -1,8 +1,8 @@
 import {
   ApplicationConfig,
   importProvidersFrom,
-  provideBrowserGlobalErrorListeners,
-  provideZonelessChangeDetection,
+  // provideBrowserGlobalErrorListeners,
+  // provideZonelessChangeDetection,
 } from '@angular/core';
 import { provideRouter } from '@angular/router';
 
@@ -32,8 +32,8 @@ export function HttpLoaderFactory(http: HttpClient) {
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideBrowserGlobalErrorListeners(),
-    provideZonelessChangeDetection(),
+    // provideBrowserGlobalErrorListeners(),
+    // provideZonelessChangeDetection(),
     provideRouter(routes),
     provideHttpClient(),
     provideAnimationsAsync(),
@@ -53,7 +53,7 @@ export const appConfig: ApplicationConfig = {
       })
     ),
     // Add a provider to configure FaIconLibrary with icons.
-    // This part is correct in its usage with `provide: FaIconLibrary`.
+    // This part is correct in its usage with `provide: FaIcon-library`.
     {
       provide: FaIconLibrary,
       useFactory: () => {
@@ -61,7 +61,6 @@ export const appConfig: ApplicationConfig = {
         library.addIconPacks(fas, fab, far);
         return library;
       },
-      multi: true,
     },
   ],
 };
