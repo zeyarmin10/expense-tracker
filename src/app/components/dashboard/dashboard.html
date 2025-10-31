@@ -2,9 +2,7 @@
   <div class="row d-flex justify-content-center">
     <div class="col-12 col-sm-10 col-md-10 col-lg-8 col-xl-8 col-xxl-8">
       <div class="card shadow-sm p-3 p-md-4">
-        <div
-          class="dashboard-header d-flex justify-content-between align-items-center mb-4 p-3 rounded"
-        >
+        <div class="dashboard-header d-flex justify-content-between align-items-center mb-4 p-3 rounded">
           <div>
             <h2 class="fw-bold">{{ currentSummaryTitle$ | async }}</h2>
             <h6 class="fw-bold">{{ currentSummaryDateRange$ | async }}</h6>
@@ -17,31 +15,23 @@
           <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 col-12 mb-3">
             <div class="card h-100 income-card">
               <div class="card-body pt-1 pb-1">
-                <div
-                  class="d-flex flex-column justify-content-center align-items-center"
-                  *ngIf="
+                <div class="d-flex flex-column justify-content-center align-items-center" *ngIf="
                     totalIncomesByCurrency$ | async as totals;
                     else loading
-                  "
-                >
+                  ">
                   <h6 class="text-muted">{{ "TOTAL_INCOMES" | translate }}</h6>
-                  <div
-                    *ngIf="
+                  <div *ngIf="
                       totals && (totals | keyvalue).length > 0;
                       else noData
-                    "
-                  >
-                    <span
-                      *ngFor="let total of totals | keyvalue"
-                      class="d-flex justify-content-center pb-0"
-                    >
+                    ">
+                    <span *ngFor="let total of totals | keyvalue" class="d-flex justify-content-center pb-0">
                       <!-- <strong>{{ total.key }}:</strong> -->
                       <span class="income-amount fs-5">{{
                         formatService.formatAmountWithSymbol(
-                          total.value,
-                          total.key
+                        total.value,
+                        total.key
                         )
-                      }}</span>
+                        }}</span>
                     </span>
                   </div>
                   <ng-template #noData>
@@ -62,31 +52,23 @@
           <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 col-12 mb-3">
             <div class="card h-100 budget-card">
               <div class="card-body pt-1 pb-1">
-                <div
-                  class="d-flex flex-column justify-content-center align-items-center"
-                  *ngIf="
+                <div class="d-flex flex-column justify-content-center align-items-center" *ngIf="
                     totalBudgetsByCurrency$ | async as totals;
                     else loading
-                  "
-                >
+                  ">
                   <h6 class="text-muted">{{ "TOTAL_BUDGET" | translate }}</h6>
-                  <div
-                    *ngIf="
+                  <div *ngIf="
                       totals && (totals | keyvalue).length > 0;
                       else noData
-                    "
-                  >
-                    <span
-                      *ngFor="let total of totals | keyvalue"
-                      class="d-flex justify-content-center pb-0"
-                    >
+                    ">
+                    <span *ngFor="let total of totals | keyvalue" class="d-flex justify-content-center pb-0">
                       <!-- <strong>{{ total.key }}:</strong> -->
                       <span class="budget-amount fs-5">{{
                         formatService.formatAmountWithSymbol(
-                          total.value,
-                          total.key
+                        total.value,
+                        total.key
                         )
-                      }}</span>
+                        }}</span>
                     </span>
                   </div>
                   <ng-template #noData>
@@ -107,31 +89,23 @@
           <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 col-12 mb-3">
             <div class="card h-100 expense-card">
               <div class="card-body pt-1 pb-1">
-                <div
-                  class="d-flex flex-column justify-content-center align-items-center"
-                  *ngIf="
+                <div class="d-flex flex-column justify-content-center align-items-center" *ngIf="
                     totalExpensesByCurrency$ | async as totals;
                     else loading
-                  "
-                >
+                  ">
                   <h6 class="text-muted">{{ "TOTAL_EXPENSES" | translate }}</h6>
-                  <div
-                    *ngIf="
+                  <div *ngIf="
                       totals && (totals | keyvalue).length > 0;
                       else noData
-                    "
-                  >
-                    <span
-                      *ngFor="let total of totals | keyvalue"
-                      class="d-flex justify-content-center pb-0"
-                    >
+                    ">
+                    <span *ngFor="let total of totals | keyvalue" class="d-flex justify-content-center pb-0">
                       <!-- <strong>{{ total.key }}:</strong> -->
                       <span class="expense-amount fs-5">
                         {{
-                          formatService.formatAmountWithSymbol(
-                            total.value,
-                            total.key
-                          )
+                        formatService.formatAmountWithSymbol(
+                        total.value,
+                        total.key
+                        )
                         }}
                       </span>
                     </span>
@@ -151,7 +125,7 @@
             </div>
           </div>
 
-          <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 col-12 mb-3">
+          <!-- <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 col-12 mb-3">
             <div
               class="card h-100"
               [ngClass]="
@@ -168,7 +142,7 @@
                 >
                   <h6 class="text-muted">
                     {{ "REMAINING_BALANCE" | translate }}
-                    <!-- <small>{{ "BALANCE_SUFFIX" | translate }}</small> -->
+                    <small>{{ "BALANCE_SUFFIX" | translate }}</small>
                   </h6>
                   <div
                     *ngIf="
@@ -180,7 +154,7 @@
                       *ngFor="let balance of balances | keyvalue"
                       class="d-flex justify-content-center pb-0"
                     >
-                      <!-- <strong>{{ balance.key }}:</strong> -->
+                      <strong>{{ balance.key }}:</strong>
                       <span
                         [ngClass]="getBalanceAmountClass(balance.value)"
                         class="fs-5"
@@ -207,10 +181,48 @@
                 </ng-template>
               </div>
             </div>
+          </div> -->
+
+          <!-- START: PROFIT/LOSS CARD -->
+          <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 col-12 mb-3">
+            <div class="card h-100 border-2" [ngClass]="getProfitLossCardClass(totalProfitLossByCurrency$ | async)">
+              <div class="card-body pt-1 pb-1 d-flex flex-column justify-content-center align-items-center">
+                <div *ngIf="
+          totalProfitLossByCurrency$ | async as profitLosses; else loading
+        ">
+                  <div *ngIf="(profitLosses | keyvalue).length > 0; else noData">
+                    <div *ngFor="let profit of profitLosses | keyvalue">
+                      <div class="text-muted text-center w-100">
+                        {{
+                        ($any(profit).value >= 0 ? "NET_PROFIT" : "NET_LOSS") | translate
+                        }}
+                      </div>
+                      <div class="fw-bold text-center fs-5 w-100"
+                        [ngClass]="getProfitLossAmountClass($any(profit).value)">
+                        {{
+                        formatService.formatAmountWithSymbol($any(profit).value, $any(profit).key)
+                        }}
+                      </div>
+                    </div>
+                  </div>
+                  <ng-template #noData>
+                    <p class="text-muted text-center pb-0">
+                      {{ "NO_PROFIT_LOSS_DATA" | translate }}
+                    </p>
+                  </ng-template>
+                </div>
+                <ng-template #loading>
+                  <p class="text-muted text-center">
+                    {{ "LOADING_DATA" | translate }}
+                  </p>
+                </ng-template>
+              </div>
+            </div>
           </div>
-          <div
-            class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12 mt-3 mb3 ps-0 pe-0"
-          >
+          <!-- END: PROFIT/LOSS CARD -->
+
+
+          <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12 mt-3 mb3 ps-0 pe-0">
             <div class="card mb-4 ps-0 pe-0">
               <div class="card-body ps-0 pe-0">
                 <div class="col-12 p-0">

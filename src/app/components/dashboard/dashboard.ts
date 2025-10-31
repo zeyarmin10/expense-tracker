@@ -52,6 +52,7 @@ import { UserProfile, UserDataService } from '../../services/user-data';
 import { FormatService } from '../../services/format.service';
 
 Chart.register(...registerables);
+type CurrencyMap = { [currency: string]: number };
 
 @Component({
   selector: 'app-dashboard',
@@ -96,7 +97,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   userDisplayName$!: Observable<string | null>;
   totalExpensesByCurrency$!: Observable<{ [currency: string]: number }>;
   totalBudgetsByCurrency$!: Observable<{ [currency: string]: number }>;
-  remainingBalanceByCurrency$!: Observable<{ [currency: string]: number }>;
+  // remainingBalanceByCurrency$!: Observable<{ [currency: string]: number }>;
+  totalProfitLossByCurrency$!: Observable<CurrencyMap>;
   monthlyExpenseChartData$!: Observable<{ labels: string[]; datasets: any[] }>;
   hasData$!: Observable<boolean>;
   currentSummaryTitle$!: Observable<string>;
@@ -394,20 +396,36 @@ export class DashboardComponent implements OnInit, OnDestroy {
       })
     );
 
-    this.remainingBalanceByCurrency$ = combineLatest([
-      this.totalBudgetsByCurrency$,
+    // this.remainingBalanceByCurrency$ = combineLatest([
+    //   this.totalBudgetsByCurrency$,
+    //   this.totalExpensesByCurrency$,
+    // ]).pipe(
+    //   map(([budgets, expenses]) => {
+    //     const balance: { [currency: string]: number } = {};
+    //     const allCurrencies = new Set([...Object.keys(budgets), ...Object.keys(expenses)]);
+
+    //     allCurrencies.forEach((currency) => {
+    //       balance[currency] = (budgets[currency] || 0) - (expenses[currency] || 0);
+    //     });
+    //     return balance;
+    //   })
+    // );
+
+    this.totalProfitLossByCurrency$ = combineLatest([
+      this.totalIncomesByCurrency$,
       this.totalExpensesByCurrency$,
     ]).pipe(
-      map(([budgets, expenses]) => {
-        const balance: { [currency: string]: number } = {};
-        const allCurrencies = new Set([...Object.keys(budgets), ...Object.keys(expenses)]);
-
-        allCurrencies.forEach((currency) => {
-          balance[currency] = (budgets[currency] || 0) - (expenses[currency] || 0);
-        });
-        return balance;
+      map(([incomes, expenses]) => {
+        const profitLoss: CurrencyMap = { ...incomes };
+        for (const currency in expenses) {
+          if (expenses.hasOwnProperty(currency)) {
+            profitLoss[currency] = (profitLoss[currency] || 0) - expenses[currency];
+          }
+        }
+        return profitLoss;
       })
     );
+    
 
     this.hasData$ = combineLatest([
       this.totalIncomesByCurrency$,
@@ -517,6 +535,19 @@ export class DashboardComponent implements OnInit, OnDestroy {
       },
     });
   }
+
+  getProfitLossCardClass(balances: { [currency: string]: number } | null): string {
+    if (!balances) return 'balance-positive'; 
+    const totalBalance = Object.values(balances).reduce(
+      (sum, value) => sum + value,
+      0
+    );
+    return totalBalance >= 0 ? 'balance-positive' : 'balance-negative';
+  }
+  
+  getProfitLossAmountClass(value: number): string {
+    return value >= 0 ? 'balance-positive-amount' : 'balance-negative-amount';
+  }  
 
   getBalanceCardClass(balances: { [currency: string]: number } | null): string {
     if (!balances) return 'balance-positive';

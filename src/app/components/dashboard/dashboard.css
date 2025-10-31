@@ -118,3 +118,23 @@ body {
 .balance-negative-amount {
   color: #dc2626;
 }
+
+.balance-positive {
+  border: 2px solid #10b981;
+  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+  color: #047857;
+}
+
+.balance-negative {
+  border: 2px solid #ef4444;
+  background: linear-gradient(135deg, #fef2f2, #fecaca);
+  color: #dc2626;
+}
+
+.balance-positive-amount {
+  color: #047857;
+}
+
+.balance-negative-amount {
+  color: #dc2626;
+}
