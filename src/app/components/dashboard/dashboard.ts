@@ -123,6 +123,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // Subscriptions
   private subscriptions = new Subscription();
   private expenseChartInstance: Chart | undefined;
+  currentSummaryDateRange$: Observable<string> | undefined;
 
   constructor(
     private cdr: ChangeDetectorRef,
@@ -258,7 +259,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
           summaryDateRange = `(${year})`;
       }
 
-      this.currentSummaryTitle$ = of(`${this.translate.instant(titleKey)} ${summaryDateRange}`);
+      this.currentSummaryTitle$ = of(`${this.translate.instant(titleKey)}`);
+      this.currentSummaryDateRange$ = of(`${summaryDateRange}`);
   }
 
   private initializeForms(): void {

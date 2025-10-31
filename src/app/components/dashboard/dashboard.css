@@ -8,7 +8,7 @@ body {
 }
 
 .dashboard-header {
-  background-color: #ffffff;
+  background-color: #F9F9F9;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
@@ -63,6 +63,12 @@ body {
     position: relative;
     min-height: 50vh;
     margin-bottom: 20px;
+  }
+}
+
+@media (max-width: 365px) {
+  .dashboard-header {
+    padding: 1rem 0.5rem !important;
   }
 }
 
