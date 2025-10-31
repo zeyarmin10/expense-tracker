@@ -124,6 +124,9 @@
   padding: 0.25rem 0.5rem;
   border-radius: 0.5rem; */
 }
+.card .total-budget-card-header {
+  background-color: transparent !important;
+}
 .category-title {
   background: linear-gradient(135deg, #f8f8f8, #dddddd);
   padding: 0.25rem 0.5rem;
