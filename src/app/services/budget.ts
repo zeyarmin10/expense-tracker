@@ -14,7 +14,7 @@ import { AuthService } from './auth';
 
 export interface ServiceIBudget {
   id?: string;
-  type: 'monthly' | 'yearly';
+  type: 'monthly' | 'yearly' | 'weekly';
   period?: string;
   category?: string;
   categoryId?: string;

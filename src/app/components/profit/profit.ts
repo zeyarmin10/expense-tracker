@@ -330,22 +330,35 @@ export class Profit implements OnInit, OnDestroy {
         this.incomeForm.get('currency')?.setValue(defaultCurrency);
         this.resetForm();
 
-        // ✅ NEW: Set default date filter from user profile budget period
         const budgetPeriod = profile?.budgetPeriod;
-        if (budgetPeriod && budgetPeriod !== 'custom') {
-          // Set the date filter for predefined periods (weekly, monthly, yearly)
-          this.setDateFilter(budgetPeriod);
-        } else if (
-          budgetPeriod === 'custom' &&
-          profile?.budgetStartMonth &&
-          profile?.budgetEndMonth
-        ) {
-          // Set the date filter for custom period
-          this.setCustomDateFilter(
-            profile.budgetStartMonth,
-            profile.budgetEndMonth
-          );
+        let dateFilter: string;
+
+        switch (budgetPeriod) {
+          case 'yearly':
+            dateFilter = 'currentYear';
+            break;
+          case 'monthly':
+            dateFilter = 'currentMonth';
+            break;
+          case 'weekly':
+            dateFilter = 'currentWeek';
+            break;
+          case 'custom':
+            if (profile?.budgetStartMonth && profile?.budgetEndMonth) {
+              this.setCustomDateFilter(
+                profile.budgetStartMonth,
+                profile.budgetEndMonth
+              );
+              dateFilter = 'custom';
+            } else {
+              dateFilter = 'currentMonth';
+            }
+            break;
+          default:
+            dateFilter = 'currentMonth';
         }
+
+        this.setDateFilter(dateFilter);
       });
   }
 

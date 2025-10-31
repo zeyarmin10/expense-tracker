@@ -72,12 +72,39 @@ export class ProfitLossService {
         });
 
         const filteredBudgets = budgets.filter((b) => {
-          // Only filter monthly budgets that have a period field within the range
-          if (b.type === 'monthly' && b.period) {
-            const budgetDate = new Date(b.period);
-            return budgetDate >= start && budgetDate <= end;
+          if (!b.period) return false;
+
+          let budgetStart: Date;
+          let budgetEnd: Date;
+
+          switch (b.type) {
+            case 'yearly': {
+              const year = parseInt(b.period, 10);
+              if (isNaN(year)) return false;
+              budgetStart = new Date(year, 0, 1);
+              budgetEnd = new Date(year, 11, 31, 23, 59, 59, 999);
+              break;
+            }
+            case 'monthly': {
+              const [year, month] = b.period.split('-').map(Number);
+              if (isNaN(year) || isNaN(month)) return false;
+              budgetStart = new Date(year, month - 1, 1);
+              budgetEnd = new Date(year, month, 0, 23, 59, 59, 999);
+              break;
+            }
+            case 'weekly': {
+              budgetStart = new Date(b.period);
+              if (isNaN(budgetStart.getTime())) return false;
+              budgetEnd = new Date(budgetStart);
+              budgetEnd.setDate(budgetStart.getDate() + 6);
+              budgetEnd.setHours(23, 59, 59, 999);
+              break;
+            }
+            default:
+              return false;
           }
-          return false;
+          // Check for overlap: budget period intersects with the filter range.
+          return budgetStart <= end && budgetEnd >= start;
         });
 
         // --- 2. Calculation of Totals ---
@@ -87,7 +114,10 @@ export class ProfitLossService {
 
         // --- 3. Profit/Loss and Balance Calculations ---
         const profitLoss = this.calculateProfitLoss(totalIncomes, totalExpenses);
-        const remainingBalance = this.calculateProfitLoss(totalBudgets, totalExpenses);
+        const remainingBalance = this.calculateProfitLoss(
+          totalBudgets,
+          totalExpenses
+        );
         const netProfit = this.calculateNetProfit(profitLoss, remainingBalance);
 
         // --- 4. Return Combined Data ---
@@ -109,10 +139,9 @@ export class ProfitLossService {
   /**
    * Helper function to sum items by currency.
    */
-  private calculateTotal<T extends { currency: string; amount?: number; totalCost?: number }>(
-    items: T[],
-    key: 'amount' | 'totalCost'
-  ): CurrencyMap {
+  private calculateTotal<
+    T extends { currency: string; amount?: number; totalCost?: number }
+  >(items: T[], key: 'amount' | 'totalCost'): CurrencyMap {
     return items.reduce((acc, item) => {
       const value = (item as any)[key] || 0; // Use (item as any) to access property dynamically
       if (item.currency) {
@@ -127,7 +156,7 @@ export class ProfitLossService {
    */
   private calculateProfitLoss(
     positive: CurrencyMap, // e.g., Incomes or Budgets
-    negative: CurrencyMap  // e.g., Expenses
+    negative: CurrencyMap // e.g., Expenses
   ): CurrencyMap {
     const profitLoss: CurrencyMap = {};
     const allCurrencies = new Set([
