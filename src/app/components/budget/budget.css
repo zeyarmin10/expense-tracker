@@ -39,7 +39,7 @@
 
 .chart-container {
   position: relative;
-  min-height: 40vh;
+  min-height: 45vh;
   margin-bottom: 20px;
   /* width: 100%; */
   margin-top: 0.5rem;
@@ -160,6 +160,14 @@
   .budget-spending-monitor-body {
     padding-left: 0.5rem !important;
     padding-right: 0.5rem !important;
+  }
+  .chart-container {
+    position: relative;
+    min-height: 55vh;
+    margin-bottom: 20px;
+    /* width: 100%; */
+    margin-top: 0.5rem;
+    padding: 0;
   }
 }
 

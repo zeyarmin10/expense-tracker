@@ -572,7 +572,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     let currentDate = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
     while (currentDate <= endDate) {
-      const label = this.datePipe.transform(currentDate, 'MMM yyyy', undefined, currentLang) || '';
+      const label = this.datePipe.transform(currentDate, 'MMM yy', undefined, currentLang) || '';
       labels.push(label);
       monthlyExpensesMap[label] = 0;
       currentDate.setMonth(currentDate.getMonth() + 1);
@@ -580,7 +580,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     expenses.forEach((expense) => {
       const expenseDate = this.safeParseDate(expense.date);
-      const periodKey = this.datePipe.transform(expenseDate, 'MMM yyyy', undefined, currentLang) || '';
+      const periodKey = this.datePipe.transform(expenseDate, 'MMM yy', undefined, currentLang) || '';
       if (monthlyExpensesMap.hasOwnProperty(periodKey)) {
         monthlyExpensesMap[periodKey] += expense.totalCost;
       }

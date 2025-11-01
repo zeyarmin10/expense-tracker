@@ -66,9 +66,14 @@ body {
   }
 }
 
-@media (max-width: 365px) {
+@media (max-width: 364.98px) {
   .dashboard-header {
     padding: 1rem 0.5rem !important;
+  }
+  .chart-container {
+    position: relative;
+    min-height: 55vh;
+    margin-bottom: 20px;
   }
 }
 
