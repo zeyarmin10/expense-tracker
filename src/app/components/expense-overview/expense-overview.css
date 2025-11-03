@@ -21,13 +21,6 @@ body {
   color: #333;
 }
 
-/* For small screens, the filter/search section stacks */
-@media (max-width: 991.98px) {
-  .form-label {
-    margin-bottom: 0.25rem;
-  }
-}
-
 /* Other styles from the previous response... */
 
 /* New styles for the chart container */
@@ -37,13 +30,6 @@ body {
   /* height: 400px;  */
   max-width: 600px; /* Max width to prevent stretching on large screens */
   margin: 0 auto; /* Center the container */
-}
-
-@media (max-width: 767.98px) {
-  .chart-container {
-    height: auto; /* Allow height to be auto on mobile for responsiveness */
-    max-width: 100%;
-  }
 }
 
 /* Styles for the category buttons with totals */
@@ -75,30 +61,6 @@ body {
 .summary-card h4 {
   font-size: 1.25rem;
   font-weight: 600;
-}
-
-/* Mobile-first layout adjustments */
-@media (max-width: 575.98px) {
-  .summary-card h4 {
-    font-size: 1.1rem;
-  }
-}
-
-/* For small screens, the filter/search section stacks */
-@media (max-width: 991.98px) {
-  .form-label {
-    margin-bottom: 0.25rem;
-  }
-}
-
-/* Styles for the expense table to improve readability on smaller screens */
-@media (max-width: 767.98px) {
-  .hide-mobile-views {
-    display: none;
-  }
-  .table {
-    font-size: 0.9em;
-  }
 }
 
 /* New style for clickable rows */
@@ -136,4 +98,46 @@ body {
 
 .most-expense {
   background: linear-gradient(135deg, #ebf7ff, #c7e5fe);
+}
+
+/* For small screens, the filter/search section stacks */
+@media (max-width: 991.98px) {
+  .form-label {
+    margin-bottom: 0.25rem;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .chart-container {
+    height: auto; /* Allow height to be auto on mobile for responsiveness */
+    max-width: 100%;
+  }
+  .hide-mobile-views {
+    display: none;
+  }
+}
+
+/* Mobile-first layout adjustments */
+@media (max-width: 575.98px) {
+  .summary-card h4 {
+    font-size: 1.1rem;
+  }
+  .card-expense-overview {
+    padding: 1rem 0.75rem !important;
+  }
+  .table {
+    font-size: 0.9em;
+  }
+}
+
+@media (max-width: 364.98px) {
+  .container-column {
+    padding: 0 0.5rem !important;
+  }
+  .card-expense-overview {
+    padding: 1rem 0.5rem !important;
+  }
+  .table {
+    font-size: 0.9em;
+  }
 }
