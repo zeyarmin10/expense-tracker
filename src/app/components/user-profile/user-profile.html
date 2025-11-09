@@ -126,26 +126,26 @@
             >
               <label class="form-label font-weight-bold d-block">
                 <strong>
-                  {{ "START_MONTH_LABEL" | translate }} -
-                  {{ "END_MONTH_LABEL" | translate }} :
+                  {{ "START_DATE_LABEL" | translate }} -
+                  {{ "END_DATE_LABEL" | translate }} :
                 </strong>
               </label>
 
               <div class="row g-1">
                 <div class="col-6">
                   <input
-                    type="month"
+                    type="date"
                     class="form-control"
-                    formControlName="budgetStartMonth"
-                    [placeholder]="'START_MONTH_LABEL' | translate"
+                    formControlName="budgetStartDate"
+                    [placeholder]="'START_DATE_LABEL' | translate"
                   />
                 </div>
                 <div class="col-6">
                   <input
-                    type="month"
+                    type="date"
                     class="form-control"
-                    formControlName="budgetEndMonth"
-                    [placeholder]="'END_MONTH_LABEL' | translate"
+                    formControlName="budgetEndDate"
+                    [placeholder]="'END_DATE_LABEL' | translate"
                   />
                 </div>
               </div>

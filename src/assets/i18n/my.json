@@ -370,8 +370,8 @@
     "YEARLY": "နှစ်စဉ်",
     "CUSTOM": "စိတ်ကြိုက်"
   },
-  "START_MONTH_LABEL": "စတင်မည့်လ",
-  "END_MONTH_LABEL": "ပြီးဆုံးမည့်လ",
+  "START_DATE_LABEL": "စတင်မည့်ရက်စွဲ",
+  "END_DATE_LABEL": "ပြီးဆုံးမည့်ရက်စွဲ",
   "CUSTOM_SUMMARY_TITLE": "ဘတ်ဂျက်ကာလအကျဉ်းချုပ်",
   "WEEKLY_SUMMARY_TITLE": "အပတ်စဉ်အကျဉ်းချုပ်"
 }

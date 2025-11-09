@@ -207,24 +207,20 @@ export class ExpenseOverview implements OnInit {
   dateFilter$ = new BehaviorSubject<DateRange>({ start: '', end: '' });
   searchFilter$ = new BehaviorSubject<string>('');
 
-  // ✅ NEW: Method to determine and set the initial date filter based on profile
   setInitialDateFilter(profile: UserProfile | null): void {
     const budgetPeriod = profile?.budgetPeriod;
-    const startMonth = profile?.budgetStartMonth; // YYYY-MM
-    const endMonth = profile?.budgetEndMonth; // YYYY-MM
+    const startDate = profile?.budgetStartDate; // YYYY-MM-DD
+    const endDate = profile?.budgetEndDate; // YYYY-MM-DD
 
     let filterValue: string = 'currentMonth'; // Default filter
 
     if (budgetPeriod) {
-      if (budgetPeriod === 'custom' && startMonth && endMonth) {
-        // 1. Calculate and set the YYYY-MM-DD range from the YYYY-MM strings
-        this.setCustomBudgetRange(startMonth, endMonth);
-        // 2. Set the UI filter to 'custom' and trigger filtering
+      if (budgetPeriod === 'custom' && startDate && endDate) {
+        this.setCustomBudgetRange(startDate, endDate);
         this.setDateFilter('custom');
         return; // Exit after setting custom range
       }
 
-      // Map other budget periods to standard filter strings.
       switch (budgetPeriod) {
         case 'weekly':
           filterValue = 'currentWeek';
@@ -240,35 +236,17 @@ export class ExpenseOverview implements OnInit {
       }
     }
 
-    // Apply the standard filter (e.g., 'currentMonth', 'currentYear', or 'currentWeek')
     this.setDateFilter(filterValue);
   }
 
-  // ✅ NEW: Method to convert YYYY-MM custom budget months to YYYY-MM-DD dates
-  setCustomBudgetRange(startMonth: string, endMonth: string): void {
-    // Start date: First day of the start month
-    const startDate = `${startMonth}-01`;
-
-    // End date: Last day of the end month
-    // We use the Date constructor trick: new Date(year, monthIndex, 0) gives the last day of the previous month.
-    // The month index is 1-indexed from the YYYY-MM string (e.g., '01' -> 1).
-    const monthIndex = parseInt(endMonth.substring(5), 10);
-    const year = parseInt(endMonth.substring(0, 4), 10);
-
-    // Set to the last day of the month specified by endMonth
-    const lastDayOfMonth = new Date(year, monthIndex, 0);
-    const endDate = this.datePipe.transform(lastDayOfMonth, 'yyyy-MM-dd') || '';
-
-    // Update the component's date properties
+  setCustomBudgetRange(startDate: string, endDate: string): void {
     this.startDate = startDate;
     this.endDate = endDate;
   }
 
-  // ✅ REVISED: setDateFilter to handle the new 'currentWeek' filter
   setDateFilter(filter: string): void {
     this.selectedDateFilter = filter;
 
-    // List of filters handled by DateFilterService
     const serviceFilters = [
       'last30Days',
       'currentMonth',
@@ -280,32 +258,23 @@ export class ExpenseOverview implements OnInit {
     ];
 
     if (serviceFilters.includes(filter)) {
-      // Standard filters use the service
       const dateRange = this.dateFilterService.getDateRange(
         this.datePipe,
         filter,
         this.startDate,
-        this.endDate // Passed but typically ignored for fixed filters
+        this.endDate
       );
       this.dateFilter$.next(dateRange);
     } else if (filter === 'custom') {
-      // 'custom' filter uses the component's startDate/endDate properties
       if (this.startDate && this.endDate) {
         this.dateFilter$.next({
           start: this.startDate,
           end: this.endDate,
         });
       } else {
-        // Fallback if 'custom' is selected manually but dates are empty
         this.setDateFilter('currentMonth');
       }
     }
-
-    console.log(
-      'date range set by filter:',
-      this.selectedDateFilter,
-      this.dateFilter$.value
-    );
   }
 
   onSearch(): void {
@@ -319,7 +288,6 @@ export class ExpenseOverview implements OnInit {
       return;
     }
 
-    // Group expenses by currency
     const groupedByCurrency = expenses.reduce((acc, expense) => {
       const currency = expense.currency;
       if (!acc[currency]) {
@@ -335,12 +303,6 @@ export class ExpenseOverview implements OnInit {
         (sum, e) => sum + e.totalCost,
         0
       );
-      //   const uniqueDays = new Set(
-      //     currencyExpenses.map((e) =>
-      //       this.datePipe.transform(e.date, 'yyyy-MM-dd')
-      //     )
-      //   ).size;
-      //   const dailyAverage = uniqueDays > 0 ? totalExpenses / uniqueDays : 0;
       const dailyAverage = totalDays > 0 ? totalExpenses / totalDays : 0;
 
       return {
@@ -362,13 +324,9 @@ export class ExpenseOverview implements OnInit {
       return acc;
     }, {} as { [key: string]: CategoryTotal });
 
-    // Convert the map to an array and sort by total expense in descending order
     this.categoryTotals = Object.values(categoryTotalsMap).sort(
       (a, b) => b.total - a.total
     );
-    // this.categoryTotals = Object.values(categoryTotalsMap);
-
-    // Keep the most expensive category logic for the chart and other summaries
     const mostExpensive = this.categoryTotals[0]?.category;
     this.mostExpenseCategory = mostExpensive || 'N/A';
   }
@@ -408,16 +366,13 @@ export class ExpenseOverview implements OnInit {
   }
 
   onRowClick(expense: ServiceIExpense): void {
-    // Navigate to the 'expense' page and pass the expenseId as a URL parameter
     this.router.navigate(['/expense', expense.date]);
   }
 
   filterByCategory(category: string): void {
-    // Pass an empty string to clear the filter, or the category name to filter
     this._selectedCategory$.next(category);
   }
 
-  // ✅ REVISED: Add a new method to format the date based on the current language
   formatLocalizedDate(date: string | Date | null | undefined): string {
     const currentLang = this.translate.currentLang;
 
@@ -427,7 +382,6 @@ export class ExpenseOverview implements OnInit {
 
     if (currentLang === 'my') {
       const d = new Date(date);
-      // Get the English month abbreviation and map it to Burmese
       const month = this.datePipe.transform(d, 'MMM');
       const burmeseMonth = month
         ? BURMESE_MONTH_ABBREVIATIONS[
@@ -435,7 +389,6 @@ export class ExpenseOverview implements OnInit {
           ]
         : '';
 
-      // Format the day and year with Burmese numerals
       const day = new Intl.NumberFormat('my-MM', {
         numberingSystem: 'mymr',
         useGrouping: false,
@@ -445,10 +398,8 @@ export class ExpenseOverview implements OnInit {
         useGrouping: false,
       }).format(d.getFullYear());
 
-      // Combine the localized parts
       return `${day} ${burmeseMonth} ${year}`;
     } else {
-      // For all other languages, use the standard Angular DatePipe
       return (
         this.datePipe.transform(date, 'mediumDate', undefined, currentLang) ||
         ''
@@ -456,7 +407,6 @@ export class ExpenseOverview implements OnInit {
     }
   }
 
-  // Mobile-specific date format for Burmese
   formatMobileDate(date: string | Date | null | undefined): string {
     const currentLang = this.translate.currentLang;
 
@@ -466,7 +416,6 @@ export class ExpenseOverview implements OnInit {
 
     if (currentLang === 'my') {
       const d = new Date(date);
-      // Get the English month abbreviation and map it to Burmese
       const month = this.datePipe.transform(d, 'MMM');
       const burmeseMonth = month
         ? BURMESE_MONTH_ABBREVIATIONS[
@@ -474,16 +423,13 @@ export class ExpenseOverview implements OnInit {
           ]
         : '';
 
-      // Format the day with Burmese numerals
       const day = new Intl.NumberFormat('my-MM', {
         numberingSystem: 'mymr',
         useGrouping: false,
       }).format(d.getDate());
 
-      // Combine the localized parts
       return `${burmeseMonth} ${day}`;
     } else {
-      // For all other languages, use the standard Angular DatePipe
       return (
         this.datePipe.transform(date, 'MMM d', undefined, currentLang) || ''
       );

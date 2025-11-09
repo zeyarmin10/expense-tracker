@@ -55,8 +55,8 @@ export class UserProfileComponent implements OnInit {
     createdAt: string | null;
     currency?: string;
     budgetPeriod?: 'weekly' | 'monthly' | 'yearly' | 'custom' | null;
-    budgetStartMonth?: string | null; 
-    budgetEndMonth?: string | null;
+    budgetStartDate?: string | null; 
+    budgetEndDate?: string | null;
   } | null>;
   userPhotoUrl$: Observable<string | null>;
 
@@ -86,8 +86,8 @@ export class UserProfileComponent implements OnInit {
       displayName: ['', Validators.maxLength(50)],
       currency: ['MMK', Validators.required],
       budgetPeriod: [null],
-      budgetStartMonth: [null],
-      budgetEndMonth: [null],
+      budgetStartDate: [null],
+      budgetEndDate: [null],
     });
 
     this.userDisplayData$ = this.authService.currentUser$.pipe(
@@ -99,14 +99,14 @@ export class UserProfileComponent implements OnInit {
                 profile?.displayName || user.displayName || '';
               const currentCurrency = profile?.currency || 'MMK';
               const currentBudgetPeriod = profile?.budgetPeriod || null;
-              const currentStartMonth = profile?.budgetStartMonth ?? null;
-              const currentEndMonth = profile?.budgetEndMonth ?? null;
+              const currentStartDate = profile?.budgetStartDate ?? null;
+              const currentEndDate = profile?.budgetEndDate ?? null;
               this.userProfileForm.patchValue({
                 displayName: currentDisplayName,
                 currency: currentCurrency,
                 budgetPeriod: currentBudgetPeriod,
-                budgetStartMonth: currentStartMonth,
-                budgetEndMonth: currentEndMonth,
+                budgetStartDate: currentStartDate,
+                budgetEndDate: currentEndDate,
               });
 
               // ✅ NEW: Set selectedCurrency from profile or default
@@ -124,8 +124,8 @@ export class UserProfileComponent implements OnInit {
                       user.metadata.creationTime || new Date().toISOString(),
                     currency: this.selectedCurrency,
                     budgetPeriod: this.selectedBudgetPeriod,
-                    budgetStartMonth: null,
-                    budgetEndMonth: null,
+                    budgetStartDate: null,
+                    budgetEndDate: null,
                   })
                   .catch((err) =>
                     console.error('Error creating initial user profile:', err)
@@ -141,16 +141,16 @@ export class UserProfileComponent implements OnInit {
 
               const currency = profile?.currency || 'MMK';
               const budgetPeriod = profile?.budgetPeriod || null;
-              const budgetStartMonth = profile?.budgetStartMonth ?? null;
-              const budgetEndMonth = profile?.budgetEndMonth ?? null;
+              const budgetStartDate = profile?.budgetStartDate ?? null;
+              const budgetEndDate = profile?.budgetEndDate ?? null;
 
               return {
                 email,
                 createdAt,
                 currency,
                 budgetPeriod,
-                budgetStartMonth,
-                budgetEndMonth,
+                budgetStartDate,
+                budgetEndDate,
               };
             }),
             catchError((err) => {
@@ -165,8 +165,8 @@ export class UserProfileComponent implements OnInit {
           displayName: '',
           currency: 'MMK',
           budgetPeriod: null,
-          budgetStartMonth: null,
-          budgetEndMonth: null,
+          budgetStartDate: null,
+          budgetEndDate: null,
         });
         return of(null);
       })
@@ -241,35 +241,35 @@ export class UserProfileComponent implements OnInit {
   handleBudgetPeriodChange(
     period: 'weekly' | 'monthly' | 'yearly' | 'custom' | null
   ): void {
-    const startMonthControl = this.userProfileForm.get('budgetStartMonth');
-    const endMonthControl = this.userProfileForm.get('budgetEndMonth');
+    const startDateControl = this.userProfileForm.get('budgetStartDate');
+    const endDateControl = this.userProfileForm.get('budgetEndDate');
 
     // ✅ REVISED: Get current year in YYYY format to create default 'YYYY-MM' strings
     const currentYear = this.datePipe.transform(new Date(), 'yyyy');
-    const defaultStartMonth = `${currentYear}-01`; // e.g., '2025-01'
-    const defaultEndMonth = `${currentYear}-12`;   // e.g., '2025-12'
+    const defaultStartDate = `${currentYear}-01-01`; 
+    const defaultEndDate = `${currentYear}-12-31`;   
 
     if (period !== 'custom') {
       // Only update if the current value isn't already null to avoid unnecessary markAsDirty()
-      if (startMonthControl?.value !== null) {
-        startMonthControl?.setValue(null);
+      if (startDateControl?.value !== null) {
+        startDateControl?.setValue(null);
         // Mark as dirty so onSubmit is triggered if they change from 'custom' to another period
-        startMonthControl?.markAsDirty();
+        startDateControl?.markAsDirty();
       }
 
-      if (endMonthControl?.value !== null) {
-        endMonthControl?.setValue(null);
-        endMonthControl?.markAsDirty();
+      if (endDateControl?.value !== null) {
+        endDateControl?.setValue(null);
+        endDateControl?.markAsDirty();
       }
     } else {
       // When switching to 'custom', set default month strings
-      if (startMonthControl?.value === null) {
-        startMonthControl.setValue(defaultStartMonth);
-        startMonthControl.markAsDirty();
+      if (startDateControl?.value === null) {
+        startDateControl.setValue(defaultStartDate);
+        startDateControl.markAsDirty();
       }
-      if (endMonthControl?.value === null) {
-        endMonthControl.setValue(defaultEndMonth);
-        endMonthControl.markAsDirty();
+      if (endDateControl?.value === null) {
+        endDateControl.setValue(defaultEndDate);
+        endDateControl.markAsDirty();
       }
     }
   }
@@ -299,10 +299,10 @@ export class UserProfileComponent implements OnInit {
         const displayName = this.userProfileForm.get('displayName')?.value;
         const currency = this.userProfileForm.get('currency')?.value;
         const budgetPeriod = this.userProfileForm.get('budgetPeriod')?.value;
-        const budgetStartMonth =
-          this.userProfileForm.get('budgetStartMonth')?.value;
-        const budgetEndMonth =
-          this.userProfileForm.get('budgetEndMonth')?.value;
+        const budgetStartDate =
+          this.userProfileForm.get('budgetStartDate')?.value;
+        const budgetEndDate =
+          this.userProfileForm.get('budgetEndDate')?.value;
         try {
           if (
             currentUser.displayName !== displayName &&
@@ -318,8 +318,8 @@ export class UserProfileComponent implements OnInit {
             displayName: displayName,
             currency: currency,
             budgetPeriod: budgetPeriod,
-            budgetStartMonth: budgetStartMonth,
-            budgetEndMonth: budgetEndMonth,
+            budgetStartDate: budgetStartDate,
+            budgetEndDate: budgetEndDate,
           });
 
           this.successMessage = this.translate.instant(

@@ -1101,8 +1101,8 @@ export class BudgetComponent implements OnInit, OnDestroy {
   // ✅ NEW: Method to determine and set the initial date filter based on profile
   setInitialDateFilter(profile: UserProfile | null): void {
     const budgetPeriod = profile?.budgetPeriod;
-    const startMonth = profile?.budgetStartMonth; // YYYY-MM
-    const endMonth = profile?.budgetEndMonth; // YYYY-MM
+    const startMonth = profile?.budgetStartDate; // YYYY-MM
+    const endMonth = profile?.budgetEndDate; // YYYY-MM
 
     let filterValue: string = 'currentMonth'; // Default filter
 
@@ -1110,7 +1110,9 @@ export class BudgetComponent implements OnInit, OnDestroy {
     if (budgetPeriod) {
       if (budgetPeriod === 'custom' && startMonth && endMonth) {
         // 1. Calculate and set the YYYY-MM-DD range from the YYYY-MM strings
-        this.setCustomBudgetRange(startMonth, endMonth);
+        // this.setCustomBudgetRange(startMonth, endMonth);
+        this.startDate = startMonth;
+        this.endDate = endMonth;
         // 2. Set the UI filter to 'custom' and trigger filtering
         this.setDateFilter('custom');
         return; // Exit after setting custom range

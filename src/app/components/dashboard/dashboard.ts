@@ -22,7 +22,6 @@ import {
   Observable,
   combineLatest,
   map,
-  Subscription,
   of,
   BehaviorSubject,
   switchMap,
@@ -43,12 +42,11 @@ import {
   keyframes,
 } from '@angular/animations';
 import { Router } from '@angular/router';
-import {
-  AVAILABLE_CURRENCIES,
-} from '../../core/constants/app.constants';
+import { AVAILABLE_CURRENCIES } from '../../core/constants/app.constants';
 import { CategoryService } from '../../services/category';
 import { UserProfile, UserDataService } from '../../services/user-data';
-
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { faSync } from '@fortawesome/free-solid-svg-icons';
 import { FormatService } from '../../services/format.service';
 
 Chart.register(...registerables);
@@ -57,7 +55,7 @@ type CurrencyMap = { [currency: string]: number };
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule],
+  imports: [CommonModule, FormsModule, TranslateModule, FontAwesomeModule],
   providers: [DatePipe],
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.css'],
@@ -93,11 +91,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   @ViewChild('expenseChartCanvas')
   private expenseChartCanvas!: ElementRef<HTMLCanvasElement>;
 
-  // Observables for async data
   userDisplayName$!: Observable<string | null>;
   totalExpensesByCurrency$!: Observable<{ [currency: string]: number }>;
   totalBudgetsByCurrency$!: Observable<{ [currency: string]: number }>;
-  // remainingBalanceByCurrency$!: Observable<{ [currency: string]: number }>;
   totalProfitLossByCurrency$!: Observable<CurrencyMap>;
   monthlyExpenseChartData$!: Observable<{ labels: string[]; datasets: any[] }>;
   hasData$!: Observable<boolean>;
@@ -108,29 +104,21 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }>;
   totalIncomesByCurrency$!: Observable<{ [currency: string]: number }>;
 
-  // Forms
   expenseFilterForm!: FormGroup;
   categoryFilterForm!: FormGroup;
 
-  // Date management
   _startDate$: BehaviorSubject<string>;
   _endDate$: BehaviorSubject<string>;
+  private refresh$ = new BehaviorSubject<void>(undefined);
 
-  // UI properties
   titleAnimTrigger: string = 'initial';
+  faSync = faSync;
 
-  // Constants
   availableCurrencies = AVAILABLE_CURRENCIES;
-
-  // Subscriptions
-  private subscriptions = new Subscription();
   private expenseChartInstance: Chart | undefined;
   currentSummaryDateRange$: Observable<string> | undefined;
 
-  constructor(
-    private cdr: ChangeDetectorRef,
-    private datePipe: DatePipe
-  ) {
+  constructor(private cdr: ChangeDetectorRef, private datePipe: DatePipe) {
     const today = new Date();
     this._startDate$ = new BehaviorSubject<string>(
       this.datePipe.transform(new Date(today.getFullYear(), 0, 1), 'yyyy-MM-dd') || ''
@@ -152,10 +140,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
-    this.subscriptions.unsubscribe();
-    if (this.expenseChartInstance) {
-      this.expenseChartInstance.destroy();
-    }
+    this.expenseChartInstance?.destroy();
+  }
+
+  refreshData(): void {
+    this.refresh$.next();
+    this.titleAnimTrigger = 'roll';
+    setTimeout(() => (this.titleAnimTrigger = 'initial'), 200);
   }
 
   private initializeLanguage(): void {
@@ -167,35 +158,39 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   private initializeUserDataAndDateRange(): void {
-    this.userDisplayName$ = this.authService.currentUser$.pipe(map(user => user?.displayName || null));
+    this.userDisplayName$ = this.authService.currentUser$.pipe(
+      map((user) => user?.displayName || null)
+    );
 
-    this.authService.currentUser$.pipe(
-      filter((user): user is import('@angular/fire/auth').User => !!user),
-      switchMap(user => this.userDataService.getUserProfile(user.uid)),
-      takeUntil(this.destroy$)
-    ).subscribe(userProfile => {
-      this.setDashboardDateRange(userProfile);
-      this.expenseFilterForm.patchValue({
-        startDate: this._startDate$.getValue(),
-        endDate: this._endDate$.getValue()
+    this.authService.currentUser$
+      .pipe(
+        filter((user): user is import('@angular/fire/auth').User => !!user),
+        switchMap((user) => this.userDataService.getUserProfile(user.uid)),
+        takeUntil(this.destroy$)
+      )
+      .subscribe((userProfile) => {
+        this.setDashboardDateRange(userProfile);
+        this.expenseFilterForm.patchValue({
+          startDate: this._startDate$.getValue(),
+          endDate: this._endDate$.getValue(),
+        });
+        this.updateSummaryTitle(userProfile);
       });
-      this.updateSummaryTitle(userProfile);
-    });
   }
 
   private setDashboardDateRange(userProfile: UserProfile | null): void {
     const today = new Date();
     const currentYear = today.getFullYear();
-    let startDate: Date;
-    let endDate: Date;
+    let startDate: Date, endDate: Date;
 
     if (userProfile?.budgetPeriod) {
       switch (userProfile.budgetPeriod) {
         case 'weekly':
           const dayOfWeek = today.getDay();
           const firstDayOfWeek = new Date(today);
-          firstDayOfWeek.setDate(today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1));
-
+          firstDayOfWeek.setDate(
+            today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1)
+          );
           startDate = new Date(firstDayOfWeek);
           endDate = new Date(startDate);
           endDate.setDate(startDate.getDate() + 6);
@@ -209,18 +204,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
           endDate = new Date(currentYear, 11, 31);
           break;
         case 'custom':
-          if (userProfile.budgetStartMonth && userProfile.budgetEndMonth) {
-            const [startYear, startMonth] = userProfile.budgetStartMonth.split('-').map(Number);
-            const [endYear, endMonth] = userProfile.budgetEndMonth.split('-').map(Number);
-
-            startDate = new Date(startYear, startMonth - 1, 1);
-            endDate = new Date(endYear, endMonth - 1, 1);
-            endDate.setMonth(endDate.getMonth() + 1);
-            endDate.setDate(0);
-          } else {
-            startDate = new Date(currentYear, 0, 1);
-            endDate = new Date(currentYear, 11, 31);
-          }
+          startDate = userProfile.budgetStartDate
+            ? new Date(userProfile.budgetStartDate)
+            : new Date(currentYear, 0, 1);
+          endDate = userProfile.budgetEndDate
+            ? new Date(userProfile.budgetEndDate)
+            : new Date(currentYear, 11, 31);
           break;
         default:
           startDate = new Date(currentYear, 0, 1);
@@ -243,6 +232,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     const startDateValue = this._startDate$.getValue();
     const endDateValue = this._endDate$.getValue();
+
     if (budgetPeriod === 'weekly') {
       titleKey = 'WEEKLY_SUMMARY_TITLE';
       const start = this.datePipe.transform(startDateValue, 'MMM d');
@@ -250,13 +240,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
       summaryDateRange = `(${start} - ${end})`;
     } else if (budgetPeriod === 'monthly') {
       titleKey = 'MONTHLY_SUMMARY_TITLE';
-      summaryDateRange = `(${this.datePipe.transform(startDateValue, 'MMMM yyyy')})`;
+      summaryDateRange = `(${this.datePipe.transform(
+        startDateValue,
+        'MMMM yyyy'
+      )})`;
     } else if (budgetPeriod === 'custom') {
       titleKey = 'CUSTOM_SUMMARY_TITLE';
-      const start = this.datePipe.transform(startDateValue, 'MMM yyyy');
-      const end = this.datePipe.transform(endDateValue, 'MMM yyyy');
+      const start = this.datePipe.transform(startDateValue, 'MMM d, yyyy');
+      const end = this.datePipe.transform(endDateValue, 'MMM d, yyyy');
       summaryDateRange = `(${start} - ${end})`;
-    } else { // yearly or default
+    } else {
       const year = this.safeParseDate(startDateValue).getFullYear();
       summaryDateRange = `(${year})`;
     }
@@ -279,33 +272,31 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   private createDataStream<T>(streamProvider: () => Observable<T[]>): Observable<T[]> {
     return this.authService.currentUser$.pipe(
-      switchMap(user => (user ? streamProvider() : of([] as T[])))
+      switchMap((user) => (user ? streamProvider() : of([] as T[])))
     );
   }
 
   private safeParseDate(dateStr: string): Date {
     const [year, month, day] = dateStr.split('-').map(Number);
-    return new Date(year, month - 1, day, 12, 0, 0); // Use noon to avoid timezone-related day shifts
+    return new Date(year, month - 1, day, 12, 0, 0);
   }
 
   private filterByDateRange<T extends { date: string }>(items: T[], startDate: Date, endDate: Date): T[] {
-    const rangeStart = this.safeParseDate(this.datePipe.transform(startDate, 'yyyy-MM-dd') || '');
-    const rangeEnd = this.safeParseDate(this.datePipe.transform(endDate, 'yyyy-MM-dd') || '');
-    rangeEnd.setDate(rangeEnd.getDate() + 1);
-
-    return items.filter(item => {
+    return items.filter((item) => {
       const itemDate = this.safeParseDate(item.date);
-      return itemDate >= rangeStart && itemDate < rangeEnd;
+      return itemDate >= startDate && itemDate <= endDate;
     });
   }
 
   private initializeDataStreams(): void {
-    const allExpenses$ = this.createDataStream(() => this.expenseService.getExpenses());
-    const allIncomes$ = this.createDataStream(() => this.incomeService.getIncomes());
-    const allBudgets$ = this.createDataStream(() => this.budgetService.getBudgets());
-    const userProfile$ = this.authService.currentUser$.pipe(
-      filter((user): user is import('@angular/fire/auth').User => !!user),
-      switchMap(user => this.userDataService.getUserProfile(user.uid))
+    const allExpenses$ = this.createDataStream(() =>
+      this.expenseService.getExpenses()
+    );
+    const allIncomes$ = this.createDataStream(() =>
+      this.incomeService.getIncomes()
+    );
+    const allBudgets$ = this.createDataStream(() =>
+      this.budgetService.getBudgets()
     );
 
     this.filteredExpensesAndIncomes$ = combineLatest([
@@ -313,6 +304,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       allIncomes$,
       this._startDate$,
       this._endDate$,
+      this.refresh$,
     ]).pipe(
       map(([expenses, incomes, startDateStr, endDateStr]) => {
         const startDate = this.safeParseDate(startDateStr);
@@ -332,84 +324,65 @@ export class DashboardComponent implements OnInit, OnDestroy {
       map(({ incomes }) => this.calculateTotalByCurrency(incomes, 'amount'))
     );
 
-    // PASTE THIS ENTIRE BLOCK TO REPLACE THE OLD ONE
-    this.totalBudgetsByCurrency$ = combineLatest([allBudgets$, this._startDate$, this._endDate$, userProfile$]).pipe(
-      map(([budgets, startDateStr, endDateStr, userProfile]) => {
+    this.totalBudgetsByCurrency$ = combineLatest([
+      allBudgets$,
+      this._startDate$,
+      this._endDate$,
+      this.refresh$,
+    ]).pipe(
+      map(([budgets, startDateStr, endDateStr]) => {
         const startDate = this.safeParseDate(startDateStr);
         const endDate = this.safeParseDate(endDateStr);
 
-        if (userProfile?.budgetPeriod === 'weekly') {
-          const weeklyTotals: { [currency: string]: number } = {};
+        const budgetGroups = new Map<string, { total: number; individual: number; currency: string }>();
 
-          // First, get the relevant month periods for the week
-          const startMonthPeriod = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}`;
-          const endMonthPeriod = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}`;
-
-          // Filter budgets to only include those from the relevant month(s)
-          const relevantBudgets = budgets.filter(budget =>
-            budget.period && (budget.period === startMonthPeriod || budget.period === endMonthPeriod)
-          );
-
-          relevantBudgets.forEach(budget => {
-            const [year, month] = budget.period!.split('-').map(Number);
-            const budgetMonthStart = new Date(year, month - 1, 1);
-            const budgetMonthEnd = new Date(year, month, 0);
-
-            const weekStart = new Date(startDate);
-            const weekEnd = new Date(endDate);
-
-            // Determine the actual overlap between the budget's month and the week
-            const overlapStart = new Date(Math.max(budgetMonthStart.getTime(), weekStart.getTime()));
-            const overlapEnd = new Date(Math.min(budgetMonthEnd.getTime(), weekEnd.getTime()));
-
-            if (overlapStart <= overlapEnd) {
-              const daysInMonth = budgetMonthEnd.getDate();
-              const dailyAmount = budget.amount / daysInMonth;
-              // Calculate days of overlap correctly
-              const overlapDays = Math.round((overlapEnd.getTime() - overlapStart.getTime()) / (1000 * 3600 * 24)) + 1;
-
-              if (!weeklyTotals[budget.currency]) {
-                weeklyTotals[budget.currency] = 0;
-              }
-              weeklyTotals[budget.currency] += overlapDays * dailyAmount;
+        // Iterate over all budgets once
+        budgets.forEach((budget) => {
+            // 1. Check if the period is defined. This also narrows the type for the compiler.
+            if (!budget.period) {
+                return; // Skip this budget if it has no period.
             }
-          });
-          return weeklyTotals;
+            
+            // 2. Check if the budget's date falls within the selected range.
+            const budgetDate = this.safeParseDate(budget.period);
+            if (budgetDate < startDate || budgetDate > endDate) {
+                return; // Skip if it's outside the date range.
+            }
 
-        } else {
-          // This logic for other periods remains the same
-          const rangeStart = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
-          const rangeEnd = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
+            // 3. Group and aggregate the budgets.
+            const periodKey = budget.type === 'yearly' 
+                ? this.datePipe.transform(budgetDate, 'yyyy')
+                : this.datePipe.transform(budgetDate, 'yyyy-MM');
+            
+            if (!periodKey) {
+                return; // Skip if we can't generate a valid key.
+            }
+        
+            const groupKey = `${periodKey}_${budget.currency}`;
+            const currentGroup = budgetGroups.get(groupKey) || { total: 0, individual: 0, currency: budget.currency };
 
-          return budgets
-            .filter(budget => {
-              if (!budget.period) return false;
-              const [year, month] = budget.period.split('-').map(Number);
-              const budgetDate = new Date(year, month - 1, 1);
-              return budgetDate >= rangeStart && budgetDate <= rangeEnd;
-            })
-            .reduce((acc, budget) => {
-              acc[budget.currency] = (acc[budget.currency] || 0) + budget.amount;
-              return acc;
-            }, {} as { [currency: string]: number });
-        }
+            if (budget.category === 'all') {
+                currentGroup.total += budget.amount;
+            } else {
+                currentGroup.individual += budget.amount;
+            }
+            budgetGroups.set(groupKey, currentGroup);
+        });
+        
+        // 4. Sum up the effective budgets for each currency.
+        const totalBudgets: { [currency: string]: number } = {};
+        budgetGroups.forEach((group) => {
+            const effectiveAmount = group.total > 0 ? group.total : group.individual;
+            totalBudgets[group.currency] = (totalBudgets[group.currency] || 0) + effectiveAmount;
+        });
+
+        return totalBudgets;
       })
     );
 
-    // this.remainingBalanceByCurrency$ = combineLatest([
-    //   this.totalBudgetsByCurrency$,
-    //   this.totalExpensesByCurrency$,
-    // ]).pipe(
-    //   map(([budgets, expenses]) => {
-    //     const balance: { [currency: string]: number } = {};
-    //     const allCurrencies = new Set([...Object.keys(budgets), ...Object.keys(expenses)]);
 
-    //     allCurrencies.forEach((currency) => {
-    //       balance[currency] = (budgets[currency] || 0) - (expenses[currency] || 0);
-    //     });
-    //     return balance;
-    //   })
-    // );
+
+
 
     this.totalProfitLossByCurrency$ = combineLatest([
       this.totalIncomesByCurrency$,
@@ -425,7 +398,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
         return profitLoss;
       })
     );
-
 
     this.hasData$ = combineLatest([
       this.totalIncomesByCurrency$,
@@ -469,16 +441,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
         }),
         takeUntil(this.destroy$)
       )
-      .subscribe({ error: (err) => console.error('Error checking/creating categories:', err) });
+      .subscribe({ error: (err) => console.error('Error creating/creating categories:', err) });
   }
 
   private subscribeToChartData(): void {
     this.monthlyExpenseChartData$
       .pipe(takeUntil(this.destroy$))
       .subscribe((data) => {
-        if (data) {
-          this.renderExpenseChart(data);
-        }
+        if (data) this.renderExpenseChart(data);
       });
   }
 
@@ -486,25 +456,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.router.navigate(['/expense', expenseId]);
   }
 
-  formatDailyDate(dateStr: string): string {
-    const date = this.safeParseDate(dateStr);
-    const today = new Date();
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    const isToday = this.datePipe.transform(date, 'yyyy-MM-dd') === this.datePipe.transform(today, 'yyyy-MM-dd');
-    const isYesterday = this.datePipe.transform(date, 'yyyy-MM-dd') === this.datePipe.transform(yesterday, 'yyyy-MM-dd');
-
-    if (isToday) return this.translate.instant('TODAY');
-    if (isYesterday) return this.translate.instant('YESTERDAY');
-    return this.datePipe.transform(date, 'fullDate', '', this.translate.currentLang) || dateStr;
-  }
-
   onTimeRangeChange(): void {
-    const newStartDate = this.expenseFilterForm.value.startDate;
-    const newEndDate = this.expenseFilterForm.value.endDate;
-    this._startDate$.next(newStartDate);
-    this._endDate$.next(newEndDate);
+    this._startDate$.next(this.expenseFilterForm.value.startDate);
+    this._endDate$.next(this.expenseFilterForm.value.endDate);
     this.cdr.detectChanges();
   }
 
@@ -522,14 +476,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         responsive: true,
         maintainAspectRatio: false,
         scales: {
-          x: {
-            beginAtZero: true,
-            ticks: {
-              callback: (value: any) => new Intl.NumberFormat(
-                this.translate.currentLang === 'my' ? 'my-MM' : undefined
-              ).format(value),
-            },
-          },
+          x: { beginAtZero: true, ticks: { callback: (value: any) => new Intl.NumberFormat(this.translate.currentLang === 'my' ? 'my-MM' : undefined).format(value), }, },
           y: { beginAtZero: true },
         },
       },
@@ -538,10 +485,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   getProfitLossCardClass(balances: { [currency: string]: number } | null): string {
     if (!balances) return 'balance-positive';
-    const totalBalance = Object.values(balances).reduce(
-      (sum, value) => sum + value,
-      0
-    );
+    const totalBalance = Object.values(balances).reduce((sum, value) => sum + value, 0);
     return totalBalance >= 0 ? 'balance-positive' : 'balance-negative';
   }
 
@@ -566,10 +510,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const monthlyExpensesMap: { [label: string]: number } = {};
     const labels: string[] = [];
     const currentLang = this.translate.currentLang;
-
     const startDate = this.safeParseDate(this._startDate$.getValue());
     const endDate = this.safeParseDate(this._endDate$.getValue());
-
     let currentDate = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
     while (currentDate <= endDate) {
       const label = this.datePipe.transform(currentDate, 'MMM yy', undefined, currentLang) || '';
@@ -577,7 +519,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       monthlyExpensesMap[label] = 0;
       currentDate.setMonth(currentDate.getMonth() + 1);
     }
-
     expenses.forEach((expense) => {
       const expenseDate = this.safeParseDate(expense.date);
       const periodKey = this.datePipe.transform(expenseDate, 'MMM yy', undefined, currentLang) || '';
@@ -585,27 +526,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
         monthlyExpensesMap[periodKey] += expense.totalCost;
       }
     });
-
     const expenseData = labels.map((label) => monthlyExpensesMap[label] || 0);
-
     return {
       labels,
-      datasets: [
-        {
-          label: this.translate.instant('EXPENSE_AMOUNT'),
-          data: expenseData,
-          backgroundColor: 'rgba(255, 99, 132, 0.5)',
-          borderColor: 'rgba(255, 99, 132, 1)',
-          borderWidth: 1,
-        },
-      ],
+      datasets: [{ label: this.translate.instant('EXPENSE_AMOUNT'), data: expenseData, backgroundColor: 'rgba(255, 99, 132, 0.5)', borderColor: 'rgba(255, 99, 132, 1)', borderWidth: 1, },],
     };
   }
 
-  private calculateTotalByCurrency(
-    items: any[],
-    amountKey: string
-  ): { [currency: string]: number } {
+  private calculateTotalByCurrency(items: any[], amountKey: string): { [currency: string]: number } {
     return items.reduce((acc, item) => {
       acc[item.currency] = (acc[item.currency] || 0) + item[amountKey];
       return acc;

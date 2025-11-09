@@ -344,11 +344,13 @@ export class Profit implements OnInit, OnDestroy {
             dateFilter = 'currentWeek';
             break;
           case 'custom':
-            if (profile?.budgetStartMonth && profile?.budgetEndMonth) {
-              this.setCustomDateFilter(
-                profile.budgetStartMonth,
-                profile.budgetEndMonth
-              );
+            if (profile?.budgetStartDate && profile?.budgetEndDate) {
+              // this.setCustomDateFilter(
+              //   profile.budgetStartDate,
+              //   profile.budgetEndDate
+              // );
+              this.startDate = profile.budgetStartDate;
+              this.endDate = profile.budgetEndDate;
               dateFilter = 'custom';
             } else {
               dateFilter = 'currentMonth';
