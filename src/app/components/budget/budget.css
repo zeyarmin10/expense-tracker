@@ -20,11 +20,9 @@
   left: -50%;
   width: 200%;
   height: 200%;
-  background: radial-gradient(
-    circle,
-    rgba(255, 255, 255, 0.2) 0%,
-    transparent 70%
-  );
+  background: radial-gradient(circle,
+      rgba(255, 255, 255, 0.2) 0%,
+      transparent 70%);
   transition: transform 0.5s ease-in-out;
   transform: rotate(45deg);
 }
@@ -46,14 +44,16 @@
   padding: 0;
 }
 
-.budget-card {
+.total-budget-card {
   border: 2px solid #3b82f6;
   background: linear-gradient(135deg, #eff6ff, #dbeafe);
 }
+
 .budget-amount {
   max-width: fit-content;
   color: #1d4ed8;
 }
+
 .monthly-budget {
   border-radius: 0.5rem;
   padding: 0.25rem;
@@ -65,10 +65,12 @@
   border: 2px solid #f59e0b;
   background: linear-gradient(135deg, #fffbeb, #fef3c7);
 }
+
 .expense-amount {
   max-width: fit-content;
   color: #d97706;
 }
+
 .monthly-expense {
   border-radius: 0.5rem;
   padding: 0.25rem;
@@ -82,17 +84,20 @@
   padding: 0.25rem;
   background: linear-gradient(135deg, #ecfdf5, #d1fae5);
 }
+
 .monthly-balance-negative {
   max-width: fit-content;
   border-radius: 0.5rem;
   padding: 0.25rem;
   background: linear-gradient(135deg, #fef2f2, #fecaca);
 }
+
 .balance-positive {
   border: 2px solid #10b981;
   background: linear-gradient(135deg, #ecfdf5, #d1fae5);
   color: #047857;
 }
+
 .balance-negative {
   border: 2px solid #ef4444;
   background: linear-gradient(135deg, #fef2f2, #fecaca);
@@ -102,6 +107,7 @@
 .balance-positive-amount {
   color: #047857;
 }
+
 .balance-negative-amount {
   color: #dc2626;
 }
@@ -111,6 +117,7 @@
   padding: 0.2rem 0.5rem;
   border-radius: 0.5rem;
 }
+
 .recorded-budget {
   max-width: fit-content;
   padding: 0.25rem 0.5rem;
@@ -124,9 +131,11 @@
   padding: 0.25rem 0.5rem;
   border-radius: 0.5rem; */
 }
+
 .card .total-budget-card-header {
   background-color: transparent !important;
 }
+
 .category-title {
   background: linear-gradient(135deg, #f8f8f8, #dddddd);
   padding: 0.25rem 0.5rem;
@@ -145,22 +154,45 @@
   background: linear-gradient(135deg, #fffafa, #ffeaea);
 }
 
+@media (max-width: 575.98px) {
+  .smaller-font {
+    font-size: smaller;
+  }
+
+  .total-budget-card-body {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+  }
+
+  .category-budget-card-body {
+    padding: 0.25rem 0.5rem !important;
+  }
+
+  .no-category-budget-card-body {
+    padding: 0.25rem 0.5rem !important;
+  }
+}
+
 @media (max-width: 364.98px) {
   .list-group-item {
     padding-left: 0.5rem !important;
     padding-right: 0.5rem !important;
   }
+
   .recorded-budget-body {
     padding-left: 0.5rem !important;
     padding-right: 0.5rem !important;
   }
+
   .budget-monthly-summary {
     padding: 1rem 0.5rem;
   }
+
   .budget-spending-monitor-body {
     padding-left: 0.5rem !important;
     padding-right: 0.5rem !important;
   }
+
   .chart-container {
     position: relative;
     min-height: 55vh;
@@ -169,20 +201,12 @@
     margin-top: 0.5rem;
     padding: 0;
   }
-}
 
-@media (max-width: 575.98px) {
-  .smaller-font {
-    font-size: smaller;
+  .container-column {
+    padding: 0 0.5rem !important;
   }
-  .total-budget-card-body {
-    padding-left: 0.5rem !important;
-    padding-right: 0.5rem !important;
-  }
-  .category-budget-card-body {
-    padding: 0.25rem 0.5rem !important;
-  }
-  .no-category-budget-card-body {
-    padding: 0.25rem 0.5rem !important;
+
+  .budget-card {
+    padding: 1rem 0.5rem !important;
   }
 }

@@ -32,6 +32,7 @@
     max-width: 800px;
     margin: 0 1rem;
   }
+
   .profit-card {
     width: 100% !important;
     border-radius: 1rem !important;
@@ -42,26 +43,38 @@
 @keyframes shine {
   0% {
     box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
-  } /* Initial subtle glow for info button */
+  }
+
+  /* Initial subtle glow for info button */
   50% {
     box-shadow: 0 0 5px rgba(0, 123, 255, 0.5), 0 0 15px rgba(0, 123, 255, 0.5);
-  } /* Brighter glow */
+  }
+
+  /* Brighter glow */
   100% {
     box-shadow: 0 0 5px rgba(209, 244, 251, 0.3);
-  } /* Return to subtle glow */
+  }
+
+  /* Return to subtle glow */
 }
 
 /* Define the shine effect animation for success button */
 @keyframes shine-success {
   0% {
     box-shadow: 0 0 5px rgba(40, 167, 69, 0.3);
-  } /* Initial subtle glow for success button */
+  }
+
+  /* Initial subtle glow for success button */
   50% {
     box-shadow: 0 0 5px rgba(40, 167, 69, 0.35), 0 0 15px rgba(40, 167, 69, 0.5);
-  } /* Brighter glow */
+  }
+
+  /* Brighter glow */
   100% {
     box-shadow: 0 0 5px rgba(40, 167, 69, 0.3);
-  } /* Return to subtle glow */
+  }
+
+  /* Return to subtle glow */
 }
 
 /* Apply the animation to buttons with .shine-effect class */
@@ -81,12 +94,15 @@
 .btn[disabled] {
   transition: background-color 0.3s ease, color 0.3s ease,
     border-color 0.3s ease, box-shadow 0.3s ease;
-  animation: none !important; /* Stop animation when disabled */
+  animation: none !important;
+  /* Stop animation when disabled */
 }
+
 .total-incomes {
   font-weight: bolder;
   color: green;
 }
+
 /* .monthly-profit-loss {
     border: 1px solid grey;
     border-radius: 0.5rem;
@@ -127,22 +143,6 @@
   margin-bottom: 20px;
 }
 
-/* For mobile devices, increase the chart height for better readability */
-@media (max-width: 767px) {
-  .chart-container {
-    position: relative;
-    min-height: 40vh;
-    margin-bottom: 20px;
-  }
-}
-@media (max-width: 364.98px) {
-  .chart-container {
-    position: relative;
-    max-height: 50vh;
-    margin-bottom: 20px;
-  }
-}
-
 .net-profit-card {
   border: 2px solid #32c9ee;
   background: linear-gradient(135deg, #f1fcff, #dbf7ff);
@@ -159,6 +159,7 @@
   border: 2px solid #22c55e;
   background: linear-gradient(135deg, #f0fdf4, #dcfce7);
 }
+
 .income-amount {
   color: #15803d;
 }
@@ -168,6 +169,7 @@
   border: 2px solid #f59e0b;
   background: linear-gradient(135deg, #fffbeb, #fef3c7);
 }
+
 .expense-amount {
   color: #d97706;
 }
@@ -179,6 +181,7 @@
   background: linear-gradient(135deg, #ecfdf5, #d1fae5);
   color: #047857;
 }
+
 .balance-negative {
   border: 2px solid #ef4444;
   background: linear-gradient(135deg, #fef2f2, #fecaca);
@@ -188,13 +191,37 @@
 .balance-positive-amount {
   color: #047857;
 }
+
 .balance-negative-amount {
   color: #dc2626;
 }
 
+/* For mobile devices, increase the chart height for better readability */
+@media (max-width: 767px) {
+  .chart-container {
+    position: relative;
+    min-height: 40vh;
+    margin-bottom: 20px;
+  }
+}
+
 @media (max-width: 364.98px) {
+  .chart-container {
+    position: relative;
+    max-height: 50vh;
+    margin-bottom: 20px;
+  }
+
   .recorded-income-body {
     padding-left: 0.3rem !important;
     padding-right: 0.3rem !important;
+  }
+
+  .container-column {
+    padding: 0 0.5rem !important;
+  }
+
+  .profit-card {
+    padding: 1rem 0.5rem !important;
   }
 }

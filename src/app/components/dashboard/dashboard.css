@@ -57,31 +57,12 @@ body {
   margin-bottom: 20px;
 }
 
-/* For mobile devices, increase the chart height for better readability */
-@media (max-width: 767px) {
-  .chart-container {
-    position: relative;
-    min-height: 50vh;
-    margin-bottom: 20px;
-  }
-}
-
-@media (max-width: 364.98px) {
-  .dashboard-header {
-    padding: 1rem 0.5rem !important;
-  }
-  .chart-container {
-    position: relative;
-    min-height: 55vh;
-    margin-bottom: 20px;
-  }
-}
-
 /* Income */
 .income-card {
   border: 2px solid #22c55e;
   background: linear-gradient(135deg, #f0fdf4, #dcfce7);
 }
+
 .income-amount {
   color: #15803d;
 }
@@ -91,6 +72,7 @@ body {
   border: 2px solid #3b82f6;
   background: linear-gradient(135deg, #eff6ff, #dbeafe);
 }
+
 .budget-amount {
   color: #1d4ed8;
 }
@@ -100,6 +82,7 @@ body {
   border: 2px solid #f59e0b;
   background: linear-gradient(135deg, #fffbeb, #fef3c7);
 }
+
 .expense-amount {
   color: #d97706;
 }
@@ -111,6 +94,7 @@ body {
   background: linear-gradient(135deg, #ecfdf5, #d1fae5);
   color: #047857;
 }
+
 .balance-negative {
   border: 2px solid #ef4444;
   background: linear-gradient(135deg, #fef2f2, #fecaca);
@@ -120,6 +104,7 @@ body {
 .balance-positive-amount {
   color: #047857;
 }
+
 .balance-negative-amount {
   color: #dc2626;
 }
@@ -142,4 +127,43 @@ body {
 
 .balance-negative-amount {
   color: #dc2626;
+}
+
+/* For mobile devices, increase the chart height for better readability */
+@media (max-width: 767px) {
+  .chart-container {
+    position: relative;
+    min-height: 50vh;
+    margin-bottom: 20px;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .card-dashboard {
+    padding: 1rem 0.75rem !important;
+  }
+}
+
+@media (max-width: 364.98px) {
+  .dashboard-header {
+    padding: 1rem 0.5rem !important;
+  }
+
+  .chart-container {
+    position: relative;
+    min-height: 55vh;
+    margin-bottom: 20px;
+  }
+
+  .container-column {
+    padding: 0 0.5rem !important;
+  }
+
+  .dashboard-card {
+    padding: 1rem 0.5rem !important;
+  }
+
+  .dashboard-barchart-body {
+    padding: 1rem 0.25rem !important;
+  }
 }

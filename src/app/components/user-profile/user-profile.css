@@ -3,34 +3,35 @@
 }
 
 .profile-picture-img {
-  width: 25%; /* Adjust size as needed */
-  height: 25%; /* Adjust size as needed */
+  width: 25%;
+  /* Adjust size as needed */
+  height: 25%;
+  /* Adjust size as needed */
   object-fit: cover;
-  border: 2px solid var(--bs-info); /* Example border */
+  border: 2px solid var(--bs-info);
+  /* Example border */
 }
 
 .default-profile-icon {
-  font-size: 120px; /* Adjust size to match image */
-  color: #ccc; /* A default grey color */
+  font-size: 120px;
+  /* Adjust size to match image */
+  color: #ccc;
+  /* A default grey color */
 }
 
-@media (max-width: 576px) {
-  .card-header {
-    flex-direction: column;
-    text-align: center;
-  }
-}
 
 /* ... existing CSS */
 .language-toggle {
   display: flex;
-  gap: 5px; /* Adds space between the buttons */
+  gap: 5px;
+  /* Adds space between the buttons */
 }
 
 .language-btn {
   display: flex;
   align-items: center;
-  gap: 5px; /* Adds space between the flag and the text */
+  gap: 5px;
+  /* Adds space between the flag and the text */
   background-color: #f1f1f1;
   color: #555;
   border: 1px solid #ddd;
@@ -60,19 +61,6 @@
   height: auto;
 }
 
-/* For mobile view, adjust the layout if necessary */
-@media (max-width: 576px) {
-  .language-toggle {
-    margin-top: 10px;
-    justify-content: center;
-    width: 100%;
-  }
-  .form-control[type="month"] {
-    font-size: 0.85rem;
-    /* You may also adjust padding slightly to match the smaller font */
-    padding: 0.375rem 0.5rem;
-  }
-}
 
 /* Apply the animation to buttons with .shine-effect class */
 .btn.shine-effect {
@@ -91,5 +79,40 @@
 .btn[disabled] {
   transition: background-color 0.3s ease, color 0.3s ease,
     border-color 0.3s ease, box-shadow 0.3s ease;
-  animation: none !important; /* Stop animation when disabled */
+  animation: none !important;
+  /* Stop animation when disabled */
+}
+
+/* For mobile view, adjust the layout if necessary */
+@media (max-width: 576px) {
+  .card-header {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .language-toggle {
+    margin-top: 10px;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .form-control[type="month"] {
+    font-size: 0.9rem;
+    /* You may also adjust padding slightly to match the smaller font */
+    padding: 0.375rem 0.5rem;
+  }
+}
+
+@media (max-width: 364.98px) {
+  .container-column {
+    padding: 0 0.5rem !important;
+  }
+
+  .user-profile-card {
+    padding: 1rem 0.5rem !important;
+  }
+
+  .card-body {
+    padding: 1rem 0.5rem !important;
+  }
 }

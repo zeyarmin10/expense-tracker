@@ -176,8 +176,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     ).subscribe(userProfile => {
       this.setDashboardDateRange(userProfile);
       this.expenseFilterForm.patchValue({
-          startDate: this._startDate$.getValue(),
-          endDate: this._endDate$.getValue()
+        startDate: this._startDate$.getValue(),
+        endDate: this._endDate$.getValue()
       });
       this.updateSummaryTitle(userProfile);
     });
@@ -192,9 +192,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (userProfile?.budgetPeriod) {
       switch (userProfile.budgetPeriod) {
         case 'weekly':
-          const dayOfWeek = today.getDay(); 
+          const dayOfWeek = today.getDay();
           const firstDayOfWeek = new Date(today);
-          firstDayOfWeek.setDate(today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1)); 
+          firstDayOfWeek.setDate(today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1));
 
           startDate = new Date(firstDayOfWeek);
           endDate = new Date(startDate);
@@ -212,11 +212,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
           if (userProfile.budgetStartMonth && userProfile.budgetEndMonth) {
             const [startYear, startMonth] = userProfile.budgetStartMonth.split('-').map(Number);
             const [endYear, endMonth] = userProfile.budgetEndMonth.split('-').map(Number);
-            
+
             startDate = new Date(startYear, startMonth - 1, 1);
-            endDate = new Date(endYear, endMonth -1 , 1); 
+            endDate = new Date(endYear, endMonth - 1, 1);
             endDate.setMonth(endDate.getMonth() + 1);
-            endDate.setDate(0); 
+            endDate.setDate(0);
           } else {
             startDate = new Date(currentYear, 0, 1);
             endDate = new Date(currentYear, 11, 31);
@@ -237,32 +237,32 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   private updateSummaryTitle(userProfile: UserProfile | null): void {
-      const budgetPeriod = userProfile?.budgetPeriod;
-      let titleKey = 'YEARLY_SUMMARY_TITLE';
-      let summaryDateRange = '';
+    const budgetPeriod = userProfile?.budgetPeriod;
+    let titleKey = 'YEARLY_SUMMARY_TITLE';
+    let summaryDateRange = '';
 
-      const startDateValue = this._startDate$.getValue();
-      const endDateValue = this._endDate$.getValue();
-      if (budgetPeriod === 'weekly') {
-        titleKey = 'WEEKLY_SUMMARY_TITLE';
-        const start = this.datePipe.transform(startDateValue, 'MMM d');
-        const end = this.datePipe.transform(endDateValue, 'MMM d, yyyy');
-        summaryDateRange = `(${start} - ${end})`;
-      } else if (budgetPeriod === 'monthly') {
-          titleKey = 'MONTHLY_SUMMARY_TITLE';
-          summaryDateRange = `(${this.datePipe.transform(startDateValue, 'MMMM yyyy')})`;
-      } else if (budgetPeriod === 'custom') {
-          titleKey = 'CUSTOM_SUMMARY_TITLE';
-          const start = this.datePipe.transform(startDateValue, 'MMM yyyy');
-          const end = this.datePipe.transform(endDateValue, 'MMM yyyy');
-          summaryDateRange = `(${start} - ${end})`;
-      } else { // yearly or default
-          const year = this.safeParseDate(startDateValue).getFullYear();
-          summaryDateRange = `(${year})`;
-      }
+    const startDateValue = this._startDate$.getValue();
+    const endDateValue = this._endDate$.getValue();
+    if (budgetPeriod === 'weekly') {
+      titleKey = 'WEEKLY_SUMMARY_TITLE';
+      const start = this.datePipe.transform(startDateValue, 'MMM d');
+      const end = this.datePipe.transform(endDateValue, 'MMM d, yyyy');
+      summaryDateRange = `(${start} - ${end})`;
+    } else if (budgetPeriod === 'monthly') {
+      titleKey = 'MONTHLY_SUMMARY_TITLE';
+      summaryDateRange = `(${this.datePipe.transform(startDateValue, 'MMMM yyyy')})`;
+    } else if (budgetPeriod === 'custom') {
+      titleKey = 'CUSTOM_SUMMARY_TITLE';
+      const start = this.datePipe.transform(startDateValue, 'MMM yyyy');
+      const end = this.datePipe.transform(endDateValue, 'MMM yyyy');
+      summaryDateRange = `(${start} - ${end})`;
+    } else { // yearly or default
+      const year = this.safeParseDate(startDateValue).getFullYear();
+      summaryDateRange = `(${year})`;
+    }
 
-      this.currentSummaryTitle$ = of(`${this.translate.instant(titleKey)}`);
-      this.currentSummaryDateRange$ = of(`${summaryDateRange}`);
+    this.currentSummaryTitle$ = of(`${this.translate.instant(titleKey)}`);
+    this.currentSummaryDateRange$ = of(`${summaryDateRange}`);
   }
 
   private initializeForms(): void {
@@ -291,7 +291,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private filterByDateRange<T extends { date: string }>(items: T[], startDate: Date, endDate: Date): T[] {
     const rangeStart = this.safeParseDate(this.datePipe.transform(startDate, 'yyyy-MM-dd') || '');
     const rangeEnd = this.safeParseDate(this.datePipe.transform(endDate, 'yyyy-MM-dd') || '');
-    rangeEnd.setDate(rangeEnd.getDate() + 1); 
+    rangeEnd.setDate(rangeEnd.getDate() + 1);
 
     return items.filter(item => {
       const itemDate = this.safeParseDate(item.date);
@@ -307,7 +307,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       filter((user): user is import('@angular/fire/auth').User => !!user),
       switchMap(user => this.userDataService.getUserProfile(user.uid))
     );
-    
+
     this.filteredExpensesAndIncomes$ = combineLatest([
       allExpenses$,
       allIncomes$,
@@ -335,64 +335,64 @@ export class DashboardComponent implements OnInit, OnDestroy {
     // PASTE THIS ENTIRE BLOCK TO REPLACE THE OLD ONE
     this.totalBudgetsByCurrency$ = combineLatest([allBudgets$, this._startDate$, this._endDate$, userProfile$]).pipe(
       map(([budgets, startDateStr, endDateStr, userProfile]) => {
-          const startDate = this.safeParseDate(startDateStr);
-          const endDate = this.safeParseDate(endDateStr);
+        const startDate = this.safeParseDate(startDateStr);
+        const endDate = this.safeParseDate(endDateStr);
 
-          if (userProfile?.budgetPeriod === 'weekly') {
-              const weeklyTotals: { [currency: string]: number } = {};
+        if (userProfile?.budgetPeriod === 'weekly') {
+          const weeklyTotals: { [currency: string]: number } = {};
 
-              // First, get the relevant month periods for the week
-              const startMonthPeriod = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}`;
-              const endMonthPeriod = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}`;
+          // First, get the relevant month periods for the week
+          const startMonthPeriod = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}`;
+          const endMonthPeriod = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}`;
 
-              // Filter budgets to only include those from the relevant month(s)
-              const relevantBudgets = budgets.filter(budget =>
-                  budget.period && (budget.period === startMonthPeriod || budget.period === endMonthPeriod)
-              );
+          // Filter budgets to only include those from the relevant month(s)
+          const relevantBudgets = budgets.filter(budget =>
+            budget.period && (budget.period === startMonthPeriod || budget.period === endMonthPeriod)
+          );
 
-              relevantBudgets.forEach(budget => {
-                  const [year, month] = budget.period!.split('-').map(Number);
-                  const budgetMonthStart = new Date(year, month - 1, 1);
-                  const budgetMonthEnd = new Date(year, month, 0);
+          relevantBudgets.forEach(budget => {
+            const [year, month] = budget.period!.split('-').map(Number);
+            const budgetMonthStart = new Date(year, month - 1, 1);
+            const budgetMonthEnd = new Date(year, month, 0);
 
-                  const weekStart = new Date(startDate);
-                  const weekEnd = new Date(endDate);
+            const weekStart = new Date(startDate);
+            const weekEnd = new Date(endDate);
 
-                  // Determine the actual overlap between the budget's month and the week
-                  const overlapStart = new Date(Math.max(budgetMonthStart.getTime(), weekStart.getTime()));
-                  const overlapEnd = new Date(Math.min(budgetMonthEnd.getTime(), weekEnd.getTime()));
+            // Determine the actual overlap between the budget's month and the week
+            const overlapStart = new Date(Math.max(budgetMonthStart.getTime(), weekStart.getTime()));
+            const overlapEnd = new Date(Math.min(budgetMonthEnd.getTime(), weekEnd.getTime()));
 
-                  if (overlapStart <= overlapEnd) {
-                      const daysInMonth = budgetMonthEnd.getDate();
-                      const dailyAmount = budget.amount / daysInMonth;
-                      // Calculate days of overlap correctly
-                      const overlapDays = Math.round((overlapEnd.getTime() - overlapStart.getTime()) / (1000 * 3600 * 24)) + 1;
+            if (overlapStart <= overlapEnd) {
+              const daysInMonth = budgetMonthEnd.getDate();
+              const dailyAmount = budget.amount / daysInMonth;
+              // Calculate days of overlap correctly
+              const overlapDays = Math.round((overlapEnd.getTime() - overlapStart.getTime()) / (1000 * 3600 * 24)) + 1;
 
-                      if (!weeklyTotals[budget.currency]) {
-                          weeklyTotals[budget.currency] = 0;
-                      }
-                      weeklyTotals[budget.currency] += overlapDays * dailyAmount;
-                  }
-              });
-              return weeklyTotals;
+              if (!weeklyTotals[budget.currency]) {
+                weeklyTotals[budget.currency] = 0;
+              }
+              weeklyTotals[budget.currency] += overlapDays * dailyAmount;
+            }
+          });
+          return weeklyTotals;
 
-          } else {
-              // This logic for other periods remains the same
-              const rangeStart = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
-              const rangeEnd = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
+        } else {
+          // This logic for other periods remains the same
+          const rangeStart = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+          const rangeEnd = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
 
-              return budgets
-                .filter(budget => {
-                  if (!budget.period) return false;
-                  const [year, month] = budget.period.split('-').map(Number);
-                  const budgetDate = new Date(year, month - 1, 1);
-                  return budgetDate >= rangeStart && budgetDate <= rangeEnd;
-                })
-                .reduce((acc, budget) => {
-                  acc[budget.currency] = (acc[budget.currency] || 0) + budget.amount;
-                  return acc;
-                }, {} as { [currency: string]: number });
-          }
+          return budgets
+            .filter(budget => {
+              if (!budget.period) return false;
+              const [year, month] = budget.period.split('-').map(Number);
+              const budgetDate = new Date(year, month - 1, 1);
+              return budgetDate >= rangeStart && budgetDate <= rangeEnd;
+            })
+            .reduce((acc, budget) => {
+              acc[budget.currency] = (acc[budget.currency] || 0) + budget.amount;
+              return acc;
+            }, {} as { [currency: string]: number });
+        }
       })
     );
 
@@ -425,7 +425,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         return profitLoss;
       })
     );
-    
+
 
     this.hasData$ = combineLatest([
       this.totalIncomesByCurrency$,
@@ -469,7 +469,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         }),
         takeUntil(this.destroy$)
       )
-      .subscribe({error: (err) => console.error('Error checking/creating categories:', err)});
+      .subscribe({ error: (err) => console.error('Error checking/creating categories:', err) });
   }
 
   private subscribeToChartData(): void {
@@ -537,17 +537,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   getProfitLossCardClass(balances: { [currency: string]: number } | null): string {
-    if (!balances) return 'balance-positive'; 
+    if (!balances) return 'balance-positive';
     const totalBalance = Object.values(balances).reduce(
       (sum, value) => sum + value,
       0
     );
     return totalBalance >= 0 ? 'balance-positive' : 'balance-negative';
   }
-  
+
   getProfitLossAmountClass(value: number): string {
     return value >= 0 ? 'balance-positive-amount' : 'balance-negative-amount';
-  }  
+  }
 
   getBalanceCardClass(balances: { [currency: string]: number } | null): string {
     if (!balances) return 'balance-positive';

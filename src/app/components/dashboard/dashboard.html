@@ -1,7 +1,7 @@
 <div class="container mt-3 mb-5">
   <div class="row d-flex justify-content-center">
-    <div class="col-12 col-sm-10 col-md-10 col-lg-8 col-xl-8 col-xxl-8">
-      <div class="card shadow-sm p-3 p-md-4">
+    <div class="col-12 col-sm-10 col-md-10 col-lg-8 col-xl-8 col-xxl-8 container-column">
+      <div class="card shadow-sm px-3 py-3 p-sm-4 p-md-4 p-lg-4 p-xl-4 p-xxl-4 dashboard-card">
         <div class="dashboard-header d-flex justify-content-between align-items-center mb-4 p-3 rounded">
           <div>
             <h2 class="fw-bold">{{ currentSummaryTitle$ | async }}</h2>
@@ -222,9 +222,9 @@
           <!-- END: PROFIT/LOSS CARD -->
 
 
-          <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12 mt-3 mb3 ps-0 pe-0">
-            <div class="card mb-4 ps-0 pe-0">
-              <div class="card-body ps-0 pe-0">
+          <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12 mt-3 mb3">
+            <div class="card mb-4">
+              <div class="card-body dashboard-barchart-body">
                 <div class="col-12 p-0">
                   <h4 class="text-center fw-bold">
                     {{ "DASHBOARD_EXPENSES_CHART_TITLE" | translate }}

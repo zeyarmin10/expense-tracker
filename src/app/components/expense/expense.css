@@ -8,82 +8,6 @@
   box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.05);
 }
 
-/* Adjust table header/data for better mobile readability */
-@media (max-width: 991.98px) {
-  .table-responsive {
-    border: 0;
-  }
-  table,
-  thead,
-  tbody,
-  th,
-  td,
-  tr {
-    display: block;
-  }
-  thead tr {
-    position: absolute;
-    top: -9999px;
-    left: -9999px;
-  }
-  tr {
-    /* border: 1px solid #dee2e6; */
-    margin-bottom: 1rem;
-  }
-  td {
-    border: none;
-    /* border-bottom: 1px solid #dee2e6; */
-    position: relative;
-    /* padding-left: 50% !important; */
-    /* text-align: right; */
-  }
-
-  .mobile-label {
-    font-weight: 500;
-    color: #333;
-  }
-
-  .mobile-value {
-    word-break: break-all;
-    text-align: right;
-  }
-  .edit-tr td {
-    padding-bottom: 0;
-  }
-  .mobile-card-view {
-    padding: 0;
-    padding-top: 0.5rem;
-  }
-  .mobile-card-view .row {
-    padding-bottom: 0.5rem !important;
-  }
-  .mobile-value {
-    text-wrap: wrap !important;
-  }
-}
-
-/* Ensure icons are consistently sized */
-fa-icon {
-  width: 1em;
-  height: 1em;
-  vertical-align: -0.125em;
-}
-
-/* Specific styles for filter date inputs on smaller screens */
-/* This section can be simplified as we now have a single date picker */
-@media (max-width: 575.98px) {
-  /* Extra small devices (phones, 320px and up) */
-  .row.g-2 .col-8,
-  .row.g-2 .col-4 {
-    /* Adjusted for date picker and reset button */
-    flex: 0 0 auto;
-    width: auto; /* Allow content to define width */
-  }
-  .row.g-2 .col-8 {
-    flex-grow: 1; /* Allow date picker to grow */
-  }
-}
-
 /* Ensure icons are consistently sized */
 fa-icon {
   width: 1em;
@@ -100,13 +24,15 @@ fa-icon {
 .badge.bg-secondary {
   font-size: 0.9em;
   padding: 0.5em 0.75em;
-  cursor: pointer; /* Indicate clickable */
+  cursor: pointer;
+  /* Indicate clickable */
   transition: background-color 0.2s ease-in-out;
 }
 
 .badge.bg-primary:hover,
 .badge.bg-secondary:hover {
-  filter: brightness(1.1); /* Slightly brighten on hover */
+  filter: brightness(1.1);
+  /* Slightly brighten on hover */
 }
 
 /* Ensure the flex wrap for badges */
@@ -119,47 +45,42 @@ fa-icon {
   gap: 0.5rem;
 }
 
-/* Hide labels for screen readers only on larger screens for filter inputs */
-/* This `visually-hidden` is now primarily for accessibility of placeholders, no longer needed for labels explicitly if using `placeholder` */
-/* You can remove this media query if you prefer the label always visible on small screens */
-@media (min-width: 768px) {
-  .form-label.visually-hidden {
-    position: absolute !important;
-    width: 1px !important;
-    height: 1px !important;
-    padding: 0 !important;
-    margin: -1px !important;
-    overflow: hidden !important;
-    clip: rect(0, 0, 0, 0) !important;
-    white-space: nowrap !important;
-    border: 0 !important;
-  }
-}
-
 /* Define the shine effect animation */
 @keyframes shine {
   0% {
     box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
-  } /* Initial subtle glow for info button */
+  }
+
+  /* Initial subtle glow for info button */
   50% {
     box-shadow: 0 0 5px rgba(0, 123, 255, 0.5), 0 0 15px rgba(0, 123, 255, 0.5);
-  } /* Brighter glow */
+  }
+
+  /* Brighter glow */
   100% {
     box-shadow: 0 0 5px rgba(209, 244, 251, 0.3);
-  } /* Return to subtle glow */
+  }
+
+  /* Return to subtle glow */
 }
 
 /* Define the shine effect animation for success button */
 @keyframes shine-success {
   0% {
     box-shadow: 0 0 5px rgba(40, 167, 69, 0.3);
-  } /* Initial subtle glow for success button */
+  }
+
+  /* Initial subtle glow for success button */
   50% {
     box-shadow: 0 0 5px rgba(40, 167, 69, 0.35), 0 0 15px rgba(40, 167, 69, 0.5);
-  } /* Brighter glow */
+  }
+
+  /* Brighter glow */
   100% {
     box-shadow: 0 0 5px rgba(40, 167, 69, 0.3);
-  } /* Return to subtle glow */
+  }
+
+  /* Return to subtle glow */
 }
 
 /* Apply the animation to buttons with .shine-effect class */
@@ -179,7 +100,8 @@ fa-icon {
 .btn[disabled] {
   transition: background-color 0.3s ease, color 0.3s ease,
     border-color 0.3s ease, box-shadow 0.3s ease;
-  animation: none !important; /* Stop animation when disabled */
+  animation: none !important;
+  /* Stop animation when disabled */
 }
 
 .currency-select {
@@ -189,4 +111,112 @@ fa-icon {
 
 .expense-amount {
   color: #d97706;
+}
+
+/* Adjust table header/data for better mobile readability */
+@media (max-width: 991.98px) {
+  .table-responsive {
+    border: 0;
+  }
+
+  table,
+  thead,
+  tbody,
+  th,
+  td,
+  tr {
+    display: block;
+  }
+
+  thead tr {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+  }
+
+  tr {
+    /* border: 1px solid #dee2e6; */
+    margin-bottom: 1rem;
+  }
+
+  td {
+    border: none;
+    /* border-bottom: 1px solid #dee2e6; */
+    position: relative;
+    /* padding-left: 50% !important; */
+    /* text-align: right; */
+  }
+
+  .mobile-label {
+    font-weight: 500;
+    color: #333;
+  }
+
+  .mobile-value {
+    word-break: break-all;
+    text-align: right;
+  }
+
+  .edit-tr td {
+    padding-bottom: 0;
+  }
+
+  .mobile-card-view {
+    padding: 0;
+    padding-top: 0.5rem;
+  }
+
+  .mobile-card-view .row {
+    padding-bottom: 0.5rem !important;
+  }
+
+  .mobile-value {
+    text-wrap: wrap !important;
+  }
+}
+
+/* Hide labels for screen readers only on larger screens for filter inputs */
+/* This `visually-hidden` is now primarily for accessibility of placeholders, no longer needed for labels explicitly if using `placeholder` */
+/* You can remove this media query if you prefer the label always visible on small screens */
+@media (min-width: 768px) {
+  .form-label.visually-hidden {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+  }
+}
+
+/* Specific styles for filter date inputs on smaller screens */
+/* This section can be simplified as we now have a single date picker */
+@media (max-width: 575.98px) {
+
+  /* Extra small devices (phones, 320px and up) */
+  .row.g-2 .col-8,
+  .row.g-2 .col-4 {
+    /* Adjusted for date picker and reset button */
+    flex: 0 0 auto;
+    width: auto;
+    /* Allow content to define width */
+  }
+
+  .row.g-2 .col-8 {
+    flex-grow: 1;
+    /* Allow date picker to grow */
+  }
+}
+
+@media (max-width: 364.98px) {
+  .container-column {
+    padding: 0 0.5rem !important;
+  }
+
+  .expense-card {
+    padding: 1rem 0.5rem !important;
+  }
 }
