@@ -142,6 +142,9 @@ body {
   .card-dashboard {
     padding: 1rem 0.75rem !important;
   }
+  .dashboard-barchart-body {
+    padding: 1rem 0rem !important;
+  }
 }
 
 @media (max-width: 364.98px) {
@@ -164,6 +167,6 @@ body {
   }
 
   .dashboard-barchart-body {
-    padding: 1rem 0.25rem !important;
+    padding: 1rem 0rem !important;
   }
 }
