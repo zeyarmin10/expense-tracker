@@ -280,21 +280,34 @@ export class BudgetComponent implements OnInit, OnDestroy {
         const start = new Date(dateRange.start);
         const end = new Date(dateRange.end);
 
-        const filteredBudgets = budgets.filter((b) => {
+        // const filteredBudgets = budgets.filter((b) => {
+        //   if (b.type === 'monthly' && b.period) {
+        //     const budgetDate = new Date(b.period);
+        //     // For monthly budgets, we need to check if the date falls within the month
+        //     const budgetMonth = budgetDate.getMonth();
+        //     const budgetYear = budgetDate.getFullYear();
+        //     return budgetDate >= start && budgetDate <= end;
+        //   } else if (b.type === 'yearly' && b.period) {
+        //     const budgetDate = new Date(b.period);
+        //     // For yearly budgets, check if the date falls within the year
+        //     const budgetYear = budgetDate.getFullYear();
+        //     return budgetDate >= start && budgetDate <= end;
+        //   }
+        //   return false;
+        // });
+
+        const filteredBudgets = budgets
+        .filter((b) => {
           if (b.type === 'monthly' && b.period) {
             const budgetDate = new Date(b.period);
-            // For monthly budgets, we need to check if the date falls within the month
-            const budgetMonth = budgetDate.getMonth();
-            const budgetYear = budgetDate.getFullYear();
             return budgetDate >= start && budgetDate <= end;
           } else if (b.type === 'yearly' && b.period) {
             const budgetDate = new Date(b.period);
-            // For yearly budgets, check if the date falls within the year
-            const budgetYear = budgetDate.getFullYear();
             return budgetDate >= start && budgetDate <= end;
           }
           return false;
-        });
+        })
+        .sort((a, b) => new Date(a.period!).getTime() - new Date(b.period!).getTime());        
 
         const filteredExpenses = expenses.filter((e) => {
           const expenseDate = new Date(e.date);

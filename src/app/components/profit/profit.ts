@@ -191,7 +191,12 @@ export class Profit implements OnInit, OnDestroy {
       dateRange$
     );
 
-    this.incomes$ = profitLossData$.pipe(map((data) => data.incomes));
+    this.incomes$ = profitLossData$.pipe(
+      map((data) =>
+        [...data.incomes] // copy to avoid mutating the source array
+          .sort((a, b) => (new Date(a.date ?? 0).getTime()) - (new Date(b.date ?? 0).getTime()))
+      )
+    );
     this.filteredBudgets$ = profitLossData$.pipe(map((data) => data.budgets));
     this.totalExpensesByCurrency$ = profitLossData$.pipe(
       map((data) => data.totalExpenses)
@@ -565,8 +570,8 @@ export class Profit implements OnInit, OnDestroy {
       const month = this.datePipe.transform(d, 'MMM');
       const burmeseMonth = month
         ? BURMESE_MONTH_ABBREVIATIONS[
-            month as keyof typeof BURMESE_MONTH_ABBREVIATIONS
-          ]
+        month as keyof typeof BURMESE_MONTH_ABBREVIATIONS
+        ]
         : '';
 
       const options: Intl.NumberFormatOptions = {

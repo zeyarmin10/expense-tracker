@@ -92,7 +92,7 @@ export class CategoryModalComponent implements OnInit {
 
   async onSubmit(): Promise<void> {
     // Check category limit using the internally fetched count
-    if (this._modalCurrentCategoryCount >= 10) {
+    if (this._modalCurrentCategoryCount >= 100) {
       this.translateService.get('CATEGORY_LIMIT_REACHED').subscribe((res: string) => {
         this.toastService.showError(res); // Show error as toast
       });
