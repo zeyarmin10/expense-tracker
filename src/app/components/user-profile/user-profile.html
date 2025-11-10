@@ -71,7 +71,7 @@
                     <option *ngFor="let period of translatedBudgetPeriods" [value]="period.code">
                       {{ period.name }}
                     </option>
-                    <optgroup label="{{ 'CUSTOM_PERIODS' | translate }}" *ngIf="customBudgetPeriods.length > 0">
+                    <optgroup label="{{ 'BUDGET_PERIOD.CUSTOM' | translate }}" *ngIf="customBudgetPeriods.length > 0">
                       <option *ngFor="let period of customBudgetPeriods" [value]="period.id">
                         {{ period.name }}
                         <button class="btn btn-outline-danger" 
@@ -82,7 +82,7 @@
                       </option>
                     </optgroup>
                   </select>
-                  <button class="btn btn-outline-secondary" type="button" (click)="openBudgetPeriodModal()">
+                  <button class="btn btn-outline-info" type="button" (click)="openBudgetPeriodModal()">
                     <fa-icon [icon]="faPlus"></fa-icon>
                   </button>
                 </div>
