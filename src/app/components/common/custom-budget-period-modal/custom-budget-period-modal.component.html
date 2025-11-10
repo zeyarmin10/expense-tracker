@@ -1,0 +1,33 @@
+<div class="modal fade" id="customBudgetPeriodModal" tabindex="-1" aria-labelledby="customBudgetPeriodModalLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="customBudgetPeriodModalLabel">{{ 'CREATE_CUSTOM_BUDGET_PERIOD' | translate }}</h5>
+        <button type="button" class="btn-close" (click)="close()" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form [formGroup]="budgetPeriodForm">
+          <div class="mb-3">
+            <label for="budgetName" class="form-label">{{ 'BUDGET_PERIOD_NAME' | translate }}</label>
+            <input type="text" class="form-control" id="budgetName" formControlName="name">
+          </div>
+          <div class="mb-3">
+            <label for="modalBudgetStartDate" class="form-label">{{ 'START_DATE' | translate }}</label>
+            <input type="date" class="form-control" id="modalBudgetStartDate" formControlName="startDate">
+          </div>
+          <div class="mb-3">
+            <label for="modalBudgetEndDate" class="form-label">{{ 'END_DATE' | translate }}</label>
+            <input type="date" class="form-control" id="modalBudgetEndDate" formControlName="endDate">
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <!-- <button type="button" class="btn btn-secondary" (click)="close()">{{ 'CANCEL' | translate }}</button> -->
+        <button type="button" class="btn ps-4 pe-4" [ngClass]="{
+          'btn-outline-info': true,
+        }" (click)="save()" [disabled]="!budgetPeriodForm.valid"><fa-icon [icon]="faSave"></fa-icon></button>
+      </div>
+    </div>
+  </div>
+</div>

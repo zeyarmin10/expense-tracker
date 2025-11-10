@@ -373,5 +373,8 @@
   "START_DATE_LABEL": "Start Date",
   "END_DATE_LABEL": "End Date",
   "CUSTOM_SUMMARY_TITLE": "Budget Period Summary",
-  "WEEKLY_SUMMARY_TITLE": "Weekly Summary"
+  "WEEKLY_SUMMARY_TITLE": "Weekly Summary",
+  "SYSTEM_LANGUAGE_LABEL": "Sytem Language",
+  "CREATE_CUSTOM_BUDGET_PERIOD": "Create Custom Budget Period",
+  "BUDGET_PERIOD_NAME": "Budget Period Name"
 }

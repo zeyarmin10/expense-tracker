@@ -373,5 +373,8 @@
   "START_DATE_LABEL": "စတင်မည့်ရက်စွဲ",
   "END_DATE_LABEL": "ပြီးဆုံးမည့်ရက်စွဲ",
   "CUSTOM_SUMMARY_TITLE": "ဘတ်ဂျက်ကာလအကျဉ်းချုပ်",
-  "WEEKLY_SUMMARY_TITLE": "အပတ်စဉ်အကျဉ်းချုပ်"
+  "WEEKLY_SUMMARY_TITLE": "အပတ်စဉ်အကျဉ်းချုပ်",
+  "SYSTEM_LANGUAGE_LABEL": "စနစ်ဘာသာစကား",
+  "CREATE_CUSTOM_BUDGET_PERIOD": "စိတ်ကြိုက်ဘတ်ဂျက်ကာလအသစ်",
+  "BUDGET_PERIOD_NAME": "ဘတ်ဂျက်ကာလအမည်"
 }

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ViewChild } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import {
   FormBuilder,
@@ -9,24 +9,23 @@ import {
 import { Observable, of, map, firstValueFrom } from 'rxjs';
 import { switchMap, tap, catchError } from 'rxjs/operators';
 import { AuthService } from '../../services/auth';
-// Assuming UserProfile now includes a 'currency' property
 import { UserDataService, UserProfile } from '../../services/user-data';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faSave, faUserCircle } from '@fortawesome/free-solid-svg-icons';
+import { faSave, faUserCircle, faTrash, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { updateProfile } from '@angular/fire/auth';
 import { User } from '@angular/fire/auth';
 import { FormsModule } from '@angular/forms';
 import { AVAILABLE_CURRENCIES } from '../../core/constants/app.constants';
+import { CustomBudgetPeriodModalComponent } from '../common/custom-budget-period-modal/custom-budget-period-modal.component';
+import { CustomBudgetPeriod, CustomBudgetPeriodService } from '../../services/custom-budget-period.service';
 
 export const AVAILABLE_BUDGET_PERIODS = [
   { code: null, nameKey: 'BUDGET_PERIOD.NONE' },
   { code: 'weekly', nameKey: 'BUDGET_PERIOD.WEEKLY' },
   { code: 'monthly', nameKey: 'BUDGET_PERIOD.MONTHLY' },
   { code: 'yearly', nameKey: 'BUDGET_PERIOD.YEARLY' },
-  { code: 'custom', nameKey: 'BUDGET_PERIOD.CUSTOM' },
 ];
-
 
 @Component({
   selector: 'app-user-profile',
@@ -37,6 +36,7 @@ export const AVAILABLE_BUDGET_PERIODS = [
     TranslateModule,
     FontAwesomeModule,
     FormsModule,
+    CustomBudgetPeriodModalComponent,
   ],
   providers: [DatePipe],
   templateUrl: './user-profile.html',
@@ -48,46 +48,47 @@ export class UserProfileComponent implements OnInit {
   private fb = inject(FormBuilder);
   private translate = inject(TranslateService);
   private datePipe = inject(DatePipe);
+  private customBudgetPeriodService = inject(CustomBudgetPeriodService);
 
   userProfileForm: FormGroup;
-  userDisplayData$: Observable<{
-    email: string | null;
-    createdAt: string | null;
-    currency?: string;
-    budgetPeriod?: 'weekly' | 'monthly' | 'yearly' | 'custom' | null;
-    budgetStartDate?: string | null; 
-    budgetEndDate?: string | null;
-  } | null>;
+  userDisplayData$: Observable<any>;
   userPhotoUrl$: Observable<string | null>;
 
   errorMessage: string | null = null;
   successMessage: string | null = null;
   selectedLanguage: string = 'my';
   selectedCurrency: string = 'MMK';
-
-  selectedBudgetPeriod: 'weekly' | 'monthly' | 'yearly' | 'custom' | null =
-    null;
+  selectedBudgetPeriod: string | null = null;
   availableBudgetPeriods = AVAILABLE_BUDGET_PERIODS;
   translatedBudgetPeriods: any[] = [];
-
-  // ✅ NEW: Available currencies for the dropdown
   availableCurrencies = AVAILABLE_CURRENCIES;
-
   translatedCurrencies: any[] = [];
+  customBudgetPeriods: CustomBudgetPeriod[] = [];
+  showCustomDateRange = false;
 
+  get isCustomPeriodSelected(): boolean {
+    const selectedPeriodId = this.userProfileForm.get('budgetPeriod')?.value;
+    if (!selectedPeriodId) {
+      return false;
+    }
+    return this.customBudgetPeriods.some(p => p.id === selectedPeriodId);
+  }
+
+  @ViewChild(CustomBudgetPeriodModalComponent) private modalComponent!: CustomBudgetPeriodModalComponent;
+  
+  faPlus = faPlus;
   faSave = faSave;
   faUserCircle = faUserCircle;
-
+  faTrash = faTrash;
   imageLoadError: boolean = false;
 
   constructor() {
-    // ✅ FIX: Add 'currency' as a form control with a default value
     this.userProfileForm = this.fb.group({
       displayName: ['', Validators.maxLength(50)],
       currency: ['MMK', Validators.required],
       budgetPeriod: [null],
-      budgetStartDate: [null],
-      budgetEndDate: [null],
+      budgetStartDate: [{ value: null, disabled: true }],
+      budgetEndDate: [{ value: null, disabled: true }],
     });
 
     this.userDisplayData$ = this.authService.currentUser$.pipe(
@@ -95,64 +96,26 @@ export class UserProfileComponent implements OnInit {
         if (user && user.uid) {
           return this.userDataService.getUserProfile(user.uid).pipe(
             tap((profile) => {
-              const currentDisplayName =
-                profile?.displayName || user.displayName || '';
-              const currentCurrency = profile?.currency || 'MMK';
-              const currentBudgetPeriod = profile?.budgetPeriod || null;
-              const currentStartDate = profile?.budgetStartDate ?? null;
-              const currentEndDate = profile?.budgetEndDate ?? null;
               this.userProfileForm.patchValue({
-                displayName: currentDisplayName,
-                currency: currentCurrency,
-                budgetPeriod: currentBudgetPeriod,
-                budgetStartDate: currentStartDate,
-                budgetEndDate: currentEndDate,
+                displayName: profile?.displayName || user.displayName || '',
+                currency: profile?.currency || 'MMK',
+                budgetPeriod: profile?.budgetPeriod || null,
+                budgetStartDate: profile?.budgetStartDate || null,
+                budgetEndDate: profile?.budgetEndDate || null,
               });
-
-              // ✅ NEW: Set selectedCurrency from profile or default
               this.selectedCurrency = profile?.currency || 'MMK';
-              this.selectedBudgetPeriod = currentBudgetPeriod;
 
-              if (!profile) {
-                // If no profile exists, create one with default currency
-                this.userDataService
-                  .createUserProfile({
-                    uid: user.uid,
-                    email: user.email || '',
-                    displayName: user.displayName || '',
-                    createdAt:
-                      user.metadata.creationTime || new Date().toISOString(),
-                    currency: this.selectedCurrency,
-                    budgetPeriod: this.selectedBudgetPeriod,
-                    budgetStartDate: null,
-                    budgetEndDate: null,
-                  })
-                  .catch((err) =>
-                    console.error('Error creating initial user profile:', err)
-                  );
-              }
+              // This will now correctly handle the 'custom' case on load
+              this.handleBudgetPeriodChange(profile?.budgetPeriod || null, true);
             }),
-            map((profile) => {
-              const email = profile?.email || user.email || 'N/A';
-              const createdAt =
-                profile?.createdAt ||
-                user.metadata.creationTime ||
-                new Date().toISOString();
-
-              const currency = profile?.currency || 'MMK';
-              const budgetPeriod = profile?.budgetPeriod || null;
-              const budgetStartDate = profile?.budgetStartDate ?? null;
-              const budgetEndDate = profile?.budgetEndDate ?? null;
-
-              return {
-                email,
-                createdAt,
-                currency,
-                budgetPeriod,
-                budgetStartDate,
-                budgetEndDate,
-              };
-            }),
+            map((profile) => ({
+              email: profile?.email || user.email || 'N/A',
+              createdAt: profile?.createdAt || user.metadata.creationTime || new Date().toISOString(),
+              currency: profile?.currency || 'MMK',
+              budgetPeriod: profile?.budgetPeriod || null,
+              budgetStartDate: profile?.budgetStartDate || null,
+              budgetEndDate: profile?.budgetEndDate || null,
+            })),
             catchError((err) => {
               console.error('Error fetching user profile data:', err);
               this.errorMessage = this.translate.instant('PROFILE_FETCH_ERROR');
@@ -160,14 +123,6 @@ export class UserProfileComponent implements OnInit {
             })
           );
         }
-        // Handle no user logged in case
-        this.userProfileForm.patchValue({
-          displayName: '',
-          currency: 'MMK',
-          budgetPeriod: null,
-          budgetStartDate: null,
-          budgetEndDate: null,
-        });
         return of(null);
       })
     );
@@ -175,23 +130,13 @@ export class UserProfileComponent implements OnInit {
     this.userPhotoUrl$ = this.authService.currentUser$.pipe(
       map((user) => {
         this.imageLoadError = false;
-        if (
-          user?.photoURL &&
-          typeof user.photoURL === 'string' &&
-          user.photoURL.length > 0
-        ) {
-          return user.photoURL;
-        }
-        return null;
+        return user?.photoURL || null;
       })
     );
 
-    // ✅ NEW: Subscribe to budgetPeriod changes to clear month values when needed
-    this.userProfileForm
-      .get('budgetPeriod')
-      ?.valueChanges.subscribe((period) => {
-        this.handleBudgetPeriodChange(period);
-      });
+    this.userProfileForm.get('budgetPeriod')?.valueChanges.subscribe((periodId) => {
+        this.handleBudgetPeriodChange(periodId);
+    });
   }
 
   ngOnInit(): void {
@@ -204,83 +149,77 @@ export class UserProfileComponent implements OnInit {
       this.translate.use(this.selectedLanguage);
     }
 
-    // Subscribe to language changes to update the currency names
     this.translate.onLangChange.subscribe(() => {
       this.translateCurrencyNames();
       this.translateBudgetPeriodNames();
     });
 
-    // Initial translation on component load
     this.translateCurrencyNames();
     this.translateBudgetPeriodNames();
-  }
 
+    this.authService.currentUser$.subscribe(user => {
+      if (user) {
+        this.customBudgetPeriodService.getCustomBudgetPeriods(user.uid).subscribe(periods => {
+          this.customBudgetPeriods = periods;
+          // Re-evaluate after custom periods are loaded
+          this.handleBudgetPeriodChange(this.userProfileForm.get('budgetPeriod')?.value, true);
+        });
+      }
+    });
+  }
+  
   translateCurrencyNames() {
-    this.translatedCurrencies = this.availableCurrencies.map((currency) => {
-      return {
+    this.translatedCurrencies = this.availableCurrencies.map((currency) => ({
         ...currency,
         name: this.translate.instant('CURRENCY_NAMES.' + currency.code),
-      };
-    });
+      }));
   }
 
   translateBudgetPeriodNames() {
-    this.translatedBudgetPeriods = this.availableBudgetPeriods.map((period) => {
-      return {
+    this.translatedBudgetPeriods = this.availableBudgetPeriods.map((period) => ({
         ...period,
         name: this.translate.instant(period.nameKey),
-      };
-    });
+      }));
   }
 
-
-  /**
-   * Clears budget start and end months if the period is not 'custom'.
-   * @param period The new value of budgetPeriod.
-   */
-  handleBudgetPeriodChange(
-    period: 'weekly' | 'monthly' | 'yearly' | 'custom' | null
-  ): void {
+  handleBudgetPeriodChange(periodId: string | null, isInitialLoad = false): void {
     const startDateControl = this.userProfileForm.get('budgetStartDate');
     const endDateControl = this.userProfileForm.get('budgetEndDate');
 
-    // ✅ REVISED: Get current year in YYYY format to create default 'YYYY-MM' strings
-    const currentYear = this.datePipe.transform(new Date(), 'yyyy');
-    const defaultStartDate = `${currentYear}-01-01`; 
-    const defaultEndDate = `${currentYear}-12-31`;   
-
-    if (period !== 'custom') {
-      // Only update if the current value isn't already null to avoid unnecessary markAsDirty()
-      if (startDateControl?.value !== null) {
-        startDateControl?.setValue(null);
-        // Mark as dirty so onSubmit is triggered if they change from 'custom' to another period
-        startDateControl?.markAsDirty();
+    if (isInitialLoad && periodId === 'custom') {
+      const savedStartDate = this.userProfileForm.get('budgetStartDate')?.value;
+      const savedEndDate = this.userProfileForm.get('budgetEndDate')?.value;
+      const matchingCustomPeriod = this.customBudgetPeriods.find(p => p.startDate === savedStartDate && p.endDate === savedEndDate);
+      if (matchingCustomPeriod) {
+        // Set the dropdown to the correct custom period ID
+        this.userProfileForm.get('budgetPeriod')?.setValue(matchingCustomPeriod.id, { emitEvent: false });
+        periodId = matchingCustomPeriod.id ?? null; // Continue with the correct ID
       }
+    }
 
-      if (endDateControl?.value !== null) {
-        endDateControl?.setValue(null);
-        endDateControl?.markAsDirty();
-      }
+    const customPeriod = this.customBudgetPeriods.find(p => p.id === periodId);
+
+    if (customPeriod) {
+      this.showCustomDateRange = true;
+      startDateControl?.enable();
+      endDateControl?.enable();
+      startDateControl?.setValue(customPeriod.startDate);
+      endDateControl?.setValue(customPeriod.endDate);
+      startDateControl?.disable();
+      endDateControl?.disable();
     } else {
-      // When switching to 'custom', set default month strings
-      if (startDateControl?.value === null) {
-        startDateControl.setValue(defaultStartDate);
-        startDateControl.markAsDirty();
-      }
-      if (endDateControl?.value === null) {
-        endDateControl.setValue(defaultEndDate);
-        endDateControl.markAsDirty();
+      this.showCustomDateRange = false;
+      if (!isInitialLoad) {
+          startDateControl?.setValue(null);
+          endDateControl?.setValue(null);
       }
     }
   }
-
+  
   onLanguageChange(language: string): void {
     this.selectedLanguage = language;
     this.translate.use(this.selectedLanguage);
     localStorage.setItem('selectedLanguage', this.selectedLanguage);
-    // You might want to persist the language to the user profile here as well,
-    // if it's considered a user setting that syncs across devices.
-    // e.g., this.userDataService.updateUserProfile(currentUser.uid, { language: this.selectedLanguage });
   }
 
   onImageError(): void {
@@ -294,60 +233,66 @@ export class UserProfileComponent implements OnInit {
 
     if (this.userProfileForm.valid && this.userProfileForm.dirty) {
       const currentUser = await firstValueFrom(this.authService.currentUser$);
-
       if (currentUser && currentUser.uid) {
-        const displayName = this.userProfileForm.get('displayName')?.value;
-        const currency = this.userProfileForm.get('currency')?.value;
-        const budgetPeriod = this.userProfileForm.get('budgetPeriod')?.value;
-        const budgetStartDate =
-          this.userProfileForm.get('budgetStartDate')?.value;
-        const budgetEndDate =
-          this.userProfileForm.get('budgetEndDate')?.value;
+        const formValues = this.userProfileForm.getRawValue();
+        const isCustom = this.customBudgetPeriods.some(p => p.id === formValues.budgetPeriod);
+
+        const profileData: Partial<UserProfile> = {
+          displayName: formValues.displayName,
+          currency: formValues.currency,
+          budgetPeriod: isCustom ? 'custom' : formValues.budgetPeriod,
+          budgetStartDate: isCustom ? formValues.budgetStartDate : null,
+          budgetEndDate: isCustom ? formValues.budgetEndDate : null,
+        };
+
         try {
-          if (
-            currentUser.displayName !== displayName &&
-            displayName !== null &&
-            displayName !== undefined
-          ) {
-            await updateProfile(currentUser, { displayName: displayName });
+          if (currentUser.displayName !== profileData.displayName) {
+            await updateProfile(currentUser, { displayName: profileData.displayName });
           }
 
-          // ✅ REVISED: Include currency in the update if it changes (though it's disabled in UI)
-          // If you decide to make it editable later, this is where you'd save it.
-          await this.userDataService.updateUserProfile(currentUser.uid, {
-            displayName: displayName,
-            currency: currency,
-            budgetPeriod: budgetPeriod,
-            budgetStartDate: budgetStartDate,
-            budgetEndDate: budgetEndDate,
-          });
+          await this.userDataService.updateUserProfile(currentUser.uid, profileData);
 
-          this.successMessage = this.translate.instant(
-            'PROFILE_UPDATE_SUCCESS'
-          );
+          this.successMessage = this.translate.instant('PROFILE_UPDATE_SUCCESS');
           this.userProfileForm.markAsPristine();
         } catch (error: any) {
           console.error('Error updating profile:', error);
-          this.errorMessage =
-            error.message || this.translate.instant('PROFILE_UPDATE_ERROR');
+          this.errorMessage = error.message || this.translate.instant('PROFILE_UPDATE_ERROR');
         }
       } else {
         this.errorMessage = this.translate.instant('AUTH_ERROR_PROFILE_UPDATE');
       }
-    } else {
-      if (this.userProfileForm.invalid) {
+    } else if (this.userProfileForm.invalid) {
         this.errorMessage = this.translate.instant('INVALID_FORM_PROFILE');
-      } else if (!this.userProfileForm.dirty) {
+    } else if (!this.userProfileForm.dirty) {
         this.errorMessage = this.translate.instant('NO_CHANGES_TO_SAVE');
-      }
     }
   }
 
-  formatLocalizedDate(
-    date: string | Date | null | undefined,
-    format: string
-  ): string {
+  formatLocalizedDate(date: string | Date | null | undefined, format: string): string {
     const currentLang = this.translate.currentLang;
     return this.datePipe.transform(date, format, undefined, currentLang) || '';
+  }
+
+  openBudgetPeriodModal(): void {
+    this.modalComponent.open();
+  }
+
+  async onPeriodSaved(period: { name: string, startDate: string, endDate: string }): Promise<void> {
+    const currentUser = await firstValueFrom(this.authService.currentUser$);
+    if (currentUser) {
+      const newPeriodRef = this.customBudgetPeriodService.addCustomBudgetPeriod(currentUser.uid, period);
+      this.userProfileForm.get('budgetPeriod')?.setValue(newPeriodRef.key);
+    }
+  }
+
+  async deleteCustomPeriod(periodId: string, event: Event): Promise<void> {
+    event.stopPropagation();
+    const currentUser = await firstValueFrom(this.authService.currentUser$);
+    if (currentUser && confirm(this.translate.instant('CONFIRM_DELETE_BUDGET_PERIOD'))) {
+      await this.customBudgetPeriodService.deleteCustomBudgetPeriod(currentUser.uid, periodId);
+      if (this.userProfileForm.get('budgetPeriod')?.value === periodId) {
+        this.userProfileForm.get('budgetPeriod')?.setValue(null);
+      }
+    }
   }
 }

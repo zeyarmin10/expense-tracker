@@ -2,172 +2,105 @@
   <div class="row d-flex justify-content-center">
     <div class="col-12 col-md-10 col-lg-8 container-column">
       <div class="card shadow-sm p-3 p-md-4 user-profile-card">
-        <div
-          class="card-header bg-white border-0 d-flex justify-content-between align-items-center"
-        >
-          <h2 class="card-title mb-0">
-            <fa-icon [icon]="faUserCircle"></fa-icon>
-            {{ "USER_PROFILE_TITLE" | translate }}
-          </h2>
-          <div class="language-toggle">
-            <button
-              class="btn btn-outline-info language-btn"
-              [class.active]="selectedLanguage === 'en'"
-              (click)="onLanguageChange('en')"
-            >
-              <img
-                src="../../../assets/flags/en.png"
-                alt="English Flag"
-                class="flag-icon"
-              />
-              EN
-            </button>
-            <button
-              class="btn btn-outline-info language-btn"
-              [class.active]="selectedLanguage === 'my'"
-              (click)="onLanguageChange('my')"
-            >
-              <img
-                src="../../../assets/flags/mm.png"
-                alt="Myanmar Flag"
-                class="flag-icon"
-              />
-              MY
-            </button>
-          </div>
-        </div>
         <div class="card-body">
-          <div class="profile-picture-container text-center mb-4">
-            <ng-container *ngIf="userPhotoUrl$ | async as photoURL">
-              <img
-                *ngIf="!imageLoadError"
-                [src]="photoURL"
-                alt="{{ 'PROFILE_PICTURE_ALT' | translate }}"
-                class="profile-picture-img rounded-circle border border-2 border-primary"
-                (error)="onImageError()"
-              />
-            </ng-container>
-            <ng-container *ngIf="!(userPhotoUrl$ | async) || imageLoadError">
-              <fa-icon
-                [icon]="faUserCircle"
-                class="default-profile-icon"
-              ></fa-icon>
-            </ng-container>
-          </div>
+          <h2 class="card-title text-center mb-4">{{ 'USER_PROFILE_TITLE' | translate }}</h2>
 
-          <div *ngIf="errorMessage" class="alert alert-danger" role="alert">
-            {{ errorMessage }}
-          </div>
-          <div *ngIf="successMessage" class="alert alert-success" role="alert">
-            {{ successMessage }}
-          </div>
+          <!-- Loading/Error Messages -->
+          <div *ngIf="errorMessage" class="alert alert-danger">{{ errorMessage }}</div>
+          <div *ngIf="successMessage" class="alert alert-success">{{ successMessage }}</div>
 
-          <div *ngIf="userDisplayData$ | async as userData">
-            <div class="mb-3">
-              <label class="form-label font-weight-bold"
-                ><strong>{{ "EMAIL_LABEL" | translate }} :</strong></label
-              >
-              <p class="form-control-plaintext">{{ userData.email }}</p>
-            </div>
+          <ng-container *ngIf="userDisplayData$ | async as userData">
+            <form [formGroup]="userProfileForm" (ngSubmit)="onSubmit()">
 
-            <div class="mb-3">
-              <label class="form-label font-weight-bold"
-                ><strong
-                  >{{ "MEMBER_SINCE_LABEL" | translate }} :</strong
-                ></label
-              >
-              <p class="form-control-plaintext">
-                {{ formatLocalizedDate(userData.createdAt, "MMM d, yyyy") }}
-              </p>
-            </div>
-          </div>
-          <div *ngIf="!(userDisplayData$ | async)">
-            <p class="text-center text-muted">
-              {{ "LOADING_PROFILE_DATA" | translate }}
-            </p>
-          </div>
+              <!-- Profile Picture -->
+              <div class="text-center mb-4">
+                <ng-container *ngIf="userPhotoUrl$ | async as photoUrl; else defaultIcon">
+                  <img [src]="photoUrl" alt="User Photo" class="profile-photo rounded-circle" (error)="onImageError()" *ngIf="!imageLoadError">
+                  <fa-icon [icon]="faUserCircle" size="6x" class="text-secondary" *ngIf="imageLoadError"></fa-icon>
+                </ng-container>
+                <ng-template #defaultIcon>
+                  <fa-icon [icon]="faUserCircle" size="6x" class="text-secondary"></fa-icon>
+                </ng-template>
+              </div>
 
-          <form [formGroup]="userProfileForm" (ngSubmit)="onSubmit()">
-            <div class="mb-3">
-              <label class="form-label font-weight-bold">
-                <strong>{{ "CURRENCY_LABEL" | translate }} :</strong>
-              </label>
-              <select
-                class="form-select"
-                formControlName="currency"
-                (change)="onSubmit()"
-              >
-                <option
-                  *ngFor="let currency of translatedCurrencies"
-                  [value]="currency.code"
+              <!-- Display Name -->
+              <div class="mb-3">
+                <label for="displayName" class="form-label">{{ 'DISPLAY_NAME_LABEL' | translate }}</label>
+                <input type="text" id="displayName" class="form-control" formControlName="displayName">
+              </div>
+
+              <!-- Email -->
+              <div class="mb-3">
+                <label class="form-label">{{ 'EMAIL_LABEL' | translate }}</label>
+                <p class="form-control-static">{{ userData.email }}</p>
+              </div>
+              <!-- Member Since -->
+              <div class="mb-3">
+                <label class="form-label font-weight-bold"
+                  ><strong
+                    >{{ "MEMBER_SINCE_LABEL" | translate }}</strong
+                  ></label
                 >
-                  {{ currency.symbol }} ({{ currency.code }}) -
-                  {{ currency.name }}
-                </option>
-              </select>
-            </div>
-            <div class="mb-3">
-              <label class="form-label font-weight-bold">
-                <strong>{{ "BUDGET_PERIOD_LABEL" | translate }} :</strong>
-              </label>
-              <select class="form-select" formControlName="budgetPeriod">
-                <option
-                  *ngFor="let period of translatedBudgetPeriods"
-                  [value]="period.code"
-                >
-                  {{ period.name }}
-                </option>
-              </select>
-            </div>
+                <p class="form-control-plaintext">
+                  {{ formatLocalizedDate(userData.createdAt, "MMM d, yyyy") }}
+                </p>
+              </div>
 
-            <div
-              class="mb-3"
-              *ngIf="userProfileForm.get('budgetPeriod')?.value === 'custom'"
-            >
-              <label class="form-label font-weight-bold d-block">
-                <strong>
-                  {{ "START_DATE_LABEL" | translate }} -
-                  {{ "END_DATE_LABEL" | translate }} :
-                </strong>
-              </label>
+              <!-- Language Selection -->
+              <div class="mb-3">
+                <label for="language" class="form-label">{{ 'SYSTEM_LANGUAGE_LABEL' | translate }}</label>
+                <select id="language" class="form-select" [ngModel]="selectedLanguage" (ngModelChange)="onLanguageChange($event)" [ngModelOptions]="{standalone: true}">
+                  <option value="en">English</option>
+                  <option value="my">မြန်မာ</option>
+                </select>
+              </div>
 
-              <div class="row g-1">
-                <div class="col-6">
-                  <input
-                    type="date"
-                    class="form-control"
-                    formControlName="budgetStartDate"
-                    [placeholder]="'START_DATE_LABEL' | translate"
-                  />
-                </div>
-                <div class="col-6">
-                  <input
-                    type="date"
-                    class="form-control"
-                    formControlName="budgetEndDate"
-                    [placeholder]="'END_DATE_LABEL' | translate"
-                  />
+              <!-- Currency Selection -->
+              <div class="mb-3">
+                  <label for="currency" class="form-label">{{ 'CURRENCY' | translate }}</label>
+                  <select id="currency" class="form-select" formControlName="currency">
+                      <option *ngFor="let currency of translatedCurrencies" [value]="currency.code">{{ currency.name }} ({{ currency.symbol }})</option>
+                  </select>
+              </div>
+
+              <!-- Budget Period -->
+              <div class="mb-3">
+                <label for="budgetPeriod" class="form-label">{{ 'BUDGET_PERIOD_LABEL' | translate }}</label>
+                <div class="input-group">
+                  <select id="budgetPeriod" class="form-select" formControlName="budgetPeriod">
+                    <option *ngFor="let period of translatedBudgetPeriods" [value]="period.code">
+                      {{ period.name }}
+                    </option>
+                    <optgroup label="{{ 'CUSTOM_PERIODS' | translate }}" *ngIf="customBudgetPeriods.length > 0">
+                      <option *ngFor="let period of customBudgetPeriods" [value]="period.id">
+                        {{ period.name }}
+                        <button class="btn btn-outline-danger" 
+                                type="button" 
+                                (click)="deleteCustomPeriod(userProfileForm.get('budgetPeriod')?.value, $event)">
+                          <fa-icon [icon]="faTrash"></fa-icon>
+                        </button>
+                      </option>
+                    </optgroup>
+                  </select>
+                  <button class="btn btn-outline-secondary" type="button" (click)="openBudgetPeriodModal()">
+                    <fa-icon [icon]="faPlus"></fa-icon>
+                  </button>
                 </div>
               </div>
-            </div>
-            <div class="mb-3">
-              <label for="displayName" class="form-label"
-                ><strong
-                  >{{ "DISPLAY_NAME_LABEL" | translate }} :</strong
-                ></label
-              >
-              <div class="input-group">
-                <input
-                  id="displayName"
-                  type="text"
-                  formControlName="displayName"
-                  class="form-control"
-                  [class.is-invalid]="
-                    userProfileForm.get('displayName')?.invalid &&
-                    userProfileForm.get('displayName')?.touched
-                  "
-                />
+
+              <!-- Custom Date Range Display -->
+              <div *ngIf="showCustomDateRange" class="row">
+                <div class="col-6 mb-3">
+                  <label for="budgetStartDate" class="form-label">{{ 'START_DATE_LABEL' | translate }}</label>
+                  <input type="date" id="budgetStartDate" class="form-control" formControlName="budgetStartDate">
+                </div>
+                <div class="col-6 mb-3">
+                  <label for="budgetEndDate" class="form-label">{{ 'END_DATE_LABEL' | translate }}</label>
+                  <input type="date" id="budgetEndDate" class="form-control" formControlName="budgetEndDate">
+                </div>
               </div>
+
+              <!-- Save Button -->
               <div class="d-flex justify-content-end mt-3">
                 <button
                   type="submit"
@@ -181,23 +114,12 @@
                   <fa-icon [icon]="faSave"></fa-icon>
                 </button>
               </div>
-              <div
-                *ngIf="
-                  userProfileForm.get('displayName')?.invalid &&
-                  userProfileForm.get('displayName')?.touched
-                "
-                class="invalid-feedback d-block"
-              >
-                <span
-                  *ngIf="userProfileForm.get('displayName')?.errors?.['maxlength']"
-                >
-                  {{ "DISPLAY_NAME_MAX_LENGTH_ERROR" | translate }}
-                </span>
-              </div>
-            </div>
-          </form>
+            </form>
+          </ng-container>
         </div>
       </div>
     </div>
   </div>
 </div>
+
+<app-custom-budget-period-modal (periodSaved)="onPeriodSaved($event)"></app-custom-budget-period-modal>
