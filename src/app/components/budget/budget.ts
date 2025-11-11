@@ -49,6 +49,7 @@ import {
   DateRange,
 } from '../../services/date-filter.service';
 import { CategoryService } from '../../services/category';
+import { ToastService } from '../../services/toast';
 
 Chart.register(...registerables);
 
@@ -110,6 +111,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
   private translate = inject(TranslateService);
   public formatService = inject(FormatService);
   private categoryService = inject(CategoryService);
+  private toastService = inject(ToastService);
 
   @ViewChild('deleteConfirmationModal')
   private deleteConfirmationModal!: ConfirmationModal;
@@ -1015,6 +1017,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
           this.budgetService
             .addBudget(budgetData)
             .then(() => {
+              this.toastService.showSuccess(this.translate.instant('BUDGET_SAVE_SUCCESS'));
               console.log('Budget added successfully!');
               this.resetForm();
             })
@@ -1073,6 +1076,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
       this.budgetService
         .deleteBudget(this.budgetIdToDelete)
         .then(() => {
+          this.toastService.showSuccess(this.translate.instant('BUDGET_DELETE_SUCCESS'));
           console.log('Budget deleted successfully!');
           this.budgetIdToDelete = undefined;
         })

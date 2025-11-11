@@ -53,6 +53,7 @@ import { DateFilterService } from '../../services/date-filter.service';
 import { ExpenseService } from '../../services/expense'; // Added missing import
 // ✅ NEW SERVICE: Assuming a new service handles all the complex combineLatest logic
 import { ProfitLossService } from '../../services/profit-loss.service';
+import { ToastService } from '../../services/toast';
 
 Chart.register(...registerables);
 
@@ -90,6 +91,7 @@ export class Profit implements OnInit, OnDestroy {
   // ✅ NEW SERVICE INJECTION
   private profitLossService = inject(ProfitLossService);
   private library = inject(FaIconLibrary); // Used for pre-loading icons
+  private toastService = inject(ToastService);
 
   // --- View Children ---
   @ViewChild('deleteConfirmationModal')
@@ -474,6 +476,7 @@ export class Profit implements OnInit, OnDestroy {
       this.incomeService
         .addIncome(incomeData)
         .then(() => {
+          this.toastService.showSuccess(this.translate.instant('INCOME_SAVE_SUCCESS'));
           console.log('Income added successfully!');
           this.resetForm();
         })
@@ -495,6 +498,7 @@ export class Profit implements OnInit, OnDestroy {
       this.incomeService
         .deleteIncome(this.incomeIdToDelete)
         .then(() => {
+          this.toastService.showSuccess(this.translate.instant('INCOME_DELETE_SUCCESS'));
           console.log('Income deleted successfully!');
           this.incomeIdToDelete = undefined;
         })

@@ -383,5 +383,9 @@
   "CUSTOM_BUDGET_PERIOD_SAVE_SUCCESS": "Custom budget period saved successfully.",
   "CUSTOM_BUDGET_PERIOD_SAVE_ERROR": "Error saving custom budget period.",
   "CUSTOM_BUDGET_PERIOD_DELETE_SUCCESS": "Custom budget period deleted successfully.",
-  "CUSTOM_BUDGET_PERIOD_DELETE_ERROR": "Error deleting custom budget period."
+  "CUSTOM_BUDGET_PERIOD_DELETE_ERROR": "Error deleting custom budget period.",
+  "BUDGET_SAVE_SUCCESS": "Budget added successfully!",
+  "BUDGET_DELETE_SUCCESS": "Budget deleted successfully!",
+  "INCOME_SAVE_SUCCESS": "Profit added successfully!",
+  "INCOME_DELETE_SUCCESS": "Profit deleted successfully!"
 }
