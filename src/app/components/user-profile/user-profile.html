@@ -90,8 +90,15 @@
                 <div class="card-body" *ngIf="!isCustomBudgetListCollapsed">
                   <ul class="list-group list-group-flush">
                     <li *ngFor="let period of customBudgetPeriods" class="list-group-item d-flex justify-content-between align-items-center">
-                      {{ period.name }} ({{ formatLocalizedDate(period.startDate, 'shortDate') }} - {{ formatLocalizedDate(period.endDate, 'shortDate') }})
-                      <button class="btn btn-outline-danger btn-sm" type="button" (click)="deleteCustomPeriod(period.id, $event)">
+                      <span>
+                        <span class="d-inline-block text-break w-100">
+                          {{ period.name }}
+                        </span>
+                        <span class="d-inline-block w-100">
+                          ({{ formatLocalizedDate(period.startDate, 'shortDate') }} - {{ formatLocalizedDate(period.endDate, 'shortDate') }})
+                        </span>
+                      </span>
+                      <button class="btn btn-outline-danger btn-sm ms-3" type="button" (click)="deleteCustomPeriod(period.id, $event)">
                         <fa-icon [icon]="faTrash"></fa-icon>
                       </button>
                     </li>
