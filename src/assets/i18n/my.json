@@ -379,5 +379,9 @@
   "BUDGET_PERIOD_NAME": "ဘတ်ဂျက်ကာလအမည်",
   "CONFIRM_DELETE_BUDGET_PERIOD": "ဒီဘတ်ဂျက်ကာလကို ဖျက်မှာ သေချာလား",
   "CONFIRM_DELETE_BUDGET_PERIOD_TITLE": "ဖျက်မှာသေချာလား",
-  "CUSTOM_BUDGET_PERIOD_LIMIT_REACHED": "စိတ်ကြိုက်ဘတ်ဂျက်ကာလက သတ်မှတ်အရေအတွက်ပြည့်သွားပါပြီ"
+  "CUSTOM_BUDGET_PERIOD_LIMIT_REACHED": "စိတ်ကြိုက်ဘတ်ဂျက်ကာလက သတ်မှတ်အရေအတွက်ပြည့်သွားပါပြီ",
+  "CUSTOM_BUDGET_PERIOD_SAVE_SUCCESS": "စိတ်ကြိုက်ဘတ်ဂျက်ကာလကို အောင်မြင်စွာ သိမ်းဆည်းပြီးပါပြီ။",
+  "CUSTOM_BUDGET_PERIOD_SAVE_ERROR": "စိတ်ကြိုက်ဘတ်ဂျက်ကာလကို သိမ်းဆည်းရာတွင် အမှားဖြစ်ပွားပါသည်။",
+  "CUSTOM_BUDGET_PERIOD_DELETE_SUCCESS": "စိတ်ကြိုက်ဘတ်ဂျက်ကာလကို အောင်မြင်စွာ ဖျက်ပစ်ပြီးပါပြီ။",
+  "CUSTOM_BUDGET_PERIOD_DELETE_ERROR": "စိတ်ကြိုက်ဘတ်ဂျက်ကာလကို ဖျက်ပစ်ရာတွင် အမှားဖြစ်ပွားပါသည်။"
 }

@@ -20,6 +20,7 @@ import { AVAILABLE_CURRENCIES } from '../../core/constants/app.constants';
 import { CustomBudgetPeriodModalComponent } from '../common/custom-budget-period-modal/custom-budget-period-modal.component';
 import { CustomBudgetPeriod, CustomBudgetPeriodService } from '../../services/custom-budget-period.service';
 import { ConfirmationModal } from '../common/confirmation-modal/confirmation-modal';
+import { ToastService } from '../../services/toast';
 
 export const AVAILABLE_BUDGET_PERIODS = [
   { code: null, nameKey: 'BUDGET_PERIOD.NONE' },
@@ -51,13 +52,12 @@ export class UserProfileComponent implements OnInit {
   private translate = inject(TranslateService);
   private datePipe = inject(DatePipe);
   private customBudgetPeriodService = inject(CustomBudgetPeriodService);
+  private toastService = inject(ToastService);
 
   userProfileForm: FormGroup;
   userDisplayData$: Observable<any>;
   userPhotoUrl$: Observable<string | null>;
 
-  errorMessage: string | null = null;
-  successMessage: string | null = null;
   selectedLanguage: string = 'my';
   selectedCurrency: string = 'MMK';
   selectedBudgetPeriod: string | null = null;
@@ -133,7 +133,7 @@ export class UserProfileComponent implements OnInit {
             })),
             catchError((err) => {
               console.error('Error fetching user profile data:', err);
-              this.errorMessage = this.translate.instant('PROFILE_FETCH_ERROR');
+              this.toastService.showError(this.translate.instant('PROFILE_FETCH_ERROR'));
               return of(null);
             })
           );
@@ -243,9 +243,6 @@ export class UserProfileComponent implements OnInit {
   }
 
   async onSubmit(): Promise<void> {
-    this.errorMessage = null;
-    this.successMessage = null;
-
     if (this.userProfileForm.valid && this.userProfileForm.dirty) {
       const currentUser = await firstValueFrom(this.authService.currentUser$);
       if (currentUser && currentUser.uid) {
@@ -267,19 +264,19 @@ export class UserProfileComponent implements OnInit {
 
           await this.userDataService.updateUserProfile(currentUser.uid, profileData);
 
-          this.successMessage = this.translate.instant('PROFILE_UPDATE_SUCCESS');
+          this.toastService.showSuccess(this.translate.instant('PROFILE_UPDATE_SUCCESS'));
           this.userProfileForm.markAsPristine();
         } catch (error: any) {
           console.error('Error updating profile:', error);
-          this.errorMessage = error.message || this.translate.instant('PROFILE_UPDATE_ERROR');
+          this.toastService.showError(error.message || this.translate.instant('PROFILE_UPDATE_ERROR'));
         }
       } else {
-        this.errorMessage = this.translate.instant('AUTH_ERROR_PROFILE_UPDATE');
+        this.toastService.showError(this.translate.instant('AUTH_ERROR_PROFILE_UPDATE'));
       }
     } else if (this.userProfileForm.invalid) {
-        this.errorMessage = this.translate.instant('INVALID_FORM_PROFILE');
+        this.toastService.showError(this.translate.instant('INVALID_FORM_PROFILE'));
     } else if (!this.userProfileForm.dirty) {
-        this.errorMessage = this.translate.instant('NO_CHANGES_TO_SAVE');
+        this.toastService.showError(this.translate.instant('NO_CHANGES_TO_SAVE'));
     }
   }
 
@@ -289,18 +286,24 @@ export class UserProfileComponent implements OnInit {
   }
 
   openBudgetPeriodModal(): void {
-    // if (this.customBudgetPeriods.length >= 10) {
-    //   this.errorMessage = this.translate.instant('CUSTOM_BUDGET_PERIOD_LIMIT_REACHED');
-    //   return;
-    // }
+    if (this.customBudgetPeriods.length >= 10) {
+      this.toastService.showError(this.translate.instant('CUSTOM_BUDGET_PERIOD_LIMIT_REACHED'));
+      return;
+    }
     this.modalComponent.open();
   }
 
   async onPeriodSaved(period: { name: string, startDate: string, endDate: string }): Promise<void> {
     const currentUser = await firstValueFrom(this.authService.currentUser$);
     if (currentUser) {
-      const newPeriodRef = this.customBudgetPeriodService.addCustomBudgetPeriod(currentUser.uid, period);
-      this.userProfileForm.get('budgetPeriod')?.setValue(newPeriodRef.key);
+      try {
+        const newPeriodRef = await this.customBudgetPeriodService.addCustomBudgetPeriod(currentUser.uid, period);
+        this.userProfileForm.get('budgetPeriod')?.setValue(newPeriodRef.key);
+        this.toastService.showSuccess(this.translate.instant('CUSTOM_BUDGET_PERIOD_SAVE_SUCCESS'));
+      } catch (error) {
+        this.toastService.showError(this.translate.instant('CUSTOM_BUDGET_PERIOD_SAVE_ERROR'));
+        console.error('Error saving custom budget period:', error);
+      }
     }
   }
 
@@ -324,12 +327,22 @@ export class UserProfileComponent implements OnInit {
     if (confirmed && this.periodToDeleteId) {
       const currentUser = await firstValueFrom(this.authService.currentUser$);
       if (currentUser) {
-        await this.customBudgetPeriodService.deleteCustomBudgetPeriod(currentUser.uid, this.periodToDeleteId);
-        if (this.userProfileForm.get('budgetPeriod')?.value === this.periodToDeleteId) {
-          this.userProfileForm.get('budgetPeriod')?.setValue(null);
+        try {
+          await this.customBudgetPeriodService.deleteCustomBudgetPeriod(currentUser.uid, this.periodToDeleteId);
+          if (this.userProfileForm.get('budgetPeriod')?.value === this.periodToDeleteId) {
+            this.userProfileForm.get('budgetPeriod')?.setValue(null);
+          }
+          this.toastService.showSuccess(this.translate.instant('CUSTOM_BUDGET_PERIOD_DELETE_SUCCESS'));
+        } catch (error) {
+          this.toastService.showError(this.translate.instant('CUSTOM_BUDGET_PERIOD_DELETE_ERROR'));
+          console.error('Error deleting custom budget period:', error);
+        } finally {
+          this.periodToDeleteId = null; // Reset after deletion
         }
-        this.periodToDeleteId = null; // Reset after deletion
       }
+    } else {
+      // Reset if the user cancels
+      this.periodToDeleteId = null;
     }
   }
 
