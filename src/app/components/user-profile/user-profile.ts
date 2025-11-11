@@ -313,9 +313,9 @@ export class UserProfileComponent implements OnInit {
       return;
     }
     this.periodToDeleteId = periodId;
-    this.translate.get(['CONFIRM_DELETE_BUDGET_PERIOD_TITLE', 'CONFIRM_DELETE_BUDGET_PERIOD', 'DELETE_BUTTON', 'CANCEL_BUTTON'])
+    this.translate.get(['CONFIRM_DELETE_TITLE', 'CONFIRM_DELETE_BUDGET_PERIOD', 'DELETE_BUTTON', 'CANCEL_BUTTON'])
       .subscribe(translations => {
-        this.confirmationTitle = translations['CONFIRM_DELETE_BUDGET_PERIOD_TITLE'];
+        this.confirmationTitle = translations['CONFIRM_DELETE_TITLE'];
         this.confirmationMessage = translations['CONFIRM_DELETE_BUDGET_PERIOD'];
         this.confirmButtonText = translations['DELETE_BUTTON'];
         this.cancelButtonText = translations['CANCEL_BUTTON'];

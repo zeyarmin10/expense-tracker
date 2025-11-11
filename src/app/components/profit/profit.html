@@ -157,6 +157,10 @@
                 <button
                   type="submit"
                   class="btn btn-outline-info ps-4 pe-4"
+                  [ngClass]="{
+                    'btn-outline-info': true,
+                    'shine-effect': incomeForm.valid
+                  }"
                   [disabled]="incomeForm.invalid"
                 >
                   <fa-icon [icon]="faSave"></fa-icon>

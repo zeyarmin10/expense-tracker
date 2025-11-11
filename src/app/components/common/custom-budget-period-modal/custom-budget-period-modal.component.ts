@@ -12,6 +12,7 @@ declare var bootstrap: any;
   standalone: true,
   imports: [CommonModule, FormsModule, ReactiveFormsModule, TranslateModule, FontAwesomeModule],
   templateUrl: './custom-budget-period-modal.component.html',
+  styleUrls: ['./custom-budget-period-modal.component.css'],
 })
 export class CustomBudgetPeriodModalComponent {
   @Output() periodSaved = new EventEmitter<{ name: string; startDate: string; endDate: string }>();

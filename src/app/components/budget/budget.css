@@ -7,28 +7,73 @@
   margin-bottom: 0;
 }
 
-/* Add a subtle shine effect to valid buttons */
-.shine-effect {
-  position: relative;
-  overflow: hidden;
+/* Define the shine effect animation */
+@keyframes shine {
+  0% {
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+  }
+
+  /* Initial subtle glow for info button */
+  50% {
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5), 0 0 15px rgba(0, 123, 255, 0.5);
+  }
+
+  /* Brighter glow */
+  100% {
+    box-shadow: 0 0 5px rgba(209, 244, 251, 0.3);
+  }
+
+  /* Return to subtle glow */
 }
 
-.shine-effect::after {
-  content: "";
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle,
-      rgba(255, 255, 255, 0.2) 0%,
-      transparent 70%);
-  transition: transform 0.5s ease-in-out;
-  transform: rotate(45deg);
+/* Define the shine effect animation for success button */
+@keyframes shine-success {
+  0% {
+    box-shadow: 0 0 5px rgba(40, 167, 69, 0.3);
+  }
+
+  /* Initial subtle glow for success button */
+  50% {
+    box-shadow: 0 0 5px rgba(40, 167, 69, 0.35), 0 0 15px rgba(40, 167, 69, 0.5);
+  }
+
+  /* Brighter glow */
+  100% {
+    box-shadow: 0 0 5px rgba(40, 167, 69, 0.3);
+  }
+
+  /* Return to subtle glow */
 }
 
-.shine-effect:hover::after {
-  transform: rotate(45deg) translate(25%, 25%);
+
+
+/* Apply the animation to buttons with .shine-effect class */
+.btn.shine-effect {
+  animation: shine 1.5s infinite ease-in-out;
+  transition: background-color 0.3s ease, color 0.3s ease,
+    border-color 0.3s ease;
+}
+
+/* Override for success button animation */
+.btn.btn-outline-success.shine-effect {
+  /* Changed to btn-outline-success */
+  animation: shine-success 1.5s infinite ease-in-out;
+}
+
+/* Ensure smooth transition when disabled */
+.btn[disabled] {
+  transition: background-color 0.3s ease, color 0.3s ease,
+    border-color 0.3s ease, box-shadow 0.3s ease;
+  animation: none !important;
+  /* Stop animation when disabled */
+}
+
+/* Ensure smooth transition when disabled */
+.btn[disabled] {
+  transition: background-color 0.3s ease, color 0.3s ease,
+    border-color 0.3s ease, box-shadow 0.3s ease;
+  animation: none !important;
+  /* Stop animation when disabled */
 }
 
 .total-incomes {

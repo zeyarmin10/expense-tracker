@@ -22,10 +22,11 @@
           </div>
         </form>
       </div>
-      <div class="modal-footer">
+      <div class="modal-footer mb-3">
         <!-- <button type="button" class="btn btn-secondary" (click)="close()">{{ 'CANCEL' | translate }}</button> -->
         <button type="button" class="btn ps-4 pe-4" [ngClass]="{
           'btn-outline-info': true,
+          'shine-effect': budgetPeriodForm.valid
         }" (click)="save()" [disabled]="!budgetPeriodForm.valid"><fa-icon [icon]="faSave"></fa-icon></button>
       </div>
     </div>

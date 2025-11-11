@@ -2,7 +2,7 @@
   <div class="row d-flex justify-content-center">
     <div class="col-12 col-md-10 col-lg-8 container-column">
       <div class="card shadow-sm p-3 p-md-4 user-profile-card">
-        <div class="card-body">
+        <div class="card-body ps-0 pe-0">
           <h2 class="card-title text-center mb-4">{{ 'USER_PROFILE_TITLE' | translate }}</h2>
 
           <ng-container *ngIf="userDisplayData$ | async as userData">
@@ -21,12 +21,12 @@
               </div>
 
               <!-- Email -->
-              <div class="border border-secondary rounded mb-4 p-2">
+              <div class="border border-secondary-subtle rounded mb-4 p-2">
                 <label class="form-label">{{ 'EMAIL_LABEL' | translate }}</label>
                 <p class="form-control-plaintext">{{ userData.email }}</p>
               </div>
               <!-- Member Since -->
-              <div class="border border-secondary rounded mb-4 p-2">
+              <div class="border border-secondary-subtle rounded mb-4 p-2">
                 <label class="form-label font-weight-bold"><strong>{{ "MEMBER_SINCE_LABEL" | translate
                     }}</strong></label>
                 <p class="form-control-plaintext">
@@ -35,13 +35,13 @@
               </div>
 
               <!-- Display Name -->
-              <div class="border border-secondary rounded mb-4 p-2">
+              <div class="border border-secondary-subtle rounded mb-4 p-2">
                 <label for="displayName" class="form-label">{{ 'DISPLAY_NAME_LABEL' | translate }}</label>
                 <input type="text" id="displayName" class="form-control" formControlName="displayName">
               </div>
 
               <!-- Budget Period -->
-              <div class="border border-secondary rounded mb-4 p-2">
+              <div class="border border-secondary-subtle rounded mb-4 p-2">
                 <div class="mb-2">
                   <label for="budgetPeriod" class="form-label">{{ 'BUDGET_PERIOD_LABEL' | translate }}</label>
                   <div class="input-group">
@@ -60,7 +60,7 @@
                     </button>
                   </div>
                 </div>
-  
+
                 <!-- Custom Date Range Display -->
                 <div *ngIf="showCustomDateRange" class="row mb-3">
                   <div class="col-6">
@@ -72,7 +72,7 @@
                     <input type="date" id="budgetEndDate" class="form-control" formControlName="budgetEndDate">
                   </div>
                 </div>
-  
+
                 <!-- Manage Custom Periods Card -->
                 <div class="card mb-2" *ngIf="customBudgetPeriods.length > 0">
                   <div class="card-header" (click)="toggleCustomBudgetList()" style="cursor: pointer;">
@@ -86,16 +86,19 @@
                   </div>
                   <div class="card-body" *ngIf="!isCustomBudgetListCollapsed">
                     <ul class="list-group list-group-flush">
-                      <li *ngFor="let period of customBudgetPeriods" class="list-group-item d-flex justify-content-between align-items-center">
+                      <li *ngFor="let period of customBudgetPeriods"
+                        class="list-group-item d-flex justify-content-between align-items-center">
                         <span>
                           <span class="d-inline-block text-break w-100">
                             {{ period.name }}
                           </span>
                           <span class="d-inline-block w-100">
-                            ({{ formatLocalizedDate(period.startDate, 'shortDate') }} - {{ formatLocalizedDate(period.endDate, 'shortDate') }})
+                            ({{ formatLocalizedDate(period.startDate, 'shortDate') }} - {{
+                            formatLocalizedDate(period.endDate, 'shortDate') }})
                           </span>
                         </span>
-                        <button class="btn btn-outline-danger btn-sm ms-3" type="button" (click)="deleteCustomPeriod(period.id, $event)">
+                        <button class="btn btn-outline-danger btn-sm ms-3" type="button"
+                          (click)="deleteCustomPeriod(period.id, $event)">
                           <fa-icon [icon]="faTrash"></fa-icon>
                         </button>
                       </li>
@@ -105,7 +108,7 @@
               </div>
 
               <!-- Currency Selection -->
-              <div class="border border-secondary rounded mb-4 p-2">
+              <div class="border border-secondary-subtle rounded mb-4 p-2">
                 <label for="currency" class="form-label">{{ 'CURRENCY' | translate }}</label>
                 <select id="currency" class="form-select" formControlName="currency">
                   <option *ngFor="let currency of translatedCurrencies" [value]="currency.code">{{ currency.name }} ({{
@@ -114,7 +117,7 @@
               </div>
 
               <!-- Language Selection -->
-              <div class="border border-secondary rounded mb-4 p-2">
+              <div class="border border-secondary-subtle rounded mb-4 p-2">
                 <label for="language" class="form-label">{{ 'SYSTEM_LANGUAGE_LABEL' | translate }}</label>
                 <select id="language" class="form-select" [ngModel]="selectedLanguage"
                   (ngModelChange)="onLanguageChange($event)" [ngModelOptions]="{standalone: true}">
@@ -142,12 +145,7 @@
 
 <app-custom-budget-period-modal (periodSaved)="onPeriodSaved($event)"></app-custom-budget-period-modal>
 
-<app-confirmation-modal
-  [title]="confirmationTitle"
-  [message]="confirmationMessage"
-  [confirmButtonText]="confirmButtonText"
-  [cancelButtonText]="cancelButtonText"
-  (confirmed)="onConfirmation($event)"
-  messageColor="text-danger"
-  modalType="confirm">
+<app-confirmation-modal [title]="confirmationTitle" [message]="confirmationMessage"
+  [confirmButtonText]="confirmButtonText" [cancelButtonText]="cancelButtonText" (confirmed)="onConfirmation($event)"
+  messageColor="text-danger" modalType="confirm">
 </app-confirmation-modal>
