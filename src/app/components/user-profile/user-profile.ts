@@ -175,7 +175,7 @@ export class UserProfileComponent implements OnInit {
     this.authService.currentUser$.subscribe(user => {
       if (user) {
         this.customBudgetPeriodService.getCustomBudgetPeriods(user.uid).subscribe(periods => {
-          this.customBudgetPeriods = periods;
+          this.customBudgetPeriods = periods.sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
           // Re-evaluate after custom periods are loaded
           this.handleBudgetPeriodChange(this.userProfileForm.get('budgetPeriod')?.value, true);
         });
