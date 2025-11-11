@@ -12,7 +12,7 @@ import { AuthService } from '../../services/auth';
 import { UserDataService, UserProfile } from '../../services/user-data';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faSave, faUserCircle, faTrash, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { faSave, faUserCircle, faTrash, faPlus, faChevronDown, faChevronUp, faListUl } from '@fortawesome/free-solid-svg-icons';
 import { updateProfile } from '@angular/fire/auth';
 import { User } from '@angular/fire/auth';
 import { FormsModule } from '@angular/forms';
@@ -65,6 +65,7 @@ export class UserProfileComponent implements OnInit {
   translatedCurrencies: any[] = [];
   customBudgetPeriods: CustomBudgetPeriod[] = [];
   showCustomDateRange = false;
+  isCustomBudgetListCollapsed = true;
 
   get isCustomPeriodSelected(): boolean {
     const selectedPeriodId = this.userProfileForm.get('budgetPeriod')?.value;
@@ -80,7 +81,10 @@ export class UserProfileComponent implements OnInit {
   faSave = faSave;
   faUserCircle = faUserCircle;
   faTrash = faTrash;
+  faChevronDown = faChevronDown;
+  faChevronUp = faChevronUp;
   imageLoadError: boolean = false;
+  faListUl = faListUl;
 
   constructor() {
     this.userProfileForm = this.fb.group({
@@ -274,6 +278,10 @@ export class UserProfileComponent implements OnInit {
   }
 
   openBudgetPeriodModal(): void {
+    // if (this.customBudgetPeriods.length >= 10) {
+    //   this.errorMessage = this.translate.instant('CUSTOM_BUDGET_PERIOD_LIMIT_REACHED');
+    //   return;
+    // }
     this.modalComponent.open();
   }
 
@@ -285,8 +293,11 @@ export class UserProfileComponent implements OnInit {
     }
   }
 
-  async deleteCustomPeriod(periodId: string, event: Event): Promise<void> {
+  async deleteCustomPeriod(periodId: string | undefined, event: Event): Promise<void> {
     event.stopPropagation();
+    if (!periodId) {
+        return;
+    }
     const currentUser = await firstValueFrom(this.authService.currentUser$);
     if (currentUser && confirm(this.translate.instant('CONFIRM_DELETE_BUDGET_PERIOD'))) {
       await this.customBudgetPeriodService.deleteCustomBudgetPeriod(currentUser.uid, periodId);
@@ -294,5 +305,9 @@ export class UserProfileComponent implements OnInit {
         this.userProfileForm.get('budgetPeriod')?.setValue(null);
       }
     }
+  }
+
+  toggleCustomBudgetList(): void {
+    this.isCustomBudgetListCollapsed = !this.isCustomBudgetListCollapsed;
   }
 }

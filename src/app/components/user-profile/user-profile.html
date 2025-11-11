@@ -25,12 +25,12 @@
               </div>
 
               <!-- Email -->
-              <div class="mb-3">
+              <div class="mb-4">
                 <label class="form-label">{{ 'EMAIL_LABEL' | translate }}</label>
                 <p class="form-control-static">{{ userData.email }}</p>
               </div>
               <!-- Member Since -->
-              <div class="mb-3">
+              <div class="mb-4">
                 <label class="form-label font-weight-bold"><strong>{{ "MEMBER_SINCE_LABEL" | translate
                     }}</strong></label>
                 <p class="form-control-plaintext">
@@ -39,13 +39,13 @@
               </div>
 
               <!-- Display Name -->
-              <div class="mb-3">
+              <div class="mb-4">
                 <label for="displayName" class="form-label">{{ 'DISPLAY_NAME_LABEL' | translate }}</label>
                 <input type="text" id="displayName" class="form-control" formControlName="displayName">
               </div>
 
               <!-- Budget Period -->
-              <div class="mb-3">
+              <div class="mb-2">
                 <label for="budgetPeriod" class="form-label">{{ 'BUDGET_PERIOD_LABEL' | translate }}</label>
                 <div class="input-group">
                   <select id="budgetPeriod" class="form-select" formControlName="budgetPeriod">
@@ -55,10 +55,6 @@
                     <optgroup label="{{ 'BUDGET_PERIOD.CUSTOM' | translate }}" *ngIf="customBudgetPeriods.length > 0">
                       <option *ngFor="let period of customBudgetPeriods" [value]="period.id">
                         {{ period.name }}
-                        <button class="btn btn-outline-danger" type="button"
-                          (click)="deleteCustomPeriod(userProfileForm.get('budgetPeriod')?.value, $event)">
-                          <fa-icon [icon]="faTrash"></fa-icon>
-                        </button>
                       </option>
                     </optgroup>
                   </select>
@@ -70,18 +66,41 @@
 
               <!-- Custom Date Range Display -->
               <div *ngIf="showCustomDateRange" class="row">
-                <div class="col-6 mb-3">
+                <div class="col-6">
                   <label for="budgetStartDate" class="form-label">{{ 'START_DATE_LABEL' | translate }}</label>
                   <input type="date" id="budgetStartDate" class="form-control" formControlName="budgetStartDate">
                 </div>
-                <div class="col-6 mb-3">
+                <div class="col-6">
                   <label for="budgetEndDate" class="form-label">{{ 'END_DATE_LABEL' | translate }}</label>
                   <input type="date" id="budgetEndDate" class="form-control" formControlName="budgetEndDate">
                 </div>
               </div>
 
+              <!-- Manage Custom Periods Card -->
+              <div class="card mt-2 mb-4" *ngIf="customBudgetPeriods.length > 0">
+                <div class="card-header" (click)="toggleCustomBudgetList()" style="cursor: pointer;">
+                  <h6 class="mb-0 d-flex justify-content-between align-items-center">
+                    <span>
+                      <fa-icon [icon]="faListUl" class="pe-2"></fa-icon>
+                      {{ 'BUDGET_PERIOD.CUSTOM' | translate }}
+                    </span>
+                    <fa-icon [icon]="isCustomBudgetListCollapsed ? faChevronDown : faChevronUp"></fa-icon>
+                  </h6>
+                </div>
+                <div class="card-body" *ngIf="!isCustomBudgetListCollapsed">
+                  <ul class="list-group list-group-flush">
+                    <li *ngFor="let period of customBudgetPeriods" class="list-group-item d-flex justify-content-between align-items-center">
+                      {{ period.name }} ({{ formatLocalizedDate(period.startDate, 'shortDate') }} - {{ formatLocalizedDate(period.endDate, 'shortDate') }})
+                      <button class="btn btn-outline-danger btn-sm ms-3" type="button" (click)="deleteCustomPeriod(period.id, $event)">
+                        <fa-icon [icon]="faTrash"></fa-icon>
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
               <!-- Currency Selection -->
-              <div class="mb-3">
+              <div class="mb-4">
                 <label for="currency" class="form-label">{{ 'CURRENCY' | translate }}</label>
                 <select id="currency" class="form-select" formControlName="currency">
                   <option *ngFor="let currency of translatedCurrencies" [value]="currency.code">{{ currency.name }} ({{
@@ -100,7 +119,7 @@
               </div>
 
               <!-- Save Button -->
-              <div class="d-flex justify-content-end mt-4 mb-3">
+              <div class="d-flex justify-content-end mt-4 mb-4">
                 <button type="submit" class="btn ps-4 pe-4" [ngClass]="{
                     'btn-outline-info': true,
                     'shine-effect': userProfileForm.valid

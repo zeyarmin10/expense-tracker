@@ -376,5 +376,6 @@
   "WEEKLY_SUMMARY_TITLE": "Weekly Summary",
   "SYSTEM_LANGUAGE_LABEL": "Sytem Language",
   "CREATE_CUSTOM_BUDGET_PERIOD": "Create Custom Budget Period",
-  "BUDGET_PERIOD_NAME": "Budget Period Name"
+  "BUDGET_PERIOD_NAME": "Budget Period Name",
+  "CONFIRM_DELETE_BUDGET_PERIOD": "Are you sure you want to delete this budget period?"
 }
