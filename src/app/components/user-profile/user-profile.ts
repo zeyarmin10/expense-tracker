@@ -19,6 +19,7 @@ import { FormsModule } from '@angular/forms';
 import { AVAILABLE_CURRENCIES } from '../../core/constants/app.constants';
 import { CustomBudgetPeriodModalComponent } from '../common/custom-budget-period-modal/custom-budget-period-modal.component';
 import { CustomBudgetPeriod, CustomBudgetPeriodService } from '../../services/custom-budget-period.service';
+import { ConfirmationModal } from '../common/confirmation-modal/confirmation-modal';
 
 export const AVAILABLE_BUDGET_PERIODS = [
   { code: null, nameKey: 'BUDGET_PERIOD.NONE' },
@@ -37,6 +38,7 @@ export const AVAILABLE_BUDGET_PERIODS = [
     FontAwesomeModule,
     FormsModule,
     CustomBudgetPeriodModalComponent,
+    ConfirmationModal
   ],
   providers: [DatePipe],
   templateUrl: './user-profile.html',
@@ -66,6 +68,15 @@ export class UserProfileComponent implements OnInit {
   customBudgetPeriods: CustomBudgetPeriod[] = [];
   showCustomDateRange = false;
   isCustomBudgetListCollapsed = true;
+  
+  // For confirmation modal
+  @ViewChild(ConfirmationModal) private confirmationModal!: ConfirmationModal;
+  periodToDeleteId: string | null = null;
+  confirmationTitle: string = '';
+  confirmationMessage: string = '';
+  confirmButtonText: string = '';
+  cancelButtonText: string = '';
+
 
   get isCustomPeriodSelected(): boolean {
     const selectedPeriodId = this.userProfileForm.get('budgetPeriod')?.value;
@@ -296,16 +307,32 @@ export class UserProfileComponent implements OnInit {
   async deleteCustomPeriod(periodId: string | undefined, event: Event): Promise<void> {
     event.stopPropagation();
     if (!periodId) {
-        return;
+      return;
     }
-    const currentUser = await firstValueFrom(this.authService.currentUser$);
-    if (currentUser && confirm(this.translate.instant('CONFIRM_DELETE_BUDGET_PERIOD'))) {
-      await this.customBudgetPeriodService.deleteCustomBudgetPeriod(currentUser.uid, periodId);
-      if (this.userProfileForm.get('budgetPeriod')?.value === periodId) {
-        this.userProfileForm.get('budgetPeriod')?.setValue(null);
+    this.periodToDeleteId = periodId;
+    this.translate.get(['CONFIRM_DELETE_BUDGET_PERIOD_TITLE', 'CONFIRM_DELETE_BUDGET_PERIOD', 'DELETE_BUTTON', 'CANCEL_BUTTON'])
+      .subscribe(translations => {
+        this.confirmationTitle = translations['CONFIRM_DELETE_BUDGET_PERIOD_TITLE'];
+        this.confirmationMessage = translations['CONFIRM_DELETE_BUDGET_PERIOD'];
+        this.confirmButtonText = translations['DELETE_BUTTON'];
+        this.cancelButtonText = translations['CANCEL_BUTTON'];
+        this.confirmationModal.open();
+      });
+  }
+
+  async onConfirmation(confirmed: boolean): Promise<void> {
+    if (confirmed && this.periodToDeleteId) {
+      const currentUser = await firstValueFrom(this.authService.currentUser$);
+      if (currentUser) {
+        await this.customBudgetPeriodService.deleteCustomBudgetPeriod(currentUser.uid, this.periodToDeleteId);
+        if (this.userProfileForm.get('budgetPeriod')?.value === this.periodToDeleteId) {
+          this.userProfileForm.get('budgetPeriod')?.setValue(null);
+        }
+        this.periodToDeleteId = null; // Reset after deletion
       }
     }
   }
+
 
   toggleCustomBudgetList(): void {
     this.isCustomBudgetListCollapsed = !this.isCustomBudgetListCollapsed;
