@@ -20,24 +20,26 @@
                 </ng-template>
               </div>
 
-              <!-- Email -->
               <div class="border border-secondary-subtle rounded mb-4 p-2">
-                <label class="form-label">{{ 'EMAIL_LABEL' | translate }}</label>
-                <p class="form-control-plaintext">{{ userData.email }}</p>
-              </div>
-              <!-- Member Since -->
-              <div class="border border-secondary-subtle rounded mb-4 p-2">
-                <label class="form-label font-weight-bold"><strong>{{ "MEMBER_SINCE_LABEL" | translate
-                    }}</strong></label>
-                <p class="form-control-plaintext">
-                  {{ formatLocalizedDate(userData.createdAt, "MMM d, yyyy") }}
-                </p>
-              </div>
+                <!-- Email -->
+                <div class="mb-3">
+                  <label class="form-label font-weight-bold mb-0">{{ 'EMAIL_LABEL' | translate }}</label>
+                  <p class="form-control-plaintext m-0 p-0">{{ userData.email }}</p>
+                </div>
+                <!-- Member Since -->
+                <div class="mb-3">
+                  <label class="form-label font-weight-bold mb-0"><strong>{{ "MEMBER_SINCE_LABEL" | translate
+                      }}</strong></label>
+                  <p class="form-control-plaintext m-0 p-0">
+                    {{ formatLocalizedDate(userData.createdAt, "MMM d, yyyy") }}
+                  </p>
+                </div>
 
-              <!-- Display Name -->
-              <div class="border border-secondary-subtle rounded mb-4 p-2">
-                <label for="displayName" class="form-label">{{ 'DISPLAY_NAME_LABEL' | translate }}</label>
-                <input type="text" id="displayName" class="form-control" formControlName="displayName">
+                <!-- Display Name -->
+                <div class="mb-3">
+                  <label for="displayName" class="form-label">{{ 'DISPLAY_NAME_LABEL' | translate }}</label>
+                  <input type="text" id="displayName" class="form-control" formControlName="displayName">
+                </div>
               </div>
 
               <!-- Budget Period -->
@@ -107,30 +109,33 @@
                 </div>
               </div>
 
-              <!-- Currency Selection -->
               <div class="border border-secondary-subtle rounded mb-4 p-2">
-                <label for="currency" class="form-label">{{ 'CURRENCY' | translate }}</label>
-                <select id="currency" class="form-select" formControlName="currency">
-                  <option *ngFor="let currency of translatedCurrencies" [value]="currency.code">{{ currency.name }} ({{
-                    currency.symbol }})</option>
-                </select>
-              </div>
+                <!-- Currency Selection -->
+                <div class="mb-3">
+                  <label for="currency" class="form-label">{{ 'CURRENCY' | translate }}</label>
+                  <select id="currency" class="form-select" formControlName="currency">
+                    <option *ngFor="let currency of translatedCurrencies" [value]="currency.code">{{ currency.name }}
+                      ({{
+                      currency.symbol }})</option>
+                  </select>
+                </div>
 
-              <!-- Language Selection -->
-              <div class="border border-secondary-subtle rounded mb-4 p-2">
-                <label for="language" class="form-label">{{ 'SYSTEM_LANGUAGE_LABEL' | translate }}</label>
-                <select id="language" class="form-select" [ngModel]="selectedLanguage"
-                  (ngModelChange)="onLanguageChange($event)" [ngModelOptions]="{standalone: true}">
-                  <option value="en">English</option>
-                  <option value="my">မြန်မာ</option>
-                </select>
+                <!-- Language Selection -->
+                <div class="mb-3">
+                  <label for="language" class="form-label">{{ 'SYSTEM_LANGUAGE_LABEL' | translate }}</label>
+                  <select id="language" class="form-select" [ngModel]="selectedLanguage"
+                    (ngModelChange)="onLanguageChange($event)" [ngModelOptions]="{standalone: true}">
+                    <option value="en">English</option>
+                    <option value="my">မြန်မာ</option>
+                  </select>
+                </div>
               </div>
 
               <!-- Save Button -->
-              <div class="d-flex justify-content-end mt-4 mb-4">
-                <button type="submit" class="btn ps-4 pe-4" [ngClass]="{
+              <div class="sticky-save-button-container">
+                <button type="submit" class="profile-save-btn btn ps-4 pe-4" [ngClass]="{
                     'btn-outline-info': true,
-                    'shine-effect': userProfileForm.valid
+                    'shine-effect': userProfileForm.valid && userProfileForm.dirty
                   }" [disabled]="userProfileForm.invalid || !userProfileForm.dirty">
                   <fa-icon [icon]="faSave"></fa-icon>
                 </button>

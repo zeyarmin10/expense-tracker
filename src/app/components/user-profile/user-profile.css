@@ -99,8 +99,6 @@
   /* Return to subtle glow */
 }
 
-
-
 /* Apply the animation to buttons with .shine-effect class */
 .btn.shine-effect {
   animation: shine 1.5s infinite ease-in-out;
@@ -128,6 +126,18 @@
     border-color 0.3s ease, box-shadow 0.3s ease;
   animation: none !important;
   /* Stop animation when disabled */
+}
+
+.profile-save-btn {
+  background-color: #ffffff;
+}
+
+.sticky-save-button-container {
+  position: sticky;
+  bottom: 3rem;
+  right: 1rem;
+  text-align: right;
+  z-index: 1020; /* Ensure it's above other content */
 }
 
 /* For mobile view, adjust the layout if necessary */
