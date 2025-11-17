@@ -158,6 +158,7 @@ export class LoginComponent implements OnInit, OnDestroy {
             uid: user.uid,
             email: user.email || email,
             displayName: name,
+            currency: 'MMK',
             createdAt: new Date().toISOString(),
           };
           await this.userDataService.createUserProfile(newUserProfile);
@@ -193,6 +194,7 @@ export class LoginComponent implements OnInit, OnDestroy {
                   uid: user.uid,
                   email: user.email || '',
                   displayName: user.displayName || 'Google User',
+                  currency: 'MMK',
                   createdAt: new Date().toISOString(),
                 };
                 await this.userDataService.createUserProfile(newUserProfile);
