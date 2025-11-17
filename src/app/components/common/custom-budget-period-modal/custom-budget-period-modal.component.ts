@@ -32,9 +32,31 @@ export class CustomBudgetPeriodModalComponent {
   }
 
   open(): void {
-    this.budgetPeriodForm.reset();
+    const today = new Date();
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(today.getMonth() - 6);
+    const sixMonthsHence = new Date();
+    sixMonthsHence.setMonth(today.getMonth() + 6);
+
+    const sixMonthsAgoString = sixMonthsAgo.toISOString().split('T')[0];
+    const sixMonthsHenceString = sixMonthsHence.toISOString().split('T')[0];
+
+    this.budgetPeriodForm.reset({
+      name: '',
+      startDate: sixMonthsAgoString,
+      endDate: sixMonthsHenceString
+    });
+
     const modalElement = document.getElementById('customBudgetPeriodModal');
     if (modalElement) {
+      // Set up autofocus when the modal is shown
+      modalElement.addEventListener('shown.bs.modal', () => {
+        const inputElement = document.getElementById('budgetName');
+        if (inputElement) {
+          inputElement.focus();
+        }
+      }, { once: true });
+
       this.modalInstance = new bootstrap.Modal(modalElement);
       this.modalInstance.show();
     }

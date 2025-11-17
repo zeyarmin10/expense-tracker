@@ -12,13 +12,15 @@
             <label for="budgetName" class="form-label">{{ 'BUDGET_PERIOD_NAME' | translate }}</label>
             <input type="text" class="form-control" id="budgetName" formControlName="name">
           </div>
-          <div class="mb-3">
-            <label for="modalBudgetStartDate" class="form-label">{{ 'START_DATE' | translate }}</label>
-            <input type="date" class="form-control" id="modalBudgetStartDate" formControlName="startDate">
-          </div>
-          <div class="mb-3">
-            <label for="modalBudgetEndDate" class="form-label">{{ 'END_DATE' | translate }}</label>
-            <input type="date" class="form-control" id="modalBudgetEndDate" formControlName="endDate">
+          <div class="row mb-3">
+            <div class="col-6 pe-1 pe-sm-3 pe-md-3 pe-lg-3 pe-xl-3 pe-xxl-3">
+              <label for="modalBudgetStartDate" class="form-label">{{ 'START_DATE' | translate }}</label>
+              <input type="date" class="form-control" id="modalBudgetStartDate" formControlName="startDate">
+            </div>
+            <div class="col-6 ps-1 ps-sm-3 ps-md-3 ps-lg-3 ps-xl-3 ps-xxl-3">
+              <label for="modalBudgetEndDate" class="form-label">{{ 'END_DATE' | translate }}</label>
+              <input type="date" class="form-control" id="modalBudgetEndDate" formControlName="endDate">
+            </div>
           </div>
         </form>
       </div>
