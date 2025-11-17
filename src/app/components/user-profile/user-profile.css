@@ -160,6 +160,12 @@
   }
 }
 
+@media (min-width: 365px) and (max-width: 576px) {
+  .info-container {
+    padding: 1rem !important;
+  }
+}
+
 @media (max-width: 364.98px) {
   .container-column {
     padding: 0 0.5rem !important;
