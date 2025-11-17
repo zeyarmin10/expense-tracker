@@ -380,10 +380,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       })
     );
 
-
-
-
-
     this.totalProfitLossByCurrency$ = combineLatest([
       this.totalIncomesByCurrency$,
       this.totalExpensesByCurrency$,

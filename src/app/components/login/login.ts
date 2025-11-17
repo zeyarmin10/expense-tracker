@@ -1,4 +1,3 @@
-// login.ts
 import {
   Component,
   HostListener,
@@ -8,7 +7,7 @@ import {
   OnDestroy,
   ViewChild,
 } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
   FormGroup,
@@ -18,13 +17,14 @@ import {
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth';
 import { UserDataService, UserProfile } from '../../services/user-data';
-import { CategoryService } from '../../services/category'; // Import your existing CategoryService
+import { CategoryService } from '../../services/category';
 import { debounceTime, Subject, takeUntil } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { SessionManagement } from '../../services/session-management';
 import { ConfirmationModal } from '../common/confirmation-modal/confirmation-modal';
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome'; // Import FontAwesomeModule
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
+import { User } from '@angular/fire/auth';
 
 @Component({
   selector: 'app-login',
@@ -54,7 +54,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   loginForm: FormGroup;
   authService = inject(AuthService);
   userDataService = inject(UserDataService);
-  categoryService = inject(CategoryService); // Inject your existing CategoryService
+  categoryService = inject(CategoryService);
   router = inject(Router);
   sessionService = inject(SessionManagement);
   errorMessage: string | null = null;
@@ -139,36 +139,12 @@ export class LoginComponent implements OnInit, OnDestroy {
     try {
       if (this.isLoginMode) {
         const user = await this.authService.login(email, password);
-        this.sessionService.recordActivity();
-        // Check if user has categories, if not, add default ones
-        const hasCategories = await this.categoryService.hasCategories(
-          user.uid
-        );
-        if (!hasCategories) {
-          await this.categoryService.addDefaultCategories(
-            user.uid,
-            this.currentLang
-          ); // Pass currentLang
-        }
+        await this.handleUserSetup(user);
         await this.postLogin();
       } else {
         const user = await this.authService.register(email, password);
         if (user) {
-          const currency = this.currentLang === 'my' ? 'MMK' : 'USD';
-          const newUserProfile: UserProfile = {
-            uid: user.uid,
-            email: user.email || email,
-            displayName: name,
-            currency: currency,
-            createdAt: new Date().toISOString(),
-          };
-          await this.userDataService.createUserProfile(newUserProfile);
-          // Add default categories for the newly registered user
-          await this.categoryService.addDefaultCategories(
-            user.uid,
-            this.currentLang
-          ); // Pass currentLang
-
+          await this.handleUserSetup(user, name);
           await this.postLogin();
         }
       }
@@ -186,27 +162,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     try {
       const user = await this.authService.signInWithGoogle();
       if (user) {
-        const profile = await this.userDataService.getUserProfile(user.uid);
-        const hasCategories = await this.categoryService.hasCategories(
-          user.uid
-        );
-        if (!hasCategories) {
-          await this.categoryService.addDefaultCategories(
-            user.uid,
-            this.currentLang
-          ); // Pass currentLang
-        }
-        if (!profile) {
-          const currency = this.currentLang === 'my' ? 'MMK' : 'USD';
-          const newUserProfile: UserProfile = {
-            uid: user.uid,
-            email: user.email || '',
-            displayName: user.displayName || 'Google User',
-            currency: currency,
-            createdAt: new Date().toISOString(),
-          };
-          await this.userDataService.createUserProfile(newUserProfile);
-        }
+        await this.handleUserSetup(user);
         await this.postLogin();
       }
     } catch (error: any) {
@@ -216,11 +172,32 @@ export class LoginComponent implements OnInit, OnDestroy {
     }
   }
 
+  private async handleUserSetup(user: User, displayName?: string): Promise<void> {
+    const [profile, hasCategories] = await Promise.all([
+      this.userDataService.getUserProfile(user.uid),
+      this.categoryService.hasCategories(user.uid),
+    ]);
+
+    if (!profile) {
+      const currency = this.currentLang === 'my' ? 'MMK' : 'USD';
+      const newUserProfile: UserProfile = {
+        uid: user.uid,
+        email: user.email || '',
+        displayName: displayName || user.displayName || 'New User',
+        currency: currency,
+        createdAt: new Date().toISOString(),
+      };
+      await this.userDataService.createUserProfile(newUserProfile);
+    }
+
+    if (!hasCategories) {
+      await this.categoryService.addDefaultCategories(user.uid, this.currentLang);
+    }
+  }
+
   private async postLogin() {
-    // Common logic for post-login actions
     this.sessionService.recordActivity();
-    this.router.navigate(['/dashboard']).then(() => {
-    });
+    this.router.navigate(['/dashboard']).then(() => {});
   }
 
   togglePasswordVisibility(): void {
