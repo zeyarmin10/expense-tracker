@@ -4,13 +4,9 @@ import {
   ref,
   set,
   get,
-  child,
-  onValue,
-  objectVal,
   remove,
   update,
 } from '@angular/fire/database';
-import { Observable } from 'rxjs';
 
 // Define a simple user profile interface for type safety
 export interface UserProfile {
@@ -43,12 +39,16 @@ export class UserDataService {
   /**
    * Retrieves a user profile by UID from the Realtime Database.
    * @param uid The user's UID.
-   * @returns An Observable of the UserProfile or null if not found.
+   * @returns A Promise of the UserProfile or null if not found.
    */
-  getUserProfile(uid: string): Observable<UserProfile | null> {
+  async getUserProfile(uid: string): Promise<UserProfile | null> {
     const userRef = ref(this.db, `users/${uid}/profile`);
-    // objectVal() returns an Observable of the object at the given path
-    return objectVal<UserProfile>(userRef);
+    const snapshot = await get(userRef);
+    if (snapshot.exists()) {
+      return snapshot.val() as UserProfile;
+    } else {
+      return null;
+    }
   }
 
   /**

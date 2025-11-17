@@ -6,7 +6,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { Observable, of, map, firstValueFrom } from 'rxjs';
+import { Observable, of, map, firstValueFrom, from } from 'rxjs';
 import { switchMap, tap, catchError } from 'rxjs/operators';
 import { AuthService } from '../../services/auth';
 import { UserDataService, UserProfile } from '../../services/user-data';
@@ -109,7 +109,7 @@ export class UserProfileComponent implements OnInit {
     this.userDisplayData$ = this.authService.currentUser$.pipe(
       switchMap((user) => {
         if (user && user.uid) {
-          return this.userDataService.getUserProfile(user.uid).pipe(
+          return from(this.userDataService.getUserProfile(user.uid)).pipe(
             tap((profile) => {
               this.userProfileForm.patchValue({
                 displayName: profile?.displayName || user.displayName || '',

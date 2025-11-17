@@ -1,7 +1,7 @@
 import { Component, signal, inject, HostListener, ElementRef } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from './services/auth';
-import { Observable, of, Subject, takeUntil, debounceTime } from 'rxjs'; // Import 'of'
+import { Observable, of, Subject, takeUntil, debounceTime, from } from 'rxjs'; // Import 'from'
 import { User } from '@angular/fire/auth';
 import { CommonModule } from '@angular/common';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
@@ -52,11 +52,11 @@ export class App {
     this.userDisplayName$ = this.currentUser$.pipe(
       switchMap(user => {
         if (user) {
-          // If a Firebase user exists, try to get their profile from UserDataService
-          return this.userDataService.getUserProfile(user.uid).pipe( //
+          // If a Firebase user exists, get their profile from UserDataService
+          return from(this.userDataService.getUserProfile(user.uid)).pipe(
             map(userProfile => {
               // Prioritize displayName from UserProfile, otherwise use Firebase displayName or email
-              return userProfile?.displayName || user.displayName || user.email; //
+              return userProfile?.displayName || user.displayName || user.email;
             })
           );
         } else {
@@ -75,23 +75,11 @@ export class App {
     ).subscribe(() => {
       this.sessionService.recordActivity(); // Record activity on user interaction
     });
-
-    // Initial check for activity when the app loads (e.g., if refreshed)
-    // The SessionManagementService handles this in its constructor by checking currentUser$.
-    // If you need more granular control, you could explicitly call this here:
-    // this.authService.currentUser$.pipe(takeUntil(this.destroy$)).subscribe(user => {
-    //   if (user) {
-    //     this.sessionService.startSessionMonitoring();
-    //     this.sessionService.recordActivity();
-    //   }
-    // });
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
-    // The SessionManagementService itself handles stopping its timers on logout or when user becomes null.
-    // However, clean up component-specific subscriptions.
   }
 
   // Listen for common user interactions
@@ -105,10 +93,8 @@ export class App {
   async logout(): Promise<void> { // This method would be tied to your "Logout" button
     try {
       await this.authService.logout(true); // Pass true for manual logout
-      // No need to navigate here, SessionManagementService will handle it via logoutSuccess$
     } catch (error) {
       console.error('Logout failed:', error);
-      // Handle logout error (e.g., show a toast)
     }
   }
 

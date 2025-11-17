@@ -133,7 +133,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.initializeForms();
     this.initializeUserDataAndDateRange();
     this.initializeDataStreams();
-    this.checkAndCreateDefaultCategories();
+    // this.checkAndCreateDefaultCategories();
     this.subscribeToChartData();
   }
 
