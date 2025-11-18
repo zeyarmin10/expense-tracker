@@ -27,7 +27,7 @@ export class Toast implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnInit(): void {
     this.toastSubscription = this.toastService.getToastEvents().subscribe(toast => {
-      console.log('Toast received in component:', toast); // Debugging: Confirm toast received
+      // console.log('Toast received in component:', toast); // Debugging: Confirm toast received
       this.toasts.push(toast);
 
       // Use QueryList.changes observable to react when the DOM actually updates
@@ -35,19 +35,19 @@ export class Toast implements OnInit, AfterViewInit, OnDestroy {
       this.toastElements.changes.subscribe((queryList: QueryList<ElementRef>) => {
         const newToastElement = queryList.find(el => el.nativeElement.id === `toast-${toast.id}`);
         if (newToastElement) {
-          console.log('Toast element found in DOM:', newToastElement.nativeElement); // Debugging: Confirm element found
+          // console.log('Toast element found in DOM:', newToastElement.nativeElement); // Debugging: Confirm element found
           try {
             const bsToast = new bootstrap.Toast(newToastElement.nativeElement);
             this.bootstrapToastInstances.set(toast.id, bsToast);
 
             newToastElement.nativeElement.addEventListener('hidden.bs.toast', () => {
-              console.log(`Toast hidden by Bootstrap: ${toast.id}`); // Debugging: Confirm hidden event
+              // console.log(`Toast hidden by Bootstrap: ${toast.id}`); // Debugging: Confirm hidden event
               this.removeToast(toast.id);
               this.bootstrapToastInstances.delete(toast.id);
             });
 
             bsToast.show(); // Tell Bootstrap to show the toast
-            console.log(`Bootstrap toast instance shown for ID: ${toast.id}`); // Debugging: Confirm show called
+            // console.log(`Bootstrap toast instance shown for ID: ${toast.id}`); // Debugging: Confirm show called
 
           } catch (e) {
             console.error('Error initializing Bootstrap Toast:', e); // Debugging: Catch Bootstrap errors

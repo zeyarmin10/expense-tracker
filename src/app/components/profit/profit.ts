@@ -477,7 +477,7 @@ export class Profit implements OnInit, OnDestroy {
         .addIncome(incomeData)
         .then(() => {
           this.toastService.showSuccess(this.translate.instant('INCOME_SAVE_SUCCESS'));
-          console.log('Income added successfully!');
+          // console.log('Income added successfully!');
           this.resetForm();
         })
         .catch((error) => {
@@ -499,7 +499,7 @@ export class Profit implements OnInit, OnDestroy {
         .deleteIncome(this.incomeIdToDelete)
         .then(() => {
           this.toastService.showSuccess(this.translate.instant('INCOME_DELETE_SUCCESS'));
-          console.log('Income deleted successfully!');
+          // console.log('Income deleted successfully!');
           this.incomeIdToDelete = undefined;
         })
         .catch((error) => {
@@ -525,7 +525,7 @@ export class Profit implements OnInit, OnDestroy {
       this.budgetService
         .deleteBudget(this.budgetIdToDelete)
         .then(() => {
-          console.log('Budget deleted successfully!');
+          // console.log('Budget deleted successfully!');
           this.budgetIdToDelete = undefined;
         })
         .catch((error) => {

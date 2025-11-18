@@ -1018,7 +1018,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
             .addBudget(budgetData)
             .then(() => {
               this.toastService.showSuccess(this.translate.instant('BUDGET_SAVE_SUCCESS'));
-              console.log('Budget added successfully!');
+              // console.log('Budget added successfully!');
               this.resetForm();
             })
             .catch((error) => {
@@ -1077,7 +1077,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
         .deleteBudget(this.budgetIdToDelete)
         .then(() => {
           this.toastService.showSuccess(this.translate.instant('BUDGET_DELETE_SUCCESS'));
-          console.log('Budget deleted successfully!');
+          // console.log('Budget deleted successfully!');
           this.budgetIdToDelete = undefined;
         })
         .catch((error) => {
@@ -1210,11 +1210,11 @@ export class BudgetComponent implements OnInit, OnDestroy {
       }
     }
 
-    console.log(
-      'Budget date range set by filter:',
-      this.selectedDateFilter,
-      this.dateFilter$.value
-    );
+    // console.log(
+    //   'Budget date range set by filter:',
+    //   this.selectedDateFilter,
+    //   this.dateFilter$.value
+    // );
   }
 
   private chartInstance: Chart | undefined;

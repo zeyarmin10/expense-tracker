@@ -12,7 +12,7 @@ import {
   DatabaseReference,
   get,
   child,
-} from '@angular/fire/database';ါငအ 
+} from '@angular/fire/database';
 import { Observable, switchMap, firstValueFrom, map, of, Subject } from 'rxjs';
 import { AuthService } from './auth';
 
@@ -197,11 +197,11 @@ export class CategoryService {
     try {
       const snapshot = await get(expensesQuery);
       const result = snapshot.exists() && snapshot.size > 0;
-      console.log(
-        'isCategoryUsedInExpenses - Query result (snapshot exists and size > 0):',
-        result
-      );
-      console.log('isCategoryUsedInExpenses - Snapshot value:', snapshot.val()); // Log actual data found
+      // console.log(
+      //   'isCategoryUsedInExpenses - Query result (snapshot exists and size > 0):',
+      //   result
+      // );
+      // console.log('isCategoryUsedInExpenses - Snapshot value:', snapshot.val()); // Log actual data found
       return result;
     } catch (error) {
       console.error('Error checking category usage in expenses:', error);
@@ -248,6 +248,6 @@ export class CategoryService {
       };
       await push(this.getCategoriesRef(userId), newCategory);
     }
-    console.log('All default categories added for user:', userId);
+    // console.log('All default categories added for user:', userId);
   }
 }

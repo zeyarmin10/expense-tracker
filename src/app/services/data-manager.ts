@@ -52,11 +52,11 @@ export class DataManagerService {
   async addCategory(categoryName: string): Promise<void> {
     const userPathObservable = this.getUserDataPath('categories');
     const path = await firstValueFrom(userPathObservable); // Convert observable to promise to get value once
-    console.log('path', path);
+    // console.log('path', path);
     if (!path) throw new Error('User not authenticated or path not found.');
 
     const categoryRef = push(ref(this.db, path)); // Push generates a unique ID
-    console.log('categoryRef', categoryRef);
+    // console.log('categoryRef', categoryRef);
     const newCategory: DataICategory = {
       id: categoryRef.key!, // Get the generated key
       name: categoryName,
