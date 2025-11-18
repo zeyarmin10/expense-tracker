@@ -12,7 +12,7 @@ import {
   DatabaseReference,
   get,
   child,
-} from '@angular/fire/database';
+} from '@angular/fire/database';ါငအ 
 import { Observable, switchMap, firstValueFrom, map, of, Subject } from 'rxjs';
 import { AuthService } from './auth';
 
@@ -20,6 +20,7 @@ export interface ServiceICategory {
   id?: string; // Firebase push key
   name: string;
   userId: string;
+  createdAt?: string;
 }
 
 // Assuming an expense structure might look like this for checking category usage
@@ -68,6 +69,7 @@ export class CategoryService {
     const newCategory: Omit<ServiceICategory, 'id'> = {
       name: categoryName.trim(), // Trim spaces when adding
       userId: userId,
+      createdAt: new Date().toISOString(),
     };
     await push(this.getCategoriesRef(userId), newCategory);
   }
@@ -242,6 +244,7 @@ export class CategoryService {
       const newCategory: Omit<ServiceICategory, 'id'> = {
         name: categoryName.trim(),
         userId: userId,
+        createdAt: new Date().toISOString(),
       };
       await push(this.getCategoriesRef(userId), newCategory);
     }

@@ -8,6 +8,7 @@ export interface CustomBudgetPeriod {
   name: string;
   startDate: string;
   endDate: string;
+  createdAt?: string;
 }
 
 @Injectable({
@@ -24,7 +25,11 @@ export class CustomBudgetPeriodService {
   addCustomBudgetPeriod(userId: string, period: Omit<CustomBudgetPeriod, 'id'>): ThenableReference {
     const listRef = ref(this.db, `users/${userId}/profile/customBudgetPeriods`);
     const newPeriodRef = push(listRef);
-    set(newPeriodRef, period);
+    const newPeriodData = {
+      ...period,
+      createdAt: new Date().toISOString()
+    };
+    set(newPeriodRef, newPeriodData);
     return newPeriodRef;
   }
 

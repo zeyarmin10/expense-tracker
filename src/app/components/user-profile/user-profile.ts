@@ -114,14 +114,14 @@ export class UserProfileComponent implements OnInit {
               this.userProfileForm.patchValue({
                 displayName: profile?.displayName || user.displayName || '',
                 currency: profile?.currency || 'MMK',
-                budgetPeriod: profile?.budgetPeriod || null,
+                budgetPeriod: profile?.selectedBudgetPeriodId || profile?.budgetPeriod || null,
                 budgetStartDate: profile?.budgetStartDate || null,
                 budgetEndDate: profile?.budgetEndDate || null,
               });
               this.selectedCurrency = profile?.currency || 'MMK';
 
               // This will now correctly handle the 'custom' case on load
-              this.handleBudgetPeriodChange(profile?.budgetPeriod || null, true);
+              this.handleBudgetPeriodChange(this.userProfileForm.get('budgetPeriod')?.value, true);
             }),
             map((profile) => ({
               email: profile?.email || user.email || 'N/A',
@@ -210,6 +210,8 @@ export class UserProfileComponent implements OnInit {
         this.userProfileForm.get('budgetPeriod')?.setValue(matchingCustomPeriod.id, { emitEvent: false });
         periodId = matchingCustomPeriod.id ?? null; // Continue with the correct ID
       }
+    } else if (isInitialLoad && this.userProfileForm.get('budgetPeriod')?.value) {
+      periodId = this.userProfileForm.get('budgetPeriod')?.value;
     }
 
     const customPeriod = this.customBudgetPeriods.find(p => p.id === periodId);
@@ -255,6 +257,7 @@ export class UserProfileComponent implements OnInit {
           budgetPeriod: isCustom ? 'custom' : formValues.budgetPeriod,
           budgetStartDate: isCustom ? formValues.budgetStartDate : null,
           budgetEndDate: isCustom ? formValues.budgetEndDate : null,
+          selectedBudgetPeriodId: isCustom ? formValues.budgetPeriod : null
         };
 
         try {
@@ -312,6 +315,16 @@ export class UserProfileComponent implements OnInit {
     if (!periodId) {
       return;
     }
+
+    const currentUser = await firstValueFrom(this.authService.currentUser$);
+    if (currentUser) {
+        const userProfile = await this.userDataService.getUserProfile(currentUser.uid);
+        if (userProfile && userProfile.selectedBudgetPeriodId === periodId) {
+            this.toastService.showError(this.translate.instant('DELETE_ACTIVE_BUDGET_PERIOD_ERROR'));
+            return;
+        }
+    }
+
     this.periodToDeleteId = periodId;
     this.translate.get(['CONFIRM_DELETE_TITLE', 'CONFIRM_DELETE_BUDGET_PERIOD', 'DELETE_BUTTON', 'CANCEL_BUTTON'])
       .subscribe(translations => {

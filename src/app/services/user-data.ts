@@ -18,6 +18,7 @@ export interface UserProfile {
   budgetPeriod?: 'weekly' | 'monthly' | 'yearly' | 'custom' | null;
   budgetStartDate?: string | null; 
   budgetEndDate?: string | null;
+  selectedBudgetPeriodId?: string | null;
 }
 @Injectable({
   providedIn: 'root',

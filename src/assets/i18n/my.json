@@ -387,5 +387,6 @@
   "BUDGET_SAVE_SUCCESS": "ဘတ်ဂျက်အောင်မြင်စွာထည့်ပြီးပါပြီ။",
   "BUDGET_DELETE_SUCCESS": "ဘတ်ဂျက်အောင်မြင်စွာဖျက်ပြီးပါပြီ။",
   "INCOME_SAVE_SUCCESS": "ဝင်ငွေအောင်မြင်စွာထည့်ပြီးပါပြီ။",
-  "INCOME_DELETE_SUCCESS": "ဝင်ငွေအောင်မြင်စွာဖျက်ပြီးပါပြီ။"
+  "INCOME_DELETE_SUCCESS": "ဝင်ငွေအောင်မြင်စွာဖျက်ပြီးပါပြီ။",
+  "DELETE_ACTIVE_BUDGET_PERIOD_ERROR": "ဤဘတ်ဂျက်ကာလက လက်ရှိအသုံးပြုနေလို့ ဖျက်၍မရပါ။"
 }
