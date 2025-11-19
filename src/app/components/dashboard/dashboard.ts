@@ -468,12 +468,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
       type: 'bar',
       data: data,
       options: {
-        indexAxis: 'y',
+        indexAxis: 'x',
         responsive: true,
         maintainAspectRatio: false,
         scales: {
-          x: { beginAtZero: true, ticks: { callback: (value: any) => new Intl.NumberFormat(this.translate.currentLang === 'my' ? 'my-MM' : undefined).format(value), }, },
-          y: { beginAtZero: true },
+          x: { beginAtZero: true },
+          y: { 
+            beginAtZero: true,
+            ticks: {
+              callback: (value: any) => this.formatService.formatAmountShort(value),
+            },
+          },
         },
       },
     });

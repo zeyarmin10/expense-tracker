@@ -1241,7 +1241,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
         type: 'bar',
         data: data,
         options: {
-          indexAxis: 'y',
+          indexAxis: 'x',
           responsive: true,
           maintainAspectRatio: false,
           scales: {
@@ -1249,23 +1249,15 @@ export class BudgetComponent implements OnInit, OnDestroy {
               // 'x' axis now represents the amount
               stacked: false,
               beginAtZero: true,
-              ticks: {
-                callback: function (value: any) {
-                  // Use the component reference to access the translate service
-                  const currentLang = component.translate?.currentLang;
-                  if (currentLang === 'my') {
-                    return new Intl.NumberFormat('my-MM', {
-                      numberingSystem: 'mymr',
-                    }).format(value);
-                  }
-                  return new Intl.NumberFormat().format(value);
-                },
-              },
+              
             },
             y: {
               // 'y' axis now represents the months
               stacked: false,
               beginAtZero: true,
+              ticks: {
+                callback: (value: any) => this.formatService.formatAmountShort(value),
+              },
             },
           },
         },

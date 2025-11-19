@@ -49,14 +49,6 @@ export class FormatService {
       }).format(amount);
     }
 
-    // // Place the symbol after the amount for MMK and THB
-    // if (currency === 'MMK' || currency === 'THB') {
-    //   return `${formattedAmount} ${symbol}`;
-    // } else {
-    //   // Place the symbol before the amount for all other currencies
-    //   return `${symbol}${formattedAmount}`;
-    // }
-
     if (locale === BURMESE_LOCALE_CODE && currency === MMK_CURRENCY_CODE) {
       return `${formattedAmount} ${BURMESE_CURRENCY_SYMBOL}`;
     } else if (
@@ -67,5 +59,35 @@ export class FormatService {
     }
 
     return `${symbol} ${formattedAmount}`;
+  }
+
+  formatAmountShort(amount: number): string {
+    const locale = this.translate.currentLang;
+    const isBurmese = locale === 'my';
+    const numberLocale = isBurmese ? 'my-MM' : locale;
+    const numberingSystem = isBurmese ? { numberingSystem: 'mymr' } : {};
+
+    if (amount >= 1e6) {
+      const value = amount / 1e6;
+      const formattedValue = new Intl.NumberFormat(numberLocale, {
+        maximumFractionDigits: 1,
+        ...numberingSystem,
+      }).format(value);
+      return `${formattedValue} M`;
+    }
+    if (amount >= 1e3) {
+      const value = amount / 1e3;
+      const formattedValue = new Intl.NumberFormat(numberLocale, {
+        maximumFractionDigits: 0,
+        ...numberingSystem,
+      }).format(value);
+      return `${formattedValue} K`;
+    }
+    
+    const formattedValue = new Intl.NumberFormat(numberLocale, {
+      maximumFractionDigits: 0,
+      ...numberingSystem,
+    }).format(amount);
+    return formattedValue;
   }
 }
