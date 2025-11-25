@@ -29,8 +29,8 @@ body {
 
 .chart-container {
   position: relative;
-  height: 300px;
-  width: 100%;
+  min-height: 50vh;
+  /* width: 100%; */
 }
 
 .expense-list-item {
@@ -51,11 +51,6 @@ body {
   font-weight: 600;
 }
 
-.chart-container {
-  position: relative;
-  min-height: 45vh;
-  margin-bottom: 20px;
-}
 
 /* Income */
 .income-card {
@@ -130,15 +125,27 @@ body {
 }
 
 /* For mobile devices, increase the chart height for better readability */
+@media (max-width: 991px) {
+  .chart-container {
+    position: relative;
+    min-height: 40vh;
+    margin-bottom: 20px;
+  }
+}
 @media (max-width: 767px) {
   .chart-container {
     position: relative;
-    min-height: 50vh;
+    min-height: 40vh;
     margin-bottom: 20px;
   }
 }
 
 @media (max-width: 575.98px) {
+  .chart-container {
+    position: relative;
+    min-height: 40vh;
+    margin-bottom: 20px;
+  }
   .card-dashboard {
     padding: 1rem 0.75rem !important;
   }
@@ -154,7 +161,7 @@ body {
 
   .chart-container {
     position: relative;
-    min-height: 55vh;
+    min-height: 40vh;
     margin-bottom: 20px;
   }
 
