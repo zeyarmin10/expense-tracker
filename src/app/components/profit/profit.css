@@ -149,7 +149,8 @@
 
 .chart-container {
   position: relative;
-  max-height: 50vh;
+  max-height: 40vh;
+  min-height: 20rem;
   width: 100%;
   margin-bottom: 20px;
 }
@@ -212,6 +213,7 @@
   .chart-container {
     position: relative;
     max-height: 40vh;
+    min-height: 20rem;
     width: 100%;
     margin-bottom: 20px;
   }
@@ -220,6 +222,7 @@
   .chart-container {
     position: relative;
     max-height: 40vh;
+    min-height: 20rem;
     width: 100%;
     margin-bottom: 20px;
   }
@@ -229,6 +232,7 @@
   .chart-container {
     position: relative;
     max-height: 40vh;
+    min-height: 20rem;
     width: 100%;
     margin-bottom: 20px;
   }
@@ -237,6 +241,7 @@
   .chart-container {
     position: relative;
     max-height: 40vh;
+    min-height: 20rem;
     width: 100%;
     margin-bottom: 20px;
   }
