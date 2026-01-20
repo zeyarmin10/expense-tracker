@@ -28,9 +28,6 @@ import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
 import {
   CURRENCY_SYMBOLS,
   BURMESE_MONTH_ABBREVIATIONS,
-  BURMESE_LOCALE_CODE,
-  MMK_CURRENCY_CODE,
-  BURMESE_CURRENCY_SYMBOL,
 } from '../../core/constants/app.constants';
 
 import { FormatService } from '../../services/format.service';
@@ -153,18 +150,32 @@ export class ExpenseOverview implements OnInit {
       this.allExpenses$,
       this.dateFilter$,
       this.searchFilter$,
-      this._selectedCategory$, // <-- Add this new stream
+      this._selectedCategory$,
     ]).pipe(
       map(([expenses, { start, end }, searchTerm, selectedCategory]) => {
-        // Calculate the total number of days in the selected date range
+        // --- MODIFIED: Daily Average Day Count Calculation ---
         const startDate = new Date(start);
-        const endDate = new Date(end);
-        // Calculate difference in milliseconds, then convert to days (inclusive)
-        const timeDifference = endDate.getTime() - startDate.getTime();
-        // Add 1 to ensure the count is inclusive of the start and end days
-        const totalDays = Math.ceil(timeDifference / (1000 * 60 * 60 * 24)) + 1;
+        const originalEndDate = new Date(end);
+        const today = new Date();
+        let totalDays: number;
 
-        // <-- Add selectedCategory here
+        let effectiveEndDate = originalEndDate;
+
+        // If 'custom' filter is used and its end date is in the future, use today as the end date for calculation.
+        if (this.selectedDateFilter === 'custom' && originalEndDate > today) {
+            effectiveEndDate = today;
+        }
+
+        // Ensure start date isn't after the effective end date (e.g., if start is in the future).
+        if (startDate > effectiveEndDate) {
+            totalDays = 0;
+        } else {
+            const timeDifference = effectiveEndDate.getTime() - startDate.getTime();
+            // Add 1 for inclusivity, use Math.floor for whole days.
+            totalDays = Math.floor(timeDifference / (1000 * 60 * 60 * 24)) + 1;
+        }
+        // --- END MODIFICATION ---
+
         let filtered = expenses;
 
         // Date filtering logic
