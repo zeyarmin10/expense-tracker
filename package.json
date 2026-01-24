@@ -32,6 +32,7 @@
     "ng2-charts": "^7.0.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
+    "ua-parser-js": "^2.0.8",
     "zone.js": "~0.14.0"
   },
   "devDependencies": {
@@ -39,6 +40,7 @@
     "@angular/cli": "18.2.14",
     "@angular/compiler-cli": "18.2.14",
     "@types/jasmine": "~5.1.0",
+    "@types/ua-parser-js": "^0.7.39",
     "jasmine-core": "~5.8.0",
     "karma": "~6.4.0",
     "karma-chrome-launcher": "~3.2.0",

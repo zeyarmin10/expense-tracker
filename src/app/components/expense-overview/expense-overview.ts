@@ -311,7 +311,7 @@ export class ExpenseOverview implements OnInit {
     this.currencySummaries = Object.keys(groupedByCurrency).map((currency) => {
       const currencyExpenses = groupedByCurrency[currency];
       const totalExpenses = currencyExpenses.reduce(
-        (sum, e) => sum + e.totalCost,
+        (sum: number, e: ServiceIExpense) => sum + e.totalCost,
         0
       );
       const dailyAverage = totalDays > 0 ? totalExpenses / totalDays : 0;
@@ -336,7 +336,7 @@ export class ExpenseOverview implements OnInit {
     }, {} as { [key: string]: CategoryTotal });
 
     this.categoryTotals = Object.values(categoryTotalsMap).sort(
-      (a, b) => b.total - a.total
+      (a: CategoryTotal, b: CategoryTotal) => b.total - a.total
     );
     const mostExpensive = this.categoryTotals[0]?.category;
     this.mostExpenseCategory = mostExpensive || 'N/A';

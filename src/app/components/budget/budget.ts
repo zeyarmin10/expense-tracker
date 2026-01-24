@@ -1004,7 +1004,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
 
           const budgetData: Omit<
             ServiceIBudget,
-            'id' | 'userId' | 'createdAt'
+            'id' | 'userId' | 'createdAt' | 'device' | 'editedDevice'
           > = {
             type: formValue.type,
             category: categoryName,

@@ -23,6 +23,8 @@ export interface ServiceIBudget {
   currency: string;
   userId?: string;
   createdAt?: string;
+  device: string;
+  editedDevice?: string;
 }
 
 @Injectable({
@@ -38,13 +40,8 @@ export class BudgetService {
     return ref(this.db, `users/${userId}/budgets`);
   }
 
-  /**
-   * Adds a new budget record for the current user to Firebase.
-   * @param budgetData The budget data.
-   * @returns A Promise that resolves when the budget is added.
-   */
   async addBudget(
-    budgetData: Omit<ServiceIBudget, 'id' | 'userId' | 'createdAt'>
+    budgetData: Omit<ServiceIBudget, 'id' | 'userId' | 'createdAt' | 'device' | 'editedDevice'>
   ): Promise<void> {
     const userId = (await firstValueFrom(
       this.authService.currentUser$.pipe(map((user) => user?.uid))
@@ -57,15 +54,11 @@ export class BudgetService {
       ...budgetData,
       userId,
       createdAt: new Date().toISOString(),
+      device: navigator.userAgent,
     };
     await push(this.getBudgetsRef(userId), newBudgetToSave);
   }
 
-  /**
-   * Gets all budget records for the current user as an Observable from Firebase.
-   * Attaches Firebase push IDs as 'id' property.
-   * @returns An Observable of an array of ServiceIBudget objects.
-   */
   getBudgets(): Observable<ServiceIBudget[]> {
     return this.authService.currentUser$.pipe(
       switchMap((user) => {
@@ -79,12 +72,6 @@ export class BudgetService {
     );
   }
 
-  /**
-   * Updates an existing budget record for the current user in Firebase.
-   * @param budgetId The ID of the budget to update.
-   * @param updatedData The partial budget data to update.
-   * @returns A Promise that resolves when the budget is updated.
-   */
   async updateBudget(
     budgetId: string,
     updatedData: Partial<Omit<ServiceIBudget, 'id' | 'userId' | 'createdAt'>>
@@ -99,14 +86,9 @@ export class BudgetService {
       throw new Error('Budget ID is required for update.');
     }
     const budgetRef = ref(this.db, `users/${userId}/budgets/${budgetId}`);
-    await update(budgetRef, updatedData);
+    await update(budgetRef, { ...updatedData, editedDevice: navigator.userAgent });
   }
 
-  /**
-   * Deletes a budget record for the current user from Firebase.
-   * @param budgetId The ID of the budget to delete.
-   * @returns A Promise that resolves when the budget is deleted.
-   */
   async deleteBudget(id: string): Promise<void> {
     const userId = (await firstValueFrom(
       this.authService.currentUser$.pipe(map((user) => user?.uid))

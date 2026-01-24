@@ -465,7 +465,7 @@ export class Profit implements OnInit, OnDestroy {
     const defaultCurrency = this.userProfile?.currency || 'MMK';
 
     if (this.incomeForm.valid) {
-      const incomeData: Omit<ServiceIIncome, 'id' | 'userId' | 'createdAt'> = {
+      const incomeData: Omit<ServiceIIncome, 'id' | 'userId' | 'createdAt' | 'device' | 'editedDevice'> = {
         description: this.incomeForm.value.description,
         amount: this.incomeForm.value.amount,
         // Use the user's default currency, ignoring the disabled form control value
