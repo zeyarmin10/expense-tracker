@@ -19,6 +19,17 @@ export interface UserProfile {
   budgetStartDate?: string | null; 
   budgetEndDate?: string | null;
   selectedBudgetPeriodId?: string | null;
+  accountType?: 'PERSONAL' | 'GROUP';
+  role?: 'GROUP_ADMIN' | 'STANDARD_MEMBER' | 'EXPENSE_ONLY_MEMBER';
+  permissions?: {
+    canManageGroup?: boolean;
+    canReadWriteAllData?: boolean;
+    canReadBudgetData?: boolean;
+    canReadProfitData?: boolean;
+    canWriteExpense?: boolean;
+    canReadExpense?: boolean;
+    canReadExpenseOverview?: boolean;
+  };
 }
 @Injectable({
   providedIn: 'root',

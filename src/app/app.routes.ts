@@ -8,6 +8,7 @@ import { AuthGuard } from './guards/auth-guard'; // Import your auth guard
 import { UserProfileComponent } from './components/user-profile/user-profile';
 import { ExpenseOverview } from './components/expense-overview/expense-overview'
 import { BudgetComponent } from './components/budget/budget';
+import { UnauthorizedComponent } from './components/unauthorized/unauthorized';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' }, // Default route
@@ -21,26 +22,31 @@ export const routes: Routes = [
     path: 'profit',
     component: Profit,
     canActivate: [AuthGuard],
+    data: { permissions: { canReadProfitData: true } },
   },
-  { 
-    path: 'expense/:date', 
+  {
+    path: 'expense/:date',
     component: Expense,
-    canActivate: [AuthGuard]
+    canActivate: [AuthGuard],
+    data: { permissions: { canWriteExpense: true } },
   },
   {
     path: 'expense',
     component: Expense,
     canActivate: [AuthGuard],
+    data: { permissions: { canWriteExpense: true } },
   },
-  { 
-    path: 'expense-overview', 
-    component: ExpenseOverview ,
-    canActivate: [AuthGuard]
+  {
+    path: 'expense-overview',
+    component: ExpenseOverview,
+    canActivate: [AuthGuard],
+    data: { permissions: { canReadExpenseOverview: true } },
   },
-  { 
-    path: 'budget', 
-    component: BudgetComponent, 
-    canActivate: [AuthGuard]
+  {
+    path: 'budget',
+    component: BudgetComponent,
+    canActivate: [AuthGuard],
+    data: { permissions: { canReadBudgetData: true } },
   },
   {
     path: 'profile',
@@ -51,6 +57,12 @@ export const routes: Routes = [
     path: 'category',
     component: Category,
     canActivate: [AuthGuard],
+    data: { permissions: { canReadWriteAllData: true } },
+  },
+  { 
+    path: 'unauthorized', 
+    component: UnauthorizedComponent, 
+    canActivate: [AuthGuard] 
   },
   // Move the wildcard route to the very end of the array
   { path: '**', redirectTo: '/login' },

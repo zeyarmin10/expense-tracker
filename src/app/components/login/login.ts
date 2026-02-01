@@ -71,6 +71,7 @@ export class LoginComponent implements OnInit, OnDestroy {
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
       name: [''],
+      accountType: ['PERSONAL', Validators.required]
     });
 
     this.currentLang =
@@ -115,14 +116,17 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.isLoginMode = !this.isLoginMode;
     this.errorMessage = null;
     this.successMessage = null;
-    this.loginForm.reset();
+    this.loginForm.reset({ accountType: 'PERSONAL' });
 
     if (!this.isLoginMode) {
       this.loginForm.controls['name'].setValidators(Validators.required);
+      this.loginForm.controls['accountType'].setValidators(Validators.required);
     } else {
       this.loginForm.controls['name'].clearValidators();
+      this.loginForm.controls['accountType'].clearValidators();
     }
     this.loginForm.controls['name'].updateValueAndValidity();
+    this.loginForm.controls['accountType'].updateValueAndValidity();
   }
 
   async onSubmit(): Promise<void> {
@@ -134,7 +138,7 @@ export class LoginComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const { email, password, name } = this.loginForm.value;
+    const { email, password, name, accountType } = this.loginForm.value;
 
     try {
       if (this.isLoginMode) {
@@ -144,7 +148,7 @@ export class LoginComponent implements OnInit, OnDestroy {
       } else {
         const user = await this.authService.register(email, password);
         if (user) {
-          await this.handleUserSetup(user, name);
+          await this.handleUserSetup(user, name, accountType);
           await this.postLogin();
         }
       }
@@ -162,7 +166,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     try {
       const user = await this.authService.signInWithGoogle();
       if (user) {
-        await this.handleUserSetup(user);
+        await this.handleUserSetup(user, undefined, 'PERSONAL');
         await this.postLogin();
       }
     } catch (error: any) {
@@ -172,7 +176,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     }
   }
 
-  private async handleUserSetup(user: User, displayName?: string): Promise<void> {
+  private async handleUserSetup(user: User, displayName?: string, accountType?: 'PERSONAL' | 'GROUP'): Promise<void> {
     const [profile, hasCategories] = await Promise.all([
       this.userDataService.getUserProfile(user.uid),
       this.categoryService.hasCategories(user.uid),
@@ -186,7 +190,31 @@ export class LoginComponent implements OnInit, OnDestroy {
         displayName: displayName || user.displayName || 'New User',
         currency: currency,
         createdAt: new Date().toISOString(),
+        accountType: accountType,
       };
+      if (accountType === 'GROUP') {
+        newUserProfile.role = 'GROUP_ADMIN';
+        newUserProfile.permissions = {
+          canManageGroup: true,
+          canReadWriteAllData: true,
+          canReadBudgetData: true,
+          canReadProfitData: true,
+          canWriteExpense: true,
+          canReadExpense: true,
+          canReadExpenseOverview: true,
+        }
+      } else {
+        newUserProfile.permissions = {
+          canManageGroup: true,
+          canReadWriteAllData: true,
+          canReadBudgetData: true,
+          canReadProfitData: true,
+          canWriteExpense: true,
+          canReadExpense: true,
+          canReadExpenseOverview: true,
+        }
+      }
+
       await this.userDataService.createUserProfile(newUserProfile);
     }
 

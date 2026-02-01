@@ -26,6 +26,7 @@
   "ERROR_PASSWORD_REQUIRED": "Password is required.",
   "ERROR_PASSWORD_MINLENGTH": "Password must be at least 6 characters.",
   "ERROR_NAME_REQUIRED": "Name is required.",
+  "ERROR_ACCOUNTTYPE_REQUIRED": "Account type is required.",
   "ERROR_EMAIL_IN_USE": "This email address is already in use. Please try logging in or use a different email.",
   "ERROR_INVALID_EMAIL": "The email address is not valid.",
   "ERROR_WEAK_PASSWORD": "The password is too weak. Please choose a stronger password.",
@@ -388,5 +389,16 @@
   "BUDGET_DELETE_SUCCESS": "Budget deleted successfully!",
   "INCOME_SAVE_SUCCESS": "Profit added successfully!",
   "INCOME_DELETE_SUCCESS": "Profit deleted successfully!",
-  "DELETE_ACTIVE_BUDGET_PERIOD_ERROR": "Cannot delete an active budget period. Please switch to a different budget period before deleting."
+  "DELETE_ACTIVE_BUDGET_PERIOD_ERROR": "Cannot delete an active budget period. Please switch to a different budget period before deleting.",
+  "ACCOUNT_TYPE_LABEL": "Account Type",
+  "PERSONAL_ACCOUNT_LABEL": "Personal",
+  "GROUP_ACCOUNT_LABEL": "Group",
+  "ROLE_LABEL": "Role",
+  "GROUP_ADMIN": "Group Admin",
+  "STANDARD_MEMBER": "Standard Member",
+  "EXPENSE_ONLY_MEMBER": "Expense-Only Member",
+  "MANAGE_GROUP_BUTTON": "Manage Group",
+  "UNAUTHORIZED_TITLE": "Unauthorized Access",
+  "UNAUTHORIZED_MESSAGE": "You do not have permission to view this page.",
+  "GO_TO_DASHBOARD": "Go to Dashboard"
 }

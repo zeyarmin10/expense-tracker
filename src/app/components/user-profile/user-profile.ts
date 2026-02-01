@@ -6,8 +6,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { Observable, of, map, firstValueFrom, from } from 'rxjs';
-import { switchMap, tap, catchError } from 'rxjs/operators';
+import { Observable, of, map, firstValueFrom, from, switchMap, tap, catchError } from 'rxjs';
 import { AuthService } from '../../services/auth';
 import { UserDataService, UserProfile } from '../../services/user-data';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -104,34 +103,40 @@ export class UserProfileComponent implements OnInit {
       budgetPeriod: [null],
       budgetStartDate: [{ value: null, disabled: true }],
       budgetEndDate: [{ value: null, disabled: true }],
+      accountType: ['PERSONAL'],
+      role: ['STANDARD_MEMBER'],
     });
 
     this.userDisplayData$ = this.authService.currentUser$.pipe(
-      switchMap((user) => {
+      switchMap((user: User | null) => {
         if (user && user.uid) {
           return from(this.userDataService.getUserProfile(user.uid)).pipe(
-            tap((profile) => {
+            tap((profile: UserProfile | null) => {
               this.userProfileForm.patchValue({
                 displayName: profile?.displayName || user.displayName || '',
                 currency: profile?.currency || 'MMK',
                 budgetPeriod: profile?.selectedBudgetPeriodId || profile?.budgetPeriod || null,
                 budgetStartDate: profile?.budgetStartDate || null,
                 budgetEndDate: profile?.budgetEndDate || null,
+                accountType: profile?.accountType || 'PERSONAL',
+                role: profile?.role || 'STANDARD_MEMBER',
               });
               this.selectedCurrency = profile?.currency || 'MMK';
 
               // This will now correctly handle the 'custom' case on load
               this.handleBudgetPeriodChange(this.userProfileForm.get('budgetPeriod')?.value, true);
             }),
-            map((profile) => ({
+            map((profile: UserProfile | null) => ({
               email: profile?.email || user.email || 'N/A',
               createdAt: profile?.createdAt || user.metadata.creationTime || new Date().toISOString(),
               currency: profile?.currency || 'MMK',
               budgetPeriod: profile?.budgetPeriod || null,
               budgetStartDate: profile?.budgetStartDate || null,
               budgetEndDate: profile?.budgetEndDate || null,
+              accountType: profile?.accountType || 'PERSONAL',
+              role: profile?.role || 'STANDARD_MEMBER',
             })),
-            catchError((err) => {
+            catchError((err: any) => {
               console.error('Error fetching user profile data:', err);
               this.toastService.showError(this.translate.instant('PROFILE_FETCH_ERROR'));
               return of(null);
@@ -257,8 +262,59 @@ export class UserProfileComponent implements OnInit {
           budgetPeriod: isCustom ? 'custom' : formValues.budgetPeriod,
           budgetStartDate: isCustom ? formValues.budgetStartDate : null,
           budgetEndDate: isCustom ? formValues.budgetEndDate : null,
-          selectedBudgetPeriodId: isCustom ? formValues.budgetPeriod : null
+          selectedBudgetPeriodId: isCustom ? formValues.budgetPeriod : null,
+          accountType: formValues.accountType,
+          role: formValues.role,
         };
+
+        if (profileData.accountType === 'PERSONAL') {
+          profileData.role = undefined;
+          profileData.permissions = {
+            canManageGroup: true,
+            canReadWriteAllData: true,
+            canReadBudgetData: true,
+            canReadProfitData: true,
+            canWriteExpense: true,
+            canReadExpense: true,
+            canReadExpenseOverview: true,
+          };
+        } else {
+          switch (profileData.role) {
+            case 'GROUP_ADMIN':
+              profileData.permissions = {
+                canManageGroup: true,
+                canReadWriteAllData: true,
+                canReadBudgetData: true,
+                canReadProfitData: true,
+                canWriteExpense: true,
+                canReadExpense: true,
+                canReadExpenseOverview: true,
+              };
+              break;
+            case 'STANDARD_MEMBER':
+              profileData.permissions = {
+                canManageGroup: false,
+                canReadWriteAllData: false,
+                canReadBudgetData: true,
+                canReadProfitData: true,
+                canWriteExpense: true,
+                canReadExpense: true,
+                canReadExpenseOverview: true,
+              };
+              break;
+            case 'EXPENSE_ONLY_MEMBER':
+              profileData.permissions = {
+                canManageGroup: false,
+                canReadWriteAllData: false,
+                canReadBudgetData: false,
+                canReadProfitData: false,
+                canWriteExpense: true,
+                canReadExpense: true,
+                canReadExpenseOverview: true,
+              };
+              break;
+          }
+        }
 
         try {
           if (currentUser.displayName !== profileData.displayName) {

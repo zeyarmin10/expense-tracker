@@ -26,6 +26,7 @@
   "ERROR_PASSWORD_REQUIRED": "စကားဝှက်လိုအပ်ပါသည်။",
   "ERROR_PASSWORD_MINLENGTH": "စကားဝှက်သည် အနည်းဆုံး စာလုံးရေ ၆ လုံးရှိရမည်။",
   "ERROR_NAME_REQUIRED": "အမည်လိုအပ်ပါသည်။",
+  "ERROR_ACCOUNTTYPE_REQUIRED": "Account type is required.",
   "ERROR_EMAIL_IN_USE": "ဤအီးမေးလ်လိပ်စာကို အသုံးပြုပြီးသားဖြစ်သည်။ ကျေးဇူးပြု၍ ဝင်ရောက်ပါ သို့မဟုတ် အခြားအီးမေးလ်ကို အသုံးပြုပါ။",
   "ERROR_INVALID_EMAIL": "အီးမေးလ်လိပ်စာ မမှန်ပါ။",
   "ERROR_WEAK_PASSWORD": "စကားဝှက်သည် အားနည်းနေသည်။ ပိုမိုခိုင်မာသော စကားဝှက်ကို ရွေးချယ်ပါ။",
@@ -388,5 +389,16 @@
   "BUDGET_DELETE_SUCCESS": "ဘတ်ဂျက်အောင်မြင်စွာဖျက်ပြီးပါပြီ။",
   "INCOME_SAVE_SUCCESS": "ဝင်ငွေအောင်မြင်စွာထည့်ပြီးပါပြီ။",
   "INCOME_DELETE_SUCCESS": "ဝင်ငွေအောင်မြင်စွာဖျက်ပြီးပါပြီ။",
-  "DELETE_ACTIVE_BUDGET_PERIOD_ERROR": "ဤဘတ်ဂျက်ကာလက လက်ရှိအသုံးပြုနေလို့ ဖျက်၍မရပါ။"
+  "DELETE_ACTIVE_BUDGET_PERIOD_ERROR": "ဤဘတ်ဂျက်ကာလက လက်ရှိအသုံးပြုနေလို့ ဖျက်၍မရပါ။",
+  "ACCOUNT_TYPE_LABEL": "အကောင့်အမျိုးအစား",
+  "PERSONAL_ACCOUNT_LABEL": "ကိုယ်ပိုင်အကောင့်",
+  "GROUP_ACCOUNT_LABEL": "အဖွဲ့အကောင့်",
+  "ROLE_LABEL": "အခန်းကဏ္ဍ",
+  "GROUP_ADMIN": "အဖွဲ့ အက်ဒမင်",
+  "STANDARD_MEMBER": "သာမန်အဖွဲ့ဝင်",
+  "EXPENSE_ONLY_MEMBER": "အသုံးစရိတ်ကြည့်ခွင့်ရှိသူ",
+  "MANAGE_GROUP_BUTTON": "အဖွဲ့ကို စီမံရန်",
+  "UNAUTHORIZED_TITLE": "ဝင်ရောက်ခွင့်မရှိပါ",
+  "UNAUTHORIZED_MESSAGE": "ဤစာမျက်နှာကို ကြည့်ရှုရန် သင့်တွင် ခွင့်ပြုချက်မရှိပါ။",
+  "GO_TO_DASHBOARD": "ဒက်ရှ်ဘုတ်သို့ သွားရန်"
 }

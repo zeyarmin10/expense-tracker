@@ -42,6 +42,35 @@
                 </div>
               </div>
 
+              <!-- Account Settings -->
+              <div class="info-container border border-secondary-subtle rounded mb-4 p-2 p-sm-3 p-md-3 p-lg-3 p-xl-3 p-xxl-3">
+                <div class="mb-3">
+                  <label class="form-label">{{ 'ACCOUNT_TYPE_LABEL' | translate }}</label>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" id="personalAccount" value="PERSONAL" formControlName="accountType">
+                    <label class="form-check-label" for="personalAccount">{{ 'PERSONAL_ACCOUNT_LABEL' | translate }}</label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" id="groupAccount" value="GROUP" formControlName="accountType">
+                    <label class="form-check-label" for="groupAccount">{{ 'GROUP_ACCOUNT_LABEL' | translate }}</label>
+                  </div>
+                </div>
+
+                <div *ngIf="userProfileForm.get('accountType')?.value === 'GROUP'">
+                  <div class="mb-3">
+                    <label for="role" class="form-label">{{ 'ROLE_LABEL' | translate }}</label>
+                    <select id="role" class="form-select" formControlName="role">
+                      <option value="GROUP_ADMIN">{{ 'GROUP_ADMIN' | translate }}</option>
+                      <option value="STANDARD_MEMBER">{{ 'STANDARD_MEMBER' | translate }}</option>
+                      <option value="EXPENSE_ONLY_MEMBER">{{ 'EXPENSE_ONLY_MEMBER' | translate }}</option>
+                    </select>
+                  </div>
+                  <div class="mb-3" *ngIf="userProfileForm.get('role')?.value === 'GROUP_ADMIN'">
+                    <button type="button" class="btn btn-primary">{{ 'MANAGE_GROUP_BUTTON' | translate }}</button>
+                  </div>
+                </div>
+              </div>
+
               <!-- Budget Period -->
               <div class="info-container border border-secondary-subtle rounded mb-4 p-2 p-sm-3 p-md-3 p-lg-3 p-xl-3 p-xxl-3">
                 <div class="mb-2">
