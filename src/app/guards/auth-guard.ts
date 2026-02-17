@@ -1,20 +1,34 @@
 import { inject } from '@angular/core';
-import { CanActivateFn, Router } from '@angular/router';
+import { CanActivateFn, Router, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
 import { AuthService } from '../services/auth';
 import { map, take } from 'rxjs/operators';
 
-export const AuthGuard: CanActivateFn = (route, state) => {
+export const AuthGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
   return authService.currentUser$.pipe(
-    take(1), // Take the first value emitted by currentUser$ and complete
+    take(1),
     map(user => {
-      if (user) {
-        return true; // User is logged in, allow access
+      const isLoggedIn = !!user;
+      const isAuthRoute = state.url.includes('/login') || state.url.includes('/register');
+
+      if (isLoggedIn) {
+        // If user is logged in and tries to access login/register page, redirect to dashboard
+        if (isAuthRoute) {
+          router.navigate(['/dashboard']);
+          return false;
+        }
+        // If user is logged in and trying to access a protected route, allow access
+        return true;
       } else {
-        router.navigate(['/login']); // User is not logged in, redirect to login
-        return false;
+        // If user is not logged in and tries to access a protected route, redirect to login
+        if (!isAuthRoute) {
+          router.navigate(['/login']);
+          return false;
+        }
+        // If user is not logged in and is on login/register page, allow access
+        return true;
       }
     })
   );

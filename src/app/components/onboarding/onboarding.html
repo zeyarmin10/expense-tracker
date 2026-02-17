@@ -1,0 +1,26 @@
+<div class="onboarding-container">
+  <h2>Welcome! Let's Get You Set Up.</h2>
+  <p>How would you like to use this app?</p>
+
+  <div class="option personal-option">
+    <h3>Use as a Personal Account</h3>
+    <p>Track your own income and expenses.</p>
+    <button (click)="setupPersonalAccount()">Continue with Personal Account</button>
+  </div>
+
+  <hr>
+
+  <div class="option">
+    <h3>Create a New Group</h3>
+    <p>Create a shared space and invite others.</p>
+    <input type="text" [(ngModel)]="newGroupName" placeholder="Enter Group Name">
+    <button (click)="createGroup()">Create Group</button>
+  </div>
+
+  <div class="option">
+    <h3>Join an Existing Group</h3>
+    <p>Use an invite code to join a group.</p>
+    <input type="text" [(ngModel)]="inviteCode" placeholder="Enter Invite Code">
+    <button (click)="joinGroup()">Join Group</button>
+  </div>
+</div>

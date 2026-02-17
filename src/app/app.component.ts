@@ -24,9 +24,9 @@ import { faRightFromBracket } from '@fortawesome/free-solid-svg-icons';
   templateUrl: './app.html',
   styleUrls: ['./app.css'],
 })
-export class App { // <--- CORRECTED CLASS NAME
+export class AppComponent {
   title = 'expense-tracker';
-  showNavbar$: Observable<boolean>; // <--- ADDED REQUIRED PROPERTY
+  showNavbar$: Observable<boolean>;
   currentUser$: Observable<User | null>;
   userDisplayName$: Observable<string | null>;
   faRightFromBracket = faRightFromBracket;
@@ -73,10 +73,12 @@ export class App { // <--- CORRECTED CLASS NAME
 
   async logout(): Promise<void> {
     try {
+      // THE CORRECT FIX: Pass 'true' to signify a manual logout.
       await this.authService.logout(true);
-      this.router.navigate(['/login']);
+      // Navigation is handled by the session manager, so it's removed from here to avoid redundancy.
     } catch (error) {
       console.error('Logout failed', error);
+      alert("Logout failed. Please check your connection and try again.");
     }
   }
 

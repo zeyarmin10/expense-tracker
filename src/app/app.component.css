@@ -1,0 +1,4 @@
+/* Add a top padding to the main content to avoid it being obscured by the fixed navbar */
+main {
+    padding-top: 80px; /* Adjust this value based on your navbar's height */
+}

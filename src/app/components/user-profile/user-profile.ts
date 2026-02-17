@@ -68,8 +68,7 @@ export class UserProfileComponent implements OnInit {
   customBudgetPeriods: CustomBudgetPeriod[] = [];
   showCustomDateRange = false;
   isCustomBudgetListCollapsed = true;
-  
-  // For confirmation modal
+
   @ViewChild(ConfirmationModal) private confirmationModal!: ConfirmationModal;
   periodToDeleteId: string | null = null;
   confirmationTitle: string = '';
@@ -87,7 +86,7 @@ export class UserProfileComponent implements OnInit {
   }
 
   @ViewChild(CustomBudgetPeriodModalComponent) private modalComponent!: CustomBudgetPeriodModalComponent;
-  
+
   faPlus = faPlus;
   faSave = faSave;
   faUserCircle = faUserCircle;
@@ -109,28 +108,28 @@ export class UserProfileComponent implements OnInit {
     this.userDisplayData$ = this.authService.currentUser$.pipe(
       switchMap((user) => {
         if (user && user.uid) {
-          return from(this.userDataService.getUserProfile(user.uid)).pipe(
+          return this.userDataService.getUserProfile(user.uid).pipe( // Simplified: no need for `from`
             tap((profile) => {
-              this.userProfileForm.patchValue({
-                displayName: profile?.displayName || user.displayName || '',
-                currency: profile?.currency || 'MMK',
-                budgetPeriod: profile?.selectedBudgetPeriodId || profile?.budgetPeriod || null,
-                budgetStartDate: profile?.budgetStartDate || null,
-                budgetEndDate: profile?.budgetEndDate || null,
-              });
-              this.selectedCurrency = profile?.currency || 'MMK';
-
-              // This will now correctly handle the 'custom' case on load
-              this.handleBudgetPeriodChange(this.userProfileForm.get('budgetPeriod')?.value, true);
+              if (profile) { // Check if profile exists
+                this.userProfileForm.patchValue({
+                  displayName: profile.displayName || user.displayName || '',
+                  currency: profile.currency || 'MMK',
+                  budgetPeriod: profile.selectedBudgetPeriodId || profile.budgetPeriod || null,
+                  budgetStartDate: profile.budgetStartDate || null,
+                  budgetEndDate: profile.budgetEndDate || null,
+                });
+                this.selectedCurrency = profile.currency || 'MMK';
+                this.handleBudgetPeriodChange(this.userProfileForm.get('budgetPeriod')?.value, true);
+              }
             }),
-            map((profile) => ({
-              email: profile?.email || user.email || 'N/A',
-              createdAt: profile?.createdAt || user.metadata.creationTime || new Date().toISOString(),
-              currency: profile?.currency || 'MMK',
-              budgetPeriod: profile?.budgetPeriod || null,
-              budgetStartDate: profile?.budgetStartDate || null,
-              budgetEndDate: profile?.budgetEndDate || null,
-            })),
+            map((profile) => profile ? ({
+              email: profile.email || user.email || 'N/A',
+              createdAt: profile.createdAt || (user.metadata as any).creationTime || new Date().toISOString(),
+              currency: profile.currency || 'MMK',
+              budgetPeriod: profile.budgetPeriod || null,
+              budgetStartDate: profile.budgetStartDate || null,
+              budgetEndDate: profile.budgetEndDate || null,
+            }) : null),
             catchError((err) => {
               console.error('Error fetching user profile data:', err);
               this.toastService.showError(this.translate.instant('PROFILE_FETCH_ERROR'));
@@ -150,7 +149,7 @@ export class UserProfileComponent implements OnInit {
     );
 
     this.userProfileForm.get('budgetPeriod')?.valueChanges.subscribe((periodId) => {
-        this.handleBudgetPeriodChange(periodId);
+      this.handleBudgetPeriodChange(periodId);
     });
   }
 
@@ -160,7 +159,8 @@ export class UserProfileComponent implements OnInit {
       this.selectedLanguage = storedLang;
       this.translate.use(storedLang);
     } else {
-      this.selectedLanguage = this.translate.getBrowserLang() || 'my';
+      const browserLang = this.translate.getBrowserLang();
+      this.selectedLanguage = browserLang && ['en', 'my'].includes(browserLang) ? browserLang : 'my';
       this.translate.use(this.selectedLanguage);
     }
 
@@ -172,67 +172,43 @@ export class UserProfileComponent implements OnInit {
     this.translateCurrencyNames();
     this.translateBudgetPeriodNames();
 
-    this.authService.currentUser$.subscribe(user => {
-      if (user) {
-        this.customBudgetPeriodService.getCustomBudgetPeriods(user.uid).subscribe(periods => {
-          this.customBudgetPeriods = periods.sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
-          // Re-evaluate after custom periods are loaded
-          this.handleBudgetPeriodChange(this.userProfileForm.get('budgetPeriod')?.value, true);
-        });
-      }
+    this.authService.currentUser$.pipe(
+      switchMap(user => user ? this.customBudgetPeriodService.getCustomBudgetPeriods(user.uid) : of([]))
+    ).subscribe(periods => {
+      this.customBudgetPeriods = periods.sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
+      this.handleBudgetPeriodChange(this.userProfileForm.get('budgetPeriod')?.value, true);
     });
   }
-  
+
   translateCurrencyNames() {
     this.translatedCurrencies = this.availableCurrencies.map((currency) => ({
-        ...currency,
-        name: this.translate.instant('CURRENCY_NAMES.' + currency.code),
-      }));
+      ...currency,
+      name: this.translate.instant('CURRENCY_NAMES.' + currency.code),
+    }));
   }
 
   translateBudgetPeriodNames() {
     this.translatedBudgetPeriods = this.availableBudgetPeriods.map((period) => ({
-        ...period,
-        name: this.translate.instant(period.nameKey),
-      }));
+      ...period,
+      name: this.translate.instant(period.nameKey),
+    }));
   }
 
   handleBudgetPeriodChange(periodId: string | null, isInitialLoad = false): void {
     const startDateControl = this.userProfileForm.get('budgetStartDate');
     const endDateControl = this.userProfileForm.get('budgetEndDate');
 
-    if (isInitialLoad && periodId === 'custom') {
-      const savedStartDate = this.userProfileForm.get('budgetStartDate')?.value;
-      const savedEndDate = this.userProfileForm.get('budgetEndDate')?.value;
-      const matchingCustomPeriod = this.customBudgetPeriods.find(p => p.startDate === savedStartDate && p.endDate === savedEndDate);
-      if (matchingCustomPeriod) {
-        // Set the dropdown to the correct custom period ID
-        this.userProfileForm.get('budgetPeriod')?.setValue(matchingCustomPeriod.id, { emitEvent: false });
-        periodId = matchingCustomPeriod.id ?? null; // Continue with the correct ID
-      }
-    } else if (isInitialLoad && this.userProfileForm.get('budgetPeriod')?.value) {
-      periodId = this.userProfileForm.get('budgetPeriod')?.value;
-    }
-
     const customPeriod = this.customBudgetPeriods.find(p => p.id === periodId);
 
     if (customPeriod) {
       this.showCustomDateRange = true;
-      startDateControl?.enable();
-      endDateControl?.enable();
-      startDateControl?.setValue(customPeriod.startDate);
-      endDateControl?.setValue(customPeriod.endDate);
-      startDateControl?.disable();
-      endDateControl?.disable();
+      startDateControl?.setValue(customPeriod.startDate, { emitEvent: false });
+      endDateControl?.setValue(customPeriod.endDate, { emitEvent: false });
     } else {
-      this.showCustomDateRange = false;
-      if (!isInitialLoad) {
-          startDateControl?.setValue(null);
-          endDateControl?.setValue(null);
-      }
+      this.showCustomDateRange = periodId === 'custom'; // Show range selector only for 'custom' itself
     }
   }
-  
+
   onLanguageChange(language: string): void {
     this.selectedLanguage = language;
     this.translate.use(this.selectedLanguage);
@@ -277,9 +253,9 @@ export class UserProfileComponent implements OnInit {
         this.toastService.showError(this.translate.instant('AUTH_ERROR_PROFILE_UPDATE'));
       }
     } else if (this.userProfileForm.invalid) {
-        this.toastService.showError(this.translate.instant('INVALID_FORM_PROFILE'));
+      this.toastService.showError(this.translate.instant('INVALID_FORM_PROFILE'));
     } else if (!this.userProfileForm.dirty) {
-        this.toastService.showError(this.translate.instant('NO_CHANGES_TO_SAVE'));
+      // To be replaced by a more subtle notification or disabled save button
     }
   }
 
@@ -312,17 +288,16 @@ export class UserProfileComponent implements OnInit {
 
   async deleteCustomPeriod(periodId: string | undefined, event: Event): Promise<void> {
     event.stopPropagation();
-    if (!periodId) {
-      return;
-    }
+    if (!periodId) return;
 
     const currentUser = await firstValueFrom(this.authService.currentUser$);
     if (currentUser) {
-        const userProfile = await this.userDataService.getUserProfile(currentUser.uid);
-        if (userProfile && userProfile.selectedBudgetPeriodId === periodId) {
-            this.toastService.showError(this.translate.instant('DELETE_ACTIVE_BUDGET_PERIOD_ERROR'));
-            return;
-        }
+      // Correctly await the profile object from the observable
+      const userProfile = await firstValueFrom(this.userDataService.getUserProfile(currentUser.uid));
+      if (userProfile && userProfile.selectedBudgetPeriodId === periodId) {
+        this.toastService.showError(this.translate.instant('DELETE_ACTIVE_BUDGET_PERIOD_ERROR'));
+        return;
+      }
     }
 
     this.periodToDeleteId = periodId;
@@ -350,15 +325,13 @@ export class UserProfileComponent implements OnInit {
           this.toastService.showError(this.translate.instant('CUSTOM_BUDGET_PERIOD_DELETE_ERROR'));
           console.error('Error deleting custom budget period:', error);
         } finally {
-          this.periodToDeleteId = null; // Reset after deletion
+          this.periodToDeleteId = null;
         }
       }
     } else {
-      // Reset if the user cancels
       this.periodToDeleteId = null;
     }
   }
-
 
   toggleCustomBudgetList(): void {
     this.isCustomBudgetListCollapsed = !this.isCustomBudgetListCollapsed;

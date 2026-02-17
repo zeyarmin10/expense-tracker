@@ -13,6 +13,7 @@ import {
 } from '@angular/fire/auth';
 import { TranslateService } from '@ngx-translate/core';
 import { Observable, Subject } from 'rxjs';
+
 @Injectable({
   providedIn: 'root'
 })
@@ -25,7 +26,6 @@ export class AuthService {
 
   currentUser$: Observable<User | null>;
 
-  // New: Subject to emit when a logout successfully completes
   private _logoutSuccess = new Subject<boolean>();
   logoutSuccess$: Observable<boolean> = this._logoutSuccess.asObservable();
 
@@ -44,11 +44,11 @@ export class AuthService {
       const userCredential = await createUserWithEmailAndPassword(this.auth, email, password);
       return userCredential.user;
     } catch (error: any) {
-        if (error.code === AuthErrorCodes.EMAIL_EXISTS) {
-            alert('ဒီအီးမေးလ်ကို စာရင်းသွင်းထားပြီးသားဖြစ်သည်။ အကောင့် Login ဝင်ကြည့်ပါ။');
-        } else {
-            alert(`Authentication error: ${error.message}`);
-        }
+      if (error.code === AuthErrorCodes.EMAIL_EXISTS) {
+        alert('ဒီအီးမေးလ်ကို စာရင်းသွင်းထားပြီးသားဖြစ်သည်။ အကောင့် Login ဝင်ကြည့်ပါ။');
+      } else {
+        alert(`Authentication error: ${error.message}`);
+      }
       throw new Error(this.getFirebaseErrorMessage(error));
     }
   }
@@ -73,54 +73,62 @@ export class AuthService {
   }
 
   /**
-   * Logs out the current user.
-   * @param isManualLogout True if this logout was triggered by a user's manual action.
-   * @returns A Promise that resolves when logout is complete.
-   * @throws Error on failure.
+   * DEFINITIVE FIX: Logs out, cleans up storage, and notifies listeners in the correct order.
+   * This is now the single source of truth for the entire logout process.
    */
-  async logout(isManualLogout: boolean = false): Promise<void> { // Added isManualLogout parameter
+  async logout(isManualLogout: boolean = false): Promise<void> {
     try {
+      // 1. Sign out from Firebase first. This is crucial.
+      // It triggers onAuthStateChanged, which will set the app's user state to null.
       await signOut(this.auth);
-      this._logoutSuccess.next(isManualLogout); // Emit with the flag
+
+      // 2. ONLY AFTER signing out is complete, clear the local storage.
+      // This completely eliminates the race condition where loginTime is null but the user is not.
+      localStorage.removeItem('loginTime');
+      localStorage.removeItem('lastActivityTime');
+
+      // 3. Finally, notify all listeners that the logout (including all cleanup) is complete.
+      this._logoutSuccess.next(isManualLogout);
+
     } catch (error: any) {
-      // You might still want to emit false on error, or handle errors differently
-      // For now, we only emit on success.
+      console.error("Logout failed in AuthService:", error);
+      // If Firebase fails, we don't clear local state. We just report the error.
       throw new Error(this.getFirebaseErrorMessage(error.code));
     }
   }
 
-  public getFirebaseErrorMessage(error: any): string { // Made public for use in SessionManagementService
+  public getFirebaseErrorMessage(error: any): string {
     if (error && typeof error.code === 'string') {
-        switch (error.code) {
-            case 'auth/email-already-in-use':
-                return this.translateService.instant('EMAIL_ALREADY_IN_USE');
-            case 'auth/invalid-email':
-                return this.translateService.instant('INVALID_EMAIL');
-            case 'auth/operation-not-allowed':
-                return this.translateService.instant('OPERATION_NOT_ALLOWED');
-            case 'auth/weak-password':
-                return this.translateService.instant('WEAK_PASSWORD');
-            case 'auth/user-disabled':
-                return this.translateService.instant('USER_DISABLED');
-            case 'auth/user-not-found':
-                return this.translateService.instant('USER_NOT_FOUND');
-            case 'auth/wrong-password':
-                return this.translateService.instant('WRONG_PASSWORD');
-            case 'auth/popup-closed-by-user':
-                return this.translateService.instant('POPUP_CLOSED_BY_USER');
-            case 'auth/cancelled-popup-request':
-                return this.translateService.instant('CANCELLED_POPUP_REQUEST');
-            case 'auth/network-request-failed':
-                return this.translateService.instant('NETWORK_REQUEST_FAILED');
-            case 'auth/invalid-credential':
-                return this.translateService.instant('INVALID_CREDENTIAL');
-            default:
-                return this.translateService.instant('GENERIC', { code: error.code });
-        }
+      switch (error.code) {
+        case 'auth/email-already-in-use':
+          return this.translateService.instant('EMAIL_ALREADY_IN_USE');
+        case 'auth/invalid-email':
+          return this.translateService.instant('INVALID_EMAIL');
+        case 'auth/operation-not-allowed':
+          return this.translateService.instant('OPERATION_NOT_ALLOWED');
+        case 'auth/weak-password':
+          return this.translateService.instant('WEAK_PASSWORD');
+        case 'auth/user-disabled':
+          return this.translateService.instant('USER_DISABLED');
+        case 'auth/user-not-found':
+          return this.translateService.instant('USER_NOT_FOUND');
+        case 'auth/wrong-password':
+          return this.translateService.instant('WRONG_PASSWORD');
+        case 'auth/popup-closed-by-user':
+          return this.translateService.instant('POPUP_CLOSED_BY_USER');
+        case 'auth/cancelled-popup-request':
+          return this.translateService.instant('CANCELLED_POPUP_REQUEST');
+        case 'auth/network-request-failed':
+          return this.translateService.instant('NETWORK_REQUEST_FAILED');
+        case 'auth/invalid-credential':
+          return this.translateService.instant('INVALID_CREDENTIAL');
+        default:
+          return this.translateService.instant('GENERIC', { code: error.code });
+      }
     } else if (error && typeof error.message === 'string') {
-        return `အမှားတစ်ခု ဖြစ်ပေါ်ခဲ့သည်: ${error.message}`;
+      return `အမှားတစ်ခု ဖြစ်ပေါ်ခဲ့သည်: ${error.message}`;
     } else {
-        return 'မမျှော်မှန်းထားသော ပြဿနာတစ်ခု ကြုံတွေ့နေရပါသည်။ ကျေးဇူးပြု၍ နောက်မှ ပြန်လည်ကြိုးစားပါ။';
+      return 'မမျှော်မှန်းထားသော ပြဿနာတစ်ခု ကြုံတွေ့နေရပါသည်။ ကျေးဇူးပြု၍ နောက်မှ ပြန်လည်ကြိုးစားပါ။';
     }
   }
 }
