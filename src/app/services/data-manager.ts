@@ -108,7 +108,14 @@ export class DataManagerService {
     groupName: string,
     invitedBy: IUserProfile, // Changed to IUserProfile
     recipientEmail: string
-  ): Promise<void> {
+  ): Promise<string | null> { // Return the invite code (string)
+    const groupDetails = await this.getGroupDetails(groupId);
+    if (!groupDetails || !groupDetails.inviteCode) {
+      throw new Error("Group details or invite code not found!");
+    }
+    
+    const inviteCode = groupDetails.inviteCode;
+
     const inviteRef = push(ref(this.db, 'invitations'));
     const newInvitation = {
       groupId,
@@ -121,8 +128,11 @@ export class DataManagerService {
       },
       createdAt: new Date().toISOString(),
       status: 'pending',
+      inviteCode: inviteCode // Storing the invite code with the invitation
     };
-    return set(inviteRef, newInvitation);
+    
+    await set(inviteRef, newInvitation);
+    return inviteCode; // Return the invite code
   }
 
   getPendingInvitations(groupId: string): Observable<any[]> {
