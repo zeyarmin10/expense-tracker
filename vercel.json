@@ -4,20 +4,12 @@
     {
       "src": "package.json",
       "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist/expense-tracker"
+      "config": { 
+        "distDir": "dist/expense-tracker" 
       }
-    },
-    {
-      "src": "api/index.py",
-      "use": "@vercel/python"
     }
   ],
   "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/index.py"
-    },
     {
       "handle": "filesystem"
     },
