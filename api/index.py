@@ -1,14 +1,15 @@
 
 import os
 from flask import Flask, request, jsonify
-import brevo
+import sib_api_v3_sdk
+from sib_api_v3_sdk.rest import ApiException
 
 app = Flask(__name__)
 
-# Brevo API configuration from environment variables
-configuration = brevo.Configuration()
+# Brevo/Sendinblue API configuration
+configuration = sib_api_v3_sdk.Configuration()
 configuration.api_key['api-key'] = os.environ.get("BREVO_API_KEY")
-api_instance = brevo.TransactionalEmailsApi(brevo.ApiClient(configuration))
+api_instance = sib_api_v3_sdk.TransactionalEmailsApi(sib_api_v3_sdk.ApiClient(configuration))
 
 SENDER_EMAIL = os.environ.get("SENDER_EMAIL")
 
@@ -32,10 +33,10 @@ def send_invite():
         </body>
     </html>
     """
-    sender = brevo.SendSmtpEmailSender(name="Expense Tracker", email=SENDER_EMAIL)
-    to = [brevo.SendSmtpEmailTo(email=recipient_email)]
+    sender = sib_api_v3_sdk.SendSmtpEmailSender(name="Expense Tracker", email=SENDER_EMAIL)
+    to = [sib_api_v3_sdk.SendSmtpEmailTo(email=recipient_email)]
 
-    smtp_email = brevo.SendSmtpEmail(
+    smtp_email = sib_api_v3_sdk.SendSmtpEmail(
         sender=sender,
         to=to,
         subject=subject,
@@ -46,11 +47,10 @@ def send_invite():
         api_response = api_instance.send_transac_email(smtp_email)
         print(api_response)
         return jsonify({"message": "Invite email sent successfully!"}), 200
-    except Exception as e:
+    except ApiException as e:
         print(f"Error sending email: {e}")
         return jsonify({"error": "Failed to send invitation email"}), 500
 
-# Optional: Add a root route for basic testing
 @app.route("/")
 def index():
     return "<h1>Python Flask API is running!</h1>"
