@@ -15,43 +15,43 @@ SENDER_EMAIL = os.environ.get("SENDER_EMAIL")
 
 @app.route("/api/send-invite", methods=["POST"])
 def send_invite():
-    data = request.get_json()
-    if not data or "recipient_email" not in data:
-        return jsonify({"error": "Recipient email is required"}), 400
-
-    recipient_email = data["recipient_email"]
-
-    subject = "You are invited to join Expense Tracker"
-    html_content = f"""
-    <html>
-        <body>
-            <h1>Invitation to Expense Tracker</h1>
-            <p>You have been invited to join an expense tracking group.</p>
-            <p>Please click the link below to accept the invitation:</p>
-            <a href="https://expense-tracker-git-feature-google-redir-b54e30-zeyars-projects.vercel.app/onboarding?email={recipient_email}">Accept Invitation</a>
-            <p>Thank you!</p>
-        </body>
-    </html>
-    """
-    sender = sib_api_v3_sdk.SendSmtpEmailSender(name="Expense Tracker", email=SENDER_EMAIL)
-    to = [sib_api_v3_sdk.SendSmtpEmailTo(email=recipient_email)]
-
-    smtp_email = sib_api_v3_sdk.SendSmtpEmail(
-        sender=sender,
-        to=to,
-        subject=subject,
-        html_content=html_content
-    )
-
     try:
+        data = request.get_json()
+        if not data or "recipient_email" not in data:
+            return jsonify({"error": "Recipient email is required"}), 400
+
+        recipient_email = data["recipient_email"]
+
+        subject = "You are invited to join Expense Tracker"
+        html_content = f"""
+        <html>
+            <body>
+                <h1>Invitation to Expense Tracker</h1>
+                <p>You have been invited to join an expense tracking group.</p>
+                <p>Please click the link below to accept the invitation:</p>
+                <a href="https://expense-tracker-git-feature-google-redir-b54e30-zeyars-projects.vercel.app/onboarding?email={recipient_email}">Accept Invitation</a>
+                <p>Thank you!</p>
+            </body>
+        </html>
+        """
+        sender = sib_api_v3_sdk.SendSmtpEmailSender(name="Expense Tracker", email=SENDER_EMAIL)
+        to = [sib_api_v3_sdk.SendSmtpEmailTo(email=recipient_email)]
+
+        smtp_email = sib_api_v3_sdk.SendSmtpEmail(
+            sender=sender,
+            to=to,
+            subject=subject,
+            html_content=html_content
+        )
+
         api_response = api_instance.send_transac_email(smtp_email)
         print(api_response)
         return jsonify({"message": "Invite email sent successfully!"}), 200
-    except ApiException as e:
-        # DEBUGGING: Return the full error from Brevo to the frontend
-        error_details = str(e.body)
-        print(f"Brevo API Error: {error_details}")
-        return jsonify({"error": f"Brevo API Error: {error_details}"}), 500
+    except Exception as e:
+        # CATCH ALL EXCEPTIONS FOR DEBUGGING
+        error_details = str(e)
+        print(f"An unexpected error occurred: {error_details}")
+        return jsonify({"error": f"An unexpected server error occurred: {error_details}"}), 500
 
 @app.route("/")
 def index():
