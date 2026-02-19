@@ -48,8 +48,10 @@ def send_invite():
         print(api_response)
         return jsonify({"message": "Invite email sent successfully!"}), 200
     except ApiException as e:
-        print(f"Error sending email: {e}")
-        return jsonify({"error": "Failed to send invitation email"}), 500
+        # DEBUGGING: Return the full error from Brevo to the frontend
+        error_details = str(e.body)
+        print(f"Brevo API Error: {error_details}")
+        return jsonify({"error": f"Brevo API Error: {error_details}"}), 500
 
 @app.route("/")
 def index():
