@@ -13,7 +13,7 @@ api_instance = sib_api_v3_sdk.TransactionalEmailsApi(sib_api_v3_sdk.ApiClient(co
 
 SENDER_EMAIL = os.environ.get("SENDER_EMAIL")
 
-@app.route("/send-invite", methods=["POST"])
+@app.route("/api/send-invite", methods=["POST"])
 def send_invite():
     try:
         data = request.get_json()
