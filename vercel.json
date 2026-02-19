@@ -3,7 +3,10 @@
   "builds": [
     {
       "src": "package.json",
-      "use": "@vercel/angular"
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist/expense-tracker"
+      }
     },
     {
       "src": "api/index.py",
@@ -11,6 +14,13 @@
     }
   ],
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/index.py" }
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ]
 }
