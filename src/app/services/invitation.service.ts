@@ -20,7 +20,9 @@ export class InvitationService {
   sendInvitationEmail(email: string, inviteCode: string): Observable<any> {
     const body = {
       to: email,
-      from: 'zayuwyne@gmail.com', // <-- ဒီနေရာမှာ ကိုယ် verify လုပ်ထားတဲ့ domain address ကိုပြောင်းထည့်ပါ
+      // ERROR: Do not use a public email address like @gmail.com here.
+      // You MUST use an email from a domain you have verified in your Resend account.
+      from: 'invites@your-verified-domain.com', 
       subject: 'You are invited to join a group!',
       html: `You have been invited to join a group. Your invite code is ${inviteCode}`
     };
