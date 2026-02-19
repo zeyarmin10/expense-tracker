@@ -1,6 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import nodemailer from 'nodemailer';
-import { google } from 'googleapis';
+
+// Use CommonJS require syntax instead of import
+const nodemailer = require('nodemailer');
+const { google } = require('googleapis');
 
 const OAuth2 = google.auth.OAuth2;
 
@@ -29,7 +31,7 @@ async function createTransporter() {
             service: 'gmail',
             auth: {
                 type: 'OAuth2',
-                user: OAUTH_USER,
+                user: OAUTH_USER, // Your Gmail address from .env
                 clientId: OAUTH_CLIENT_ID,
                 clientSecret: OAUTH_CLIENT_SECRET,
                 refreshToken: OAUTH_REFRESH_TOKEN,
@@ -44,7 +46,8 @@ async function createTransporter() {
     }
 }
 
-export default async function handler(
+// Use module.exports instead of export default
+module.exports = async function handler(
     request: VercelRequest,
     response: VercelResponse,
 ) {
@@ -56,7 +59,7 @@ export default async function handler(
         return response.status(200).end();
     }
 
-    response.setHeader('Access-Control-Allow-Origin', '*'); // Allow all origins for the actual request
+    response.setHeader('Access-Control-Allow-Origin', '*'); // Allow all origins
 
     if (request.method !== 'POST') {
         return response.status(405).json({ error: 'Method Not Allowed' });
@@ -64,20 +67,25 @@ export default async function handler(
 
     try {
         const { to, subject, html } = request.body;
+        
+        if (!to || !subject || !html) {
+            return response.status(400).json({ error: 'Missing required fields: to, subject, html' });
+        }
+
         const mailer = await createTransporter();
 
         const mailOptions = {
-            from: OAUTH_USER, // Your Gmail address
-            to: to,
-            subject: subject,
-            html: html
+            from: OAUTH_USER, // Sender address
+            to: to,               // List of recipients
+            subject: subject,     // Subject line
+            html: html,           // HTML body
         };
 
         const result = await mailer.sendMail(mailOptions);
-        return response.status(200).json({ message: 'Email sent successfully', data: result });
+        return response.status(200).json({ message: 'Email sent successfully', data: result.response });
 
     } catch (error: any) {
         console.error('Error sending email:', error);
         return response.status(500).json({ error: 'Failed to send email', details: error.message });
     }
-}
+};
