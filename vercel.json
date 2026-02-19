@@ -5,7 +5,7 @@
       "src": "package.json",
       "use": "@vercel/static-build",
       "config": {
-        "distDir": "dist/expense-tracker"
+        "distDir": "dist/expense-tracker-frontend"
       }
     },
     {
