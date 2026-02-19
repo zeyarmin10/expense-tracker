@@ -19,9 +19,11 @@ export class InvitationService {
    */
   sendInvitationEmail(email: string, inviteCode: string): Observable<any> {
     const body = {
-      email: email,
-      invite_code: inviteCode
+      to: email,
+      from: 'onboarding@resend.dev',
+      subject: 'You are invited to join a group!',
+      html: `You have been invited to join a group. Your invite code is ${inviteCode}`
     };
-    return this.http.post(`${this.backendUrl}/send-invite`, body);
+    return this.http.post(this.backendUrl, body);
   }
 }
