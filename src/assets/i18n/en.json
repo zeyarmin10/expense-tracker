@@ -396,5 +396,8 @@
   "SEND_INVITE": "Send Invite",
   "CURRENT_MEMBERS": "Current Members",
   "ROLE": "Role",
-  "REMOVE": "Remove"
+  "REMOVE": "Remove",
+  "INVITATION_SENT_SUCCESS": "Invitation sent successfully!",
+  "PENDING_INVITATIONS": "Pending Invitations",
+  "REVOKE": "Revoke Access"
 }
