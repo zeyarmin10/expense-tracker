@@ -20,7 +20,7 @@ export class InvitationService {
   sendInvitationEmail(email: string, inviteCode: string): Observable<any> {
     const body = {
       to: email,
-      from: 'onboarding@resend.dev',
+      from: 'zayuwyne@gmail.com', // <-- ဒီနေရာမှာ ကိုယ် verify လုပ်ထားတဲ့ domain address ကိုပြောင်းထည့်ပါ
       subject: 'You are invited to join a group!',
       html: `You have been invited to join a group. Your invite code is ${inviteCode}`
     };
