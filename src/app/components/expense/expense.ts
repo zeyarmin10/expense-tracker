@@ -402,8 +402,8 @@ export class Expense implements OnInit {
       category: [expense.category, Validators.required],
       itemName: [expense.itemName, Validators.required],
       quantity: [expense.quantity, [Validators.required, Validators.min(0.01)]], // Changed min to 0.01
-      unit: [expense.unit], // 'unit' is no longer required
-      price: [expense.price, [Validators.required, Validators.min(0)]],
+      unit: [expense['unit']], // 'unit' is no longer required
+      price: [expense['price'], [Validators.required, Validators.min(0)]],
       currency: [expense.currency || 'MMK', Validators.required],
       updatedAt: new Date().toISOString().split('T')[0],
     });

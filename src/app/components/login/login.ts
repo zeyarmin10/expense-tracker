@@ -18,7 +18,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth';
 import { UserDataService, UserProfile } from '../../services/user-data';
 import { CategoryService } from '../../services/category';
-import { debounceTime, Subject, takeUntil, firstValueFrom } from 'rxjs'; // Import firstValueFrom
+import { debounceTime, Subject, takeUntil, firstValueFrom } from 'rxjs'; 
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { SessionManagement } from '../../services/session-management';
 import { ConfirmationModal } from '../common/confirmation-modal/confirmation-modal';
@@ -80,7 +80,6 @@ export class LoginComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.authService.currentUser$.pipe(takeUntil(this.destroy$)).subscribe(async (user) => {
       if (user) {
-        // On any auth state change, ensure data is migrated and then navigate.
         await this.checkOnboardingAndNavigate(user);
       }
     });
@@ -145,7 +144,6 @@ export class LoginComponent implements OnInit, OnDestroy {
         const user = await this.authService.register(email, password);
         await this.handleUserSetup(user, name);
       }
-      // Navigation is now handled by the subscription in ngOnInit
     } catch (error: any) {
       console.error('Authentication error:', error);
       const translatedErrorMessage =
@@ -160,7 +158,6 @@ export class LoginComponent implements OnInit, OnDestroy {
     try {
       const user = await this.authService.signInWithGoogle();
       await this.handleUserSetup(user);
-      // Navigation is handled by the subscription in ngOnInit
     } catch (error: any) {
       console.error('Google sign-in error:', error);
       const translatedErrorMessage = this.authService.getFirebaseErrorMessage(error);
@@ -168,9 +165,8 @@ export class LoginComponent implements OnInit, OnDestroy {
     }
   }
 
-  // This function now sets the default budgetPeriod for new users.
   private async handleUserSetup(user: User, displayName?: string): Promise<void> {
-    const profile = await firstValueFrom(this.userDataService.getUserProfile(user.uid));
+    const profile = await this.userDataService.fetchUserProfile(user.uid);
 
     if (!profile) {
       const currency = this.currentLang === 'my' ? 'MMK' : 'USD';
@@ -181,33 +177,20 @@ export class LoginComponent implements OnInit, OnDestroy {
         currency: currency,
         language: this.currentLang,
         createdAt: Date.now(),
-        // budgetPeriod: 'monthly' // Default budget period for all new users
+        // roles is intentionally omitted, will be set during onboarding
       };
       await this.userDataService.createUserProfile(newUserProfile);
     }
   }
 
-  // This function now centralizes migration, default setting, and navigation logic.
   private async checkOnboardingAndNavigate(user: User): Promise<void> {
-    // Step 1: Always attempt to migrate the user's old data structure first.
     await this.userDataService.migrateUserProfileIfNeeded(user.uid);
+    const profile = await this.userDataService.fetchUserProfile(user.uid);
 
-    // Step 2: After potential migration, get the user profile.
-    let profile = await firstValueFrom(this.userDataService.getUserProfile(user.uid));
-
-    // // Step 3: If the user profile exists but budgetPeriod is not set, set it to 'monthly'.
-    // if (profile && !profile.budgetPeriod) {
-    //   await this.userDataService.updateUserProfile(user.uid, { budgetPeriod: 'monthly' });
-    //   // Re-fetch the profile to have the most up-to-date data for the next step
-    //   profile = await firstValueFrom(this.userDataService.getUserProfile(user.uid));
-    // }
-
-    // Step 4: Navigate based on the accountType field.
     if (profile && profile.accountType) {
       this.sessionService.recordActivity();
       this.router.navigate(['/dashboard']);
     } else {
-      // If there is no accountType, user needs to go through onboarding.
       this.router.navigate(['/onboarding']);
     }
   }

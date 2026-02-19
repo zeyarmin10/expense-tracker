@@ -117,6 +117,7 @@ export class UserProfileComponent implements OnInit {
                   budgetPeriod: profile.selectedBudgetPeriodId || profile.budgetPeriod || null,
                   budgetStartDate: profile.budgetStartDate || null,
                   budgetEndDate: profile.budgetEndDate || null,
+                  roles: profile.roles || null,
                 });
                 this.selectedCurrency = profile.currency || 'MMK';
                 this.handleBudgetPeriodChange(this.userProfileForm.get('budgetPeriod')?.value, true);
@@ -129,6 +130,7 @@ export class UserProfileComponent implements OnInit {
               budgetPeriod: profile.budgetPeriod || null,
               budgetStartDate: profile.budgetStartDate || null,
               budgetEndDate: profile.budgetEndDate || null,
+              roles: profile.roles || null,
             }) : null),
             catchError((err) => {
               console.error('Error fetching user profile data:', err);

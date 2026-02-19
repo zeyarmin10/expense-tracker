@@ -410,7 +410,7 @@
                         </div>
                         <div class="col-6 mobile-value">
                           {{ formatLocalizedNumber(expense.quantity) }}
-                          {{ expense.unit }}
+                          {{ expense['unit'] }}
                         </div>
                       </div>
                       <div class="row p-0 m-0">
@@ -420,7 +420,7 @@
                         <div class="col-6 mobile-value">
                           {{
                             formatService.formatAmountWithSymbol(
-                              expense.price,
+                              expense['price'],
                               expense.currency
                             )
                           }}
@@ -480,12 +480,12 @@
                     </td>
                     <td class="d-none d-lg-table-cell">
                       {{ formatLocalizedNumber(expense.quantity) }}
-                      {{ expense.unit }}
+                      {{ expense['unit'] }}
                     </td>
                     <td class="d-none d-lg-table-cell">
                       {{
                         formatService.formatAmountWithSymbol(
-                          expense.price,
+                          expense['price'],
                           expense.currency
                         )
                       }}

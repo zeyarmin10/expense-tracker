@@ -12,19 +12,23 @@ import {
   AuthErrorCodes
 } from '@angular/fire/auth';
 import { TranslateService } from '@ngx-translate/core';
-import { Observable, Subject } from 'rxjs';
+import { Observable, Subject, of } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
+import { UserDataService, UserProfile } from './user-data';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
   private auth: Auth = inject(Auth);
+  private userDataService: UserDataService = inject(UserDataService);
 
   public get currentUserId(): string | null {
     return this.auth.currentUser ? this.auth.currentUser.uid : null;
   }
 
   currentUser$: Observable<User | null>;
+  userProfile$: Observable<UserProfile | null>;
 
   private _logoutSuccess = new Subject<boolean>();
   logoutSuccess$: Observable<boolean> = this._logoutSuccess.asObservable();
@@ -37,6 +41,16 @@ export class AuthService {
         observer.next(user);
       });
     });
+
+    this.userProfile$ = this.currentUser$.pipe(
+      switchMap(user => {
+        if (user) {
+          return this.userDataService.getUserProfile(user.uid);
+        } else {
+          return of(null);
+        }
+      })
+    );
   }
 
   async register(email: string, password: string): Promise<User> {

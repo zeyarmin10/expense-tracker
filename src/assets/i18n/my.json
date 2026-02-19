@@ -33,7 +33,6 @@
   "ERROR_UNEXPECTED": "မမျှော်လင့်ထားသော အမှားတစ်ခု ဖြစ်ပွားခဲ့သည်။ ကျေးဇူးပြု၍ ထပ်ကြိုးစားပါ။",
   "ERROR_GOOGLE_SIGNIN_FAILED": "Google ဖြင့်ဝင်ရောက်ရန် ပျက်ကွက်ခဲ့သည်။ ကျေးဇူးပြု၍ ထပ်ကြိုးစားပါ။",
   "ERROR_SAVING_USER_DATA": "Google ဖြင့်ဝင်ရောက်ပြီးနောက် အသုံးပြုသူဒေတာသိမ်းဆည်းရာတွင် အမှားဖြစ်ခဲ့သည်။",
-
   "EXPENSE_ADD_TITLE": "အသုံးစရိတ်အသစ်ထည့်မည်",
   "EXPENSE_DATE_LABEL": "ရက်စွဲ",
   "EXPENSE_CATEGORY_LABEL": "အမျိုးအစား",
@@ -77,7 +76,6 @@
   "EXPENSE_UNIT_REQUIRED": "ယူနစ်လိုအပ်ပါသည်။",
   "EXPENSE_PRICE_NON_NEGATIVE": "ဈေးနှုန်းသည် သုည သို့မဟုတ် အပေါင်းကိန်းဖြစ်ရမည်။",
   "EXPENSE_CURRENCY_REQUIRED": "ငွေကြေးလိုအပ်ပါသည်။",
-
   "SELECT_DATE_LABEL": "ရက်စွဲရွေးပါ",
   "TOTALS_BY_CURRENCY_LABEL": "ငွေကြေးအလိုက် စုစုပေါင်း",
   "TOTALS_BY_CATEGORY_LABEL": "အမျိုးအစားအလိုက် စုစုပေါင်း",
@@ -86,7 +84,6 @@
   "NO_TOTALS_FOR_DATE": "ရွေးချယ်ထားသော ရက်စွဲအတွက် စုစုပေါင်းမရှိပါ။",
   "NO_CATEGORY_TOTALS_FOR_DATE": "ရွေးချယ်ထားသော ရက်စွဲအတွက် အမျိုးအစားအလိုက် စုစုပေါင်းမရှိပါ။",
   "RESET_FILTER_BUTTON": "စစ်ထုတ်မှုကို ပြန်လည်သတ်မှတ်မည်",
-
   "DASHBOARD_WELCOME": "Dashboard",
   "DASHBOARD_WELCOME_BACK": "ပြန်ကြိုဆိုပါတယ်",
   "DASHBOARD_START_DATE_LABEL": "စတင်ရက်",
@@ -388,5 +385,15 @@
   "BUDGET_DELETE_SUCCESS": "ဘတ်ဂျက်အောင်မြင်စွာဖျက်ပြီးပါပြီ။",
   "INCOME_SAVE_SUCCESS": "ဝင်ငွေအောင်မြင်စွာထည့်ပြီးပါပြီ။",
   "INCOME_DELETE_SUCCESS": "ဝင်ငွေအောင်မြင်စွာဖျက်ပြီးပါပြီ။",
-  "DELETE_ACTIVE_BUDGET_PERIOD_ERROR": "ဤဘတ်ဂျက်ကာလက လက်ရှိအသုံးပြုနေလို့ ဖျက်၍မရပါ။"
+  "DELETE_ACTIVE_BUDGET_PERIOD_ERROR": "ဤဘတ်ဂျက်ကာလက လက်ရှိအသုံးပြုနေလို့ ဖျက်၍မရပါ။",
+  "NAV_CATEGORIES": "ကဏ္ဍများ",
+  "NAV_INCOME": "ဝင်ငွေ",
+  "NAV_MEMBER_MANAGEMENT": "အဖွဲ့ဝင် စီမံခန့်ခွဲမှု",
+  "NAV_PROFILE_AND_SETTING": "ပရိုဖိုင်နှင့်ဆက်တင်",
+  "GROUP_MEMBERS": "အဖွဲ့ဝင်များ",
+  "INVITE_NEW_MEMBER": "အဖွဲ့ဝင်အသစ် ဖိတ်ခေါ်ရန်",
+  "MEMBER_EMAIL_PLACEHOLDER": "အီးမေးလ်လိပ်စာ ရိုက်ထည့်ပါ",
+  "SEND_INVITE": "ဖိတ်ကြားလွှာ ပို့ရန်",
+  "CURRENT_MEMBERS": "လက်ရှိ အဖွဲ့ဝင်များ",
+  "ROLE": "တာဝန်/အဆင့်"
 }

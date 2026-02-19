@@ -335,7 +335,7 @@ export class ExpenseOverview implements OnInit {
       return acc;
     }, {} as { [key: string]: CategoryTotal });
 
-    this.categoryTotals = Object.values(categoryTotalsMap).sort(
+    this.categoryTotals = (Object.values(categoryTotalsMap) as CategoryTotal[]).sort(
       (a: CategoryTotal, b: CategoryTotal) => b.total - a.total
     );
     const mostExpensive = this.categoryTotals[0]?.category;
@@ -349,7 +349,7 @@ export class ExpenseOverview implements OnInit {
     }, {} as { [key: string]: number });
 
     const labels = Object.keys(categoryTotals);
-    const data = Object.values(categoryTotals);
+    const data = Object.values(categoryTotals) as number[];
 
     this.pieChartData = {
       labels: labels,

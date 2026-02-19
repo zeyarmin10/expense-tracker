@@ -119,7 +119,7 @@ export class ExpenseService {
     if (updates['quantity'] || updates['price']) {
       const currentExpense = await this.getExpense(expenseId);
       const quantity = updates['quantity'] || currentExpense.quantity;
-      const price = updates['price'] || currentExpense.price;
+      const price = updates['price'] || currentExpense['price'];
       updatedData.totalCost = quantity * price;
     }
 
@@ -154,7 +154,7 @@ export class ExpenseService {
                   resolve({
                     id: snapshot.key,
                     ...expense,
-                    totalCost: expense.quantity * expense.price,
+                    totalCost: expense.quantity * expense['price'],
                   } as ServiceIExpense);
                 } else {
                   reject('Expense not found.');

@@ -9,11 +9,12 @@ import { UserProfileComponent } from './components/user-profile/user-profile';
 import { ExpenseOverview } from './components/expense-overview/expense-overview';
 import { BudgetComponent } from './components/budget/budget';
 import { OnboardingComponent } from './components/onboarding/onboarding';
+import { MemberManagementComponent } from './components/member-management/member-management';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
   {
-    path: '', 
+    path: '',
     canActivate: [AuthGuard],
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
@@ -26,6 +27,7 @@ export const routes: Routes = [
       { path: 'profile', component: UserProfileComponent },
       { path: 'category', component: Category },
       { path: 'onboarding', component: OnboardingComponent },
+      { path: 'member-management', component: MemberManagementComponent },
     ]
   },
   { path: '**', redirectTo: '/dashboard' },

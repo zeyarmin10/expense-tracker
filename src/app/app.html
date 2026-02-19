@@ -1,9 +1,8 @@
 <nav class="navbar navbar-expand-lg" style="background-color: #e3f2fd;" *ngIf="showNavbar$ | async">
     <div class="container-fluid">
         <a class="navbar-brand" routerLink="/">
-            <img src="assets/images/Expense-Tracker-Logo.png" alt="Expense Tracker Logo" 
-           class="img-fluid d-inline-block align-text-top"
-           id="navbarLogo">
+            <img src="assets/images/Expense-Tracker-Logo.png" alt="Expense Tracker Logo"
+                class="img-fluid d-inline-block align-text-top" id="navbarLogo">
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarColor03"
             aria-controls="navbarColor03" aria-expanded="false" aria-label="Toggle navigation">
@@ -13,35 +12,65 @@
         <div class="collapse navbar-collapse" id="navbarColor03">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0 ps-2">
                 <li class="nav-item text-center">
-                    <a class="nav-link" aria-current="page" routerLink="/dashboard" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_DASHBOARD' | translate }}</a>
+                    <a class="nav-link" aria-current="page" routerLink="/dashboard" routerLinkActive="active-link"
+                        (click)="closeNavbarMenu()">{{ 'NAV_DASHBOARD' | translate }}</a>
                 </li>
                 <li class="nav-item text-center">
-                    <a class="nav-link" routerLink="/expense" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_EXPENSE' | translate }}</a>
+                    <a class="nav-link" routerLink="/expense" routerLinkActive="active-link"
+                        (click)="closeNavbarMenu()">{{ 'NAV_EXPENSE' | translate }}</a>
                 </li>
                 <li class="nav-item text-center">
-                    <a class="nav-link" routerLink="/expense-overview" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_EXPENSE_OVERVIEW' | translate }}</a>
+                    <a class="nav-link" routerLink="/expense-overview" routerLinkActive="active-link"
+                        (click)="closeNavbarMenu()">{{ 'NAV_EXPENSE_OVERVIEW' | translate }}</a>
                 </li>
                 <li class="nav-item text-center">
-                    <a class="nav-link"  routerLink="/budget" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_BUDGET' | translate }}</a>
+                    <a class="nav-link" routerLink="/budget" routerLinkActive="active-link"
+                        (click)="closeNavbarMenu()">{{ 'NAV_BUDGET' | translate }}</a>
                 </li>
                 <li class="nav-item text-center">
-                    <a class="nav-link"  routerLink="/profit" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_PROFIT' | translate }}</a>
+                    <a class="nav-link" routerLink="/profit" routerLinkActive="active-link"
+                        (click)="closeNavbarMenu()">{{ 'NAV_PROFIT' | translate }}</a>
                 </li>
                 <li class="nav-item text-center">
-                    <a class="nav-link" routerLink="/category" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_CATEGORY' | translate }}</a>
+                    <a class="nav-link" routerLink="/category" routerLinkActive="active-link"
+                        (click)="closeNavbarMenu()">{{ 'NAV_CATEGORY' | translate }}</a>
+                </li>
+                <li class="nav-item text-center" *ngIf="isGroupAdmin$ | async">
+                    <a class="nav-link" routerLink="/member-management" routerLinkActive="active-link"
+                        (click)="closeNavbarMenu()">{{'NAV_MEMBER_MANAGEMENT' | translate}}</a>
                 </li>
             </ul>
 
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0 ps-2">
+                <li class="nav-item dropdown text-center" *ngIf="currentUser$ | async as user">
+                    <a class="nav-link dropdown-toggle text-center" href="#" id="navbarDropdown" role="button"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        {{ user.displayName || 'Profile' }}
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end text-center" aria-labelledby="navbarDropdown">
+                        <li class="text-center"><a class="dropdown-item" routerLink="/profile"
+                                (click)="closeNavbarMenu()">{{
+                                'NAV_PROFILE_AND_SETTING' | translate
+                                }}</a></li>
+                        <li class="text-center">
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li class="text-center"><button class="dropdown-item" (click)="logout()">{{'NAV_LOGOUT' |
+                                translate}}</button></li>
+                    </ul>
+                </li>
+            </ul>
+            <!-- <ul class="navbar-nav ms-auto mb-2 mb-lg-0 ps-2">
                 <li class="nav-item text-center">
-                    <a class="nav-link" routerLink="/profile" routerLinkActive="active-link" (click)="closeNavbarMenu()">
+                    <a class="nav-link" routerLink="/profile" routerLinkActive="active-link"
+                        (click)="closeNavbarMenu()">
                         {{ userDisplayName$ | async }}
                     </a>
                 </li>
                 <li class="nav-item text-center">
                     <a class="nav-link" (click)="logout()" style="cursor: pointer;">{{ 'NAV_LOGOUT' | translate }}</a>
                 </li>
-            </ul>
+            </ul> -->
         </div>
     </div>
 </nav>

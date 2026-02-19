@@ -33,7 +33,6 @@
   "ERROR_UNEXPECTED": "An unexpected error occurred. Please try again.",
   "ERROR_GOOGLE_SIGNIN_FAILED": "Failed to sign in with Google. Please try again.",
   "ERROR_SAVING_USER_DATA": "Error saving user data after Google sign-in.",
-
   "EXPENSE_ADD_TITLE": "Add New Expense",
   "EXPENSE_DATE_LABEL": "Date",
   "EXPENSE_CATEGORY_LABEL": "Category",
@@ -77,7 +76,6 @@
   "EXPENSE_UNIT_REQUIRED": "Unit is required.",
   "EXPENSE_PRICE_NON_NEGATIVE": "Price must be a non-negative number.",
   "EXPENSE_CURRENCY_REQUIRED": "Currency is required.",
-
   "SELECT_DATE_LABEL": "Select Date",
   "TOTALS_BY_CURRENCY_LABEL": "Totals by Currency",
   "TOTALS_BY_CATEGORY_LABEL": "Totals by Category",
@@ -86,7 +84,6 @@
   "NO_TOTALS_FOR_DATE": "No totals found for the selected date.",
   "NO_CATEGORY_TOTALS_FOR_DATE": "No category totals found for the selected date.",
   "RESET_FILTER_BUTTON": "Reset Filter",
-
   "DASHBOARD_WELCOME": "Dashboard",
   "DASHBOARD_WELCOME_BACK": "Welcome Back!",
   "DASHBOARD_START_DATE_LABEL": "Start Date",
@@ -295,7 +292,7 @@
   "TOTAL_INCOMES": "Total Incomes",
   "ADD_REVENUE": "Add Revenue",
   "INCOME_DESCRIPTION_PLACEHOLDER": "Enter income description",
-  "NO_INCOMES_FOR_SELECTED_DATE": "No incomes for the selected date",
+  "NO_INCOMES_for_selected_date": "No incomes for the selected date",
   "LOSS": "Loss",
   "NET_LOSS": "Net Loss",
   "RECORDED_REVENUE": "Recorded Revenue",
@@ -388,5 +385,16 @@
   "BUDGET_DELETE_SUCCESS": "Budget deleted successfully!",
   "INCOME_SAVE_SUCCESS": "Profit added successfully!",
   "INCOME_DELETE_SUCCESS": "Profit deleted successfully!",
-  "DELETE_ACTIVE_BUDGET_PERIOD_ERROR": "Cannot delete an active budget period. Please switch to a different budget period before deleting."
+  "DELETE_ACTIVE_BUDGET_PERIOD_ERROR": "Cannot delete an active budget period. Please switch to a different budget period before deleting.",
+  "NAV_CATEGORIES": "Categories",
+  "NAV_INCOME": "Income",
+  "NAV_MEMBER_MANAGEMENT": "Member Management",
+  "NAV_PROFILE_AND_SETTING": "Profile & Settings",
+  "GROUP_MEMBERS": "Group Members",
+  "INVITE_NEW_MEMBER": "Invite New Member",
+  "MEMBER_EMAIL_PLACEHOLDER": "Enter email address",
+  "SEND_INVITE": "Send Invite",
+  "CURRENT_MEMBERS": "Current Members",
+  "ROLE": "Role",
+  "REMOVE": "Remove"
 }

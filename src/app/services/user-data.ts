@@ -8,20 +8,18 @@ import {
   get,
   remove
 } from '@angular/fire/database';
-import { Observable, from } from 'rxjs';
-import { map, switchMap, tap } from 'rxjs/operators';
+import { Observable } from 'rxjs';
 
-// Represents the structure of the user's profile data in the database.
 export interface UserProfile {
   uid: string;
   email: string;
   displayName: string;
   currency: string;
   language: string;
-  createdAt: number; // Stored as a timestamp
+  createdAt: number; 
   accountType?: 'personal' | 'group';
   groupId?: string;
-  // Deprecated fields, kept for migration purposes
+  roles?: string; // Changed to string type as requested
   budgetPeriod?: 'weekly' | 'monthly' | 'yearly' | 'custom' | null;
   budgetStartDate?: string | null;
   budgetEndDate?: string | null;
@@ -34,61 +32,51 @@ export interface UserProfile {
 export class UserDataService {
   private db: Database = inject(Database);
 
-  // This function now transparently handles both old and new data structures.
   getUserProfile(userId: string): Observable<UserProfile | null> {
     const userRef = ref(this.db, `users/${userId}`);
-    return objectVal<any>(userRef).pipe(
-      map(userObject => {
-        if (!userObject) {
-          return null; // User does not exist.
-        }
-        // If 'profile' node exists and root lacks an email, it's the old structure.
-        if (userObject.profile && !userObject.email) {
-          return userObject.profile as UserProfile; // Return the nested profile data.
-        }
-        // Otherwise, it's the new, flat structure.
-        return userObject as UserProfile;
-      })
-    );
+    return objectVal<UserProfile>(userRef);
   }
 
-  // This function is designed to be called once upon login to migrate old data.
-  async migrateUserProfileIfNeeded(userId: string): Promise<void> {
+  async fetchUserProfile(userId: string): Promise<UserProfile | null> {
     const userRef = ref(this.db, `users/${userId}`);
     const snapshot = await get(userRef);
-    const data = snapshot.val();
-
-    // Migration is needed if 'profile' exists and there's no 'email' at the root.
-    if (data && data.profile && !data.email) {
-      console.log(`Old data structure detected for user ${userId}. Migrating...`);
-      const profileData = data.profile; // The actual profile data to move.
-
-      const updates: { [key: string]: any } = {};
-
-      // 1. Copy all keys from the old 'profile' object to the root path.
-      Object.keys(profileData).forEach(key => {
-        updates[`/users/${userId}/${key}`] = profileData[key];
-      });
-
-      // 2. Mark the old 'profile' node for deletion in the same atomic update.
-      updates[`/users/${userId}/profile`] = null;
-
-      try {
-        await update(ref(this.db), updates);
-        console.log(`Migration successful for user ${userId}.`);
-      } catch (error) {
-        console.error(`Error migrating user ${userId}:`, error);
-      }
-    } 
+    return snapshot.exists() ? snapshot.val() as UserProfile : null;
   }
 
   createUserProfile(profile: UserProfile): Promise<void> {
-    const userRef = ref(this.db, `users/${profile.uid}`);
-    return set(userRef, profile);
+      const userRef = ref(this.db, `users/${profile.uid}`);
+      return set(userRef, profile);
   }
 
   updateUserProfile(userId: string, data: Partial<UserProfile>): Promise<void> {
     const userRef = ref(this.db, `users/${userId}`);
     return update(userRef, data);
+  }
+
+  async deleteUserData(userId: string): Promise<void> {
+    const userRef = ref(this.db, `users/${userId}`);
+    await remove(userRef);
+  }
+
+  async migrateUserProfileIfNeeded(userId: string): Promise<void> {
+    const profile = await this.fetchUserProfile(userId);
+    if (profile) {
+      const updates: Partial<UserProfile> = {};
+      
+      if (!profile.accountType) {
+        updates.accountType = profile.groupId ? 'group' : 'personal';
+      }
+      
+      // If roles is not a string (it might be the old object or undefined)
+      if (typeof profile.roles !== 'string') {
+        // Default to a non-admin role for safety during migration.
+        // Users might need to re-select roles in onboarding if they were admins.
+        updates.roles = 'member'; 
+      }
+
+      if (Object.keys(updates).length > 0) {
+        await this.updateUserProfile(userId, updates);
+      }
+    }
   }
 }
