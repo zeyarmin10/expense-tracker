@@ -25,7 +25,7 @@ export class InvitationService {
   sendInvitationEmail(recipientEmail: string, inviteCode: string, inviterName: string, groupName: string, language: string): Observable<any> {
     
     const loginLink = `${window.location.origin}/login?invite_code=${inviteCode}`;
-    const logoUrl = `${window.location.origin}/assets/icons/icon-192x192.png`; // URL to the app logo
+    const logoUrl = `${window.location.origin}/assets/images/Expense-Tracker-Logo.png`; // URL to the app logo
     const primaryColor = '#70BDF0'; // App's primary color
 
     const isMyanmar = language === 'my';
