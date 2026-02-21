@@ -153,17 +153,9 @@ export class LoginComponent implements OnInit, OnDestroy {
         profile = newUserProfile; // Use the newly created profile
     }
 
-    // If there's an invite code, try to accept the invitation
-    if (this.inviteCode && profile.uid) {
-      try {
-        await this.dataManager.acceptGroupInvitation(this.inviteCode, profile.uid);
-        this.toastService.showSuccess('Successfully joined the group!'); // CORRECTED
-        // Clear the invite code from URL to prevent re-processing
-        this.router.navigate([], { queryParams: { invite_code: null }, queryParamsHandling: 'merge' });
-      } catch (error: any) {
-        console.error('Failed to accept invitation:', error);
-        this.toastService.showError(error.message || 'Could not join the group.'); // CORRECTED
-      }
+    if (this.inviteCode) {
+      // Clear the invite code from URL to prevent re-processing
+      this.router.navigate([], { queryParams: { invite_code: null }, queryParamsHandling: 'merge' });
     }
 
     // Navigate based on onboarding status
