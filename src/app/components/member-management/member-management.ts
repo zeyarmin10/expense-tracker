@@ -9,7 +9,8 @@ import { switchMap, shareReplay } from 'rxjs/operators';
 import { AuthService } from '../../services/auth';
 import { DataManagerService } from '../../services/data-manager';
 import { UserDataService } from '../../services/user-data';
-import { InvitationService } from '../../services/invitation.service'; // Import the new service
+import { InvitationService } from '../../services/invitation.service';
+import { ToastService } from '../../services/toast';
 
 @Component({
   selector: 'app-member-management',
@@ -21,7 +22,8 @@ export class MemberManagementComponent implements OnInit {
   private authService = inject(AuthService);
   private dataManager = inject(DataManagerService);
   private userDataService = inject(UserDataService);
-  private invitationService = inject(InvitationService); // Inject the service
+  private invitationService = inject(InvitationService);
+  private toastService = inject(ToastService);
 
   userProfile$: Observable<any>;
   members$: Observable<IGroupMember[]>;
@@ -67,7 +69,6 @@ export class MemberManagementComponent implements OnInit {
       try {
         const groupDetails = await this.dataManager.getGroupDetails(profile.groupId);
         
-        // This likely creates the invite in Firebase and returns a code
         const inviteCode = await this.dataManager.sendGroupInvitation(
           profile.groupId,
           groupDetails.groupName || 'Your Group',
@@ -75,35 +76,37 @@ export class MemberManagementComponent implements OnInit {
           this.newMemberEmail
         );
 
-        // Now, send the email using the new service
-        if (inviteCode) { // Assuming sendGroupInvitation returns an invite code or similar identifier
-          this.invitationService.sendInvitationEmail(this.newMemberEmail, inviteCode)
+        if (inviteCode) {
+          const inviterName = profile.displayName || 'A friend';
+          const groupName = groupDetails.groupName || 'a group';
+
+          this.invitationService.sendInvitationEmail(this.newMemberEmail, inviteCode, inviterName, groupName)
             .subscribe({
               next: (response) => {
-                console.log('Invitation email sent successfully', response);
+                this.toastService.show('Invitation email sent successfully');
                 this.invitationSent = true;
                 this.newMemberEmail = '';
               },
               error: (error) => {
                 console.error('Failed to send invitation email:', error);
-                // Optionally, show an error message to the user
+                this.toastService.show('Failed to send invitation email. Please try again.', 'error');
               },
               complete: () => {
                 this.isSending = false;
               }
             });
         } else {
-          // If no invite code is returned, handle it as a non-email-sending case
-          this.invitationSent = true; 
-          this.newMemberEmail = '';
-          this.isSending = false;
+          this.isSending = false; // Reset if no code was generated
         }
 
       } catch (err) {
         console.error('Error sending invitation:', err);
+        this.toastService.show('An error occurred while sending the invitation.', 'error');
         this.isSending = false;
       }
     } else {
+      console.error('User profile or group ID not found.');
+      this.toastService.show('Could not find your user or group information.', 'error');
       this.isSending = false;
     }
   }

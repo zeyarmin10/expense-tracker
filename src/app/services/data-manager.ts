@@ -44,23 +44,52 @@ export class DataManagerService {
 
     return update(ref(this.db), updates);
   }
+  
+  /**
+   * Accepts a group invitation using an invite code and associates the user with the group.
+   * @param inviteCode The invitation code.
+   * @param userId The ID of the user accepting the invitation.
+   */
+  async acceptGroupInvitation(inviteCode: string, userId: string): Promise<void> {
+    const inviteCodeRef = ref(this.db, `invite_codes/${inviteCode}`);
+    const inviteCodeSnap = await get(inviteCodeRef);
 
-  async joinGroup(inviteCode: string, userId: string): Promise<boolean> {
-    const codeRef = ref(this.db, `invite_codes/${inviteCode}`);
-    const snapshot = await get(codeRef);
-
-    if (snapshot.exists()) {
-      const groupId = snapshot.val();
-      const role = 'member';
-      const updates: { [key: string]: any } = {};
-      updates[`/group_members/${groupId}/${userId}`] = role;
-      updates[`/users/${userId}/groupId`] = groupId;
-      updates[`/users/${userId}/accountType`] = 'group';
-      updates[`/users/${userId}/roles/${groupId}`] = role;
-      await update(ref(this.db), updates);
-      return true;
+    if (!inviteCodeSnap.exists()) {
+      throw new Error('Invalid or expired invitation code.');
     }
-    return false;
+
+    const groupId = inviteCodeSnap.val();
+    const role = 'member';
+
+    // 1. Add user to the group_members list
+    // 2. Update user's profile with groupId, accountType, and role
+    const updates: { [key: string]: any } = {};
+    updates[`/group_members/${groupId}/${userId}`] = role;
+    updates[`/users/${userId}/groupId`] = groupId;
+    updates[`/users/${userId}/accountType`] = 'group'; // Set account type to group
+    updates[`/users/${userId}/roles/${groupId}`] = role;
+    
+    // Find and update the specific invitation entry to 'accepted'
+    const userProfile = await firstValueFrom(this.userDataService.getUserProfile(userId));
+    if (userProfile && userProfile.email) {
+      const invitesQuery = query(
+        ref(this.db, 'invitations'),
+        orderByChild('recipientEmail'),
+        equalTo(userProfile.email.toLowerCase())
+      );
+      const invitesSnap = await get(invitesQuery);
+      if (invitesSnap.exists()) {
+        invitesSnap.forEach(childSnap => {
+          const inviteData = childSnap.val();
+          // Double check if groupId matches and status is pending
+          if (inviteData.groupId === groupId && inviteData.status === 'pending') {
+            updates[`/invitations/${childSnap.key}/status`] = 'accepted';
+          }
+        });
+      }
+    }
+
+    await update(ref(this.db), updates);
   }
 
   async removeGroupMember(groupId: string, memberId: string): Promise<void> {

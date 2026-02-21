@@ -14,9 +14,10 @@ import {
   Validators,
   ReactiveFormsModule,
 } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router'; // Import ActivatedRoute
 import { AuthService } from '../../services/auth';
 import { UserDataService, UserProfile } from '../../services/user-data';
+import { DataManagerService } from '../../services/data-manager'; // Import DataManagerService
 import { CategoryService } from '../../services/category';
 import { debounceTime, Subject, takeUntil, firstValueFrom } from 'rxjs'; 
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -25,6 +26,7 @@ import { ConfirmationModal } from '../common/confirmation-modal/confirmation-mod
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import { User } from '@angular/fire/auth';
+import { ToastService } from '../../services/toast'; // Import ToastService
 
 @Component({
   selector: 'app-login',
@@ -54,9 +56,12 @@ export class LoginComponent implements OnInit, OnDestroy {
   loginForm: FormGroup;
   authService = inject(AuthService);
   userDataService = inject(UserDataService);
+  dataManager = inject(DataManagerService); // Inject DataManagerService
   categoryService = inject(CategoryService);
   router = inject(Router);
+  route = inject(ActivatedRoute); // Inject ActivatedRoute
   sessionService = inject(SessionManagement);
+  toastService = inject(ToastService); // Inject ToastService
   errorMessage: string | null = null;
   successMessage: string | null = null;
   isLoginMode: boolean = true;
@@ -65,6 +70,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
 
   currentLang: string;
+  private inviteCode: string | null = null; // Variable to store invite code
 
   constructor(private fb: FormBuilder) {
     this.loginForm = this.fb.group({
@@ -78,9 +84,17 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    // Check for invite code in the URL
+    this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(params => {
+      this.inviteCode = params['invite_code'] || null;
+      if (this.inviteCode) {
+        console.log(`Found invite code: ${this.inviteCode}`);
+      }
+    });
+
     this.authService.currentUser$.pipe(takeUntil(this.destroy$)).subscribe(async (user) => {
       if (user) {
-        await this.checkOnboardingAndNavigate(user);
+        await this.handlePostLogin(user);
       }
     });
 
@@ -105,6 +119,63 @@ export class LoginComponent implements OnInit, OnDestroy {
   private checkMobileView(width: number): void {
     this.isMobileView = width < this.MOBILE_BREAKPOINT;
   }
+  
+  async signInWithGoogle(): Promise<void> {
+      this.errorMessage = null;
+      this.successMessage = null;
+      try {
+          const user = await this.authService.signInWithGoogle();
+          // The currentUser$ subscription in ngOnInit will handle post-login actions
+      } catch (error: any) {
+          console.error('Google sign-in error:', error);
+          const translatedErrorMessage = this.authService.getFirebaseErrorMessage(error);
+          this.showErrorModal(translatedErrorMessage);
+      }
+  }
+
+  // Refactored to handle post-login logic for all sign-in methods
+  private async handlePostLogin(user: User): Promise<void> {
+    await this.userDataService.migrateUserProfileIfNeeded(user.uid);
+    let profile = await this.userDataService.fetchUserProfile(user.uid);
+
+    // Create profile if it doesn't exist
+    if (!profile) {
+        const currency = this.currentLang === 'my' ? 'MMK' : 'USD';
+        const newUserProfile: UserProfile = {
+            uid: user.uid,
+            email: user.email || '',
+            displayName: user.displayName || 'New User',
+            currency: currency,
+            language: this.currentLang,
+            createdAt: Date.now(),
+        };
+        await this.userDataService.createUserProfile(newUserProfile);
+        profile = newUserProfile; // Use the newly created profile
+    }
+
+    // If there's an invite code, try to accept the invitation
+    if (this.inviteCode && profile.uid) {
+      try {
+        await this.dataManager.acceptGroupInvitation(this.inviteCode, profile.uid);
+        this.toastService.showSuccess('Successfully joined the group!'); // CORRECTED
+        // Clear the invite code from URL to prevent re-processing
+        this.router.navigate([], { queryParams: { invite_code: null }, queryParamsHandling: 'merge' });
+      } catch (error: any) {
+        console.error('Failed to accept invitation:', error);
+        this.toastService.showError(error.message || 'Could not join the group.'); // CORRECTED
+      }
+    }
+
+    // Navigate based on onboarding status
+    if (profile && profile.accountType) {
+        this.sessionService.recordActivity();
+        this.router.navigate(['/dashboard']);
+    } else {
+        this.router.navigate(['/onboarding']);
+    }
+  }
+
+  // ... other methods like switchLanguage, toggleMode, onSubmit, etc. remain the same ...
 
   switchLanguage(lang: string) {
     this.translate.use(lang);
@@ -135,63 +206,20 @@ export class LoginComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const { email, password, name } = this.loginForm.value;
+    const { email, password } = this.loginForm.value;
 
     try {
       if (this.isLoginMode) {
         await this.authService.login(email, password);
       } else {
-        const user = await this.authService.register(email, password);
-        await this.handleUserSetup(user, name);
+        await this.authService.register(email, password);
       }
+      // The currentUser$ subscription in ngOnInit will handle post-login actions
     } catch (error: any) {
       console.error('Authentication error:', error);
       const translatedErrorMessage =
         this.authService.getFirebaseErrorMessage(error);
       this.showErrorModal(translatedErrorMessage);
-    }
-  }
-
-  async signInWithGoogle(): Promise<void> {
-    this.errorMessage = null;
-    this.successMessage = null;
-    try {
-      const user = await this.authService.signInWithGoogle();
-      await this.handleUserSetup(user);
-    } catch (error: any) {
-      console.error('Google sign-in error:', error);
-      const translatedErrorMessage = this.authService.getFirebaseErrorMessage(error);
-      this.showErrorModal(translatedErrorMessage);
-    }
-  }
-
-  private async handleUserSetup(user: User, displayName?: string): Promise<void> {
-    const profile = await this.userDataService.fetchUserProfile(user.uid);
-
-    if (!profile) {
-      const currency = this.currentLang === 'my' ? 'MMK' : 'USD';
-      const newUserProfile: UserProfile = {
-        uid: user.uid,
-        email: user.email || '',
-        displayName: displayName || user.displayName || 'New User',
-        currency: currency,
-        language: this.currentLang,
-        createdAt: Date.now(),
-        // roles is intentionally omitted, will be set during onboarding
-      };
-      await this.userDataService.createUserProfile(newUserProfile);
-    }
-  }
-
-  private async checkOnboardingAndNavigate(user: User): Promise<void> {
-    await this.userDataService.migrateUserProfileIfNeeded(user.uid);
-    const profile = await this.userDataService.fetchUserProfile(user.uid);
-
-    if (profile && profile.accountType) {
-      this.sessionService.recordActivity();
-      this.router.navigate(['/dashboard']);
-    } else {
-      this.router.navigate(['/onboarding']);
     }
   }
 
