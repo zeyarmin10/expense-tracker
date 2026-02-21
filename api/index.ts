@@ -51,6 +51,12 @@ module.exports = async function handler(
     request: VercelRequest,
     response: VercelResponse,
 ) {
+    // --- START DEBUG LOGGING ---
+    console.log(`[DEBUG] Attempting to send email. OAUTH_USER: ${OAUTH_USER}`);
+    console.log(`[DEBUG] CLIENT_ID starts with: ${OAUTH_CLIENT_ID ? OAUTH_CLIENT_ID.substring(0, 10) : 'NOT FOUND'}`);
+    console.log(`[DEBUG] REFRESH_TOKEN is present: ${OAUTH_REFRESH_TOKEN ? 'Yes' : 'No'}`);
+    // --- END DEBUG LOGGING ---
+
     // Handle CORS preflight
     if (request.method === 'OPTIONS') {
         response.setHeader('Access-Control-Allow-Origin', '*');
