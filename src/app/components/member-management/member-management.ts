@@ -30,7 +30,6 @@ export class MemberManagementComponent implements OnInit {
   pendingInvites$: Observable<any[]>;
   
   newMemberEmail: string = '';
-  invitationSent: boolean = false;
   isSending: boolean = false;
 
   constructor() {
@@ -62,10 +61,9 @@ export class MemberManagementComponent implements OnInit {
     if (this.isSending || !this.newMemberEmail) return;
 
     this.isSending = true;
-    this.invitationSent = false;
     const profile = await firstValueFrom(this.userProfile$);
 
-    if (profile && profile.groupId) {
+    if (profile && profile.groupId && profile.language) { // Ensure language is available
       try {
         const groupDetails = await this.dataManager.getGroupDetails(profile.groupId);
         
@@ -80,11 +78,15 @@ export class MemberManagementComponent implements OnInit {
           const inviterName = profile.displayName || 'A friend';
           const groupName = groupDetails.groupName || 'a group';
 
-          this.invitationService.sendInvitationEmail(this.newMemberEmail, inviteCode, inviterName, groupName)
-            .subscribe({
+          this.invitationService.sendInvitationEmail(
+            this.newMemberEmail, 
+            inviteCode, 
+            inviterName, 
+            groupName, 
+            profile.language // Pass the user's language
+          ).subscribe({
               next: (response) => {
                 this.toastService.showSuccess('Invitation email sent successfully');
-                this.invitationSent = true;
                 this.newMemberEmail = '';
               },
               error: (error) => {
@@ -96,7 +98,7 @@ export class MemberManagementComponent implements OnInit {
               }
             });
         } else {
-          this.isSending = false; // Reset if no code was generated
+          this.isSending = false; 
         }
 
       } catch (err) {
@@ -105,14 +107,13 @@ export class MemberManagementComponent implements OnInit {
         this.isSending = false;
       }
     } else {
-      console.error('User profile or group ID not found.');
+      console.error('User profile, group ID, or language not found.');
       this.toastService.showError('Could not find your user or group information.');
       this.isSending = false;
     }
   }
 
   async deleteMember(memberId: string): Promise<void> {
-    // ... (rest of the code is unchanged)
     if (confirm('Are you sure you want to remove this member?')) {
       const profile = await firstValueFrom(this.userProfile$);
       if (profile && profile.groupId) {
@@ -126,7 +127,6 @@ export class MemberManagementComponent implements OnInit {
   }
 
   async revokeInvite(inviteKey: string): Promise<void> {
-    // ... (rest of the code is unchanged)
     if (confirm('Are you sure you want to revoke this invitation?')) {
       try {
         await this.dataManager.revokeGroupInvitation(inviteKey);
