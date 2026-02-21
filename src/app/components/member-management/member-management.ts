@@ -61,50 +61,36 @@ export class MemberManagementComponent implements OnInit {
   async sendInvite(): Promise<void> {
     if (this.isSending || !this.newMemberEmail) return;
 
-    
     this.isSending = true;
     this.invitationSent = false;
     const profile = await firstValueFrom(this.userProfile$);
 
-    if (profile && profile.groupId && profile.language) { // Ensure language is available
+    if (profile && profile.groupId && profile.language) {
       try {
         const groupDetails = await this.dataManager.getGroupDetails(profile.groupId);
-        
-        const inviteCode = await this.dataManager.sendGroupInvitation(
-          profile.groupId,
-          groupDetails.groupName || 'Your Group',
-          profile as IUserProfile,
-          this.newMemberEmail
-        );
+        const inviterName = profile.displayName || 'A friend';
+        const groupName = groupDetails.groupName || 'a group';
 
-        if (inviteCode) {
-          const inviterName = profile.displayName || 'A friend';
-          const groupName = groupDetails.groupName || 'a group';
-
-          this.invitationService.sendInvitationEmail(
-            this.newMemberEmail, 
-            inviteCode, 
-            inviterName, 
-            groupName, 
-            profile.language // Pass the user's language
-          ).subscribe({
-              next: (response) => {
-                this.toastService.showSuccess('Invitation email sent successfully');
-                this.invitationSent = true;
-                this.newMemberEmail = '';
-              },
-              error: (error) => {
-                console.error('Failed to send invitation email:', error);
-                this.toastService.showError('Failed to send invitation email. Please try again.');
-              },
-              complete: () => {
-                this.isSending = false;
-              }
-            });
-        } else {
-          this.isSending = false; 
-        }
-
+        this.invitationService.sendInvitationEmail(
+          this.newMemberEmail,
+          inviterName,
+          groupName,
+          profile.language,
+          profile.groupId
+        ).subscribe({
+            next: (response) => {
+              this.toastService.showSuccess('Invitation email sent successfully');
+              this.invitationSent = true;
+              this.newMemberEmail = '';
+            },
+            error: (error) => {
+              console.error('Failed to send invitation email:', error);
+              this.toastService.showError('Failed to send invitation email. Please try again.');
+            },
+            complete: () => {
+              this.isSending = false;
+            }
+          });
       } catch (err) {
         console.error('Error sending invitation:', err);
         this.toastService.showError('An error occurred while sending the invitation.');

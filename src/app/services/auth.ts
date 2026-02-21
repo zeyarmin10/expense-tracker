@@ -11,9 +11,10 @@ import {
   signInWithPopup,
   AuthErrorCodes
 } from '@angular/fire/auth';
+import { AngularFireDatabase } from '@angular/fire/compat/database';
 import { TranslateService } from '@ngx-translate/core';
-import { Observable, Subject, of } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { Observable, Subject, of, from } from 'rxjs';
+import { switchMap, tap } from 'rxjs/operators';
 import { UserDataService, UserProfile } from './user-data';
 
 @Injectable({
@@ -22,6 +23,7 @@ import { UserDataService, UserProfile } from './user-data';
 export class AuthService {
   private auth: Auth = inject(Auth);
   private userDataService: UserDataService = inject(UserDataService);
+  private db: AngularFireDatabase = inject(AngularFireDatabase);
 
   public get currentUserId(): string | null {
     return this.auth.currentUser ? this.auth.currentUser.uid : null;
@@ -56,6 +58,7 @@ export class AuthService {
   async register(email: string, password: string): Promise<User> {
     try {
       const userCredential = await createUserWithEmailAndPassword(this.auth, email, password);
+      await this.handleInvite(userCredential.user);
       return userCredential.user;
     } catch (error: any) {
       if (error.code === AuthErrorCodes.EMAIL_EXISTS) {
@@ -70,6 +73,7 @@ export class AuthService {
   async login(email: string, password: string): Promise<User> {
     try {
       const userCredential = await signInWithEmailAndPassword(this.auth, email, password);
+      await this.handleInvite(userCredential.user);
       return userCredential.user;
     } catch (error: any) {
       throw new Error(this.getFirebaseErrorMessage(error));
@@ -80,9 +84,34 @@ export class AuthService {
     try {
       const provider = new GoogleAuthProvider();
       const userCredential = await signInWithPopup(this.auth, provider);
+      await this.handleInvite(userCredential.user);
       return userCredential.user;
     } catch (error: any) {
       throw new Error(this.getFirebaseErrorMessage(error));
+    }
+  }
+
+  private async handleInvite(user: User): Promise<void> {
+    const urlParams = new URLSearchParams(window.location.search);
+    const inviteCode = urlParams.get('invite_code');
+
+    if (inviteCode) {
+      const inviteRef = this.db.object(`invitations/${inviteCode}`);
+      const inviteSnap = await inviteRef.query.get();
+
+      if (inviteSnap.exists()) {
+        const inviteData = inviteSnap.val();
+        if (inviteData.status === 'pending') {
+          // Add user to group
+          await this.db.object(`group_members/${inviteData.groupId}/${user.uid}`).set(true);
+
+          // Update user profile with groupId
+          await this.userDataService.updateUserProfile(user.uid, { groupId: inviteData.groupId });
+
+          // Mark invitation as used
+          await inviteRef.update({ status: 'accepted', acceptedBy: user.uid, acceptedAt: new Date().toISOString() });
+        }
+      }
     }
   }
 
