@@ -13,7 +13,7 @@ import {
 } from '@angular/fire/auth';
 import { AngularFireDatabase } from '@angular/fire/compat/database';
 import { TranslateService } from '@ngx-translate/core';
-import { Observable, Subject, of, from } from 'rxjs';
+import { Observable, Subject, of, from, firstValueFrom } from 'rxjs';
 import { switchMap, tap } from 'rxjs/operators';
 import { UserDataService, UserProfile } from './user-data';
 
@@ -102,14 +102,25 @@ export class AuthService {
       if (inviteSnap.exists()) {
         const inviteData = inviteSnap.val();
         if (inviteData.status === 'pending') {
-          // Add user to group
-          await this.db.object(`group_members/${inviteData.groupId}/${user.uid}`).set(true);
+            // Get the user's profile to denormalize data
+            const userProfile = await firstValueFrom(this.userDataService.getUserProfile(user.uid));
+            
+            if (userProfile) {
+                const memberData = {
+                    role: 'member', // Assign a default role
+                    displayName: userProfile.displayName,
+                    email: userProfile.email
+                };
 
-          // Update user profile with groupId
-          await this.userDataService.updateUserProfile(user.uid, { groupId: inviteData.groupId });
+                // Add user to group with denormalized data
+                await this.db.object(`group_members/${inviteData.groupId}/${user.uid}`).set(memberData);
 
-          // Mark invitation as used
-          await inviteRef.update({ status: 'accepted', acceptedBy: user.uid, acceptedAt: new Date().toISOString() });
+                // Update user profile with groupId
+                await this.userDataService.updateUserProfile(user.uid, { groupId: inviteData.groupId });
+
+                // Mark invitation as used
+                await inviteRef.update({ status: 'accepted', acceptedBy: user.uid, acceptedAt: new Date().toISOString() });
+            }
         }
       }
     }

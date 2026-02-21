@@ -72,6 +72,9 @@ export class InvitationService {
           body4: isMyanmar
             ? 'ဖိတ်ခေါ်ကုဒ်ကို အသုံးပြု၍လည်း ဝင်ရောက်နိုင်ပါသည်:'
             : 'Or, you can use the invitation code:',
+          body5: isMyanmar
+            ? 'ကျေးဇူးပြု၍ မှတ်သားထားပါ- ဤဖိတ်ခေါ်ကုဒ်သည် တစ်ကြိမ်သာ အသုံးပြုရန်ဖြစ်ပါသည်။'
+            : 'Please note: This invitation code is for one-time use only.',
           footer: isMyanmar
             ? 'သင်သည် ဤဖိတ်ခေါ်ချက်ကို မမျှော်လင့်ထားပါက၊ ဤအီးမေးလ်ကို လျစ်လျူရှုနိုင်ပါသည်။'
             : 'If you did not expect this invitation, you can safely ignore this email.',
@@ -91,7 +94,8 @@ export class InvitationService {
                 <a href="${loginLink}" style="background-color: ${PrimaryBgColor}; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-size: 18px; display: inline-block;">${texts.button}</a>
               </div>
               <p style="font-size: 16px;">${texts.body4}</p>
-              <p style="font-size: 20px; font-weight: bold; text-align: center; letter-spacing: 2px; color: ${inviteCodeColor}; background-color: ${PrimaryBgColor};">${inviteCode}</p>
+              <p style="font-size: 20px; font-weight: bold; text-align: center; letter-spacing: 5px; color: black; background-color: ${PrimaryBgColor}; border-radius: 8px; padding: 10px 20px;">${inviteCode}</p>
+              <p style="font-size: 14px; color: #555; text-align: center; margin-top: 5px;">${texts.body5}</p>
               <p style="font-size: 16px; margin-top: 20px;">${texts.body3}</p>
               <p style="font-size: 14px; color: #555; word-break: break-all;">${loginLink}</p>
               <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">

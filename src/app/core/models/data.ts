@@ -18,6 +18,15 @@ export interface IUserProfile {
   createdAt?: any;
 }
 
+export interface IInvitation {
+  key?: string;
+  email: string;
+  groupId: string;
+  status: 'pending' | 'accepted';
+  createdAt: any;
+  invitedBy: string;
+}
+
 export interface DataICategory {
   id: string;
   name: string;

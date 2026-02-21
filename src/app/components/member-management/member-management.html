@@ -1,57 +1,115 @@
-<div class="container mt-4">
-  <div class="row">
-    <div class="col-md-8 mx-auto">
-      <div class="card">
-        <div class="card-header">
-          <h4>{{ 'GROUP_MEMBERS' | translate }}</h4>
-        </div>
-        <div class="card-body">
-          <div class="mb-3">
-            <h5>{{ 'INVITE_NEW_MEMBER' | translate }}</h5>
-            <div class="input-group">
-              <input type="email" class="form-control" [(ngModel)]="newMemberEmail" [placeholder]="'MEMBER_EMAIL_PLACEHOLDER' | translate">
-              <button class="btn btn-primary" (click)="sendInvite()" [disabled]="!newMemberEmail">
-                {{ 'SEND_INVITE' | translate }}
-              </button>
-            </div>
-            <!-- Show success message instead of invite code -->
-            <!-- <div *ngIf="invitationSent" class="alert alert-success mt-2">
-              {{ 'INVITATION_SENT_SUCCESS' | translate }}
-            </div> -->
-          </div>
-
-          <hr>
-
-          <!-- Pending Invitations -->
-          <div *ngIf="(pendingInvites$ | async) as invites">
-            <div *ngIf="invites.length > 0">
-              <h5>{{ 'PENDING_INVITATIONS' | translate }}</h5>
-              <ul class="list-group mb-3">
-                <li *ngFor="let invite of invites" class="list-group-item d-flex justify-content-between align-items-center">
-                  <span>{{ invite.recipientEmail }}</span>
-                  <button class="btn btn-danger btn-sm" (click)="revokeInvite(invite.key)">
-                    {{ 'REVOKE' | translate }}
-                  </button>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          <h5>{{ 'CURRENT_MEMBERS' | translate }}</h5>
-          <!-- Use async pipe to subscribe to members$ observable -->
-          <ul class="list-group">
-            <li *ngFor="let member of (members$ | async)" class="list-group-item d-flex justify-content-between align-items-center">
-              <div>
-                <h6 class="mb-0">{{ member.displayName || member.email }}</h6>
-                <small class="text-muted">{{ 'Role' | translate }}: {{ member.role | titlecase }}</small>
+<div class="container mt-3 mb-5">
+  <div class="row d-flex justify-content-center">
+    <div class="col-12 col-sm-10 col-md-10 col-lg-8 col-xl-8 col-xxl-8 container-column">
+      <div class="card shadow-sm p-3 p-md-4 expense-card">
+        <!-- Invite New Member -->
+        <div class="card shadow-sm border-0 mb-4">
+          <div class="card-body p-4">
+            <h2 class="card-title text-center mb-4">
+              <i class="bi bi-person-plus-fill me-2"></i>{{ 'MEMBER_MANAGEMENT.INVITE_MEMBER' | translate }}
+            </h2>
+            
+            <div class="row g-3">
+              <div class="col-md-9">
+                <input type="email" [(ngModel)]="newMemberEmail"
+                  placeholder="{{ 'MEMBER_MANAGEMENT.EMAIL_PLACEHOLDER' | translate }}"
+                  class="form-control form-control shadow-none" />
               </div>
-              <button class="btn btn-danger btn-sm" (click)="deleteMember(member.uid)" [disabled]="member.role === 'admin'">
-                {{ 'DELETE' | translate }}
-              </button>
-            </li>
-          </ul>
-
+              <div class="col-md-3 d-grid">
+                <button (click)="sendInvite()" class="btn btn-primary" [disabled]="isSending">
+                  <span *ngIf="isSending" class="spinner-border spinner-border-sm me-2" role="status"></span>
+                  {{ (isSending ? 'MEMBER_MANAGEMENT.SENDING_INVITE' : 'MEMBER_MANAGEMENT.SEND_INVITE') | translate }}
+                </button>
+              </div>
+            </div>
+            
+            <div *ngIf="invitationSent" class="alert alert-success mt-3 mb-0 d-flex align-items-center" role="alert">
+              <i class="bi bi-check-circle-fill me-2"></i>
+              <div>{{ 'MEMBER_MANAGEMENT.INVITE_SENT_SUCCESS' | translate }}</div>
+            </div>
+          </div>
         </div>
+
+        <!-- Pending Invitations -->
+        <div class="card shadow-sm border-0 mb-4">
+          <div class="card-header bg-white py-3 border-bottom-0">
+            <h2 class="h5 mb-0 fw-bold">{{ 'MEMBER_MANAGEMENT.PENDING_INVITES' | translate }}</h2>
+          </div>
+          <div class="card-body px-4 py-2">
+            <div *ngIf="pendingInvites$ | async as invites; else loadingInvites">
+              <div *ngIf="invites.length > 0; else noInvites" class="list-group list-group-flush border rounded">
+                <div *ngFor="let invite of invites" class="list-group-item d-flex justify-content-between align-items-center py-2 bg-light-hover">
+                  <div class="d-flex align-items-center">
+                    <i class="bi bi-envelope text-secondary me-3"></i>
+                    <span class="text-break">{{ invite.email }}</span>
+                  </div>
+                  <button (click)="revokeInvite(invite.key!)" class="btn btn-outline-warning btn-sm px-3 rounded-pill">
+                    {{ 'MEMBER_MANAGEMENT.REVOKE' | translate }}
+                  </button>
+                </div>
+              </div>
+              <ng-template #noInvites>
+                <div class="text-center py-4 text-muted">
+                  <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                  <p class="mb-0">{{ 'MEMBER_MANAGEMENT.NO_PENDING_INVITES' | translate }}</p>
+                </div>
+              </ng-template>
+            </div>
+            <ng-template #loadingInvites>
+              <div class="d-flex align-items-center text-primary">
+                <span class="spinner-border spinner-border-sm me-2"></span>
+                <span>{{ 'MEMBER_MANAGEMENT.LOADING_INVITES' | translate }}</span>
+              </div>
+            </ng-template>
+          </div>
+        </div>
+
+        <!-- Current Members -->
+        <div class="card shadow-sm border-0">
+          <div class="card-header bg-white py-3 border-bottom-0">
+            <h2 class="h5 mb-0 fw-bold">{{ 'MEMBER_MANAGEMENT.CURRENT_MEMBERS' | translate }}</h2>
+          </div>
+          
+          <div class="card-body px-4 py-2">
+            <div *ngIf="(members$ | async) as members; else loadingMembers">
+              
+              <div *ngIf="members.length > 0; else noMembers" class="list-group list-group-flush border rounded">
+                
+                <div *ngFor="let member of members" class="list-group-item d-flex justify-content-between align-items-center py-2">
+                  <div class="d-flex align-items-center">
+                    
+                    <div class="avatar-circle me-3 bg-primary text-white d-flex align-items-center justify-content-center rounded-circle" 
+                         style="width: 40px; height: 40px; min-width: 40px; flex-shrink: 0;">
+                        {{ (member?.displayName?.[0] || '?').toUpperCase() }}
+                    </div>
+                    
+                    <div>
+                      <div class="fw-bold mb-0 text-dark">{{ member?.displayName || 'Unknown User' }}</div>
+                      <small class="badge bg-light text-dark border fw-normal">{{ member?.role }}</small>
+                    </div>
+                  </div>
+        
+                  <button *ngIf="(groupOwnerId$ | async) !== member?.uid" (click)="deleteMember(member!.uid!)"
+                    class="btn btn-outline-danger btn-sm px-3 rounded-pill">
+                    <i class="bi bi-trash3 me-1"></i>{{ 'MEMBER_MANAGEMENT.DELETE' | translate }}
+                  </button>
+                </div>
+              </div>
+        
+              <ng-template #noMembers>
+                <p class="text-muted mb-0">{{ 'MEMBER_MANAGEMENT.NO_MEMBERS' | translate }}</p>
+              </ng-template>
+            </div>
+        
+            <ng-template #loadingMembers>
+              <div class="d-flex align-items-center text-primary">
+                <span class="spinner-border spinner-border-sm me-2"></span>
+                <span>{{ 'MEMBER_MANAGEMENT.LOADING_MEMBERS' | translate }}</span>
+              </div>
+            </ng-template>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>

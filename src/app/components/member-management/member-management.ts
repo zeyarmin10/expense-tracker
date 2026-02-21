@@ -3,11 +3,11 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { IGroupMember, IUserProfile } from '../../core/models/data';
-import { Observable, of, firstValueFrom } from 'rxjs';
-import { switchMap, shareReplay } from 'rxjs/operators';
+import { IGroupMember, IUserProfile, IInvitation } from '../../core/models/data';
+import { Observable, of, firstValueFrom, from } from 'rxjs';
+import { switchMap, shareReplay, map } from 'rxjs/operators';
 import { AuthService } from '../../services/auth';
-import { DataManagerService } from '../../services/data-manager';
+import { DataManagerService, IGroupDetails } from '../../services/data-manager';
 import { UserDataService } from '../../services/user-data';
 import { InvitationService } from '../../services/invitation.service';
 import { ToastService } from '../../services/toast';
@@ -25,9 +25,10 @@ export class MemberManagementComponent implements OnInit {
   private invitationService = inject(InvitationService);
   private toastService = inject(ToastService);
 
-  userProfile$: Observable<any>;
+  userProfile$: Observable<IUserProfile | null>;
   members$: Observable<IGroupMember[]>;
-  pendingInvites$: Observable<any[]>;
+  pendingInvites$: Observable<IInvitation[]>;
+  groupOwnerId$: Observable<string | null>;
   invitationSent: boolean = false;
   
   newMemberEmail: string = '';
@@ -36,6 +37,7 @@ export class MemberManagementComponent implements OnInit {
   constructor() {
     this.userProfile$ = this.authService.currentUser$.pipe(
       switchMap(user => user ? this.userDataService.getUserProfile(user.uid) : of(null)),
+      map(profile => profile as IUserProfile | null), // Cast to IUserProfile
       shareReplay(1)
     );
 
@@ -54,6 +56,16 @@ export class MemberManagementComponent implements OnInit {
           : of([])
       )
     );
+
+    this.groupOwnerId$ = this.userProfile$.pipe(
+      switchMap(profile => 
+        profile && profile.groupId 
+          ? from(this.dataManager.getGroupDetails(profile.groupId)).pipe(
+              map((details: IGroupDetails | null) => details ? details.ownerId : null)
+            ) 
+          : of(null)
+      )
+    );
   }
 
   ngOnInit(): void {}
@@ -65,20 +77,24 @@ export class MemberManagementComponent implements OnInit {
     this.invitationSent = false;
     const profile = await firstValueFrom(this.userProfile$);
 
-    if (profile && profile.groupId && profile.language) {
+    if (profile && profile.groupId) {
       try {
         const groupDetails = await this.dataManager.getGroupDetails(profile.groupId);
-        const inviterName = profile.displayName || 'A friend';
-        const groupName = groupDetails.groupName || 'a group';
+        if (!groupDetails) {
+          throw new Error('Group details not found');
+        }
+        
+        const inviterName = profile.displayName || 'A Friend';
+        const userLanguage = 'en'; // Assuming 'en' for now, this should be dynamic
 
         this.invitationService.sendInvitationEmail(
           this.newMemberEmail,
           inviterName,
-          groupName,
-          profile.language,
+          groupDetails.groupName,
+          userLanguage,
           profile.groupId
         ).subscribe({
-            next: (response) => {
+            next: () => {
               this.toastService.showSuccess('Invitation email sent successfully');
               this.invitationSent = true;
               this.newMemberEmail = '';
@@ -91,13 +107,14 @@ export class MemberManagementComponent implements OnInit {
               this.isSending = false;
             }
           });
+
       } catch (err) {
         console.error('Error sending invitation:', err);
         this.toastService.showError('An error occurred while sending the invitation.');
         this.isSending = false;
       }
     } else {
-      console.error('User profile, group ID, or language not found.');
+      console.error('User profile or group ID not found.');
       this.toastService.showError('Could not find your user or group information.');
       this.isSending = false;
     }
@@ -109,8 +126,10 @@ export class MemberManagementComponent implements OnInit {
       if (profile && profile.groupId) {
         try {
           await this.dataManager.removeGroupMember(profile.groupId, memberId);
+          this.toastService.showSuccess('Member removed successfully');
         } catch (err) {
           console.error('Error removing member:', err);
+          this.toastService.showError('Failed to remove member.');
         }
       }
     }
@@ -120,8 +139,10 @@ export class MemberManagementComponent implements OnInit {
     if (confirm('Are you sure you want to revoke this invitation?')) {
       try {
         await this.dataManager.revokeGroupInvitation(inviteKey);
+        this.toastService.showSuccess('Invitation revoked successfully');
       } catch (err) {
         console.error('Error revoking invitation:', err);
+        this.toastService.showError('Failed to revoke invitation.');
       }
     }
   }

@@ -445,5 +445,20 @@
   "TOAST_MEMBER_REMOVED": "Member removed successfully.",
   "TOAST_ERROR_REMOVING_MEMBER": "Error removing member.",
   "TOAST_INVITATION_REVOKED": "Invitation revoked successfully.",
-  "TOAST_ERROR_REVOKING_INVITE": "Error revoking invitation."
+  "TOAST_ERROR_REVOKING_INVITE": "Error revoking invitation.",
+  "MEMBER_MANAGEMENT": {
+    "INVITE_MEMBER": "Invite New Member",
+    "EMAIL_PLACEHOLDER": "Enter email address",
+    "SEND_INVITE": "Send Invite",
+    "SENDING_INVITE": "Sending...",
+    "INVITE_SENT_SUCCESS": "Invitation sent successfully!",
+    "PENDING_INVITES": "Pending Invitations",
+    "NO_PENDING_INVITES": "No pending invitations.",
+    "LOADING_INVITES": "Loading invitations...",
+    "REVOKE": "Revoke",
+    "CURRENT_MEMBERS": "Current Members",
+    "NO_MEMBERS": "No members in this group yet.",
+    "LOADING_MEMBERS": "Loading members...",
+    "DELETE": "Delete"
+  }
 }
