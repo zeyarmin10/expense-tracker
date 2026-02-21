@@ -83,13 +83,13 @@ export class MemberManagementComponent implements OnInit {
           this.invitationService.sendInvitationEmail(this.newMemberEmail, inviteCode, inviterName, groupName)
             .subscribe({
               next: (response) => {
-                this.toastService.show('Invitation email sent successfully');
+                this.toastService.showSuccess('Invitation email sent successfully');
                 this.invitationSent = true;
                 this.newMemberEmail = '';
               },
               error: (error) => {
                 console.error('Failed to send invitation email:', error);
-                this.toastService.show('Failed to send invitation email. Please try again.', 'error');
+                this.toastService.showError('Failed to send invitation email. Please try again.');
               },
               complete: () => {
                 this.isSending = false;
@@ -101,12 +101,12 @@ export class MemberManagementComponent implements OnInit {
 
       } catch (err) {
         console.error('Error sending invitation:', err);
-        this.toastService.show('An error occurred while sending the invitation.', 'error');
+        this.toastService.showError('An error occurred while sending the invitation.');
         this.isSending = false;
       }
     } else {
       console.error('User profile or group ID not found.');
-      this.toastService.show('Could not find your user or group information.', 'error');
+      this.toastService.showError('Could not find your user or group information.');
       this.isSending = false;
     }
   }
