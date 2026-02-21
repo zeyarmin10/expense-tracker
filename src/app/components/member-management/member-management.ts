@@ -28,6 +28,7 @@ export class MemberManagementComponent implements OnInit {
   userProfile$: Observable<any>;
   members$: Observable<IGroupMember[]>;
   pendingInvites$: Observable<any[]>;
+  invitationSent: boolean = false;
   
   newMemberEmail: string = '';
   isSending: boolean = false;
@@ -60,7 +61,9 @@ export class MemberManagementComponent implements OnInit {
   async sendInvite(): Promise<void> {
     if (this.isSending || !this.newMemberEmail) return;
 
+    
     this.isSending = true;
+    this.invitationSent = false;
     const profile = await firstValueFrom(this.userProfile$);
 
     if (profile && profile.groupId && profile.language) { // Ensure language is available
@@ -87,6 +90,7 @@ export class MemberManagementComponent implements OnInit {
           ).subscribe({
               next: (response) => {
                 this.toastService.showSuccess('Invitation email sent successfully');
+                this.invitationSent = true;
                 this.newMemberEmail = '';
               },
               error: (error) => {

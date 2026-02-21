@@ -1,50 +1,58 @@
-<div class="container mx-auto p-4">
-  <h2 class="text-2xl font-bold mb-4">Group Members</h2>
+<div class="container mt-4">
+  <div class="row">
+    <div class="col-md-8 mx-auto">
+      <div class="card">
+        <div class="card-header">
+          <h4>{{ 'GROUP_MEMBERS' | translate }}</h4>
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <h5>{{ 'INVITE_NEW_MEMBER' | translate }}</h5>
+            <div class="input-group">
+              <input type="email" class="form-control" [(ngModel)]="newMemberEmail" [placeholder]="'MEMBER_EMAIL_PLACEHOLDER' | translate">
+              <button class="btn btn-primary" (click)="sendInvite()" [disabled]="!newMemberEmail">
+                {{ 'SEND_INVITE' | translate }}
+              </button>
+            </div>
+            <!-- Show success message instead of invite code -->
+            <div *ngIf="invitationSent" class="alert alert-success mt-2">
+              {{ 'INVITATION_SENT_SUCCESS' | translate }}
+            </div>
+          </div>
 
-  <!-- Invite New Member -->
-  <div class="mb-6 p-4 border rounded-lg">
-    <h3 class="text-xl font-semibold mb-2">Invite New Member</h3>
-    <div class="flex items-center space-x-2">
-      <input 
-        type="email" 
-        [(ngModel)]="newMemberEmail" 
-        class="input input-bordered w-full" 
-        placeholder="Enter email address"
-      />
-      <button 
-        class="btn btn-primary" 
-        (click)="sendInvite()" 
-        [disabled]="isSending || !newMemberEmail.trim()">
-        <span *ngIf="isSending" class="loading loading-spinner"></span>
-        {{ isSending ? 'Sending...' : 'Send Invite' }}
-      </button>
-    </div>
-    <!-- The success message box below is now removed -->
-  </div>
+          <hr>
 
-  <!-- Pending Invitations -->
-  <div *ngIf="(pendingInvites$ | async) as invites" class="mb-6">
-    <h3 class="text-xl font-semibold mb-2">Pending Invitations</h3>
-    <div *ngIf="invites.length > 0; else noPendingInvites" class="space-y-2">
-      <div *ngFor="let invite of invites" class="flex items-center justify-between p-2 border rounded">
-        <span>{{ invite.recipientEmail }}</span>
-        <button class="btn btn-sm btn-error" (click)="revokeInvite(invite.key)">Revoke Access</button>
+          <!-- Pending Invitations -->
+          <div *ngIf="(pendingInvites$ | async) as invites">
+            <div *ngIf="invites.length > 0">
+              <h5>{{ 'PENDING_INVITATIONS' | translate }}</h5>
+              <ul class="list-group mb-3">
+                <li *ngFor="let invite of invites" class="list-group-item d-flex justify-content-between align-items-center">
+                  <span>{{ invite.recipientEmail }}</span>
+                  <button class="btn btn-danger btn-sm" (click)="revokeInvite(invite.key)">
+                    {{ 'REVOKE' | translate }}
+                  </button>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <h5>{{ 'CURRENT_MEMBERS' | translate }}</h5>
+          <!-- Use async pipe to subscribe to members$ observable -->
+          <ul class="list-group">
+            <li *ngFor="let member of (members$ | async)" class="list-group-item d-flex justify-content-between align-items-center">
+              <div>
+                <h6 class="mb-0">{{ member.displayName || member.email }}</h6>
+                <small class="text-muted">{{ 'Role' | translate }}: {{ member.role | titlecase }}</small>
+              </div>
+              <button class="btn btn-danger btn-sm" (click)="deleteMember(member.uid)" [disabled]="member.role === 'admin'">
+                {{ 'DELETE' | translate }}
+              </button>
+            </li>
+          </ul>
+
+        </div>
       </div>
     </div>
-    <ng-template #noPendingInvites>
-      <p>No pending invitations.</p>
-    </ng-template>
   </div>
-
-  <!-- Current Members -->
-  <div>
-    <h3 class="text-xl font-semibold mb-2">Current Members</h3>
-    <div *ngIf="(members$ | async) as members" class="space-y-2">
-      <div *ngFor="let member of members" class="flex items-center justify-between p-2 border rounded">
-        <span>{{ member.uid }}</span> <!-- You might want to display member name/email instead -->
-        <button class="btn btn-sm btn-error" (click)="deleteMember(member.uid)">Delete</button>
-      </div>
-    </div>
-  </div>
-
 </div>
