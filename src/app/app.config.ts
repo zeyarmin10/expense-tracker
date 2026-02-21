@@ -5,6 +5,8 @@ import {
   // provideZonelessChangeDetection,
 } from '@angular/core';
 import { provideRouter } from '@angular/router';
+import { AngularFireModule } from '@angular/fire/compat';
+import { AngularFireDatabaseModule } from '@angular/fire/compat/database';
 
 import { routes } from './app.routes';
 import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
@@ -44,6 +46,8 @@ export const appConfig: ApplicationConfig = {
     // These should be imported via importProvidersFrom as they are Angular Modules
     importProvidersFrom(
       FontAwesomeModule, // <== Moved FontAwesomeModule here
+      AngularFireModule.initializeApp(environment.firebaseConfig),
+      AngularFireDatabaseModule,
       TranslateModule.forRoot({
         loader: {
           provide: TranslateLoader,
