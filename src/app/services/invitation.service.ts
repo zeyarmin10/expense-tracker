@@ -47,7 +47,8 @@ export class InvitationService {
     return this.generateAndStoreInviteCode(recipientEmail, groupId).pipe(
       switchMap(inviteCode => {
         const loginLink = `${window.location.origin}/login?invite_code=${inviteCode}`;
-        const primaryColor = '#70BDF0'; // App's primary color
+        const PrimaryBgColor = '#70BDF0'; // App's primary color
+        const inviteCodeColor = '#1373BD';
 
         const isMyanmar = language === 'my';
 
@@ -78,7 +79,7 @@ export class InvitationService {
 
         const htmlBody = `
           <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; line-height: 1.6; max-width: 600px; margin: 20px auto; border: 1px solid #ddd; border-radius: 12px; overflow: hidden;">
-            <div style="background-color: ${primaryColor}; color: white; padding: 20px; text-align: center;">
+            <div style="background-color: ${PrimaryBgColor}; color: white; padding: 20px; text-align: center;">
               <h1 style="margin: 0; font-size: 28px;">Expense Tracker</h1>
             </div>
             <div style="padding: 25px 30px;">
@@ -87,10 +88,10 @@ export class InvitationService {
               <p style="font-size: 16px;">${texts.body1}</p>
               <p style="font-size: 16px;">${texts.body2}</p>
               <div style="text-align: center; margin: 30px 0;">
-                <a href="${loginLink}" style="background-color: ${primaryColor}; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-size: 18px; display: inline-block;">${texts.button}</a>
+                <a href="${loginLink}" style="background-color: ${PrimaryBgColor}; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-size: 18px; display: inline-block;">${texts.button}</a>
               </div>
               <p style="font-size: 16px;">${texts.body4}</p>
-              <p style="font-size: 20px; font-weight: bold; text-align: center; letter-spacing: 2px; color: ${primaryColor};">${inviteCode}</p>
+              <p style="font-size: 20px; font-weight: bold; text-align: center; letter-spacing: 2px; color: ${inviteCodeColor}; background-color: ${PrimaryBgColor};">${inviteCode}</p>
               <p style="font-size: 16px; margin-top: 20px;">${texts.body3}</p>
               <p style="font-size: 14px; color: #555; word-break: break-all;">${loginLink}</p>
               <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
