@@ -51,7 +51,7 @@
           </ng-container>
         </div>
 
-        <div class="card mb-4">
+        <div class="card mb-4" *ngIf="userProfile?.accountType === 'personal' || userRole === 'admin'">
           <div class="card-header d-flex justify-content-between align-items-center budget-card-header" role="button"
             (click)="toggleVisibility('budgetForm')">
             {{ "ADD_BUDGET" | translate }}
@@ -193,7 +193,7 @@
                       </small>
                     </div>
                     <div class="text-end">
-                      <fa-icon class="btn btn-sm btn-outline-danger" [icon]="faTrash"
+                      <fa-icon *ngIf="userProfile?.accountType === 'personal' || userRole === 'admin'" class="btn btn-sm btn-outline-danger" [icon]="faTrash"
                         (click)="confirmDeleteBudget(budget.id)" title="{{ 'DELETE' | translate }}"></fa-icon>
                     </div>
                   </li>

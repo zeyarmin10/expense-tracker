@@ -65,7 +65,7 @@
           </ng-container>
         </div>
 
-        <div class="card mb-4">
+        <div class="card mb-4" *ngIf="userProfile?.accountType === 'personal' || userRole === 'admin'">
           <div
             class="card-header d-flex justify-content-between align-items-center"
             role="button"
@@ -215,6 +215,7 @@
                     </div>
                     <div class="text-end">
                       <fa-icon
+                        *ngIf="userProfile?.accountType === 'personal' || userRole === 'admin'"
                         class="btn btn-sm btn-outline-danger"
                         [icon]="faTrash"
                         (click)="confirmDeleteIncome(income.id)"

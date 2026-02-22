@@ -124,9 +124,9 @@ export class BudgetComponent implements OnInit, OnDestroy {
 
   budgetChartData$: Observable<{ labels: string[]; datasets: any[] }>;
 
-  totalBudgetByCurrency$: Observable<{ [currency: string]: number }>;
-  totalExpensesByCurrency$: Observable<{ [currency: string]: number }>;
-  remainingBalanceByCurrency$: Observable<{ [currency: string]: number }>;
+  totalBudgetByCurrency$: Observable<{ [key: string]: number }>;
+  totalExpensesByCurrency$: Observable<{ [key: string]: number }>;
+  remainingBalanceByCurrency$: Observable<{ [key: string]: number }>;
 
   // Updated type declaration to match the emitted structure
   monthlySummary$: Observable<MonthlySummaryItem[]>;
@@ -159,6 +159,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
   public endDate: string | null = null;
   public dateFilter$ = new BehaviorSubject<DateRange>({ start: '', end: '' });
   userProfile: UserProfile | null = null;
+  public userRole: string | null = null;
 
   availableCurrencies = AVAILABLE_CURRENCIES;
 
@@ -176,7 +177,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
       now.getDate()
     );
 
-    // ✅ FIXED: Initialize start and end dates here
     this.startDate = this.datePipe.transform(oneYearAgo, 'yyyy-MM-dd');
     this.endDate = this.datePipe.transform(now, 'yyyy-MM-dd');
 
@@ -191,15 +191,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
       ],
       description: [''],
     });
-    // this.budgets$ = this.budgetService.getBudgets().pipe(
-    //   map((budgets) =>
-    //     budgets.sort((a, b) => {
-    //       const dateA = a.period ? new Date(a.period).getTime() : 0;
-    //       const dateB = b.period ? new Date(b.period).getTime() : 0;
-    //       return dateB - dateA;
-    //     })
-    //   )
-    // );
     this.budgets$ = this.budgetService.getBudgets();
 
     this.expenses$ = this.expenseService.getExpenses();
@@ -209,94 +200,14 @@ export class BudgetComponent implements OnInit, OnDestroy {
     this._startDate$.next(this.startDate);
     this._endDate$.next(this.endDate);
 
-    // const filteredData$ = combineLatest([
-    //   this.budgets$,
-    //   this.expenses$,
-    //   this._selectedDateRange$,
-    //   this._startDate$,
-    //   this._endDate$,
-    // ]).pipe(
-    //   map(([budgets, expenses, dateRange, startDate, endDate]) => {
-    //     const now = new Date();
-    //     let start: Date;
-    //     let end: Date = now;
-
-    //     switch (dateRange) {
-    //       case 'last30Days':
-    //         start = new Date(
-    //           now.getFullYear(),
-    //           now.getMonth(),
-    //           now.getDate() - 30
-    //         );
-    //         break;
-    //       case 'currentMonth':
-    //         start = new Date(now.getFullYear(), now.getMonth(), 1);
-    //         end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    //         break;
-    //       case 'currentYear':
-    //         start = new Date(now.getFullYear(), 0, 1);
-    //         end = new Date(now.getFullYear(), 11, 31);
-    //         break;
-    //       case 'lastYear':
-    //         start = new Date(now.getFullYear() - 1, 0, 1);
-    //         end = new Date(now.getFullYear() - 1, 11, 31);
-    //         break;
-    //       case 'custom':
-    //         start = new Date(startDate);
-    //         end = new Date(endDate);
-    //         break;
-    //       default:
-    //         start = new Date(now.getFullYear(), 0, 1);
-    //         break;
-    //     }
-
-    //     if (dateRange !== 'last30Days') {
-    //       end.setHours(23, 59, 59, 999);
-    //     }
-
-    //     const filteredBudgets = budgets.filter((b) => {
-    //       if (b.type === 'monthly' && b.period) {
-    //         const budgetDate = new Date(b.period);
-    //         return budgetDate >= start && budgetDate <= end;
-    //       }
-    //       return false;
-    //     });
-
-    //     const filteredExpenses = expenses.filter((e) => {
-    //       const expenseDate = new Date(e.date);
-    //       return expenseDate >= start && expenseDate <= end;
-    //     });
-
-    //     return { budgets: filteredBudgets, expenses: filteredExpenses };
-    //   })
-    // );
-
-    // ✅ REVISED: Use the dateFilter$ observable to get the date range
     const filteredData$ = combineLatest([
       this.budgets$,
       this.expenses$,
-      this.dateFilter$, // ✅ Use the new date filter observable
+      this.dateFilter$, 
     ]).pipe(
       map(([budgets, expenses, dateRange]) => {
-        // ✅ Use the date range directly from the service output
         const start = new Date(dateRange.start);
         const end = new Date(dateRange.end);
-
-        // const filteredBudgets = budgets.filter((b) => {
-        //   if (b.type === 'monthly' && b.period) {
-        //     const budgetDate = new Date(b.period);
-        //     // For monthly budgets, we need to check if the date falls within the month
-        //     const budgetMonth = budgetDate.getMonth();
-        //     const budgetYear = budgetDate.getFullYear();
-        //     return budgetDate >= start && budgetDate <= end;
-        //   } else if (b.type === 'yearly' && b.period) {
-        //     const budgetDate = new Date(b.period);
-        //     // For yearly budgets, check if the date falls within the year
-        //     const budgetYear = budgetDate.getFullYear();
-        //     return budgetDate >= start && budgetDate <= end;
-        //   }
-        //   return false;
-        // });
 
         const filteredBudgets = budgets
         .filter((b) => {
@@ -369,13 +280,11 @@ export class BudgetComponent implements OnInit, OnDestroy {
           }
         });
 
-        // Create a temporary array to sort by the machine-readable date string
         const temporarySummaryArray = Array.from(monthlyDataMap.entries()).map(
           ([key, data]) => {
             const [monthYearStr, currency] = key.split('_');
             const monthDate = new Date(monthYearStr + '-01');
 
-            // Use total budget if available, otherwise use sum of individual budgets
             const totalBudget =
               data.budgetAmount > 0
                 ? data.budgetAmount
@@ -383,8 +292,8 @@ export class BudgetComponent implements OnInit, OnDestroy {
             const balance = totalBudget - data.expenseAmount;
 
             return {
-              sortDate: monthDate, // Use the Date object for sorting
-              month: this.formatLocalizedDateSummary(monthDate), // Use the formatted string for display
+              sortDate: monthDate, 
+              month: this.formatLocalizedDateSummary(monthDate), 
               total: { [currency]: data.expenseAmount },
               budget: {
                 amount: totalBudget,
@@ -395,12 +304,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
           }
         );
 
-        // Sort the temporary array by the 'sortDate' property
-        // temporarySummaryArray.sort(
-        //   (a, b) => b.sortDate.getTime() - a.sortDate.getTime()
-        // );
-
-        // Map the sorted array to the final structure, excluding the temporary 'sortDate' property
         return temporarySummaryArray.map((item) => ({
           month: item.month,
           total: item.total,
@@ -413,7 +316,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
       map(({ budgets, expenses }) => {
         const monthlyDataMap = new Map<string, SpendingMonitorItem>();
 
-        // Process expenses by month and category
         expenses.forEach((expense) => {
           const expenseDate = new Date(expense.date);
           const monthYear = this.datePipe.transform(expenseDate, 'yyyy-MM')!;
@@ -444,7 +346,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
           const monthData = monthlyDataMap.get(key)!;
           monthData.total.spent += expense.totalCost;
 
-          // Find or create category entry
           let categoryEntry = monthData.categories.find(
             (c) => c.name === expense.category
           );
@@ -462,7 +363,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
           categoryEntry.spent += expense.totalCost;
         });
 
-        // Process budgets by month and category
         budgets.forEach((budget) => {
           if (!budget.period) return;
 
@@ -495,11 +395,9 @@ export class BudgetComponent implements OnInit, OnDestroy {
           const monthData = monthlyDataMap.get(key)!;
 
           if (budget.category === 'all') {
-            // Add to total budget
             monthData.total.budget += budget.amount;
             monthData.total.budgetType = 'all';
           } else {
-            // Find or create category entry
             let categoryEntry = monthData.categories.find(
               (c) => c.name === budget.category
             );
@@ -520,9 +418,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
           }
         });
 
-        // Calculate remaining amounts and percentages
         monthlyDataMap.forEach((monthData) => {
-          // Calculate total budget by summing individual categories if no total budget exists
           if (monthData.total.budget === 0 && monthData.categories.length > 0) {
             monthData.total.budget = monthData.categories.reduce(
               (sum, category) => sum + category.budget,
@@ -530,7 +426,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
             );
           }
 
-          // Calculate total remaining and percentage
           monthData.total.remaining =
             monthData.total.budget - monthData.total.spent;
           monthData.total.percentage =
@@ -538,7 +433,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
               ? (monthData.total.spent / monthData.total.budget) * 100
               : 0;
 
-          // Calculate for each category
           monthData.categories.forEach((category) => {
             category.remaining = category.budget - category.spent;
             category.percentage =
@@ -546,24 +440,14 @@ export class BudgetComponent implements OnInit, OnDestroy {
                 ? (category.spent / category.budget) * 100
                 : 0;
           });
-
-          // Filter out categories without budgets
-          //   monthData.categories = monthData.categories.filter(
-          //     (category) => category.hasBudget
-          //   );
         });
 
-        // Convert to array and sort by date (newest first)
-        // return Array.from(monthlyDataMap.values()).sort(
-        //   (a, b) => b.sortDate.getTime() - a.sortDate.getTime()
-        // );
         return Array.from(monthlyDataMap.values());
       })
     );
 
     this.totalBudgetByCurrency$ = filteredData$.pipe(
       map(({ budgets }) => {
-        // First, group budgets by month and currency to calculate aggregated totals
         const monthlyBudgetsMap = new Map<
           string,
           { total: number; individual: number }
@@ -590,11 +474,9 @@ export class BudgetComponent implements OnInit, OnDestroy {
           monthlyBudgetsMap.set(key, currentData);
         });
 
-        // Now calculate the final totals by currency
         return Array.from(monthlyBudgetsMap.entries()).reduce(
           (acc, [key, data]) => {
             const [, currency] = key.split('_');
-            // Use total budget if available, otherwise use sum of individual budgets
             const amount = data.total > 0 ? data.total : data.individual;
             acc[currency] = (acc[currency] || 0) + amount;
             return acc;
@@ -619,7 +501,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
         const balance: { [currency: string]: number } = {};
         const allCurrencies = new Set<string>();
 
-        // First, calculate the effective budget for each month
         const monthlyBudgetsMap = new Map<
           string,
           { total: number; individual: number }
@@ -647,21 +528,18 @@ export class BudgetComponent implements OnInit, OnDestroy {
           allCurrencies.add(budget.currency);
         });
 
-        // Add effective budgets to balance
         monthlyBudgetsMap.forEach((data, key) => {
           const [, currency] = key.split('_');
           const effectiveBudget = data.total > 0 ? data.total : data.individual;
           balance[currency] = (balance[currency] || 0) + effectiveBudget;
         });
 
-        // Subtract expenses
         expenses.forEach((expense) => {
           allCurrencies.add(expense.currency);
           balance[expense.currency] =
             (balance[expense.currency] || 0) - expense.totalCost;
         });
 
-        // Ensure all currencies have a value
         allCurrencies.forEach((currency) => {
           if (balance[currency] === undefined) {
             balance[currency] = 0;
@@ -672,7 +550,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
       })
     );
 
-    // ✅ REVISED: Use filteredData$
     this.budgetChartData$ = filteredData$.pipe(
       map(({ budgets, expenses }) => {
         const monthlyData: {
@@ -681,7 +558,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
 
         const currentLang = this.translate.currentLang;
         const locale = currentLang === 'my' ? 'my-MM' : currentLang;
-        // Changed to 'MMM, yy' for abbreviated month and year
         const dateFormat = 'MMM, yy';
 
         budgets.forEach((budget) => {
@@ -720,23 +596,15 @@ export class BudgetComponent implements OnInit, OnDestroy {
           monthlyData[monthYear].expense += expense.totalCost;
         });
 
-        // Get an array of objects to sort
         const sortedMonthlyData = Object.keys(monthlyData).map((month) => ({
           month: month,
           data: monthlyData[month],
         }));
 
-        // Sort the array in ascending chronological order
-        // sortedMonthlyData.sort(
-        //   (a, b) => a.data.date.getTime() - b.data.date.getTime()
-        // );
-
-        // ✅ REVISED: Get start and end dates from the dateFilter$ observable.
         const dateRange = this.dateFilter$.getValue();
         let start: Date = new Date(dateRange.start);
         let end: Date = new Date(dateRange.end);
 
-        // Normalize start to first day of month, end to first day of month
         start.setDate(1);
         end.setDate(1);
 
@@ -753,7 +621,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
           current.setMonth(current.getMonth() + 1);
         }
 
-        // Map sortedMonthlyData by label for quick lookup
         const monthlyDataMap = new Map<
           string,
           { budget: number; expense: number }
@@ -762,7 +629,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
           monthlyDataMap.set(item.month, item.data);
         });
 
-        // Fill budgetedAmounts and expenseAmounts for all labels, defaulting to 0 if missing
         const budgetedAmounts: number[] = labels.map(
           (label) => monthlyDataMap.get(label)?.budget ?? 0
         );
@@ -793,7 +659,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
     );
 
     this.budgetChartData$.subscribe((data) => {
-      // Add a small delay to ensure DOM is ready
       setTimeout(() => {
         this.renderChart(data);
       }, 100);
@@ -801,10 +666,8 @@ export class BudgetComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    // ✅ FIXED: Set the initial date range when the component initializes
     this.setDateFilter(this.selectedDateFilter);
 
-    // ✅ NEW: Fetch user profile
     this.userProfile$ = this.authService.currentUser$.pipe(
       switchMap((user) => {
         if (user?.uid) {
@@ -814,11 +677,23 @@ export class BudgetComponent implements OnInit, OnDestroy {
       })
     );
 
-    // ✅ NEW: Subscribe to userProfile$ once to set the initial date filter
-    this.userProfile$.pipe(take(1)).subscribe((profile) => {
-      // Use take(1) if you only need the initial value
-      this.setInitialDateFilter(profile);
+    const profileSubscription = this.userProfile$.subscribe((profile) => {
+      this.userProfile = profile;
+      if (profile) {
+        this.setInitialDateFilter(profile);
+
+        const defaultCurrency = profile.currency || 'MMK';
+        this.budgetForm.get('currency')?.setValue(defaultCurrency);
+
+        if (profile.accountType === 'group' && profile.roles && typeof profile.roles === 'object' && Object.keys(profile.roles).length > 0) {
+          this.userRole = Object.values(profile.roles)[0]; 
+        } else {
+          this.userRole = null;
+        }
+      }
     });
+
+    this.subscriptions.add(profileSubscription);
 
     this.categories$ = this.categoryService
       .getCategories()
@@ -829,7 +704,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
         ])
       );
 
-    // Subscribe to categories$ and store them in the categories property
     this.subscriptions.add(
       this.categories$.subscribe((categories) => {
         this.categories = categories;
@@ -847,28 +721,8 @@ export class BudgetComponent implements OnInit, OnDestroy {
       );
     }
     Chart.defaults.font.family = 'MyanmarUIFont, Arial, sans-serif';
-
-    // ✅ REVISION: Fetch user profile and set the default currency on form load
-    this.authService.currentUser$
-      .pipe(
-        switchMap((user) => {
-          if (user && user.uid) {
-            // If a user is logged in, fetch their profile
-            return this.userDataService.getUserProfile(user.uid);
-          }
-          // Otherwise, return a null profile
-          return of(null);
-        }),
-        // Only take the first value emitted and then unsubscribe
-        take(1)
-      )
-      .subscribe((profile) => {
-        this.userProfile = profile;
-        // Set the currency value based on the profile, or default to 'MMK'
-        const defaultCurrency = profile?.currency || 'MMK';
-        this.budgetForm.get('currency')?.setValue(defaultCurrency);
-      });
   }
+
 
   ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
@@ -884,7 +738,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
 
     if (type === 'monthly') {
       periodControl?.setValidators(Validators.required);
-      // Set to first day of current month
       const firstDayOfMonth = new Date(
         currentDate.getFullYear(),
         currentDate.getMonth(),
@@ -895,7 +748,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
       );
     } else if (type === 'yearly') {
       periodControl?.setValidators(Validators.required);
-      // Set to first day of current year
       const firstDayOfYear = new Date(currentDate.getFullYear(), 0, 1);
       periodControl?.setValue(
         this.datePipe.transform(firstDayOfYear, 'yyyy-MM-dd')
@@ -910,11 +762,10 @@ export class BudgetComponent implements OnInit, OnDestroy {
     if (this.budgetForm.valid) {
       const formValue = this.budgetForm.value;
 
-      // Check if a budget already exists for this period
       this.budgetService
         .getBudgets()
         .pipe(
-          take(1) // Take the first emission and unsubscribe
+          take(1) 
         )
         .subscribe((budgets) => {
           const periodDate = new Date(formValue.period);
@@ -924,7 +775,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
           )!;
           const periodYear = this.datePipe.transform(periodDate, 'yyyy')!;
 
-          // Filter budgets for the same period and currency
           const existingBudgets = budgets.filter((budget) => {
             if (!budget.period) return false;
             const budgetDate = new Date(budget.period);
@@ -934,7 +784,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
             )!;
             const budgetYear = this.datePipe.transform(budgetDate, 'yyyy')!;
 
-            // Check if same currency and either same month (for monthly) or same year (for yearly)
             return (
               budget.currency === defaultCurrency &&
               ((formValue.type === 'monthly' &&
@@ -943,13 +792,11 @@ export class BudgetComponent implements OnInit, OnDestroy {
             );
           });
 
-          // NEW VALIDATION: Check if there are budgets of different types for the same period
           const hasDifferentTypeBudget = existingBudgets.some(
             (budget) => budget.type !== formValue.type
           );
 
           if (hasDifferentTypeBudget) {
-            // Show error modal: Cannot mix monthly and yearly budgets
             this.showBudgetErrorModal('MIXED_BUDGET_TYPES_ERROR');
             return;
           }
@@ -959,19 +806,16 @@ export class BudgetComponent implements OnInit, OnDestroy {
           if (formValue.category === 'all') {
             categoryName = 'all';
 
-            // Check if individual category budgets already exist for this period
             const hasIndividualBudgets = existingBudgets.some(
               (budget) =>
                 budget.category !== 'all' && budget.category !== undefined
             );
 
             if (hasIndividualBudgets) {
-              // Show error modal: Cannot add total budget when individual categories exist
               this.showBudgetErrorModal('INDIVIDUAL_CATEGORIES_EXIST_ERROR');
               return;
             }
           } else {
-            // Direct lookup in the categories array
             const selectedCategory = this.categories.find(
               (c) => c.id === formValue.category
             );
@@ -979,24 +823,20 @@ export class BudgetComponent implements OnInit, OnDestroy {
               ? selectedCategory.name
               : formValue.category;
 
-            // Check if a total budget already exists for this period
             const hasTotalBudget = existingBudgets.some(
               (budget) => budget.category === 'all'
             );
 
             if (hasTotalBudget) {
-              // Show error modal: Cannot add individual category when total budget exists
               this.showBudgetErrorModal('TOTAL_BUDGET_EXISTS_ERROR');
               return;
             }
 
-            // Check if this specific category already has a budget for this period
             const hasCategoryBudget = existingBudgets.some(
               (budget) => budget.category === categoryName
             );
 
             if (hasCategoryBudget) {
-              // Show error modal: This category already has a budget for this period
               this.showBudgetErrorModal('CATEGORY_BUDGET_EXISTS_ERROR');
               return;
             }
@@ -1018,7 +858,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
             .addBudget(budgetData)
             .then(() => {
               this.toastService.showSuccess(this.translate.instant('BUDGET_SAVE_SUCCESS'));
-              // console.log('Budget added successfully!');
               this.resetForm();
             })
             .catch((error) => {
@@ -1029,7 +868,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
   }
 
   private showBudgetErrorModal(errorType: string): void {
-    // Set up the modal based on error type
     let title = '';
     let message = '';
 
@@ -1055,7 +893,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
         message = this.translate.instant('GENERIC_BUDGET_ERROR');
     }
 
-    // Use the confirmation modal as an alert
     this.errorModalRef.title = title;
     this.errorModalRef.message = message;
     this.errorModalRef.messageColor = 'text-danger';
@@ -1077,7 +914,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
         .deleteBudget(this.budgetIdToDelete)
         .then(() => {
           this.toastService.showSuccess(this.translate.instant('BUDGET_DELETE_SUCCESS'));
-          // console.log('Budget deleted successfully!');
           this.budgetIdToDelete = undefined;
         })
         .catch((error) => {
@@ -1115,27 +951,21 @@ export class BudgetComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ✅ NEW: Method to determine and set the initial date filter based on profile
   setInitialDateFilter(profile: UserProfile | null): void {
     const budgetPeriod = profile?.budgetPeriod;
-    const startMonth = profile?.budgetStartDate; // YYYY-MM
-    const endMonth = profile?.budgetEndDate; // YYYY-MM
+    const startMonth = profile?.budgetStartDate; 
+    const endMonth = profile?.budgetEndDate; 
 
-    let filterValue: string = 'currentMonth'; // Default filter
+    let filterValue: string = 'currentMonth';
 
-    // Only apply the budget filter if a period is explicitly set
     if (budgetPeriod) {
       if (budgetPeriod === 'custom' && startMonth && endMonth) {
-        // 1. Calculate and set the YYYY-MM-DD range from the YYYY-MM strings
-        // this.setCustomBudgetRange(startMonth, endMonth);
         this.startDate = startMonth;
         this.endDate = endMonth;
-        // 2. Set the UI filter to 'custom' and trigger filtering
         this.setDateFilter('custom');
-        return; // Exit after setting custom range
+        return; 
       }
 
-      // Map other budget periods to standard filter strings.
       switch (budgetPeriod) {
         case 'weekly':
           filterValue = 'currentWeek';
@@ -1151,33 +981,22 @@ export class BudgetComponent implements OnInit, OnDestroy {
       }
     }
 
-    // Apply the standard filter or the 'currentMonth' default
     this.setDateFilter(filterValue);
   }
 
-  // ✅ NEW: Method to convert YYYY-MM custom budget months to YYYY-MM-DD dates
   setCustomBudgetRange(startMonth: string, endMonth: string): void {
-    // Start date: First day of the start month
     this.startDate = `${startMonth}-01`;
 
-    // End date: Last day of the end month
-    // The Date constructor trick: new Date(year, monthIndex, 0) gives the last day of the PREVIOUS month.
-    // So, we use monthIndex + 1 to get the correct last day of the desired month (month index is 0-11).
-    const monthIndex = parseInt(endMonth.substring(5), 10); // e.g., '01' -> 1
+    const monthIndex = parseInt(endMonth.substring(5), 10); 
     const year = parseInt(endMonth.substring(0, 4), 10);
 
-    // Set to the last day of the month specified by endMonth (monthIndex is 1-indexed here)
     const lastDayOfMonth = new Date(year, monthIndex, 0);
     this.endDate = this.datePipe.transform(lastDayOfMonth, 'yyyy-MM-dd') || '';
-
-    // Note: this.startDate and this.endDate are class properties used by setDateFilter('custom')
   }
 
-  // ✅ REVISED: setDateFilter to handle 'currentWeek' filter
   setDateFilter(filter: string): void {
     this.selectedDateFilter = filter;
 
-    // List of filters handled by DateFilterService
     const serviceFilters = [
       'last30Days',
       'currentMonth',
@@ -1185,36 +1004,27 @@ export class BudgetComponent implements OnInit, OnDestroy {
       'lastSixMonths',
       'currentYear',
       'lastYear',
-      'currentWeek', // Assumes DateFilterService handles 'currentWeek'
+      'currentWeek', 
     ];
 
     if (serviceFilters.includes(filter)) {
-      // Standard filters use the service
       const dateRange = this.dateFilterService.getDateRange(
         this.datePipe,
         filter,
-        this.startDate, // These are passed, but start/end dates for fixed filters are calculated by the service
+        this.startDate, 
         this.endDate
       );
       this.dateFilter$.next(dateRange);
     } else if (filter === 'custom') {
-      // 'custom' filter uses the component's startDate/endDate properties
       if (this.startDate && this.endDate) {
         this.dateFilter$.next({
           start: this.startDate,
           end: this.endDate,
         });
       } else {
-        // Fallback if 'custom' is selected manually but dates are empty
         this.setDateFilter('currentMonth');
       }
     }
-
-    // console.log(
-    //   'Budget date range set by filter:',
-    //   this.selectedDateFilter,
-    //   this.dateFilter$.value
-    // );
   }
 
   private chartInstance: Chart | undefined;
@@ -1227,13 +1037,11 @@ export class BudgetComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Destroy previous chart instance if it exists
     if (this.chartInstance) {
       this.chartInstance.destroy();
       this.chartInstance = undefined;
     }
 
-    // A reference to the component instance is needed to access its properties.
     const component = this;
 
     try {
@@ -1246,13 +1054,11 @@ export class BudgetComponent implements OnInit, OnDestroy {
           maintainAspectRatio: false,
           scales: {
             x: {
-              // 'x' axis now represents the amount
               stacked: false,
               beginAtZero: true,
               
             },
             y: {
-              // 'y' axis now represents the months
               stacked: false,
               beginAtZero: true,
               ticks: {
@@ -1275,36 +1081,29 @@ export class BudgetComponent implements OnInit, OnDestroy {
 
     if (currentLang === 'my') {
       const d = new Date(date);
-      // Get the full English month name
       const englishMonth = this.datePipe.transform(d, 'MMMM');
-      // Look up the Burmese month name from the constant
       const burmeseMonth = englishMonth
         ? BURMESE_MONTH_FULL_NAMES[
             englishMonth as keyof typeof BURMESE_MONTH_FULL_NAMES
           ]
         : '';
 
-      // Format the year with Burmese numerals
       const burmeseYear = new Intl.NumberFormat('my-MM', {
         numberingSystem: 'mymr',
         useGrouping: false,
       }).format(d.getFullYear());
 
-      // Combine the Burmese month and year
       return `${burmeseMonth} ${burmeseYear}`;
     } else {
-      // Use standard formatting for other languages
       return this.datePipe.transform(date, 'MMMM y') || '';
     }
   }
 
-  // Update the formatLocalizedDate method to handle full dates
   formatLocalizedDate(date: string | Date | null | undefined): string {
     if (!date) {
       return '';
     }
 
-    // Handle invalid dates
     let dateObj: Date;
     if (typeof date === 'string') {
       dateObj = new Date(date);
@@ -1312,7 +1111,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
       dateObj = new Date(date);
     }
 
-    // Check if the date is valid
     if (isNaN(dateObj.getTime())) {
       console.warn('Invalid date:', date);
       return String(date);
@@ -1321,7 +1119,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
     const currentLang = this.translate.currentLang;
 
     if (currentLang === 'my') {
-      // Get the English month abbreviation and map it to Burmese
       const month = this.datePipe.transform(dateObj, 'MMM');
       const burmeseMonth = month
         ? BURMESE_MONTH_ABBREVIATIONS[
@@ -1329,7 +1126,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
           ]
         : '';
 
-      // Format the day and year with Burmese numerals
       const day = new Intl.NumberFormat('my-MM', {
         numberingSystem: 'mymr',
         useGrouping: false,
@@ -1339,10 +1135,8 @@ export class BudgetComponent implements OnInit, OnDestroy {
         useGrouping: false,
       }).format(dateObj.getFullYear());
 
-      // Combine the localized parts
       return `${day} ${burmeseMonth} ${year}`;
     } else {
-      // For all other languages, use the standard Angular DatePipe
       return (
         this.datePipe.transform(
           dateObj,
@@ -1353,8 +1147,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
       );
     }
   }
-
-  // Add these methods to your dashboard component
 
   getBalanceCardClass(balances: any): string {
     if (!balances) return 'balance-positive';
@@ -1377,7 +1169,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
   }
 
   formatPercentage(value: number): string {
-    // Handle invalid values
     if (isNaN(value) || !isFinite(value)) {
       return '0%';
     }
@@ -1385,7 +1176,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
     const currentLang = this.translate.currentLang;
 
     if (currentLang === 'my') {
-      // For Burmese language, use Burmese numerals
       return new Intl.NumberFormat('my-MM', {
         style: 'percent',
         minimumFractionDigits: 1,
@@ -1393,7 +1183,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
         numberingSystem: 'mymr',
       }).format(value / 100);
     } else {
-      // For other languages, use standard formatting
       return new Intl.NumberFormat(undefined, {
         style: 'percent',
         minimumFractionDigits: 1,

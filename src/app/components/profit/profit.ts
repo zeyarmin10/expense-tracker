@@ -106,6 +106,7 @@ export class Profit implements OnInit, OnDestroy {
   incomeForm: FormGroup;
   userProfile: UserProfile | null = null;
   availableCurrencies = AVAILABLE_CURRENCIES;
+  public userRole: string | null = null;
 
   // Observables for filtered data (likely provided by ProfitLossService)
   incomes$!: Observable<ServiceIIncome[]>;
@@ -323,15 +324,15 @@ export class Profit implements OnInit, OnDestroy {
     );
 
     // Fetch user profile and set default currency
-    this.authService.currentUser$
+    const profileSubscription = this.authService.currentUser$
       .pipe(
         switchMap((user) =>
           user?.uid ? this.userDataService.getUserProfile(user.uid) : of(null)
         ),
-        take(1)
       )
       .subscribe((profile) => {
         this.userProfile = profile;
+        if(profile) {
         const defaultCurrency = profile?.currency || 'MMK';
         // Note: 'currency' is disabled, so we use setValue on the control.
         this.incomeForm.get('currency')?.setValue(defaultCurrency);
@@ -368,7 +369,16 @@ export class Profit implements OnInit, OnDestroy {
         }
 
         this.setDateFilter(dateFilter, true);
+
+        if (profile.accountType === 'group' && profile.roles && typeof profile.roles === 'object' && Object.keys(profile.roles).length > 0) {
+          this.userRole = Object.values(profile.roles)[0]; 
+        } else {
+          this.userRole = null;
+        }
+      }
       });
+      this.subscriptions.add(profileSubscription);
+
   }
 
   setDateFilter(filter: string, isInitialLoad: boolean = false): void {
