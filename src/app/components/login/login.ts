@@ -135,7 +135,6 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   // Refactored to handle post-login logic for all sign-in methods
   private async handlePostLogin(user: User): Promise<void> {
-    await this.userDataService.migrateUserProfileIfNeeded(user.uid);
     let profile = await this.userDataService.fetchUserProfile(user.uid);
 
     // Create profile if it doesn't exist

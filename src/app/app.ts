@@ -3,14 +3,12 @@ import { CommonModule } from '@angular/common';
 import { Router, NavigationEnd, RouterOutlet, RouterModule } from '@angular/router';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { Observable, combineLatest, of } from 'rxjs';
-import { map, filter, startWith, switchMap } from 'rxjs/operators';
+import { map, filter, startWith } from 'rxjs/operators';
 import { AuthService } from './services/auth';
 import { User } from '@angular/fire/auth';
 import { Toast } from './components/toast/toast';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faRightFromBracket } from '@fortawesome/free-solid-svg-icons';
-import { UserDataService } from './services/user-data';
-import { DataManagerService } from './services/data-manager';
 
 @Component({
   selector: 'app-root',
@@ -37,8 +35,6 @@ export class App {
 
   private authService = inject(AuthService);
   private router = inject(Router);
-  private dataManager = inject(DataManagerService);
-  private userDataService = inject(UserDataService);
 
   constructor(private translate: TranslateService) {
     this.translate.setDefaultLang('en');
@@ -47,21 +43,18 @@ export class App {
     this.currentLang = savedLang;
 
     this.currentUser$ = this.authService.currentUser$;
-    this.userDisplayName$ = this.currentUser$.pipe(
-      map(user => user ? (user.displayName || 'User') : null)
+    this.userDisplayName$ = this.authService.userProfile$.pipe(
+      map(profile => profile ? (profile.displayName || 'User') : null)
     );
 
-    this.isGroupAdmin$ = this.authService.currentUser$.pipe(
-      switchMap(user => {
-        if (!user) {
-          return of(false);
+    this.isGroupAdmin$ = this.authService.userProfile$.pipe(
+      map(profile => {
+        if (profile?.accountType !== 'group' || !profile?.roles) {
+          return false;
         }
-        return this.userDataService.getUserProfile(user.uid).pipe(
-          map(profile => {
-            // Check if accountType is group and roles string is 'admin'
-            return profile?.accountType === 'group' && profile?.roles === 'admin';
-          })
-        );
+        // Check if any role in the roles object is 'admin'
+        const userRoles = Object.values(profile.roles);
+        return userRoles.includes('admin');
       })
     );
 

@@ -1,26 +1,45 @@
-<div class="onboarding-container">
-  <h2>Welcome! Let's Get You Set Up.</h2>
-  <p>How would you like to use this app?</p>
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-6 col-lg-5">
+      
+      <div class="onboarding-card shadow-sm p-4 rounded-4 border bg-white">
+        <div class="text-center mb-4" *ngIf="userProfile$ | async as profile">
+          <h2 class="fw-bold h4">Welcome, {{ profile.displayName || profile.email }}!</h2>
+          <p class="text-muted">Let's Get You Set Up.</p>
+          <small class="text-secondary">How would you like to use this app?</small>
+        </div>
 
-  <div class="option personal-option">
-    <h3>Use as a Personal Account</h3>
-    <p>Track your own income and expenses.</p>
-    <button (click)="setupPersonalAccount()">Continue with Personal Account</button>
-  </div>
+        <div class="option-card personal-bg p-3 rounded-3 mb-4 border border-primary-subtle">
+          <h3 class="h6 fw-bold mb-1">Use as a Personal Account</h3>
+          <p class="small text-muted mb-3">Track your own income and expenses.</p>
+          <button class="btn btn-primary w-100 py-2 shadow-sm" (click)="setupPersonalAccount()">
+            Continue with Personal Account
+          </button>
+        </div>
 
-  <hr>
+        <div class="position-relative my-4 text-center">
+          <hr>
+          <span class="position-absolute top-50 start-50 translate-middle bg-white px-3 text-muted small">OR</span>
+        </div>
 
-  <div class="option">
-    <h3>Create a New Group</h3>
-    <p>Create a shared space and invite others.</p>
-    <input type="text" [(ngModel)]="newGroupName" placeholder="Enter Group Name">
-    <button (click)="createGroup()">Create Group</button>
-  </div>
+        <div class="option-card p-3 rounded-3 mb-3 border bg-light">
+          <h3 class="h6 fw-bold mb-1">Create a New Group</h3>
+          <p class="small text-muted mb-2">Create a shared space and invite others.</p>
+          <div class="mb-2">
+            <input type="text" class="form-control form-control-sm" [(ngModel)]="newGroupName" placeholder="Enter Group Name">
+          </div>
+          <button class="btn btn-outline-primary w-100" (click)="createGroup()">Create Group</button>
+        </div>
 
-  <div class="option">
-    <h3>Join an Existing Group</h3>
-    <p>Use an invite code to join a group.</p>
-    <input type="text" [(ngModel)]="inviteCode" placeholder="Enter Invite Code">
-    <button (click)="joinGroup()">Join Group</button>
+        <div class="option-card p-3 rounded-3 border bg-light">
+          <h3 class="h6 fw-bold mb-1">Join an Existing Group</h3>
+          <p class="small text-muted mb-2">Use an invite code to join a group.</p>
+          <div class="mb-2">
+            <input type="text" class="form-control form-control-sm" [(ngModel)]="inviteCode" placeholder="Enter Invite Code">
+          </div>
+          <button class="btn btn-dark w-100" (click)="joinGroup()">Join Group</button>
+        </div>
+
+      </div> </div>
   </div>
 </div>

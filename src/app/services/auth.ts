@@ -102,25 +102,23 @@ export class AuthService {
       if (inviteSnap.exists()) {
         const inviteData = inviteSnap.val();
         if (inviteData.status === 'pending') {
-            // Get the user's profile to denormalize data
-            const userProfile = await firstValueFrom(this.userDataService.getUserProfile(user.uid));
-            
-            if (userProfile) {
-                const memberData = {
-                    role: 'member', // Assign a default role
-                    displayName: userProfile.displayName,
-                    email: userProfile.email
-                };
+          const role = 'member'; // The role for a new member
+          // Add user to the group with only their role
+          await this.db.object(`group_members/${inviteData.groupId}/${user.uid}`).set({ role: role });
 
-                // Add user to group with denormalized data
-                await this.db.object(`group_members/${inviteData.groupId}/${user.uid}`).set(memberData);
+          // Update the user's profile
+          await this.userDataService.updateUserProfile(user.uid, { 
+            groupId: inviteData.groupId,
+            accountType: 'group',
+            roles: { [inviteData.groupId]: role } 
+          });
 
-                // Update user profile with groupId
-                await this.userDataService.updateUserProfile(user.uid, { groupId: inviteData.groupId });
-
-                // Mark invitation as used
-                await inviteRef.update({ status: 'accepted', acceptedBy: user.uid, acceptedAt: new Date().toISOString() });
-            }
+          // Mark invitation as used
+          await inviteRef.update({ 
+            status: 'accepted', 
+            acceptedBy: user.uid, 
+            acceptedAt: new Date().toISOString() 
+          });
         }
       }
     }

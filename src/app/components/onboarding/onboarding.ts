@@ -1,11 +1,11 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { Observable, firstValueFrom } from 'rxjs';
 import { AuthService } from '../../services/auth';
 import { UserDataService, UserProfile } from '../../services/user-data';
-import { GroupService } from '../../services/group';
-import { switchMap, take } from 'rxjs/operators';
+import { DataManagerService } from '../../services/data-manager';
 
 @Component({
   selector: 'app-onboarding',
@@ -14,34 +14,25 @@ import { switchMap, take } from 'rxjs/operators';
   templateUrl: './onboarding.html',
   styleUrls: ['./onboarding.css'],
 })
-export class OnboardingComponent implements OnInit {
+export class OnboardingComponent {
   private authService = inject(AuthService);
   private userDataService = inject(UserDataService);
-  private groupService = inject(GroupService);
+  private dataManager = inject(DataManagerService);
   private router = inject(Router);
 
-  currentUser: UserProfile | null = null;
+  userProfile$: Observable<UserProfile | null>;
   newGroupName = '';
   inviteCode = '';
 
-  ngOnInit(): void {
-    this.authService.currentUser$.pipe(
-      take(1),
-      switchMap(user => {
-        if (!user) {
-          throw new Error('User not logged in');
-        }
-        return this.userDataService.fetchUserProfile(user.uid);
-      })
-    ).subscribe(profile => {
-      this.currentUser = profile;
-    });
+  constructor() {
+    this.userProfile$ = this.authService.userProfile$;
   }
 
   async setupPersonalAccount(): Promise<void> {
-    if (!this.currentUser) return;
+    const user = await firstValueFrom(this.userProfile$);
+    if (!user) return;
     try {
-      await this.userDataService.updateUserProfile(this.currentUser.uid, {
+      await this.userDataService.updateUserProfile(user.uid, {
         accountType: 'personal',
       });
       this.router.navigate(['/dashboard']);
@@ -51,34 +42,23 @@ export class OnboardingComponent implements OnInit {
   }
 
   async createGroup(): Promise<void> {
-    if (!this.currentUser || !this.newGroupName.trim()) return;
+    const user = await firstValueFrom(this.userProfile$);
+    if (!user || !this.newGroupName.trim()) return;
     try {
-      const groupId = await this.groupService.createGroup(this.newGroupName.trim(), this.currentUser.uid);
-      await this.userDataService.updateUserProfile(this.currentUser.uid, {
-        accountType: 'group',
-        groupId: groupId,
-        roles: 'admin' // Set role as string
-      });
+      await this.dataManager.createGroup(this.newGroupName.trim(), user.uid);
       this.router.navigate(['/dashboard']);
     } catch (error) {
       console.error('Error creating group:', error);
+      alert('Failed to create group. Check console for details.');
     }
   }
 
   async joinGroup(): Promise<void> {
-    if (!this.currentUser || !this.inviteCode.trim()) return;
+    const user = await firstValueFrom(this.userProfile$);
+    if (!user || !this.inviteCode.trim()) return;
     try {
-      const groupId = await this.groupService.joinGroup(this.inviteCode.trim(), this.currentUser.uid);
-      if (groupId) {
-        await this.userDataService.updateUserProfile(this.currentUser.uid, {
-          accountType: 'group',
-          groupId: groupId,
-          roles: 'member' // Set role as string
-        });
-        this.router.navigate(['/dashboard']);
-      } else {
-        alert('Invalid invite code.');
-      }
+      this.router.navigate(['/'], { queryParams: { invite_code: this.inviteCode.trim() } });
+      window.location.reload();
     } catch (error) {
       console.error('Error joining group:', error);
     }

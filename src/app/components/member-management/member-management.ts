@@ -3,11 +3,11 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { IGroupMember, IUserProfile, IInvitation } from '../../core/models/data';
+import { IUserProfile, IInvitation } from '../../core/models/data';
 import { Observable, of, firstValueFrom, from } from 'rxjs';
 import { switchMap, shareReplay, map } from 'rxjs/operators';
 import { AuthService } from '../../services/auth';
-import { DataManagerService, IGroupDetails } from '../../services/data-manager';
+import { DataManagerService, IGroupDetails, IGroupMemberDetails } from '../../services/data-manager';
 import { UserDataService } from '../../services/user-data';
 import { InvitationService } from '../../services/invitation.service';
 import { ToastService } from '../../services/toast';
@@ -26,7 +26,7 @@ export class MemberManagementComponent implements OnInit {
   private toastService = inject(ToastService);
 
   userProfile$: Observable<IUserProfile | null>;
-  members$: Observable<IGroupMember[]>;
+  members$: Observable<IGroupMemberDetails[]>; // <-- Updated type here
   pendingInvites$: Observable<IInvitation[]>;
   groupOwnerId$: Observable<string | null>;
   invitationSent: boolean = false;
@@ -35,16 +35,13 @@ export class MemberManagementComponent implements OnInit {
   isSending: boolean = false;
 
   constructor() {
-    this.userProfile$ = this.authService.currentUser$.pipe(
-      switchMap(user => user ? this.userDataService.getUserProfile(user.uid) : of(null)),
-      map(profile => profile as IUserProfile | null), // Cast to IUserProfile
-      shareReplay(1)
-    );
+    this.userProfile$ = this.authService.userProfile$.pipe(shareReplay(1));
 
     this.members$ = this.userProfile$.pipe(
       switchMap(profile => 
         profile && profile.groupId 
-          ? this.dataManager.getGroupMembers(profile.groupId) 
+          // Use the new function to get members with their full, updated profiles
+          ? this.dataManager.getGroupMembersWithProfile(profile.groupId) 
           : of([])
       )
     );

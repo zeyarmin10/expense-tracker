@@ -12,8 +12,7 @@ import {
   orderByChild,
   equalTo,
 } from '@angular/fire/database';
-import { Observable, switchMap, firstValueFrom, of, from, combineLatest } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, switchMap, firstValueFrom, of, from, combineLatest, map as rxMap } from 'rxjs';
 import { AuthService } from './auth';
 import { IGroupMember, IUserProfile, IInvitation } from '../core/models/data';
 import { UserDataService } from './user-data';
@@ -21,6 +20,11 @@ import { UserDataService } from './user-data';
 export interface IGroupDetails {
   groupName: string;
   ownerId: string;
+}
+
+// New interface for the combined member data
+export interface IGroupMemberDetails extends IUserProfile {
+  role: string; // Add role to the user profile data
 }
 
 @Injectable({
@@ -32,12 +36,6 @@ export class DataManagerService {
   private userDataService: UserDataService = inject(UserDataService);
 
   async createGroup(groupName: string, userId: string): Promise<void> {
-    // First, get the profile of the user creating the group
-    const userProfile = await firstValueFrom(this.userDataService.getUserProfile(userId));
-    if (!userProfile) {
-      throw new Error('User profile not found to create a group.');
-    }
-
     const groupRef = push(ref(this.db, 'groups'));
     const groupId = groupRef.key!;
     const role = 'admin';
@@ -46,12 +44,9 @@ export class DataManagerService {
     // Create the group details
     updates[`/groups/${groupId}`] = { groupName, ownerId: userId };
     
-    // Add the creator to group_members, now including their display name and email
-    updates[`/group_members/${groupId}/${userId}`] = { 
-      role: role,
-      displayName: userProfile.displayName,
-      email: userProfile.email
-    };
+    // Add the creator to group_members, but ONLY with their role.
+    // We will no longer store displayName and email here.
+    updates[`/group_members/${groupId}/${userId}`] = { role: role };
 
     // Update the user's own profile to link them to the group
     updates[`/users/${userId}/groupId`] = groupId;
@@ -59,6 +54,27 @@ export class DataManagerService {
     updates[`/users/${userId}/roles/${groupId}`] = role;
 
     return update(ref(this.db), updates);
+  }
+
+  getGroupMembersWithProfile(groupId: string): Observable<IGroupMemberDetails[]> {
+    const membersRef = ref(this.db, `group_members/${groupId}`);
+    return listVal<any>(membersRef, { keyField: 'uid' }).pipe(
+      switchMap(members => {
+        if (!members || members.length === 0) {
+          return of([]);
+        }
+        const memberProfiles$ = members.map(member => 
+          this.userDataService.getUserProfile(member.uid).pipe(
+            rxMap(profile => ({
+              ...profile,
+              uid: member.uid, // ensure uid is carried over
+              role: member.role // combine role from group_members
+            } as IGroupMemberDetails))
+          )
+        );
+        return combineLatest(memberProfiles$);
+      })
+    );
   }
 
   async removeGroupMember(groupId: string, memberId: string): Promise<void> {
@@ -80,7 +96,7 @@ export class DataManagerService {
     }
     const roleRef = ref(this.db, `users/${userId}/roles/${groupId}`);
     return from(get(roleRef)).pipe(
-      map(snapshot => (snapshot.exists() ? snapshot.val() : null))
+      rxMap(snapshot => (snapshot.exists() ? snapshot.val() : null))
     );
   }
 
@@ -105,7 +121,7 @@ export class DataManagerService {
       equalTo(groupId)
     );
     return listVal<IInvitation>(invitesRef, { keyField: 'key' }).pipe(
-      map((invites) => invites.filter(inv => inv.status === 'pending'))
+      rxMap((invites) => invites.filter(inv => inv.status === 'pending'))
     );
   }
 

@@ -1,9 +1,11 @@
 
+export type Role = 'admin' | 'member';
+
 export interface IGroupMember {
   uid: string;
   displayName: string | null;
   email: string | null;
-  role: 'admin' | 'editor' | 'viewer';
+  role: Role;
 }
 
 export interface IUserProfile {
@@ -14,7 +16,7 @@ export interface IUserProfile {
   currency: string;
   defaultBudgetPeriod?: 'monthly' | 'quarterly' | 'yearly' | 'custom';
   groupId?: string | null;
-  roles?: { [key: string]: 'admin' | 'editor' | 'viewer' };
+  roles?: { [key: string]: Role };
   createdAt?: any;
 }
 

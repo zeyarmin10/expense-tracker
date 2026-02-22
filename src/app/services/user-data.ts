@@ -10,6 +10,8 @@ import {
 } from '@angular/fire/database';
 import { Observable } from 'rxjs';
 
+export type Role = 'admin' | 'member'; // Define the possible roles
+
 export interface UserProfile {
   uid: string;
   email: string;
@@ -19,7 +21,8 @@ export interface UserProfile {
   createdAt: number; 
   accountType?: 'personal' | 'group';
   groupId?: string;
-  roles?: string; // Changed to string type as requested
+  // Use a specific type for roles for better type safety
+  roles?: { [key: string]: Role }; 
   budgetPeriod?: 'weekly' | 'monthly' | 'yearly' | 'custom' | null;
   budgetStartDate?: string | null;
   budgetEndDate?: string | null;
@@ -56,27 +59,5 @@ export class UserDataService {
   async deleteUserData(userId: string): Promise<void> {
     const userRef = ref(this.db, `users/${userId}`);
     await remove(userRef);
-  }
-
-  async migrateUserProfileIfNeeded(userId: string): Promise<void> {
-    const profile = await this.fetchUserProfile(userId);
-    if (profile) {
-      const updates: Partial<UserProfile> = {};
-      
-      if (!profile.accountType) {
-        updates.accountType = profile.groupId ? 'group' : 'personal';
-      }
-      
-      // If roles is not a string (it might be the old object or undefined)
-      if (typeof profile.roles !== 'string') {
-        // Default to a non-admin role for safety during migration.
-        // Users might need to re-select roles in onboarding if they were admins.
-        updates.roles = 'member'; 
-      }
-
-      if (Object.keys(updates).length > 0) {
-        await this.updateUserProfile(userId, updates);
-      }
-    }
   }
 }
