@@ -83,6 +83,17 @@ export class MemberManagementComponent implements OnInit {
 
     if (profile && profile.groupId) {
       try {
+        // Check if user is already a member
+        const members = await firstValueFrom(this.members$);
+        const isAlreadyMember = members.some(member => member.email === this.newMemberEmail);
+
+        if (isAlreadyMember) {
+          this.toastService.showError(this.translate.instant('MEMBER_ALREADY_EXISTS'));
+          setTimeout(() => this.isSending = false);
+          console.log('isSending-> ', this.isSending);
+          return;
+        }
+
         const groupDetails = await this.dataManager.getGroupDetails(profile.groupId);
         if (!groupDetails) {
           throw new Error('Group details not found');

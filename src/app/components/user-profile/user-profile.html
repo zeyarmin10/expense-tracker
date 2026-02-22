@@ -46,7 +46,7 @@
                 </div>
 
                 <!-- Role -->
-                <div class="mb-3">
+                <div class="mb-3" *ngIf="userData.accountType === 'group'">
                   <label class="form-label font-weight-bold mb-0"><strong>{{ "ROLE" | translate
                       }}</strong></label>
                   <p class="form-control-plaintext m-0 p-0">
@@ -59,7 +59,6 @@
                   <label for="displayName" class="form-label">{{ 'DISPLAY_NAME_LABEL' | translate }}</label>
                   <input type="text" id="displayName" class="form-control" formControlName="displayName">
                 </div>
-
               </div>
 
               <!-- Budget Period -->

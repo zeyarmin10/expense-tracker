@@ -27,6 +27,7 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import { User } from '@angular/fire/auth';
 import { ToastService } from '../../services/toast'; // Import ToastService
+import { InvitationService } from '../../services/invitation.service';
 
 @Component({
   selector: 'app-login',
@@ -58,6 +59,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   userDataService = inject(UserDataService);
   dataManager = inject(DataManagerService); // Inject DataManagerService
   categoryService = inject(CategoryService);
+  invitationService = inject(InvitationService);
   router = inject(Router);
   route = inject(ActivatedRoute); // Inject ActivatedRoute
   sessionService = inject(SessionManagement);
@@ -84,11 +86,19 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    // Check for invite code in the URL
     this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(params => {
       this.inviteCode = params['invite_code'] || null;
       if (this.inviteCode) {
         console.log(`Found invite code: ${this.inviteCode}`);
+      }
+
+      const error = params['error'];
+      if (error === 'invite_used') {
+        this.toastService.showError(this.translate.instant('ERROR_INVITE_CODE_USED'));
+        this.router.navigate([], {
+          queryParams: { error: null },
+          queryParamsHandling: 'merge'
+        });
       }
     });
 
@@ -133,11 +143,10 @@ export class LoginComponent implements OnInit, OnDestroy {
       }
   }
 
-  // Refactored to handle post-login logic for all sign-in methods
   private async handlePostLogin(user: User): Promise<void> {
     let profile = await this.userDataService.fetchUserProfile(user.uid);
 
-    // Create profile if it doesn't exist
+    // Always create a profile if one doesn't exist
     if (!profile) {
         const currency = this.currentLang === 'my' ? 'MMK' : 'USD';
         const newUserProfile: UserProfile = {
@@ -149,22 +158,44 @@ export class LoginComponent implements OnInit, OnDestroy {
             createdAt: Date.now(),
         };
         await this.userDataService.createUserProfile(newUserProfile);
-        profile = newUserProfile; // Use the newly created profile
+        profile = newUserProfile; // use the new profile
     }
 
+    // If an invite code is present in the URL
     if (this.inviteCode) {
-      // Clear the invite code from URL to prevent re-processing
-      this.router.navigate([], { queryParams: { invite_code: null }, queryParamsHandling: 'merge' });
-    }
+        const code = this.inviteCode;
+        this.inviteCode = null; // Consume the code
+        this.router.navigate([], { queryParams: { invite_code: null }, queryParamsHandling: 'merge' }); // Clean URL
 
-    // Navigate based on onboarding status
-    if (profile && profile.accountType) {
-        this.sessionService.recordActivity();
-        this.router.navigate(['/dashboard']);
+        try {
+            const invitation = await firstValueFrom(this.invitationService.getInvitation(code));
+
+            if (invitation && invitation.status === 'pending') {
+                // VALID: Accept invitation and go to dashboard
+                await this.dataManager.acceptGroupInvitation(code, user.uid);
+                this.toastService.showSuccess(this.translate.instant('GROUP_JOIN_SUCCESS'));
+                this.router.navigate(['/dashboard']);
+            } else {
+                // INVALID: Invitation is used, expired or invalid.
+                throw new Error('Invalid invitation code');
+            }
+        } catch (error) {
+            // This block will catch the thrown error above or any other error from the services
+            console.error('Failed to process invitation code:', error);
+            await this.authService.logout();
+            this.router.navigate(['/login'], { queryParams: { error: 'invite_used' } });
+        }
     } else {
-        this.router.navigate(['/onboarding']);
+        // No invite code, normal login flow
+        if (profile && profile.accountType) {
+            this.sessionService.recordActivity();
+            this.router.navigate(['/dashboard']);
+        } else {
+            this.router.navigate(['/onboarding']);
+        }
     }
-  }
+}
+
 
   // ... other methods like switchLanguage, toggleMode, onSubmit, etc. remain the same ...
 

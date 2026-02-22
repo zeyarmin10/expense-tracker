@@ -90,7 +90,8 @@ export class OnboardingComponent implements OnInit {
         this.toastService.showSuccess('Successfully joined the group!');
         this.router.navigate(['/dashboard'], { replaceUrl: true });
       } else {
-        this.toastService.showError('Invalid or expired invitation code.');
+        await this.authService.logout();
+        this.router.navigate(['/login'], { queryParams: { error: 'invite_used' } });
       }
     } catch (error) {
       console.error('Error handling invitation:', error);

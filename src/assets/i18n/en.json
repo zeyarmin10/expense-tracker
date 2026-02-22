@@ -1,4 +1,3 @@
-
 {
   "NAV_DASHBOARD": "Dashboard",
   "NAV_EXPENSE": "Expense",
@@ -32,6 +31,7 @@
   "ERROR_WEAK_PASSWORD": "The password is too weak. Please choose a stronger password.",
   "ERROR_INVALID_CREDENTIALS": "Invalid email or password. Please check your credentials.",
   "ERROR_UNEXPECTED": "An unexpected error occurred. Please try again.",
+  "ERROR_INVITE_CODE_USED": "This invitation code has already been used or is invalid.",
   "ERROR_GOOGLE_SIGNIN_FAILED": "Failed to sign in with Google. Please try again.",
   "ERROR_SAVING_USER_DATA": "Error saving user data after Google sign-in.",
   "EXPENSE_ADD_TITLE": "Add New Expense",
@@ -481,5 +481,7 @@
   },
   "ACCOUNT_TYPE_LABEL": "Account Type",
   "ACCOUNT_TYPE_PERSONAL": "Personal",
-  "ACCOUNT_TYPE_GROUP": "Group"
+  "ACCOUNT_TYPE_GROUP": "Group",
+  "MEMBER_ALREADY_EXISTS": "This user is already a member of the group.",
+  "GROUP_JOIN_SUCCESS": "Successfully joined the group!"
 }
