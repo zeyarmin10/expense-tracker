@@ -42,8 +42,11 @@ export class OnboardingComponent implements OnInit {
   }
 
   async setupPersonalAccount(): Promise<void> {
-    const user = await firstValueFrom(this.userProfile$);
-    if (!user) return;
+    const user = await firstValueFrom(this.authService.currentUser$);
+    if (!user) {
+        console.error('User not logged in');
+        return;
+    }
     try {
       await this.userDataService.updateUserProfile(user.uid, {
         accountType: 'personal',
@@ -55,7 +58,7 @@ export class OnboardingComponent implements OnInit {
   }
 
   async createGroup(): Promise<void> {
-    const user = await firstValueFrom(this.userProfile$);
+    const user = await firstValueFrom(this.authService.currentUser$);
     if (!user || !this.newGroupName.trim()) return;
     try {
       await this.dataManager.createGroup(this.newGroupName.trim(), user.uid);
@@ -67,7 +70,7 @@ export class OnboardingComponent implements OnInit {
   }
 
   async joinGroup(): Promise<void> {
-    const user = await firstValueFrom(this.userProfile$);
+    const user = await firstValueFrom(this.authService.currentUser$);
     if (!user || !this.inviteCode.trim()) return;
     try {
       this.router.navigate(['/'], { queryParams: { invite_code: this.inviteCode.trim() } });
