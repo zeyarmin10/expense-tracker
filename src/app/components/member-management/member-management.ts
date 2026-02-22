@@ -1,8 +1,7 @@
-
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { IUserProfile, IInvitation } from '../../core/models/data';
 import { Observable, of, firstValueFrom, from } from 'rxjs';
 import { switchMap, shareReplay, map } from 'rxjs/operators';
@@ -24,9 +23,10 @@ export class MemberManagementComponent implements OnInit {
   private userDataService = inject(UserDataService);
   private invitationService = inject(InvitationService);
   private toastService = inject(ToastService);
+  private translate = inject(TranslateService);
 
   userProfile$: Observable<IUserProfile | null>;
-  members$: Observable<IGroupMemberDetails[]>; // <-- Updated type here
+  members$: Observable<IGroupMemberDetails[]>; 
   pendingInvites$: Observable<IInvitation[]>;
   groupOwnerId$: Observable<string | null>;
   invitationSent: boolean = false;
@@ -40,7 +40,6 @@ export class MemberManagementComponent implements OnInit {
     this.members$ = this.userProfile$.pipe(
       switchMap(profile => 
         profile && profile.groupId 
-          // Use the new function to get members with their full, updated profiles
           ? this.dataManager.getGroupMembersWithProfile(profile.groupId) 
           : of([])
       )
@@ -82,7 +81,7 @@ export class MemberManagementComponent implements OnInit {
         }
         
         const inviterName = profile.displayName || 'A Friend';
-        const userLanguage = 'en'; // Assuming 'en' for now, this should be dynamic
+        const userLanguage = this.translate.currentLang || 'my'; 
 
         this.invitationService.sendInvitationEmail(
           this.newMemberEmail,

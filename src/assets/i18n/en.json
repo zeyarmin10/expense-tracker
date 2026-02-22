@@ -1,3 +1,4 @@
+
 {
   "NAV_DASHBOARD": "Dashboard",
   "NAV_EXPENSE": "Expense",
@@ -460,5 +461,22 @@
     "NO_MEMBERS": "No members in this group yet.",
     "LOADING_MEMBERS": "Loading members...",
     "DELETE": "Delete"
+  },
+  "ONBOARDING": {
+    "WELCOME": "Welcome, {{name}}!",
+    "LETS_GET_YOU_SET_UP": "Let's Get You Set Up.",
+    "HOW_WOULD_YOU_LIKE_TO_USE_THIS_APP": "How would you like to use this app?",
+    "USE_AS_PERSONAL_ACCOUNT": "Use as a Personal Account",
+    "TRACK_YOUR_OWN": "Track your own income and expenses.",
+    "CONTINUE_WITH_PERSONAL_ACCOUNT": "Continue with Personal Account",
+    "OR": "OR",
+    "CREATE_NEW_GROUP": "Create a New Group",
+    "CREATE_SHARED_SPACE": "Create a shared space and invite others.",
+    "ENTER_GROUP_NAME": "Enter Group Name",
+    "CREATE_GROUP_BUTTON": "Create Group",
+    "JOIN_EXISTING_GROUP": "Join an Existing Group",
+    "USE_INVITE_CODE": "Use an invite code to join a group.",
+    "ENTER_INVITE_CODE": "Enter Invite Code",
+    "JOIN_GROUP_BUTTON": "Join Group"
   }
 }

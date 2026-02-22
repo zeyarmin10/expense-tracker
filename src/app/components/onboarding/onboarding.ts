@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -6,19 +6,21 @@ import { Observable, firstValueFrom } from 'rxjs';
 import { AuthService } from '../../services/auth';
 import { UserDataService, UserProfile } from '../../services/user-data';
 import { DataManagerService } from '../../services/data-manager';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-onboarding',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslateModule],
   templateUrl: './onboarding.html',
   styleUrls: ['./onboarding.css'],
 })
-export class OnboardingComponent {
+export class OnboardingComponent implements OnInit {
   private authService = inject(AuthService);
   private userDataService = inject(UserDataService);
   private dataManager = inject(DataManagerService);
   private router = inject(Router);
+  private translate = inject(TranslateService);
 
   userProfile$: Observable<UserProfile | null>;
   newGroupName = '';
@@ -26,6 +28,17 @@ export class OnboardingComponent {
 
   constructor() {
     this.userProfile$ = this.authService.userProfile$;
+  }
+
+  ngOnInit(): void {
+    const storedLang = localStorage.getItem('selectedLanguage');
+    if (storedLang) {
+      this.translate.use(storedLang);
+    } else {
+      const browserLang = this.translate.getBrowserLang();
+      const langToUse = browserLang && ['en', 'my'].includes(browserLang) ? browserLang : 'my';
+      this.translate.use(langToUse);
+    }
   }
 
   async setupPersonalAccount(): Promise<void> {
