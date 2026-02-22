@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -12,11 +12,12 @@ import { DataManagerService, IGroupDetails, IGroupMemberDetails } from '../../se
 import { UserDataService } from '../../services/user-data';
 import { InvitationService } from '../../services/invitation.service';
 import { ToastService } from '../../services/toast';
+import { ConfirmationModal } from '../common/confirmation-modal/confirmation-modal';
 
 @Component({
   selector: 'app-member-management',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, FontAwesomeModule],
+  imports: [CommonModule, FormsModule, TranslateModule, FontAwesomeModule, ConfirmationModal],
   templateUrl: './member-management.html',
 })
 export class MemberManagementComponent implements OnInit {
@@ -26,6 +27,9 @@ export class MemberManagementComponent implements OnInit {
   private invitationService = inject(InvitationService);
   private toastService = inject(ToastService);
   private translate = inject(TranslateService);
+
+  @ViewChild('deleteMemberModal') private deleteMemberModal!: ConfirmationModal;
+  @ViewChild('revokeInviteModal') private revokeInviteModal!: ConfirmationModal;
 
   // Font Awesome Icons
   faUserPlus = faUserPlus;
@@ -41,6 +45,9 @@ export class MemberManagementComponent implements OnInit {
   
   newMemberEmail: string = '';
   isSending: boolean = false;
+
+  private memberToDeleteId: string | null = null;
+  private inviteToRevokeKey: string | null = null;
 
   constructor() {
     this.userProfile$ = this.authService.userProfile$.pipe(shareReplay(1));
@@ -90,7 +97,6 @@ export class MemberManagementComponent implements OnInit {
         if (isAlreadyMember) {
           this.toastService.showError(this.translate.instant('MEMBER_ALREADY_EXISTS'));
           setTimeout(() => this.isSending = false);
-          console.log('isSending-> ', this.isSending);
           return;
         }
 
@@ -135,30 +141,48 @@ export class MemberManagementComponent implements OnInit {
     }
   }
 
-  async deleteMember(memberId: string): Promise<void> {
-    if (confirm('Are you sure you want to remove this member?')) {
+  confirmDeleteMember(memberId: string): void {
+    this.memberToDeleteId = memberId;
+    this.deleteMemberModal.open();
+  }
+
+  async onDeleteMemberConfirmed(confirmed: boolean): Promise<void> {
+    if (confirmed && this.memberToDeleteId) {
       const profile = await firstValueFrom(this.userProfile$);
       if (profile && profile.groupId) {
         try {
-          await this.dataManager.removeGroupMember(profile.groupId, memberId);
+          await this.dataManager.removeGroupMember(profile.groupId, this.memberToDeleteId);
           this.toastService.showSuccess('Member removed successfully');
         } catch (err) {
           console.error('Error removing member:', err);
           this.toastService.showError('Failed to remove member.');
+        } finally {
+          this.memberToDeleteId = null;
         }
       }
+    } else {
+      this.memberToDeleteId = null;
     }
   }
 
-  async revokeInvite(inviteKey: string): Promise<void> {
-    if (confirm('Are you sure you want to revoke this invitation?')) {
+  confirmRevokeInvite(inviteKey: string): void {
+    this.inviteToRevokeKey = inviteKey;
+    this.revokeInviteModal.open();
+  }
+
+  async onRevokeInviteConfirmed(confirmed: boolean): Promise<void> {
+    if (confirmed && this.inviteToRevokeKey) {
       try {
-        await this.dataManager.revokeGroupInvitation(inviteKey);
+        await this.dataManager.revokeGroupInvitation(this.inviteToRevokeKey);
         this.toastService.showSuccess('Invitation revoked successfully');
       } catch (err) {
         console.error('Error revoking invitation:', err);
         this.toastService.showError('Failed to revoke invitation.');
+      } finally {
+        this.inviteToRevokeKey = null;
       }
+    } else {
+      this.inviteToRevokeKey = null;
     }
   }
 }

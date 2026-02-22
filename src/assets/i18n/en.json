@@ -461,7 +461,14 @@
     "CURRENT_MEMBERS": "Current Members",
     "NO_MEMBERS": "No members in this group yet.",
     "LOADING_MEMBERS": "Loading members...",
-    "DELETE": "Delete"
+    "DELETE": "Delete",
+    "CONFIRM_DELETE_TITLE": "Confirm Member Deletion",
+    "CONFIRM_DELETE_MESSAGE": "Are you sure you want to remove this member from the group?",
+    "DELETE_BUTTON": "Delete",
+    "CANCEL_BUTTON": "Cancel",
+    "CONFIRM_REVOKE_TITLE": "Confirm Invitation Revoke",
+    "CONFIRM_REVOKE_MESSAGE": "Are you sure you want to revoke this invitation?",
+    "REVOKE_BUTTON": "Revoke"
   },
   "ONBOARDING": {
     "WELCOME": "Welcome, {{name}}!",

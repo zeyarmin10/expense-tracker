@@ -461,7 +461,14 @@
     "CURRENT_MEMBERS": "လက်ရှိအဖွဲ့ဝင်များ",
     "NO_MEMBERS": "ဤအဖွဲ့တွင် အဖွဲ့ဝင် မရှိသေးပါ။",
     "LOADING_MEMBERS": "အဖွဲ့ဝင်များ ဖွင့်နေသည်...",
-    "DELETE": "ဖျက်မည်"
+    "DELETE": "ဖျက်မည်",
+    "CONFIRM_DELETE_TITLE": "အဖွဲ့ဝင် ဖျက်ခြင်းကို အတည်ပြုပါ",
+    "CONFIRM_DELETE_MESSAGE": "ဤအဖွဲ့ဝင်ကို အဖွဲ့မှ ဖယ်ရှားရန် သေချာပါသလား။",
+    "DELETE_BUTTON": "ဖျက်မည်",
+    "CANCEL_BUTTON": "မလုပ်တော့ပါ",
+    "CONFIRM_REVOKE_TITLE": "ဖိတ်ခေါ်မှု ပြန်ရုပ်သိမ်းခြင်းကို အတည်ပြုပါ",
+    "CONFIRM_REVOKE_MESSAGE": "ဤဖိတ်ခေါ်မှုကို ပြန်လည်ရုပ်သိမ်းရန် သေချာပါသလား။",
+    "REVOKE_BUTTON": "ပြန်ရုပ်သိမ်းမည်"
   },
   "ONBOARDING": {
     "WELCOME": "ကြိုဆိုပါတယ်, {{name}}!",
