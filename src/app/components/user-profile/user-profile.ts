@@ -6,7 +6,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { Observable, of, map, firstValueFrom, from } from 'rxjs';
+import { Observable, of, map, firstValueFrom } from 'rxjs';
 import { switchMap, tap, catchError } from 'rxjs/operators';
 import { AuthService } from '../../services/auth';
 import { UserDataService, UserProfile } from '../../services/user-data';
@@ -14,7 +14,6 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faSave, faUserCircle, faTrash, faPlus, faChevronDown, faChevronUp, faListUl } from '@fortawesome/free-solid-svg-icons';
 import { updateProfile } from '@angular/fire/auth';
-import { User } from '@angular/fire/auth';
 import { FormsModule } from '@angular/forms';
 import { AVAILABLE_CURRENCIES } from '../../core/constants/app.constants';
 import { CustomBudgetPeriodModalComponent } from '../common/custom-budget-period-modal/custom-budget-period-modal.component';
@@ -76,7 +75,6 @@ export class UserProfileComponent implements OnInit {
   confirmButtonText: string = '';
   cancelButtonText: string = '';
 
-
   get isCustomPeriodSelected(): boolean {
     const selectedPeriodId = this.userProfileForm.get('budgetPeriod')?.value;
     if (!selectedPeriodId) {
@@ -105,19 +103,25 @@ export class UserProfileComponent implements OnInit {
       budgetEndDate: [{ value: null, disabled: true }],
     });
 
+    const getRole = (roles: { [key: string]: string } | null | undefined): string => {
+      if (!roles || typeof roles !== 'object' || Object.keys(roles).length === 0) {
+        return 'N/A'; 
+      }
+      return Object.values(roles)[0];
+    };
+
     this.userDisplayData$ = this.authService.currentUser$.pipe(
       switchMap((user) => {
         if (user && user.uid) {
-          return this.userDataService.getUserProfile(user.uid).pipe( // Simplified: no need for `from`
+          return this.userDataService.getUserProfile(user.uid).pipe(
             tap((profile) => {
-              if (profile) { // Check if profile exists
+              if (profile) {
                 this.userProfileForm.patchValue({
                   displayName: profile.displayName || user.displayName || '',
                   currency: profile.currency || 'MMK',
                   budgetPeriod: profile.selectedBudgetPeriodId || profile.budgetPeriod || null,
                   budgetStartDate: profile.budgetStartDate || null,
                   budgetEndDate: profile.budgetEndDate || null,
-                  roles: profile.roles || null,
                 });
                 this.selectedCurrency = profile.currency || 'MMK';
                 this.handleBudgetPeriodChange(this.userProfileForm.get('budgetPeriod')?.value, true);
@@ -130,7 +134,7 @@ export class UserProfileComponent implements OnInit {
               budgetPeriod: profile.budgetPeriod || null,
               budgetStartDate: profile.budgetStartDate || null,
               budgetEndDate: profile.budgetEndDate || null,
-              roles: profile.roles || null,
+              roles: getRole(profile.roles),
             }) : null),
             catchError((err) => {
               console.error('Error fetching user profile data:', err);
@@ -207,7 +211,7 @@ export class UserProfileComponent implements OnInit {
       startDateControl?.setValue(customPeriod.startDate, { emitEvent: false });
       endDateControl?.setValue(customPeriod.endDate, { emitEvent: false });
     } else {
-      this.showCustomDateRange = periodId === 'custom'; // Show range selector only for 'custom' itself
+      this.showCustomDateRange = periodId === 'custom'; 
     }
   }
 
@@ -257,7 +261,6 @@ export class UserProfileComponent implements OnInit {
     } else if (this.userProfileForm.invalid) {
       this.toastService.showError(this.translate.instant('INVALID_FORM_PROFILE'));
     } else if (!this.userProfileForm.dirty) {
-      // To be replaced by a more subtle notification or disabled save button
     }
   }
 
@@ -294,7 +297,6 @@ export class UserProfileComponent implements OnInit {
 
     const currentUser = await firstValueFrom(this.authService.currentUser$);
     if (currentUser) {
-      // Correctly await the profile object from the observable
       const userProfile = await firstValueFrom(this.userDataService.getUserProfile(currentUser.uid));
       if (userProfile && userProfile.selectedBudgetPeriodId === periodId) {
         this.toastService.showError(this.translate.instant('DELETE_ACTIVE_BUDGET_PERIOD_ERROR'));
