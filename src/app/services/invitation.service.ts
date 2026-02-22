@@ -3,7 +3,15 @@ import { Injectable, inject } from '@angular/core';
 import { AngularFireDatabase } from '@angular/fire/compat/database';
 import { Observable, from } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
-import { UserDataService } from './user-data';
+
+export interface Invitation {
+  email: string;
+  groupId: string;
+  status: 'pending' | 'accepted';
+  createdAt: string;
+  acceptedBy?: string;
+  acceptedAt?: string;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -11,9 +19,12 @@ import { UserDataService } from './user-data';
 export class InvitationService {
 
   private backendUrl = '/api'; 
-  private userDataService = inject(UserDataService);
 
   constructor(private http: HttpClient, private db: AngularFireDatabase) { }
+
+  getInvitation(code: string): Observable<Invitation | null> {
+    return this.db.object<Invitation>(`invitations/${code}`).valueChanges();
+  }
 
   sendInvitationEmail(recipientEmail: string, inviterName: string, groupName: string, language: string, groupId: string): Observable<any> {
     
@@ -87,17 +98,14 @@ export class InvitationService {
       html: htmlBody
     };
 
-    // 1. First, send the email via the backend.
     return this.http.post(this.backendUrl, emailPayload).pipe(
-      // 2. If the email is sent successfully, then store the invitation in the database.
       switchMap(response => {
-        const invitation = {
+        const invitation: Omit<Invitation, 'acceptedBy' | 'acceptedAt'> = {
           email: recipientEmail,
           groupId: groupId,
           status: 'pending',
           createdAt: new Date().toISOString()
         };
-        // The `set` operation returns a Promise, so we convert it to an Observable.
         return from(this.db.object(`invitations/${inviteCode}`).set(invitation));
       })
     );

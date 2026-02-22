@@ -36,10 +36,13 @@
                   </p>
                 </div>
 
-                <!-- Display Name -->
+                <!-- Account Type -->
                 <div class="mb-3">
-                  <label for="displayName" class="form-label">{{ 'DISPLAY_NAME_LABEL' | translate }}</label>
-                  <input type="text" id="displayName" class="form-control" formControlName="displayName">
+                  <label class="form-label font-weight-bold mb-0"><strong>{{ 'ACCOUNT_TYPE_LABEL' | translate }}</strong></label>
+                  <div>
+                    <span *ngIf="userData.accountType === 'personal'" class="badge bg-success">{{ 'ACCOUNT_TYPE_PERSONAL' | translate }}</span>
+                    <span *ngIf="userData.accountType === 'group'" class="badge bg-info">{{ 'ACCOUNT_TYPE_GROUP' | translate }}</span>
+                  </div>
                 </div>
 
                 <!-- Role -->
@@ -50,6 +53,13 @@
                     {{ userData.roles }}
                   </p>
                 </div>
+
+                <!-- Display Name -->
+                <div class="mb-3">
+                  <label for="displayName" class="form-label">{{ 'DISPLAY_NAME_LABEL' | translate }}</label>
+                  <input type="text" id="displayName" class="form-control" formControlName="displayName">
+                </div>
+
               </div>
 
               <!-- Budget Period -->

@@ -135,6 +135,7 @@ export class UserProfileComponent implements OnInit {
               budgetStartDate: profile.budgetStartDate || null,
               budgetEndDate: profile.budgetEndDate || null,
               roles: getRole(profile.roles),
+              accountType: profile.accountType || 'personal' // Add accountType here
             }) : null),
             catchError((err) => {
               console.error('Error fetching user profile data:', err);

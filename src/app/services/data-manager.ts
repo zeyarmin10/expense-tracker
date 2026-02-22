@@ -16,6 +16,7 @@ import { Observable, switchMap, firstValueFrom, of, from, combineLatest, map as 
 import { AuthService } from './auth';
 import { IGroupMember, IUserProfile, IInvitation } from '../core/models/data';
 import { UserDataService } from './user-data';
+import { Invitation } from './invitation.service';
 
 export interface IGroupDetails {
   groupName: string;
@@ -52,6 +53,41 @@ export class DataManagerService {
     updates[`/users/${userId}/groupId`] = groupId;
     updates[`/users/${userId}/accountType`] = 'group';
     updates[`/users/${userId}/roles/${groupId}`] = role;
+
+    return update(ref(this.db), updates);
+  }
+
+  async acceptGroupInvitation(inviteCode: string, userId: string): Promise<void> {
+    const inviteRef = ref(this.db, `invitations/${inviteCode}`);
+    const inviteSnapshot = await get(inviteRef);
+
+    if (!inviteSnapshot.exists()) {
+      throw new Error('Invitation not found');
+    }
+
+    const invitation = inviteSnapshot.val() as Invitation;
+
+    if (invitation.status !== 'pending') {
+      throw new Error('Invitation is not pending');
+    }
+
+    const groupId = invitation.groupId;
+    const role = 'member'; // Default role for new members
+
+    const updates: { [key: string]: any } = {};
+
+    // Add user to group_members
+    updates[`/group_members/${groupId}/${userId}`] = { role };
+
+    // Update user's profile
+    updates[`/users/${userId}/accountType`] = 'group';
+    updates[`/users/${userId}/groupId`] = groupId;
+    updates[`/users/${userId}/roles/${groupId}`] = role;
+
+    // Update invitation status
+    updates[`/invitations/${inviteCode}/status`] = 'accepted';
+    updates[`/invitations/${inviteCode}/acceptedBy`] = userId;
+    updates[`/invitations/${inviteCode}/acceptedAt`] = new Date().toISOString();
 
     return update(ref(this.db), updates);
   }

@@ -478,5 +478,8 @@
     "USE_INVITE_CODE": "Use an invite code to join a group.",
     "ENTER_INVITE_CODE": "Enter Invite Code",
     "JOIN_GROUP_BUTTON": "Join Group"
-  }
+  },
+  "ACCOUNT_TYPE_LABEL": "Account Type",
+  "ACCOUNT_TYPE_PERSONAL": "Personal",
+  "ACCOUNT_TYPE_GROUP": "Group"
 }

@@ -1,14 +1,17 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, NavigationEnd, RouterOutlet, RouterModule } from '@angular/router';
+import { Router, NavigationEnd, RouterOutlet, RouterModule, ActivatedRoute } from '@angular/router';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
-import { Observable, combineLatest, of } from 'rxjs';
-import { map, filter, startWith } from 'rxjs/operators';
+import { Observable, combineLatest, of, firstValueFrom } from 'rxjs';
+import { map, filter, startWith, switchMap } from 'rxjs/operators';
 import { AuthService } from './services/auth';
 import { User } from '@angular/fire/auth';
 import { Toast } from './components/toast/toast';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faRightFromBracket } from '@fortawesome/free-solid-svg-icons';
+import { InvitationService } from './services/invitation.service';
+import { DataManagerService } from './services/data-manager';
+import { ToastService } from './services/toast';
 
 @Component({
   selector: 'app-root',
@@ -24,7 +27,7 @@ import { faRightFromBracket } from '@fortawesome/free-solid-svg-icons';
   templateUrl: './app.html',
   styleUrls: ['./app.css'],
 })
-export class App {
+export class App implements OnInit {
   title = 'expense-tracker';
   showNavbar$: Observable<boolean>;
   currentUser$: Observable<User | null>;
@@ -35,6 +38,10 @@ export class App {
 
   private authService = inject(AuthService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  private invitationService = inject(InvitationService);
+  private dataManager = inject(DataManagerService);
+  private toastService = inject(ToastService);
 
   constructor(private translate: TranslateService) {
     this.translate.setDefaultLang('en');
@@ -75,6 +82,39 @@ export class App {
     this.translate.onLangChange.subscribe(event => {
       this.currentLang = event.lang;
     });
+  }
+
+  ngOnInit(): void {
+    this.route.queryParamMap.pipe(
+      switchMap(params => {
+        const inviteCode = params.get('invite_code');
+        if (inviteCode) {
+          return this.handleInvitation(inviteCode);
+        }
+        return of(null);
+      })
+    ).subscribe();
+  }
+
+  private async handleInvitation(inviteCode: string): Promise<void> {
+    const user = await firstValueFrom(this.authService.currentUser$);
+    if (!user) return;
+
+    try {
+      const invitation = await firstValueFrom(this.invitationService.getInvitation(inviteCode));
+      if (invitation && invitation.status === 'pending') {
+        await this.dataManager.acceptGroupInvitation(inviteCode, user.uid);
+        this.toastService.showSuccess('Successfully joined the group!');
+        this.router.navigate(['/dashboard'], { replaceUrl: true });
+      } else {
+        this.toastService.showError('Invalid or expired invitation code.');
+        this.router.navigate([], { queryParams: { invite_code: null }, queryParamsHandling: 'merge' });
+      }
+    } catch (error) {
+      console.error('Error handling invitation:', error);
+      this.toastService.showError('Failed to process invitation.');
+      this.router.navigate([], { queryParams: { invite_code: null }, queryParamsHandling: 'merge' });
+    }
   }
 
   toggleLanguage(): void {
