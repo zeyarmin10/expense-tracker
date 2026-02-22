@@ -19,9 +19,10 @@ export class InvitationService {
     
     const inviteCode = this.generateRandomCode();
     const loginLink = `${window.location.origin}/login?invite_code=${inviteCode}`;
-    const PrimaryBgColor = '#b4dffc'; 
+    const PrimaryBgColor = '#70BDEF';
+    const PrimaryTxtColor = '#1172BD';
     const PrimaryBtnBgColor = '#70BDF0';
-    const inviteCodeBgColor = '#ADD8E6';
+    const inviteCodeBgColor = '#e0e0e0';
 
     const isMyanmar = language === 'my';
 
@@ -55,7 +56,7 @@ export class InvitationService {
 
     const htmlBody = `
     <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; line-height: 1.6; max-width: 600px; margin: 20px auto; border: 1px solid #ddd; border-radius: 12px; overflow: hidden;">
-      <div style="background-color: ${PrimaryBgColor}; color: white; padding: 20px; text-align: center;">
+      <div style="background-color: ${PrimaryBgColor}; color: ${PrimaryTxtColor}; padding: 20px; text-align: center;">
         <h1 style="margin: 0; font-size: 28px;">Expense Tracker</h1>
       </div>
       <div style="padding: 25px 30px;">

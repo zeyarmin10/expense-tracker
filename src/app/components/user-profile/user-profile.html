@@ -24,7 +24,7 @@
                 class="info-container border border-secondary-subtle rounded mb-4 p-2 p-sm-3 p-md-3 p-lg-3 p-xl-3 p-xxl-3">
                 <!-- Email -->
                 <div class="mb-3">
-                  <label class="form-label font-weight-bold mb-0">{{ 'EMAIL_LABEL' | translate }}</label>
+                  <label class="form-label font-weight-bold mb-0"><strong>{{ 'EMAIL_LABEL' | translate }}</strong></label>
                   <p class="form-control-plaintext m-0 p-0">{{ userData.email }}</p>
                 </div>
                 <!-- Member Since -->
@@ -56,7 +56,7 @@
               <div
                 class="info-container border border-secondary-subtle rounded mb-4 p-2 p-sm-3 p-md-3 p-lg-3 p-xl-3 p-xxl-3">
                 <div class="mb-2">
-                  <label for="budgetPeriod" class="form-label">{{ 'BUDGET_PERIOD_LABEL' | translate }}</label>
+                  <label for="budgetPeriod" class="form-label"><strong>{{ 'BUDGET_PERIOD_LABEL' | translate }}</strong></label>
                   <div class="input-group">
                     <select id="budgetPeriod" class="form-select" formControlName="budgetPeriod">
                       <option *ngFor="let period of translatedBudgetPeriods" [value]="period.code">
@@ -124,7 +124,7 @@
                 class="info-container border border-secondary-subtle rounded mb-4 p-2 p-sm-3 p-md-3 p-lg-3 p-xl-3 p-xxl-3">
                 <!-- Currency Selection -->
                 <div class="mb-3">
-                  <label for="currency" class="form-label">{{ 'CURRENCY' | translate }}</label>
+                  <label for="currency" class="form-label"><strong>{{ 'CURRENCY' | translate }}</strong></label>
                   <select id="currency" class="form-select" formControlName="currency">
                     <option *ngFor="let currency of translatedCurrencies" [value]="currency.code">{{ currency.name }}
                       ({{
@@ -134,7 +134,7 @@
 
                 <!-- Language Selection -->
                 <div class="mb-3">
-                  <label for="language" class="form-label">{{ 'SYSTEM_LANGUAGE_LABEL' | translate }}</label>
+                  <label for="language" class="form-label"><strong>{{ 'SYSTEM_LANGUAGE_LABEL' | translate }}</strong></label>
                   <select id="language" class="form-select" [ngModel]="selectedLanguage"
                     (ngModelChange)="onLanguageChange($event)" [ngModelOptions]="{standalone: true}">
                     <option value="en">English</option>
