@@ -6,7 +6,7 @@
         <div class="card shadow-sm border-0 mb-4">
           <div class="card-body p-4">
             <h2 class="card-title text-center mb-4">
-              <i class="bi bi-person-plus-fill me-2"></i>{{ 'MEMBER_MANAGEMENT.INVITE_MEMBER' | translate }}
+              <fa-icon [icon]="faUserPlus" class="me-2"></fa-icon>{{ 'MEMBER_MANAGEMENT.INVITE_MEMBER' | translate }}
             </h2>
             
             <div class="row g-3">
@@ -24,7 +24,7 @@
             </div>
             
             <!-- <div *ngIf="invitationSent" class="alert alert-success mt-3 mb-0 d-flex align-items-center" role="alert">
-              <i class="bi bi-check-circle-fill me-2"></i>
+              <fa-icon [icon]="faCheckCircle" class="me-2"></fa-icon>
               <div>{{ 'MEMBER_MANAGEMENT.INVITE_SENT_SUCCESS' | translate }}</div>
             </div> -->
           </div>
@@ -40,7 +40,7 @@
               <div *ngIf="invites.length > 0; else noInvites" class="list-group list-group-flush border rounded">
                 <div *ngFor="let invite of invites" class="list-group-item d-flex justify-content-between align-items-center py-2 bg-light-hover">
                   <div class="d-flex align-items-center">
-                    <i class="bi bi-envelope text-secondary me-3"></i>
+                    <fa-icon [icon]="faEnvelope" class="text-secondary me-3"></fa-icon>
                     <span class="text-break">{{ invite.email }}</span>
                   </div>
                   <button (click)="revokeInvite(invite.key!)" class="btn btn-outline-warning btn-sm px-3 rounded-pill">
@@ -49,8 +49,8 @@
                 </div>
               </div>
               <ng-template #noInvites>
-                <div class="text-center py-4 text-muted">
-                  <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                <div class="text-center py-1 text-muted">
+                  <fa-icon [icon]="faInbox" class="fs-1 d-block mb-2"></fa-icon>
                   <p class="mb-0">{{ 'MEMBER_MANAGEMENT.NO_PENDING_INVITES' | translate }}</p>
                 </div>
               </ng-template>
@@ -91,7 +91,7 @@
         
                   <button *ngIf="(groupOwnerId$ | async) !== member?.uid" (click)="deleteMember(member!.uid!)"
                     class="btn btn-outline-danger btn-sm px-3 rounded-pill">
-                    <i class="bi bi-trash3 me-1"></i>{{ 'MEMBER_MANAGEMENT.DELETE' | translate }}
+                    <fa-icon [icon]="faTrash" class="me-1"></fa-icon>{{ 'MEMBER_MANAGEMENT.DELETE' | translate }}
                   </button>
                 </div>
               </div>

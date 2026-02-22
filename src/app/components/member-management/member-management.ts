@@ -2,6 +2,8 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { faUserPlus, faEnvelope, faInbox, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { IUserProfile, IInvitation } from '../../core/models/data';
 import { Observable, of, firstValueFrom, from } from 'rxjs';
 import { switchMap, shareReplay, map } from 'rxjs/operators';
@@ -14,7 +16,7 @@ import { ToastService } from '../../services/toast';
 @Component({
   selector: 'app-member-management',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule],
+  imports: [CommonModule, FormsModule, TranslateModule, FontAwesomeModule],
   templateUrl: './member-management.html',
 })
 export class MemberManagementComponent implements OnInit {
@@ -24,6 +26,12 @@ export class MemberManagementComponent implements OnInit {
   private invitationService = inject(InvitationService);
   private toastService = inject(ToastService);
   private translate = inject(TranslateService);
+
+  // Font Awesome Icons
+  faUserPlus = faUserPlus;
+  faEnvelope = faEnvelope;
+  faInbox = faInbox;
+  faTrash = faTrash;
 
   userProfile$: Observable<IUserProfile | null>;
   members$: Observable<IGroupMemberDetails[]>; 

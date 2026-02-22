@@ -13,8 +13,9 @@ import {
   get,
   child,
 } from '@angular/fire/database';
-import { Observable, switchMap, firstValueFrom, map, of, Subject } from 'rxjs';
+import { Observable, switchMap, firstValueFrom, map, of, Subject, take } from 'rxjs';
 import { AuthService } from './auth';
+import { TranslateService } from '@ngx-translate/core';
 
 export interface ServiceICategory {
   id?: string; // Firebase push key
@@ -36,6 +37,7 @@ interface ServiceIExpense {
 export class CategoryService {
   private db: Database = inject(Database);
   private authService = inject(AuthService);
+  private translateService = inject(TranslateService);
 
   // Add a Subject to emit category updates
   private categoryUpdatedSource = new Subject<{
@@ -44,6 +46,13 @@ export class CategoryService {
     userId: string;
   }>();
   categoryUpdated$ = this.categoryUpdatedSource.asObservable(); // Public observable
+
+  constructor() {
+    // Subscribe to new user registrations to add default categories
+    this.authService.newUserRegistered$.subscribe(userId => {
+      this.checkAndAddDefaultCategories(userId);
+    });
+  }
 
   private getCategoriesRef(userId: string): DatabaseReference {
     return ref(this.db, `users/${userId}/categories`);
@@ -75,22 +84,24 @@ export class CategoryService {
   }
 
   /**
-   * Gets all categories for the current user as an Observable.
-   * Attaches Firebase push IDs as 'id' property.
+   * Gets all categories for a user as an Observable.
+   * If no userId is provided, it defaults to the currently authenticated user.
+   * @param userId (Optional) The UID of the user to fetch categories for.
    * @returns An Observable of an array of ServiceICategory objects.
    */
-  getCategories(): Observable<ServiceICategory[]> {
-    return this.authService.currentUser$.pipe(
-      switchMap((user) => {
-        if (user?.uid) {
-          // Use listVal with keyField to include the Firebase key as 'id'
-          return listVal<ServiceICategory>(this.getCategoriesRef(user.uid), {
-            keyField: 'id',
-          });
-        }
-        return of([]); // Return empty array if no user
-      })
-    );
+  getCategories(userId?: string): Observable<ServiceICategory[]> {
+    if (userId) {
+      return listVal<ServiceICategory>(this.getCategoriesRef(userId), { keyField: 'id' });
+    } else {
+      return this.authService.currentUser$.pipe(
+        switchMap((user) => {
+          if (user?.uid) {
+            return listVal<ServiceICategory>(this.getCategoriesRef(user.uid), { keyField: 'id' });
+          }
+          return of([]); // Return empty array if no user
+        })
+      );
+    }
   }
 
   /**
@@ -210,16 +221,14 @@ export class CategoryService {
   }
 
   // --- New methods for default categories ---
+  private async checkAndAddDefaultCategories(userId: string): Promise<void> {
+    const categories$ = this.getCategories(userId);
+    const existingCategories = await firstValueFrom(categories$.pipe(take(1)));
 
-  /**
-   * Checks if a user already has any categories.
-   * @param userId The UID of the user.
-   * @returns A Promise that resolves to true if categories exist, false otherwise.
-   */
-  async hasCategories(userId: string): Promise<boolean> {
-    const categoriesRef = this.getCategoriesRef(userId);
-    const snapshot = await get(categoriesRef);
-    return snapshot.exists() && snapshot.size > 0;
+    if (existingCategories.length === 0) {
+      const currentLang = this.translateService.currentLang || 'my';
+      await this.addDefaultCategories(userId, currentLang);
+    }
   }
 
   /**

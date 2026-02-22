@@ -9,12 +9,13 @@ import {
   onAuthStateChanged,
   GoogleAuthProvider,
   signInWithPopup,
-  AuthErrorCodes
+  AuthErrorCodes,
+  getAdditionalUserInfo
 } from '@angular/fire/auth';
 import { AngularFireDatabase } from '@angular/fire/compat/database';
 import { TranslateService } from '@ngx-translate/core';
 import { Observable, Subject, of, from, firstValueFrom } from 'rxjs';
-import { switchMap, tap } from 'rxjs/operators';
+import { switchMap } from 'rxjs/operators';
 import { UserDataService, UserProfile } from './user-data';
 
 @Injectable({
@@ -34,6 +35,9 @@ export class AuthService {
 
   private _logoutSuccess = new Subject<boolean>();
   logoutSuccess$: Observable<boolean> = this._logoutSuccess.asObservable();
+
+  private newUserRegisteredSource = new Subject<string>();
+  newUserRegistered$ = this.newUserRegisteredSource.asObservable();
 
   translateService = inject(TranslateService);
 
@@ -58,6 +62,8 @@ export class AuthService {
   async register(email: string, password: string): Promise<User> {
     try {
       const userCredential = await createUserWithEmailAndPassword(this.auth, email, password);
+      // A new user has registered, notify listeners
+      this.newUserRegisteredSource.next(userCredential.user.uid);
       await this.handleInvite(userCredential.user);
       return userCredential.user;
     } catch (error: any) {
@@ -84,6 +90,13 @@ export class AuthService {
     try {
       const provider = new GoogleAuthProvider();
       const userCredential = await signInWithPopup(this.auth, provider);
+      const additionalUserInfo = getAdditionalUserInfo(userCredential);
+      
+      if (additionalUserInfo?.isNewUser) {
+        // A new user has signed in with Google, notify listeners
+        this.newUserRegisteredSource.next(userCredential.user.uid);
+      }
+
       await this.handleInvite(userCredential.user);
       return userCredential.user;
     } catch (error: any) {
