@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { Observable, firstValueFrom } from 'rxjs';
 import { AuthService } from '../../services/auth';
 import { UserDataService, UserProfile } from '../../services/user-data';
+import { GroupService } from '../../services/group.service';
 import { DataManagerService } from '../../services/data-manager';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { InvitationService } from '../../services/invitation.service';
@@ -20,6 +21,7 @@ import { ToastService } from '../../services/toast';
 export class OnboardingComponent implements OnInit {
   private authService = inject(AuthService);
   private userDataService = inject(UserDataService);
+  private groupService = inject(GroupService);
   private dataManager = inject(DataManagerService);
   private router = inject(Router);
   private translate = inject(TranslateService);
@@ -62,10 +64,10 @@ export class OnboardingComponent implements OnInit {
   }
 
   async createGroup(): Promise<void> {
-    const user = await firstValueFrom(this.authService.currentUser$);
-    if (!user || !this.newGroupName.trim()) return;
+    if (!this.newGroupName.trim()) return;
     try {
-      await this.dataManager.createGroup(this.newGroupName.trim(), user.uid);
+      const lang = this.translate.currentLang || 'my';
+      await this.groupService.createGroup(this.newGroupName.trim(), lang);
       this.router.navigate(['/dashboard']);
     } catch (error) {
       console.error('Error creating group:', error);

@@ -9,6 +9,7 @@ import {
   remove
 } from '@angular/fire/database';
 import { Observable } from 'rxjs';
+import { GroupService } from './group.service';
 
 export type Role = 'admin' | 'member'; // Define the possible roles
 

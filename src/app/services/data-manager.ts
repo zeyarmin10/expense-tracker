@@ -1,16 +1,14 @@
-
 import { Injectable, inject } from '@angular/core';
 import {
   Database,
   ref,
-  push,
-  update,
   remove,
   listVal,
   get,
   query,
   orderByChild,
   equalTo,
+  update,
 } from '@angular/fire/database';
 import { Observable, switchMap, firstValueFrom, of, from, combineLatest, map as rxMap } from 'rxjs';
 import { AuthService } from './auth';
@@ -35,27 +33,6 @@ export class DataManagerService {
   private db: Database = inject(Database);
   private authService: AuthService = inject(AuthService);
   private userDataService: UserDataService = inject(UserDataService);
-
-  async createGroup(groupName: string, userId: string): Promise<void> {
-    const groupRef = push(ref(this.db, 'groups'));
-    const groupId = groupRef.key!;
-    const role = 'admin';
-
-    const updates: { [key: string]: any } = {};
-    // Create the group details
-    updates[`/groups/${groupId}`] = { groupName, ownerId: userId };
-    
-    // Add the creator to group_members, but ONLY with their role.
-    // We will no longer store displayName and email here.
-    updates[`/group_members/${groupId}/${userId}`] = { role: role };
-
-    // Update the user's own profile to link them to the group
-    updates[`/users/${userId}/groupId`] = groupId;
-    updates[`/users/${userId}/accountType`] = 'group';
-    updates[`/users/${userId}/roles/${groupId}`] = role;
-
-    return update(ref(this.db), updates);
-  }
 
   async acceptGroupInvitation(inviteCode: string, userId: string): Promise<void> {
     const inviteRef = ref(this.db, `invitations/${inviteCode}`);
