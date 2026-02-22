@@ -457,6 +457,7 @@
                             <fa-icon [icon]="faEdit"></fa-icon>
                           </button>
                           <button
+                            *ngIf="userProfile?.accountType === 'personal' || userRole === 'admin'"
                             class="btn btn-sm btn-outline-danger"
                             (click)="onDelete(expense.id!)"
                             [attr.aria-label]="
@@ -510,6 +511,7 @@
                         <fa-icon [icon]="faEdit"></fa-icon>
                       </button>
                       <button
+                        *ngIf="userProfile?.accountType === 'personal' || userRole === 'admin'"
                         class="btn btn-sm btn-outline-danger"
                         (click)="onDelete(expense.id!)"
                         [attr.aria-label]="'EXPENSE_DELETE_BUTTON' | translate"

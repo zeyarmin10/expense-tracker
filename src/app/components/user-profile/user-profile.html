@@ -54,6 +54,14 @@
                   </p>
                 </div>
 
+                <!-- Group Name -->
+                <div class="mb-3" *ngIf="userData.accountType === 'group' && userData.groupName">
+                  <label class="form-label font-weight-bold mb-0"><strong>{{ 'GROUP_NAME' | translate }}</strong></label>
+                  <p class="form-control-plaintext m-0 p-0">
+                    {{ userData.groupName }}
+                  </p>
+                </div>
+
                 <!-- Display Name -->
                 <div class="mb-3">
                   <label for="displayName" class="form-label">{{ 'DISPLAY_NAME_LABEL' | translate }}</label>

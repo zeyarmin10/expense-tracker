@@ -1,8 +1,8 @@
 import { Injectable, inject } from '@angular/core';
-import { Database, ref, push, update } from '@angular/fire/database';
+import { Database, ref, push, update, get } from '@angular/fire/database';
 import { AuthService } from './auth';
 import { CategoryService } from './category';
-import { firstValueFrom, map } from 'rxjs';
+import { firstValueFrom, map, Observable, of } from 'rxjs';
 
 export interface Group {
   groupName: string;
@@ -52,5 +52,22 @@ export class GroupService {
     await this.categoryService.addDefaultGroupCategories(newGroupId, language);
     
     return newGroupId;
+  }
+
+  getGroupName(groupId: string): Observable<string | null> {
+    if (!groupId) return of(null);
+    const groupRef = ref(this.db, `groups/${groupId}/groupName`);
+    return new Observable(observer => {
+      get(groupRef).then(snapshot => {
+        if (snapshot.exists()) {
+          observer.next(snapshot.val());
+        } else {
+          observer.next(null);
+        }
+        observer.complete();
+      }).catch(error => {
+        observer.error(error);
+      });
+    });
   }
 }

@@ -1,7 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ExpenseService, ServiceIExpense } from '../../services/expense';
+import { ExpenseService, IExpense } from '../../services/expense.service';
 import {
   Observable,
   BehaviorSubject,
@@ -78,9 +78,9 @@ export class ExpenseOverview implements OnInit {
   faMagnifyingGlass = faMagnifyingGlass;
 
   // --- Filtering and Search Properties ---
-  allExpenses$: Observable<ServiceIExpense[]> =
+  allExpenses$: Observable<IExpense[]> =
     this.expenseService.getExpenses();
-  filteredExpenses$: Observable<ServiceIExpense[]> = of([]);
+  filteredExpenses$: Observable<IExpense[]> = of([]);
   selectedDateFilter: string = 'currentMonth';
   startDate: string = '';
   endDate: string = '';
@@ -292,7 +292,7 @@ export class ExpenseOverview implements OnInit {
     this.searchFilter$.next(this.searchTerm);
   }
 
-  calculateSummary(expenses: ServiceIExpense[], totalDays: number): void {
+  calculateSummary(expenses: IExpense[], totalDays: number): void {
     if (!expenses || expenses.length === 0) {
       this.currencySummaries = [];
       this.mostExpenseCategory = 'N/A';
@@ -306,12 +306,12 @@ export class ExpenseOverview implements OnInit {
       }
       acc[currency].push(expense);
       return acc;
-    }, {} as { [key: string]: ServiceIExpense[] });
+    }, {} as { [key: string]: IExpense[] });
 
     this.currencySummaries = Object.keys(groupedByCurrency).map((currency) => {
       const currencyExpenses = groupedByCurrency[currency];
       const totalExpenses = currencyExpenses.reduce(
-        (sum: number, e: ServiceIExpense) => sum + e.totalCost,
+        (sum: number, e: IExpense) => sum + e.totalCost,
         0
       );
       const dailyAverage = totalDays > 0 ? totalExpenses / totalDays : 0;
@@ -342,7 +342,7 @@ export class ExpenseOverview implements OnInit {
     this.mostExpenseCategory = mostExpensive || 'N/A';
   }
 
-  updatePieChart(expenses: ServiceIExpense[]): void {
+  updatePieChart(expenses: IExpense[]): void {
     const categoryTotals = expenses.reduce((acc, expense) => {
       acc[expense.category] = (acc[expense.category] || 0) + expense.totalCost;
       return acc;
@@ -376,7 +376,7 @@ export class ExpenseOverview implements OnInit {
     return colors;
   }
 
-  onRowClick(expense: ServiceIExpense): void {
+  onRowClick(expense: IExpense): void {
     this.router.navigate(['/expense', expense.date]);
   }
 

@@ -5,7 +5,6 @@ import {
   inject,
   ViewChild,
   ChangeDetectorRef,
-  viewChild,
   NgZone,
 } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
@@ -15,7 +14,7 @@ import {
   Validators,
   ReactiveFormsModule,
 } from '@angular/forms';
-import { ServiceIExpense, ExpenseService } from '../../services/expense';
+import { IExpense, ExpenseService } from '../../services/expense.service';
 import { ServiceICategory, CategoryService } from '../../services/category';
 import {
   Observable,
@@ -47,11 +46,8 @@ import { AuthService } from '../../services/auth';
 import { UserDataService, UserProfile } from '../../services/user-data';
 import {
   AVAILABLE_CURRENCIES,
-  BURMESE_CURRENCY_SYMBOL,
-  BURMESE_LOCALE_CODE,
   BURMESE_MONTH_ABBREVIATIONS,
   CURRENCY_SYMBOLS,
-  MMK_CURRENCY_CODE,
 } from '../../core/constants/app.constants';
 
 import { FormatService } from '../../services/format.service';
@@ -75,13 +71,13 @@ export class Expense implements OnInit {
   @ViewChild(CategoryModalComponent) categoryModal!: CategoryModalComponent;
   @ViewChild('deleteConfirmationModal')
   deleteConfirmationModal!: ConfirmationModal;
-  @ViewChild('errorModal') errorModal!: ConfirmationModal; // New: Reference to the error modal
+  @ViewChild('errorModal') errorModal!: ConfirmationModal;
 
   newExpenseForm: FormGroup;
   editingForm: FormGroup | null = null;
 
-  expenses$: Observable<ServiceIExpense[]>;
-  categories$: Observable<ServiceICategory[]> | undefined;
+  expenses$: Observable<IExpense[]>;
+  categories$: Observable<ServiceICategory[]>;
 
   private _selectedDate$ = new BehaviorSubject<string>('');
   private _activeCurrencyFilter$ = new BehaviorSubject<string | null>(null);
@@ -91,7 +87,7 @@ export class Expense implements OnInit {
   private userDataService = inject(UserDataService);
   public formatService = inject(FormatService);
 
-  displayedExpenses$: Observable<ServiceIExpense[]>;
+  displayedExpenses$: Observable<IExpense[]>;
   totalExpensesByCurrency$: Observable<{ [key: string]: number }>;
   totalExpensesByCategoryAndCurrency$: Observable<{
     [category: string]: { [currency: string]: number };
@@ -106,8 +102,7 @@ export class Expense implements OnInit {
   private ngZone: NgZone;
 
   editingExpenseId: string | null = null;
-  errorMessage: string | null = null;
-  successMessage: string | null = null;
+  public userRole: string | null = null;
 
   faPlus = faPlus;
   faEdit = faEdit;
@@ -119,21 +114,15 @@ export class Expense implements OnInit {
   currencySymbols: { [key: string]: string } = CURRENCY_SYMBOLS;
 
   availableCurrencies = AVAILABLE_CURRENCIES;
-
-  // expenseForm is not directly used for input binding, can be removed or kept for other purposes if needed
-  // expenseForm!: FormGroup;
-  // Store original values when input is focused
-  private originalItemName: string | null = null;
-  private originalUnit: string | null = null;
-  private originalQuantity: number | null = null;
-  private originalPrice: number | null = null;
-  private _expensesSubject: BehaviorSubject<ServiceIExpense[]> =
-    new BehaviorSubject<ServiceIExpense[]>([]);
   userProfile: UserProfile | null = null;
 
   router = inject(Router);
   route = inject(ActivatedRoute);
-  //   pageTitle: string = 'ADD_NEW_EXPENSE';
+  
+  private originalItemName: string | null = null;
+  private originalUnit: string | null = null;
+  private originalQuantity: number | null = null;
+  private originalPrice: number | null = null;
 
   constructor(private fb: FormBuilder) {
     const todayFormatted =
@@ -144,16 +133,15 @@ export class Expense implements OnInit {
       date: [todayFormatted, Validators.required],
       category: ['', Validators.required],
       itemName: ['', Validators.required],
-      quantity: [1, [Validators.required, Validators.min(0.01)]], // Changed min to 0.01
-      unit: [''], // 'unit' is no longer required
+      quantity: [1, [Validators.required, Validators.min(0.01)]],
+      unit: [''],
       price: [0, [Validators.required, Validators.min(0)]],
       currency: ['MMK', Validators.required],
       selectedDate: [todayFormatted],
     });
-
-    // Subscribing to the _expensesSubject to update expenses$
-    this.expenses$ = this._expensesSubject.asObservable();
-    this.loadCategories();
+    
+    this.expenses$ = this.expenseService.getExpenses();
+    this.categories$ = this.categoryService.getCategories();
 
     this.displayedExpenses$ = combineLatest([
       this.expenses$,
@@ -177,48 +165,29 @@ export class Expense implements OnInit {
             (expense) => expense.category === activeCategory
           );
         }
-        // MODIFIED: Sort by creation date descending to display the latest content first
-        // return filtered.sort(
-        //   (a, b) =>
-        //     new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        // );
-
         return filtered;
       })
     );
 
-    this.totalExpensesByCurrency$ = combineLatest([
-      this.expenses$,
-      this._selectedDate$,
-    ]).pipe(
-      map(([expenses, selectedDate]) => {
-        const dailyExpenses = expenses.filter(
-          (expense) => expense.date === selectedDate
-        );
-        return dailyExpenses.reduce((acc, expense) => {
-          acc[expense.currency] =
-            (acc[expense.currency] || 0) + expense.totalCost;
+    this.totalExpensesByCurrency$ = this.displayedExpenses$.pipe(
+      map(expenses => {
+        return expenses.reduce((acc, expense) => {
+          acc[expense.currency] = (acc[expense.currency] || 0) + expense.totalCost;
           return acc;
         }, {} as { [key: string]: number });
       })
     );
 
-    this.totalExpensesByCategoryAndCurrency$ = combineLatest([
-      this.expenses$,
-      this._selectedDate$,
-    ]).pipe(
-      map(([expenses, selectedDate]) => {
-        const dailyExpenses = expenses.filter(
-          (expense) => expense.date === selectedDate
-        );
-        return dailyExpenses.reduce((acc, expense) => {
-          if (!acc[expense.category]) {
-            acc[expense.category] = {};
-          }
-          acc[expense.category][expense.currency] =
-            (acc[expense.category][expense.currency] || 0) + expense.totalCost;
-          return acc;
-        }, {} as { [category: string]: { [currency: string]: number } });
+    this.totalExpensesByCategoryAndCurrency$ = this.displayedExpenses$.pipe(
+      map(expenses => {
+          return expenses.reduce((acc, expense) => {
+              if (!acc[expense.category]) {
+              acc[expense.category] = {};
+              }
+              acc[expense.category][expense.currency] =
+              (acc[expense.category][expense.currency] || 0) + expense.totalCost;
+              return acc;
+          }, {} as { [category: string]: { [currency: string]: number } });
       })
     );
 
@@ -235,57 +204,27 @@ export class Expense implements OnInit {
 
   ngOnInit(): void {
     this.applyDateFilter();
-    // expenseForm is not directly used for input binding, can be removed or kept for other purposes if needed
-    // this.expenseForm = this.fb.group({
-    //   itemName: ['', Validators.required],
-    //   unit: [''],
-    //   quantity: ['', [Validators.required, Validators.min(0.01)]],
-    //   price: ['', [Validators.required, Validators.min(0.01)]],
-    // });
-    // Initial load of expenses
-    this.loadExpenses();
-
-    // To disable the 'currency' form control
-    this.newExpenseForm.controls['currency'].disable();
-
-    // --- STEP 1: Check for date in URL on component initialization ---
-    // We subscribe to the route parameters to see if a 'date' exists.
     this.route.paramMap.subscribe((params) => {
       const date = params.get('date');
       if (date) {
-        // If a date is in the URL, use it to update the component state.
-        // this.pageTitle = 'EDIT_EXPENSE_FOR_DAY';
         this.newExpenseForm.patchValue({ selectedDate: date });
         this._selectedDate$.next(date);
       } else {
-        // If no date is in the URL, use the default date from the form.
-        // this.pageTitle = 'ADD_NEW_EXPENSE';
         this._selectedDate$.next(
           this.newExpenseForm.get('selectedDate')?.value || null
         );
       }
     });
 
-    // ✅ REVISION: Fetch user profile and set the default currency on form load
-    this.authService.currentUser$
-      .pipe(
-        switchMap((user) => {
-          if (user && user.uid) {
-            // If a user is logged in, fetch their profile
-            return this.userDataService.getUserProfile(user.uid);
-          }
-          // Otherwise, return a null profile
-          return of(null);
-        }),
-        // Only take the first value emitted and then unsubscribe
-        take(1)
-      )
-      .subscribe((profile) => {
+    this.authService.userProfile$.pipe(take(1)).subscribe(profile => {
         this.userProfile = profile;
-        // Set the currency value based on the profile, or default to 'MMK'
-        const defaultCurrency = profile?.currency || 'MMK';
-        this.newExpenseForm.get('currency')?.setValue(defaultCurrency);
-      });
+        if (profile) {
+          this.newExpenseForm.get('currency')?.setValue(profile.currency || 'MMK');
+          if (profile.roles && typeof profile.roles === 'object' && Object.keys(profile.roles).length > 0) {
+            this.userRole = Object.values(profile.roles)[0];
+          }
+        }
+    });
   }
 
   loadCategories(): void {
@@ -296,18 +235,9 @@ export class Expense implements OnInit {
     this.categoryModal.open();
   }
 
-  private clearMessages(): void {
-    this.errorMessage = null;
-    this.successMessage = null;
-    this.cdr.detectChanges();
-  }
-
   async onSubmitNewExpense(): Promise<void> {
-    this.clearMessages();
-    // Mark all controls as touched to display validation messages
     this.newExpenseForm.markAllAsTouched();
     if (this.newExpenseForm.invalid) {
-      // Use error modal instead of errorMessage
       this.showErrorModal(
         this.translate.instant('ERROR_TITLE'),
         this.translate.instant('ERROR_FILL_ALL_FIELDS')
@@ -315,59 +245,42 @@ export class Expense implements OnInit {
       return;
     }
 
-    const defaultCurrency = this.userProfile?.currency || 'MMK';
-
-    const formData = {
-      ...this.newExpenseForm.value,
-      currency: defaultCurrency,
+    const formValue = this.newExpenseForm.value;
+    const newExpense: Omit<IExpense, 'id'> = {
+      date: formValue.date,
+      category: formValue.category,
+      itemName: formValue.itemName,
+      quantity: formValue.quantity,
+      unit: formValue.unit,
+      price: formValue.price,
+      currency: formValue.currency,
+      totalCost: formValue.quantity * formValue.price, // Calculate totalCost
     };
 
     try {
-      await this.expenseService.addExpense(formData);
-      // Use toast service instead of successMessage
-      this.translate.get('EXPENSE_SUCCESS_ADDED').subscribe((res: string) => {
-        this.toastService.showSuccess(res);
-      });
-      this.newExpenseForm.reset();
-      const todayFormatted =
-        this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
-
-      this.newExpenseForm.patchValue({
-        date: todayFormatted,
-        category: '',
-        quantity: 1,
-        currency: defaultCurrency,
-        selectedDate: todayFormatted,
+      await this.expenseService.addExpense(newExpense);
+      this.toastService.showSuccess(this.translate.instant('EXPENSE_SUCCESS_ADDED'));
+      this.newExpenseForm.reset({
+          date: this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '',
+          quantity: 1,
+          price: 0,
+          currency: this.userProfile?.currency || 'MMK',
+          selectedDate: this.datePipe.transform(new Date(), 'yyyy-MM-dd') || ''
       });
       this.resetFilter();
-      await this.loadExpenses();
     } catch (error: any) {
-      // Use error modal instead of errorMessage
       this.showErrorModal(
         this.translate.instant('ERROR_TITLE'),
         error.message || this.translate.instant('EXPENSE_ERROR_ADD')
       );
-      console.error('New expense save error:', error);
     }
-    this.cdr.detectChanges();
   }
-
-  //   applyDateFilter(): void {
-
-  //     const selectedDate = this.newExpenseForm.get('selectedDate')?.value;
-  //     if (selectedDate) {
-  //       this._selectedDate$.next(selectedDate);
-  //       this.resetActiveFilters();
-  //     }
-  //   }
-
-  // --- STEP 2: Function to handle user-driven date changes from the form ---
-
+  
   applyDateFilter(): void {
     const selectedDate = this.newExpenseForm.get('selectedDate')?.value;
     if (selectedDate) {
-      // Update the BehaviorSubject, which will trigger the expensesForDay$ observable.
       this._selectedDate$.next(selectedDate);
+      this.resetActiveFilters();
     }
   }
 
@@ -394,31 +307,22 @@ export class Expense implements OnInit {
     this._activeCategoryFilter$.next(category);
   }
 
-  startEdit(expense: ServiceIExpense): void {
-    this.clearMessages();
+  startEdit(expense: IExpense): void {
     this.editingExpenseId = expense.id!;
     this.editingForm = this.fb.group({
       date: [expense.date, Validators.required],
       category: [expense.category, Validators.required],
       itemName: [expense.itemName, Validators.required],
-      quantity: [expense.quantity, [Validators.required, Validators.min(0.01)]], // Changed min to 0.01
-      unit: [expense['unit']], // 'unit' is no longer required
-      price: [expense['price'], [Validators.required, Validators.min(0)]],
-      currency: [expense.currency || 'MMK', Validators.required],
-      updatedAt: new Date().toISOString().split('T')[0],
+      quantity: [expense.quantity, [Validators.required, Validators.min(0.01)]],
+      unit: [expense.unit],
+      price: [expense.price, [Validators.required, Validators.min(0)]],
+      currency: [expense.currency, Validators.required],
+      updatedAt: [new Date().toISOString()] // Add the missing control
     });
-    this.cdr.detectChanges();
   }
 
   async saveEdit(): Promise<void> {
-    this.clearMessages();
-    // Mark all controls as touched to display validation messages
-    if (this.editingForm) {
-      this.editingForm.markAllAsTouched();
-    }
-
     if (this.editingForm && this.editingForm.invalid) {
-      // Use error modal instead of errorMessage
       this.showErrorModal(
         this.translate.instant('ERROR_TITLE'),
         this.translate.instant('EXPENSE_ERROR_EDIT_FORM_INVALID')
@@ -426,7 +330,6 @@ export class Expense implements OnInit {
       return;
     }
     if (!this.editingForm || !this.editingExpenseId) {
-      // Use error modal instead of errorMessage
       this.showErrorModal(
         this.translate.instant('ERROR_TITLE'),
         this.translate.instant('EXPENSE_ERROR_NO_EXPENSE_SELECTED')
@@ -434,153 +337,82 @@ export class Expense implements OnInit {
       return;
     }
 
+    const formValue = this.editingForm.value;
+    const updatedExpense: Partial<IExpense> = {
+      ...formValue,
+      totalCost: formValue.quantity * formValue.price, // Recalculate totalCost
+    };
+
     try {
       await this.expenseService.updateExpense(
         this.editingExpenseId,
-        this.editingForm.value
+        updatedExpense
       );
-      // Use toast service instead of successMessage
-      this.translate.get('EXPENSE_SUCCESS_UPDATED').subscribe((res: string) => {
-        this.toastService.showSuccess(res);
-      });
+      this.toastService.showSuccess(this.translate.instant('EXPENSE_SUCCESS_UPDATED'));
       this.cancelEdit();
-      await this.loadExpenses();
     } catch (error: any) {
-      // Use error modal instead of errorMessage
       this.showErrorModal(
         this.translate.instant('ERROR_TITLE'),
         error.message || this.translate.instant('EXPENSE_ERROR_UPDATE')
       );
-      console.error('Expense update error:', error);
     }
-    this.cdr.detectChanges();
   }
 
   cancelEdit(): void {
-    this.clearMessages();
     this.editingExpenseId = null;
     this.editingForm = null;
-    this.cdr.detectChanges();
   }
 
-  /**
-   * Handles the deletion of an expense using the confirmation modal.
-   * @param expenseId The ID of the expense to delete.
-   */
   onDelete(expenseId: string): void {
-    this.translate
-      .get('CONFIRM_DELETE_EXPENSE')
-      .subscribe((confirmMsg: string) => {
-        this.deleteConfirmationModal.title = this.translate.instant(
-          'CONFIRM_DELETE_TITLE'
-        );
-        this.deleteConfirmationModal.message = confirmMsg;
-        this.deleteConfirmationModal.confirmButtonText =
-          this.translate.instant('DELETE_BUTTON');
-        this.deleteConfirmationModal.cancelButtonText =
-          this.translate.instant('CANCEL_BUTTON');
-        this.deleteConfirmationModal.messageColor = 'text-danger';
-        this.deleteConfirmationModal.modalType = 'confirm'; // Explicitly set to confirm type
+    this.deleteConfirmationModal.title = this.translate.instant(
+      'CONFIRM_DELETE_TITLE'
+    );
+    this.deleteConfirmationModal.message = this.translate.instant('CONFIRM_DELETE_EXPENSE');
+    this.deleteConfirmationModal.confirmButtonText =
+      this.translate.instant('DELETE_BUTTON');
+    this.deleteConfirmationModal.cancelButtonText =
+      this.translate.instant('CANCEL_BUTTON');
+    this.deleteConfirmationModal.messageColor = 'text-danger';
+    this.deleteConfirmationModal.modalType = 'confirm';
 
-        // Force change detection to ensure @Input properties are updated in the DOM
-        this.cdr.detectChanges();
-        //   console.log('onDelete (Expense) - cdr.detectChanges() called for deleteConfirmationModal.');
+    this.deleteConfirmationModal.open();
 
-        setTimeout(() => {
-          this.deleteConfirmationModal.open();
-          // console.log('onDelete (Expense) - Confirmation modal.open() called via setTimeout.');
-        }, 0);
-
-        const subscription = this.deleteConfirmationModal.confirmed.subscribe(
-          async (confirmed: boolean) => {
-            // console.log('onDelete (Expense) - Confirmation modal confirmed event received:', confirmed);
-            if (confirmed) {
-              try {
-                await this.expenseService.deleteExpense(expenseId);
-                this.ngZone.run(async () => {
-                  this.translate
-                    .get('EXPENSE_DELETED_SUCCESS')
-                    .subscribe((res: string) => {
-                      this.toastService.showSuccess(res);
-                      this.cdr.detectChanges();
-                    });
-
-                  if (this.editingExpenseId === expenseId) {
-                    this.cancelEdit();
-                  }
-                  await this.loadExpenses();
-                  this.cdr.detectChanges();
-                  //   console.log('onDelete (Expense) - Expense deleted successfully.');
-                });
-              } catch (error: any) {
-                // Use error modal instead of toastService for delete errors
-                this.showErrorModal(
-                  this.translate.instant('ERROR_TITLE'),
-                  error.message || this.translate.instant('DATA_DELETE_ERROR')
-                );
-                console.error(
-                  'onDelete (Expense) - Expense delete error:',
-                  error
-                );
-              }
-            }
-            subscription.unsubscribe();
+    const subscription = this.deleteConfirmationModal.confirmed.subscribe(
+      async (confirmed: boolean) => {
+        if (confirmed) {
+          try {
+            await this.expenseService.deleteExpense(expenseId);
+             this.toastService.showSuccess(this.translate.instant('EXPENSE_DELETED_SUCCESS'));
+          } catch (error: any) {
+            this.showErrorModal(
+              this.translate.instant('ERROR_TITLE'),
+              error.message || this.translate.instant('DATA_DELETE_ERROR')
+            );
           }
-        );
-      });
+        }
+        subscription.unsubscribe();
+      }
+    );
   }
 
-  public async loadExpenses(): Promise<void> {
-    try {
-      const expenses = await firstValueFrom(this.expenseService.getExpenses());
-      this._expensesSubject.next(expenses);
-      this.applyDateFilter(); // Re-apply filter to update displayed expenses based on the current date
-    } catch (error) {
-      // Use error modal instead of toastService for load errors
-      this.showErrorModal(
-        this.translate.instant('ERROR_TITLE'),
-        (error as any).message || this.translate.instant('DATA_LOAD_ERROR')
-      );
-      console.error('Error loading expenses:', error);
-    }
-  }
-
-  /**
-   * Displays an error modal with a dynamic title and message.
-   * @param title The title of the error modal.
-   * @param message The error message to display.
-   */
   showErrorModal(title: string, message: string): void {
     this.errorModal.title = title;
     this.errorModal.message = message;
-    this.errorModal.confirmButtonText = this.translate.instant('OK_BUTTON'); // Set to 'OK'
-    this.errorModal.cancelButtonText = ''; // Ensure cancel button is not shown for error
-    this.errorModal.messageColor = 'text-danger'; // Error messages are typically red
-    this.errorModal.modalType = 'alert'; // Set modal type to alert (single button)
+    this.errorModal.confirmButtonText = this.translate.instant('OK_BUTTON');
+    this.errorModal.cancelButtonText = '';
+    this.errorModal.messageColor = 'text-danger';
+    this.errorModal.modalType = 'alert';
 
-    // Force change detection to ensure @Input properties are updated in the DOM
-    this.cdr.detectChanges();
-
-    // Add a small delay using setTimeout(0) to ensure Bootstrap's show() method is called.
-    setTimeout(() => {
-      this.errorModal.open();
-    }, 0);
+    this.errorModal.open();
   }
 
-  /**
-   * Handles the focus event for input fields.
-   * Stores the current value of the input before it's cleared.
-   * @param event The focus event.
-   * @param controlName The name of the form control ('itemName' | 'unit' | 'quantity' | 'price').
-   * @param formGroup The FormGroup instance (newExpenseForm or editingForm).
-   */
   onFocusInput(
     event: Event,
     controlName: 'itemName' | 'unit' | 'quantity' | 'price',
-    formGroup: FormGroup // Added formGroup parameter
+    formGroup: FormGroup
   ): void {
     const inputElement = event.target as HTMLInputElement;
-    const currentControl = formGroup.get(controlName); // Use the passed formGroup
+    const currentControl = formGroup.get(controlName);
 
     if (currentControl) {
       if (controlName === 'itemName') {
@@ -593,33 +425,20 @@ export class Expense implements OnInit {
         this.originalPrice = currentControl.value;
       }
     }
-
-    // Clear the input element's visual value
     inputElement.value = '';
   }
 
-  /**
-   * Handles the blur event for input fields.
-   * Restores the original value if the input is left empty and valid.
-   * Otherwise, ensures validation messages appear if invalid.
-   * @param event The blur event.
-   * @param controlName The name of the form control ('itemName' | 'unit' | 'quantity' | 'price').
-   * @param formGroup The FormGroup instance (newExpenseForm or editingForm).
-   */
   onBlurInput(
     event: Event,
     controlName: 'itemName' | 'unit' | 'quantity' | 'price',
-    formGroup: FormGroup // Added formGroup parameter
+    formGroup: FormGroup
   ): void {
     const inputElement = event.target as HTMLInputElement;
     const currentValue = inputElement.value;
-    const currentControl = formGroup.get(controlName); // Use the passed formGroup
+    const currentControl = formGroup.get(controlName);
 
     if (currentValue === '' && currentControl) {
-      // If the current value is empty, check if it's valid or invalid.
       if (currentControl.valid) {
-        // If valid (e.g., optional field, or min value is 0 and user cleared it),
-        // restore original value if one exists.
         if (controlName === 'itemName' && this.originalItemName !== null) {
           currentControl.setValue(this.originalItemName);
         } else if (controlName === 'unit' && this.originalUnit !== null) {
@@ -633,20 +452,16 @@ export class Expense implements OnInit {
           currentControl.setValue(this.originalPrice);
         }
       } else {
-        // If the current value is empty AND the control is invalid (e.g., required field cleared),
-        // we want the validation message to show. Do NOT restore the original value.
-        // Instead, explicitly mark it as touched to ensure validation message appears.
         currentControl.markAsTouched();
       }
     }
 
-    // Reset all original stored values
     this.originalItemName = null;
     this.originalUnit = null;
     this.originalQuantity = null;
     this.originalPrice = null;
   }
-
+  
   formatLocalizedDate(date: string | Date | null | undefined): string {
     const currentLang = this.translate.currentLang;
 
@@ -656,7 +471,6 @@ export class Expense implements OnInit {
 
     if (currentLang === 'my') {
       const d = new Date(date);
-      // Get the English month abbreviation and map it to Burmese
       const month = this.datePipe.transform(d, 'MMM');
       const burmeseMonth = month
         ? BURMESE_MONTH_ABBREVIATIONS[
@@ -664,7 +478,6 @@ export class Expense implements OnInit {
           ]
         : '';
 
-      // Format the day and year with Burmese numerals
       const day = new Intl.NumberFormat('my-MM', {
         numberingSystem: 'mymr',
         useGrouping: false,
@@ -674,10 +487,8 @@ export class Expense implements OnInit {
         useGrouping: false,
       }).format(d.getFullYear());
 
-      // Combine the localized parts
       return `${day} ${burmeseMonth} ${year}`;
     } else {
-      // For all other languages, use the standard Angular DatePipe
       return (
         this.datePipe.transform(date, 'mediumDate', undefined, currentLang) ||
         ''

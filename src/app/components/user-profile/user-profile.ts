@@ -20,6 +20,7 @@ import { CustomBudgetPeriodModalComponent } from '../common/custom-budget-period
 import { CustomBudgetPeriod, CustomBudgetPeriodService } from '../../services/custom-budget-period.service';
 import { ConfirmationModal } from '../common/confirmation-modal/confirmation-modal';
 import { ToastService } from '../../services/toast';
+import { GroupService } from '../../services/group.service';
 
 export const AVAILABLE_BUDGET_PERIODS = [
   { code: null, nameKey: 'BUDGET_PERIOD.NONE' },
@@ -52,6 +53,7 @@ export class UserProfileComponent implements OnInit {
   private datePipe = inject(DatePipe);
   private customBudgetPeriodService = inject(CustomBudgetPeriodService);
   private toastService = inject(ToastService);
+  private groupService = inject(GroupService);
 
   userProfileForm: FormGroup;
   userDisplayData$: Observable<any>;
@@ -114,29 +116,39 @@ export class UserProfileComponent implements OnInit {
       switchMap((user) => {
         if (user && user.uid) {
           return this.userDataService.getUserProfile(user.uid).pipe(
-            tap((profile) => {
-              if (profile) {
-                this.userProfileForm.patchValue({
-                  displayName: profile.displayName || user.displayName || '',
+            switchMap(profile => {
+              if (!profile) return of(null);
+
+              // Patch form values
+              this.userProfileForm.patchValue({
+                displayName: profile.displayName || user.displayName || '',
+                currency: profile.currency || 'MMK',
+                budgetPeriod: profile.selectedBudgetPeriodId || profile.budgetPeriod || null,
+                budgetStartDate: profile.budgetStartDate || null,
+                budgetEndDate: profile.budgetEndDate || null,
+              });
+              this.selectedCurrency = profile.currency || 'MMK';
+              this.handleBudgetPeriodChange(this.userProfileForm.get('budgetPeriod')?.value, true);
+
+              // Fetch group name if accountType is 'group'
+              const groupName$ = profile.accountType === 'group' && profile.groupId
+                ? this.groupService.getGroupName(profile.groupId)
+                : of(null);
+
+              return groupName$.pipe(
+                map(groupName => ({
+                  email: profile.email || user.email || 'N/A',
+                  createdAt: profile.createdAt || (user.metadata as any).creationTime || new Date().toISOString(),
                   currency: profile.currency || 'MMK',
-                  budgetPeriod: profile.selectedBudgetPeriodId || profile.budgetPeriod || null,
+                  budgetPeriod: profile.budgetPeriod || null,
                   budgetStartDate: profile.budgetStartDate || null,
                   budgetEndDate: profile.budgetEndDate || null,
-                });
-                this.selectedCurrency = profile.currency || 'MMK';
-                this.handleBudgetPeriodChange(this.userProfileForm.get('budgetPeriod')?.value, true);
-              }
+                  roles: getRole(profile.roles),
+                  accountType: profile.accountType || 'personal',
+                  groupName: groupName
+                }))
+              );
             }),
-            map((profile) => profile ? ({
-              email: profile.email || user.email || 'N/A',
-              createdAt: profile.createdAt || (user.metadata as any).creationTime || new Date().toISOString(),
-              currency: profile.currency || 'MMK',
-              budgetPeriod: profile.budgetPeriod || null,
-              budgetStartDate: profile.budgetStartDate || null,
-              budgetEndDate: profile.budgetEndDate || null,
-              roles: getRole(profile.roles),
-              accountType: profile.accountType || 'personal' // Add accountType here
-            }) : null),
             catchError((err) => {
               console.error('Error fetching user profile data:', err);
               this.toastService.showError(this.translate.instant('PROFILE_FETCH_ERROR'));
