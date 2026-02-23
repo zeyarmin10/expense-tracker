@@ -58,6 +58,7 @@ export class UserProfileComponent implements OnInit {
   userProfileForm: FormGroup;
   userDisplayData$: Observable<any>;
   userPhotoUrl$: Observable<string | null>;
+  isGroupMember: boolean = false; // <-- Added this property
 
   selectedLanguage: string = 'my';
   selectedCurrency: string = 'MMK';
@@ -118,6 +119,8 @@ export class UserProfileComponent implements OnInit {
           return this.userDataService.getUserProfile(user.uid).pipe(
             switchMap(profile => {
               if (!profile) return of(null);
+
+              this.isGroupMember = !!profile.groupId; // <-- Check if user is a group member
 
               // Patch form values
               this.userProfileForm.patchValue({
