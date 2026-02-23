@@ -8,6 +8,10 @@
   box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.05);
 }
 
+.cursor-pointer {
+  cursor: pointer;
+}
+
 /* Ensure icons are consistently sized */
 fa-icon {
   width: 1em;

@@ -77,7 +77,7 @@
 
               <!-- Budget Period -->
               <div
-                *ngIf="!isGroupMember"
+                *ngIf="canEditSettings"
                 class="info-container border border-secondary-subtle rounded mb-4 p-2 p-sm-3 p-md-3 p-lg-3 p-xl-3 p-xxl-3">
                 <div class="mb-2">
                   <label for="budgetPeriod" class="form-label"><strong>{{ 'BUDGET_PERIOD_LABEL' | translate
@@ -148,7 +148,7 @@
               <div
                 class="info-container border border-secondary-subtle rounded mb-4 p-2 p-sm-3 p-md-3 p-lg-3 p-xl-3 p-xxl-3">
                 <!-- Currency Selection -->
-                <div class="mb-3" *ngIf="!isGroupMember">
+                <div class="mb-3" *ngIf="canEditSettings">
                   <label for="currency" class="form-label"><strong>{{ 'CURRENCY' | translate }}</strong></label>
                   <select id="currency" class="form-select" formControlName="currency">
                     <option *ngFor="let currency of translatedCurrencies" [value]="currency.code">{{ currency.name }}

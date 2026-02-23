@@ -58,7 +58,8 @@ export class UserProfileComponent implements OnInit {
   userProfileForm: FormGroup;
   userDisplayData$: Observable<any>;
   userPhotoUrl$: Observable<string | null>;
-  isGroupMember: boolean = false; // <-- Added this property
+  public userRole: string | null = null;
+  public accountType: string | null = null;
 
   selectedLanguage: string = 'my';
   selectedCurrency: string = 'MMK';
@@ -84,6 +85,13 @@ export class UserProfileComponent implements OnInit {
       return false;
     }
     return this.customBudgetPeriods.some(p => p.id === selectedPeriodId);
+  }
+
+  get canEditSettings(): boolean {
+    if (this.accountType !== 'group') {
+      return true; // Personal account users can always edit
+    }
+    return this.userRole === 'admin' || this.userRole === 'owner';
   }
 
   @ViewChild(CustomBudgetPeriodModalComponent) private modalComponent!: CustomBudgetPeriodModalComponent;
@@ -120,7 +128,8 @@ export class UserProfileComponent implements OnInit {
             switchMap(profile => {
               if (!profile) return of(null);
 
-              this.isGroupMember = !!profile.groupId; // <-- Check if user is a group member
+              this.accountType = profile.accountType || 'personal';
+              this.userRole = getRole(profile.roles);
 
               // Patch form values
               this.userProfileForm.patchValue({
@@ -146,8 +155,8 @@ export class UserProfileComponent implements OnInit {
                   budgetPeriod: profile.budgetPeriod || null,
                   budgetStartDate: profile.budgetStartDate || null,
                   budgetEndDate: profile.budgetEndDate || null,
-                  roles: getRole(profile.roles),
-                  accountType: profile.accountType || 'personal',
+                  roles: this.userRole,
+                  accountType: this.accountType,
                   groupName: groupName
                 }))
               );

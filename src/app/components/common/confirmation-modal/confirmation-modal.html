@@ -1,19 +1,17 @@
-<div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true" #confirmModal>
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="confirmationModalLabel">{{ title }}</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" (click)="onCancel()"></button>
-      </div>
-      <div class="modal-body">
-        <p [ngClass]="messageColor">{{ message }}</p>
-      </div>
-      <div class="modal-footer">
-        <!-- Conditionally render the Cancel button based on modalType -->
-        <button type="button" class="btn btn-secondary" (click)="onCancel()" *ngIf="modalType === 'confirm'">{{ cancelButtonText }}</button>
-        <!-- For alert type, the confirm button acts as an OK button -->
-        <button type="button" class="btn" [ngClass]="{'btn-danger': modalType === 'confirm', 'btn-outline-info': modalType === 'alert'}" (click)="onConfirm()">{{ confirmButtonText }}</button>
+<div #confirmModal class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">{{ title }}</h5>
+          <button type="button" class="btn-close" (click)="close()"></button>
+        </div>
+        <div class="modal-body">
+          <p [class]="messageColor" [innerHTML]="message"></p>
+        </div>
+        <div class="modal-footer">
+            <button *ngIf="modalType === 'confirm'" type="button" class="btn btn-secondary" (click)="onCancel()">{{ cancelButtonText }}</button>
+            <button type="button" class="btn btn-primary" (click)="onConfirm()">{{ confirmButtonText }}</button>
+        </div>
       </div>
     </div>
   </div>
-</div>

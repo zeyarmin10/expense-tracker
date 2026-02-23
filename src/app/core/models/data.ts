@@ -30,19 +30,30 @@ export interface IInvitation {
 }
 
 export interface DataICategory {
-  id: string;
+  id?: string;
   name: string;
-  [key: string]: any;
+  userId?: string;
+  groupId?: string;
+  createdAt?: string;
 }
 
 export interface DataIExpense {
-  id: string;
+  id?: string;
   date: string;
   category: string;
+  categoryId?: string;
   itemName: string;
   quantity: number;
-  unitCost: number;
-  totalCost: number;
+  price: number; 
+  totalCost?: number;
   currency: string;
-  [key: string]: any;
+  description?: string;
+  // Tracking
+  userId?: string;
+  groupId?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  updatedBy?: string; // UID of user who last updated
+  device?: string;
+  editedDevice?: string;
 }

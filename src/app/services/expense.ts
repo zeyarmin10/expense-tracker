@@ -13,14 +13,23 @@ import { map, switchMap, catchError } from 'rxjs/operators';
 import { DataIExpense as IExpense } from '../core/models/data';
 import { AuthService } from './auth';
 import { UAParser } from 'ua-parser-js';
+import { UserDataService } from './user-data';
 
-export type ServiceIExpense = IExpense & { id: string; totalCost: number; };
+export type ServiceIExpense = IExpense & { 
+  id: string; 
+  totalCost: number;
+  updatedByName?: string;
+};
 
 @Injectable({
   providedIn: 'root',
 })
 export class ExpenseService {
-  constructor(private db: Database, private authService: AuthService) {}
+  constructor(
+    private db: Database, 
+    private authService: AuthService,
+    private userDataService: UserDataService
+  ) {}
 
   private getExpensesRef(userId: string): DatabaseReference {
     return ref(this.db, `users/${userId}/expenses`);
@@ -51,20 +60,31 @@ export class ExpenseService {
         return new Observable<ServiceIExpense[]>((observer) => {
           onValue(
             expensesRef,
-            (snapshot) => {
+            async (snapshot) => {
               const expensesData = snapshot.val();
-              const expenses = expensesData
-                ? Object.keys(expensesData).map(
-                    (key) => {
-                      const expense = expensesData[key];
-                      return {
-                        id: key,
-                        ...expense,
-                        totalCost: expense.quantity * expense.price,
-                      } as ServiceIExpense;
-                    }
-                  )
-                : [];
+              if (!expensesData) {
+                observer.next([]);
+                return;
+              }
+
+              const promises = Object.keys(expensesData).map(async (key) => {
+                const expense = expensesData[key] as IExpense;
+                let updatedByName: string | undefined = undefined;
+
+                if (expense.updatedBy) {
+                  const userProfile = await firstValueFrom(this.userDataService.getUserProfile(expense.updatedBy));
+                  updatedByName = userProfile?.displayName || 'Unknown User';
+                }
+
+                return {
+                  id: key,
+                  ...expense,
+                  totalCost: expense.quantity * expense.price,
+                  updatedByName: updatedByName,
+                } as ServiceIExpense;
+              });
+              
+              const expenses = await Promise.all(promises);
               observer.next(expenses);
             },
             (error) => observer.error(error)
@@ -80,8 +100,8 @@ export class ExpenseService {
 
   async addExpense(
     expenseData: Omit<
-      ServiceIExpense,
-      'id' | 'userId' | 'groupId' | 'totalCost' | 'device' | 'editedDevice' | 'updatedAt'
+      IExpense,
+      'id' | 'userId' | 'groupId' | 'totalCost' | 'device' | 'editedDevice' | 'updatedAt' | 'updatedBy'
     >
   ): Promise<void> {
     const profile = await firstValueFrom(this.authService.userProfile$);
@@ -93,8 +113,8 @@ export class ExpenseService {
     const result = parser.getResult();
     const device = `${result.browser.name} on ${result.os.name}, Model: ${result.device.model || 'Unknown'} (${result.device.vendor || 'Unknown'})`;
 
-    const totalCost = expenseData['quantity'] * expenseData['price'];
-    const newExpense: Omit<ServiceIExpense, 'id' | 'updatedAt' | 'editedDevice'> = {
+    const totalCost = expenseData.quantity * expenseData.price;
+    const newExpense: Omit<IExpense, 'id' | 'updatedAt' | 'editedDevice' | 'updatedBy'> = {
       ...expenseData,
       userId: profile.uid,
       totalCost,
@@ -115,7 +135,7 @@ export class ExpenseService {
 
   async updateExpense(
     expenseId: string,
-    updates: Partial<Omit<ServiceIExpense, 'id' | 'userId' | 'groupId' | 'totalCost'>>
+    updates: Partial<Omit<IExpense, 'id' | 'userId' | 'groupId' | 'totalCost'>>
   ): Promise<void> {
     const profile = await firstValueFrom(this.authService.userProfile$);
     if (!profile?.uid) {
@@ -134,12 +154,13 @@ export class ExpenseService {
       ...updates,
       updatedAt: new Date().toISOString(),
       editedDevice: editedDevice,
+      updatedBy: profile.uid // <-- Add the updatedBy field
     };
 
-    if (updates['quantity'] || updates['price']) {
+    if (updates.quantity || updates.price) {
         const currentExpense = await this.getExpense(expenseId);
-        const quantity = updates['quantity'] || currentExpense.quantity;
-        const price = updates['price'] || currentExpense['price'];
+        const quantity = updates.quantity || currentExpense.quantity;
+        const price = updates.price || currentExpense.price;
         updatedData.totalCost = quantity * price;
       }
 
@@ -171,13 +192,21 @@ export class ExpenseService {
           return new Promise<ServiceIExpense>((resolve, reject) => {
             onValue(
               expenseRef,
-              (snapshot) => {
+              async (snapshot) => {
                 if (snapshot.exists()) {
-                  const expense = snapshot.val();
+                  const expense = snapshot.val() as IExpense;
+                  let updatedByName: string | undefined = undefined;
+
+                  if (expense.updatedBy) {
+                    const userProfile = await firstValueFrom(this.userDataService.getUserProfile(expense.updatedBy));
+                    updatedByName = userProfile?.displayName || 'Unknown User';
+                  }
+
                   resolve({
-                    id: snapshot.key,
+                    id: snapshot.key!,
                     ...expense,
-                    totalCost: expense.quantity * expense['price'],
+                    totalCost: expense.quantity * expense.price,
+                    updatedByName: updatedByName,
                   } as ServiceIExpense);
                 } else {
                   reject('Expense not found.');

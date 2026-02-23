@@ -491,5 +491,11 @@
   "ACCOUNT_TYPE_PERSONAL": "Personal",
   "ACCOUNT_TYPE_GROUP": "Group",
   "MEMBER_ALREADY_EXISTS": "This user is already a member of the group.",
-  "GROUP_JOIN_SUCCESS": "Successfully joined the group!"
+  "GROUP_JOIN_SUCCESS": "Successfully joined the group!",
+  "EDITED_BY": "Last updated by {{name}} on {{date}}",
+  "ON_DEVICE": " on device: {{device}}",
+  "EXPENSE_INFO_TITLE": "Expense Info",
+  "ITEM_NAME_INFO": "Item: {{itemName}}",
+  "CREATED_BY": "Created by {{name}} on {{date}}",
+  "LAST_UPDATED_BY": "Last updated by {{name}} on {{date}}"
 }

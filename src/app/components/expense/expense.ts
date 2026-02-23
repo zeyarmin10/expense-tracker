@@ -27,6 +27,7 @@ import {
   of,
 } from 'rxjs';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import Swal from 'sweetalert2';
 
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import {
@@ -36,6 +37,7 @@ import {
   faSave,
   faTimes,
   faSync,
+  faInfoCircle,
 } from '@fortawesome/free-solid-svg-icons';
 
 import { CategoryModalComponent } from '../common/category-modal/category-modal';
@@ -72,6 +74,7 @@ export class Expense implements OnInit {
   @ViewChild('deleteConfirmationModal')
   deleteConfirmationModal!: ConfirmationModal;
   @ViewChild('errorModal') errorModal!: ConfirmationModal;
+  @ViewChild('infoModal') infoModal!: ConfirmationModal;
 
   newExpenseForm: FormGroup;
   editingForm: FormGroup | null = null;
@@ -110,6 +113,7 @@ export class Expense implements OnInit {
   faSave = faSave;
   faTimes = faTimes;
   faSync = faSync;
+  faInfoCircle = faInfoCircle;
 
   currencySymbols: { [key: string]: string } = CURRENCY_SYMBOLS;
 
@@ -216,7 +220,7 @@ export class Expense implements OnInit {
       }
     });
 
-    this.authService.userProfile$.pipe(take(1)).subscribe(profile => {
+    this.authService.userProfile$.subscribe(profile => {
         this.userProfile = profile;
         if (profile) {
           this.newExpenseForm.get('currency')?.setValue(profile.currency || 'MMK');
@@ -317,7 +321,6 @@ export class Expense implements OnInit {
       unit: [expense.unit],
       price: [expense.price, [Validators.required, Validators.min(0)]],
       currency: [expense.currency, Validators.required],
-      updatedAt: [new Date().toISOString()] // Add the missing control
     });
   }
 
@@ -337,10 +340,14 @@ export class Expense implements OnInit {
       return;
     }
 
+    const user = await firstValueFrom(this.authService.currentUser$);
     const formValue = this.editingForm.value;
     const updatedExpense: Partial<IExpense> = {
       ...formValue,
       totalCost: formValue.quantity * formValue.price, // Recalculate totalCost
+      updatedAt: new Date().toISOString(),
+      updatedByName: this.userProfile?.displayName,
+      editedDevice: 'Web Browser'
     };
 
     try {
@@ -405,6 +412,55 @@ export class Expense implements OnInit {
 
     this.errorModal.open();
   }
+  
+  showExpenseInfo(expense: IExpense): void {
+    const title = this.translate.instant('EXPENSE_INFO_TITLE');
+  
+    const infoBlocks: string[] = [
+      `<strong>${this.translate.instant('ITEM_NAME_INFO', { itemName: expense.itemName })}</strong>`
+    ];
+  
+    // Creator Info
+    if (expense.createdByName && expense.createdAt) {
+      infoBlocks.push(this.translate.instant('CREATED_BY', {
+        name: expense.createdByName,
+        date: this.formatLocalizedDate(expense.createdAt, 'medium')
+      }));
+    }
+  
+    // Update Info Block
+    let hasBeenUpdated = false;
+    if (expense.createdAt && expense.updatedAt) {
+      const createdAtTime = new Date(expense.createdAt).getTime();
+      const updatedAtTime = new Date(expense.updatedAt).getTime();
+      if (updatedAtTime > createdAtTime + 5000) { // 5-second threshold
+        hasBeenUpdated = true;
+      }
+    }
+
+    if (hasBeenUpdated) {
+      if (expense.updatedByName && expense.updatedAt) {
+        infoBlocks.push(this.translate.instant('LAST_UPDATED_BY', {
+          name: expense.updatedByName,
+          date: this.formatLocalizedDate(expense.updatedAt, 'medium')
+        }));
+      }
+      if (expense.editedDevice) {
+        let deviceInfo = this.translate.instant('ON_DEVICE', { device: expense.editedDevice });
+        if (deviceInfo.startsWith(' ၊ ')) {
+            deviceInfo = deviceInfo.substring(3);
+        }
+        infoBlocks.push(deviceInfo);
+      }
+    }
+  
+    Swal.fire({
+      title: title,
+      html: infoBlocks.map(block => `<p>${block}</p>`).join(''),
+      icon: 'info',
+      confirmButtonText: this.translate.instant('OK_BUTTON')
+    });
+  }
 
   onFocusInput(
     event: Event,
@@ -462,39 +518,38 @@ export class Expense implements OnInit {
     this.originalPrice = null;
   }
   
-  formatLocalizedDate(date: string | Date | null | undefined): string {
+  formatLocalizedDate(date: string | Date | null | undefined, format: 'medium' | 'shortDate' = 'shortDate'): string {
     const currentLang = this.translate.currentLang;
-
+  
     if (!date) {
       return '';
     }
-
+  
+    const d = new Date(date);
+  
     if (currentLang === 'my') {
-      const d = new Date(date);
       const month = this.datePipe.transform(d, 'MMM');
       const burmeseMonth = month
-        ? BURMESE_MONTH_ABBREVIATIONS[
-            month as keyof typeof BURMESE_MONTH_ABBREVIATIONS
-          ]
+        ? BURMESE_MONTH_ABBREVIATIONS[month as keyof typeof BURMESE_MONTH_ABBREVIATIONS]
         : '';
-
-      const day = new Intl.NumberFormat('my-MM', {
-        numberingSystem: 'mymr',
-        useGrouping: false,
-      }).format(d.getDate());
-      const year = new Intl.NumberFormat('my-MM', {
-        numberingSystem: 'mymr',
-        useGrouping: false,
-      }).format(d.getFullYear());
-
-      return `${day} ${burmeseMonth} ${year}`;
+  
+      const day = new Intl.NumberFormat('my-MM', { numberingSystem: 'mymr', useGrouping: false }).format(d.getDate());
+      const year = new Intl.NumberFormat('my-MM', { numberingSystem: 'mymr', useGrouping: false }).format(d.getFullYear());
+  
+      const datePart = `${day} ${burmeseMonth} ${year}`;
+  
+      if (format === 'medium') {
+        const hour = new Intl.NumberFormat('my-MM', { numberingSystem: 'mymr', minimumIntegerDigits: 2 }).format(d.getHours());
+        const minute = new Intl.NumberFormat('my-MM', { numberingSystem: 'mymr', minimumIntegerDigits: 2 }).format(d.getMinutes());
+        return `${datePart}, ${hour}:${minute}`;
+      }
+      return datePart;
     } else {
-      return (
-        this.datePipe.transform(date, 'mediumDate', undefined, currentLang) ||
-        ''
-      );
+      const angularFormat = format === 'medium' ? 'medium' : 'mediumDate';
+      return this.datePipe.transform(d, angularFormat, undefined, currentLang) || '';
     }
   }
+
   formatLocalizedNumber(amount: number): string {
     const currentLang = this.translate.currentLang;
     const currency = this.newExpenseForm.get('currency')?.value || 'MMK';
