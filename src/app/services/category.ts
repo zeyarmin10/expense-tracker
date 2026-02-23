@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, forwardRef } from '@angular/core';
 import {
   Database,
   ref,
@@ -16,20 +16,19 @@ import {
 import { Observable, switchMap, firstValueFrom, map, of, Subject, take } from 'rxjs';
 import { AuthService } from './auth';
 import { TranslateService } from '@ngx-translate/core';
+import { UserProfile } from './user-data'; // Import UserProfile
 
 export interface ServiceICategory {
-  id?: string; // Firebase push key
+  id?: string; 
   name: string;
   userId?: string;
   groupId?: string;
   createdAt?: string;
 }
 
-// Assuming an expense structure might look like this for checking category usage
 interface ServiceIExpense {
   id?: string;
-  categoryId: string; // This would now contain the category NAME if you choose this option
-  // other expense properties
+  categoryId: string; 
 }
 
 @Injectable({
@@ -37,21 +36,17 @@ interface ServiceIExpense {
 })
 export class CategoryService {
   private db: Database = inject(Database);
-  private authService = inject(AuthService);
   private translateService = inject(TranslateService);
+  private authService = inject(forwardRef(() => AuthService));
 
-  // Add a Subject to emit category updates
   private categoryUpdatedSource = new Subject<{
     oldName: string;
     newName: string;
     userId: string;
   }>();
-  categoryUpdated$ = this.categoryUpdatedSource.asObservable(); // Public observable
+  categoryUpdated$ = this.categoryUpdatedSource.asObservable();
 
-  constructor() {
-    // No longer check for categories on new user registration here.
-    // This will be handled by the onboarding component.
-  }
+  constructor() {}
 
   private getCategoriesRef(userId: string): DatabaseReference {
     return ref(this.db, `users/${userId}/categories`);
@@ -67,37 +62,25 @@ export class CategoryService {
 
   private getGroupExpensesRef(groupId: string): DatabaseReference {
     return ref(this.db, `group_data/${groupId}/expenses`);
-}
+  }
 
-  /**
-   * Observes the correct list of categories based on the user's account type (personal or group).
-   * @returns An Observable of an array of ServiceICategory objects.
-   */
   getCategories(): Observable<ServiceICategory[]> {
     return this.authService.userProfile$.pipe(
-      switchMap(profile => {
+      switchMap((profile: UserProfile | null) => { // Explicitly type the profile
         if (profile?.groupId) {
-          // User is in a group, fetch group categories from group_data
           return listVal<ServiceICategory>(this.getGroupCategoriesRef(profile.groupId), { keyField: 'id' });
         } else if (profile?.uid) {
-          // User is not in a group (personal account), fetch personal categories
           return listVal<ServiceICategory>(this.getCategoriesRef(profile.uid), { keyField: 'id' });
         } else {
-          // User not logged in or profile not loaded
           return of([]);
         }
       })
     );
   }
 
-  /**
-   * Sets up the default categories for a new personal account if they don't exist.
-   * This should be called after the user explicitly chooses to use a personal account.
-   */
   async setupPersonalAccountCategories(): Promise<void> {
-    const profile = await firstValueFrom(this.authService.userProfile$.pipe(take(1)));
+    const profile = await firstValueFrom(this.authService.userProfile$.pipe(take(1))) as UserProfile | null;
     if (!profile || profile.groupId) {
-      // Don't add personal categories if user is in a group or not logged in.
       return;
     }
 
@@ -110,13 +93,8 @@ export class CategoryService {
     }
   }
 
-  /**
-   * Adds a new category for the current user or their group.
-   * @param categoryName The name of the category to add.
-   * @returns A Promise that resolves when the category is added.
-   */
   async addCategory(categoryName: string): Promise<void> {
-    const profile = await firstValueFrom(this.authService.userProfile$);
+    const profile = await firstValueFrom(this.authService.userProfile$) as UserProfile | null;
     if (!profile?.uid) {
       throw new Error('User not authenticated.');
     }
@@ -129,7 +107,7 @@ export class CategoryService {
     let categoriesRef: DatabaseReference;
     if (profile.groupId) {
       newCategory.groupId = profile.groupId;
-      newCategory.userId = profile.uid; // To know who created it
+      newCategory.userId = profile.uid;
       categoriesRef = this.getGroupCategoriesRef(profile.groupId);
     } else {
       newCategory.userId = profile.uid;
@@ -139,15 +117,8 @@ export class CategoryService {
     await push(categoriesRef, newCategory);
   }
 
-  /**
-   * Updates an existing category.
-   * @param categoryId The ID of the category to update.
-   * @param oldCategoryName The original name of the category.
-   * @param newCategoryName The new name for the category.
-   * @returns A Promise that resolves when the category is updated.
-   */
   async updateCategory(categoryId: string, oldCategoryName: string, newCategoryName: string): Promise<void> {
-    const profile = await firstValueFrom(this.authService.userProfile$);
+    const profile = await firstValueFrom(this.authService.userProfile$) as UserProfile | null;
     if (!profile?.uid) {
       throw new Error('User not authenticated.');
     }
@@ -164,21 +135,15 @@ export class CategoryService {
 
     await update(categoryRef, { name: newCategoryName.trim() });
 
-    // Notify about the update for expenses adjustment
     this.categoryUpdatedSource.next({
       oldName: oldCategoryName,
       newName: newCategoryName,
-      userId: profile.uid, // This might need adjustment based on group expense logic
+      userId: profile.uid,
     });
   }
 
-  /**
-   * Deletes a category.
-   * @param categoryId The ID of the category to delete.
-   * @returns A Promise that resolves when the category is deleted.
-   */
   async deleteCategory(categoryId: string): Promise<void> {
-    const profile = await firstValueFrom(this.authService.userProfile$);
+    const profile = await firstValueFrom(this.authService.userProfile$) as UserProfile | null;
     if (!profile?.uid) {
       throw new Error('User not authenticated.');
     }
@@ -196,13 +161,8 @@ export class CategoryService {
     await remove(categoryRef);
   }
 
-  /**
-   * Checks if a category is currently used in any expenses.
-   * @param categoryId The ID of the category to check.
-   * @returns A Promise that resolves to true if the category is used, false otherwise.
-   */
   async isCategoryUsedInExpenses(categoryId: string): Promise<boolean> {
-    const profile = await firstValueFrom(this.authService.userProfile$);
+    const profile = await firstValueFrom(this.authService.userProfile$) as UserProfile | null;
     if (!profile?.uid) {
       throw new Error('User not authenticated.');
     }
@@ -222,7 +182,7 @@ export class CategoryService {
     const categoryName = categorySnapshot.val()?.name;
 
     if (!categoryName) {
-      return false; // Category does not exist
+      return false; 
     }
 
     const expensesQuery = query(expensesRef, orderByChild('category'), equalTo(categoryName));
@@ -230,7 +190,6 @@ export class CategoryService {
     return snapshot.exists();
   }
 
-  // ... rest of the service remains the same ...
   private async checkAndAddDefaultCategories(userId: string): Promise<void> {
     const categories$ = this.getCategories();
     const existingCategories = await firstValueFrom(categories$.pipe(take(1)));

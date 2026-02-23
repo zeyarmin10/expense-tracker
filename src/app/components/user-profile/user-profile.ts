@@ -60,6 +60,7 @@ export class UserProfileComponent implements OnInit {
   userPhotoUrl$: Observable<string | null>;
   public userRole: string | null = null;
   public accountType: string | null = null;
+  private groupId: string | null = null;
 
   selectedLanguage: string = 'my';
   selectedCurrency: string = 'MMK';
@@ -130,6 +131,7 @@ export class UserProfileComponent implements OnInit {
 
               this.accountType = profile.accountType || 'personal';
               this.userRole = getRole(profile.roles);
+              this.groupId = profile.groupId || null;
 
               // Patch form values
               this.userProfileForm.patchValue({
@@ -253,41 +255,53 @@ export class UserProfileComponent implements OnInit {
 
   async onSubmit(): Promise<void> {
     if (this.userProfileForm.valid && this.userProfileForm.dirty) {
-      const currentUser = await firstValueFrom(this.authService.currentUser$);
-      if (currentUser && currentUser.uid) {
-        const formValues = this.userProfileForm.getRawValue();
-        const isCustom = this.customBudgetPeriods.some(p => p.id === formValues.budgetPeriod);
+        const currentUser = await firstValueFrom(this.authService.currentUser$);
+        if (currentUser && currentUser.uid) {
+            const formValues = this.userProfileForm.getRawValue();
+            const isCustom = this.customBudgetPeriods.some(p => p.id === formValues.budgetPeriod);
 
-        const profileData: Partial<UserProfile> = {
-          displayName: formValues.displayName,
-          currency: formValues.currency,
-          budgetPeriod: isCustom ? 'custom' : formValues.budgetPeriod,
-          budgetStartDate: isCustom ? formValues.budgetStartDate : null,
-          budgetEndDate: isCustom ? formValues.budgetEndDate : null,
-          selectedBudgetPeriodId: isCustom ? formValues.budgetPeriod : null
-        };
+            const profileData: Partial<UserProfile> = {
+                displayName: formValues.displayName,
+                currency: formValues.currency,
+                budgetPeriod: isCustom ? 'custom' : formValues.budgetPeriod,
+                budgetStartDate: isCustom ? formValues.budgetStartDate : null,
+                budgetEndDate: isCustom ? formValues.budgetEndDate : null,
+                selectedBudgetPeriodId: isCustom ? formValues.budgetPeriod : null
+            };
 
-        try {
-          if (currentUser.displayName !== profileData.displayName) {
-            await updateProfile(currentUser, { displayName: profileData.displayName });
-          }
+            try {
+                // Step 1: Update the user's personal profile
+                if (currentUser.displayName !== profileData.displayName) {
+                    await updateProfile(currentUser, { displayName: profileData.displayName });
+                }
+                await this.userDataService.updateUserProfile(currentUser.uid, profileData);
 
-          await this.userDataService.updateUserProfile(currentUser.uid, profileData);
+                // Step 2: If the user is an admin/owner of a group, update the group's settings
+                if (this.canEditSettings && this.accountType === 'group' && this.groupId) {
+                    const groupSettings = {
+                        currency: profileData.currency,
+                        budgetPeriod: profileData.budgetPeriod,
+                        selectedBudgetPeriodId: profileData.selectedBudgetPeriodId,
+                    };
+                    await this.groupService.updateGroupSettings(this.groupId, groupSettings);
+                }
 
-          this.toastService.showSuccess(this.translate.instant('PROFILE_UPDATE_SUCCESS'));
-          this.userProfileForm.markAsPristine();
-        } catch (error: any) {
-          console.error('Error updating profile:', error);
-          this.toastService.showError(error.message || this.translate.instant('PROFILE_UPDATE_ERROR'));
+                this.toastService.showSuccess(this.translate.instant('PROFILE_UPDATE_SUCCESS'));
+                this.userProfileForm.markAsPristine();
+
+            } catch (error: any) {
+                console.error('Error updating profile:', error);
+                this.toastService.showError(error.message || this.translate.instant('PROFILE_UPDATE_ERROR'));
+            }
+        } else {
+            this.toastService.showError(this.translate.instant('AUTH_ERROR_PROFILE_UPDATE'));
         }
-      } else {
-        this.toastService.showError(this.translate.instant('AUTH_ERROR_PROFILE_UPDATE'));
-      }
     } else if (this.userProfileForm.invalid) {
-      this.toastService.showError(this.translate.instant('INVALID_FORM_PROFILE'));
+        this.toastService.showError(this.translate.instant('INVALID_FORM_PROFILE'));
     } else if (!this.userProfileForm.dirty) {
+        // No changes to save, maybe show a different toast or do nothing
     }
-  }
+}
 
   formatLocalizedDate(date: string | Date | null | undefined, format: string): string {
     const currentLang = this.translate.currentLang;

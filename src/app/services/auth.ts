@@ -1,5 +1,5 @@
 // src/app/services/auth.ts
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, Injector } from '@angular/core';
 import {
   Auth,
   createUserWithEmailAndPassword,
@@ -15,15 +15,15 @@ import {
 import { AngularFireDatabase } from '@angular/fire/compat/database';
 import { TranslateService } from '@ngx-translate/core';
 import { Observable, Subject, of, from, firstValueFrom } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { switchMap, map } from 'rxjs/operators';
 import { UserDataService, UserProfile } from './user-data';
+import { GroupService } from './group.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
   private auth: Auth = inject(Auth);
-  private userDataService: UserDataService = inject(UserDataService);
   private db: AngularFireDatabase = inject(AngularFireDatabase);
 
   public get currentUserId(): string | null {
@@ -41,7 +41,7 @@ export class AuthService {
 
   translateService = inject(TranslateService);
 
-  constructor() {
+  constructor(private injector: Injector) {
     this.currentUser$ = new Observable<User | null>(observer => {
       onAuthStateChanged(this.auth, user => {
         observer.next(user);
@@ -50,11 +50,38 @@ export class AuthService {
 
     this.userProfile$ = this.currentUser$.pipe(
       switchMap(user => {
-        if (user) {
-          return this.userDataService.getUserProfile(user.uid);
-        } else {
+        if (!user) {
           return of(null);
         }
+        // LAZY INJECT services here to break circular dependency
+        const userDataService = this.injector.get(UserDataService);
+        const groupService = this.injector.get(GroupService);
+
+        return userDataService.getUserProfile(user.uid).pipe(
+          switchMap(profile => {
+            if (!profile) {
+              return of(null);
+            }
+            if (profile.groupId) {
+              return groupService.getGroupSettings(profile.groupId).pipe(
+                map(groupSettings => {
+                  if (groupSettings) {
+                    return {
+                      ...profile,
+                      currency: groupSettings.currency || profile.currency,
+                      budgetPeriod: (groupSettings.budgetPeriod as UserProfile['budgetPeriod']) || profile.budgetPeriod,
+                      selectedBudgetPeriodId: groupSettings.selectedBudgetPeriodId || profile.selectedBudgetPeriodId
+                    };
+                  } else {
+                    return profile;
+                  }
+                })
+              );
+            } else {
+              return of(profile);
+            }
+          })
+        );
       })
     );
   }
@@ -62,7 +89,6 @@ export class AuthService {
   async register(email: string, password: string): Promise<User> {
     try {
       const userCredential = await createUserWithEmailAndPassword(this.auth, email, password);
-      // A new user has registered, notify listeners
       this.newUserRegisteredSource.next(userCredential.user.uid);
       await this.handleInvite(userCredential.user);
       return userCredential.user;
@@ -91,9 +117,8 @@ export class AuthService {
       const provider = new GoogleAuthProvider();
       const userCredential = await signInWithPopup(this.auth, provider);
       const additionalUserInfo = getAdditionalUserInfo(userCredential);
-      
+
       if (additionalUserInfo?.isNewUser) {
-        // A new user has signed in with Google, notify listeners
         this.newUserRegisteredSource.next(userCredential.user.uid);
       }
 
@@ -115,49 +140,34 @@ export class AuthService {
       if (inviteSnap.exists()) {
         const inviteData = inviteSnap.val();
         if (inviteData.status === 'pending') {
-          const role = 'member'; // The role for a new member
-          // Add user to the group with only their role
+          const userDataService = this.injector.get(UserDataService);
+          const role = 'member';
           await this.db.object(`group_members/${inviteData.groupId}/${user.uid}`).set({ role: role });
 
-          // Update the user's profile
-          await this.userDataService.updateUserProfile(user.uid, { 
+          await userDataService.updateUserProfile(user.uid, {
             groupId: inviteData.groupId,
             accountType: 'group',
-            roles: { [inviteData.groupId]: role } 
+            roles: { [inviteData.groupId]: role }
           });
 
-          // Mark invitation as used
-          await inviteRef.update({ 
-            status: 'accepted', 
-            acceptedBy: user.uid, 
-            acceptedAt: new Date().toISOString() 
+          await inviteRef.update({
+            status: 'accepted',
+            acceptedBy: user.uid,
+            acceptedAt: new Date().toISOString()
           });
         }
       }
     }
   }
 
-  /**
-   * DEFINITIVE FIX: Logs out, cleans up storage, and notifies listeners in the correct order.
-   * This is now the single source of truth for the entire logout process.
-   */
   async logout(isManualLogout: boolean = false): Promise<void> {
     try {
-      // 1. Sign out from Firebase first. This is crucial.
-      // It triggers onAuthStateChanged, which will set the app's user state to null.
       await signOut(this.auth);
-
-      // 2. ONLY AFTER signing out is complete, clear the local storage.
-      // This completely eliminates the race condition where loginTime is null but the user is not.
       localStorage.removeItem('loginTime');
       localStorage.removeItem('lastActivityTime');
-
-      // 3. Finally, notify all listeners that the logout (including all cleanup) is complete.
       this._logoutSuccess.next(isManualLogout);
-
     } catch (error: any) {
       console.error("Logout failed in AuthService:", error);
-      // If Firebase fails, we don't clear local state. We just report the error.
       throw new Error(this.getFirebaseErrorMessage(error.code));
     }
   }
