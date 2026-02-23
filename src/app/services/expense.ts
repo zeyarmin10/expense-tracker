@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import {
   Database,
   ref,
@@ -14,22 +14,25 @@ import { DataIExpense as IExpense } from '../core/models/data';
 import { AuthService } from './auth';
 import { UAParser } from 'ua-parser-js';
 import { UserDataService } from './user-data';
+import { GroupService } from './group.service';
 
 export type ServiceIExpense = IExpense & { 
   id: string; 
   totalCost: number;
   updatedByName?: string;
+  createdByName?: string; // Add createdByName to the service model
 };
 
 @Injectable({
   providedIn: 'root',
 })
 export class ExpenseService {
-  constructor(
-    private db: Database, 
-    private authService: AuthService,
-    private userDataService: UserDataService
-  ) {}
+  private db: Database = inject(Database);
+  private authService: AuthService = inject(AuthService);
+  private userDataService: UserDataService = inject(UserDataService);
+  private groupService: GroupService = inject(GroupService);
+
+  constructor() {}
 
   private getExpensesRef(userId: string): DatabaseReference {
     return ref(this.db, `users/${userId}/expenses`);
@@ -70,16 +73,24 @@ export class ExpenseService {
               const promises = Object.keys(expensesData).map(async (key) => {
                 const expense = expensesData[key] as IExpense;
                 let updatedByName: string | undefined = undefined;
+                let createdByName: string | undefined = expense.createdByName;
 
                 if (expense.updatedBy) {
                   const userProfile = await firstValueFrom(this.userDataService.getUserProfile(expense.updatedBy));
                   updatedByName = userProfile?.displayName || 'Unknown User';
                 }
 
+                // Fetch creator's current name if not already set
+                if (expense.userId && !createdByName) {
+                  const userProfile = await firstValueFrom(this.userDataService.getUserProfile(expense.userId));
+                  createdByName = userProfile?.displayName;
+                }
+
                 return {
                   id: key,
                   ...expense,
                   totalCost: expense.quantity * expense.price,
+                  createdByName: createdByName || 'Former Member',
                   updatedByName: updatedByName,
                 } as ServiceIExpense;
               });
@@ -101,7 +112,7 @@ export class ExpenseService {
   async addExpense(
     expenseData: Omit<
       IExpense,
-      'id' | 'userId' | 'groupId' | 'totalCost' | 'device' | 'editedDevice' | 'updatedAt' | 'updatedBy'
+      'id' | 'userId' | 'groupId' | 'totalCost' | 'device' | 'editedDevice' | 'updatedAt' | 'updatedBy' | 'currency' | 'createdByName'
     >
   ): Promise<void> {
     const profile = await firstValueFrom(this.authService.userProfile$);
@@ -114,20 +125,30 @@ export class ExpenseService {
     const device = `${result.browser.name} on ${result.os.name}, Model: ${result.device.model || 'Unknown'} (${result.device.vendor || 'Unknown'})`;
 
     const totalCost = expenseData.quantity * expenseData.price;
+    let currency: string;
+    let expensesRef: DatabaseReference;
+
+    if (profile.groupId) {
+      const groupSettings = await firstValueFrom(this.groupService.getGroupSettings(profile.groupId));
+      currency = groupSettings?.currency || profile.currency; // Fallback to user's currency
+      expensesRef = this.getGroupExpensesRef(profile.groupId);
+    } else {
+      currency = profile.currency;
+      expensesRef = this.getExpensesRef(profile.uid);
+    }
+
     const newExpense: Omit<IExpense, 'id' | 'updatedAt' | 'editedDevice' | 'updatedBy'> = {
       ...expenseData,
-      userId: profile.uid,
+      userId: profile.uid, // createdById
+      createdByName: profile.displayName || 'Anonymous', // Save current displayName
+      currency: currency,
       totalCost,
       createdAt: new Date().toISOString(),
       device: device,
     };
 
-    let expensesRef: DatabaseReference;
     if (profile.groupId) {
-        (newExpense as any).groupId = profile.groupId;
-        expensesRef = this.getGroupExpensesRef(profile.groupId);
-    } else {
-        expensesRef = this.getExpensesRef(profile.uid);
+      (newExpense as any).groupId = profile.groupId;
     }
 
     await push(expensesRef, newExpense);
@@ -154,7 +175,7 @@ export class ExpenseService {
       ...updates,
       updatedAt: new Date().toISOString(),
       editedDevice: editedDevice,
-      updatedBy: profile.uid // <-- Add the updatedBy field
+      updatedBy: profile.uid
     };
 
     if (updates.quantity || updates.price) {
@@ -196,16 +217,24 @@ export class ExpenseService {
                 if (snapshot.exists()) {
                   const expense = snapshot.val() as IExpense;
                   let updatedByName: string | undefined = undefined;
+                  let createdByName: string | undefined = expense.createdByName;
 
                   if (expense.updatedBy) {
                     const userProfile = await firstValueFrom(this.userDataService.getUserProfile(expense.updatedBy));
                     updatedByName = userProfile?.displayName || 'Unknown User';
                   }
 
+                  // Fetch creator's current name if not already set
+                  if (expense.userId && !createdByName) {
+                    const userProfile = await firstValueFrom(this.userDataService.getUserProfile(expense.userId));
+                    createdByName = userProfile?.displayName;
+                  }
+
                   resolve({
                     id: snapshot.key!,
                     ...expense,
                     totalCost: expense.quantity * expense.price,
+                    createdByName: createdByName || 'Former Member',
                     updatedByName: updatedByName,
                   } as ServiceIExpense);
                 } else {

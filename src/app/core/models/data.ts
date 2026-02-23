@@ -49,7 +49,8 @@ export interface DataIExpense {
   currency: string;
   description?: string;
   // Tracking
-  userId?: string;
+  userId?: string; // This is createdById
+  createdByName?: string; // Creator's name at the time of creation
   groupId?: string;
   createdAt?: string;
   updatedAt?: string;
