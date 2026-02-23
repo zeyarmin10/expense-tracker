@@ -19,6 +19,7 @@ export interface ServiceIIncome {
   currency: string;
   description?: string;
   userId?: string; 
+  groupId?: string;
   createdAt?: string; 
   device: string;
   editedDevice?: string;
@@ -38,30 +39,45 @@ export class IncomeService {
     return ref(this.db, `users/${userId}/incomes`);
   }
 
+  private getGroupIncomesRef(groupId: string): DatabaseReference {
+    return ref(this.db, `group_data/${groupId}/incomes`);
+  }
+
   async addIncome(
-    incomeData: Omit<ServiceIIncome, 'id' | 'userId' | 'createdAt' | 'device' | 'editedDevice'>
+    incomeData: Omit<ServiceIIncome, 'id' | 'userId' | 'groupId' | 'createdAt' | 'device' | 'editedDevice'>
   ): Promise<void> {
-    const userId = (await firstValueFrom(
-      this.authService.currentUser$.pipe(map((user) => user?.uid))
-    ))!;
-    if (!userId) {
-      throw new Error('User not authenticated.');
+    const profile = await firstValueFrom(this.authService.userProfile$);
+    if (!profile?.uid) {
+        throw new Error('User not authenticated.');
     }
 
-    const newIncomeToSave: ServiceIIncome = {
+    const newIncomeToSave: Omit<ServiceIIncome, 'id'> = {
       ...incomeData,
-      userId,
+      userId: profile.uid,
       createdAt: new Date().toISOString(),
       device: navigator.userAgent,
     };
-    await push(this.getIncomesRef(userId), newIncomeToSave);
+
+    let incomesRef: DatabaseReference;
+    if (profile.groupId) {
+        newIncomeToSave.groupId = profile.groupId;
+        incomesRef = this.getGroupIncomesRef(profile.groupId);
+    } else {
+        incomesRef = this.getIncomesRef(profile.uid);
+    }
+
+    await push(incomesRef, newIncomeToSave);
   }
 
   getIncomes(): Observable<ServiceIIncome[]> {
-    return this.authService.currentUser$.pipe(
-      switchMap((user) => {
-        if (user?.uid) {
-          return listVal<ServiceIIncome>(this.getIncomesRef(user.uid), {
+    return this.authService.userProfile$.pipe(
+      switchMap((profile) => {
+        if (profile?.groupId) {
+            return listVal<ServiceIIncome>(this.getGroupIncomesRef(profile.groupId), {
+                keyField: 'id',
+            });
+        } else if (profile?.uid) {
+          return listVal<ServiceIIncome>(this.getIncomesRef(profile.uid), {
             keyField: 'id',
           });
         }
@@ -72,32 +88,43 @@ export class IncomeService {
 
   async updateIncome(
     incomeId: string,
-    updatedData: Partial<Omit<ServiceIIncome, 'id' | 'userId' | 'createdAt'>>
+    updatedData: Partial<Omit<ServiceIIncome, 'id' | 'userId' | 'groupId' | 'createdAt'>>
   ): Promise<void> {
-    const userId = (await firstValueFrom(
-      this.authService.currentUser$.pipe(map((user) => user?.uid))
-    ))!;
-    if (!userId) {
-      throw new Error('User not authenticated.');
+    const profile = await firstValueFrom(this.authService.userProfile$);
+    if (!profile?.uid) {
+        throw new Error('User not authenticated.');
     }
+
     if (!incomeId) {
       throw new Error('Income ID is required for update.');
     }
-    const incomeRef = ref(this.db, `users/${userId}/incomes/${incomeId}`);
+
+    let incomeRef: DatabaseReference;
+    if (profile.groupId) {
+        incomeRef = ref(this.db, `group_data/${profile.groupId}/incomes/${incomeId}`);
+    } else {
+        incomeRef = ref(this.db, `users/${profile.uid}/incomes/${incomeId}`);
+    }
+
     await update(incomeRef, { ...updatedData, editedDevice: navigator.userAgent });
   }
 
   async deleteIncome(id: string): Promise<void> {
-    const userId = (await firstValueFrom(
-      this.authService.currentUser$.pipe(map((user) => user?.uid))
-    ))!;
-    if (!userId) {
-      throw new Error('User not authenticated.');
+    const profile = await firstValueFrom(this.authService.userProfile$);
+    if (!profile?.uid) {
+        throw new Error('User not authenticated.');
     }
+    
     if (!id) {
       throw new Error('Income ID is required for deletion.');
     }
-    const incomeRef = ref(this.db, `users/${userId}/incomes/${id}`);
+
+    let incomeRef: DatabaseReference;
+    if (profile.groupId) {
+        incomeRef = ref(this.db, `group_data/${profile.groupId}/incomes/${id}`);
+    } else {
+        incomeRef = ref(this.db, `users/${profile.uid}/incomes/${id}`);
+    }
     await remove(incomeRef);
   }
 

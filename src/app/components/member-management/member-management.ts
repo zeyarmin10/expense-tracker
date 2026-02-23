@@ -96,7 +96,17 @@ export class MemberManagementComponent implements OnInit {
 
         if (isAlreadyMember) {
           this.toastService.showError(this.translate.instant('MEMBER_ALREADY_EXISTS'));
-          setTimeout(() => this.isSending = false);
+          this.isSending = false;
+          return;
+        }
+
+        // Check if there's a pending invitation for this email
+        const pendingInvites = await firstValueFrom(this.pendingInvites$);
+        const hasPendingInvite = pendingInvites.some(invite => invite.email === this.newMemberEmail);
+
+        if (hasPendingInvite) {
+          this.toastService.showError(this.translate.instant('MEMBER_ALREADY_EXISTS'));
+          this.isSending = false;
           return;
         }
 

@@ -49,10 +49,8 @@ export class CategoryService {
   categoryUpdated$ = this.categoryUpdatedSource.asObservable(); // Public observable
 
   constructor() {
-    // Subscribe to new user registrations to add default categories
-    this.authService.newUserRegistered$.subscribe(userId => {
-      this.checkAndAddDefaultCategories(userId);
-    });
+    // No longer check for categories on new user registration here.
+    // This will be handled by the onboarding component.
   }
 
   private getCategoriesRef(userId: string): DatabaseReference {
@@ -60,132 +58,139 @@ export class CategoryService {
   }
 
   private getGroupCategoriesRef(groupId: string): DatabaseReference {
-    return ref(this.db, `groups/${groupId}/categories`);
+    return ref(this.db, `group_data/${groupId}/categories`);
   }
 
   private getExpensesRef(userId: string): DatabaseReference {
     return ref(this.db, `users/${userId}/expenses`);
   }
 
+  private getGroupExpensesRef(groupId: string): DatabaseReference {
+    return ref(this.db, `group_data/${groupId}/expenses`);
+}
+
   /**
-   * Adds a new category for the current user or a group.
+   * Observes the correct list of categories based on the user's account type (personal or group).
+   * @returns An Observable of an array of ServiceICategory objects.
+   */
+  getCategories(): Observable<ServiceICategory[]> {
+    return this.authService.userProfile$.pipe(
+      switchMap(profile => {
+        if (profile?.groupId) {
+          // User is in a group, fetch group categories from group_data
+          return listVal<ServiceICategory>(this.getGroupCategoriesRef(profile.groupId), { keyField: 'id' });
+        } else if (profile?.uid) {
+          // User is not in a group (personal account), fetch personal categories
+          return listVal<ServiceICategory>(this.getCategoriesRef(profile.uid), { keyField: 'id' });
+        } else {
+          // User not logged in or profile not loaded
+          return of([]);
+        }
+      })
+    );
+  }
+
+  /**
+   * Sets up the default categories for a new personal account if they don't exist.
+   * This should be called after the user explicitly chooses to use a personal account.
+   */
+  async setupPersonalAccountCategories(): Promise<void> {
+    const profile = await firstValueFrom(this.authService.userProfile$.pipe(take(1)));
+    if (!profile || profile.groupId) {
+      // Don't add personal categories if user is in a group or not logged in.
+      return;
+    }
+
+    const categoriesRef = this.getCategoriesRef(profile.uid);
+    const snapshot = await get(categoriesRef);
+
+    if (!snapshot.exists()) {
+        const currentLang = this.translateService.currentLang || 'my';
+        await this.addDefaultCategories(profile.uid, currentLang);
+    }
+  }
+
+  /**
+   * Adds a new category for the current user or their group.
    * @param categoryName The name of the category to add.
-   * @param groupId (Optional) The ID of the group to add the category to.
    * @returns A Promise that resolves when the category is added.
    */
-  async addCategory(categoryName: string, groupId?: string): Promise<void> {
-    const userId = (await firstValueFrom(
-      this.authService.currentUser$.pipe(map((user) => user?.uid))
-    ))!;
-    if (!userId) {
+  async addCategory(categoryName: string): Promise<void> {
+    const profile = await firstValueFrom(this.authService.userProfile$);
+    if (!profile?.uid) {
       throw new Error('User not authenticated.');
     }
-    
+
     const newCategory: Omit<ServiceICategory, 'id'> = {
       name: categoryName.trim(),
       createdAt: new Date().toISOString(),
     };
 
     let categoriesRef: DatabaseReference;
-    if (groupId) {
-      newCategory.groupId = groupId;
-      newCategory.userId = userId; // To know who created it
-      categoriesRef = this.getGroupCategoriesRef(groupId);
+    if (profile.groupId) {
+      newCategory.groupId = profile.groupId;
+      newCategory.userId = profile.uid; // To know who created it
+      categoriesRef = this.getGroupCategoriesRef(profile.groupId);
     } else {
-      newCategory.userId = userId;
-      categoriesRef = this.getCategoriesRef(userId);
+      newCategory.userId = profile.uid;
+      categoriesRef = this.getCategoriesRef(profile.uid);
     }
 
     await push(categoriesRef, newCategory);
   }
 
   /**
-   * Gets all categories for a user or a group as an Observable.
-   * If no userId and no groupId is provided, it defaults to the currently authenticated user.
-   * @param userId (Optional) The UID of the user to fetch categories for.
-   * @param groupId (Optional) The ID of the group to fetch categories for.
-   * @returns An Observable of an array of ServiceICategory objects.
-   */
-  getCategories(userId?: string, groupId?: string): Observable<ServiceICategory[]> {
-    if (groupId) {
-      return listVal<ServiceICategory>(this.getGroupCategoriesRef(groupId), { keyField: 'id' });
-    }
-    
-    if (userId) {
-      return listVal<ServiceICategory>(this.getCategoriesRef(userId), { keyField: 'id' });
-    } else {
-      return this.authService.currentUser$.pipe(
-        switchMap((user) => {
-          if (user?.uid) {
-            return listVal<ServiceICategory>(this.getCategoriesRef(user.uid), { keyField: 'id' });
-          }
-          return of([]); // Return empty array if no user
-        })
-      );
-    }
-  }
-
-  /**
    * Updates an existing category.
    * @param categoryId The ID of the category to update.
+   * @param oldCategoryName The original name of the category.
    * @param newCategoryName The new name for the category.
-   * @param groupId (Optional) The ID of the group the category belongs to.
    * @returns A Promise that resolves when the category is updated.
    */
-  async updateCategory(
-    categoryId: string,
-    oldCategoryName: string,
-    newCategoryName: string,
-    groupId?: string
-  ): Promise<void> {
-    const userId = (await firstValueFrom(
-      this.authService.currentUser$.pipe(map((user) => user?.uid))
-    ))!;
-    if (!userId) {
+  async updateCategory(categoryId: string, oldCategoryName: string, newCategoryName: string): Promise<void> {
+    const profile = await firstValueFrom(this.authService.userProfile$);
+    if (!profile?.uid) {
       throw new Error('User not authenticated.');
     }
     if (!categoryId) {
       throw new Error('Category ID is required for update.');
     }
 
-    let categoryRef;
-    if (groupId) {
-        categoryRef = ref(this.db, `groups/${groupId}/categories/${categoryId}`);
+    let categoryRef: DatabaseReference;
+    if (profile.groupId) {
+      categoryRef = ref(this.db, `group_data/${profile.groupId}/categories/${categoryId}`);
     } else {
-        categoryRef = ref(this.db, `users/${userId}/categories/${categoryId}`);
+      categoryRef = ref(this.db, `users/${profile.uid}/categories/${categoryId}`);
     }
-    
+
     await update(categoryRef, { name: newCategoryName.trim() });
 
+    // Notify about the update for expenses adjustment
     this.categoryUpdatedSource.next({
       oldName: oldCategoryName,
       newName: newCategoryName,
-      userId: userId,
+      userId: profile.uid, // This might need adjustment based on group expense logic
     });
   }
 
   /**
    * Deletes a category.
    * @param categoryId The ID of the category to delete.
-   * @param groupId (Optional) The ID of the group the category belongs to.
    * @returns A Promise that resolves when the category is deleted.
    */
-  async deleteCategory(categoryId: string, groupId?: string): Promise<void> {
-    const userId = (await firstValueFrom(
-      this.authService.currentUser$.pipe(map((user) => user?.uid))
-    ))!;
-    if (!userId) {
+  async deleteCategory(categoryId: string): Promise<void> {
+    const profile = await firstValueFrom(this.authService.userProfile$);
+    if (!profile?.uid) {
       throw new Error('User not authenticated.');
     }
     if (!categoryId) {
       throw new Error('Category ID is required for deletion.');
     }
 
-    let categoryRef;
-    if (groupId) {
-        categoryRef = ref(this.db, `groups/${groupId}/categories/${categoryId}`);
+    let categoryRef: DatabaseReference;
+    if (profile.groupId) {
+      categoryRef = ref(this.db, `group_data/${profile.groupId}/categories/${categoryId}`);
     } else {
-        categoryRef = ref(this.db, `users/${userId}/categories/${categoryId}`);
+      categoryRef = ref(this.db, `users/${profile.uid}/categories/${categoryId}`);
     }
 
     await remove(categoryRef);
@@ -194,55 +199,40 @@ export class CategoryService {
   /**
    * Checks if a category is currently used in any expenses.
    * @param categoryId The ID of the category to check.
-   * @param groupId (Optional) The ID of the group the category belongs to.
    * @returns A Promise that resolves to true if the category is used, false otherwise.
    */
-  async isCategoryUsedInExpenses(categoryId: string, groupId?: string): Promise<boolean> {
-    const userId = (await firstValueFrom(
-      this.authService.currentUser$.pipe(map((user) => user?.uid))
-    ))!;
-    if (!userId) {
-      console.error('isCategoryUsedInExpenses - User not authenticated.');
+  async isCategoryUsedInExpenses(categoryId: string): Promise<boolean> {
+    const profile = await firstValueFrom(this.authService.userProfile$);
+    if (!profile?.uid) {
       throw new Error('User not authenticated.');
     }
 
-    let categoryRef;
-    let expensesRef;
+    let categoryRef: DatabaseReference;
+    let expensesRef: DatabaseReference;
 
-    if (groupId) {
-        categoryRef = ref(this.db, `groups/${groupId}/categories/${categoryId}`);
-        expensesRef = ref(this.db, `groups/${groupId}/expenses`);
+    if (profile.groupId) {
+      categoryRef = ref(this.db, `group_data/${profile.groupId}/categories/${categoryId}`);
+      expensesRef = this.getGroupExpensesRef(profile.groupId);
     } else {
-        categoryRef = ref(this.db, `users/${userId}/categories/${categoryId}`);
-        expensesRef = this.getExpensesRef(userId);
+      categoryRef = ref(this.db, `users/${profile.uid}/categories/${categoryId}`);
+      expensesRef = this.getExpensesRef(profile.uid);
     }
-    
+
     const categorySnapshot = await get(categoryRef);
     const categoryName = categorySnapshot.val()?.name;
 
     if (!categoryName) {
-      console.warn('isCategoryUsedInExpenses - Category name not found for ID:', categoryId);
-      return false;
+      return false; // Category does not exist
     }
 
-    const normalizedCategoryName = categoryName.trim();
-    const expensesQuery = query(
-      expensesRef,
-      orderByChild('category'),
-      equalTo(normalizedCategoryName)
-    );
-
-    try {
-      const snapshot = await get(expensesQuery);
-      return snapshot.exists() && snapshot.size > 0;
-    } catch (error) {
-      console.error('Error checking category usage in expenses:', error);
-      throw new Error('Failed to check category usage.');
-    }
+    const expensesQuery = query(expensesRef, orderByChild('category'), equalTo(categoryName));
+    const snapshot = await get(expensesQuery);
+    return snapshot.exists();
   }
 
+  // ... rest of the service remains the same ...
   private async checkAndAddDefaultCategories(userId: string): Promise<void> {
-    const categories$ = this.getCategories(userId);
+    const categories$ = this.getCategories();
     const existingCategories = await firstValueFrom(categories$.pipe(take(1)));
 
     if (existingCategories.length === 0) {
@@ -251,13 +241,6 @@ export class CategoryService {
     }
   }
 
-  /**
-   * Adds 5 default categories for a given user ID based on the specified language.
-   * This function should be called only once per user upon their first login/registration.
-   * @param userId The UID of the user for whom to add default categories.
-   * @param language The language to use for category names ('en' for English, 'my' for Burmese).
-   * @returns A Promise that resolves when all default categories are added.
-   */
   async addDefaultCategories(userId: string, language: string): Promise<void> {
     const defaultCategories = [
       { en: 'Food', my: 'အစားအသောက်' },
@@ -279,12 +262,6 @@ export class CategoryService {
     }
   }
 
-  /**
-   * Adds default categories to a group.
-   * This should be called when a new group is created.
-   * @param groupId The ID of the group.
-   * @param language The language for the default category names ('en' or 'my').
-   */
   async addDefaultGroupCategories(groupId: string, language: string): Promise<void> {
     const defaultCategories = [
       { en: 'Food', my: 'အစားအသောက်' },

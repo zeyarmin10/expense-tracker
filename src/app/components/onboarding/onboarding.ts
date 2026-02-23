@@ -10,6 +10,7 @@ import { DataManagerService } from '../../services/data-manager';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { InvitationService } from '../../services/invitation.service';
 import { ToastService } from '../../services/toast';
+import { CategoryService } from '../../services/category';
 
 @Component({
   selector: 'app-onboarding',
@@ -27,6 +28,7 @@ export class OnboardingComponent implements OnInit {
   private translate = inject(TranslateService);
   private invitationService = inject(InvitationService);
   private toastService = inject(ToastService);
+  private categoryService = inject(CategoryService);
 
   userProfile$: Observable<UserProfile | null>;
   newGroupName = '';
@@ -57,6 +59,8 @@ export class OnboardingComponent implements OnInit {
       await this.userDataService.updateUserProfile(user.uid, {
         accountType: 'personal',
       });
+      // Now that the account type is set, setup the default categories
+      await this.categoryService.setupPersonalAccountCategories();
       this.router.navigate(['/dashboard']);
     } catch (error) {
       console.error('Error setting up personal account:', error);

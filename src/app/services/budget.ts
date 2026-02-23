@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { BehaviorSubject, Observable, of, firstValueFrom } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { Observable, of, firstValueFrom } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 import {
   Database,
   ref,
@@ -22,6 +22,7 @@ export interface ServiceIBudget {
   amount: number;
   currency: string;
   userId?: string;
+  groupId?: string; // Added for group budgets
   createdAt?: string;
   device: string;
   editedDevice?: string;
@@ -40,66 +41,91 @@ export class BudgetService {
     return ref(this.db, `users/${userId}/budgets`);
   }
 
+  private getGroupBudgetsRef(groupId: string): DatabaseReference {
+    return ref(this.db, `group_data/${groupId}/budgets`);
+  }
+
   async addBudget(
-    budgetData: Omit<ServiceIBudget, 'id' | 'userId' | 'createdAt' | 'device' | 'editedDevice'>
+    budgetData: Omit<ServiceIBudget, 'id' | 'userId' | 'groupId' | 'createdAt' | 'device' | 'editedDevice'>
   ): Promise<void> {
-    const userId = (await firstValueFrom(
-      this.authService.currentUser$.pipe(map((user) => user?.uid))
-    ))!;
-    if (!userId) {
+    const profile = await firstValueFrom(this.authService.userProfile$);
+    if (!profile?.uid) {
       throw new Error('User not authenticated.');
     }
 
-    const newBudgetToSave: ServiceIBudget = {
+    const newBudget: Omit<ServiceIBudget, 'id'> = {
       ...budgetData,
-      userId,
+      userId: profile.uid,
       createdAt: new Date().toISOString(),
       device: navigator.userAgent,
     };
-    await push(this.getBudgetsRef(userId), newBudgetToSave);
+
+    let budgetsRef: DatabaseReference;
+    if (profile.groupId) {
+      newBudget.groupId = profile.groupId;
+      budgetsRef = this.getGroupBudgetsRef(profile.groupId);
+    } else {
+      budgetsRef = this.getBudgetsRef(profile.uid);
+    }
+
+    await push(budgetsRef, newBudget);
   }
 
   getBudgets(): Observable<ServiceIBudget[]> {
-    return this.authService.currentUser$.pipe(
-      switchMap((user) => {
-        if (user?.uid) {
-          return listVal<ServiceIBudget>(this.getBudgetsRef(user.uid), {
+    return this.authService.userProfile$.pipe(
+      switchMap(profile => {
+        if (profile?.groupId) {
+          return listVal<ServiceIBudget>(this.getGroupBudgetsRef(profile.groupId), {
             keyField: 'id',
           });
+        } else if (profile?.uid) {
+          return listVal<ServiceIBudget>(this.getBudgetsRef(profile.uid), {
+            keyField: 'id',
+          });
+        } else {
+          return of([]);
         }
-        return of([]);
       })
     );
   }
 
   async updateBudget(
     budgetId: string,
-    updatedData: Partial<Omit<ServiceIBudget, 'id' | 'userId' | 'createdAt'>>
+    updatedData: Partial<Omit<ServiceIBudget, 'id' | 'userId' | 'groupId' | 'createdAt'>>
   ): Promise<void> {
-    const userId = (await firstValueFrom(
-      this.authService.currentUser$.pipe(map((user) => user?.uid))
-    ))!;
-    if (!userId) {
+    const profile = await firstValueFrom(this.authService.userProfile$);
+    if (!profile?.uid) {
       throw new Error('User not authenticated.');
     }
     if (!budgetId) {
       throw new Error('Budget ID is required for update.');
     }
-    const budgetRef = ref(this.db, `users/${userId}/budgets/${budgetId}`);
+
+    let budgetRef: DatabaseReference;
+    if (profile.groupId) {
+        budgetRef = ref(this.db, `group_data/${profile.groupId}/budgets/${budgetId}`);
+    } else {
+        budgetRef = ref(this.db, `users/${profile.uid}/budgets/${budgetId}`);
+    }
+
     await update(budgetRef, { ...updatedData, editedDevice: navigator.userAgent });
   }
 
   async deleteBudget(id: string): Promise<void> {
-    const userId = (await firstValueFrom(
-      this.authService.currentUser$.pipe(map((user) => user?.uid))
-    ))!;
-    if (!userId) {
+    const profile = await firstValueFrom(this.authService.userProfile$);
+    if (!profile?.uid) {
       throw new Error('User not authenticated.');
     }
     if (!id) {
       throw new Error('Budget ID is required for deletion.');
     }
-    const budgetRef = ref(this.db, `users/${userId}/budgets/${id}`);
+
+    let budgetRef: DatabaseReference;
+    if (profile.groupId) {
+        budgetRef = ref(this.db, `group_data/${profile.groupId}/budgets/${id}`);
+    } else {
+        budgetRef = ref(this.db, `users/${profile.uid}/budgets/${id}`);
+    }
     await remove(budgetRef);
   }
 }

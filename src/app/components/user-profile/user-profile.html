@@ -24,7 +24,8 @@
                 class="info-container border border-secondary-subtle rounded mb-4 p-2 p-sm-3 p-md-3 p-lg-3 p-xl-3 p-xxl-3">
                 <!-- Email -->
                 <div class="mb-3">
-                  <label class="form-label font-weight-bold mb-0"><strong>{{ 'EMAIL_LABEL' | translate }}</strong></label>
+                  <label class="form-label font-weight-bold mb-0"><strong>{{ 'EMAIL_LABEL' | translate
+                      }}</strong></label>
                   <p class="form-control-plaintext m-0 p-0">{{ userData.email }}</p>
                 </div>
                 <!-- Member Since -->
@@ -38,10 +39,13 @@
 
                 <!-- Account Type -->
                 <div class="mb-3">
-                  <label class="form-label font-weight-bold mb-0"><strong>{{ 'ACCOUNT_TYPE_LABEL' | translate }}</strong></label>
+                  <label class="form-label font-weight-bold mb-0"><strong>{{ 'ACCOUNT_TYPE_LABEL' | translate
+                      }}</strong></label>
                   <div>
-                    <span *ngIf="userData.accountType === 'personal'" class="badge bg-success">{{ 'ACCOUNT_TYPE_PERSONAL' | translate }}</span>
-                    <span *ngIf="userData.accountType === 'group'" class="badge bg-info">{{ 'ACCOUNT_TYPE_GROUP' | translate }}</span>
+                    <span *ngIf="userData.accountType === 'personal'" class="badge bg-success">{{
+                      'ACCOUNT_TYPE_PERSONAL' | translate }}</span>
+                    <span *ngIf="userData.accountType === 'group'" class="badge bg-info">{{ 'ACCOUNT_TYPE_GROUP' |
+                      translate }}</span>
                   </div>
                 </div>
 
@@ -56,7 +60,8 @@
 
                 <!-- Group Name -->
                 <div class="mb-3" *ngIf="userData.accountType === 'group' && userData.groupName">
-                  <label class="form-label font-weight-bold mb-0"><strong>{{ 'GROUP_NAME' | translate }}</strong></label>
+                  <label class="form-label font-weight-bold mb-0"><strong>{{ 'GROUP_NAME' | translate
+                      }}</strong></label>
                   <p class="form-control-plaintext m-0 p-0">
                     {{ userData.groupName }}
                   </p>
@@ -64,7 +69,8 @@
 
                 <!-- Display Name -->
                 <div class="mb-3">
-                  <label for="displayName" class="form-label">{{ 'DISPLAY_NAME_LABEL' | translate }}</label>
+                  <label for="displayName" class="form-label"><strong>{{ 'DISPLAY_NAME_LABEL' | translate
+                      }}</strong></label>
                   <input type="text" id="displayName" class="form-control" formControlName="displayName">
                 </div>
               </div>
@@ -73,7 +79,8 @@
               <div
                 class="info-container border border-secondary-subtle rounded mb-4 p-2 p-sm-3 p-md-3 p-lg-3 p-xl-3 p-xxl-3">
                 <div class="mb-2">
-                  <label for="budgetPeriod" class="form-label"><strong>{{ 'BUDGET_PERIOD_LABEL' | translate }}</strong></label>
+                  <label for="budgetPeriod" class="form-label"><strong>{{ 'BUDGET_PERIOD_LABEL' | translate
+                      }}</strong></label>
                   <div class="input-group">
                     <select id="budgetPeriod" class="form-select" formControlName="budgetPeriod">
                       <option *ngFor="let period of translatedBudgetPeriods" [value]="period.code">
@@ -151,7 +158,8 @@
 
                 <!-- Language Selection -->
                 <div class="mb-3">
-                  <label for="language" class="form-label"><strong>{{ 'SYSTEM_LANGUAGE_LABEL' | translate }}</strong></label>
+                  <label for="language" class="form-label"><strong>{{ 'SYSTEM_LANGUAGE_LABEL' | translate
+                      }}</strong></label>
                   <select id="language" class="form-select" [ngModel]="selectedLanguage"
                     (ngModelChange)="onLanguageChange($event)" [ngModelOptions]="{standalone: true}">
                     <option value="en">English</option>
