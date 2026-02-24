@@ -70,6 +70,8 @@ export class AuthService {
                       ...profile,
                       currency: groupSettings.currency || profile.currency,
                       budgetPeriod: (groupSettings.budgetPeriod as UserProfile['budgetPeriod']) || profile.budgetPeriod,
+                      budgetStartDate: groupSettings.budgetStartDate || profile.budgetStartDate,
+                      budgetEndDate: groupSettings.budgetEndDate || profile.budgetEndDate,
                       selectedBudgetPeriodId: groupSettings.selectedBudgetPeriodId || profile.selectedBudgetPeriodId
                     };
                   } else {
