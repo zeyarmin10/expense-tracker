@@ -4,8 +4,6 @@ import {
   OnInit,
   inject,
   ViewChild,
-  ChangeDetectorRef,
-  NgZone,
 } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import {
@@ -13,6 +11,7 @@ import {
   FormGroup,
   Validators,
   ReactiveFormsModule,
+  FormsModule, // Import FormsModule
 } from '@angular/forms';
 import { IExpense, ExpenseService } from '../../services/expense.service';
 import { ServiceICategory, CategoryService } from '../../services/category';
@@ -22,9 +21,6 @@ import {
   combineLatest,
   map,
   firstValueFrom,
-  switchMap,
-  take,
-  of,
 } from 'rxjs';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import Swal from 'sweetalert2';
@@ -60,6 +56,7 @@ import { FormatService } from '../../services/format.service';
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    FormsModule, // Add FormsModule here
     FontAwesomeModule,
     CategoryModalComponent,
     TranslateModule,
@@ -82,27 +79,21 @@ export class Expense implements OnInit {
   expenses$: Observable<IExpense[]>;
   categories$: Observable<ServiceICategory[]>;
 
-  private _selectedDate$ = new BehaviorSubject<string>('');
+  public _selectedDate$ = new BehaviorSubject<string>('');
   private _activeCurrencyFilter$ = new BehaviorSubject<string | null>(null);
   private _activeCategoryFilter$ = new BehaviorSubject<string | null>(null);
 
   private authService = inject(AuthService);
-  private userDataService = inject(UserDataService);
   public formatService = inject(FormatService);
 
   displayedExpenses$: Observable<IExpense[]>;
   totalExpensesByCurrency$: Observable<{ [key: string]: number }>;
-  totalExpensesByCategoryAndCurrency$: Observable<{
-    [category: string]: { [currency: string]: number };
-  }>;
 
   expenseService = inject(ExpenseService);
   categoryService = inject(CategoryService);
   datePipe = inject(DatePipe);
   translate = inject(TranslateService);
-  private cdr = inject(ChangeDetectorRef);
   toastService = inject(ToastService);
-  private ngZone: NgZone;
 
   editingExpenseId: string | null = null;
   public userRole: string | null = null;
@@ -115,33 +106,21 @@ export class Expense implements OnInit {
   faSync = faSync;
   faInfoCircle = faInfoCircle;
 
-  currencySymbols: { [key: string]: string } = CURRENCY_SYMBOLS;
-
-  availableCurrencies = AVAILABLE_CURRENCIES;
   userProfile: UserProfile | null = null;
 
   router = inject(Router);
   route = inject(ActivatedRoute);
-  
-  private originalItemName: string | null = null;
-  private originalUnit: string | null = null;
-  private originalQuantity: number | null = null;
-  private originalPrice: number | null = null;
 
   constructor(private fb: FormBuilder) {
-    const todayFormatted =
-      this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
-    this.ngZone = inject(NgZone);
+    const todayFormatted = this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
 
     this.newExpenseForm = this.fb.group({
       date: [todayFormatted, Validators.required],
       category: ['', Validators.required],
       itemName: ['', Validators.required],
-      quantity: [1, [Validators.required, Validators.min(0.01)]],
+      quantity: [1, [Validators.required, Validators.min(1)]],
       unit: [''],
       price: [0, [Validators.required, Validators.min(0)]],
-      currency: ['MMK', Validators.required],
-      selectedDate: [todayFormatted],
     });
     
     this.expenses$ = this.expenseService.getExpenses();
@@ -154,22 +133,16 @@ export class Expense implements OnInit {
       this._activeCategoryFilter$,
     ]).pipe(
       map(([expenses, selectedDate, activeCurrency, activeCategory]) => {
-        let filtered = expenses.filter((expense) => {
-          return expense.date === selectedDate;
-        });
+        let filtered = expenses.filter(expense => expense.date === selectedDate);
 
         if (activeCurrency) {
-          filtered = filtered.filter(
-            (expense) => expense.currency === activeCurrency
-          );
+          filtered = filtered.filter(expense => expense.currency === activeCurrency);
         }
 
         if (activeCategory) {
-          filtered = filtered.filter(
-            (expense) => expense.category === activeCategory
-          );
+          filtered = filtered.filter(expense => expense.category === activeCategory);
         }
-        return filtered;
+        return filtered.sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
       })
     );
 
@@ -182,54 +155,29 @@ export class Expense implements OnInit {
       })
     );
 
-    this.totalExpensesByCategoryAndCurrency$ = this.displayedExpenses$.pipe(
-      map(expenses => {
-          return expenses.reduce((acc, expense) => {
-              if (!acc[expense.category]) {
-              acc[expense.category] = {};
-              }
-              acc[expense.category][expense.currency] =
-              (acc[expense.category][expense.currency] || 0) + expense.totalCost;
-              return acc;
-          }, {} as { [category: string]: { [currency: string]: number } });
-      })
-    );
-
     const storedLang = localStorage.getItem('selectedLanguage');
-    if (storedLang) {
-      this.translate.use(storedLang);
-    } else {
-      const browserLang = this.translate.getBrowserLang();
-      this.translate.use(
-        browserLang && browserLang.match(/my|en/) ? browserLang : 'my'
-      );
-    }
+    this.translate.use(storedLang || this.translate.getBrowserLang() || 'en');
   }
 
   ngOnInit(): void {
-    this.applyDateFilter();
-    this.newExpenseForm.controls['currency'].disable();
-    this.route.paramMap.subscribe((params) => {
+    this.route.paramMap.subscribe(params => {
       const date = params.get('date');
-      if (date) {
-        this.newExpenseForm.patchValue({ selectedDate: date });
-        this._selectedDate$.next(date);
-      } else {
-        this._selectedDate$.next(
-          this.newExpenseForm.get('selectedDate')?.value || null
-        );
-      }
+      const initialDate = date || this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
+      this._selectedDate$.next(initialDate);
     });
 
     this.authService.userProfile$.subscribe(profile => {
         this.userProfile = profile;
-        if (profile) {
-          this.newExpenseForm.get('currency')?.setValue(profile.currency || 'MMK');
-          if (profile.roles && typeof profile.roles === 'object' && Object.keys(profile.roles).length > 0) {
+        if (profile?.roles && typeof profile.roles === 'object') {
             this.userRole = Object.values(profile.roles)[0];
-          }
         }
     });
+    this.loadCategories();
+  }
+  
+  onDateChange(date: string): void {
+    this._selectedDate$.next(date);
+    this.resetActiveFilters();
   }
 
   loadCategories(): void {
@@ -241,14 +189,10 @@ export class Expense implements OnInit {
   }
 
   async onSubmitNewExpense(): Promise<void> {
-    const defaultCurrency = this.userProfile?.currency || 'MMK';
     this.newExpenseForm.markAllAsTouched();
     if (this.newExpenseForm.invalid) {
-      this.showErrorModal(
-        this.translate.instant('ERROR_TITLE'),
-        this.translate.instant('ERROR_FILL_ALL_FIELDS')
-      );
-      return;
+        this.showErrorModal(this.translate.instant('ERROR_TITLE'), this.translate.instant('ERROR_FILL_ALL_FIELDS'));
+        return;
     }
 
     const formValue = this.newExpenseForm.value;
@@ -259,8 +203,8 @@ export class Expense implements OnInit {
       quantity: formValue.quantity,
       unit: formValue.unit,
       price: formValue.price,
-      currency: defaultCurrency,
-      totalCost: formValue.quantity * formValue.price, // Calculate totalCost
+      currency: this.userProfile?.currency || 'MMK',
+      totalCost: formValue.quantity * formValue.price,
     };
 
     try {
@@ -269,25 +213,14 @@ export class Expense implements OnInit {
       this.newExpenseForm.reset({
           date: this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '',
           category: '',
+          itemName: '',
           quantity: 1,
-          price: 0,
-          currency: defaultCurrency || 'MMK',
-          selectedDate: this.datePipe.transform(new Date(), 'yyyy-MM-dd') || ''
+          unit: '',
+          price: 0
       });
       this.resetFilter();
     } catch (error: any) {
-      this.showErrorModal(
-        this.translate.instant('ERROR_TITLE'),
-        error.message || this.translate.instant('EXPENSE_ERROR_ADD')
-      );
-    }
-  }
-  
-  applyDateFilter(): void {
-    const selectedDate = this.newExpenseForm.get('selectedDate')?.value;
-    if (selectedDate) {
-      this._selectedDate$.next(selectedDate);
-      this.resetActiveFilters();
+      this.showErrorModal(this.translate.instant('ERROR_TITLE'), error.message || this.translate.instant('EXPENSE_ERROR_ADD'));
     }
   }
 
@@ -297,9 +230,7 @@ export class Expense implements OnInit {
   }
 
   resetFilter(): void {
-    const todayFormatted =
-      this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
-    this.newExpenseForm.patchValue({ selectedDate: todayFormatted });
+    const todayFormatted = this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
     this._selectedDate$.next(todayFormatted);
     this.resetActiveFilters();
   }
@@ -320,7 +251,7 @@ export class Expense implements OnInit {
       date: [expense.date, Validators.required],
       category: [expense.category, Validators.required],
       itemName: [expense.itemName, Validators.required],
-      quantity: [expense.quantity, [Validators.required, Validators.min(0.01)]],
+      quantity: [expense.quantity, [Validators.required, Validators.min(1)]],
       unit: [expense.unit],
       price: [expense.price, [Validators.required, Validators.min(0)]],
       currency: [expense.currency, Validators.required],
@@ -328,43 +259,30 @@ export class Expense implements OnInit {
   }
 
   async saveEdit(): Promise<void> {
-    if (this.editingForm && this.editingForm.invalid) {
-      this.showErrorModal(
-        this.translate.instant('ERROR_TITLE'),
-        this.translate.instant('EXPENSE_ERROR_EDIT_FORM_INVALID')
-      );
+    if (!this.editingForm || !this.editingExpenseId) {
+      this.showErrorModal(this.translate.instant('ERROR_TITLE'), this.translate.instant('EXPENSE_ERROR_NO_EXPENSE_SELECTED'));
       return;
     }
-    if (!this.editingForm || !this.editingExpenseId) {
-      this.showErrorModal(
-        this.translate.instant('ERROR_TITLE'),
-        this.translate.instant('EXPENSE_ERROR_NO_EXPENSE_SELECTED')
-      );
+    if (this.editingForm.invalid) {
+      this.showErrorModal(this.translate.instant('ERROR_TITLE'), this.translate.instant('EXPENSE_ERROR_EDIT_FORM_INVALID'));
       return;
     }
 
-    const user = await firstValueFrom(this.authService.currentUser$);
     const formValue = this.editingForm.value;
     const updatedExpense: Partial<IExpense> = {
       ...formValue,
-      totalCost: formValue.quantity * formValue.price, // Recalculate totalCost
+      totalCost: formValue.quantity * formValue.price,
       updatedAt: new Date().toISOString(),
       updatedByName: this.userProfile?.displayName,
       editedDevice: 'Web Browser'
     };
 
     try {
-      await this.expenseService.updateExpense(
-        this.editingExpenseId,
-        updatedExpense
-      );
+      await this.expenseService.updateExpense(this.editingExpenseId, updatedExpense);
       this.toastService.showSuccess(this.translate.instant('EXPENSE_SUCCESS_UPDATED'));
       this.cancelEdit();
     } catch (error: any) {
-      this.showErrorModal(
-        this.translate.instant('ERROR_TITLE'),
-        error.message || this.translate.instant('EXPENSE_ERROR_UPDATE')
-      );
+      this.showErrorModal(this.translate.instant('ERROR_TITLE'), error.message || this.translate.instant('EXPENSE_ERROR_UPDATE'));
     }
   }
 
@@ -374,42 +292,33 @@ export class Expense implements OnInit {
   }
 
   onDelete(expenseId: string): void {
-    this.deleteConfirmationModal.title = this.translate.instant(
-      'CONFIRM_DELETE_TITLE'
-    );
+    this.deleteConfirmationModal.title = this.translate.instant('CONFIRM_DELETE_TITLE');
     this.deleteConfirmationModal.message = this.translate.instant('CONFIRM_DELETE_EXPENSE');
-    this.deleteConfirmationModal.confirmButtonText =
-      this.translate.instant('DELETE_BUTTON');
-    this.deleteConfirmationModal.cancelButtonText =
-      this.translate.instant('CANCEL_BUTTON');
+    this.deleteConfirmationModal.confirmButtonText = this.translate.instant('DELETE_BUTTON');
+    this.deleteConfirmationModal.cancelButtonText = this.translate.instant('CANCEL_BUTTON');
     this.deleteConfirmationModal.messageColor = 'text-danger';
     this.deleteConfirmationModal.modalType = 'confirm';
 
     this.deleteConfirmationModal.open();
 
-    const subscription = this.deleteConfirmationModal.confirmed.subscribe(
-      async (confirmed: boolean) => {
-        if (confirmed) {
-          try {
-            await this.expenseService.deleteExpense(expenseId);
-             this.toastService.showSuccess(this.translate.instant('EXPENSE_DELETED_SUCCESS'));
-          } catch (error: any) {
-            this.showErrorModal(
-              this.translate.instant('ERROR_TITLE'),
-              error.message || this.translate.instant('DATA_DELETE_ERROR')
-            );
-          }
+    const subscription = this.deleteConfirmationModal.confirmed.subscribe(async (confirmed: boolean) => {
+      if (confirmed) {
+        try {
+          await this.expenseService.deleteExpense(expenseId);
+          this.toastService.showSuccess(this.translate.instant('EXPENSE_DELETED_SUCCESS'));
+        } catch (error: any) {
+          this.showErrorModal(this.translate.instant('ERROR_TITLE'), error.message || this.translate.instant('DATA_DELETE_ERROR'));
         }
-        subscription.unsubscribe();
       }
-    );
+      subscription.unsubscribe();
+    });
   }
 
   showErrorModal(title: string, message: string): void {
     this.errorModal.title = title;
     this.errorModal.message = message;
     this.errorModal.confirmButtonText = this.translate.instant('OK_BUTTON');
-    this.errorModal.cancelButtonText = '';
+    this.errorModal.cancelButtonText = ''; // No cancel button for alert
     this.errorModal.messageColor = 'text-danger';
     this.errorModal.modalType = 'alert';
 
@@ -423,7 +332,6 @@ export class Expense implements OnInit {
       `<strong>${this.translate.instant('ITEM_NAME_INFO', { itemName: expense.itemName })}</strong>`
     ];
   
-    // Creator Info
     if (expense.createdByName && expense.createdAt) {
       infoBlocks.push(this.translate.instant('CREATED_BY', {
         name: expense.createdByName,
@@ -431,12 +339,11 @@ export class Expense implements OnInit {
       }));
     }
   
-    // Update Info Block
     let hasBeenUpdated = false;
     if (expense.createdAt && expense.updatedAt) {
       const createdAtTime = new Date(expense.createdAt).getTime();
       const updatedAtTime = new Date(expense.updatedAt).getTime();
-      if (updatedAtTime > createdAtTime + 5000) { // 5-second threshold
+      if (updatedAtTime > createdAtTime + 5000) {
         hasBeenUpdated = true;
       }
     }
@@ -459,110 +366,39 @@ export class Expense implements OnInit {
   
     Swal.fire({
       title: title,
-      html: infoBlocks.map(block => `<p>${block}</p>`).join(''),
+      html: infoBlocks.map(block => `<p class="text-start">${block}</p>`).join(''),
       icon: 'info',
       confirmButtonText: this.translate.instant('OK_BUTTON')
     });
   }
 
-  onFocusInput(
-    event: Event,
-    controlName: 'itemName' | 'unit' | 'quantity' | 'price',
-    formGroup: FormGroup
-  ): void {
-    const inputElement = event.target as HTMLInputElement;
-    const currentControl = formGroup.get(controlName);
-
-    if (currentControl) {
-      if (controlName === 'itemName') {
-        this.originalItemName = currentControl.value;
-      } else if (controlName === 'unit') {
-        this.originalUnit = currentControl.value;
-      } else if (controlName === 'quantity') {
-        this.originalQuantity = currentControl.value;
-      } else if (controlName === 'price') {
-        this.originalPrice = currentControl.value;
-      }
-    }
-    inputElement.value = '';
-  }
-
-  onBlurInput(
-    event: Event,
-    controlName: 'itemName' | 'unit' | 'quantity' | 'price',
-    formGroup: FormGroup
-  ): void {
-    const inputElement = event.target as HTMLInputElement;
-    const currentValue = inputElement.value;
-    const currentControl = formGroup.get(controlName);
-
-    if (currentValue === '' && currentControl) {
-      if (currentControl.valid) {
-        if (controlName === 'itemName' && this.originalItemName !== null) {
-          currentControl.setValue(this.originalItemName);
-        } else if (controlName === 'unit' && this.originalUnit !== null) {
-          currentControl.setValue(this.originalUnit);
-        } else if (
-          controlName === 'quantity' &&
-          this.originalQuantity !== null
-        ) {
-          currentControl.setValue(this.originalQuantity);
-        } else if (controlName === 'price' && this.originalPrice !== null) {
-          currentControl.setValue(this.originalPrice);
-        }
-      } else {
-        currentControl.markAsTouched();
-      }
-    }
-
-    this.originalItemName = null;
-    this.originalUnit = null;
-    this.originalQuantity = null;
-    this.originalPrice = null;
-  }
-  
   formatLocalizedDate(date: string | Date | null | undefined, format: 'medium' | 'shortDate' = 'shortDate'): string {
-    const currentLang = this.translate.currentLang;
-  
-    if (!date) {
-      return '';
-    }
-  
+    if (!date) return '';
     const d = new Date(date);
-  
+    const currentLang = this.translate.currentLang;
+
     if (currentLang === 'my') {
-      const month = this.datePipe.transform(d, 'MMM');
-      const burmeseMonth = month
-        ? BURMESE_MONTH_ABBREVIATIONS[month as keyof typeof BURMESE_MONTH_ABBREVIATIONS]
-        : '';
-  
-      const day = new Intl.NumberFormat('my-MM', { numberingSystem: 'mymr', useGrouping: false }).format(d.getDate());
-      const year = new Intl.NumberFormat('my-MM', { numberingSystem: 'mymr', useGrouping: false }).format(d.getFullYear());
-  
-      const datePart = `${day} ${burmeseMonth} ${year}`;
-  
-      if (format === 'medium') {
-        const hour = new Intl.NumberFormat('my-MM', { numberingSystem: 'mymr', minimumIntegerDigits: 2 }).format(d.getHours());
-        const minute = new Intl.NumberFormat('my-MM', { numberingSystem: 'mymr', minimumIntegerDigits: 2 }).format(d.getMinutes());
-        return `${datePart}, ${hour}:${minute}`;
-      }
-      return datePart;
+        const month = this.datePipe.transform(d, 'MMM');
+        const burmeseMonth = month ? BURMESE_MONTH_ABBREVIATIONS[month as keyof typeof BURMESE_MONTH_ABBREVIATIONS] : '';
+        const day = new Intl.NumberFormat('my-MM', { numberingSystem: 'mymr' }).format(d.getDate());
+        const year = new Intl.NumberFormat('my-MM', { numberingSystem: 'mymr' }).format(d.getFullYear());
+        const datePart = `${day} ${burmeseMonth}, ${year}`;
+
+        if (format === 'medium') {
+            const hour = new Intl.NumberFormat('my-MM', { numberingSystem: 'mymr', minimumIntegerDigits: 2 }).format(d.getHours());
+            const minute = new Intl.NumberFormat('my-MM', { numberingSystem: 'mymr', minimumIntegerDigits: 2 }).format(d.getMinutes());
+            return `${datePart}, ${hour}:${minute}`;
+        }
+        return datePart;
     } else {
-      const angularFormat = format === 'medium' ? 'medium' : 'mediumDate';
-      return this.datePipe.transform(d, angularFormat, undefined, currentLang) || '';
+        return this.datePipe.transform(d, format === 'medium' ? 'medium' : 'mediumDate', undefined, currentLang) || '';
     }
   }
 
   formatLocalizedNumber(amount: number): string {
     const currentLang = this.translate.currentLang;
-    const currency = this.newExpenseForm.get('currency')?.value || 'MMK';
-    if (currentLang === 'my' && currency === 'MMK') {
-      return new Intl.NumberFormat('my-MM', {
-        numberingSystem: 'mymr',
-        style: 'decimal',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-      }).format(amount);
+    if (currentLang === 'my') {
+      return new Intl.NumberFormat('my-MM', { numberingSystem: 'mymr' }).format(amount);
     }
     return amount.toLocaleString(currentLang);
   }
