@@ -208,6 +208,7 @@ export class Expense implements OnInit {
 
   ngOnInit(): void {
     this.applyDateFilter();
+    this.newExpenseForm.controls['currency'].disable();
     this.route.paramMap.subscribe((params) => {
       const date = params.get('date');
       if (date) {
@@ -240,6 +241,7 @@ export class Expense implements OnInit {
   }
 
   async onSubmitNewExpense(): Promise<void> {
+    const defaultCurrency = this.userProfile?.currency || 'MMK';
     this.newExpenseForm.markAllAsTouched();
     if (this.newExpenseForm.invalid) {
       this.showErrorModal(
@@ -257,7 +259,7 @@ export class Expense implements OnInit {
       quantity: formValue.quantity,
       unit: formValue.unit,
       price: formValue.price,
-      currency: formValue.currency,
+      currency: defaultCurrency,
       totalCost: formValue.quantity * formValue.price, // Calculate totalCost
     };
 
@@ -266,9 +268,10 @@ export class Expense implements OnInit {
       this.toastService.showSuccess(this.translate.instant('EXPENSE_SUCCESS_ADDED'));
       this.newExpenseForm.reset({
           date: this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '',
+          category: '',
           quantity: 1,
           price: 0,
-          currency: this.userProfile?.currency || 'MMK',
+          currency: defaultCurrency || 'MMK',
           selectedDate: this.datePipe.transform(new Date(), 'yyyy-MM-dd') || ''
       });
       this.resetFilter();
