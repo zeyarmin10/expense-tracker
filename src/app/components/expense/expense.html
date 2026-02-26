@@ -6,7 +6,7 @@
       <div class="accordion" id="expenseFormAccordion">
         <div class="accordion-item">
           <h2 class="accordion-header" id="headingOne">
-            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne"
+            <button class="accordion-button  text-white bg-info" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne"
               aria-expanded="true" aria-controls="collapseOne">
               {{ "EXPENSE_ADD_TITLE" | translate }}
             </button>
@@ -37,7 +37,7 @@
                         </select>
                         <label for="category">{{ "EXPENSE_CATEGORY_LABEL" | translate }}</label>
                       </div>
-                      <button type="button" class="btn btn-outline-secondary" (click)="openCategoryModal()">
+                      <button type="button" class="btn btn-outline-info" (click)="openCategoryModal()">
                         <fa-icon [icon]="faPlus"></fa-icon>
                       </button>
                     </div>
@@ -87,7 +87,7 @@
 
                 <!-- Submit Button -->
                 <div class="d-grid">
-                  <button type="submit" class="btn btn-primary btn-lg shine-effect" [disabled]="newExpenseForm.invalid">
+                  <button type="submit" class="btn btn-info btn-lg shine-effect text-white" [disabled]="newExpenseForm.invalid">
                     <fa-icon [icon]="faSave" class="me-2"></fa-icon>
                     {{ "SAVE_BUTTON_LABEL" | translate }}
                   </button>
