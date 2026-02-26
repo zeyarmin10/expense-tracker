@@ -45,6 +45,7 @@
                 <li class="nav-item dropdown text-center" *ngIf="currentUser$ | async as user">
                     <a class="nav-link dropdown-toggle text-center" href="#" id="navbarDropdown" role="button"
                         data-bs-toggle="dropdown" aria-expanded="false">
+                        <fa-icon [icon]="faUsers" class="me-2" *ngIf="isGroupAccount$ | async"></fa-icon>
                         {{ user.displayName || 'Profile' }}
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end text-center" aria-labelledby="navbarDropdown">
@@ -55,8 +56,9 @@
                         <li class="text-center">
                             <hr class="dropdown-divider">
                         </li>
-                        <li class="text-center"><button class="dropdown-item" (click)="logout()">{{'NAV_LOGOUT' |
-                                translate}}</button></li>
+                        <li class="text-center"><button class="dropdown-item" (click)="logout()">{{
+                                'NAV_LOGOUT' | translate
+                                }}</button></li>
                     </ul>
                 </li>
             </ul>

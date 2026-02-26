@@ -8,7 +8,7 @@ import { AuthService } from './services/auth';
 import { User } from '@angular/fire/auth';
 import { Toast } from './components/toast/toast';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faRightFromBracket } from '@fortawesome/free-solid-svg-icons';
+import { faRightFromBracket, faUsers } from '@fortawesome/free-solid-svg-icons';
 import { InvitationService } from './services/invitation.service';
 import { DataManagerService } from './services/data-manager';
 import { ToastService } from './services/toast';
@@ -33,7 +33,9 @@ export class App implements OnInit {
   currentUser$: Observable<User | null>;
   userDisplayName$: Observable<string | null>;
   isGroupAdmin$: Observable<boolean>;
+  isGroupAccount$: Observable<boolean>;
   faRightFromBracket = faRightFromBracket;
+  faUsers = faUsers;
   currentLang: string;
 
   private authService = inject(AuthService);
@@ -63,6 +65,10 @@ export class App implements OnInit {
         const userRoles = Object.values(profile.roles);
         return userRoles.includes('admin');
       })
+    );
+
+    this.isGroupAccount$ = this.authService.userProfile$.pipe(
+      map(profile => profile?.accountType === 'group')
     );
 
     const isLoggedIn$ = this.currentUser$.pipe(map(user => !!user));
