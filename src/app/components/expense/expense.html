@@ -1,3 +1,7 @@
+<div id="overlay" *ngIf="isSaving">
+  <div class="spinner"></div>
+</div>
+
 <!-- Modern, Mobile-First Add Expense Form -->
 <div class="container mt-3 mb-5">
   <div class="row d-flex justify-content-center">
@@ -6,7 +10,7 @@
       <div class="accordion" id="expenseFormAccordion">
         <div class="accordion-item">
           <h2 class="accordion-header" id="headingOne">
-            <button class="accordion-button  text-white bg-info" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne"
+            <button class="accordion-button text-white bg-info" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne"
               aria-expanded="true" aria-controls="collapseOne">
               {{ "EXPENSE_ADD_TITLE" | translate }}
             </button>
@@ -78,6 +82,7 @@
                       <span class="input-group-text">{{ userProfile?.currency || 'MMK' }}</span>
                       <div class="form-floating">
                         <input type="number" class="form-control" id="price" formControlName="price" min="0" placeholder="Price"
+                          (focus)="newExpenseForm.get('price')?.setValue(null)"
                           [class.is-invalid]="newExpenseForm.controls['price'].invalid && newExpenseForm.controls['price'].touched">
                         <label for="price">{{ "PRICE_LABEL" | translate }}</label>
                       </div>
@@ -110,7 +115,7 @@
           <div class="row g-2 mb-4 align-items-center">
             <div class="col-md">
               <div class="form-floating">
-                <input type="date" class="form-control" id="selectedDate" [ngModel]="( _selectedDate$ | async)" (ngModelChange)="onDateChange($event)" [ngModelOptions]="{standalone: true}">
+                <input type="date" class="form-control" id="selectedDate" [ngModel]="(_selectedDate$ | async)" (ngModelChange)="onDateChange($event)" [ngModelOptions]="{standalone: true}">
                 <label for="selectedDate">{{ "SELECT_DATE_LABEL" | translate }}</label>
               </div>
             </div>

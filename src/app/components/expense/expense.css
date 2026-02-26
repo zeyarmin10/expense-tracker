@@ -66,7 +66,7 @@
     100% { box-shadow: 0 0 4px rgba(13, 110, 253, 0.3); }
 }
 
-.btn.shine-effect {
+.btn.shine-effect:not(:disabled) {
     animation: shine 1.8s infinite ease-in-out;
 }
 
@@ -83,4 +83,47 @@
     .edit-form-container {
         padding: 1rem;
     }
+}
+
+/* Overlay and Spinner Styles */
+#overlay {
+    position: fixed;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background-color: rgba(255, 255, 255, 0.7);
+    z-index: 10000;
+    backdrop-filter: blur(4px);
+}
+
+.spinner {
+    width: 56px;
+    height: 56px;
+    border: 8px solid #f3f3f3;
+    border-top: 8px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@media (max-width: 480px) {
+    .spinner {
+        width: 40px;
+        height: 40px;
+        border-width: 6px;
+    }
+}
+
+
+/* Stop animation when button is disabled */
+.btn[disabled] {
+    animation: none !important;
 }

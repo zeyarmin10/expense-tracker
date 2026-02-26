@@ -1,9 +1,8 @@
-// expense.ts
 import {
   Component,
   OnInit,
   inject,
-  ViewChild,
+  ViewChild
 } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import {
@@ -11,7 +10,7 @@ import {
   FormGroup,
   Validators,
   ReactiveFormsModule,
-  FormsModule, // Import FormsModule
+  FormsModule,
 } from '@angular/forms';
 import { IExpense, ExpenseService } from '../../services/expense.service';
 import { ServiceICategory, CategoryService } from '../../services/category';
@@ -20,7 +19,6 @@ import {
   BehaviorSubject,
   combineLatest,
   map,
-  firstValueFrom,
 } from 'rxjs';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import Swal from 'sweetalert2';
@@ -41,11 +39,9 @@ import { ConfirmationModal } from '../common/confirmation-modal/confirmation-mod
 import { ToastService } from '../../services/toast';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../services/auth';
-import { UserDataService, UserProfile } from '../../services/user-data';
+import { UserProfile } from '../../services/user-data';
 import {
-  AVAILABLE_CURRENCIES,
   BURMESE_MONTH_ABBREVIATIONS,
-  CURRENCY_SYMBOLS,
 } from '../../core/constants/app.constants';
 
 import { FormatService } from '../../services/format.service';
@@ -56,7 +52,7 @@ import { FormatService } from '../../services/format.service';
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    FormsModule, // Add FormsModule here
+    FormsModule,
     FontAwesomeModule,
     CategoryModalComponent,
     TranslateModule,
@@ -97,6 +93,9 @@ export class Expense implements OnInit {
 
   editingExpenseId: string | null = null;
   public userRole: string | null = null;
+  isSaving = false;
+  isNewExpenseFormVisible = true;
+  objectKeys = Object.keys;
 
   faPlus = faPlus;
   faEdit = faEdit;
@@ -195,6 +194,8 @@ export class Expense implements OnInit {
         return;
     }
 
+    this.isSaving = true;
+
     const formValue = this.newExpenseForm.value;
     const newExpense: Omit<IExpense, 'id'> = {
       date: formValue.date,
@@ -221,6 +222,8 @@ export class Expense implements OnInit {
       this.resetFilter();
     } catch (error: any) {
       this.showErrorModal(this.translate.instant('ERROR_TITLE'), error.message || this.translate.instant('EXPENSE_ERROR_ADD'));
+    } finally {
+      this.isSaving = false;
     }
   }
 
@@ -268,6 +271,8 @@ export class Expense implements OnInit {
       return;
     }
 
+    this.isSaving = true;
+
     const formValue = this.editingForm.value;
     const updatedExpense: Partial<IExpense> = {
       ...formValue,
@@ -283,6 +288,8 @@ export class Expense implements OnInit {
       this.cancelEdit();
     } catch (error: any) {
       this.showErrorModal(this.translate.instant('ERROR_TITLE'), error.message || this.translate.instant('EXPENSE_ERROR_UPDATE'));
+    } finally {
+        this.isSaving = false;
     }
   }
 
@@ -303,11 +310,14 @@ export class Expense implements OnInit {
 
     const subscription = this.deleteConfirmationModal.confirmed.subscribe(async (confirmed: boolean) => {
       if (confirmed) {
+        this.isSaving = true;
         try {
           await this.expenseService.deleteExpense(expenseId);
           this.toastService.showSuccess(this.translate.instant('EXPENSE_DELETED_SUCCESS'));
         } catch (error: any) {
           this.showErrorModal(this.translate.instant('ERROR_TITLE'), error.message || this.translate.instant('DATA_DELETE_ERROR'));
+        } finally {
+            this.isSaving = false;
         }
       }
       subscription.unsubscribe();
