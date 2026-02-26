@@ -41,11 +41,24 @@
                 </li>
             </ul>
 
-            <ul class="navbar-nav ms-auto mb-2 mb-lg-0 ps-2">
-                <li class="nav-item dropdown text-center" *ngIf="currentUser$ | async as user">
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0 ps-2" *ngIf="currentUser$ | async as user">
+                <li class="nav-item dropdown text-center" *ngIf="isGroupAccount$ | async">
+                    <a class="nav-link dropdown-toggle" href="#" id="groupMemberDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <fa-icon [icon]="faUsers"></fa-icon>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="groupMemberDropdown">
+                        <li *ngFor="let member of groupMembers$ | async">
+                            <a class="dropdown-item" [class.text-info]="member.uid === user.uid" href="#">
+                                {{ member.displayName }} ({{member.role}})
+                                <span *ngIf="member.uid === user.uid"> ({{ 'NAV_YOU' | translate }})</span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
+                <li class="nav-item dropdown text-center">
                     <a class="nav-link dropdown-toggle text-center" href="#" id="navbarDropdown" role="button"
                         data-bs-toggle="dropdown" aria-expanded="false">
-                        <fa-icon [icon]="faUsers" class="me-2" *ngIf="isGroupAccount$ | async"></fa-icon>
                         {{ user.displayName || 'Profile' }}
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end text-center" aria-labelledby="navbarDropdown">
@@ -62,17 +75,6 @@
                     </ul>
                 </li>
             </ul>
-            <!-- <ul class="navbar-nav ms-auto mb-2 mb-lg-0 ps-2">
-                <li class="nav-item text-center">
-                    <a class="nav-link" routerLink="/profile" routerLinkActive="active-link"
-                        (click)="closeNavbarMenu()">
-                        {{ userDisplayName$ | async }}
-                    </a>
-                </li>
-                <li class="nav-item text-center">
-                    <a class="nav-link" (click)="logout()" style="cursor: pointer;">{{ 'NAV_LOGOUT' | translate }}</a>
-                </li>
-            </ul> -->
         </div>
     </div>
 </nav>

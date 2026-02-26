@@ -2,8 +2,8 @@ import { Injectable, inject, Injector } from '@angular/core';
 import { Database, ref, push, update, onValue } from '@angular/fire/database';
 import { AuthService } from './auth';
 import { CategoryService } from './category';
-import { firstValueFrom, map, Observable, of } from 'rxjs';
-import { UserDataService } from './user-data';
+import { combineLatest, firstValueFrom, map, Observable, of, switchMap } from 'rxjs';
+import { UserDataService, UserProfile } from './user-data';
 import { Group } from './group.model'; // Import Group from the new model file
 
 @Injectable({
@@ -118,6 +118,40 @@ export class GroupService {
       // On unsubscribe, Firebase listener is detached
       return { unsubscribe };
     });
+  }
+
+  getGroupMembers(groupId: string): Observable<any[]> {
+    if (!groupId) {
+      return of([]);
+    }
+    const membersRef = ref(this.db, `group_members/${groupId}`);
+
+    return new Observable<{[uid: string]: {role: string}} | null>(observer => {
+      const unsubscribe = onValue(membersRef, snapshot => {
+        observer.next(snapshot.exists() ? snapshot.val() : null);
+      }, error => observer.error(error));
+      return { unsubscribe };
+    }).pipe(
+        switchMap(members => {
+            if (!members) {
+                return of([]);
+            }
+            const memberObservables = Object.keys(members).map(uid => {
+                const role = (members as any)[uid].role;
+                return this.getUserDataService().getUserProfile(uid).pipe(
+                    map(profile => ({
+                        uid: uid,
+                        displayName: profile?.displayName || 'Unknown Member',
+                        role: role
+                    }))
+                );
+            });
+            if (memberObservables.length === 0) {
+                return of([]);
+            }
+            return combineLatest(memberObservables);
+        })
+    );
   }
 
   async removeMember(groupId: string, memberId: string): Promise<void> {

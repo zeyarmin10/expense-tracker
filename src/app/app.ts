@@ -12,6 +12,7 @@ import { faRightFromBracket, faUsers } from '@fortawesome/free-solid-svg-icons';
 import { InvitationService } from './services/invitation.service';
 import { DataManagerService } from './services/data-manager';
 import { ToastService } from './services/toast';
+import { GroupService } from './services/group.service';
 
 @Component({
   selector: 'app-root',
@@ -34,8 +35,9 @@ export class App implements OnInit {
   userDisplayName$: Observable<string | null>;
   isGroupAdmin$: Observable<boolean>;
   isGroupAccount$: Observable<boolean>;
+  groupMembers$: Observable<any[]>; 
   faRightFromBracket = faRightFromBracket;
-  faUsers = faUsers;
+  faUsers = faUsers; 
   currentLang: string;
 
   private authService = inject(AuthService);
@@ -44,6 +46,7 @@ export class App implements OnInit {
   private invitationService = inject(InvitationService);
   private dataManager = inject(DataManagerService);
   private toastService = inject(ToastService);
+  private groupService = inject(GroupService);
 
   constructor(private translate: TranslateService) {
     this.translate.setDefaultLang('en');
@@ -61,7 +64,6 @@ export class App implements OnInit {
         if (profile?.accountType !== 'group' || !profile?.roles) {
           return false;
         }
-        // Check if any role in the roles object is 'admin'
         const userRoles = Object.values(profile.roles);
         return userRoles.includes('admin');
       })
@@ -69,6 +71,15 @@ export class App implements OnInit {
 
     this.isGroupAccount$ = this.authService.userProfile$.pipe(
       map(profile => profile?.accountType === 'group')
+    );
+
+    this.groupMembers$ = this.authService.userProfile$.pipe(
+      switchMap(profile => {
+        if (profile && profile.accountType === 'group' && profile.groupId) {
+          return this.groupService.getGroupMembers(profile.groupId);
+        }
+        return of([]);
+      })
     );
 
     const isLoggedIn$ = this.currentUser$.pipe(map(user => !!user));
