@@ -162,10 +162,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
       map((user) => user?.displayName || null)
     );
 
-    this.authService.currentUser$
+    this.authService.userProfile$
       .pipe(
-        filter((user): user is import('@angular/fire/auth').User => !!user),
-        switchMap((user) => this.userDataService.getUserProfile(user.uid)),
+        filter((userProfile): userProfile is UserProfile => !!userProfile),
         takeUntil(this.destroy$)
       )
       .subscribe((userProfile) => {
@@ -178,7 +177,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       });
   }
 
-  private setDashboardDateRange(userProfile: UserProfile | null): void {
+  private setDashboardDateRange(userProfile: UserProfile): void {
     const today = new Date();
     const currentYear = today.getFullYear();
     let startDate: Date, endDate: Date;

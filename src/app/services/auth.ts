@@ -66,20 +66,26 @@ export class AuthService {
               return groupService.getGroupSettings(profile.groupId).pipe(
                 map(groupSettings => {
                   if (groupSettings) {
-                    return {
+                    // For group members, group settings ALWAYS take precedence.
+                    // The user's personal budget settings are ignored.
+                    // Fallback to null to prevent 'undefined' properties, which can cause issues downstream.
+                    const groupProfile: UserProfile = {
                       ...profile,
-                      currency: groupSettings.currency || profile.currency,
-                      budgetPeriod: (groupSettings.budgetPeriod as UserProfile['budgetPeriod']) || profile.budgetPeriod,
-                      budgetStartDate: groupSettings.budgetStartDate || profile.budgetStartDate,
-                      budgetEndDate: groupSettings.budgetEndDate || profile.budgetEndDate,
-                      selectedBudgetPeriodId: groupSettings.selectedBudgetPeriodId || profile.selectedBudgetPeriodId
+                      currency: groupSettings.currency,
+                      budgetPeriod: (groupSettings.budgetPeriod || null) as UserProfile['budgetPeriod'],
+                      budgetStartDate: groupSettings.budgetStartDate || null,
+                      budgetEndDate: groupSettings.budgetEndDate || null,
+                      selectedBudgetPeriodId: groupSettings.selectedBudgetPeriodId || null,
                     };
+                    return groupProfile;
                   } else {
+                    // Group data not found, return user's own profile
                     return profile;
                   }
                 })
               );
             } else {
+              // Not a group member, return user's own profile
               return of(profile);
             }
           })

@@ -323,62 +323,51 @@ export class Profit implements OnInit, OnDestroy {
       })
     );
 
-    // Fetch user profile and set default currency
-    const profileSubscription = this.authService.currentUser$
-      .pipe(
-        switchMap((user) =>
-          user?.uid ? this.userDataService.getUserProfile(user.uid) : of(null)
-        ),
-      )
-      .subscribe((profile) => {
+    // CORRECTED: Use the userProfile$ from AuthService to get group-aware settings
+    const profileSubscription = this.authService.userProfile$.subscribe((profile) => {
         this.userProfile = profile;
         if(profile) {
-        const defaultCurrency = profile?.currency || 'MMK';
-        // Note: 'currency' is disabled, so we use setValue on the control.
-        this.incomeForm.get('currency')?.setValue(defaultCurrency);
-        this.resetForm();
+          const defaultCurrency = profile?.currency || 'MMK';
+          // Note: 'currency' is disabled, so we use setValue on the control.
+          this.incomeForm.get('currency')?.setValue(defaultCurrency);
+          this.resetForm();
 
-        const budgetPeriod = profile?.budgetPeriod;
-        let dateFilter: string;
+          const budgetPeriod = profile?.budgetPeriod;
+          let dateFilter: string;
 
-        switch (budgetPeriod) {
-          case 'yearly':
-            dateFilter = 'currentYear';
-            break;
-          case 'monthly':
-            dateFilter = 'currentMonth';
-            break;
-          case 'weekly':
-            dateFilter = 'currentWeek';
-            break;
-          case 'custom':
-            if (profile?.budgetStartDate && profile?.budgetEndDate) {
-              // this.setCustomDateFilter(
-              //   profile.budgetStartDate,
-              //   profile.budgetEndDate
-              // );
-              this.startDate = profile.budgetStartDate;
-              this.endDate = profile.budgetEndDate;
-              dateFilter = 'custom';
-            } else {
+          switch (budgetPeriod) {
+            case 'yearly':
+              dateFilter = 'currentYear';
+              break;
+            case 'monthly':
               dateFilter = 'currentMonth';
-            }
-            break;
-          default:
-            dateFilter = 'currentMonth';
-        }
+              break;
+            case 'weekly':
+              dateFilter = 'currentWeek';
+              break;
+            case 'custom':
+              if (profile?.budgetStartDate && profile?.budgetEndDate) {
+                this.startDate = profile.budgetStartDate;
+                this.endDate = profile.budgetEndDate;
+                dateFilter = 'custom';
+              } else {
+                dateFilter = 'currentMonth';
+              }
+              break;
+            default:
+              dateFilter = 'currentMonth';
+          }
 
-        this.setDateFilter(dateFilter, true);
+          this.setDateFilter(dateFilter, true);
 
-        if (profile.accountType === 'group' && profile.roles && typeof profile.roles === 'object' && Object.keys(profile.roles).length > 0) {
-          this.userRole = Object.values(profile.roles)[0]; 
-        } else {
-          this.userRole = null;
-        }
+          if (profile.accountType === 'group' && profile.roles && typeof profile.roles === 'object' && Object.keys(profile.roles).length > 0) {
+            this.userRole = Object.values(profile.roles)[0];
+          } else {
+            this.userRole = null;
+          }
       }
-      });
-      this.subscriptions.add(profileSubscription);
-
+    });
+    this.subscriptions.add(profileSubscription);
   }
 
   setDateFilter(filter: string, isInitialLoad: boolean = false): void {

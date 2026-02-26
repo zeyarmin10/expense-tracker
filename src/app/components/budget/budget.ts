@@ -203,7 +203,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
     const filteredData$ = combineLatest([
       this.budgets$,
       this.expenses$,
-      this.dateFilter$, 
+      this.dateFilter$,
     ]).pipe(
       map(([budgets, expenses, dateRange]) => {
         const start = new Date(dateRange.start);
@@ -220,7 +220,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
           }
           return false;
         })
-        .sort((a, b) => new Date(a.period!).getTime() - new Date(b.period!).getTime());        
+        .sort((a, b) => new Date(a.period!).getTime() - new Date(b.period!).getTime());
 
         const filteredExpenses = expenses.filter((e) => {
           const expenseDate = new Date(e.date);
@@ -292,8 +292,8 @@ export class BudgetComponent implements OnInit, OnDestroy {
             const balance = totalBudget - data.expenseAmount;
 
             return {
-              sortDate: monthDate, 
-              month: this.formatLocalizedDateSummary(monthDate), 
+              sortDate: monthDate,
+              month: this.formatLocalizedDateSummary(monthDate),
               total: { [currency]: data.expenseAmount },
               budget: {
                 amount: totalBudget,
@@ -666,51 +666,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.setDateFilter(this.selectedDateFilter);
-
-    this.userProfile$ = this.authService.currentUser$.pipe(
-      switchMap((user) => {
-        if (user?.uid) {
-          return this.userDataService.getUserProfile(user.uid);
-        }
-        return of(null);
-      })
-    );
-
-    const profileSubscription = this.userProfile$.subscribe((profile) => {
-      this.userProfile = profile;
-      if (profile) {
-        this.setInitialDateFilter(profile);
-
-        const defaultCurrency = profile.currency || 'MMK';
-        this.budgetForm.get('currency')?.setValue(defaultCurrency);
-
-        if (profile.accountType === 'group' && profile.roles && typeof profile.roles === 'object' && Object.keys(profile.roles).length > 0) {
-          this.userRole = Object.values(profile.roles)[0]; 
-        } else {
-          this.userRole = null;
-        }
-      }
-    });
-
-    this.subscriptions.add(profileSubscription);
-
-    this.categories$ = this.categoryService
-      .getCategories()
-      .pipe(
-        map((categories) => [
-          { id: 'all', name: this.translate.instant('ALL_CATEGORIES') },
-          ...categories,
-        ])
-      );
-
-    this.subscriptions.add(
-      this.categories$.subscribe((categories) => {
-        this.categories = categories;
-      })
-    );
-
-    this.budgetForm.controls['currency'].disable();
+    // --- Initialize Language ---
     const storedLang = localStorage.getItem('selectedLanguage');
     if (storedLang) {
       this.translate.use(storedLang);
@@ -721,8 +677,46 @@ export class BudgetComponent implements OnInit, OnDestroy {
       );
     }
     Chart.defaults.font.family = 'MyanmarUIFont, Arial, sans-serif';
-  }
 
+    // --- Initialize Date Filter & User Profile ---
+    this.setDateFilter(this.selectedDateFilter);
+    
+    // CORRECTED: Use the userProfile$ from AuthService which includes group settings
+    this.userProfile$ = this.authService.userProfile$;
+
+    const profileSubscription = this.userProfile$.subscribe((profile) => {
+      this.userProfile = profile;
+      if (profile) {
+        this.setInitialDateFilter(profile);
+
+        const defaultCurrency = profile.currency || 'MMK';
+        this.budgetForm.get('currency')?.setValue(defaultCurrency);
+        this.budgetForm.controls['currency'].disable();
+
+        if (profile.accountType === 'group' && profile.roles && typeof profile.roles === 'object' && Object.keys(profile.roles).length > 0) {
+          this.userRole = Object.values(profile.roles)[0];
+        } else {
+          this.userRole = null;
+        }
+      }
+    });
+    this.subscriptions.add(profileSubscription);
+
+    // --- Initialize Categories ---
+    this.categories$ = this.categoryService
+      .getCategories()
+      .pipe(
+        map((categories) => [
+          { id: 'all', name: this.translate.instant('ALL_CATEGORIES') },
+          ...categories,
+        ])
+      );
+    this.subscriptions.add(
+      this.categories$.subscribe((categories) => {
+        this.categories = categories;
+      })
+    );
+  }
 
   ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
@@ -765,7 +759,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
       this.budgetService
         .getBudgets()
         .pipe(
-          take(1) 
+          take(1)
         )
         .subscribe((budgets) => {
           const periodDate = new Date(formValue.period);
@@ -953,8 +947,8 @@ export class BudgetComponent implements OnInit, OnDestroy {
 
   setInitialDateFilter(profile: UserProfile | null): void {
     const budgetPeriod = profile?.budgetPeriod;
-    const startMonth = profile?.budgetStartDate; 
-    const endMonth = profile?.budgetEndDate; 
+    const startMonth = profile?.budgetStartDate;
+    const endMonth = profile?.budgetEndDate;
 
     let filterValue: string = 'currentMonth';
 
@@ -963,7 +957,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
         this.startDate = startMonth;
         this.endDate = endMonth;
         this.setDateFilter('custom');
-        return; 
+        return;
       }
 
       switch (budgetPeriod) {
@@ -987,7 +981,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
   setCustomBudgetRange(startMonth: string, endMonth: string): void {
     this.startDate = `${startMonth}-01`;
 
-    const monthIndex = parseInt(endMonth.substring(5), 10); 
+    const monthIndex = parseInt(endMonth.substring(5), 10);
     const year = parseInt(endMonth.substring(0, 4), 10);
 
     const lastDayOfMonth = new Date(year, monthIndex, 0);
@@ -1004,14 +998,14 @@ export class BudgetComponent implements OnInit, OnDestroy {
       'lastSixMonths',
       'currentYear',
       'lastYear',
-      'currentWeek', 
+      'currentWeek',
     ];
 
     if (serviceFilters.includes(filter)) {
       const dateRange = this.dateFilterService.getDateRange(
         this.datePipe,
         filter,
-        this.startDate, 
+        this.startDate,
         this.endDate
       );
       this.dateFilter$.next(dateRange);
@@ -1056,7 +1050,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
             x: {
               stacked: false,
               beginAtZero: true,
-              
+
             },
             y: {
               stacked: false,

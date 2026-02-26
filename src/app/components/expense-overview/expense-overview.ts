@@ -129,21 +129,17 @@ export class ExpenseOverview implements OnInit {
     this.startDate = this.datePipe.transform(oneYearAgo, 'yyyy-MM-dd') || '';
     this.endDate = this.datePipe.transform(now, 'yyyy-MM-dd') || '';
 
-    this.setDateFilter('currentMonth');
+    // Use authService.userProfile$ which correctly merges group settings.
+    this.userProfile$ = this.authService.userProfile$;
 
-    // Fetch user profile
-    this.userProfile$ = this.authService.currentUser$.pipe(
-      switchMap((user) => {
-        if (user?.uid) {
-          return this.userDataService.getUserProfile(user.uid);
-        }
-        return of(null);
-      })
-    );
-
-    // Subscribe to userProfile$ once to set the initial date filter
+    // Subscribe to the definitive user profile to set the initial date filter.
     this.userProfile$.subscribe((profile) => {
-      this.setInitialDateFilter(profile);
+      if (profile) {
+        this.setInitialDateFilter(profile);
+      } else {
+        // If there's no profile, fall back to a default.
+        this.setDateFilter('currentMonth');
+      }
     });
 
     this.filteredExpenses$ = combineLatest([

@@ -1,10 +1,9 @@
-
 import { Injectable, inject, Injector } from '@angular/core';
-import { Database, ref, push, update, get } from '@angular/fire/database';
+import { Database, ref, push, update, onValue } from '@angular/fire/database';
 import { AuthService } from './auth';
 import { CategoryService } from './category';
 import { firstValueFrom, map, Observable, of } from 'rxjs';
-import { UserDataService, UserProfile } from './user-data';
+import { UserDataService } from './user-data';
 import { Group } from './group.model'; // Import Group from the new model file
 
 @Injectable({
@@ -94,16 +93,12 @@ export class GroupService {
     if (!groupId) return of(null);
     const groupRef = ref(this.db, `groups/${groupId}/groupName`);
     return new Observable(observer => {
-      get(groupRef).then(snapshot => {
-        if (snapshot.exists()) {
-          observer.next(snapshot.val());
-        } else {
-          observer.next(null);
-        }
-        observer.complete();
-      }).catch(error => {
+      const unsubscribe = onValue(groupRef, snapshot => {
+        observer.next(snapshot.exists() ? snapshot.val() : null);
+      }, error => {
         observer.error(error);
       });
+      return { unsubscribe };
     });
   }
 
@@ -111,16 +106,17 @@ export class GroupService {
     if (!groupId) return of(null);
     const groupRef = ref(this.db, `groups/${groupId}`);
     return new Observable(observer => {
-      get(groupRef).then(snapshot => {
+      const unsubscribe = onValue(groupRef, snapshot => {
         if (snapshot.exists()) {
           observer.next(snapshot.val());
         } else {
           observer.next(null);
         }
-        observer.complete();
-      }).catch(error => {
+      }, error => {
         observer.error(error);
       });
+      // On unsubscribe, Firebase listener is detached
+      return { unsubscribe };
     });
   }
 
