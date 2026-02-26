@@ -281,6 +281,8 @@ export class UserProfileComponent implements OnInit {
                     const groupSettings = {
                         currency: profileData.currency,
                         budgetPeriod: profileData.budgetPeriod,
+                        budgetStartDate: profileData.budgetStartDate,
+                        budgetEndDate: profileData.budgetEndDate,
                         selectedBudgetPeriodId: profileData.selectedBudgetPeriodId,
                     };
                     await this.groupService.updateGroupSettings(this.groupId, groupSettings);

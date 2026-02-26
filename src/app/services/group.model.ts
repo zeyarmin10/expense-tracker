@@ -7,8 +7,8 @@ export interface Group {
   members?: { [key: string]: Role };
   // Budget settings
   budgetPeriod?: 'monthly' | 'quarterly' | 'yearly' | 'custom' | 'weekly' | null;
-  budgetStartDate?: string;
-  budgetEndDate?: string;
+  budgetStartDate?: string | null;
+  budgetEndDate?: string | null;
   selectedBudgetPeriodId?: string | null;
   // Tracking
   ownerId: string;

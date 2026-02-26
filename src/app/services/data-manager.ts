@@ -98,6 +98,8 @@ export class DataManagerService {
     const userProfile = await firstValueFrom(this.userDataService.getUserProfile(memberId));
     if (userProfile?.groupId === groupId) {
       updates[`/users/${memberId}/groupId`] = null;
+      updates[`/users/${memberId}/groupId`] = null;
+      updates[`/users/${memberId}/accountType`] = 'personal';
     }
 
     return update(ref(this.db), updates);

@@ -1,3 +1,4 @@
+
 import { Injectable, inject, Injector } from '@angular/core';
 import { Database, ref, push, update, get } from '@angular/fire/database';
 import { AuthService } from './auth';
@@ -121,5 +122,16 @@ export class GroupService {
         observer.error(error);
       });
     });
+  }
+
+  async removeMember(groupId: string, memberId: string): Promise<void> {
+    const updates: { [key: string]: any } = {};
+
+    updates[`/group_members/${groupId}/${memberId}`] = null;
+    updates[`/users/${memberId}/groupId`] = null;
+    updates[`/users/${memberId}/accountType`] = 'personal';
+    updates[`/users/${memberId}/roles/${groupId}`] = null;
+
+    await update(ref(this.db), updates);
   }
 }

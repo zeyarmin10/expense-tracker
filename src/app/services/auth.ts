@@ -127,6 +127,7 @@ export class AuthService {
       await this.handleInvite(userCredential.user);
       return userCredential.user;
     } catch (error: any) {
+      console.error('Google sign-in error:', error);
       throw new Error(this.getFirebaseErrorMessage(error));
     }
   }
@@ -152,11 +153,15 @@ export class AuthService {
             roles: { [inviteData.groupId]: role }
           });
 
-          await inviteRef.update({
-            status: 'accepted',
-            acceptedBy: user.uid,
-            acceptedAt: new Date().toISOString()
-          });
+          try {
+            await inviteRef.update({
+              status: 'accepted',
+              acceptedBy: user.uid,
+              acceptedAt: new Date().toISOString()
+            });
+          } catch (error) {
+            console.warn('Invitation status could not be updated, but the user has been successfully added to the group. This may be due to database security rules, and this warning can likely be ignored.', error);
+          }
         }
       }
     }
