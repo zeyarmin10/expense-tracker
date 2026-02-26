@@ -93,13 +93,13 @@ export class DataManagerService {
   async removeGroupMember(groupId: string, memberId: string): Promise<void> {
     const updates: { [key:string]: any } = {};
     updates[`/group_members/${groupId}/${memberId}`] = null;
-    updates[`/users/${memberId}/roles/${groupId}`] = null;
 
     const userProfile = await firstValueFrom(this.userDataService.getUserProfile(memberId));
     if (userProfile?.groupId === groupId) {
       updates[`/users/${memberId}/groupId`] = null;
       updates[`/users/${memberId}/groupId`] = null;
       updates[`/users/${memberId}/accountType`] = 'personal';
+      updates[`/users/${memberId}/roles/${groupId}`] = null;
     }
 
     return update(ref(this.db), updates);
