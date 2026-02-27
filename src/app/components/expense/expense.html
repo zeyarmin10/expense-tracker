@@ -114,17 +114,17 @@
 
           <!-- Filter Section -->
           <div class="row g-2 mb-4 align-items-center">
-            <div class="col-md">
+            <div class="col-10 col-sm-10 col-md-8 col-lg-8">
               <div class="form-floating">
                 <input type="date" class="form-control" id="selectedDate" [ngModel]="(_selectedDate$ | async)"
                   (ngModelChange)="onDateChange($event)" [ngModelOptions]="{standalone: true}">
                 <label for="selectedDate">{{ "SELECT_DATE_LABEL" | translate }}</label>
               </div>
             </div>
-            <div class="col-md-auto d-flex justify-content-end justify-content-sm-end gap-2">
+            <div class="col-2 col-sm-2 col-md-4 col-lg-4 d-flex justify-content-center justify-content-sm-center gap-2">
               <button type="button" class="btn btn-outline-secondary" (click)="resetFilter()">
                 <fa-icon [icon]="faSync"></fa-icon>
-                <span class="d-none d-sm-inline ms-2">{{ 'RESET_FILTER_BUTTON' | translate }}</span>
+                <span class="d-none d-md-inline ms-2">{{ 'RESET_FILTER_BUTTON' | translate }}</span>
               </button>
             </div>
           </div>
@@ -166,7 +166,7 @@
                     expense.unit }} at {{ formatService.formatAmountWithSymbol(expense.price, expense.currency) }}
                     each</small>
                   <div class="mt-2 action-buttons d-flex justify-content-between">
-                    <div class="col d-flex justify-content-start align-items-center w-75">
+                    <div class="col-10 d-flex justify-content-start align-items-center">
                       <button class="btn btn-sm btn-outline-info me-2" (click)="startEdit(expense)"
                         [disabled]="editingExpenseId !== null">
                         <fa-icon [icon]="faEdit" class="me-1"></fa-icon> {{ "EDIT_BUTTON_LABEL" | translate }}
@@ -177,7 +177,7 @@
                         <fa-icon [icon]="faTrash" class="me-1"></fa-icon> {{ "DELETE_BUTTON_LABEL" | translate }}
                       </button>
                     </div>
-                    <div class="col d-flex justify-content-end">
+                    <div class="col-2 d-flex justify-content-end align-items-center">
                       <fa-icon *ngIf="userProfile?.accountType === 'group'" [icon]="faInfoCircle"
                         class="ms-2 text-info cursor-pointer icon-size" (click)="showExpenseInfo(expense)">
                       </fa-icon>
