@@ -91,8 +91,8 @@
                 </div>
 
                 <!-- Submit Button -->
-                <div class="d-grid">
-                  <button type="submit" class="btn btn-info btn-lg shine-effect text-white"
+                <div class="d-grid d-md-flex justify-content-md-end">
+                  <button type="submit" class="btn btn-info shine-effect text-white"
                     [disabled]="newExpenseForm.invalid">
                     <fa-icon [icon]="faSave" class="me-2"></fa-icon>
                     {{ "SAVE_BUTTON_LABEL" | translate }}
@@ -113,19 +113,19 @@
           <h3 class="card-title text-center mb-3">{{ "EXPENSE_YOUR_EXPENSES_TITLE" | translate }}</h3>
 
           <!-- Filter Section -->
-          <div class="row g-2 mb-4 align-items-center">
-            <div class="col-10 col-sm-10 col-md-8 col-lg-8">
-              <div class="form-floating">
-                <input type="date" class="form-control" id="selectedDate" [ngModel]="(_selectedDate$ | async)"
-                  (ngModelChange)="onDateChange($event)" [ngModelOptions]="{standalone: true}">
-                <label for="selectedDate">{{ "SELECT_DATE_LABEL" | translate }}</label>
+          <div class="row justify-content-start mb-4">
+            <div class="col-12 col-lg-6">
+              <div class="input-group">
+                <div class="form-floating flex-grow-1">
+                  <input type="date" class="form-control" id="selectedDate" [ngModel]="(_selectedDate$ | async)"
+                    (ngModelChange)="onDateChange($event)" [ngModelOptions]="{standalone: true}">
+                  <label for="selectedDate">{{ "SELECT_DATE_LABEL" | translate }}</label>
+                </div>
+                <button type="button" class="btn btn-outline-secondary" (click)="resetFilter()">
+                  <fa-icon [icon]="faSync"></fa-icon>
+                  <span class="d-none ms-2">{{ 'RESET_FILTER_BUTTON' | translate }}</span>
+                </button>
               </div>
-            </div>
-            <div class="col-2 col-sm-2 col-md-4 col-lg-4 d-flex justify-content-center justify-content-sm-center gap-2">
-              <button type="button" class="btn btn-outline-secondary" (click)="resetFilter()">
-                <fa-icon [icon]="faSync"></fa-icon>
-                <span class="d-none d-md-inline ms-2">{{ 'RESET_FILTER_BUTTON' | translate }}</span>
-              </button>
             </div>
           </div>
 
@@ -152,7 +152,7 @@
 
             <div class="list-group" *ngIf="expenses.length > 0">
               <div *ngFor="let expense of expenses"
-                class="list-group-item list-group-item-action flex-column align-items-start">
+                class="list-group-item list-group-item-action flex-column align-items-start pb-0">
                 <!-- Default View -->
                 <div *ngIf="editingExpenseId !== expense.id">
                   <div class="d-flex w-100 justify-content-between mb-1">
@@ -177,11 +177,14 @@
                         <fa-icon [icon]="faTrash" class="me-1"></fa-icon> {{ "DELETE_BUTTON_LABEL" | translate }}
                       </button>
                     </div>
-                    <div class="col-2 d-flex justify-content-end align-items-center">
+                    <div class="col-2 d-flex flex-column jstify-content-end align-items-end">
                       <fa-icon *ngIf="userProfile?.accountType === 'group'" [icon]="faInfoCircle"
                         class="ms-2 text-info cursor-pointer icon-size" (click)="showExpenseInfo(expense)">
                       </fa-icon>
                     </div>
+                  </div>
+                  <div *ngIf="userProfile?.accountType === 'group' && expense.userDisplayName" class="text-secondary small x-small-text text-end m-0 p-0 w-100">
+                    {{ "EXPENSE_CREATED_BY" | translate: { name: expense.userDisplayName } }}
                   </div>
                 </div>
 

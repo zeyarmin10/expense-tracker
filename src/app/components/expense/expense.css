@@ -72,6 +72,11 @@
     margin-top: 1rem;
 }
 
+.x-small-text {
+    font-size: x-small;
+    text-align: end;
+}
+
 /* Shine animation for buttons */
 @keyframes shine {
     0% {

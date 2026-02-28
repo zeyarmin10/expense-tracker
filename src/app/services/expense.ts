@@ -29,6 +29,7 @@ export type ServiceIExpense = IExpense & {
   totalCost: number;
   updatedByName?: string;
   createdByName?: string; // Add createdByName to the service model
+  userDisplayName?: string;
 };
 
 @Injectable({
@@ -114,6 +115,7 @@ export class ExpenseService {
                 totalCost: expense.quantity * expense.price,
                 createdByName: createdByName || 'Former Member',
                 updatedByName: updatedByName,
+                userDisplayName: createdByName || 'Former Member',
               } as ServiceIExpense;
             });
 
@@ -254,6 +256,7 @@ export class ExpenseService {
                     totalCost: expense.quantity * expense.price,
                     createdByName: createdByName || 'Former Member',
                     updatedByName: updatedByName,
+                    userDisplayName: createdByName || 'Former Member',
                   } as ServiceIExpense);
                 } else {
                   reject('Expense not found.');

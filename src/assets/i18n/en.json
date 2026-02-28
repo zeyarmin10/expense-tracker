@@ -498,5 +498,6 @@
   "EXPENSE_INFO_TITLE": "Expense Info",
   "ITEM_NAME_INFO": "Item: {{itemName}}",
   "CREATED_BY": "Created by {{name}} on {{date}}",
-  "LAST_UPDATED_BY": "Last updated by {{name}} on {{date}}"
+  "LAST_UPDATED_BY": "Last updated by {{name}} on {{date}}",
+  "EXPENSE_CREATED_BY": "by {{name}}"
 }

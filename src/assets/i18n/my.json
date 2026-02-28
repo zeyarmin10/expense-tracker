@@ -498,5 +498,6 @@
   "EXPENSE_INFO_TITLE": "အသုံးစရိတ် အချက်အလက်",
   "ITEM_NAME_INFO": "ပစ္စည်း: {{itemName}}",
   "CREATED_BY": "{{date}} တွင် {{name}} မှ ထည့်သွင်းခဲ့သည်။",
-  "LAST_UPDATED_BY": "{{date}} တွင် {{name}} မှ နောက်ဆုံးပြင်ဆင်ခဲ့သည်။"
+  "LAST_UPDATED_BY": "{{date}} တွင် {{name}} မှ နောက်ဆုံးပြင်ဆင်ခဲ့သည်။",
+  "EXPENSE_CREATED_BY": "{{name}} မှ"
 }
