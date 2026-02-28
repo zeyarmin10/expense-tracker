@@ -11,13 +11,16 @@ import {
   orderByChild,
   equalTo,
   get,
+  startAt,
+  endAt,
+  Query,
 } from '@angular/fire/database';
 import { Observable, from, of, firstValueFrom } from 'rxjs';
-import { map, switchMap, catchError } from 'rxjs/operators';
+import { map, switchMap, catchError, filter, take } from 'rxjs/operators';
 import { DataIExpense as IExpense } from '../core/models/data';
 import { AuthService } from './auth';
 import { UAParser } from 'ua-parser-js';
-import { UserDataService } from './user-data';
+import { UserDataService, UserProfile } from './user-data';
 import { GroupService } from './group.service';
 
 export type ServiceIExpense = IExpense & { 
@@ -55,60 +58,72 @@ export class ExpenseService {
     return ref(this.db, `group_data/${groupId}/expenses/${expenseId}`);
   }
 
-  getExpenses(): Observable<ServiceIExpense[]> {
+  getExpenses(startDate?: Date, endDate?: Date): Observable<ServiceIExpense[]> {
     return this.authService.userProfile$.pipe(
+      filter((profile): profile is UserProfile => profile !== null),
+      take(1),
       switchMap(profile => {
-        if (!profile) {
-          return of([]);
-        }
-        const expensesRef = profile.groupId
+        const baseRef = profile.groupId
           ? this.getGroupExpensesRef(profile.groupId)
           : this.getExpensesRef(profile.uid);
 
-        return new Observable<ServiceIExpense[]>((observer) => {
-          onValue(
-            expensesRef,
-            async (snapshot) => {
-              const expensesData = snapshot.val();
-              if (!expensesData) {
-                observer.next([]);
-                return;
+        let expensesQuery: Query = baseRef;
+
+        if (startDate && endDate) {
+          const start = startDate.toISOString().split('T')[0];
+          const end = endDate.toISOString().split('T')[0];
+          expensesQuery = query(baseRef, orderByChild('date'), startAt(start), endAt(end));
+        }
+
+        return from(get(expensesQuery)).pipe(
+          switchMap(async (snapshot) => {
+            const expensesData = snapshot.val();
+            if (!expensesData) {
+              return [];
+            }
+
+            const userIds = new Set<string>();
+            Object.values(expensesData).forEach((expense: any) => {
+              if (expense.userId) userIds.add(expense.userId);
+              if (expense.updatedBy) userIds.add(expense.updatedBy);
+            });
+
+            const userProfilePromises = [...userIds].map(userId =>
+              firstValueFrom(this.userDataService.getUserProfile(userId)).then(profile => ({ userId, profile }))
+            );
+
+            const userProfilesArray = await Promise.all(userProfilePromises);
+            const userProfiles = userProfilesArray.reduce((acc, { userId, profile }) => {
+              if (profile) {
+                acc[userId] = profile;
               }
+              return acc;
+            }, {} as { [userId: string]: UserProfile });
 
-              const promises = Object.keys(expensesData).map(async (key) => {
-                const expense = expensesData[key] as IExpense;
-                let updatedByName: string | undefined = undefined;
-                let createdByName: string | undefined = expense.createdByName;
+            const expenses = Object.keys(expensesData).map((key) => {
+              const expense = expensesData[key] as IExpense;
+              let createdByName = expense.createdByName;
+              if(expense.userId && !createdByName) {
+                 createdByName = userProfiles[expense.userId]?.displayName;
+              }
+              const updatedByName = expense.updatedBy ? userProfiles[expense.updatedBy]?.displayName : undefined;
 
-                if (expense.updatedBy) {
-                  const userProfile = await firstValueFrom(this.userDataService.getUserProfile(expense.updatedBy));
-                  updatedByName = userProfile?.displayName || 'Unknown User';
-                }
+              return {
+                id: key,
+                ...expense,
+                totalCost: expense.quantity * expense.price,
+                createdByName: createdByName || 'Former Member',
+                updatedByName: updatedByName,
+              } as ServiceIExpense;
+            });
 
-                if (expense.userId && !createdByName) {
-                  const userProfile = await firstValueFrom(this.userDataService.getUserProfile(expense.userId));
-                  createdByName = userProfile?.displayName;
-                }
-
-                return {
-                  id: key,
-                  ...expense,
-                  totalCost: expense.quantity * expense.price,
-                  createdByName: createdByName || 'Former Member',
-                  updatedByName: updatedByName,
-                } as ServiceIExpense;
-              });
-              
-              const expenses = await Promise.all(promises);
-              observer.next(expenses);
-            },
-            (error) => observer.error(error)
-          );
-        });
-      }),
-      catchError((error) => {
-        console.error('Error fetching expenses:', error);
-        return of([]);
+            return expenses;
+          }),
+          catchError((error) => {
+            console.error('Error fetching expenses:', error);
+            return of([]);
+          })
+        );
       })
     );
   }

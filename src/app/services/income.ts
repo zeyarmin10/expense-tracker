@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { BehaviorSubject, Observable, of, firstValueFrom } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { BehaviorSubject, Observable, of, firstValueFrom, from } from 'rxjs';
+import { map, switchMap, catchError, filter, take } from 'rxjs/operators';
 import {
   Database,
   ref,
@@ -9,8 +9,15 @@ import {
   update,
   listVal,
   DatabaseReference,
+  query,
+  orderByChild,
+  startAt,
+  endAt,
+  Query,
+  get,
 } from '@angular/fire/database';
 import { AuthService } from './auth';
+import { UserProfile } from './user-data';
 
 export interface ServiceIIncome {
   id?: string; 
@@ -69,19 +76,39 @@ export class IncomeService {
     await push(incomesRef, newIncomeToSave);
   }
 
-  getIncomes(): Observable<ServiceIIncome[]> {
+  getIncomes(startDate?: Date, endDate?: Date): Observable<ServiceIIncome[]> {
     return this.authService.userProfile$.pipe(
+      filter((profile): profile is UserProfile => profile !== null),
+      take(1),
       switchMap((profile) => {
-        if (profile?.groupId) {
-            return listVal<ServiceIIncome>(this.getGroupIncomesRef(profile.groupId), {
-                keyField: 'id',
-            });
-        } else if (profile?.uid) {
-          return listVal<ServiceIIncome>(this.getIncomesRef(profile.uid), {
-            keyField: 'id',
-          });
+        const baseRef = profile.groupId
+          ? this.getGroupIncomesRef(profile.groupId)
+          : this.getIncomesRef(profile.uid);
+
+        let incomesQuery: Query = baseRef;
+
+        if (startDate && endDate) {
+          const start = startDate.toISOString().split('T')[0];
+          const end = endDate.toISOString().split('T')[0];
+          incomesQuery = query(baseRef, orderByChild('date'), startAt(start), endAt(end));
         }
-        return of([]); 
+
+        return from(get(incomesQuery)).pipe(
+          map(snapshot => {
+            const incomesData = snapshot.val();
+            if (!incomesData) {
+              return [];
+            }
+            return Object.keys(incomesData).map(key => ({
+              id: key,
+              ...incomesData[key]
+            }));
+          }),
+          catchError(error => {
+            console.error('Error fetching incomes:', error);
+            return of([]);
+          })
+        );
       })
     );
   }
@@ -129,10 +156,8 @@ export class IncomeService {
   }
 
   getIncomesByYear(year: number): Observable<ServiceIIncome[]> {
-    return this.getIncomes().pipe(
-      map((incomes) =>
-        incomes.filter((income) => new Date(income.date).getFullYear() === year)
-      )
-    );
+    const startDate = new Date(year, 0, 1);
+    const endDate = new Date(year, 11, 31);
+    return this.getIncomes(startDate, endDate);
   }
 }

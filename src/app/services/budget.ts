@@ -1,16 +1,17 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, of, firstValueFrom } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { Observable, of, firstValueFrom, from } from 'rxjs';
+import { switchMap, map, catchError, filter, take } from 'rxjs/operators';
 import {
   Database,
   ref,
   push,
   remove,
   update,
-  listVal,
   DatabaseReference,
+  get,
 } from '@angular/fire/database';
 import { AuthService } from './auth';
+import { UserProfile } from './user-data';
 
 export interface ServiceIBudget {
   id?: string;
@@ -71,20 +72,61 @@ export class BudgetService {
     await push(budgetsRef, newBudget);
   }
 
-  getBudgets(): Observable<ServiceIBudget[]> {
+  getBudgets(startDate?: Date, endDate?: Date): Observable<ServiceIBudget[]> {
     return this.authService.userProfile$.pipe(
+      filter((profile): profile is UserProfile => profile !== null),
+      take(1),
       switchMap(profile => {
-        if (profile?.groupId) {
-          return listVal<ServiceIBudget>(this.getGroupBudgetsRef(profile.groupId), {
-            keyField: 'id',
-          });
-        } else if (profile?.uid) {
-          return listVal<ServiceIBudget>(this.getBudgetsRef(profile.uid), {
-            keyField: 'id',
-          });
-        } else {
-          return of([]);
-        }
+        const baseRef = profile.groupId
+          ? this.getGroupBudgetsRef(profile.groupId)
+          : this.getBudgetsRef(profile.uid);
+
+        return from(get(baseRef)).pipe(
+          map(snapshot => {
+            const budgetsData = snapshot.val();
+            if (!budgetsData) {
+              return [];
+            }
+
+            let allBudgets: ServiceIBudget[] = Object.keys(budgetsData).map(key => ({
+              id: key,
+              ...budgetsData[key]
+            }));
+
+            if (startDate && endDate) {
+              const start = new Date(startDate.setHours(0, 0, 0, 0));
+              const end = new Date(endDate.setHours(23, 59, 59, 999));
+
+              allBudgets = allBudgets.filter(budget => {
+                if (!budget.period) return false;
+
+                const periodParts = budget.period.split('-').map(Number);
+                const year = periodParts[0];
+                const month = periodParts.length > 1 ? periodParts[1] - 1 : 0; // JS month is 0-indexed
+
+                if (budget.type === 'yearly') {
+                   const budgetStart = new Date(year, 0, 1);
+                   const budgetEnd = new Date(year, 11, 31, 23, 59, 59, 999);
+                   return budgetStart <= end && budgetEnd >= start;
+                }
+                
+                if (budget.type === 'monthly' || budget.type === 'weekly') {
+                  const budgetStart = new Date(year, month, 1);
+                  const budgetEnd = new Date(year, month + 1, 0, 23, 59, 59, 999);
+                  return budgetStart <= end && budgetEnd >= start;
+                }
+
+                return false;
+              });
+            }
+
+            return allBudgets;
+          }),
+          catchError(error => {
+            console.error('Error fetching budgets:', error);
+            return of([]);
+          })
+        );
       })
     );
   }
