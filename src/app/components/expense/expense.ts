@@ -72,7 +72,7 @@ export class Expense implements OnInit {
   newExpenseForm: FormGroup;
   editingForm: FormGroup | null = null;
 
-  expenses$: Observable<IExpense[]>;
+  expenses$!: Observable<IExpense[]>;
   categories$: Observable<ServiceICategory[]>;
 
   public _selectedDate$ = new BehaviorSubject<string>('');
@@ -82,8 +82,8 @@ export class Expense implements OnInit {
   private authService = inject(AuthService);
   public formatService = inject(FormatService);
 
-  displayedExpenses$: Observable<IExpense[]>;
-  totalExpensesByCurrency$: Observable<{ [key: string]: number }>;
+  displayedExpenses$!: Observable<IExpense[]>;
+  totalExpensesByCurrency$!: Observable<{ [key: string]: number }>;
 
   expenseService = inject(ExpenseService);
   categoryService = inject(CategoryService);
@@ -122,9 +122,31 @@ export class Expense implements OnInit {
       price: [0, [Validators.required, Validators.min(0)]],
     });
     
-    this.expenses$ = this.expenseService.getExpenses();
     this.categories$ = this.categoryService.getCategories();
 
+    const storedLang = localStorage.getItem('selectedLanguage');
+    this.translate.use(storedLang || this.translate.getBrowserLang() || 'en');
+  }
+
+  ngOnInit(): void {
+    this.loadExpenses();
+    this.route.paramMap.subscribe(params => {
+      const date = params.get('date');
+      const initialDate = date || this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
+      this._selectedDate$.next(initialDate);
+    });
+
+    this.authService.userProfile$.subscribe(profile => {
+        this.userProfile = profile;
+        if (profile?.roles && typeof profile.roles === 'object') {
+            this.userRole = Object.values(profile.roles)[0];
+        }
+    });
+    this.loadCategories();
+  }
+  
+  loadExpenses(): void {
+    this.expenses$ = this.expenseService.getExpenses();
     this.displayedExpenses$ = combineLatest([
       this.expenses$,
       this._selectedDate$,
@@ -153,27 +175,8 @@ export class Expense implements OnInit {
         }, {} as { [key: string]: number });
       })
     );
-
-    const storedLang = localStorage.getItem('selectedLanguage');
-    this.translate.use(storedLang || this.translate.getBrowserLang() || 'en');
   }
 
-  ngOnInit(): void {
-    this.route.paramMap.subscribe(params => {
-      const date = params.get('date');
-      const initialDate = date || this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
-      this._selectedDate$.next(initialDate);
-    });
-
-    this.authService.userProfile$.subscribe(profile => {
-        this.userProfile = profile;
-        if (profile?.roles && typeof profile.roles === 'object') {
-            this.userRole = Object.values(profile.roles)[0];
-        }
-    });
-    this.loadCategories();
-  }
-  
   onDateChange(date: string): void {
     this._selectedDate$.next(date);
     this.resetActiveFilters();
@@ -220,6 +223,7 @@ export class Expense implements OnInit {
           price: 0
       });
       this.resetFilter();
+      this.loadExpenses();
     } catch (error: any) {
       this.showErrorModal(this.translate.instant('ERROR_TITLE'), error.message || this.translate.instant('EXPENSE_ERROR_ADD'));
     } finally {
@@ -286,6 +290,7 @@ export class Expense implements OnInit {
       await this.expenseService.updateExpense(this.editingExpenseId, updatedExpense as any);
       this.toastService.showSuccess(this.translate.instant('EXPENSE_SUCCESS_UPDATED'));
       this.cancelEdit();
+      this.loadExpenses();
     } catch (error: any) {
       this.showErrorModal(this.translate.instant('ERROR_TITLE'), error.message || this.translate.instant('EXPENSE_ERROR_UPDATE'));
     } finally {
@@ -314,6 +319,7 @@ export class Expense implements OnInit {
         try {
           await this.expenseService.deleteExpense(expenseId);
           this.toastService.showSuccess(this.translate.instant('EXPENSE_DELETED_SUCCESS'));
+          this.loadExpenses();
         } catch (error: any) {
           this.showErrorModal(this.translate.instant('ERROR_TITLE'), error.message || this.translate.instant('DATA_DELETE_ERROR'));
         } finally {
