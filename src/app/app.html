@@ -1,9 +1,10 @@
-<nav class="navbar navbar-expand-lg" style="background-color: #e3f2fd;" *ngIf="showNavbar$ | async">
+<nav class="navbar navbar-expand-lg position-relative" style="background-color: #e3f2fd;" *ngIf="showNavbar$ | async">
     <div class="container-fluid">
         <a class="navbar-brand" routerLink="/">
             <img src="assets/images/Expense-Tracker-Logo.png" alt="Expense Tracker Logo"
                 class="img-fluid d-inline-block align-text-top" id="navbarLogo">
         </a>
+
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarColor03"
             aria-controls="navbarColor03" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
@@ -42,7 +43,8 @@
             </ul>
 
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0 ps-2" *ngIf="currentUser$ | async as user">
-                <li class="nav-item dropdown text-center" *ngIf="isGroupAccount$ | async">
+                <!-- Group Members Dropdown (Desktop Only) -->
+                <li class="nav-item dropdown text-center d-none d-lg-block" *ngIf="isGroupAccount$ | async">
                     <a class="nav-link dropdown-toggle" href="#" id="groupMemberDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <fa-icon [icon]="faUsers"></fa-icon>
                     </a>
@@ -73,6 +75,22 @@
                                 'NAV_LOGOUT' | translate
                                 }}</button></li>
                     </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <!-- Mobile-only centered group dropdown -->
+    <div class="d-lg-none position-absolute start-50 translate-middle-x" style="top: 1em; z-index: 1040;">
+        <div class="nav-item dropdown" *ngIf="isGroupAccount$ | async">
+            <a class="nav-link dropdown-toggle" href="#" id="groupMemberDropdownMobile" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <fa-icon [icon]="faUsers" size="lg"></fa-icon>
+            </a>
+            <ul class="dropdown-menu start-50 translate-middle-x" aria-labelledby="groupMemberDropdownMobile">
+                <li *ngFor="let member of groupMembers$ | async">
+                    <span class="dropdown-item" [class.text-info]="(currentUser$ | async)?.uid === member.uid">
+                        {{ member.displayName }} ({{member.role}})
+                        <span *ngIf="(currentUser$ | async)?.uid === member.uid"> ({{ 'NAV_YOU' | translate }})</span>
+                    </span>
                 </li>
             </ul>
         </div>
