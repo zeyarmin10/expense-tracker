@@ -44,6 +44,7 @@ export interface DataIExpense {
   categoryId?: string;
   itemName: string;
   quantity: number;
+  unit?: string;
   price: number; 
   totalCost?: number;
   currency: string;

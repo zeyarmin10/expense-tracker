@@ -1,7 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ExpenseService, IExpense } from '../../services/expense.service';
+import { ExpenseService, ServiceIExpense as IExpense } from '../../services/expense';
 import {
   Observable,
   BehaviorSubject,
@@ -78,8 +78,7 @@ export class ExpenseOverview implements OnInit {
   faMagnifyingGlass = faMagnifyingGlass;
 
   // --- Filtering and Search Properties ---
-  allExpenses$: Observable<IExpense[]> =
-    this.expenseService.getExpenses();
+  allExpenses$: Observable<IExpense[]> = this.expenseService.getExpenses();
   filteredExpenses$: Observable<IExpense[]> = of([]);
   selectedDateFilter: string = 'currentMonth';
   startDate: string = '';

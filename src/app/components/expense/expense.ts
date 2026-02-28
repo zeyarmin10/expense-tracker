@@ -12,7 +12,7 @@ import {
   ReactiveFormsModule,
   FormsModule,
 } from '@angular/forms';
-import { IExpense, ExpenseService } from '../../services/expense.service';
+import { ServiceIExpense as IExpense, ExpenseService } from '../../services/expense';
 import { ServiceICategory, CategoryService } from '../../services/category';
 import {
   Observable,
@@ -209,7 +209,7 @@ export class Expense implements OnInit {
     };
 
     try {
-      await this.expenseService.addExpense(newExpense);
+      await this.expenseService.addExpense(newExpense as any);
       this.toastService.showSuccess(this.translate.instant('EXPENSE_SUCCESS_ADDED'));
       this.newExpenseForm.reset({
           date: this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '',
@@ -283,7 +283,7 @@ export class Expense implements OnInit {
     };
 
     try {
-      await this.expenseService.updateExpense(this.editingExpenseId, updatedExpense);
+      await this.expenseService.updateExpense(this.editingExpenseId, updatedExpense as any);
       this.toastService.showSuccess(this.translate.instant('EXPENSE_SUCCESS_UPDATED'));
       this.cancelEdit();
     } catch (error: any) {

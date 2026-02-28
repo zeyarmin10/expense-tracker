@@ -7,6 +7,10 @@ import {
   update,
   remove,
   DatabaseReference,
+  query,
+  orderByChild,
+  equalTo,
+  get,
 } from '@angular/fire/database';
 import { Observable, from, of, firstValueFrom } from 'rxjs';
 import { map, switchMap, catchError } from 'rxjs/operators';
@@ -18,6 +22,7 @@ import { GroupService } from './group.service';
 
 export type ServiceIExpense = IExpense & { 
   id: string; 
+  unit?: string;
   totalCost: number;
   updatedByName?: string;
   createdByName?: string; // Add createdByName to the service model
@@ -80,7 +85,6 @@ export class ExpenseService {
                   updatedByName = userProfile?.displayName || 'Unknown User';
                 }
 
-                // Fetch creator's current name if not already set
                 if (expense.userId && !createdByName) {
                   const userProfile = await firstValueFrom(this.userDataService.getUserProfile(expense.userId));
                   createdByName = userProfile?.displayName;
@@ -130,7 +134,7 @@ export class ExpenseService {
 
     if (profile.groupId) {
       const groupSettings = await firstValueFrom(this.groupService.getGroupSettings(profile.groupId));
-      currency = groupSettings?.currency || profile.currency; // Fallback to user's currency
+      currency = groupSettings?.currency || profile.currency;
       expensesRef = this.getGroupExpensesRef(profile.groupId);
     } else {
       currency = profile.currency;
@@ -139,8 +143,8 @@ export class ExpenseService {
 
     const newExpense: Omit<IExpense, 'id' | 'updatedAt' | 'editedDevice' | 'updatedBy'> = {
       ...expenseData,
-      userId: profile.uid, // createdById
-      createdByName: profile.displayName || 'Anonymous', // Save current displayName
+      userId: profile.uid,
+      createdByName: profile.displayName || 'Anonymous',
       currency: currency,
       totalCost,
       createdAt: new Date().toISOString(),
@@ -224,7 +228,6 @@ export class ExpenseService {
                     updatedByName = userProfile?.displayName || 'Unknown User';
                   }
 
-                  // Fetch creator's current name if not already set
                   if (expense.userId && !createdByName) {
                     const userProfile = await firstValueFrom(this.userDataService.getUserProfile(expense.userId));
                     createdByName = userProfile?.displayName;
@@ -247,5 +250,30 @@ export class ExpenseService {
         })
       )
     );
+  }
+
+  async isCategoryInUse(categoryName: string): Promise<boolean> {
+    const profile = await firstValueFrom(this.authService.userProfile$);
+    if (!profile) {
+      return false;
+    }
+
+    const expensesRef = profile.groupId
+      ? this.getGroupExpensesRef(profile.groupId)
+      : this.getExpensesRef(profile.uid);
+
+    const categoryQuery = query(
+      expensesRef,
+      orderByChild('category'),
+      equalTo(categoryName)
+    );
+
+    try {
+      const snapshot = await get(categoryQuery);
+      return snapshot.exists();
+    } catch (error) {
+      console.error('Error checking category usage:', error);
+      return false;
+    }
   }
 }
