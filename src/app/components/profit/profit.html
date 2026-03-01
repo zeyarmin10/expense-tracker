@@ -65,177 +65,117 @@
           </ng-container>
         </div>
 
-        <div class="card mb-4" *ngIf="userProfile?.accountType === 'personal' || userRole === 'admin'">
-          <div
-            class="card-header d-flex justify-content-between align-items-center"
-            role="button"
-            (click)="toggleVisibility('incomeForm')"
-          >
-            {{ "ADD_REVENUE" | translate }}
-            <fa-icon
-              [icon]="isIncomeFormCollapsed ? faChevronDown : faChevronUp"
-            ></fa-icon>
-          </div>
-          <div class="card-body" *ngIf="!isIncomeFormCollapsed">
-            <form
-              [formGroup]="incomeForm"
-              (ngSubmit)="onSubmitIncome()"
-              class="row"
-            >
-              <div class="col-md-6 mb-3">
-                <label for="incomeDate" class="form-label">{{
-                  "DATE" | translate
-                }}</label>
-                <input
-                  type="date"
-                  id="incomeDate"
-                  formControlName="date"
-                  class="form-control"
-                />
-                <div
-                  *ngIf="
-                    incomeForm.controls['date'].invalid &&
-                    incomeForm.controls['date'].touched
-                  "
-                  class="text-danger"
-                >
-                  {{ "DATE_REQUIRED" | translate }}
-                </div>
+        <div class="accordion mb-4" id="incomeFormAccordion" *ngIf="userProfile?.accountType === 'personal' || userRole === 'admin'">
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="headingIncome">
+              <button class="accordion-button collapsed  profit-card-header card-header" type="button" data-bs-toggle="collapse"
+                data-bs-target="#collapseIncome" aria-expanded="false" aria-controls="collapseIncome">
+                {{ "ADD_REVENUE" | translate }}
+              </button>
+            </h2>
+            <div id="collapseIncome" class="accordion-collapse collapse" aria-labelledby="headingIncome"
+              data-bs-parent="#incomeFormAccordion">
+              <div class="accordion-body">
+                <form [formGroup]="incomeForm" (ngSubmit)="onSubmitIncome()">
+                  <div class="row">
+                    <div class="col-12 col-md-6 mb-3">
+                      <div class="form-floating">
+                        <input type="date" id="incomeDate" formControlName="date" class="form-control" placeholder="Date"
+                          [class.is-invalid]="incomeForm.controls['date'].invalid && incomeForm.controls['date'].touched" />
+                        <label for="incomeDate">{{ "DATE" | translate }}</label>
+                      </div>
+                    </div>
+                    <div class="col-12 col-md-6 mb-3">
+                      <div class="input-group form-floating">
+                        <span class="input-group-text">{{
+                          incomeForm.get("currency")?.value ||
+                          userProfile?.currency ||
+                          "MMK"
+                        }}</span>
+                        <div class="form-floating">
+                          <input type="number" id="incomeAmount" formControlName="amount" class="form-control"
+                            step="0.01" placeholder="Amount"
+                            [class.is-invalid]="incomeForm.controls['amount'].invalid && incomeForm.controls['amount'].touched" />
+                          <label for="incomeAmount">{{ "AMOUNT" | translate }}</label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="form-floating mb-3">
+                    <textarea id="incomeDescription" formControlName="description" class="form-control"
+                      placeholder="{{ 'INCOME_DESCRIPTION_PLACEHOLDER' | translate }}"></textarea>
+                    <label for="incomeDescription">{{ "DESCRIPTION" | translate }}</label>
+                  </div>
+                  <div class="d-grid d-md-flex justify-content-md-end">
+                    <button type="submit" class="btn btn-info shine-effect text-white"
+                      [disabled]="incomeForm.invalid">
+                      <fa-icon [icon]="faSave" class="me-2"></fa-icon>
+                      {{ "SAVE_BUTTON_LABEL" | translate }}
+                    </button>
+                  </div>
+                </form>
               </div>
-              <div class="col-md-6 mb-3">
-                <label for="incomeAmount" class="form-label">{{
-                  "AMOUNT" | translate
-                }}</label>
-                <div class="input-group">
-                  <input
-                    type="number"
-                    id="incomeAmount"
-                    formControlName="amount"
-                    class="form-control w-75"
-                    step="0.01"
-                  />
-                  <select
-                    id="incomeCurrency"
-                    formControlName="currency"
-                    class="form-control text-center ps-2 pe-2"
-                    style="max-width: 3em"
-                  >
-                    <option
-                      *ngFor="let curr of availableCurrencies"
-                      [value]="curr.code"
-                      disabled
-                    >
-                      {{ curr.symbol }}
-                    </option>
-                  </select>
-                </div>
-                <div
-                  *ngIf="
-                    incomeForm.controls['amount'].invalid &&
-                    incomeForm.controls['amount'].touched
-                  "
-                  class="text-danger"
-                >
-                  {{ "AMOUNT_REQUIRED" | translate }}
-                </div>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label for="incomeDescription" class="form-label">{{
-                  "DESCRIPTION" | translate
-                }}</label>
-                <textarea
-                  id="incomeDescription"
-                  formControlName="description"
-                  class="form-control"
-                  rows="2"
-                  placeholder="{{
-                    'INCOME_DESCRIPTION_PLACEHOLDER' | translate
-                  }}"
-                ></textarea>
-              </div>
-              <div class="d-grid gap-2 d-flex justify-content-end">
-                <button
-                  type="submit"
-                  class="btn btn-outline-info ps-4 pe-4"
-                  [ngClass]="{
-                    'btn-outline-info': true,
-                    'shine-effect': incomeForm.valid
-                  }"
-                  [disabled]="incomeForm.invalid"
-                >
-                  <fa-icon [icon]="faSave"></fa-icon>
-                </button>
-              </div>
-            </form>
+            </div>
           </div>
         </div>
 
-        <div class="card mb-4">
-          <div
-            class="card-header d-flex justify-content-between align-items-center"
-            (click)="toggleVisibility('recordedIncomes')"
-          >
-            <span>{{ "RECORDED_REVENUE" | translate }}</span>
-            <fa-icon
-              [icon]="isRecordedIncomesCollapsed ? faChevronDown : faChevronUp"
-            ></fa-icon>
-          </div>
-          <div
-            class="card-body recorded-income-body"
-            [class.collapse]="isRecordedIncomesCollapsed"
-          >
-            <ng-container
-              *ngIf="incomes$ | async as incomes; else loadingIncomes"
-            >
-              <ng-container *ngIf="incomes.length > 0; else noIncomesTemplate">
-                <ul class="list-group">
-                  <li
-                    *ngFor="let income of incomes"
-                    class="list-group-item d-flex justify-content-between align-items-center"
-                  >
-                    <div class="d-flex flex-column">
-                      <span class="mb-2">
-                        <small class="text-muted mb-2">{{
-                          formatLocalizedDate(income.date)
-                        }}</small>
-                      </span>
-                      <span class="recorded-income fs-5 text-success mb-2">
-                        {{
-                          formatService.formatAmountWithSymbol(
-                            income.amount,
-                            income.currency
-                          )
-                        }}
-                      </span>
-                      <span>
-                        <small class="text-muted">{{
-                          income.description
-                        }}</small>
-                      </span>
-                    </div>
-                    <div class="text-end">
-                      <fa-icon
-                        *ngIf="userProfile?.accountType === 'personal' || userRole === 'admin'"
-                        class="btn btn-sm btn-outline-danger"
-                        [icon]="faTrash"
-                        (click)="confirmDeleteIncome(income.id)"
-                        title="{{ 'DELETE' | translate }}"
-                      ></fa-icon>
-                    </div>
-                  </li>
-                </ul>
-              </ng-container>
-              <ng-template #noIncomesTemplate>
-                <p class="text-muted text-center">
-                  {{ "NO_INCOMES_FOR_SELECTED_DATE" | translate }}
-                </p>
-              </ng-template>
-            </ng-container>
-            <ng-template #loadingIncomes>
-              <p class="text-muted text-center">
-                {{ "LOADING_DATA" | translate }}
-              </p>
-            </ng-template>
+        <div class="accordion mb-4" id="recordedIncomesAccordion">
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="headingRecordedIncomes">
+              <button class="accordion-button collapsed profit-card-header card-header" type="button" data-bs-toggle="collapse"
+                data-bs-target="#collapseRecordedIncomes" aria-expanded="false" aria-controls="collapseRecordedIncomes">
+                {{ "RECORDED_REVENUE" | translate }}
+              </button>
+            </h2>
+            <div id="collapseRecordedIncomes" class="accordion-collapse collapse" aria-labelledby="headingRecordedIncomes"
+              data-bs-parent="#recordedIncomesAccordion">
+              <div class="accordion-body recorded-income-body">
+                <ng-container *ngIf="incomes$ | async as incomes; else loadingIncomes">
+                  <ng-container *ngIf="incomes.length > 0; else noIncomesTemplate">
+                    <ul class="list-group">
+                      <li *ngFor="let income of incomes"
+                        class="list-group-item d-flex justify-content-between align-items-center">
+                        <div class="d-flex flex-column">
+                          <span class="mb-2">
+                            <small class="text-muted mb-2">{{
+                              formatLocalizedDate(income.date)
+                            }}</small>
+                          </span>
+                          <span class="recorded-income fs-5 text-success mb-2">
+                            {{
+                              formatService.formatAmountWithSymbol(
+                                income.amount,
+                                income.currency
+                              )
+                            }}
+                          </span>
+                          <span>
+                            <small class="text-muted">{{
+                              income.description
+                            }}</small>
+                          </span>
+                        </div>
+                        <div class="text-end">
+                          <fa-icon *ngIf="userProfile?.accountType === 'personal' || userRole === 'admin'"
+                            class="btn btn-sm btn-outline-danger" [icon]="faTrash"
+                            (click)="confirmDeleteIncome(income.id)" title="{{ 'DELETE' | translate }}"></fa-icon>
+                        </div>
+                      </li>
+                    </ul>
+                  </ng-container>
+                  <ng-template #noIncomesTemplate>
+                    <p class="text-muted text-center">
+                      {{ "NO_INCOMES_FOR_SELECTED_DATE" | translate }}
+                    </p>
+                  </ng-template>
+                </ng-container>
+                <ng-template #loadingIncomes>
+                  <p class="text-muted text-center">
+                    {{ "LOADING_DATA" | translate }}
+                  </p>
+                </ng-template>
+              </div>
+            </div>
           </div>
         </div>
 

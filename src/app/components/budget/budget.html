@@ -51,165 +51,175 @@
           </ng-container>
         </div>
 
-        <div class="card mb-4" *ngIf="userProfile?.accountType === 'personal' || userRole === 'admin'">
-          <div class="card-header d-flex justify-content-between align-items-center budget-card-header" role="button"
-            (click)="toggleVisibility('budgetForm')">
-            {{ "ADD_BUDGET" | translate }}
-            <fa-icon [icon]="isBudgetFormCollapsed ? faChevronDown : faChevronUp"></fa-icon>
-          </div>
-          <div class="card-body" *ngIf="!isBudgetFormCollapsed">
-            <form [formGroup]="budgetForm" (ngSubmit)="onSubmitBudget()" class="row">
-              <!-- Budget Type -->
-              <div class="col-md-6 mb-3">
-                <label for="type" class="form-label">{{
-                  "BUDGET_TYPE" | translate
-                  }}</label>
-                <select id="type" formControlName="type" class="form-select"
-                  (change)="onBudgetTypeChange(budgetForm.value.type)">
-                  <option value="monthly">
-                    {{ "MONTHLY_BUDGET" | translate }}
-                  </option>
-                  <option value="yearly">
-                    {{ "YEARLY_BUDGET" | translate }}
-                  </option>
-                </select>
-              </div>
+        <div class="accordion mb-4" id="budgetFormAccordion"
+          *ngIf="userProfile?.accountType === 'personal' || userRole === 'admin'">
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="headingBudget">
+              <button class="accordion-button collapsed budget-card-header card-header" type="button" data-bs-toggle="collapse"
+                data-bs-target="#collapseBudget" aria-expanded="false" aria-controls="collapseBudget">
+                {{ "ADD_BUDGET" | translate }}
+              </button>
+            </h2>
+            <div id="collapseBudget" class="accordion-collapse collapse" aria-labelledby="headingBudget"
+              data-bs-parent="#budgetFormAccordion">
+              <div class="accordion-body">
+                <form [formGroup]="budgetForm" (ngSubmit)="onSubmitBudget()">
+                  <div class="row">
+                    <!-- Budget Type -->
+                    <div class="col-md-6 mb-3">
+                      <div class="form-floating">
+                        <select id="type" formControlName="type" class="form-select"
+                          (change)="onBudgetTypeChange(budgetForm.value.type)"
+                          [class.is-invalid]="budgetForm.controls['type'].invalid && budgetForm.controls['type'].touched">
+                          <option value="monthly">
+                            {{ "MONTHLY_BUDGET" | translate }}
+                          </option>
+                          <option value="yearly">
+                            {{ "YEARLY_BUDGET" | translate }}
+                          </option>
+                        </select>
+                        <label for="type">{{ "BUDGET_TYPE" | translate }}</label>
+                      </div>
+                    </div>
 
-              <!-- Category -->
-              <div class="col-md-6 mb-3">
-                <label for="category" class="form-label">{{
-                  "CATEGORY" | translate
-                  }}</label>
-                <select id="category" formControlName="category" class="form-select">
-                  <option *ngFor="let category of categories$ | async" [value]="category.id">
-                    {{ category.name }}
-                  </option>
-                </select>
-              </div>
+                    <!-- Category -->
+                    <div class="col-md-6 mb-3">
+                      <div class="form-floating">
+                        <select id="category" formControlName="category" class="form-select"
+                          [class.is-invalid]="budgetForm.controls['category'].invalid && budgetForm.controls['category'].touched">
+                          <option *ngFor="let category of categories$ | async" [value]="category.id">
+                            {{ category.name }}
+                          </option>
+                        </select>
+                        <label for="category">{{ "CATEGORY" | translate }}</label>
+                      </div>
+                    </div>
+                  </div>
 
-              <!-- Period (Date) -->
-              <div class="col-md-6 mb-3">
-                <label for="period" class="form-label">{{
-                  "DATE" | translate
-                  }}</label>
-                <input type="date" id="period" formControlName="period" class="form-control" />
-                <div *ngIf="
-                    budgetForm.controls['period'].invalid &&
-                    budgetForm.controls['period'].touched
-                  " class="text-danger">
-                  {{ "DATE_REQUIRED" | translate }}
-                </div>
-              </div>
+                  <div class="row">
+                    <!-- Period (Date) -->
+                    <div class="col-md-6 mb-3">
+                      <div class="form-floating">
+                        <input type="date" id="period" formControlName="period" class="form-control"
+                          placeholder="Date"
+                          [class.is-invalid]="budgetForm.controls['period'].invalid && budgetForm.controls['period'].touched" />
+                        <label for="period">{{ "DATE" | translate }}</label>
+                      </div>
+                    </div>
 
-              <!-- Amount -->
-              <div class="col-md-6 mb-3">
-                <label for="amount" class="form-label">{{
-                  "AMOUNT" | translate
-                  }}</label>
-                <div class="input-group">
-                  <input type="number" id="amount" formControlName="amount" class="form-control w-75" step="0.01" />
-                  <select id="currency" formControlName="currency" class="form-control text-center ps-2 pe-2"
-                    style="max-width: 3em">
-                    <option *ngFor="let curr of availableCurrencies" [value]="curr.code" disabled>
-                      {{ curr.symbol }}
-                    </option>
-                  </select>
-                </div>
-                <div *ngIf="
-                    budgetForm.controls['amount'].invalid &&
-                    budgetForm.controls['amount'].touched
-                  " class="text-danger">
-                  {{ "AMOUNT_REQUIRED" | translate }}
-                </div>
-              </div>
+                    <!-- Amount -->
+                    <div class="col-md-6 mb-3">
+                      <div class="input-group form-floating">
+                        <span class="input-group-text">{{
+                          budgetForm.get("currency")?.value ||
+                          userProfile?.currency ||
+                          "MMK"
+                          }}</span>
+                        <div class="form-floating">
+                          <input type="number" id="amount" formControlName="amount" class="form-control"
+                            step="0.01" placeholder="Amount"
+                            [class.is-invalid]="budgetForm.controls['amount'].invalid && budgetForm.controls['amount'].touched" />
+                          <label for="amount">{{ "AMOUNT" | translate }}</label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
 
-              <!-- Description -->
-              <div class="col-12 mb-3">
-                <label for="description" class="form-label">{{
-                  "DESCRIPTION" | translate
-                  }}</label>
-                <textarea id="description" formControlName="description" class="form-control" rows="2" placeholder="{{
-                    'BUDGET_DESCRIPTION_PLACEHOLDER' | translate
-                  }}"></textarea>
-              </div>
+                  <!-- Description -->
+                  <div class="form-floating mb-3">
+                    <textarea id="description" formControlName="description" class="form-control"
+                      placeholder="{{ 'BUDGET_DESCRIPTION_PLACEHOLDER' | translate }}"></textarea>
+                    <label for="description">{{
+                      "DESCRIPTION" | translate
+                      }}</label>
+                  </div>
 
-              <div class="d-grid gap-2 d-flex justify-content-end">
-                <button type="submit" class="btn btn-outline-info ps-4 pe-4" [ngClass]="{
-                    'btn-outline-info': true,
-                    'shine-effect': budgetForm.valid
-                  }" [disabled]="budgetForm.invalid">
-                  <fa-icon [icon]="faSave"></fa-icon>
-                </button>
+                  <!-- Submit Button -->
+                  <div class="d-grid d-md-flex justify-content-md-end">
+                    <button type="submit" class="btn btn-info shine-effect text-white"
+                      [disabled]="budgetForm.invalid">
+                      <fa-icon [icon]="faSave" class="me-2"></fa-icon>
+                      {{ "SAVE_BUTTON_LABEL" | translate }}
+                    </button>
+                  </div>
+                </form>
               </div>
-            </form>
+            </div>
           </div>
         </div>
 
-        <div class="card mb-4">
-          <div class="card-header d-flex justify-content-between align-items-center budget-card-header" role="button"
-            (click)="toggleVisibility('recordedBudgets')">
-            {{ "RECORDED_BUDGETS" | translate }}
-            <fa-icon [icon]="isRecordedBudgetsCollapsed ? faChevronDown : faChevronUp"></fa-icon>
-          </div>
-          <div class="card-body recorded-budget-body" *ngIf="!isRecordedBudgetsCollapsed">
-            <ng-container *ngIf="filteredBudgets$ | async as budgets; else loadingBudget">
-              <ng-container *ngIf="budgets.length > 0; else noBudgetsTemplate">
-                <ul class="list-group">
-                  <li class="list-group-item d-flex justify-content-between align-items-center"
-                    *ngFor="let budget of budgets">
-                    <div class="d-flex flex-column">
-                      <span class="mb-2">
-                        <small class="text-muted">
-                          {{
-                          budget.type === "monthly"
-                          ? formatLocalizedDate(budget.period)
-                          : budget.period || ""
-                          }}
-                        </small>
-                        <small class="ms-2 buget-type">
-                          {{
-                          (budget.type === "monthly" ? "MONTHLY" : "YEARLY")
-                          | translate
-                          }}
-                        </small>
-                      </span>
-                      <span class="recorded-budget fs-5 text-primary mt-2 mb-2">
-                        {{
-                        formatService.formatAmountWithSymbol(
-                        budget.amount,
-                        budget.currency
-                        )
-                        }}
-                      </span>
-                      <strong *ngIf="budget.category" class="text-muted">
-                        {{
-                        budget.category === "all"
-                        ? ("ALL_CATEGORY" | translate)
-                        : budget.category
-                        }}
-                      </strong>
-                      <small *ngIf="budget.description" class="text-muted">
-                        {{ budget.description }}
-                      </small>
-                    </div>
-                    <div class="text-end">
-                      <fa-icon *ngIf="userProfile?.accountType === 'personal' || userRole === 'admin'" class="btn btn-sm btn-outline-danger" [icon]="faTrash"
-                        (click)="confirmDeleteBudget(budget.id)" title="{{ 'DELETE' | translate }}"></fa-icon>
-                    </div>
-                  </li>
-                </ul>
-              </ng-container>
-              <ng-template #noBudgetsTemplate>
-                <p class="text-muted text-center mb-0">
-                  {{ "NO_BUDGETS_FOUND" | translate }}
-                </p>
-              </ng-template>
-            </ng-container>
-            <ng-template #loadingBudget>
-              <p class="text-muted text-center">
-                {{ "LOADING_DATA" | translate }}
-              </p>
-            </ng-template>
+        <div class="accordion mb-4" id="recordedBudgetsAccordion">
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="headingRecordedBudgets">
+              <button class="accordion-button collapsed budget-card-header card-header" type="button" data-bs-toggle="collapse"
+                data-bs-target="#collapseRecordedBudgets" aria-expanded="false" aria-controls="collapseRecordedBudgets">
+                {{ "RECORDED_BUDGETS" | translate }}
+              </button>
+            </h2>
+            <div id="collapseRecordedBudgets" class="accordion-collapse collapse" aria-labelledby="headingRecordedBudgets"
+              data-bs-parent="#recordedBudgetsAccordion">
+              <div class="accordion-body recorded-budget-body">
+                <ng-container *ngIf="filteredBudgets$ | async as budgets; else loadingBudget">
+                  <ng-container *ngIf="budgets.length > 0; else noBudgetsTemplate">
+                    <ul class="list-group">
+                      <li class="list-group-item d-flex justify-content-between align-items-center"
+                        *ngFor="let budget of budgets">
+                        <div class="d-flex flex-column">
+                          <span class="mb-2">
+                            <small class="text-muted">
+                              {{
+                              budget.type === "monthly"
+                              ? formatLocalizedDate(budget.period)
+                              : budget.period || ""
+                              }}
+                            </small>
+                            <small class="ms-2 buget-type">
+                              {{
+                              (budget.type === "monthly" ? "MONTHLY" : "YEARLY")
+                              | translate
+                              }}
+                            </small>
+                          </span>
+                          <span class="recorded-budget fs-5 text-primary mt-2 mb-2">
+                            {{
+                            formatService.formatAmountWithSymbol(
+                            budget.amount,
+                            budget.currency
+                            )
+                            }}
+                          </span>
+                          <strong *ngIf="budget.category" class="text-muted">
+                            {{
+                            budget.category === "all"
+                            ? ("ALL_CATEGORY" | translate)
+                            : budget.category
+                            }}
+                          </strong>
+                          <small *ngIf="budget.description" class="text-muted">
+                            {{ budget.description }}
+                          </small>
+                        </div>
+                        <div class="text-end">
+                          <fa-icon *ngIf="userProfile?.accountType === 'personal' || userRole === 'admin'"
+                            class="btn btn-sm btn-outline-danger" [icon]="faTrash"
+                            (click)="confirmDeleteBudget(budget.id)" title="{{ 'DELETE' | translate }}"></fa-icon>
+                        </div>
+                      </li>
+                    </ul>
+                  </ng-container>
+                  <ng-template #noBudgetsTemplate>
+                    <p class="text-muted text-center mb-0">
+                      {{ "NO_BUDGETS_FOUND" | translate }}
+                    </p>
+                  </ng-template>
+                </ng-container>
+                <ng-template #loadingBudget>
+                  <p class="text-muted text-center">
+                    {{ "LOADING_DATA" | translate }}
+                  </p>
+                </ng-template>
+              </div>
+            </div>
           </div>
         </div>
 
