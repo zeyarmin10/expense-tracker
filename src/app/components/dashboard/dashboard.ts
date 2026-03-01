@@ -545,7 +545,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const expenseData = labels.map((label) => monthlyExpensesMap[label] || 0);
     return {
       labels,
-      datasets: [{ label: this.translate.instant('EXPENSE_AMOUNT'), data: expenseData, backgroundColor: 'rgba(255, 99, 132, 0.5)', borderColor: 'rgba(255, 99, 132, 1)', borderWidth: 1, },],
+      datasets: [{ label: this.translate.instant('EXPENSE_AMOUNT'), data: expenseData, backgroundColor: '#FBD38D', borderColor: '#ED8936', borderWidth: 1, },],
     };
   }
 

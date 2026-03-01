@@ -1,14 +1,9 @@
 import { Injectable, inject } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import {
-  AVAILABLE_CURRENCIES,
   BURMESE_CURRENCY_SYMBOL,
-  BURMESE_LOCALE_CODE,
-  BURMESE_MONTH_ABBREVIATIONS,
   CURRENCY_SYMBOLS,
   MMK_CURRENCY_CODE,
-  THAI_CURRENCY_SYMBOL,
-  THB_CURRENCY_CODE,
 } from '../core/constants/app.constants';
 
 @Injectable({
@@ -17,31 +12,24 @@ import {
 export class FormatService {
   private translate = inject(TranslateService);
 
-  /**
-   * Formats the amount with the correct symbol and decimal points.
-   * Removes decimals for MMK currency and adds thousands separators.
-   */
   formatAmountWithSymbol(amount: number, currencyCode: string): string {
     const locale = this.translate.currentLang;
     const currency = currencyCode.toUpperCase();
     const symbol = CURRENCY_SYMBOLS[currency] || currency;
 
-    // Set fraction digits to 0 for MMK and THB, and 2 for all others
     const minimumFractionDigits =
       currency === 'MMK' || currency === 'THB' ? 0 : 2;
 
     let formattedAmount: string;
 
-    // ✅ REVISED: Check for Burmese language and format numbers accordingly
     if (locale === 'my') {
       formattedAmount = new Intl.NumberFormat('my-MM', {
         style: 'decimal',
         minimumFractionDigits: minimumFractionDigits,
         maximumFractionDigits: minimumFractionDigits,
-        numberingSystem: 'mymr', // This will convert numbers to Burmese numerals
+        numberingSystem: 'mymr',
       }).format(amount);
     } else {
-      // Use standard formatting for other languages
       formattedAmount = new Intl.NumberFormat(locale, {
         style: 'decimal',
         minimumFractionDigits: minimumFractionDigits,
@@ -49,45 +37,59 @@ export class FormatService {
       }).format(amount);
     }
 
-    if (locale === BURMESE_LOCALE_CODE && currency === MMK_CURRENCY_CODE) {
+    if (locale === 'my' && currency === MMK_CURRENCY_CODE) {
       return `${formattedAmount} ${BURMESE_CURRENCY_SYMBOL}`;
-    } else if (
-      locale === BURMESE_LOCALE_CODE &&
-      currency !== MMK_CURRENCY_CODE
-    ) {
+    } else if (locale === 'my' && currency !== MMK_CURRENCY_CODE) {
       return `${formattedAmount} ${symbol}`;
     }
 
     return `${symbol} ${formattedAmount}`;
   }
 
-  formatAmountShort(amount: number): string {
+  formatAmountShort(amount: number, currencyCode?: string): string {
     const locale = this.translate.currentLang;
     const isBurmese = locale === 'my';
     const numberLocale = isBurmese ? 'my-MM' : locale;
     const numberingSystem = isBurmese ? { numberingSystem: 'mymr' } : {};
 
-    if (amount >= 1e6) {
-      const value = amount / 1e6;
-      const formattedValue = new Intl.NumberFormat(numberLocale, {
-        maximumFractionDigits: 1,
-        ...numberingSystem,
-      }).format(value);
-      return `${formattedValue} M`;
+    let value: number;
+    let suffixKey: string;
+
+    if (isBurmese && Math.abs(amount) >= 100000) {
+      value = amount / 100000;
+      suffixKey = 'LAKH';
+    } else if (Math.abs(amount) >= 1e9) {
+      value = amount / 1e9;
+      suffixKey = 'BILLION';
+    } else if (Math.abs(amount) >= 1e6) {
+      value = amount / 1e6;
+      suffixKey = 'MILLION';
+    } else if (Math.abs(amount) >= 1e3) {
+      value = amount / 1e3;
+      suffixKey = 'THOUSAND';
+    } else {
+      value = amount;
+      suffixKey = '';
     }
-    if (amount >= 1e3) {
-      const value = amount / 1e3;
-      const formattedValue = new Intl.NumberFormat(numberLocale, {
-        maximumFractionDigits: 0,
-        ...numberingSystem,
-      }).format(value);
-      return `${formattedValue} K`;
-    }
-    
+
     const formattedValue = new Intl.NumberFormat(numberLocale, {
-      maximumFractionDigits: 0,
+      minimumFractionDigits: value % 1 === 0 ? 0 : 2,
+      maximumFractionDigits: 2,
       ...numberingSystem,
-    }).format(amount);
+    }).format(value);
+
+    if (suffixKey) {
+      const translation = this.translate.instant(`ABBREVIATIONS.${suffixKey}`);
+
+      // Burmese colloquialism: Prefix 'သိန်း' for round numbers >= 20 (e.g., သိန်း ၂၀, သိန်း ၁၀၀).
+      // Suffix for all others (e.g., ၁၀ သိန်း, ၂၃ သိန်း).
+      if (isBurmese && suffixKey === 'LAKH' && value >= 20 && value % 10 === 0) {
+        return `${translation} ${formattedValue}`;
+      } else {
+        return `${formattedValue}${translation}`;
+      }
+    }
+
     return formattedValue;
   }
 }

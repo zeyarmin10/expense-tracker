@@ -325,7 +325,7 @@
     "VND": "ဗီယက်နမ် ဒေါင်",
     "LAK": "လာအို ကစ်",
     "EUR": "ယူရို",
-    "JPY": "ဂျပန် ယန်း",
+  "JPY": "ဂျပန် ယန်း",
     "KRW": "တောင်ကိုရီးယား ဝမ်",
     "GBP": "ပေါင်စတာလင်",
     "INR": "အိန္ဒိယ ရူပီး",
@@ -499,5 +499,11 @@
   "ITEM_NAME_INFO": "ပစ္စည်း: {{itemName}}",
   "CREATED_BY": "{{date}} တွင် {{name}} မှ ထည့်သွင်းခဲ့သည်။",
   "LAST_UPDATED_BY": "{{date}} တွင် {{name}} မှ နောက်ဆုံးပြင်ဆင်ခဲ့သည်။",
-  "EXPENSE_CREATED_BY": "{{name}} မှ"
+  "EXPENSE_CREATED_BY": "{{name}} မှ",
+  "ABBREVIATIONS": {
+    "THOUSAND": "K",
+    "MILLION": "သန်း",
+    "BILLION": "ဘီလီယံ",
+    "LAKH": "သိန်း"
+  }
 }

@@ -54,59 +54,59 @@ body {
 
 /* Income */
 .income-card {
-  border-left: 5px solid #22c55e;
-  background-color: #f0fdf4;
+  border-left: 5px solid #48bb78;
+  background-color: #f0fff4;
   border-radius: 8px;
 }
 
 .income-amount {
-  color: #166534;
+  color: #2f855a;
 }
 
 /* Budget */
 .budget-card {
-  border-left: 5px solid #3b82f6;
-  background-color: #eff6ff;
+  border-left: 5px solid #4299e1;
+  background-color: #ebf8ff;
   border-radius: 8px;
 }
 
 .budget-amount {
-  color: #1e40af;
+  color: #2b6cb0;
 }
 
 /* Expenses */
 .expense-card {
-  border-left: 5px solid #f59e0b;
-  background-color: #fffbeb;
+  border-left: 5px solid #ed8936;
+  background-color: #fffaf0;
   border-radius: 8px;
 }
 
 .expense-amount {
-  color: #b45309;
+  color: #c05621;
 }
 
 /* Balance (conditional) */
 
 .balance-positive {
-  border-left: 5px solid #10b981;
-  background: #f0fdfa;
-  color: #047857;
+  border-left: 5px solid #48bb78;
+  background: #f0fff4;
+  color: #2f855a;
   border-radius: 8px;
 }
 
 .balance-negative {
-  border-left: 5px solid #ef4444;
-  background: #fef2f2;
-  color: #b91c1c;
+  border-left: 5px solid #f56565;
+  background: #fff5f5;
+  color: #c53030;
   border-radius: 8px;
 }
 
 .balance-positive-amount {
-  color: #047857;
+  color: #2f855a;
 }
 
 .balance-negative-amount {
-  color: #b91c1c;
+  color: #c53030;
 }
 
 
