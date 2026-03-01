@@ -54,46 +54,51 @@ body {
 
 /* Income */
 .income-card {
-  border: 2px solid #22c55e;
-  background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+  border-left: 5px solid #22c55e;
+  background-color: #f0fdf4;
+  border-radius: 8px;
 }
 
 .income-amount {
-  color: #15803d;
+  color: #166534;
 }
 
 /* Budget */
 .budget-card {
-  border: 2px solid #3b82f6;
-  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  border-left: 5px solid #3b82f6;
+  background-color: #eff6ff;
+  border-radius: 8px;
 }
 
 .budget-amount {
-  color: #1d4ed8;
+  color: #1e40af;
 }
 
 /* Expenses */
 .expense-card {
-  border: 2px solid #f59e0b;
-  background: linear-gradient(135deg, #fffbeb, #fef3c7);
+  border-left: 5px solid #f59e0b;
+  background-color: #fffbeb;
+  border-radius: 8px;
 }
 
 .expense-amount {
-  color: #d97706;
+  color: #b45309;
 }
 
 /* Balance (conditional) */
 
 .balance-positive {
-  border: 2px solid #10b981;
-  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+  border-left: 5px solid #10b981;
+  background: #f0fdfa;
   color: #047857;
+  border-radius: 8px;
 }
 
 .balance-negative {
-  border: 2px solid #ef4444;
-  background: linear-gradient(135deg, #fef2f2, #fecaca);
-  color: #dc2626;
+  border-left: 5px solid #ef4444;
+  background: #fef2f2;
+  color: #b91c1c;
+  border-radius: 8px;
 }
 
 .balance-positive-amount {
@@ -101,28 +106,9 @@ body {
 }
 
 .balance-negative-amount {
-  color: #dc2626;
+  color: #b91c1c;
 }
 
-.balance-positive {
-  border: 2px solid #10b981;
-  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
-  color: #047857;
-}
-
-.balance-negative {
-  border: 2px solid #ef4444;
-  background: linear-gradient(135deg, #fef2f2, #fecaca);
-  color: #dc2626;
-}
-
-.balance-positive-amount {
-  color: #047857;
-}
-
-.balance-negative-amount {
-  color: #dc2626;
-}
 
 /* For mobile devices, increase the chart height for better readability */
 @media (max-width: 991px) {

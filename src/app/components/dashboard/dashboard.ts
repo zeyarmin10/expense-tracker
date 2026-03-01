@@ -48,7 +48,14 @@ import { AVAILABLE_CURRENCIES } from '../../core/constants/app.constants';
 import { CategoryService } from '../../services/category';
 import { UserProfile, UserDataService } from '../../services/user-data';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faSync } from '@fortawesome/free-solid-svg-icons';
+import {
+  faSync,
+  faMoneyBillWave,
+  faPiggyBank,
+  faShoppingCart,
+  faArrowTrendUp,
+  faArrowTrendDown,
+} from '@fortawesome/free-solid-svg-icons';
 import { FormatService } from '../../services/format.service';
 
 Chart.register(...registerables);
@@ -115,6 +122,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   titleAnimTrigger: string = 'initial';
   faSync = faSync;
+  faMoneyBillWave = faMoneyBillWave;
+  faPiggyBank = faPiggyBank;
+  faShoppingCart = faShoppingCart;
 
   availableCurrencies = AVAILABLE_CURRENCIES;
   private expenseChartInstance: Chart | undefined;
@@ -326,8 +336,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         console.error('Error in filteredExpensesAndIncomes$', err);
         return of({ expenses: [], incomes: [] });
       })
-    );
-    
+    ); 
     this.totalExpensesByCurrency$ = this.filteredExpensesAndIncomes$.pipe(
       map(({ expenses }) => this.calculateTotalByCurrency(expenses, 'totalCost')),
       catchError(err => {
@@ -475,6 +484,22 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   getProfitLossAmountClass(value: number): string {
     return value >= 0 ? 'balance-positive-amount' : 'balance-negative-amount';
+  }
+
+  getProfitLossIcon(balances: { [currency: string]: number } | null): any {
+    if (!balances) {
+      return faArrowTrendUp;
+    }
+    const totalBalance = Object.values(balances).reduce((sum, value) => sum + value, 0);
+    return totalBalance >= 0 ? faArrowTrendUp : faArrowTrendDown;
+  }
+
+  getProfitLossIconClass(balances: { [currency: string]: number } | null): string {
+    if (!balances) {
+      return 'text-success';
+    }
+    const totalBalance = Object.values(balances).reduce((sum, value) => sum + value, 0);
+    return totalBalance >= 0 ? 'text-success' : 'text-danger';
   }
 
   getBalanceCardClass(balances: { [currency: string]: number } | null): string {
