@@ -1,3 +1,4 @@
+
 import { Injectable, inject } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import {
@@ -55,7 +56,7 @@ export class FormatService {
     let value: number;
     let suffixKey: string;
 
-    if (isBurmese && Math.abs(amount) >= 100000) {
+    if (isBurmese && Math.abs(amount) >= 1000000) {
       value = amount / 100000;
       suffixKey = 'LAKH';
     } else if (Math.abs(amount) >= 1e9) {
@@ -64,7 +65,7 @@ export class FormatService {
     } else if (Math.abs(amount) >= 1e6) {
       value = amount / 1e6;
       suffixKey = 'MILLION';
-    } else if (Math.abs(amount) >= 1e3) {
+    } else if (!isBurmese && Math.abs(amount) >= 1e3) {
       value = amount / 1e3;
       suffixKey = 'THOUSAND';
     } else {
@@ -81,11 +82,11 @@ export class FormatService {
     if (suffixKey) {
       const translation = this.translate.instant(`ABBREVIATIONS.${suffixKey}`);
 
-      // Burmese colloquialism: Prefix 'သိန်း' for round numbers >= 20 (e.g., သိန်း ၂၀, သိန်း ၁၀၀).
-      // Suffix for all others (e.g., ၁၀ သိန်း, ၂၃ သိန်း).
       if (isBurmese && suffixKey === 'LAKH' && value >= 20 && value % 10 === 0) {
         return `${translation} ${formattedValue}`;
-      } else {
+      } else if (isBurmese && suffixKey === 'LAKH') {
+        return `${formattedValue}${translation}`;
+      } else if (!isBurmese) {
         return `${formattedValue}${translation}`;
       }
     }
