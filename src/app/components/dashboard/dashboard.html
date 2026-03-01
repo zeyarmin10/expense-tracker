@@ -126,7 +126,8 @@
           </div>
 
           <div class="col-xl-3 col-md-6 col-12 mb-3">
-            <div class="card h-100 border-2 shadow-sm" [ngClass]="getProfitLossCardClass(totalProfitLossByCurrency$ | async)">
+            <div class="card h-100 border-2 shadow-sm"
+              [ngClass]="getProfitLossCardClass(totalProfitLossByCurrency$ | async)">
               <div class="card-body pt-1 pb-1">
                 <div class="d-flex justify-content-between align-items-center" *ngIf="
           totalProfitLossByCurrency$ | async as profitLosses; else loading
@@ -169,7 +170,7 @@
         <div class="row mt-3">
           <div class="col-xl-7 col-lg-12 mb-4">
             <div class="card shadow-sm h-100">
-              <div class="card-body">
+              <div class="card-body px-1">
                 <h4 class="text-center fw-bold">
                   {{ 'DASHBOARD_EXPENSES_CHART_TITLE' | translate }}
                 </h4>
@@ -187,7 +188,8 @@
                 </h4>
                 <div class="chart-container flex-grow-1 position-relative">
                   <canvas #categoryDonutChartCanvas></canvas>
-                  <div *ngIf="!hasCategoryDataForChart" class="position-absolute top-50 start-50 translate-middle text-muted">
+                  <div *ngIf="!hasCategoryDataForChart"
+                    class="position-absolute top-50 start-50 translate-middle text-muted">
                     <p>{{ 'NO_DATA_AVAILABLE_FOR_CHART' | translate }}</p>
                   </div>
                 </div>
