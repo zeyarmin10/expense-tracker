@@ -504,5 +504,7 @@
     "THOUSAND": "K",
     "MILLION": "M",
     "BILLION": "B"
-  }
+  },
+  "DASHBOARD_EXPENSE_BREAKDOWN_BY_CATEGORY": "Expense Breakdown by Category",
+  "UNCATEGORIZED": "Uncategorized"
 }

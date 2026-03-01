@@ -6,9 +6,6 @@
           <div>
             <h2 class="fw-bold">{{ currentSummaryTitle$ | async }}</h2>
             <h6 class="fw-bold">{{ currentSummaryDateRange$ | async }}</h6>
-            <!-- <h5 class="text-secondary" *ngIf="!(hasData$ | async) && (userDisplayName$ | async) as displayName">
-                            {{ 'WELCOME_MESSAGE' | translate }} {{ displayName }}!
-                        </h5> -->
           </div>
         </div>
         <div class="row mb-4 text-center">
@@ -20,7 +17,7 @@
                     else loading
                   ">
                   <div class="text-start">
-                    <h6 class="text-muted">{{ "TOTAL_INCOMES" | translate }}</h6>
+                    <h6 class="text-muted">{{ 'TOTAL_INCOMES' | translate }}</h6>
                     <div *ngIf="
                         totals && (totals | keyvalue).length > 0;
                         else noData
@@ -33,7 +30,7 @@
                     </div>
                     <ng-template #noData>
                       <p class="text-muted text-center pb-0">
-                        {{ "NO_INCOME_DATA" | translate }}
+                        {{ 'NO_INCOME_DATA' | translate }}
                       </p>
                     </ng-template>
                   </div>
@@ -43,7 +40,7 @@
                 </div>
                 <ng-template #loading>
                   <p class="text-muted text-center">
-                    {{ "LOADING_DATA" | translate }}
+                    {{ 'LOADING_DATA' | translate }}
                   </p>
                 </ng-template>
               </div>
@@ -58,7 +55,7 @@
                     else loading
                   ">
                   <div class="text-start">
-                    <h6 class="text-muted">{{ "TOTAL_BUDGET" | translate }}</h6>
+                    <h6 class="text-muted">{{ 'TOTAL_BUDGET' | translate }}</h6>
                     <div *ngIf="
                         totals && (totals | keyvalue).length > 0;
                         else noData
@@ -71,7 +68,7 @@
                     </div>
                     <ng-template #noData>
                       <p class="text-muted text-center pb-0">
-                        {{ "NO_BUDGET_YET" | translate }}
+                        {{ 'NO_BUDGET_YET' | translate }}
                       </p>
                     </ng-template>
                   </div>
@@ -81,7 +78,7 @@
                 </div>
                 <ng-template #loading>
                   <p class="text-muted text-center">
-                    {{ "LOADING_DATA" | translate }}
+                    {{ 'LOADING_DATA' | translate }}
                   </p>
                 </ng-template>
               </div>
@@ -96,7 +93,7 @@
                     else loading
                   ">
                   <div class="text-start">
-                    <h6 class="text-muted">{{ "TOTAL_EXPENSES" | translate }}</h6>
+                    <h6 class="text-muted">{{ 'TOTAL_EXPENSES' | translate }}</h6>
                     <div *ngIf="
                         totals && (totals | keyvalue).length > 0;
                         else noData
@@ -111,7 +108,7 @@
                     </div>
                     <ng-template #noData>
                       <p class="text-muted text-center pb-0">
-                        {{ "NO_EXPENSE_DATA" | translate }}
+                        {{ 'NO_EXPENSE_DATA' | translate }}
                       </p>
                     </ng-template>
                   </div>
@@ -121,14 +118,13 @@
                 </div>
                 <ng-template #loading>
                   <p class="text-muted text-center">
-                    {{ "LOADING_DATA" | translate }}
+                    {{ 'LOADING_DATA' | translate }}
                   </p>
                 </ng-template>
               </div>
             </div>
           </div>
 
-          <!-- START: PROFIT/LOSS CARD -->
           <div class="col-xl-3 col-md-6 col-12 mb-3">
             <div class="card h-100 border-2 shadow-sm" [ngClass]="getProfitLossCardClass(totalProfitLossByCurrency$ | async)">
               <div class="card-body pt-1 pb-1">
@@ -140,11 +136,10 @@
                       <div *ngFor="let profit of profitLosses | keyvalue">
                         <div class="text-muted">
                           {{
-                          ($any(profit).value >= 0 ? "NET_PROFIT" : "NET_LOSS") | translate
+                          ($any(profit).value >= 0 ? 'NET_PROFIT' : 'NET_LOSS') | translate
                           }}
                         </div>
-                        <div class="fw-bold fs-5"
-                          [ngClass]="getProfitLossAmountClass($any(profit).value)">
+                        <div class="fw-bold fs-5" [ngClass]="getProfitLossAmountClass($any(profit).value)">
                           {{
                           formatService.formatAmountShort($any(profit).value, $any(profit).key)
                           }}
@@ -153,7 +148,7 @@
                     </div>
                     <ng-template #noData>
                       <p class="text-muted text-center pb-0">
-                        {{ "NO_PROFIT_LOSS_DATA" | translate }}
+                        {{ 'NO_PROFIT_LOSS_DATA' | translate }}
                       </p>
                     </ng-template>
                   </div>
@@ -163,30 +158,37 @@
                 </div>
                 <ng-template #loading>
                   <p class="text-muted text-center">
-                    {{ "LOADING_DATA" | translate }}
+                    {{ 'LOADING_DATA' | translate }}
                   </p>
                 </ng-template>
               </div>
             </div>
           </div>
-          <!-- END: PROFIT/LOSS CARD -->
+        </div>
 
-
-          <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12 mt-3 mb3">
-            <div class="card mb-4 shadow-sm">
-              <div class="card-body dashboard-barchart-body">
-                <div class="col-12 p-0">
-                  <h4 class="text-center fw-bold">
-                    {{ "DASHBOARD_EXPENSES_CHART_TITLE" | translate }}
-                  </h4>
-                  <div class="chart-container">
-                    <canvas #expenseChartCanvas></canvas>
-                    <!-- <div
-                      *ngIf="!(hasExpenseDataForChart$ | async)"
-                      class="text-center text-muted mt-3"
-                    >
-                      <p>{{ "NO_DATA_AVAILABLE_FOR_CHART" | translate }}</p>
-                    </div> -->
+        <div class="row mt-3">
+          <div class="col-xl-7 col-lg-12 mb-4">
+            <div class="card shadow-sm h-100">
+              <div class="card-body">
+                <h4 class="text-center fw-bold">
+                  {{ 'DASHBOARD_EXPENSES_CHART_TITLE' | translate }}
+                </h4>
+                <div class="chart-container">
+                  <canvas #expenseChartCanvas></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-xl-5 col-lg-12 mb-4">
+            <div class="card shadow-sm h-100">
+              <div class="card-body d-flex flex-column">
+                <h4 class="text-center fw-bold">
+                  {{ 'DASHBOARD_EXPENSE_BREAKDOWN_BY_CATEGORY' | translate }}
+                </h4>
+                <div class="chart-container flex-grow-1 position-relative">
+                  <canvas #categoryDonutChartCanvas></canvas>
+                  <div *ngIf="!hasCategoryDataForChart" class="position-absolute top-50 start-50 translate-middle text-muted">
+                    <p>{{ 'NO_DATA_AVAILABLE_FOR_CHART' | translate }}</p>
                   </div>
                 </div>
               </div>

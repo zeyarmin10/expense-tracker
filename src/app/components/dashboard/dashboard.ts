@@ -6,6 +6,7 @@ import {
   OnDestroy,
   ViewChild,
   ElementRef,
+  AfterViewInit,
 } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { AuthService } from '../../services/auth';
@@ -27,8 +28,6 @@ import {
   switchMap,
   takeUntil,
   Subject,
-  take,
-  from,
   filter,
   shareReplay,
   catchError,
@@ -45,7 +44,7 @@ import {
 } from '@angular/animations';
 import { Router } from '@angular/router';
 import { AVAILABLE_CURRENCIES } from '../../core/constants/app.constants';
-import { CategoryService } from '../../services/category';
+import { CategoryService, ServiceICategory } from '../../services/category';
 import { UserProfile, UserDataService } from '../../services/user-data';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import {
@@ -55,6 +54,7 @@ import {
   faShoppingCart,
   faArrowTrendUp,
   faArrowTrendDown,
+  faChartPie,
 } from '@fortawesome/free-solid-svg-icons';
 import { FormatService } from '../../services/format.service';
 
@@ -84,7 +84,7 @@ type CurrencyMap = { [currency: string]: number };
     ]),
   ],
 })
-export class DashboardComponent implements OnInit, OnDestroy {
+export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   private authService = inject(AuthService);
   private expenseService = inject(ExpenseService);
   private budgetService = inject(BudgetService);
@@ -95,10 +95,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   public formatService = inject(FormatService);
   private categoryService = inject(CategoryService);
-  private userDataService = inject(UserDataService);
 
   @ViewChild('expenseChartCanvas')
   private expenseChartCanvas!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('categoryDonutChartCanvas')
+  private categoryDonutChartCanvas!: ElementRef<HTMLCanvasElement>;
 
   userDisplayName$!: Observable<string | null>;
   totalExpensesByCurrency$!: Observable<{ [currency: string]: number }>;
@@ -125,9 +126,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
   faMoneyBillWave = faMoneyBillWave;
   faPiggyBank = faPiggyBank;
   faShoppingCart = faShoppingCart;
+  faChartPie = faChartPie;
 
   availableCurrencies = AVAILABLE_CURRENCIES;
   private expenseChartInstance: Chart | undefined;
+  private categoryDonutChart: Chart | undefined;
+  hasCategoryDataForChart: boolean = false;
   currentSummaryDateRange$: Observable<string> | undefined;
 
   constructor(private cdr: ChangeDetectorRef, private datePipe: DatePipe) {
@@ -140,6 +144,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.initializeForms();
     this.initializeUserDataAndDateRange();
     this.initializeDataStreams();
+  }
+
+  ngAfterViewInit(): void {
     this.subscribeToChartData();
   }
 
@@ -147,6 +154,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.destroy$.next();
     this.destroy$.complete();
     this.expenseChartInstance?.destroy();
+    this.categoryDonutChart?.destroy();
   }
 
   refreshData(): void {
@@ -279,14 +287,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   private safeParseDate(dateStr: string): Date {
     if (!dateStr) {
-        // Return a default or invalid date if the string is empty
         return new Date(0); 
     }
     const parts = dateStr.split('-').map(s => parseInt(s, 10));
     const year = parts[0];
-    // month in Date is 0-indexed, so subtract 1. Default to January if not present.
     const month = parts.length > 1 ? parts[1] - 1 : 0;
-    // Default to day 1 if not present
     const day = parts.length > 2 ? parts[2] : 1;
     return new Date(year, month, day, 12, 0, 0);
   }
@@ -438,6 +443,65 @@ export class DashboardComponent implements OnInit, OnDestroy {
       .subscribe((data) => {
         if (data) this.renderExpenseChart(data);
       });
+
+    this.filteredExpensesAndIncomes$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(({ expenses }) => {
+        this.createCategoryDonutChart(expenses);
+      });
+  }
+
+  private createCategoryDonutChart(expenses: ServiceIExpense[]): void {
+    const canvas = this.categoryDonutChartCanvas?.nativeElement;
+    if (!canvas) return;
+
+    const categoryTotals = expenses.reduce((acc, expense) => {
+      const categoryName =
+        expense.category || this.translate.instant('UNCATEGORIZED');
+      acc[categoryName] = (acc[categoryName] || 0) + expense.totalCost;
+      return acc;
+    }, {} as { [category: string]: number });
+
+    const labels = Object.keys(categoryTotals);
+    const data = Object.values(categoryTotals);
+    this.hasCategoryDataForChart = data.length > 0;
+    this.cdr.detectChanges();
+
+    if (this.categoryDonutChart) {
+      this.categoryDonutChart.destroy();
+    }
+
+    if (!this.hasCategoryDataForChart) {
+      return;
+    }
+
+    this.categoryDonutChart = new Chart(canvas, {
+      type: 'doughnut',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            data: data,
+            backgroundColor: [
+              '#4299E1', '#ED8936', '#9F7AEA', '#48BB78', '#F56565', 
+              '#ECC94B', '#38B2AC', '#ED64A6', '#A0AEC0', '#63B3ED'
+            ],
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              boxWidth: 20,
+            }
+          },
+        },
+      },
+    });
   }
 
   goToExpensePage(expenseId: string): void {
