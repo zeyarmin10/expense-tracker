@@ -1,286 +1,172 @@
 .budget-card-header {
-  background: linear-gradient(135deg, #eff6ff, #dbeafe);
-  /* border: 1px solid #dbeafe; */
+  background-color: #e6f7ff;
+  color: #495057;
+  border-bottom: 1px solid #dee2e6;
+  font-weight: 600;
 }
 
-.card-body p {
-  margin-bottom: 0;
+.total-budget-card,
+.expense-card,
+.balance-positive,
+.balance-negative {
+  border-radius: 10px;
+  border: 1px solid #dee2e6;
+  transition: all 0.3s ease-in-out;
 }
 
-/* Define the shine effect animation */
-@keyframes shine {
-  0% {
-    box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
-  }
-
-  /* Initial subtle glow for info button */
-  50% {
-    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5), 0 0 15px rgba(0, 123, 255, 0.5);
-  }
-
-  /* Brighter glow */
-  100% {
-    box-shadow: 0 0 5px rgba(209, 244, 251, 0.3);
-  }
-
-  /* Return to subtle glow */
-}
-
-/* Define the shine effect animation for success button */
-@keyframes shine-success {
-  0% {
-    box-shadow: 0 0 5px rgba(40, 167, 69, 0.3);
-  }
-
-  /* Initial subtle glow for success button */
-  50% {
-    box-shadow: 0 0 5px rgba(40, 167, 69, 0.35), 0 0 15px rgba(40, 167, 69, 0.5);
-  }
-
-  /* Brighter glow */
-  100% {
-    box-shadow: 0 0 5px rgba(40, 167, 69, 0.3);
-  }
-
-  /* Return to subtle glow */
-}
-
-
-
-/* Apply the animation to buttons with .shine-effect class */
-.btn.shine-effect {
-  animation: shine 1.5s infinite ease-in-out;
-  transition: background-color 0.3s ease, color 0.3s ease,
-    border-color 0.3s ease;
-}
-
-/* Override for success button animation */
-.btn.btn-outline-success.shine-effect {
-  /* Changed to btn-outline-success */
-  animation: shine-success 1.5s infinite ease-in-out;
-}
-
-/* Ensure smooth transition when disabled */
-.btn[disabled] {
-  transition: background-color 0.3s ease, color 0.3s ease,
-    border-color 0.3s ease, box-shadow 0.3s ease;
-  animation: none !important;
-  /* Stop animation when disabled */
-}
-
-/* Ensure smooth transition when disabled */
-.btn[disabled] {
-  transition: background-color 0.3s ease, color 0.3s ease,
-    border-color 0.3s ease, box-shadow 0.3s ease;
-  animation: none !important;
-  /* Stop animation when disabled */
-}
-
-.total-incomes {
-  margin-bottom: 0.5rem;
-}
-
-.chart-container {
-  position: relative;
-  min-height: 50vh;
-  margin-bottom: 20px;
-  width: 100%;
-  margin-top: 0.5rem;
-  padding: 0;
+.total-budget-card:hover,
+.expense-card:hover,
+.balance-positive:hover,
+.balance-negative:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
 }
 
 .total-budget-card {
-  border: 2px solid #3b82f6;
-  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  background-color: #e6f7ff;
+  border-left: 5px solid #1890ff;
 }
 
-.budget-amount {
-  max-width: fit-content;
-  color: #1d4ed8;
-}
-
-.monthly-budget {
-  border-radius: 0.5rem;
-  padding: 0.25rem;
-  background: linear-gradient(135deg, #eff6ff, #dbeafe);
-}
-
-/* Expenses */
 .expense-card {
-  border: 2px solid #f59e0b;
-  background: linear-gradient(135deg, #fffbeb, #fef3c7);
-}
-
-.expense-amount {
-  max-width: fit-content;
-  color: #d97706;
-}
-
-.monthly-expense {
-  border-radius: 0.5rem;
-  padding: 0.25rem;
-  background: linear-gradient(135deg, #fffbeb, #fef3c7);
-}
-
-/* Balance (conditional) */
-.monthly-balance-positive {
-  max-width: fit-content;
-  border-radius: 0.5rem;
-  padding: 0.25rem;
-  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
-}
-
-.monthly-balance-negative {
-  max-width: fit-content;
-  border-radius: 0.5rem;
-  padding: 0.25rem;
-  background: linear-gradient(135deg, #fef2f2, #fecaca);
+  background-color: #fffbe6;
+  border-left: 5px solid #faad14;
 }
 
 .balance-positive {
-  border: 2px solid #10b981;
-  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
-  color: #047857;
+  background-color: #f6ffed;
+  border-left: 5px solid #52c41a;
 }
 
 .balance-negative {
-  border: 2px solid #ef4444;
-  background: linear-gradient(135deg, #fef2f2, #fecaca);
-  color: #dc2626;
+  background-color: #fff1f0;
+  border-left: 5px solid #f5222d;
+}
+
+.budget-amount,
+.expense-amount,
+.balance-positive-amount,
+.balance-negative-amount {
+  font-weight: bold;
+}
+
+.budget-amount {
+  color: #1890ff;
+}
+
+.expense-amount {
+  color: #faad14;
 }
 
 .balance-positive-amount {
-  color: #047857;
+  color: #52c41a;
 }
 
 .balance-negative-amount {
-  color: #dc2626;
+  color: #f5222d;
 }
 
 .buget-type {
-  background-color: #fef3c7;
-  padding: 0.2rem 0.5rem;
-  border-radius: 0.5rem;
+  background-color: #e6f7ff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  color: #1890ff;
+  border: 1px solid #91d5ff;
 }
 
-.recorded-budget {
-  max-width: fit-content;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.5rem;
-  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+.recorded-budget-body {
+  max-height: 400px;
+  overflow-y: auto;
 }
 
-.total-budget-title {
-  color: #1d4ed8;
-  /* background: linear-gradient(135deg, #e0f2fe, #bae6fd);
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.5rem; */
+
+.chart-container {
+  position: relative;
+  height: 350px;
+  width: 100%;
 }
 
-.card .total-budget-card-header {
-  background-color: transparent !important;
+.budget-monthly-summary {
+  max-height: 400px;
+  overflow-y: auto;
 }
 
-.category-title {
-  background: linear-gradient(135deg, #f8f8f8, #dddddd);
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.5rem;
+.budget-spending-monitor-body {
+  max-height: 600px;
+  overflow-y: auto;
 }
 
 .less-than-75 {
-  background: linear-gradient(135deg, #fdfffe, #efffef);
+  border-left: 4px solid #52c41a;
+  /* Green for under 75% */
 }
 
 .between-75-and-100 {
-  background: linear-gradient(135deg, #fffefa, #fff8dc);
+  border-left: 4px solid #faad14;
+  /* Orange for 75-100% */
 }
 
 .more-than-100 {
-  background: linear-gradient(135deg, #fffafa, #ffeaea);
+  border-left: 4px solid #f5222d;
+  /* Red for over 100% */
 }
 
-@media (max-width: 991px) {
-  .chart-container {
-    position: relative;
-    min-height: 40vh;
-    margin-bottom: 20px;
-    width: 100%;
-    margin-top: 0.5rem;
-    padding: 0;
-  }
+
+.total-budget-card-header {
+  background-color: #f8f9fa;
+  padding: 0.5rem 1rem;
 }
 
-@media (max-width: 767px) {
-  .chart-container {
-    position: relative;
-    min-height: 40vh;
-    margin-bottom: 20px;
-    width: 100%;
-    margin-top: 0.5rem;
-    padding: 0;
-  }
+.total-budget-title {
+  font-size: 0.85rem;
+  font-weight: 600;
 }
 
-@media (max-width: 575.98px) {
-  .chart-container {
-    position: relative;
-    min-height: 40vh;
-    margin-bottom: 20px;
-    width: 100%;
-    margin-top: 0.5rem;
-    padding: 0;
-  }
-  .smaller-font {
-    font-size: smaller;
-  }
-
-  .total-budget-card-body {
-    padding-left: 0.5rem !important;
-    padding-right: 0.5rem !important;
-  }
-
-  .category-budget-card-body {
-    padding: 0.25rem 0.5rem !important;
-  }
-
-  .no-category-budget-card-body {
-    padding: 0.25rem 0.5rem !important;
-  }
+.total-budget-card-body {
+  padding: 0.75rem;
 }
 
-@media (max-width: 364.98px) {
-  .chart-container {
-    position: relative;
-    min-height: 40vh;
-    margin-bottom: 20px;
-    width: 100%;
-    margin-top: 0.5rem;
-    padding: 0;
-  }
-  .list-group-item {
-    padding-left: 0.5rem !important;
-    padding-right: 0.5rem !important;
-  }
+.smaller-font {
+  font-size: 0.9rem;
+}
 
-  .recorded-budget-body {
-    padding-left: 0.5rem !important;
-    padding-right: 0.5rem !important;
-  }
 
-  .budget-monthly-summary {
-    padding: 1rem 0.5rem;
-  }
+.category-budget-card-body {
+  padding: 0.5rem;
+}
 
-  .budget-spending-monitor-body {
-    padding-left: 0.5rem !important;
-    padding-right: 0.5rem !important;
-  }
 
-  .container-column {
-    padding: 0 0.5rem !important;
-  }
+.category-title {
+  font-weight: 600;
+}
 
-  .budget-card {
-    padding: 1rem 0.5rem !important;
-  }
+.no-category-budget-card-body {
+  padding: 0.5rem;
+}
+
+.monthly-budget,
+.monthly-expense {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.monthly-balance-positive {
+  color: #52c41a !important;
+  font-weight: 600;
+}
+
+.monthly-balance-negative {
+  color: #f5222d !important;
+  font-weight: 600;
+}
+
+.profit-loss-card {
+  background-color: #f6ffed;
+  border-left: 5px solid #52c41a;
+}
+
+.profit-loss-card-loss {
+  background-color: #fff1f0;
+  border-left: 5px solid #f5222d;
 }

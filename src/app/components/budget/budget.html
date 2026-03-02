@@ -1,7 +1,7 @@
 <div class="container mt-3 mb-5">
   <div class="row d-flex justify-content-center">
-    <div class="col-12 col-sm-10 col-md-10 col-lg-8 col-xl-8 col-xxl-8 container-column">
-      <div class="card shadow-sm p-3 p-md-4 budget-card">
+    <div class="col-12 col-lg-11 col-xl-10 container-column">
+      <div class="card shadow-sm px-3 py-3 p-sm-4 p-md-4 p-lg-4 p-xl-4 p-xxl-4 budget-card">
         <h2 class="card-title text-center mb-4">
           {{ "BUDGET_TITLE" | translate }}
         </h2>
@@ -55,8 +55,9 @@
           *ngIf="userProfile?.accountType === 'personal' || userRole === 'admin'">
           <div class="accordion-item">
             <h2 class="accordion-header" id="headingBudget">
-              <button class="accordion-button collapsed budget-card-header card-header" type="button" data-bs-toggle="collapse"
-                data-bs-target="#collapseBudget" aria-expanded="false" aria-controls="collapseBudget">
+              <button class="accordion-button collapsed budget-card-header card-header" type="button"
+                data-bs-toggle="collapse" data-bs-target="#collapseBudget" aria-expanded="false"
+                aria-controls="collapseBudget">
                 {{ "ADD_BUDGET" | translate }}
               </button>
             </h2>
@@ -100,8 +101,7 @@
                     <!-- Period (Date) -->
                     <div class="col-md-6 mb-3">
                       <div class="form-floating">
-                        <input type="date" id="period" formControlName="period" class="form-control"
-                          placeholder="Date"
+                        <input type="date" id="period" formControlName="period" class="form-control" placeholder="Date"
                           [class.is-invalid]="budgetForm.controls['period'].invalid && budgetForm.controls['period'].touched" />
                         <label for="period">{{ "DATE" | translate }}</label>
                       </div>
@@ -116,8 +116,8 @@
                           "MMK"
                           }}</span>
                         <div class="form-floating">
-                          <input type="number" id="amount" formControlName="amount" class="form-control"
-                            step="0.01" placeholder="Amount"
+                          <input type="number" id="amount" formControlName="amount" class="form-control" step="0.01"
+                            placeholder="Amount"
                             [class.is-invalid]="budgetForm.controls['amount'].invalid && budgetForm.controls['amount'].touched" />
                           <label for="amount">{{ "AMOUNT" | translate }}</label>
                         </div>
@@ -136,8 +136,7 @@
 
                   <!-- Submit Button -->
                   <div class="d-grid d-md-flex justify-content-md-end">
-                    <button type="submit" class="btn btn-info shine-effect text-white"
-                      [disabled]="budgetForm.invalid">
+                    <button type="submit" class="btn btn-info shine-effect text-white" [disabled]="budgetForm.invalid">
                       <fa-icon [icon]="faSave" class="me-2"></fa-icon>
                       {{ "SAVE_BUTTON_LABEL" | translate }}
                     </button>
@@ -151,13 +150,14 @@
         <div class="accordion mb-4" id="recordedBudgetsAccordion">
           <div class="accordion-item">
             <h2 class="accordion-header" id="headingRecordedBudgets">
-              <button class="accordion-button collapsed budget-card-header card-header" type="button" data-bs-toggle="collapse"
-                data-bs-target="#collapseRecordedBudgets" aria-expanded="false" aria-controls="collapseRecordedBudgets">
+              <button class="accordion-button collapsed budget-card-header card-header" type="button"
+                data-bs-toggle="collapse" data-bs-target="#collapseRecordedBudgets" aria-expanded="false"
+                aria-controls="collapseRecordedBudgets">
                 {{ "RECORDED_BUDGETS" | translate }}
               </button>
             </h2>
-            <div id="collapseRecordedBudgets" class="accordion-collapse collapse" aria-labelledby="headingRecordedBudgets"
-              data-bs-parent="#recordedBudgetsAccordion">
+            <div id="collapseRecordedBudgets" class="accordion-collapse collapse"
+              aria-labelledby="headingRecordedBudgets" data-bs-parent="#recordedBudgetsAccordion">
               <div class="accordion-body recorded-budget-body">
                 <ng-container *ngIf="filteredBudgets$ | async as budgets; else loadingBudget">
                   <ng-container *ngIf="budgets.length > 0; else noBudgetsTemplate">
@@ -223,118 +223,104 @@
           </div>
         </div>
 
-        <div class="row g-3 mb-3">
-          <div class="col-12 col-sm-12 col-md-12 col-lg-12 col-xl-4 col-xxl-4">
-            <div class="card h-100 total-budget-card">
+        <div class="row mb-4 text-center">
+          <div class="col-xl-4 col-md-6 col-12 mb-3">
+            <div class="card h-100 total-budget-card shadow-sm">
               <div class="card-body pt-1 pb-1">
-                <div class="text-center fw-bold p-0">
-                  {{ "TOTAL_BUDGETS" | translate }}
-                </div>
-                <div *ngIf="totalBudgetByCurrency$ | async as totals; else loading">
-                  <div class="text-center mt-1 mb-0" *ngIf="
-                      totals && (totals | keyvalue).length > 0;
-                      else noData
-                    ">
-                    <div *ngFor="let total of totals | keyvalue">
-                      <!-- <span>{{ total.key }}:</span> -->
-                      <span class="budget-amount text-center fs-5 mb-0">{{
-                        formatService.formatAmountWithSymbol(
-                        total.value,
-                        total.key
-                        )
-                        }}</span>
-                    </div>
-                  </div>
-                  <ng-template #noData>
-                    <p class="text-muted text-center m-0">
-                      {{ "NO_BUDGET_DATA" | translate }}
-                    </p>
-                  </ng-template>
-                </div>
-                <ng-template #loading>
-                  <p class="text-muted text-center">
-                    {{ "LOADING_DATA" | translate }}
-                  </p>
-                </ng-template>
-              </div>
-            </div>
-          </div>
-          <div class="col-12 col-sm-12 col-md-12 col-lg-12 col-xl-4 col-xxl-4">
-            <div class="card h-100 expense-card">
-              <div class="card-body pt-1 pb-1">
-                <div class="text-center fw-bold p-0">
-                  {{ "TOTAL_EXPENSES" | translate }}
-                </div>
-                <div *ngIf="
-                    totalExpensesByCurrency$ | async as totals;
-                    else loading
-                  ">
-                  <div *ngIf="
-                      totals && (totals | keyvalue).length > 0;
-                      else noData
-                    " class="text-center mt-1 mb-0 p-0">
-                    <div *ngFor="let total of totals | keyvalue" class="pb-0">
-                      <!-- <span>{{ total.key }}:</span> -->
-                      <span class="expense-amount text-center fs-5 mb-0">{{
-                        formatService.formatAmountWithSymbol(
-                        total.value,
-                        total.key
-                        )
-                        }}</span>
-                    </div>
-                  </div>
-                  <ng-template #noData>
-                    <p class="text-muted text-center m-0">
-                      {{ "NO_EXPENSE_DATA" | translate }}
-                    </p>
-                  </ng-template>
-                </div>
-                <ng-template #loading>
-                  <p class="text-muted text-center">
-                    {{ "LOADING_DATA" | translate }}
-                  </p>
-                </ng-template>
-              </div>
-            </div>
-          </div>
-          <div class="col-12 col-sm-12 col-md-12 col-lg-12 col-xl-4 col-xxl-4">
-            <div class="card h-100" [ngClass]="
-                getBalanceCardClass(remainingBalanceByCurrency$ | async)
-              ">
-              <div class="card-body pt-1 pb-1">
-                <div class="text-center fw-bold p-0">
-                  {{ "REMAINING_BALANCE" | translate }}
-                  <!-- <small>{{ "BALANCE_SUFFIX" | translate }}</small> -->
-                </div>
-                <div *ngIf="
-                    remainingBalanceByCurrency$ | async as balances;
-                    else loading
-                  ">
-                  <div *ngIf="
-                      balances && (balances | keyvalue).length > 0;
-                      else noData
-                    " class="text-center mt-1 mb-0">
-                    <div *ngFor="let balance of balances | keyvalue">
-                      <!-- <span>{{ balance.key }}:</span> -->
-                      <span [ngClass]="getBalanceAmountClass(balance.value)" class="fs-5">
-                        {{
-                        formatService.formatAmountWithSymbol(
-                        balance.value,
-                        balance.key
-                        )
-                        }}
+                <div class="d-flex justify-content-between align-items-center"
+                  *ngIf="totalBudgetByCurrency$ | async as totals; else loading">
+                  <div class="text-start">
+                    <h6 class="text-muted">{{ 'TOTAL_BUDGET' | translate }}</h6>
+                    <div *ngIf="totals && (totals | keyvalue).length > 0; else noData">
+                      <span *ngFor="let total of totals | keyvalue" class="d-flex justify-content-start pb-0">
+                        <span class="budget-amount fs-5">{{
+                          formatService.formatAmountShort(total.value, total.key)
+                          }}</span>
                       </span>
                     </div>
+                    <ng-template #noData>
+                      <p class="text-muted text-center pb-0">
+                        {{ 'NO_BUDGET_YET' | translate }}
+                      </p>
+                    </ng-template>
                   </div>
-                  <ng-template #noData>
-                    <p class="text-muted text-center m-0">
-                      {{ "NO_BALANCE_DATA" | translate }}
-                    </p>
-                  </ng-template>
+                  <div class="fs-2 text-primary">
+                    <fa-icon [icon]="faPiggyBank"></fa-icon>
+                  </div>
                 </div>
                 <ng-template #loading>
                   <p class="text-muted text-center">
-                    {{ "LOADING_DATA" | translate }}
+                    {{ 'LOADING_DATA' | translate }}
+                  </p>
+                </ng-template>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-xl-4 col-md-6 col-12 mb-3">
+            <div class="card h-100 expense-card shadow-sm">
+              <div class="card-body pt-1 pb-1">
+                <div class="d-flex justify-content-between align-items-center"
+                  *ngIf="totalExpensesByCurrency$ | async as totals; else loading">
+                  <div class="text-start">
+                    <h6 class="text-muted">{{ 'TOTAL_EXPENSES' | translate }}</h6>
+                    <div *ngIf="totals && (totals | keyvalue).length > 0; else noData">
+                      <span *ngFor="let total of totals | keyvalue" class="d-flex justify-content-start pb-0">
+                        <span class="expense-amount fs-5">
+                          {{
+                          formatService.formatAmountShort(total.value, total.key)
+                          }}
+                        </span>
+                      </span>
+                    </div>
+                    <ng-template #noData>
+                      <p class="text-muted text-center pb-0">
+                        {{ 'NO_EXPENSE_DATA' | translate }}
+                      </p>
+                    </ng-template>
+                  </div>
+                  <div class="fs-2 text-warning">
+                    <fa-icon [icon]="faShoppingCart"></fa-icon>
+                  </div>
+                </div>
+                <ng-template #loading>
+                  <p class="text-muted text-center">
+                    {{ 'LOADING_DATA' | translate }}
+                  </p>
+                </ng-template>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-xl-4 col-md-12 col-12 mb-3">
+            <div class="card h-100 shadow-sm" [ngClass]="getBalanceCardClass(remainingBalanceByCurrency$ | async)">
+              <div class="card-body pt-1 pb-1">
+                <div class="d-flex justify-content-between align-items-center"
+                  *ngIf="remainingBalanceByCurrency$ | async as balances; else loading">
+                  <div class="text-start">
+                    <div *ngIf="(balances | keyvalue).length > 0; else noData">
+                      <div *ngFor="let balance of balances | keyvalue">
+                        <div class="text-muted">
+                          {{ (balance.value >= 0 ? 'REMAINING_BALANCE' : 'NET_LOSS') | translate }}
+                        </div>
+                        <div class="fw-bold fs-5" [ngClass]="getBalanceAmountClass(balance.value)">
+                          {{ formatService.formatAmountShort(balance.value, balance.key) }}
+                        </div>
+                      </div>
+                    </div>
+                    <ng-template #noData>
+                      <p class="text-muted text-center pb-0">
+                        {{ 'NO_BALANCE_DATA' | translate }}
+                      </p>
+                    </ng-template>
+                  </div>
+                  <div class="fs-2" [ngClass]="getBalanceIconClass(remainingBalanceByCurrency$ | async)">
+                    <fa-icon [icon]="getBalanceIcon(remainingBalanceByCurrency$ | async)"></fa-icon>
+                  </div>
+                </div>
+                <ng-template #loading>
+                  <p class="text-muted text-center">
+                    {{ 'LOADING_DATA' | translate }}
                   </p>
                 </ng-template>
               </div>

@@ -28,6 +28,10 @@ import {
   faChevronUp,
   faTriangleExclamation,
   faCircleCheck,
+  faPiggyBank,
+  faShoppingCart,
+  faChartLine,
+  faArrowTrendDown,
 } from '@fortawesome/free-solid-svg-icons';
 import { ConfirmationModal } from '../common/confirmation-modal/confirmation-modal';
 import { Chart, registerables } from 'chart.js';
@@ -140,6 +144,10 @@ export class BudgetComponent implements OnInit, OnDestroy {
   faChevronUp = faChevronUp;
   faTriangleExclamation = faTriangleExclamation;
   faCircleCheck = faCircleCheck;
+  faPiggyBank = faPiggyBank;
+  faShoppingCart = faShoppingCart;
+  faChartLine = faChartLine;
+  faArrowTrendDown = faArrowTrendDown;
 
   private budgetIdToDelete: string | undefined;
 
@@ -1143,7 +1151,9 @@ export class BudgetComponent implements OnInit, OnDestroy {
   }
 
   getBalanceCardClass(balances: any): string {
-    if (!balances) return 'balance-positive';
+    if (!balances) {
+      return 'balance-positive';
+    }
 
     const balanceValues = Object.values(balances);
     const totalBalance = balanceValues.reduce(
@@ -1151,11 +1161,13 @@ export class BudgetComponent implements OnInit, OnDestroy {
       0
     );
 
-    return totalBalance >= 0 ? 'balance-positive' : 'balance-negative';
+    return totalBalance >= 0
+      ? 'border-2 profit-loss-card'
+      : 'border-2 profit-loss-card-loss';
   }
 
   getBalanceAmountClass(value: number): string {
-    return value >= 0 ? 'balance-positive-amount' : 'balance-negative-amount';
+    return value >= 0 ? 'text-success' : 'text-danger';
   }
 
   getMath(): Math {
@@ -1183,5 +1195,27 @@ export class BudgetComponent implements OnInit, OnDestroy {
         maximumFractionDigits: 1,
       }).format(value / 100);
     }
+  }
+
+  getBalanceIcon(balances: { [key: string]: number } | null): any {
+    if (!balances) {
+      return this.faChartLine; // Default icon
+    }
+    const totalBalance = Object.values(balances).reduce(
+      (sum, value) => sum + value,
+      0
+    );
+    return totalBalance >= 0 ? this.faChartLine : this.faArrowTrendDown;
+  }
+
+  getBalanceIconClass(balances: { [key: string]: number } | null): string {
+    if (!balances) {
+      return 'text-success';
+    }
+    const totalBalance = Object.values(balances).reduce(
+      (sum, value) => sum + value,
+      0
+    );
+    return totalBalance >= 0 ? 'text-success' : 'text-danger';
   }
 }
