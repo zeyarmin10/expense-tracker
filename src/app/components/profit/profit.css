@@ -1,261 +1,77 @@
-.profit-container {
-  padding: 20px 0;
-  /* max-width: 800px; */
-  margin: 0 auto;
+.profit-card-header {
+    background-color: #f6ffed;
+    color: #495057;
+    border-bottom: 1px solid #dee2e6;
+    font-weight: 600;
 }
 
-.card-header {
-  font-weight: bold;
-  cursor: pointer;
-  background: linear-gradient(135deg, #f0fdf4, #dcfce7);
-  /* border: 1px solid #dcfce7; */
+.income-card,
+.expense-card,
+.profit-loss-card,
+.profit-loss-card-loss {
+    border-radius: 10px;
+    border: 1px solid #dee2e6;
+    transition: all 0.3s ease-in-out;
 }
 
-.recorded-income {
-  max-width: fit-content;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.5rem;
-  background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+.income-card:hover,
+.expense-card:hover,
+.profit-loss-card:hover,
+.profit-loss-card-loss:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
 }
 
-.text-success {
-  color: green !important;
-}
-
-.text-danger {
-  color: red !important;
-}
-
-@media screen and (max-width: 768px) {
-  .profit-container {
-    padding: 20px 0;
-    max-width: 800px;
-    margin: 0 1rem;
-  }
-
-  .profit-card {
-    width: 100% !important;
-    border-radius: 1rem !important;
-  }
-}
-
-/* Define the shine effect animation */
-@keyframes shine {
-  0% {
-    box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
-  }
-
-  /* Initial subtle glow for info button */
-  50% {
-    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5), 0 0 15px rgba(0, 123, 255, 0.5);
-  }
-
-  /* Brighter glow */
-  100% {
-    box-shadow: 0 0 5px rgba(209, 244, 251, 0.3);
-  }
-
-  /* Return to subtle glow */
-}
-
-/* Define the shine effect animation for success button */
-@keyframes shine-success {
-  0% {
-    box-shadow: 0 0 5px rgba(40, 167, 69, 0.3);
-  }
-
-  /* Initial subtle glow for success button */
-  50% {
-    box-shadow: 0 0 5px rgba(40, 167, 69, 0.35), 0 0 15px rgba(40, 167, 69, 0.5);
-  }
-
-  /* Brighter glow */
-  100% {
-    box-shadow: 0 0 5px rgba(40, 167, 69, 0.3);
-  }
-
-  /* Return to subtle glow */
-}
-
-
-
-/* Apply the animation to buttons with .shine-effect class */
-.btn.shine-effect {
-  animation: shine 1.5s infinite ease-in-out;
-  transition: background-color 0.3s ease, color 0.3s ease,
-    border-color 0.3s ease;
-}
-
-/* Override for success button animation */
-.btn.btn-outline-success.shine-effect {
-  /* Changed to btn-outline-success */
-  animation: shine-success 1.5s infinite ease-in-out;
-}
-
-/* Ensure smooth transition when disabled */
-.btn[disabled] {
-  transition: background-color 0.3s ease, color 0.3s ease,
-    border-color 0.3s ease, box-shadow 0.3s ease;
-  animation: none !important;
-  /* Stop animation when disabled */
-}
-
-/* Ensure smooth transition when disabled */
-.btn[disabled] {
-  transition: background-color 0.3s ease, color 0.3s ease,
-    border-color 0.3s ease, box-shadow 0.3s ease;
-  animation: none !important;
-  /* Stop animation when disabled */
-}
-
-.total-incomes {
-  font-weight: bolder;
-  color: green;
-}
-
-/* .monthly-profit-loss {
-    border: 1px solid grey;
-    border-radius: 0.5rem;
-    padding: 1rem;
-    margin-bottom: 0.5rem;
-  } */
-
-.card-body p {
-  margin-bottom: 0;
-}
-
-.profit-card .card-body {
-  padding-top: 1rem;
-  padding-bottom: 1rem;
-}
-
-.text-info {
-  color: #17a2b8 !important;
-}
-
-.btn-outline-info {
-  color: #17a2b8;
-  border-color: #17a2b8;
-}
-
-.btn-outline-info:hover {
-  color: #fff;
-  background-color: #17a2b8;
-}
-
-.font-large {
-  font-size: 1.1em;
-}
-
-.chart-container {
-  position: relative;
-  max-height: 40vh;
-  min-height: 20rem;
-  width: 100%;
-  margin-bottom: 20px;
-}
-
-.net-profit-card {
-  border: 2px solid #32c9ee;
-  background: linear-gradient(135deg, #f1fcff, #dbf7ff);
-}
-
-.net-profit-negative {
-  border: 2px solid #ef4444;
-  background: linear-gradient(135deg, #fef2f2, #fecaca);
-  color: #dc2626;
-}
-
-/* Income */
 .income-card {
-  border: 2px solid #22c55e;
-  background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+    background-color: #f6ffed;
+    border-left: 5px solid #52c41a;
+}
+
+.expense-card {
+    background-color: #fffbe6;
+    border-left: 5px solid #faad14;
+}
+
+.profit-loss-card {
+    background-color: #e6f7ff;
+    border-left: 5px solid #1890ff;
+}
+
+.profit-loss-card-loss {
+    background-color: #fff1f0;
+    border-left: 5px solid #f5222d;
+}
+
+.income-amount,
+.expense-amount,
+.profit-amount,
+.loss-amount {
+    font-weight: bold;
 }
 
 .income-amount {
-  color: #15803d;
-}
-
-/* Expenses */
-.expense-card {
-  border: 2px solid #f59e0b;
-  background: linear-gradient(135deg, #fffbeb, #fef3c7);
+    color: #52c41a;
 }
 
 .expense-amount {
-  color: #d97706;
+    color: #faad14;
 }
 
-/* Balance (conditional) */
-
-.balance-positive {
-  border: 2px solid #10b981;
-  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
-  color: #047857;
+.profit-amount {
+    color: #1890ff;
 }
 
-.balance-negative {
-  border: 2px solid #ef4444;
-  background: linear-gradient(135deg, #fef2f2, #fecaca);
-  color: #dc2626;
+.loss-amount {
+    color: #f5222d;
 }
 
-.balance-positive-amount {
-  color: #047857;
+.recorded-income-body {
+    max-height: 400px;
+    overflow-y: auto;
 }
 
-.balance-negative-amount {
-  color: #dc2626;
-}
-
-/* For mobile devices, increase the chart height for better readability */
-@media (max-width: 991px) {
-  .chart-container {
+.chart-container {
     position: relative;
-    max-height: 40vh;
-    min-height: 20rem;
+    height: 350px;
     width: 100%;
-    margin-bottom: 20px;
-  }
-}
-@media (max-width: 767px) {
-  .chart-container {
-    position: relative;
-    max-height: 40vh;
-    min-height: 20rem;
-    width: 100%;
-    margin-bottom: 20px;
-  }
-}
-
-@media (max-width: 575px) {
-  .chart-container {
-    position: relative;
-    max-height: 40vh;
-    min-height: 20rem;
-    width: 100%;
-    margin-bottom: 20px;
-  }
-}
-@media (max-width: 364.98px) {
-  .chart-container {
-    position: relative;
-    max-height: 40vh;
-    min-height: 20rem;
-    width: 100%;
-    margin-bottom: 20px;
-  }
-
-  .recorded-income-body {
-    padding-left: 0.3rem !important;
-    padding-right: 0.3rem !important;
-  }
-
-  .container-column {
-    padding: 0 0.5rem !important;
-  }
-
-  .profit-card {
-    padding: 1rem 0.5rem !important;
-  }
 }

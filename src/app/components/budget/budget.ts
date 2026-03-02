@@ -218,17 +218,17 @@ export class BudgetComponent implements OnInit, OnDestroy {
         const end = new Date(dateRange.end);
 
         const filteredBudgets = budgets
-        .filter((b) => {
-          if (b.type === 'monthly' && b.period) {
-            const budgetDate = new Date(b.period);
-            return budgetDate >= start && budgetDate <= end;
-          } else if (b.type === 'yearly' && b.period) {
-            const budgetDate = new Date(b.period);
-            return budgetDate >= start && budgetDate <= end;
-          }
-          return false;
-        })
-        .sort((a, b) => new Date(a.period!).getTime() - new Date(b.period!).getTime());
+          .filter((b) => {
+            if (b.type === 'monthly' && b.period) {
+              const budgetDate = new Date(b.period);
+              return budgetDate >= start && budgetDate <= end;
+            } else if (b.type === 'yearly' && b.period) {
+              const budgetDate = new Date(b.period);
+              return budgetDate >= start && budgetDate <= end;
+            }
+            return false;
+          })
+          .sort((a, b) => new Date(a.period!).getTime() - new Date(b.period!).getTime());
 
         const filteredExpenses = expenses.filter((e) => {
           const expenseDate = new Date(e.date);
@@ -623,7 +623,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
         while (current <= end) {
           labels.push(
             this.datePipe.transform(current, dateFormat, undefined, locale) ||
-              ''
+            ''
           );
           monthDates.push(new Date(current));
           current.setMonth(current.getMonth() + 1);
@@ -688,7 +688,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
 
     // --- Initialize Date Filter & User Profile ---
     this.setDateFilter(this.selectedDateFilter);
-    
+
     // CORRECTED: Use the userProfile$ from AuthService which includes group settings
     this.userProfile$ = this.authService.userProfile$;
 
@@ -1086,8 +1086,8 @@ export class BudgetComponent implements OnInit, OnDestroy {
       const englishMonth = this.datePipe.transform(d, 'MMMM');
       const burmeseMonth = englishMonth
         ? BURMESE_MONTH_FULL_NAMES[
-            englishMonth as keyof typeof BURMESE_MONTH_FULL_NAMES
-          ]
+        englishMonth as keyof typeof BURMESE_MONTH_FULL_NAMES
+        ]
         : '';
 
       const burmeseYear = new Intl.NumberFormat('my-MM', {
@@ -1124,8 +1124,8 @@ export class BudgetComponent implements OnInit, OnDestroy {
       const month = this.datePipe.transform(dateObj, 'MMM');
       const burmeseMonth = month
         ? BURMESE_MONTH_ABBREVIATIONS[
-            month as keyof typeof BURMESE_MONTH_ABBREVIATIONS
-          ]
+        month as keyof typeof BURMESE_MONTH_ABBREVIATIONS
+        ]
         : '';
 
       const day = new Intl.NumberFormat('my-MM', {
@@ -1162,8 +1162,8 @@ export class BudgetComponent implements OnInit, OnDestroy {
     );
 
     return totalBalance >= 0
-      ? 'border-2 profit-loss-card'
-      : 'border-2 profit-loss-card-loss';
+      ? 'profit-loss-card'
+      : 'profit-loss-card-loss';
   }
 
   getBalanceAmountClass(value: number): string {

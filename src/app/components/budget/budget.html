@@ -301,7 +301,7 @@
                     <div *ngIf="(balances | keyvalue).length > 0; else noData">
                       <div *ngFor="let balance of balances | keyvalue">
                         <div class="text-muted">
-                          {{ (balance.value >= 0 ? 'REMAINING_BALANCE' : 'NET_LOSS') | translate }}
+                          {{ "REMAINING_BALANCE" | translate }}
                         </div>
                         <div class="fw-bold fs-5" [ngClass]="getBalanceAmountClass(balance.value)">
                           {{ formatService.formatAmountShort(balance.value, balance.key) }}

@@ -38,6 +38,10 @@ import {
   faSave,
   faChevronDown,
   faChevronUp,
+  faMoneyBillWave,
+  faShoppingCart,
+  faChartLine,
+  faArrowTrendDown,
 } from '@fortawesome/free-solid-svg-icons';
 import { ConfirmationModal } from '../common/confirmation-modal/confirmation-modal';
 import { AuthService } from '../../services/auth';
@@ -148,6 +152,10 @@ export class Profit implements OnInit, OnDestroy {
   faSave = faSave;
   faChevronDown = faChevronDown;
   faChevronUp = faChevronUp;
+  faMoneyBillWave = faMoneyBillWave;
+  faShoppingCart = faShoppingCart;
+  faChartLine = faChartLine;
+  faArrowTrendDown = faArrowTrendDown;
 
   constructor() {
     this.incomeForm = this.fb.group({
@@ -638,23 +646,31 @@ export class Profit implements OnInit, OnDestroy {
 
   // --- Helper Methods for UI Classes ---
 
-  getProfitCardClass(profit: CurrencyMap | null | undefined): string {
-    const totalBalance = profit
-      ? Object.values(profit).reduce((sum, value) => sum + value, 0)
-      : 0;
-    return totalBalance >= 0
-      ? 'border border-info net-profit-card'
-      : 'border border-danger net-profit-negative';
+  getProfitLossCardClass(profit: CurrencyMap | null | undefined): string {
+    if (!profit) {
+      return 'profit-loss-card'; // Default to profit
+    }
+    const totalProfit = Object.values(profit).reduce((sum, value) => sum + value, 0);
+    return totalProfit >= 0 ? 'profit-loss-card' : 'profit-loss-card-loss';
+  }
+  
+  getProfitLossIcon(profit: CurrencyMap | null | undefined): any {
+    if (!profit) {
+      return this.faChartLine; // Default icon
+    }
+    const totalProfit = Object.values(profit).reduce((sum, value) => sum + value, 0);
+    return totalProfit >= 0 ? this.faChartLine : this.faArrowTrendDown;
+  }
+  
+  getProfitLossIconClass(profit: CurrencyMap | null | undefined): string {
+    if (!profit) {
+      return 'text-success';
+    }
+    const totalProfit = Object.values(profit).reduce((sum, value) => sum + value, 0);
+    return totalProfit >= 0 ? 'text-success' : 'text-danger';
   }
 
-  getBalanceCardClass(balances: CurrencyMap | null | undefined): string {
-    const totalBalance = balances
-      ? Object.values(balances).reduce((sum, value) => sum + value, 0)
-      : 0;
-    return totalBalance >= 0 ? 'balance-positive' : 'balance-negative';
-  }
-
-  getBalanceAmountClass(value: number): string {
-    return value >= 0 ? 'balance-positive-amount' : 'balance-negative-amount';
+  getProfitLossAmountClass(value: number): string {
+    return value >= 0 ? 'text-success' : 'text-danger';
   }
 }
