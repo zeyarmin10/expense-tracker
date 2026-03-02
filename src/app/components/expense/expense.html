@@ -152,7 +152,8 @@
 
             <div class="list-group" *ngIf="expenses.length > 0">
               <div *ngFor="let expense of expenses"
-                class="list-group-item list-group-item-action flex-column align-items-start pb-0">
+                class="list-group-item list-group-item-action flex-column align-items-start"
+                [class.pb-0]="userProfile?.accountType === 'group'">
                 <!-- Default View -->
                 <div *ngIf="editingExpenseId !== expense.id">
                   <div class="d-flex w-100 justify-content-between mb-1">
@@ -183,7 +184,8 @@
                       </fa-icon>
                     </div>
                   </div>
-                  <div *ngIf="userProfile?.accountType === 'group' && expense.userDisplayName" class="text-secondary small x-small-text text-end m-0 p-0 w-100">
+                  <div *ngIf="userProfile?.accountType === 'group' && expense.userDisplayName"
+                    class="text-secondary small x-small-text text-end m-0 p-0 w-100">
                     {{ "EXPENSE_CREATED_BY" | translate: { name: expense.userDisplayName } }}
                   </div>
                 </div>
