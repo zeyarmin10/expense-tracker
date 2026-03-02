@@ -16,7 +16,7 @@ import { TranslateService } from '@ngx-translate/core';
   providedIn: 'root',
 })
 export class SessionManagementService implements OnDestroy {
-  private readonly SESSION_TIMEOUT_MS = 1 * 60 * 1000; // 1 minute
+  private readonly SESSION_TIMEOUT_MS = 8 * 60 * 60 * 1000; // 8 hour session timeout
   private readonly LAST_ACTIVITY_KEY = 'lastActivityTime';
   private readonly LOGIN_TIME_KEY = 'loginTime';
 
