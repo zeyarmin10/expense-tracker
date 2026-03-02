@@ -1,4 +1,3 @@
-// src/app/services/auth.ts
 import { Injectable, inject, Injector } from '@angular/core';
 import {
   Auth,
@@ -18,6 +17,7 @@ import { Observable, Subject, of, from, firstValueFrom } from 'rxjs';
 import { switchMap, map } from 'rxjs/operators';
 import { UserDataService, UserProfile } from './user-data';
 import { GroupService } from './group.service';
+import { SessionManagementService } from './session-management';
 
 @Injectable({
   providedIn: 'root'
@@ -53,7 +53,6 @@ export class AuthService {
         if (!user) {
           return of(null);
         }
-        // LAZY INJECT services here to break circular dependency
         const userDataService = this.injector.get(UserDataService);
         const groupService = this.injector.get(GroupService);
 
@@ -66,9 +65,6 @@ export class AuthService {
               return groupService.getGroupSettings(profile.groupId).pipe(
                 map(groupSettings => {
                   if (groupSettings) {
-                    // For group members, group settings ALWAYS take precedence.
-                    // The user's personal budget settings are ignored.
-                    // Fallback to null to prevent 'undefined' properties, which can cause issues downstream.
                     const groupProfile: UserProfile = {
                       ...profile,
                       currency: groupSettings.currency,
@@ -79,13 +75,11 @@ export class AuthService {
                     };
                     return groupProfile;
                   } else {
-                    // Group data not found, return user's own profile
                     return profile;
                   }
                 })
               );
             } else {
-              // Not a group member, return user's own profile
               return of(profile);
             }
           })
@@ -114,6 +108,7 @@ export class AuthService {
     try {
       const userCredential = await signInWithEmailAndPassword(this.auth, email, password);
       await this.handleInvite(userCredential.user);
+      this.setLoginTime();
       return userCredential.user;
     } catch (error: any) {
       throw new Error(this.getFirebaseErrorMessage(error));
@@ -129,13 +124,20 @@ export class AuthService {
       if (additionalUserInfo?.isNewUser) {
         this.newUserRegisteredSource.next(userCredential.user.uid);
       }
-
+      this.setLoginTime();
       await this.handleInvite(userCredential.user);
       return userCredential.user;
     } catch (error: any) {
       console.error('Google sign-in error:', error);
       throw new Error(this.getFirebaseErrorMessage(error));
     }
+  }
+
+  private setLoginTime() {
+    const sessionManagementService = this.injector.get(SessionManagementService);
+    const now = new Date().getTime();
+    localStorage.setItem('loginTime', now.toString());
+    sessionManagementService.startSessionMonitoring();
   }
 
   private async handleInvite(user: User): Promise<void> {
@@ -174,10 +176,12 @@ export class AuthService {
   }
 
   async logout(isManualLogout: boolean = false): Promise<void> {
+    const sessionManagementService = this.injector.get(SessionManagementService);
     try {
       await signOut(this.auth);
       localStorage.removeItem('loginTime');
       localStorage.removeItem('lastActivityTime');
+      sessionManagementService.stopSessionMonitoring();
       this._logoutSuccess.next(isManualLogout);
     } catch (error: any) {
       console.error("Logout failed in AuthService:", error);

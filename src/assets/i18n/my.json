@@ -507,5 +507,7 @@
     "LAKH": "သိန်း"
   },
   "DASHBOARD_EXPENSE_BREAKDOWN_BY_CATEGORY": "အမျိုးအစားအလိုက် အသုံးစရိတ်ခွဲခြမ်းစိတ်ဖြာခြင်း",
-  "UNCATEGORIZED": "အမျိုးအစားမခွဲခြားထားပါ"
+  "UNCATEGORIZED": "အမျိုးအစားမခွဲခြားထားပါ",
+  "SESSION_EXPIRED_TITLE": "သင်၏ session ကုန်ဆုံးသွားပါပြီ",
+  "SESSION_EXPIRED_MESSAGE": "အလိုအလျောက် ထွက်ခွာသွားပါသည်"
 }

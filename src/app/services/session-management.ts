@@ -1,8 +1,6 @@
-// src/app/services/session-management.service.ts
 import {
   Injectable,
   inject,
-  forwardRef,
   NgZone,
   OnDestroy,
 } from '@angular/core';
@@ -11,17 +9,18 @@ import { BehaviorSubject, Observable, timer, Subscription } from 'rxjs';
 import { distinctUntilChanged } from 'rxjs/operators';
 import { AuthService } from './auth';
 import { User } from '@angular/fire/auth';
+import Swal from 'sweetalert2';
+import { TranslateService } from '@ngx-translate/core';
 
 @Injectable({
   providedIn: 'root',
 })
-export class SessionManagement implements OnDestroy {
-  private readonly SESSION_TIMEOUT_MS = 5 * 60 * 60 * 1000; // 5 hours
+export class SessionManagementService implements OnDestroy {
+  private readonly SESSION_TIMEOUT_MS = 1 * 60 * 1000; // 1 minute
   private readonly LAST_ACTIVITY_KEY = 'lastActivityTime';
   private readonly LOGIN_TIME_KEY = 'loginTime';
 
   private sessionTimerSubscription: Subscription | null = null;
-  private authService: AuthService;
   private authStateSubscription: Subscription;
   private logoutSuccessSubscription: Subscription;
 
@@ -30,9 +29,9 @@ export class SessionManagement implements OnDestroy {
 
   private router = inject(Router);
   private ngZone = inject(NgZone);
+  private translate = inject(TranslateService);
 
-  constructor() {
-    this.authService = inject(forwardRef(() => AuthService));
+  constructor(private authService: AuthService) {
     window.addEventListener('storage', this.handleStorageChange);
 
     this.authStateSubscription = this.authService.currentUser$
@@ -47,19 +46,23 @@ export class SessionManagement implements OnDestroy {
         }
       });
 
-    // This is now the single source of truth for handling post-logout UI.
     this.logoutSuccessSubscription = this.authService.logoutSuccess$.subscribe((isManualLogout) => {
       this.router.navigate(['/login']);
       if (!isManualLogout) {
-        alert('သင်၏ session ကုန်ဆုံးသွားပြီဖြစ်သောကြောင့် အလိုအလျောက် ထွက်ခဲ့သည်။');
+        Swal.fire({
+          title: this.translate.instant('SESSION_EXPIRED_TITLE'),
+          text: this.translate.instant('SESSION_EXPIRED_MESSAGE'),
+          icon: 'warning',
+          confirmButtonText: this.translate.instant('OK_BUTTON')
+        });
       }
     });
   }
 
   ngOnDestroy(): void {
     this.stopSessionMonitoring();
-    this.authStateSubscription?.unsubscribe();
-    this.logoutSuccessSubscription?.unsubscribe();
+    this.authStateSubscription.unsubscribe();
+    this.logoutSuccessSubscription.unsubscribe();
     window.removeEventListener('storage', this.handleStorageChange);
   }
 
@@ -91,28 +94,23 @@ export class SessionManagement implements OnDestroy {
   private checkSessionExpiration(): void {
     const loginTime = parseInt(localStorage.getItem(this.LOGIN_TIME_KEY) || '0', 10);
     
-    // With the root cause fixed in auth.ts, we only need to check the time.
-    // No user check is needed, as loginTime will be cleared reliably.
     if (loginTime > 0 && (Date.now() - loginTime >= this.SESSION_TIMEOUT_MS)) {
       this.logoutAndRedirect();
     }
   }
 
-  // Triggers an automatic logout.
   async logoutAndRedirect(): Promise<void> {
+    this.stopSessionMonitoring();
     try {
-      await this.authService.logout(false); // Call with 'false' for automatic
+      await this.authService.logout(false);
     } catch (error) {
       console.error('Error during automatic logout:', error);
     }
   }
 
-  // Handles logout from another tab.
   private handleStorageChange = (event: StorageEvent) => {
     if (event.key === this.LOGIN_TIME_KEY && event.newValue === null) {
       if (this.currentUserSubject.getValue()) {
-        // The authStateSubscription will handle the user becoming null.
-        // We just need to ensure navigation happens, as logoutSuccess event won't fire in this tab.
         this.router.navigate(['/login']);
       }
     }

@@ -21,7 +21,7 @@ import { DataManagerService } from '../../services/data-manager'; // Import Data
 import { CategoryService } from '../../services/category';
 import { debounceTime, Subject, takeUntil, firstValueFrom } from 'rxjs'; 
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { SessionManagement } from '../../services/session-management';
+import { SessionManagementService } from '../../services/session-management';
 import { ConfirmationModal } from '../common/confirmation-modal/confirmation-modal';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
@@ -62,7 +62,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   invitationService = inject(InvitationService);
   router = inject(Router);
   route = inject(ActivatedRoute); // Inject ActivatedRoute
-  sessionService = inject(SessionManagement);
+  sessionService = inject(SessionManagementService);
   toastService = inject(ToastService); // Inject ToastService
   errorMessage: string | null = null;
   successMessage: string | null = null;
