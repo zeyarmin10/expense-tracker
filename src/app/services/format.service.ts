@@ -1,4 +1,3 @@
-
 import { Injectable, inject } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import {
@@ -44,7 +43,7 @@ export class FormatService {
       return `${formattedAmount} ${symbol}`;
     }
 
-    return `${symbol} ${formattedAmount}`;
+    return `${symbol}${formattedAmount}`;
   }
 
   formatAmountShort(amount: number, currencyCode?: string): string {
@@ -56,41 +55,48 @@ export class FormatService {
     let value: number;
     let suffixKey: string;
 
-    if (isBurmese && Math.abs(amount) >= 1000000) {
+    if (isBurmese && Math.abs(amount) >= 100000) {
       value = amount / 100000;
-      suffixKey = 'LAKH';
+      suffixKey = 'ABBREVIATIONS.LAKH';
     } else if (Math.abs(amount) >= 1e9) {
       value = amount / 1e9;
-      suffixKey = 'BILLION';
+      suffixKey = 'ABBREVIATIONS.BILLION';
     } else if (Math.abs(amount) >= 1e6) {
       value = amount / 1e6;
-      suffixKey = 'MILLION';
+      suffixKey = 'ABBREVIATIONS.MILLION';
     } else if (!isBurmese && Math.abs(amount) >= 1e3) {
       value = amount / 1e3;
-      suffixKey = 'THOUSAND';
+      suffixKey = 'ABBREVIATIONS.THOUSAND';
     } else {
       value = amount;
       suffixKey = '';
     }
 
-    const formattedValue = new Intl.NumberFormat(numberLocale, {
-      minimumFractionDigits: value % 1 === 0 ? 0 : 2,
-      maximumFractionDigits: 2,
+    const precision = value % 1 === 0 ? 0 : 1;
+
+    const formattedNumber = new Intl.NumberFormat(numberLocale, {
+      minimumFractionDigits: precision,
+      maximumFractionDigits: precision,
       ...numberingSystem,
     }).format(value);
 
-    if (suffixKey) {
-      const translation = this.translate.instant(`ABBREVIATIONS.${suffixKey}`);
+    const suffix = suffixKey ? this.translate.instant(suffixKey) : '';
+    const shortAmount = `${formattedNumber}${suffix}`;
 
-      if (isBurmese && suffixKey === 'LAKH' && value >= 20 && value % 10 === 0) {
-        return `${translation} ${formattedValue}`;
-      } else if (isBurmese && suffixKey === 'LAKH') {
-        return `${formattedValue}${translation}`;
-      } else if (!isBurmese) {
-        return `${formattedValue}${translation}`;
-      }
+    if (!currencyCode) {
+      return shortAmount;
     }
 
-    return formattedValue;
+    const currency = currencyCode.toUpperCase();
+    const symbol = CURRENCY_SYMBOLS[currency] || currency;
+
+    if (isBurmese) {
+      if (currency === MMK_CURRENCY_CODE) {
+        return `${shortAmount} ${BURMESE_CURRENCY_SYMBOL}`;
+      }
+      return `${shortAmount} ${symbol}`;
+    } else {
+      return `${symbol} ${shortAmount}`;
+    }
   }
 }

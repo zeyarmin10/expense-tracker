@@ -259,9 +259,9 @@ export class Profit implements OnInit, OnDestroy {
             ? this.translate.instant('PROFIT')
             : this.translate.instant('LOSS');
         const profitLossColor =
-          profit >= 0 ? 'rgba(54, 162, 235, 0.5)' : 'rgba(255, 0, 0, 0.5)';
+          profit >= 0 ? 'rgba(0,229,180,0.35)' : 'rgba(248,113,113,0.35)';
         const profitLossBorderColor =
-          profit >= 0 ? 'rgba(54, 162, 235, 1)' : 'rgba(255, 0, 0, 1)';
+          profit >= 0 ? 'rgba(0,229,180,1)' : 'rgba(248,113,113,1)';
 
         return {
           labels: [
@@ -274,13 +274,13 @@ export class Profit implements OnInit, OnDestroy {
               label: this.translate.instant('SUMMARY'),
               data: [totalIncome, totalExpense, profit],
               backgroundColor: [
-                'rgba(75, 192, 192, 0.5)', // Income
-                'rgba(255, 99, 132, 0.5)', // Expense
+                'rgba(52,211,153,0.35)', // Income
+                'rgba(251,191,36,0.35)', // Expense
                 profitLossColor, // Profit/Loss
               ],
               borderColor: [
-                'rgba(75, 192, 192, 1)',
-                'rgba(255, 99, 132, 1)',
+                'rgba(52,211,153,1)',
+                'rgba(251,191,36,1)',
                 profitLossBorderColor,
               ],
               borderWidth: 1,
@@ -300,7 +300,8 @@ export class Profit implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Disable form control for currency as it's set from user profile
     this.incomeForm.controls['currency'].disable();
-    Chart.defaults.font.family = 'MyanmarUIFont, Arial, sans-serif';
+    Chart.defaults.font.family = 'Syne, MyanmarUIFont, sans-serif';
+    Chart.defaults.color = '#6b7280';
 
     // Set initial date range for display/input fields
     const initialRange = this.dateFilterService.getDateRange(
@@ -603,7 +604,10 @@ export class Profit implements OnInit, OnDestroy {
         scales: {
           y: {
             beginAtZero: true,
+            grid: { color: 'rgba(255,255,255,0.05)' },
             ticks: {
+              color: '#6b7280',
+              font: { family: 'DM Mono, monospace', size: 11 },
               callback: function (value: any) {
                 const currentLang = component.translate?.currentLang;
                 if (currentLang === 'my') {

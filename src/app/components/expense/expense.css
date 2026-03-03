@@ -1,161 +1,809 @@
-/* General Container and Card Styles */
-.container {
-    padding-left: 15px;
-    padding-right: 15px;
+/* ============================================================
+   Expense Component — Dark Theme (matches navbar + overview)
+   Fonts: Syne + DM Mono via app-level import
+   ============================================================ */
+
+:host {
+  display: block;
 }
 
-.card,
-.accordion-item {
-    border-radius: .75rem;
-    box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05);
-    border: none;
+/* ── Wrapper ── */
+.exp-wrapper {
+  --bg: #0a0c10;
+  --surface: #12151c;
+  --surface-2: #1a1e28;
+  --border: rgba(255, 255, 255, 0.07);
+  --accent: #00e5b4;
+  --accent-dim: rgba(0, 229, 180, 0.12);
+  --accent-2: #f87171;
+  --accent-2-dim: rgba(248, 113, 113, 0.10);
+  --info: #60a5fa;
+  --info-dim: rgba(96, 165, 250, 0.12);
+  --warning: #fbbf24;
+  --success: #34d399;
+  --text: #f0f2f7;
+  --text-muted: #6b7280;
+  --text-sub: #9ca3af;
+
+  /* font-family: 'Syne', sans-serif; */
+  background: var(--bg);
+  min-height: 100vh;
+  padding: 2rem 1rem 5rem;
+  color: var(--text);
 }
 
-.icon-size {
-    font-size: 1.25rem;
+.exp-container {
+  max-width: 760px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
-.new-expense-card-header {
-    background: linear-gradient(135deg, #fcf6f0, #eecaad);
-    /* background: linear-gradient(135deg, #f6d365, #fda085); */
-    /* border: 1px solid #dbeafe; */
+/* ── Overlay / Spinner ── */
+.exp-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 12, 16, 0.75);
+  backdrop-filter: blur(6px);
+  z-index: 10000;
 }
 
-
-.accordion-button {
-    border-radius: .75rem;
+.exp-spinner {
+  width: 48px;
+  height: 48px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: exp-spin 0.8s linear infinite;
 }
 
-.accordion-button:not(.collapsed) {
-    background-color: #f8f9fa;
-    color: #212529;
-    border-bottom: 1px solid #dee2e6;
+@keyframes exp-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-.form-floating>.form-control:not(:placeholder-shown)~label {
-    font-size: 0.8em;
-    transform: scale(0.85) translateY(-0.5rem) translateX(0.15rem);
+.exp-spinner-sm {
+  width: 28px;
+  height: 28px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: exp-spin 0.8s linear infinite;
+  margin: 2rem auto;
 }
 
-.input-group .form-floating {
-    flex: 1 1 auto;
+/* ── Panel (collapsible add form) ── */
+.exp-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
 }
 
-.input-group-text {
-    background-color: #e9ecef;
+.exp-panel-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.1rem 1.4rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text);
+  /* font-family: 'Syne', sans-serif; */
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  transition: background 0.15s;
 }
 
-/* Expense List Item Styling */
-.list-group-item {
-    margin-bottom: .75rem;
-    border-radius: .5rem;
-    border: 1px solid #dee2e6;
-    transition: box-shadow 0.2s ease-in-out;
+.exp-panel-toggle:hover {
+  background: var(--surface-2);
 }
 
-.list-group-item:hover {
-    box-shadow: 0 0.25rem 1rem rgba(0, 0, 0, 0.1);
+.exp-panel-toggle-left {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
 }
 
-.expense-item-name {
-    color: #0d6efd;
+.exp-chevron {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  transition: transform 0.2s;
 }
 
-.expense-amount {
-    color: #d97706;
+.exp-panel-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, padding 0.3s ease;
+  border-top: 0px solid var(--border);
 }
 
-.edit-form-container {
-    background-color: #f8f9fa;
-    padding: 1.5rem;
-    border-radius: .5rem;
-    margin-top: 1rem;
+.exp-panel-body.open {
+  max-height: 1000px;
+  border-top: 1px solid var(--border);
 }
 
-.x-small-text {
-    font-size: x-small;
-    text-align: end;
+/* ── Form ── */
+.exp-form {
+  padding: 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-/* Shine animation for buttons */
-@keyframes shine {
-    0% {
-        box-shadow: 0 0 4px rgba(13, 110, 253, 0.3);
-    }
-
-    50% {
-        box-shadow: 0 0 12px rgba(13, 110, 253, 0.5);
-    }
-
-    100% {
-        box-shadow: 0 0 4px rgba(13, 110, 253, 0.3);
-    }
+.exp-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
 }
 
-.btn.shine-effect:not(:disabled) {
-    animation: shine 1.8s infinite ease-in-out;
+.exp-form-row-3 {
+  grid-template-columns: 1fr 1fr 1fr;
 }
 
-.cursor-pointer {
-    cursor: pointer;
+@media (max-width: 540px) {
+  .exp-form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .exp-form-row-3 {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .exp-form-row-3 .exp-float-field:last-child {
+    grid-column: 1 / -1;
+  }
 }
 
-/* Responsive adjustments */
-@media (max-width: 767.98px) {
-    .action-buttons .btn {
-        width: auto;
-        min-width: 80px;
-    }
-
-    .edit-form-container {
-        padding: 1rem;
-    }
+.exp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
 }
 
-/* Overlay and Spinner Styles */
-#overlay {
-    position: fixed;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    height: 100%;
-    top: 0;
-    left: 0;
-    background-color: rgba(255, 255, 255, 0.7);
-    z-index: 10000;
-    backdrop-filter: blur(4px);
+.exp-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
 }
 
-.spinner {
-    width: 56px;
-    height: 56px;
-    border: 8px solid #f3f3f3;
-    border-top: 8px solid #3498db;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
+.exp-input {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  /* font-family: 'Syne', sans-serif; */
+  font-size: 0.88rem;
+  padding: 0.6rem 0.9rem;
+  outline: none;
+  width: 100%;
+  transition: border-color 0.15s;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
-@keyframes spin {
-    0% {
-        transform: rotate(0deg);
-    }
-
-    100% {
-        transform: rotate(360deg);
-    }
+.exp-input:focus {
+  border-color: var(--accent);
 }
 
-@media (max-width: 480px) {
-    .spinner {
-        width: 40px;
-        height: 40px;
-        border-width: 6px;
-    }
+.exp-input.is-invalid {
+  border-color: var(--accent-2);
 }
 
+.exp-input::placeholder {
+  color: var(--text-muted);
+}
 
-/* Stop animation when button is disabled */
-.btn[disabled] {
-    animation: none !important;
+/* date input color fix on dark */
+.exp-input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.6);
+}
+
+.exp-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.9rem center;
+  padding-right: 2.2rem;
+  cursor: pointer;
+}
+
+/* Option styling workaround */
+.exp-select option {
+  background: #1a1e28;
+  color: var(--text);
+}
+
+.exp-input-group {
+  display: flex;
+  align-items: stretch;
+}
+
+.exp-input-group .exp-input {
+  border-radius: 0 10px 10px 0;
+  border-left: none;
+}
+
+.exp-currency-badge,
+.exp-addon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px 0 0 10px;
+  padding: 0 0.85rem;
+  /* font-family: 'DM Mono', monospace; */
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.exp-addon-btn {
+  cursor: pointer;
+  color: var(--info);
+  transition: background 0.15s, color 0.15s;
+  border-left: 1px solid var(--border);
+  border-radius: 0 10px 10px 0;
+}
+
+/* For addon btn that's after an input (not before) */
+.exp-input-group .exp-input+.exp-addon-btn {
+  border-radius: 0 10px 10px 0;
+  border-left: none;
+}
+
+/* Category group: select then button */
+.exp-input-group .exp-select {
+  border-radius: 10px 0 0 10px;
+  border-right: none;
+}
+
+.exp-input-group .exp-addon-btn:last-child {
+  border-left: 1px solid var(--border);
+  border-radius: 0 10px 10px 0;
+  background: var(--info-dim);
+}
+
+.exp-input-group .exp-addon-btn:last-child:hover {
+  background: var(--info);
+  color: #0a0c10;
+}
+
+.exp-form-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 0.25rem;
+}
+
+/* ── Buttons ── */
+.exp-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  /* font-family: 'Syne', sans-serif; */
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 0.55rem 1.1rem;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.exp-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.exp-btn-sm {
+  font-size: 0.76rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: 8px;
+}
+
+.exp-btn-primary {
+  background: var(--accent);
+  color: #0a0c10;
+  border-color: var(--accent);
+}
+
+.exp-btn-primary:hover:not(:disabled) {
+  opacity: 0.88;
+  box-shadow: 0 0 16px rgba(0, 229, 180, 0.3);
+}
+
+/* Shine pulse for primary */
+@keyframes exp-shine {
+
+  0%,
+  100% {
+    box-shadow: 0 0 6px rgba(0, 229, 180, 0.25);
+  }
+
+  50% {
+    box-shadow: 0 0 18px rgba(0, 229, 180, 0.5);
+  }
+}
+
+.exp-btn-primary:not(:disabled) {
+  animation: exp-shine 2s infinite ease-in-out;
+}
+
+.exp-btn-ghost {
+  background: var(--surface-2);
+  color: var(--text-sub);
+  border-color: var(--border);
+}
+
+.exp-btn-ghost:hover:not(:disabled) {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.exp-btn-outline-info {
+  background: transparent;
+  color: var(--info);
+  border-color: rgba(96, 165, 250, 0.3);
+}
+
+.exp-btn-outline-info:hover:not(:disabled) {
+  background: var(--info-dim);
+  border-color: var(--info);
+}
+
+.exp-btn-outline-danger {
+  background: transparent;
+  color: var(--accent-2);
+  border-color: rgba(248, 113, 113, 0.3);
+}
+
+.exp-btn-outline-danger:hover:not(:disabled) {
+  background: var(--accent-2-dim);
+  border-color: var(--accent-2);
+}
+
+/* ── List Section ── */
+.exp-list-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.exp-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 1.2rem 1.4rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.exp-section-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--success);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.exp-date-filter {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.exp-date-input {
+  width: auto;
+  min-width: 150px;
+  font-size: 0.82rem;
+  padding: 0.45rem 0.75rem;
+}
+
+.exp-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.exp-icon-btn:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+  color: var(--text);
+}
+
+/* ── Totals Row ── */
+.exp-totals-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.9rem 1.4rem;
+  border-bottom: 1px solid var(--border);
+  min-height: 52px;
+}
+
+.exp-total-chip {
+  /* font-family: 'DM Mono', monospace; */
+  font-size: 0.76rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 100px;
+  border: 1px solid rgba(251, 191, 36, 0.25);
+  background: rgba(251, 191, 36, 0.08);
+  color: var(--text-sub);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.exp-total-chip:hover {
+  border-color: var(--warning);
+  color: var(--warning);
+}
+
+.exp-total-amt {
+  color: var(--warning);
+  margin-left: 0.3rem;
+  font-weight: 500;
+}
+
+.exp-no-totals {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+/* ── Expense Items ── */
+.exp-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.exp-item {
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+}
+
+.exp-item:last-child {
+  border-bottom: none;
+}
+
+.exp-item:hover {
+  background: var(--surface-2);
+}
+
+.exp-item-inner {
+  padding: 1rem 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.exp-item-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.exp-item-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+  flex: 1;
+  min-width: 0;
+}
+
+.exp-item-amount {
+  /* font-family: 'DM Mono', monospace; */
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--accent);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.exp-item-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+}
+
+.exp-cat-badge {
+  display: inline-block;
+  font-size: 0.68rem;
+  /* font-family: 'DM Mono', monospace; */
+  padding: 0.15rem 0.55rem;
+  border-radius: 6px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-sub);
+}
+
+.exp-meta-dot {
+  color: var(--text-muted);
+}
+
+.exp-item-date {
+  color: var(--text-sub);
+}
+
+.exp-item-qty {
+  /* font-family: 'DM Mono', monospace; */
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.exp-item-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.25rem;
+}
+
+.exp-item-actions-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.exp-info-icon {
+  font-size: 1rem;
+  color: var(--info);
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.15s;
+}
+
+.exp-info-icon:hover {
+  opacity: 1;
+}
+
+.exp-created-by {
+  font-size: 0.7rem;
+  /* font-family: 'DM Mono', monospace; */
+  color: var(--text-muted);
+  text-align: right;
+  margin-top: 0.2rem;
+}
+
+/* ── Edit Form ── */
+.exp-edit-form {
+  padding: 1.2rem 1.4rem;
+  border-top: 1px solid var(--border);
+  background: var(--surface-2);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.exp-edit-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.exp-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+/* ── Empty / Loading ── */
+.exp-empty {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  padding: 2.5rem 1.5rem;
+}
+
+.exp-loading {
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+}
+
+/* ── Icon helpers ── */
+.exp-icon-accent {
+  color: var(--accent);
+}
+
+.exp-icon-success {
+  color: var(--success);
+}
+
+.exp-icon-warning {
+  color: var(--warning);
+  font-size: 1rem;
+}
+
+/* ══════════════════════════════
+   Floating Label Fields
+   ══════════════════════════════ */
+.exp-float-field {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* When used as a group (currency badge + input side by side) */
+.exp-float-group {
+  flex-direction: row;
+  align-items: stretch;
+  gap: 0;
+}
+
+.exp-float-input {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  /* font-family: 'Syne', sans-serif; */
+  font-size: 0.9rem;
+  padding: 1.35rem 0.9rem 0.45rem;
+  outline: none;
+  width: 100%;
+  transition: border-color 0.15s;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 56px;
+}
+
+.exp-float-input:focus {
+  border-color: var(--accent);
+}
+
+.exp-float-input.is-invalid {
+  border-color: var(--accent-2);
+}
+
+/* Date input calendar icon */
+.exp-float-input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.5);
+  cursor: pointer;
+}
+
+/* Select arrow */
+.exp-float-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.9rem center;
+  padding-right: 2.2rem;
+  cursor: pointer;
+}
+
+.exp-float-select option {
+  background: #1a1e28;
+  color: var(--text);
+}
+
+/* Joined input (after currency badge) */
+.exp-float-input-joined {
+  border-radius: 0 10px 10px 0;
+  border-left: none;
+}
+
+/* Floating Label */
+.exp-float-label {
+  position: absolute;
+  left: 0.9rem;
+  top: 50%;
+  transform: translateY(-50%);
+  /* font-family: 'Syne', sans-serif; */
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  pointer-events: none;
+  transition: top 0.18s ease, font-size 0.18s ease, color 0.18s ease, transform 0.18s ease;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+/* Float up: when input has value (not placeholder-shown) or is focused */
+.exp-float-input:not(:placeholder-shown)~.exp-float-label,
+.exp-float-input:focus~.exp-float-label {
+  top: 0.6rem;
+  transform: translateY(0);
+  font-size: 0.68rem;
+  color: var(--accent);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* For select: always float (since it always has a value shown) */
+.exp-float-select~.exp-float-label {
+  top: 0.6rem;
+  transform: translateY(0);
+  font-size: 0.68rem;
+  color: var(--accent);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Currency badge in float group */
+.exp-float-group .exp-currency-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-right: none;
+  border-radius: 10px 0 0 10px;
+  padding: 0 0.85rem;
+  /* font-family: 'DM Mono', monospace; */
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+  height: 56px;
+}
+
+/* Addon button in float group */
+.exp-float-group .exp-addon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid var(--border);
+  border-left: none;
+  border-radius: 0 10px 10px 0;
+  padding: 0 0.95rem;
+  font-size: 0.85rem;
+  color: var(--info);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  height: 56px;
+  flex-shrink: 0;
+}
+
+.exp-float-group .exp-addon-btn:hover {
+  background: var(--info);
+  color: #0a0c10;
+}
+
+/* Left part of float group (select wrapper) */
+.exp-float-group>.exp-float-field {
+  flex: 1;
+  min-width: 0;
+}
+
+.exp-float-group>.exp-float-field>.exp-float-input {
+  border-radius: 10px 0 0 10px;
+  border-right: none;
+  height: 56px;
+}
+
+/* For price field: left side is currency badge, so input loses left radius */
+.exp-float-group>.exp-currency-badge+.exp-float-field>.exp-float-input {
+  border-radius: 0 10px 10px 0;
+  border-left: none;
 }

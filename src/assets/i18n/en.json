@@ -503,7 +503,8 @@
   "ABBREVIATIONS": {
     "THOUSAND": "K",
     "MILLION": "M",
-    "BILLION": "B"
+    "BILLION": "B",
+    "LAKH": "Lakh"
   },
   "DASHBOARD_EXPENSE_BREAKDOWN_BY_CATEGORY": "Expense Breakdown by Category",
   "UNCATEGORIZED": "Uncategorized",

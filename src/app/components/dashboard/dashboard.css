@@ -1,165 +1,356 @@
-body {
-  background-color: #f0f2f5;
-  font-family: "Poppins", sans-serif;
+/* ============================================================
+   Dashboard — Dark Theme (matches navbar + expense design)
+   ============================================================ */
+
+:host {
+  display: block;
 }
 
-.dashboard-container {
-  padding-top: 2rem;
+.dash-wrapper {
+  --bg: #0a0c10;
+  --surface: #12151c;
+  --surface-2: #1a1e28;
+  --border: rgba(255, 255, 255, 0.07);
+  --accent: #00e5b4;
+  --accent-dim: rgba(0, 229, 180, 0.12);
+
+  /* Card accent colors */
+  --income-color: #34d399;
+  --income-dim: rgba(52, 211, 153, 0.10);
+  --income-border: rgba(52, 211, 153, 0.25);
+
+  --budget-color: #60a5fa;
+  --budget-dim: rgba(96, 165, 250, 0.10);
+  --budget-border: rgba(96, 165, 250, 0.25);
+
+  --expense-color: #fbbf24;
+  --expense-dim: rgba(251, 191, 36, 0.10);
+  --expense-border: rgba(251, 191, 36, 0.25);
+
+  --profit-color: #34d399;
+  --profit-dim: rgba(52, 211, 153, 0.10);
+  --profit-border: rgba(52, 211, 153, 0.25);
+
+  --loss-color: #f87171;
+  --loss-dim: rgba(248, 113, 113, 0.10);
+  --loss-border: rgba(248, 113, 113, 0.25);
+
+  --text: #f0f2f7;
+  --text-muted: #6b7280;
+  --text-sub: #9ca3af;
+
+  /* font-family: 'Syne', sans-serif; */
+  background: var(--bg);
+  min-height: 100vh;
+  padding: 2rem 1rem 5rem;
+  color: var(--text);
 }
 
-.dashboard-header {
-  background-color: #F9F9F9;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+.dash-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
-.card-body p {
-  margin-bottom: 0;
+/* ── Header ── */
+.dash-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
 }
 
-.summary-card {
-  border-radius: 8px;
-  transition: transform 0.2s;
-  min-height: 120px;
+.dash-title {
+  font-size: clamp(1.4rem, 3.5vw, 2rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin: 0 0 0.2rem;
+  line-height: 1;
 }
 
-.summary-card:hover {
-  transform: translateY(-5px);
+.dash-date-range {
+  /* font-family: 'DM Mono', monospace; */
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
 }
 
-.chart-container {
+/* ── Summary Cards Grid ── */
+.dash-summary-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.85rem;
+}
+
+@media (min-width: 540px) {
+  .dash-summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 768px) {
+  .dash-summary-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ── Summary Card Base ── */
+.dash-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.1rem 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
   position: relative;
-  min-height: 50vh;
-  /* width: 100%; */
+  overflow: hidden;
+  transition: transform 0.18s, border-color 0.18s;
 }
 
-.expense-list-item {
-  cursor: pointer;
-  transition: background-color 0.2s;
+.dash-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  opacity: 0;
+  transition: opacity 0.18s;
 }
 
-.expense-list-item:hover {
-  background-color: #f8f9fa;
+.dash-card:hover {
+  transform: translateY(-2px);
 }
 
-.profit-loss-card {
-  border-radius: 8px;
+.dash-card:hover::before {
+  opacity: 1;
 }
 
-.card-header.bg-white {
-  font-size: 1.1rem;
+/* Card variants */
+.dash-card-income {
+  border-color: var(--income-border);
+  background: linear-gradient(145deg, var(--surface), var(--income-dim));
+}
+
+.dash-card-income::before {
+  background: linear-gradient(90deg, var(--income-color), transparent);
+  opacity: 1;
+}
+
+.dash-card-budget {
+  border-color: var(--budget-border);
+  background: linear-gradient(145deg, var(--surface), var(--budget-dim));
+}
+
+.dash-card-budget::before {
+  background: linear-gradient(90deg, var(--budget-color), transparent);
+  opacity: 1;
+}
+
+.dash-card-expense {
+  border-color: var(--expense-border);
+  background: linear-gradient(145deg, var(--surface), var(--expense-dim));
+}
+
+.dash-card-expense::before {
+  background: linear-gradient(90deg, var(--expense-color), transparent);
+  opacity: 1;
+}
+
+/* Profit/Loss dynamic classes */
+.dash-card-profit {
+  border-color: var(--profit-border);
+  background: linear-gradient(145deg, var(--surface), var(--profit-dim));
+}
+
+.dash-card-profit::before {
+  background: linear-gradient(90deg, var(--profit-color), transparent);
+  opacity: 1;
+}
+
+.dash-card-loss {
+  border-color: var(--loss-border);
+  background: linear-gradient(145deg, var(--surface), var(--loss-dim));
+}
+
+.dash-card-loss::before {
+  background: linear-gradient(90deg, var(--loss-color), transparent);
+  opacity: 1;
+}
+
+/* Card internals */
+.dash-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dash-card-label {
+  font-size: 0.7rem;
   font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
 }
 
-
-/* Income */
-.income-card {
-  border-left: 5px solid #48bb78;
-  background-color: #f0fff4;
-  border-radius: 8px;
+.dash-card-icon {
+  font-size: 1.1rem;
+  opacity: 0.8;
 }
 
-.income-amount {
-  color: #2f855a;
+.dash-icon-income {
+  color: var(--income-color);
 }
 
-/* Budget */
-.budget-card {
-  border-left: 5px solid #4299e1;
-  background-color: #ebf8ff;
-  border-radius: 8px;
+.dash-icon-budget {
+  color: var(--budget-color);
 }
 
-.budget-amount {
-  color: #2b6cb0;
+.dash-icon-expense {
+  color: var(--expense-color);
 }
 
-/* Expenses */
-.expense-card {
-  border-left: 5px solid #ed8936;
-  background-color: #fffaf0;
-  border-radius: 8px;
+.dash-card-amount {
+  /* font-family: 'DM Mono', monospace; */
+  font-size: clamp(1rem, 2.5vw, 1.4rem);
+  font-weight: 500;
+  line-height: 1.1;
+  display: block;
 }
 
-.expense-amount {
-  color: #c05621;
+.dash-amount-income {
+  color: var(--income-color);
 }
 
-/* Balance (conditional) */
-
-.balance-positive {
-  border-left: 5px solid #48bb78;
-  background: #f0fff4;
-  color: #2f855a;
-  border-radius: 8px;
+.dash-amount-budget {
+  color: var(--budget-color);
 }
 
-.balance-negative {
-  border-left: 5px solid #f56565;
-  background: #fff5f5;
-  color: #c53030;
-  border-radius: 8px;
+.dash-amount-expense {
+  color: var(--expense-color);
 }
 
+/* Profit/Loss amount classes (used via ts getProfitLossAmountClass) */
 .balance-positive-amount {
-  color: #2f855a;
+  color: var(--profit-color);
 }
 
 .balance-negative-amount {
-  color: #c53030;
+  color: var(--loss-color);
 }
 
+/* Profit/Loss icon classes */
+.text-success {
+  color: var(--profit-color) !important;
+}
 
-/* For mobile devices, increase the chart height for better readability */
+.text-danger {
+  color: var(--loss-color) !important;
+}
+
+/* Profit/Loss card classes (used via ts getProfitLossCardClass) */
+.balance-positive {
+  border-color: var(--profit-border) !important;
+  background: linear-gradient(145deg, var(--surface), var(--profit-dim)) !important;
+}
+
+.balance-positive::before {
+  background: linear-gradient(90deg, var(--profit-color), transparent) !important;
+  opacity: 1 !important;
+}
+
+.balance-negative {
+  border-color: var(--loss-border) !important;
+  background: linear-gradient(145deg, var(--surface), var(--loss-dim)) !important;
+}
+
+.balance-negative::before {
+  background: linear-gradient(90deg, var(--loss-color), transparent) !important;
+  opacity: 1 !important;
+}
+
+.dash-card-muted {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* ── Charts Grid ── */
+.dash-charts-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 992px) {
+  .dash-charts-grid {
+    grid-template-columns: 7fr 5fr;
+  }
+}
+
+/* ── Chart Panel ── */
+.dash-chart-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.dash-chart-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-sub);
+  margin: 0;
+  text-align: center;
+}
+
+.dash-chart-container {
+  position: relative;
+  min-height: 280px;
+  flex: 1;
+  width: 100%;
+}
+
+.dash-chart-donut {
+  min-height: 300px;
+}
+
 @media (max-width: 991px) {
-  .chart-container {
-    position: relative;
-    min-height: 40vh;
-    margin-bottom: 20px;
+  .dash-chart-container {
+    min-height: 260px;
   }
-}
-@media (max-width: 767px) {
-  .chart-container {
-    position: relative;
-    min-height: 40vh;
-    margin-bottom: 20px;
+
+  .dash-chart-donut {
+    min-height: 320px;
   }
 }
 
-@media (max-width: 575.98px) {
-  .chart-container {
-    position: relative;
-    min-height: 40vh;
-    margin-bottom: 20px;
+@media (max-width: 575px) {
+  .dash-chart-container {
+    min-height: 220px;
   }
-  .card-dashboard {
-    padding: 1rem 0.75rem !important;
-  }
-  .dashboard-barchart-body {
-    padding: 1rem 0rem !important;
+
+  .dash-chart-donut {
+    min-height: 280px;
   }
 }
 
-@media (max-width: 364.98px) {
-  .dashboard-header {
-    padding: 1rem 0.5rem !important;
-  }
-
-  .chart-container {
-    position: relative;
-    min-height: 40vh;
-    margin-bottom: 20px;
-  }
-
-  .container-column {
-    padding: 0 0.5rem !important;
-  }
-
-  .dashboard-card {
-    padding: 1rem 0.5rem !important;
-  }
-
-  .dashboard-barchart-body {
-    padding: 1rem 0rem !important;
-  }
+.dash-no-chart-data {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  color: var(--text-muted);
 }

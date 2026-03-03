@@ -158,6 +158,12 @@ export class BudgetComponent implements OnInit, OnDestroy {
 
   isBudgetFormCollapsed: boolean = true;
   isRecordedBudgetsCollapsed: boolean = true;
+
+  // UI state for dark-theme panels
+  get isAddFormOpen(): boolean { return !this.isBudgetFormCollapsed; }
+  get isRecordedOpen(): boolean { return !this.isRecordedBudgetsCollapsed; }
+  toggleAddForm(): void { this.isBudgetFormCollapsed = !this.isBudgetFormCollapsed; }
+  toggleRecordedList(): void { this.isRecordedBudgetsCollapsed = !this.isRecordedBudgetsCollapsed; }
   private refreshBudgets$ = new BehaviorSubject<void>(undefined);
 
   private _startDate$ = new BehaviorSubject<string>('');

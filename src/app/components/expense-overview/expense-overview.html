@@ -1,208 +1,127 @@
-<div class="container mt-3 mb-5">
-  <div class="row d-flex justify-content-center">
-    <div class="col-12 col-sm-10 col-md-10 col-lg-8 col-xl-8 col-xxl-8 container-column">
-      <div class="card shadow-sm p-sm-4 p-md-4 p-lg-4 p-xl-4 p-xxl-4 card-expense-overview">
-        <h2 class="card-title text-center mb-4">
-          <fa-icon [icon]="faChartColumn" class="me-2 text-primary"></fa-icon> {{ "EXPENSE_OVERVIEW_TITLE" | translate
-          }}
-        </h2>
+<div class="expense-wrapper">
+  <div class="expense-container">
+    <!-- Header -->
+    <div class="expense-header">
+      <h2 class="expense-title">
+        Expense<span> Overview</span>
+        <!-- <fa-icon [icon]="faChartColumn" class="me-2 text-primary"></fa-icon> 
+        {{ "EXPENSE_OVERVIEW_TITLE" | translate }} -->
+      </h2>
+      <span class="header-badge">{{ currentPeriodLabel }}</span>
+    </div>
 
-        <div class="row g-3 mb-4">
-          <div class="col-12 col-lg-4">
-            <label class="form-label d-block d-lg-none">{{
-              "DATE_FILTER" | translate
-              }}</label>
-            <select class="form-select" [(ngModel)]="selectedDateFilter" (change)="setDateFilter(selectedDateFilter)">
-              <option value="currentWeek">
-                {{ "CURRENT_WEEK" | translate }}
-              </option>
-              <option value="last30Days">
-                {{ "LAST_30_DAYS" | translate }}
-              </option>
-              <option value="currentMonth">
-                {{ "CURRENT_MONTH" | translate }}
-              </option>
-              <option value="lastMonth">
-                {{ "LAST_MONTH" | translate }}
-              </option>
-              <option value="lastSixMonths">
-                {{ "LAST_SIX_MONTHS" | translate }}
-              </option>
-              <option value="currentYear">
-                {{ "CURRENT_YEAR" | translate }}
-              </option>
-              <option value="lastYear">{{ "LAST_YEAR" | translate }}</option>
-              <option value="custom">{{ "CUSTOM_DATE" | translate }}</option>
-            </select>
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+      <select class="filter-select" [(ngModel)]="selectedDateFilter" (change)="setDateFilter(selectedDateFilter)">
+        <option value="currentWeek">{{ "CURRENT_WEEK" | translate }}</option>
+        <option value="last30Days">{{ "LAST_30_DAYS" | translate }}</option>
+        <option value="currentMonth">{{ "CURRENT_MONTH" | translate }}</option>
+        <option value="lastMonth">{{ "LAST_MONTH" | translate }}</option>
+        <option value="lastSixMonths">{{ "LAST_SIX_MONTHS" | translate }}</option>
+        <option value="currentYear">{{ "CURRENT_YEAR" | translate }}</option>
+        <option value="lastYear">{{ "LAST_YEAR" | translate }}</option>
+        <option value="custom">{{ "CUSTOM_DATE" | translate }}</option>
+      </select>
+
+      <div class="search-group">
+        <input type="text" class="search-input" placeholder="{{ 'SEARCH_PLACEHOLDER' | translate }}"
+          [(ngModel)]="searchTerm" (keyup.enter)="onSearch()" />
+        <button class="search-btn" type="button" (click)="onSearch()">
+          <fa-icon [icon]="faMagnifyingGlass"></fa-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- Custom Date Range -->
+    <ng-container *ngIf="selectedDateFilter === 'custom'">
+      <div class="filter-bar" style="margin-top: -0.25rem;">
+        <input type="date" class="filter-select" [(ngModel)]="startDate" (change)="setDateFilter('custom')" />
+        <input type="date" class="filter-select" [(ngModel)]="endDate" (change)="setDateFilter('custom')" />
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="filteredExpenses$ | async as expenses">
+      <div *ngIf="expenses.length > 0; else noData">
+
+        <!-- Summary Cards -->
+        <div class="summary-grid">
+          <div class="summary-card highlight" *ngFor="let summary of currencySummaries">
+            <div class="summary-label">{{ "TOTAL_EXPENSES" | translate }} · {{ summary.currency }}</div>
+            <span class="summary-amount">
+              {{ formatService.formatAmountShort(summary.totalExpenses, summary.currency) }}
+            </span>
+            <div class="summary-sub">
+              {{ "DAILY_AVERAGE" | translate }}
+              <span>{{ formatService.formatAmountShort(summary.dailyAverage, summary.currency) }}</span>
+            </div>
           </div>
 
-          <ng-container *ngIf="selectedDateFilter === 'custom'">
-            <div class="col-6 col-lg-4">
-              <label class="form-label d-block d-lg-none">{{
-                "START_DATE" | translate
-                }}</label>
-              <input type="date" class="form-control" [(ngModel)]="startDate" (change)="setDateFilter('custom')" />
-            </div>
-            <div class="col-6 col-lg-4">
-              <label class="form-label d-block d-lg-none">{{
-                "END_DATE" | translate
-                }}</label>
-              <input type="date" class="form-control" [(ngModel)]="endDate" (change)="setDateFilter('custom')" />
-            </div>
-          </ng-container>
-
-          <div class="col-12 col-lg-8">
-            <label class="form-label d-block d-lg-none">{{
-              "SEARCH" | translate
-              }}</label>
-            <div class="input-group">
-              <input type="text" class="form-control" placeholder="{{ 'SEARCH_PLACEHOLDER' | translate }}"
-                [(ngModel)]="searchTerm" (keyup.enter)="onSearch()" />
-              <button class="btn btn-outline-info pb-1" type="button" (click)="onSearch()">
-                <fa-icon [icon]="faMagnifyingGlass"></fa-icon>
-              </button>
+          <div class="summary-card category-highlight-card">
+            <div class="category-icon">🔥</div>
+            <div>
+              <div class="summary-label">{{ "MOST_EXPENSIVE_CATEGORY" | translate }}</div>
+              <span class="summary-amount">{{ mostExpenseCategory }}</span>
             </div>
           </div>
         </div>
 
-        <ng-container *ngIf="filteredExpenses$ | async as expenses">
-          <div *ngIf="expenses.length > 0; else noData">
-            <div class="row g-3 mb-4">
-              <div class="col-12 col-sm-12 col-md-12 col-lg-12 col-xl-6 col-xxl-6"
-                *ngFor="let summary of currencySummaries">
-                <div class="card h-100 expense-card">
-                  <div class="card-body text-center">
-                    <h6 class="text-muted fw-bold mb-2">
-                      {{ "TOTAL_EXPENSES" | translate }} ({{
-                      summary.currency
-                      }})
-                    </h6>
-                    <span class="card-title expense-amount fs-1">
-                      {{
-                      formatService.formatAmountShort(
-                      summary.totalExpenses,
-                      summary.currency
-                      )
-                      }}
-                    </span>
-                    <h6 class="text-muted fw-bold mt-2">
-                      {{ "DAILY_AVERAGE" | translate }}
-                    </h6>
-                    <h5 class="text-info m-0 p-0">
-                      {{
-                      formatService.formatAmountShort(
-                      summary.dailyAverage,
-                      summary.currency
-                      )
-                      }}
-                    </h5>
-                  </div>
-                </div>
-              </div>
-              <div class="col-12 col-sm-12 col-md-12 col-lg-12 col-xl-6 col-xxl-6">
-                <div class="card h-100 border border-primary-subtle border-2 most-expense">
-                  <div class="card-body text-center d-flex flex-column justify-content-center align-item-center">
-                    <h6 class="text-muted mb-2">
-                      {{ "MOST_EXPENSIVE_CATEGORY" | translate }}
-                    </h6>
-                    <h4 class="card-title m-0">{{ mostExpenseCategory }}</h4>
-                  </div>
-                </div>
-              </div>
-            </div>
+        <!-- Category Chips -->
+        <div class="chip-bar">
+          <button class="chip active" type="button" (click)="filterByCategory('')">
+            <fa-icon [icon]="faFilter"></fa-icon> {{ "ALL_CATEGORIES" | translate }}
+          </button>
+          <button class="chip" type="button" *ngFor="let total of categoryTotals" [ngClass]="{
+              'active': total.category === (_selectedCategory$ | async)
+            }" (click)="filterByCategory(total.category)">
+            {{ total.category }}
+            <span class="chip-amount">{{ formatService.formatAmountShort(total.total, total.currency) }}</span>
+          </button>
+        </div>
 
-            <div class="row g-3 mb-4">
-              <div class="col-12">
-                <div class="card h-100 p-3">
-                  <h5 class="text-center mb-3">
-                    <fa-icon [icon]="faChartPie" class="me-2 text-info"></fa-icon> {{ "EXPENSE_BREAKDOWN_BY_CATEGORY" |
-                    translate }}
-                  </h5>
-                  <div class="chart-container">
-                    <canvas baseChart [data]="pieChartData" [options]="pieChartOptions" type="pie"></canvas>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="d-flex flex-wrap gap-1 mb-2">
-              <button type="button" class="btn btn-outline-secondary total-btn text-wrap"
-                (click)="filterByCategory('')">
-                <fa-icon [icon]="faFilter" class="me-2"></fa-icon> {{ "ALL_CATEGORIES" | translate }}
-              </button>
-
-              <button type="button" class="btn total-btn text-wrap" *ngFor="let total of categoryTotals" [ngClass]="{
-                  'btn-outline-secondary':
-                    total.category !== (_selectedCategory$ | async),
-                  'btn-secondary':
-                    total.category === (_selectedCategory$ | async)
-                }" (click)="filterByCategory(total.category)">
-                {{ total.category }} :
-                <span>{{
-                  formatService.formatAmountShort(
-                  total.total,
-                  total.currency
-                  )
-                  }}</span>
-              </button>
-            </div>
-
-            <div class="table-responsive">
-              <h5 class="mb-3 text-warning"><fa-icon [icon]="faList" class="me-2"></fa-icon> {{ "EXPENSE_LIST" |
-                translate }}</h5>
-              <table class="table table-hover align-middle">
-                <thead>
-                  <tr>
-                    <th scope="col" class="d-none d-md-table-cell">
-                      {{ "DATE_LABEL" | translate }}
-                    </th>
-                    <th scope="col" class="d-md-none ps-1 pe-1">
-                      {{ "DATE_LABEL" | translate }}
-                    </th>
-                    <th scope="col" class="hide-mobile-views">
-                      {{ "CATEGORY_LABEL" | translate }}
-                    </th>
-                    <th scope="col" class="d-none d-md-table-cell">
-                      {{ "ITEM_NAME_LABEL" | translate }}
-                    </th>
-                    <th scope="col" class="d-md-none ps-1 pe-1">
-                      {{ "ITEM_NAME_LABEL" | translate }}
-                    </th>
-                    <th scope="col" class="text-end">
-                      {{ "TOTAL_COST_LABEL" | translate }}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr *ngFor="let expense of expenses" (click)="onRowClick(expense)" class="clickable-row">
-                    <td class="d-none d-md-table-cell">
-                      {{ formatLocalizedDate(expense.date) }}
-                    </td>
-                    <td class="d-md-none ps-1 pe-1">
-                      {{ formatMobileDate(expense.date) }}
-                    </td>
-                    <td class="hide-mobile-views">{{ expense.category }}</td>
-                    <td class="ps-1 pe-1">{{ expense.itemName }}</td>
-                    <td class="text-end expense-amount ps-1 pe-1">
-                      {{
-                      formatService.formatAmountShort(
-                      expense.totalCost,
-                      expense.currency
-                      )
-                      }}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+        <!-- Expense Table -->
+        <div class="table-section">
+          <div class="table-header">
+            <h5 class="table-title">
+              <fa-icon [icon]="faList"></fa-icon>
+              {{ "EXPENSE_LIST" | translate }}
+            </h5>
+            <span class="table-count">{{ expenses.length }} items</span>
           </div>
-          <ng-template #noData>
-            <div class="text-center text-danger py-4">
-              {{ "NO_EXPENSES_FOUND" | translate }}
-            </div>
-          </ng-template>
-        </ng-container>
+          <div class="table-responsive">
+            <table class="expense-table">
+              <thead>
+                <tr>
+                  <th>{{ "DATE_LABEL" | translate }}</th>
+                  <th class="td-category">{{ "CATEGORY_LABEL" | translate }}</th>
+                  <th>{{ "ITEM_NAME_LABEL" | translate }}</th>
+                  <th>{{ "TOTAL_COST_LABEL" | translate }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let expense of expenses" (click)="onRowClick(expense)">
+                  <td class="td-date">
+                    <span class="d-none d-md-inline">{{ formatLocalizedDate(expense.date) }}</span>
+                    <span class="d-md-none">{{ formatMobileDate(expense.date) }}</span>
+                  </td>
+                  <td class="td-category">
+                    <span class="category-badge">{{ expense.category }}</span>
+                  </td>
+                  <td class="td-name">{{ expense.itemName }}</td>
+                  <td class="td-amount">
+                    {{ formatService.formatAmountShort(expense.totalCost, expense.currency) }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
       </div>
-    </div>
+      <ng-template #noData>
+        <div class="table-section">
+          <div class="no-data">{{ "NO_EXPENSES_FOUND" | translate }}</div>
+        </div>
+      </ng-template>
+    </ng-container>
   </div>
 </div>

@@ -1,202 +1,131 @@
-<div class="container mt-3 mb-5">
-  <div class="row d-flex justify-content-center">
-    <div class="col-12 col-lg-11 col-xl-10 container-column">
-      <div class="card shadow-sm px-3 py-3 p-sm-4 p-md-4 p-lg-4 p-xl-4 p-xxl-4 dashboard-card">
-        <div class="dashboard-header d-flex justify-content-between align-items-center mb-4 p-3 rounded">
-          <div>
-            <h2 class="fw-bold">{{ currentSummaryTitle$ | async }}</h2>
-            <h6 class="fw-bold">{{ currentSummaryDateRange$ | async }}</h6>
-          </div>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap"
+  rel="stylesheet">
+
+<div class="dash-wrapper">
+  <div class="dash-container">
+
+    <!-- ── Header ── -->
+    <div class="dash-header">
+      <div class="dash-header-left">
+        <h2 class="dash-title">{{ currentSummaryTitle$ | async }}</h2>
+        <span class="dash-date-range">{{ currentSummaryDateRange$ | async }}</span>
+      </div>
+    </div>
+
+    <!-- ── Summary Cards ── -->
+    <div class="dash-summary-grid">
+
+      <!-- Income -->
+      <div class="dash-card dash-card-income">
+        <div class="dash-card-top">
+          <span class="dash-card-label">{{ 'TOTAL_INCOMES' | translate }}</span>
+          <span class="dash-card-icon dash-icon-income">
+            <fa-icon [icon]="faMoneyBillWave"></fa-icon>
+          </span>
         </div>
-        <div class="row mb-4 text-center">
-          <div class="col-xl-3 col-md-6 col-12 mb-3">
-            <div class="card h-100 income-card shadow-sm">
-              <div class="card-body pt-1 pb-1">
-                <div class="d-flex justify-content-between align-items-center" *ngIf="
-                    totalIncomesByCurrency$ | async as totals;
-                    else loading
-                  ">
-                  <div class="text-start">
-                    <h6 class="text-muted">{{ 'TOTAL_INCOMES' | translate }}</h6>
-                    <div *ngIf="
-                        totals && (totals | keyvalue).length > 0;
-                        else noData
-                      ">
-                      <span *ngFor="let total of totals | keyvalue" class="d-flex justify-content-start pb-0">
-                        <span class="income-amount fs-5">{{
-                          formatService.formatAmountShort(total.value, total.key)
-                          }}</span>
-                      </span>
-                    </div>
-                    <ng-template #noData>
-                      <p class="text-muted text-center pb-0">
-                        {{ 'NO_INCOME_DATA' | translate }}
-                      </p>
-                    </ng-template>
-                  </div>
-                  <div class="fs-2 text-success">
-                    <fa-icon [icon]="faMoneyBillWave"></fa-icon>
-                  </div>
-                </div>
-                <ng-template #loading>
-                  <p class="text-muted text-center">
-                    {{ 'LOADING_DATA' | translate }}
-                  </p>
-                </ng-template>
-              </div>
-            </div>
-          </div>
+        <ng-container *ngIf="totalIncomesByCurrency$ | async as totals; else cardLoading">
+          <ng-container *ngIf="totals && (totals | keyvalue).length > 0; else cardNoData">
+            <span *ngFor="let total of totals | keyvalue" class="dash-card-amount dash-amount-income">
+              {{ formatService.formatAmountShort(total.value, total.key) }}
+            </span>
+          </ng-container>
+        </ng-container>
+      </div>
 
-          <div class="col-xl-3 col-md-6 col-12 mb-3">
-            <div class="card h-100 budget-card shadow-sm">
-              <div class="card-body pt-1 pb-1">
-                <div class="d-flex justify-content-between align-items-center" *ngIf="
-                    totalBudgetsByCurrency$ | async as totals;
-                    else loading
-                  ">
-                  <div class="text-start">
-                    <h6 class="text-muted">{{ 'TOTAL_BUDGET' | translate }}</h6>
-                    <div *ngIf="
-                        totals && (totals | keyvalue).length > 0;
-                        else noData
-                      ">
-                      <span *ngFor="let total of totals | keyvalue" class="d-flex justify-content-start pb-0">
-                        <span class="budget-amount fs-5">{{
-                          formatService.formatAmountShort(total.value, total.key)
-                          }}</span>
-                      </span>
-                    </div>
-                    <ng-template #noData>
-                      <p class="text-muted text-center pb-0">
-                        {{ 'NO_BUDGET_YET' | translate }}
-                      </p>
-                    </ng-template>
-                  </div>
-                  <div class="fs-2 text-primary">
-                    <fa-icon [icon]="faPiggyBank"></fa-icon>
-                  </div>
-                </div>
-                <ng-template #loading>
-                  <p class="text-muted text-center">
-                    {{ 'LOADING_DATA' | translate }}
-                  </p>
-                </ng-template>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-xl-3 col-md-6 col-12 mb-3">
-            <div class="card h-100 expense-card shadow-sm">
-              <div class="card-body pt-1 pb-1">
-                <div class="d-flex justify-content-between align-items-center" *ngIf="
-                    totalExpensesByCurrency$ | async as totals;
-                    else loading
-                  ">
-                  <div class="text-start">
-                    <h6 class="text-muted">{{ 'TOTAL_EXPENSES' | translate }}</h6>
-                    <div *ngIf="
-                        totals && (totals | keyvalue).length > 0;
-                        else noData
-                      ">
-                      <span *ngFor="let total of totals | keyvalue" class="d-flex justify-content-start pb-0">
-                        <span class="expense-amount fs-5">
-                          {{
-                          formatService.formatAmountShort(total.value, total.key)
-                          }}
-                        </span>
-                      </span>
-                    </div>
-                    <ng-template #noData>
-                      <p class="text-muted text-center pb-0">
-                        {{ 'NO_EXPENSE_DATA' | translate }}
-                      </p>
-                    </ng-template>
-                  </div>
-                  <div class="fs-2 text-warning">
-                    <fa-icon [icon]="faShoppingCart"></fa-icon>
-                  </div>
-                </div>
-                <ng-template #loading>
-                  <p class="text-muted text-center">
-                    {{ 'LOADING_DATA' | translate }}
-                  </p>
-                </ng-template>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-xl-3 col-md-6 col-12 mb-3">
-            <div class="card h-100 shadow-sm" [ngClass]="getProfitLossCardClass(totalProfitLossByCurrency$ | async)">
-              <div class="card-body pt-1 pb-1">
-                <div class="d-flex justify-content-between align-items-center" *ngIf="
-          totalProfitLossByCurrency$ | async as profitLosses; else loading
-        ">
-                  <div class="text-start">
-                    <div *ngIf="(profitLosses | keyvalue).length > 0; else noData">
-                      <div *ngFor="let profit of profitLosses | keyvalue">
-                        <div class="text-muted">
-                          {{
-                          ($any(profit).value >= 0 ? 'NET_PROFIT' : 'NET_LOSS') | translate
-                          }}
-                        </div>
-                        <div class="fw-bold fs-5" [ngClass]="getProfitLossAmountClass($any(profit).value)">
-                          {{
-                          formatService.formatAmountShort($any(profit).value, $any(profit).key)
-                          }}
-                        </div>
-                      </div>
-                    </div>
-                    <ng-template #noData>
-                      <p class="text-muted text-center pb-0">
-                        {{ 'NO_PROFIT_LOSS_DATA' | translate }}
-                      </p>
-                    </ng-template>
-                  </div>
-                  <div class="fs-2" [ngClass]="getProfitLossIconClass(totalProfitLossByCurrency$ | async)">
-                    <fa-icon [icon]="getProfitLossIcon(totalProfitLossByCurrency$ | async)"></fa-icon>
-                  </div>
-                </div>
-                <ng-template #loading>
-                  <p class="text-muted text-center">
-                    {{ 'LOADING_DATA' | translate }}
-                  </p>
-                </ng-template>
-              </div>
-            </div>
-          </div>
+      <!-- Budget -->
+      <div class="dash-card dash-card-budget">
+        <div class="dash-card-top">
+          <span class="dash-card-label">{{ 'TOTAL_BUDGET' | translate }}</span>
+          <span class="dash-card-icon dash-icon-budget">
+            <fa-icon [icon]="faPiggyBank"></fa-icon>
+          </span>
         </div>
+        <ng-container *ngIf="totalBudgetsByCurrency$ | async as totals; else cardLoading">
+          <ng-container *ngIf="totals && (totals | keyvalue).length > 0; else cardNoData">
+            <span *ngFor="let total of totals | keyvalue" class="dash-card-amount dash-amount-budget">
+              {{ formatService.formatAmountShort(total.value, total.key) }}
+            </span>
+          </ng-container>
+        </ng-container>
+      </div>
 
-        <div class="row mt-3">
-          <div class="col-xl-7 col-lg-12 mb-4">
-            <div class="card shadow-sm h-100">
-              <div class="card-body px-1">
-                <h4 class="text-center fw-bold">
-                  {{ 'DASHBOARD_EXPENSES_CHART_TITLE' | translate }}
-                </h4>
-                <div class="chart-container">
-                  <canvas #expenseChartCanvas></canvas>
-                </div>
+      <!-- Expenses -->
+      <div class="dash-card dash-card-expense">
+        <div class="dash-card-top">
+          <span class="dash-card-label">{{ 'TOTAL_EXPENSES' | translate }}</span>
+          <span class="dash-card-icon dash-icon-expense">
+            <fa-icon [icon]="faShoppingCart"></fa-icon>
+          </span>
+        </div>
+        <ng-container *ngIf="totalExpensesByCurrency$ | async as totals; else cardLoading">
+          <ng-container *ngIf="totals && (totals | keyvalue).length > 0; else cardNoData">
+            <span *ngFor="let total of totals | keyvalue" class="dash-card-amount dash-amount-expense">
+              {{ formatService.formatAmountShort(total.value, total.key) }}
+            </span>
+          </ng-container>
+        </ng-container>
+      </div>
+
+      <!-- Profit / Loss -->
+      <div class="dash-card" [ngClass]="getProfitLossCardClass(totalProfitLossByCurrency$ | async)">
+        <ng-container *ngIf="totalProfitLossByCurrency$ | async as profitLosses; else cardLoading">
+          <ng-container *ngIf="(profitLosses | keyvalue).length > 0; else cardNoData">
+            <div *ngFor="let profit of profitLosses | keyvalue">
+              <div class="dash-card-top">
+                <span class="dash-card-label">
+                  {{ ($any(profit).value >= 0 ? 'NET_PROFIT' : 'NET_LOSS') | translate }}
+                </span>
+                <span class="dash-card-icon" [ngClass]="getProfitLossIconClass(totalProfitLossByCurrency$ | async)">
+                  <fa-icon [icon]="getProfitLossIcon(totalProfitLossByCurrency$ | async)"></fa-icon>
+                </span>
               </div>
+              <span class="dash-card-amount" [ngClass]="getProfitLossAmountClass($any(profit).value)">
+                {{ formatService.formatAmountShort($any(profit).value, $any(profit).key) }}
+              </span>
             </div>
-          </div>
-          <div class="col-xl-5 col-lg-12 mb-4">
-            <div class="card shadow-sm h-100">
-              <div class="card-body d-flex flex-column">
-                <h4 class="text-center fw-bold">
-                  {{ 'DASHBOARD_EXPENSE_BREAKDOWN_BY_CATEGORY' | translate }}
-                </h4>
-                <div class="chart-container flex-grow-1 position-relative">
-                  <canvas #categoryDonutChartCanvas></canvas>
-                  <div *ngIf="!hasCategoryDataForChart"
-                    class="position-absolute top-50 start-50 translate-middle text-muted">
-                    <p>{{ 'NO_DATA_AVAILABLE_FOR_CHART' | translate }}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+          </ng-container>
+        </ng-container>
+      </div>
+
+    </div>
+    <!-- END Summary Cards -->
+
+    <!-- Shared no-data / loading templates -->
+    <ng-template #cardLoading>
+      <span class="dash-card-muted">{{ 'LOADING_DATA' | translate }}</span>
+    </ng-template>
+    <ng-template #cardNoData>
+      <span class="dash-card-muted">—</span>
+    </ng-template>
+
+    <!-- ── Charts ── -->
+    <div class="dash-charts-grid">
+
+      <!-- Bar Chart -->
+      <div class="dash-chart-panel p-1">
+        <h5 class="dash-chart-title">
+          {{ 'DASHBOARD_EXPENSES_CHART_TITLE' | translate }}
+        </h5>
+        <div class="dash-chart-container">
+          <canvas #expenseChartCanvas></canvas>
+        </div>
+      </div>
+
+      <!-- Donut Chart -->
+      <div class="dash-chart-panel p-1">
+        <h5 class="dash-chart-title">
+          {{ 'DASHBOARD_EXPENSE_BREAKDOWN_BY_CATEGORY' | translate }}
+        </h5>
+        <div class="dash-chart-container dash-chart-donut">
+          <canvas #categoryDonutChartCanvas></canvas>
+          <div *ngIf="!hasCategoryDataForChart" class="dash-no-chart-data">
+            <span>{{ 'NO_DATA_AVAILABLE_FOR_CHART' | translate }}</span>
           </div>
         </div>
       </div>
+
     </div>
+    <!-- END Charts -->
+
   </div>
 </div>

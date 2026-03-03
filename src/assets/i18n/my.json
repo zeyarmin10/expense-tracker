@@ -206,7 +206,7 @@
   "CATEGORY_ERROR_DELETE": "အမျိုးအစားဖျက်ရာတွင် အမှားပေါ်ပေါက်ခဲ့သည်။",
   "CATEGORY_ERROR_DUPLICATE_NAME": "အမျိုးအစားအမည် ရှိပြီးသားဖြစ်သည်။",
   "CATEGORY_CLOSE_BUTTON": "ပိတ်ရန်",
-  "CANCEL_BUTTON_LABEL": "ဖျက်ရန်",
+  "CANCEL_BUTTON_LABEL": "မလုပ်တော့",
   "SUCCESS_TITLE": "အောင်မြင်သည်",
   "ERROR_TITLE": "အမှား",
   "CONFIRMATION_TITLE": "အတည်ပြုချက်",

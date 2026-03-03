@@ -8,7 +8,7 @@ import { AuthService } from './services/auth';
 import { User } from '@angular/fire/auth';
 import { Toast } from './components/toast/toast';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faRightFromBracket, faUsers } from '@fortawesome/free-solid-svg-icons';
+import { faRightFromBracket, faUsers, faChevronDown } from '@fortawesome/free-solid-svg-icons';
 import { InvitationService } from './services/invitation.service';
 import { DataManagerService } from './services/data-manager';
 import { ToastService } from './services/toast';
@@ -35,10 +35,12 @@ export class App implements OnInit {
   userDisplayName$: Observable<string | null>;
   isGroupAdmin$: Observable<boolean>;
   isGroupAccount$: Observable<boolean>;
-  groupMembers$: Observable<any[]>; 
+  groupMembers$: Observable<any[]>;
   faRightFromBracket = faRightFromBracket;
-  faUsers = faUsers; 
+  faUsers = faUsers;
+  faChevronDown = faChevronDown;
   currentLang: string;
+  mobileMenuOpen = false;
 
   private authService = inject(AuthService);
   private router = inject(Router);
@@ -61,9 +63,7 @@ export class App implements OnInit {
 
     this.isGroupAdmin$ = this.authService.userProfile$.pipe(
       map(profile => {
-        if (profile?.accountType !== 'group' || !profile?.roles) {
-          return false;
-        }
+        if (profile?.accountType !== 'group' || !profile?.roles) return false;
         const userRoles = Object.values(profile.roles);
         return userRoles.includes('admin');
       })
@@ -95,6 +95,13 @@ export class App implements OnInit {
     this.showNavbar$ = combineLatest([isLoggedIn$, isSpecialRoute$]).pipe(
       map(([isLoggedIn, isSpecialRoute]) => isLoggedIn && !isSpecialRoute)
     );
+
+    // Close mobile menu on route change
+    this.router.events.pipe(
+      filter((event): event is NavigationEnd => event instanceof NavigationEnd)
+    ).subscribe(() => {
+      this.mobileMenuOpen = false;
+    });
 
     this.translate.onLangChange.subscribe(event => {
       this.currentLang = event.lang;
@@ -134,6 +141,10 @@ export class App implements OnInit {
     }
   }
 
+  toggleMobileMenu(): void {
+    this.mobileMenuOpen = !this.mobileMenuOpen;
+  }
+
   toggleLanguage(): void {
     const newLang = this.currentLang === 'en' ? 'my' : 'en';
     this.translate.use(newLang);
@@ -150,10 +161,6 @@ export class App implements OnInit {
   }
 
   closeNavbarMenu(): void {
-    const navbarToggler = document.querySelector('.navbar-toggler') as HTMLElement;
-    const navbarCollapse = document.querySelector('#navbarColor03');
-    if (navbarCollapse && navbarCollapse.classList.contains('show')) {
-      navbarToggler.click();
-    }
+    this.mobileMenuOpen = false;
   }
 }

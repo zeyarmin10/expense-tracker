@@ -168,7 +168,8 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     const browserLang = this.translate.getBrowserLang();
     const defaultLang = browserLang?.match(/my|en/) ? browserLang : 'my';
     this.translate.use(storedLang || defaultLang);
-    Chart.defaults.font.family = 'MyanmarUIFont, Arial, sans-serif';
+    Chart.defaults.font.family = 'Syne, MyanmarUIFont, sans-serif';
+    Chart.defaults.color = '#6b7280';
   }
 
   private initializeUserDataAndDateRange(): void {
@@ -483,8 +484,8 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
           {
             data: data,
             backgroundColor: [
-              '#4299E1', '#ED8936', '#9F7AEA', '#48BB78', '#F56565', 
-              '#ECC94B', '#38B2AC', '#ED64A6', '#A0AEC0', '#63B3ED'
+              '#00e5b4', '#60a5fa', '#fbbf24', '#f87171', '#a78bfa',
+              '#34d399', '#38bdf8', '#fb923c', '#e879f9', '#facc15'
             ],
           },
         ],
@@ -497,6 +498,8 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
             position: 'bottom',
             labels: {
               boxWidth: 20,
+              color: '#9ca3af',
+              font: { family: 'Syne, sans-serif', size: 11 }
             }
           },
         },
@@ -528,10 +531,17 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         responsive: true,
         maintainAspectRatio: false,
         scales: {
-          x: { beginAtZero: true },
-          y: { 
+          x: {
             beginAtZero: true,
+            grid: { color: 'rgba(255,255,255,0.05)' },
+            ticks: { color: '#6b7280', font: { family: 'DM Mono, monospace', size: 11 } }
+          },
+          y: {
+            beginAtZero: true,
+            grid: { color: 'rgba(255,255,255,0.05)' },
             ticks: {
+              color: '#6b7280',
+              font: { family: 'DM Mono, monospace', size: 11 },
               callback: (value: any) => this.formatService.formatAmountShort(value),
             },
           },
@@ -609,7 +619,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     const expenseData = labels.map((label) => monthlyExpensesMap[label] || 0);
     return {
       labels,
-      datasets: [{ label: this.translate.instant('EXPENSE_AMOUNT'), data: expenseData, backgroundColor: '#FBD38D', borderColor: '#ED8936', borderWidth: 1, },],
+      datasets: [{ label: this.translate.instant('EXPENSE_AMOUNT'), data: expenseData, backgroundColor: 'rgba(0,229,180,0.25)', borderColor: '#00e5b4', borderWidth: 1, },],
     };
   }
 

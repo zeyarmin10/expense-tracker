@@ -1,53 +1,40 @@
-/* Mobile-First Approach: Define default (small screen) styles first */
-#navbarLogo {
-  height: 2rem;
-  width: auto;  /* Let the width adjust automatically to maintain aspect ratio */
+/* =====================
+   Global App Styles
+   ===================== */
+
+/* Remove default body margin/padding and set dark base */
+body {
+  margin: 0;
+  background-color: #0a0c10;
+  color: #f0f2f7;
 }
 
-/* Medium devices (tablets, 768px and up) */
-@media (min-width: 768px) {
-  #navbarLogo {
-    /* height: 40px; */
-    width: auto;
-  }
-}
-
-/* Large devices (desktops, 992px and up) */
-@media (min-width: 992px) {
-  #navbarLogo {
-    /* height: 50px; */
-    width: auto;
-  }
-}
-
-/* Optional: If you also want text next to the logo on larger screens */
-.navbar-brand .ms-2 {
-  margin-left: 0.5rem !important; /* Adjust spacing as needed */
-}
-
+/* Active nav link */
 .active-link {
-    /* font-weight: bold; */
-    color: #2574b8 !important; /* Example active link color */
+  color: #00e5b4 !important;
+  background: rgba(0, 229, 180, 0.12) !important;
 }
 
-/* LIGHT MODE DEFAULTS */
+/* =====================
+   CSS Variables
+   ===================== */
 :root {
-  --color-primary-accent: #00C0D4;
+  --color-primary-accent: #00e5b4;
+  --color-bg-primary: #0a0c10;
+  --color-bg-secondary: #12151c;
+  --color-text-primary: #f0f2f7;
+  --color-border: rgba(255, 255, 255, 0.07);
+
+  --color-success: #34d399;
+  --color-warning: #fbbf24;
+  --color-danger: #f87171;
+  --color-info: #60a5fa;
+}
+
+/* Keep light mode support if needed */
+body.light-mode {
   --color-bg-primary: #ffffff;
-  --color-bg-secondary: #f8f9fa; /* For Cards/Panels */
+  --color-bg-secondary: #f8f9fa;
   --color-text-primary: #212529;
   --color-border: #dee2e6;
-
-  /* Status Colors */
-  --color-success: #198754;
-  --color-warning: #ffc107;
-  --color-danger: #dc3545;
-}
-
-/* DARK MODE OVERRIDES */
-body.dark-mode {
-  --color-bg-primary: #121212;
-  --color-bg-secondary: #1E1E1E;
-  --color-text-primary: #f8f9fa;
-  --color-border: #333333;
 }

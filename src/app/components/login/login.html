@@ -1,148 +1,137 @@
-<div class="container" [ngClass]="{ 'mt-5': !isMobileView }">
-  <div class="row justify-content-center login-bg-image-lg">
-    <div class="lg-bg-image"></div>
-    <div class="col-12 col-sm-10 col-md-8 col-lg-6 col-xl-5 col-xxl-4">
-      <div class="login-bg-image mt-3"></div>
-      <div class="card shadow-lg p-4">
-        <span class="language-switcher">
-          <button class="btn btn-link p-0" (click)="toggleLanguage()" [ngClass]="{ active: currentLang === 'my' }"
-            [attr.aria-label]="
-              'Toggle language to ' +
-              (currentLang === 'my' ? 'English' : 'Burmese')
-            ">
-            <img [src]="
-                'assets/flags/' + (currentLang === 'my' ? 'en' : 'mm') + '.png'
-              " alt="{{ currentLang === 'my' ? 'English Flag' : 'Myanmar Flag' }}" class="flag-icon" />
-          </button>
-        </span>
-        <h2 class="card-title text-center mb-4">
-          {{
-          isLoginMode
-          ? ("LOGIN_TITLE" | translate)
-          : ("REGISTER_TITLE" | translate)
-          }}
-        </h2>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 
-        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-          <div class="mb-3" *ngIf="!isLoginMode">
-            <label for="name" class="form-label">{{
-              "NAME_LABEL" | translate
-              }}</label>
-            <input type="text" class="form-control" id="name" formControlName="name"
-              placeholder="{{ 'NAME_PLACEHOLDER' | translate }}" [class.is-invalid]="
-                loginForm.controls['name'].invalid &&
-                loginForm.controls['name'].touched
-              " />
-            <div *ngIf="
-                loginForm.controls['name'].invalid &&
-                loginForm.controls['name'].touched
-              " class="invalid-feedback">
-              <span *ngIf="loginForm.controls['name'].errors?.['required']">{{
-                "ERROR_NAME_REQUIRED" | translate
-                }}</span>
-            </div>
-          </div>
+<div class="lgn-root">
 
-          <div class="mb-3">
-            <label for="email" class="form-label">{{
-              "EMAIL_LABEL" | translate
-              }}</label>
-            <input type="email" class="form-control" id="email" formControlName="email"
-              placeholder="{{ 'EMAIL_PLACEHOLDER' | translate }}" [class.is-invalid]="
-                loginForm.controls['email'].invalid &&
-                loginForm.controls['email'].touched
-              " />
-            <div *ngIf="
-                loginForm.controls['email'].invalid &&
-                loginForm.controls['email'].touched
-              " class="invalid-feedback">
-              <span *ngIf="loginForm.controls['email'].errors?.['required']">{{
-                "ERROR_EMAIL_REQUIRED" | translate
-                }}</span>
-              <span *ngIf="loginForm.controls['email'].errors?.['email']">{{
-                "ERROR_EMAIL_INVALID" | translate
-                }}</span>
-            </div>
-          </div>
+  <!-- Animated background grid -->
+  <div class="lgn-bg-grid"></div>
+  <div class="lgn-bg-glow"></div>
 
-          <div class="mb-3">
-            <label for="password" class="form-label">{{
-              "PASSWORD_LABEL" | translate
-              }}</label>
-            <div class="input-group" [class.is-invalid]="
-                loginForm.controls['password'].invalid &&
-                loginForm.controls['password'].touched
-              ">
-              <input [type]="showPassword ? 'text' : 'password'" class="form-control border border-end-0 password-input"
-                id="password" formControlName="password" placeholder="{{ 'PASSWORD_PLACEHOLDER' | translate }}" />
-              <button type="button" class="btn border border-start-0 password-eye" (click)="togglePasswordVisibility()"
-                aria-label="Toggle password visibility">
-                <fa-icon [icon]="showPassword ? faEyeSlash : faEye"></fa-icon>
-              </button>
-            </div>
-            <div *ngIf="
-                loginForm.controls['password'].invalid &&
-                loginForm.controls['password'].touched
-              " class="invalid-feedback d-block">
-              <span *ngIf="loginForm.controls['password'].errors?.['required']">{{ "ERROR_PASSWORD_REQUIRED" | translate
-                }}</span>
-              <span *ngIf="loginForm.controls['password'].errors?.['minlength']">{{ "ERROR_PASSWORD_MINLENGTH" |
-                translate }}</span>
-            </div>
-          </div>
+  <!-- Language toggle -->
+  <button class="lgn-lang-btn" (click)="toggleLanguage()" [attr.aria-label]="'Toggle language'">
+    <img [src]="'assets/flags/' + (currentLang === 'my' ? 'en' : 'mm') + '.png'"
+      alt="{{ currentLang === 'my' ? 'English' : 'Myanmar' }}"
+      class="lgn-lang-flag" />
+    <span class="lgn-lang-label">{{ currentLang === 'my' ? 'EN' : 'MM' }}</span>
+  </button>
 
-          <div *ngIf="errorMessage" class="alert alert-danger" role="alert">
-            {{ errorMessage }}
-          </div>
-          <div *ngIf="successMessage" class="alert alert-success" role="alert">
-            {{ successMessage }}
-          </div>
+  <div class="lgn-center">
 
-          <button type="submit" class="btn btn-primary w-100 mb-3" [disabled]="loginForm.invalid">
-            {{
-            isLoginMode
-            ? ("LOGIN_BUTTON" | translate)
-            : ("REGISTER_BUTTON" | translate)
-            }}
-          </button>
-        </form>
-
-        <div class="text-center mb-3" *ngIf="isLoginMode">
-          <span class="text-muted">{{ "OR_TEXT" | translate }}</span>
-        </div>
-
-        <button type="button" class="btn btn-outline-info w-100 mb-3" (click)="signInWithGoogle()" *ngIf="isLoginMode">
-          <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="25" height="25" viewBox="0 0 48 48"
-            class="svg-icon">
-            <path fill="#FFC107"
-              d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z">
-            </path>
-            <path fill="#FF3D00"
-              d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z">
-            </path>
-            <path fill="#4CAF50"
-              d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z">
-            </path>
-            <path fill="#1976D2"
-              d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z">
-            </path>
-          </svg>
-          &nbsp; {{ "SIGN_IN_GOOGLE" | translate }}
-        </button>
-
-        <p class="text-center mt-3">
-          {{
-          isLoginMode
-          ? ("NO_ACCOUNT_QUESTION" | translate)
-          : ("HAVE_ACCOUNT_QUESTION" | translate)
-          }}
-          <a class="link-primary" (click)="toggleMode()">{{
-            isLoginMode
-            ? ("REGISTER_HERE_LINK" | translate)
-            : ("LOGIN_HERE_LINK" | translate)
-            }}</a>
-        </p>
+    <!-- Logo / Brand -->
+    <div class="lgn-brand">
+      <div class="lgn-brand-icon">
+        <img src="assets/images/Expense-Tracker-Logo.png" alt="Logo" class="lgn-logo-img"
+          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+        <div class="lgn-logo-fallback" style="display:none;">₭</div>
+      </div>
+      <div class="lgn-brand-text">
+        <span class="lgn-brand-name">Expense</span>
+        <span class="lgn-brand-sub">Tracker</span>
       </div>
     </div>
+
+    <!-- Card -->
+    <div class="lgn-card">
+
+      <!-- Tab switcher -->
+      <div class="lgn-tabs">
+        <button class="lgn-tab" [class.active]="isLoginMode" type="button" (click)="isLoginMode || toggleMode()">
+          {{ 'LOGIN_TITLE' | translate }}
+        </button>
+        <button class="lgn-tab" [class.active]="!isLoginMode" type="button" (click)="isLoginMode && toggleMode()">
+          {{ 'REGISTER_TITLE' | translate }}
+        </button>
+        <div class="lgn-tab-indicator" [class.right]="!isLoginMode"></div>
+      </div>
+
+      <!-- Form -->
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="lgn-form" autocomplete="off">
+
+        <!-- Name (register only) -->
+        <div class="lgn-field" *ngIf="!isLoginMode">
+          <div class="lgn-float-wrap">
+            <input type="text" id="lgn-name" class="lgn-input" formControlName="name"
+              placeholder=" "
+              [class.err]="loginForm.controls['name'].invalid && loginForm.controls['name'].touched" />
+            <label class="lgn-label" for="lgn-name">{{ 'NAME_LABEL' | translate }}</label>
+          </div>
+          <div class="lgn-error" *ngIf="loginForm.controls['name'].invalid && loginForm.controls['name'].touched">
+            {{ 'ERROR_NAME_REQUIRED' | translate }}
+          </div>
+        </div>
+
+        <!-- Email -->
+        <div class="lgn-field">
+          <div class="lgn-float-wrap">
+            <input type="email" id="lgn-email" class="lgn-input" formControlName="email"
+              placeholder=" "
+              [class.err]="loginForm.controls['email'].invalid && loginForm.controls['email'].touched" />
+            <label class="lgn-label" for="lgn-email">{{ 'EMAIL_LABEL' | translate }}</label>
+          </div>
+          <div class="lgn-error" *ngIf="loginForm.controls['email'].invalid && loginForm.controls['email'].touched">
+            <span *ngIf="loginForm.controls['email'].errors?.['required']">{{ 'ERROR_EMAIL_REQUIRED' | translate }}</span>
+            <span *ngIf="loginForm.controls['email'].errors?.['email']">{{ 'ERROR_EMAIL_INVALID' | translate }}</span>
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div class="lgn-field">
+          <div class="lgn-float-wrap lgn-pass-wrap">
+            <input [type]="showPassword ? 'text' : 'password'" id="lgn-pass" class="lgn-input lgn-pass-input"
+              formControlName="password" placeholder=" "
+              [class.err]="loginForm.controls['password'].invalid && loginForm.controls['password'].touched" />
+            <label class="lgn-label" for="lgn-pass">{{ 'PASSWORD_LABEL' | translate }}</label>
+            <button type="button" class="lgn-eye-btn" (click)="togglePasswordVisibility()" tabindex="-1">
+              <fa-icon [icon]="showPassword ? faEyeSlash : faEye"></fa-icon>
+            </button>
+          </div>
+          <div class="lgn-error" *ngIf="loginForm.controls['password'].invalid && loginForm.controls['password'].touched">
+            <span *ngIf="loginForm.controls['password'].errors?.['required']">{{ 'ERROR_PASSWORD_REQUIRED' | translate }}</span>
+            <span *ngIf="loginForm.controls['password'].errors?.['minlength']">{{ 'ERROR_PASSWORD_MINLENGTH' | translate }}</span>
+          </div>
+        </div>
+
+        <!-- Error / Success alerts -->
+        <div class="lgn-alert lgn-alert-err" *ngIf="errorMessage" role="alert">{{ errorMessage }}</div>
+        <div class="lgn-alert lgn-alert-ok" *ngIf="successMessage" role="alert">{{ successMessage }}</div>
+
+        <!-- Submit -->
+        <button type="submit" class="lgn-submit-btn" [disabled]="loginForm.invalid">
+          <span class="lgn-btn-text">
+            {{ (isLoginMode ? 'LOGIN_BUTTON' : 'REGISTER_BUTTON') | translate }}
+          </span>
+          <span class="lgn-btn-arrow">→</span>
+        </button>
+
+      </form>
+
+      <!-- Divider + Google (login only) -->
+      <ng-container *ngIf="isLoginMode">
+        <div class="lgn-divider">
+          <span>{{ 'OR_TEXT' | translate }}</span>
+        </div>
+        <button type="button" class="lgn-google-btn" (click)="signInWithGoogle()">
+          <svg class="lgn-google-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+            <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/>
+            <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/>
+            <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/>
+            <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/>
+          </svg>
+          {{ 'SIGN_IN_GOOGLE' | translate }}
+        </button>
+      </ng-container>
+
+    </div>
+    <!-- END card -->
+
+    <!-- Footer link -->
+    <p class="lgn-footer-link">
+      {{ (isLoginMode ? 'NO_ACCOUNT_QUESTION' : 'HAVE_ACCOUNT_QUESTION') | translate }}
+      <a class="lgn-toggle-link" (click)="toggleMode()">
+        {{ (isLoginMode ? 'REGISTER_HERE_LINK' : 'LOGIN_HERE_LINK') | translate }}
+      </a>
+    </p>
+
   </div>
+  <!-- END center -->
+
 </div>

@@ -100,6 +100,8 @@ export class ExpenseOverview implements OnInit {
 
   categoryTotals: CategoryTotal[] = [];
 
+  currentPeriodLabel: string = '';
+
   public _selectedCategory$ = new BehaviorSubject<string>('');
 
   // --- Pie Chart Properties ---
@@ -163,16 +165,16 @@ export class ExpenseOverview implements OnInit {
 
         // If 'custom' filter is used and its end date is in the future, use today as the end date for calculation.
         if (this.selectedDateFilter === 'custom' && originalEndDate > today) {
-            effectiveEndDate = today;
+          effectiveEndDate = today;
         }
 
         // Ensure start date isn't after the effective end date (e.g., if start is in the future).
         if (startDate > effectiveEndDate) {
-            totalDays = 0;
+          totalDays = 0;
         } else {
-            const timeDifference = effectiveEndDate.getTime() - startDate.getTime();
-            // Add 1 for inclusivity, use Math.floor for whole days.
-            totalDays = Math.floor(timeDifference / (1000 * 60 * 60 * 24)) + 1;
+          const timeDifference = effectiveEndDate.getTime() - startDate.getTime();
+          // Add 1 for inclusivity, use Math.floor for whole days.
+          totalDays = Math.floor(timeDifference / (1000 * 60 * 60 * 24)) + 1;
         }
         // --- END MODIFICATION ---
 
@@ -257,6 +259,7 @@ export class ExpenseOverview implements OnInit {
 
   setDateFilter(filter: string): void {
     this.selectedDateFilter = filter;
+    this.updateCurrentPeriodLabel(filter);
 
     const serviceFilters = [
       'last30Days',
@@ -283,13 +286,43 @@ export class ExpenseOverview implements OnInit {
           end: this.endDate,
         });
       } else {
+        // Fallback to a default if custom dates aren't set
         this.setDateFilter('currentMonth');
       }
     }
   }
 
+
+  updateCurrentPeriodLabel(filter: string): void {
+    if (filter === 'custom') {
+      if (this.startDate && this.endDate) {
+        const start = this.datePipe.transform(this.startDate, 'shortDate');
+        const end = this.datePipe.transform(this.endDate, 'shortDate');
+        this.currentPeriodLabel = `${start} - ${end}`;
+      } else {
+        this.currentPeriodLabel = this.translate.instant('CUSTOM_DATE_RANGE');
+      }
+    } else {
+      const keyMap: { [key: string]: string } = {
+        'currentWeek': 'BUDGET_PERIOD.WEEKLY',
+        'currentMonth': 'BUDGET_PERIOD.MONTHLY',
+        'currentYear': 'BUDGET_PERIOD.YEARLY',
+        'last30Days': 'LAST_30_DAYS',
+        'lastMonth': 'LAST_MONTH',
+        'lastSixMonths': 'LAST_SIX_MONTHS',
+        'lastYear': 'LAST_YEAR',
+      };
+      const translationKey = keyMap[filter];
+      this.currentPeriodLabel = this.translate.instant(translationKey || filter);
+    }
+  }
+
+
   onSearch(): void {
     this.searchFilter$.next(this.searchTerm);
+    if (this.selectedDateFilter === 'custom') {
+      this.updateCurrentPeriodLabel('custom');
+    }
   }
 
   calculateSummary(expenses: IExpense[], totalDays: number): void {
@@ -396,8 +429,8 @@ export class ExpenseOverview implements OnInit {
       const month = this.datePipe.transform(d, 'MMM');
       const burmeseMonth = month
         ? BURMESE_MONTH_ABBREVIATIONS[
-            month as keyof typeof BURMESE_MONTH_ABBREVIATIONS
-          ]
+        month as keyof typeof BURMESE_MONTH_ABBREVIATIONS
+        ]
         : '';
 
       const day = new Intl.NumberFormat('my-MM', {
@@ -430,8 +463,8 @@ export class ExpenseOverview implements OnInit {
       const month = this.datePipe.transform(d, 'MMM');
       const burmeseMonth = month
         ? BURMESE_MONTH_ABBREVIATIONS[
-            month as keyof typeof BURMESE_MONTH_ABBREVIATIONS
-          ]
+        month as keyof typeof BURMESE_MONTH_ABBREVIATIONS
+        ]
         : '';
 
       const day = new Intl.NumberFormat('my-MM', {
