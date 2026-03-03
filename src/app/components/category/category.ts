@@ -22,6 +22,7 @@ import {
   faTrash,
   faSave,
   faTimes,
+  faTags
 } from '@fortawesome/free-solid-svg-icons';
 
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
@@ -58,6 +59,7 @@ export class Category implements OnInit {
   faTrash = faTrash;
   faSave = faSave;
   faTimes = faTimes;
+  faTags = faTags;
 
   constructor(private fb: FormBuilder) {
     this.addCategoryForm = this.fb.group({

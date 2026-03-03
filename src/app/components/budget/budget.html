@@ -3,7 +3,7 @@
     <div class="col-12 col-lg-11 col-xl-10 container-column">
       <div class="card shadow-sm px-3 py-3 p-sm-4 p-md-4 p-lg-4 p-xl-4 p-xxl-4 budget-card">
         <h2 class="card-title text-center mb-4">
-          {{ "BUDGET_TITLE" | translate }}
+          <fa-icon [icon]="faPiggyBank" class="me-2 text-primary"></fa-icon> {{ "BUDGET_TITLE" | translate }}
         </h2>
 
         <div class="row g-2 d-flex align-items-center mb-3">
@@ -58,7 +58,7 @@
               <button class="accordion-button collapsed budget-card-header card-header" type="button"
                 data-bs-toggle="collapse" data-bs-target="#collapseBudget" aria-expanded="false"
                 aria-controls="collapseBudget">
-                {{ "ADD_BUDGET" | translate }}
+                <fa-icon [icon]="faPiggyBank" class="me-2 text-primary"></fa-icon> {{ "ADD_BUDGET" | translate }}
               </button>
             </h2>
             <div id="collapseBudget" class="accordion-collapse collapse" aria-labelledby="headingBudget"
@@ -153,7 +153,7 @@
               <button class="accordion-button collapsed budget-card-header card-header" type="button"
                 data-bs-toggle="collapse" data-bs-target="#collapseRecordedBudgets" aria-expanded="false"
                 aria-controls="collapseRecordedBudgets">
-                {{ "RECORDED_BUDGETS" | translate }}
+                <fa-icon [icon]="faTasks" class="me-2 text-success"></fa-icon> {{ "RECORDED_BUDGETS" | translate }}
               </button>
             </h2>
             <div id="collapseRecordedBudgets" class="accordion-collapse collapse"
@@ -330,7 +330,7 @@
 
         <div class="card mb-4">
           <div class="card-header d-flex justify-content-center align-items-center budget-card-header">
-            {{ "BUDGET_COMPARISON" | translate }}
+            <fa-icon [icon]="faChartBar" class="me-2 text-info"></fa-icon> {{ "BUDGET_COMPARISON" | translate }}
           </div>
           <div class="card-body chart-container">
             <canvas id="budgetChart"></canvas>
@@ -340,7 +340,7 @@
         <!-- Add this card after the monthly summary section -->
         <div class="card mb-4">
           <div class="card-header d-flex justify-content-center align-items-center budget-card-header">
-            {{ "SPENDING_MONITOR" | translate }}
+            <fa-icon [icon]="faShoppingCart" class="me-2 text-warning"></fa-icon> {{ "SPENDING_MONITOR" | translate }}
           </div>
           <div class="card-body budget-spending-monitor-body">
             <div *ngIf="
@@ -633,7 +633,7 @@
 
         <div class="card mb-4">
           <div class="card-header d-flex justify-content-between align-items-center budget-card-header">
-            {{ "MONTHLY_SUMMARY" | translate }}
+            <fa-icon [icon]="faChartLine" class="me-2 text-info"></fa-icon> {{ "MONTHLY_SUMMARY" | translate }}
           </div>
           <div class="card-body budget-monthly-summary">
             <div *ngIf="monthlySummary$ | async as monthlySummary; else loading">

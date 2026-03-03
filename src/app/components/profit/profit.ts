@@ -40,6 +40,10 @@ import {
   faShoppingCart,
   faChartLine,
   faArrowTrendDown,
+  faChartPie, 
+  faFilter, 
+  faCalendarAlt, 
+  faEllipsisH
 } from '@fortawesome/free-solid-svg-icons';
 import { AuthService } from '../../services/auth';
 import { Chart, registerables } from 'chart.js';
@@ -156,6 +160,10 @@ export class Profit implements OnInit, OnDestroy {
   faShoppingCart = faShoppingCart;
   faChartLine = faChartLine;
   faArrowTrendDown = faArrowTrendDown;
+  faChartPie = faChartPie;
+  faFilter = faFilter;
+  faCalendarAlt = faCalendarAlt;
+  faEllipsisH = faEllipsisH;
 
   constructor() {
     this.incomeForm = this.fb.group({

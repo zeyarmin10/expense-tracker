@@ -32,6 +32,8 @@ import {
   faShoppingCart,
   faChartLine,
   faArrowTrendDown,
+  faTasks,
+  faChartBar
 } from '@fortawesome/free-solid-svg-icons';
 import { Chart, registerables } from 'chart.js';
 import { AuthService } from '../../services/auth';
@@ -151,6 +153,8 @@ export class BudgetComponent implements OnInit, OnDestroy {
   faShoppingCart = faShoppingCart;
   faChartLine = faChartLine;
   faArrowTrendDown = faArrowTrendDown;
+  faTasks = faTasks;
+  faChartBar = faChartBar;
 
   isBudgetFormCollapsed: boolean = true;
   isRecordedBudgetsCollapsed: boolean = true;
@@ -1023,8 +1027,8 @@ export class BudgetComponent implements OnInit, OnDestroy {
     } else if (filter === 'custom') {
       if (this.startDate && this.endDate) {
         this.dateFilter$.next({
-          start: this.startDate,
-          end: this.endDate,
+          start: this.startDate!,
+          end: this.endDate!,
         });
       } else {
         this.setDateFilter('currentMonth');

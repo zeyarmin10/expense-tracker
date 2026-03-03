@@ -24,7 +24,7 @@ import {
 } from 'chart.js';
 import { Router } from '@angular/router';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
+import { faMagnifyingGlass, faChartPie, faCalendarAlt, faFilter, faList, faChartColumn } from '@fortawesome/free-solid-svg-icons';
 import {
   CURRENCY_SYMBOLS,
   BURMESE_MONTH_ABBREVIATIONS,
@@ -76,6 +76,11 @@ export class ExpenseOverview implements OnInit {
   userDataService = inject(UserDataService);
 
   faMagnifyingGlass = faMagnifyingGlass;
+  faChartPie = faChartPie;
+  faCalendarAlt = faCalendarAlt;
+  faFilter = faFilter;
+  faList = faList;
+  faChartColumn = faChartColumn;
 
   // --- Filtering and Search Properties ---
   allExpenses$: Observable<IExpense[]> = this.expenseService.getExpenses();

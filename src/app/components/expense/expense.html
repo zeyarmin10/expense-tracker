@@ -12,7 +12,7 @@
           <h2 class="accordion-header" id="headingOne">
             <button class="accordion-button new-expense-card-header" type="button" data-bs-toggle="collapse"
               data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-              {{ "EXPENSE_ADD_TITLE" | translate }}
+              <fa-icon [icon]="faWallet" class="me-2 text-warning fs-5"></fa-icon> {{ "EXPENSE_ADD_TITLE" | translate }}
             </button>
           </h2>
           <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne"
@@ -51,7 +51,7 @@
                 <!-- Item Name Field -->
                 <div class="form-floating mb-3">
                   <input type="text" class="form-control" id="itemName" formControlName="itemName"
-                    placeholder="{{ 'EXPENSE_ITEM_NAME_PLACEHOLDER' | translate }}"
+                    placeholder="{{'EXPENSE_ITEM_NAME_PLACEHOLDER' | translate }}"
                     [class.is-invalid]="newExpenseForm.controls['itemName'].invalid && newExpenseForm.controls['itemName'].touched">
                   <label for="itemName">{{ "EXPENSE_ITEM_NAME_LABEL" | translate }}</label>
                 </div>
@@ -71,7 +71,7 @@
                   <div class="col-6 col-md-4 mb-3">
                     <div class="form-floating">
                       <input type="text" class="form-control" id="unit" formControlName="unit"
-                        placeholder="{{ 'EXPENSE_UNIT_PLACEHOLDER' | translate }}">
+                        placeholder="{{'EXPENSE_UNIT_PLACEHOLDER' | translate }}">
                       <label for="unit">{{ "EXPENSE_UNIT_LABEL" | translate }}</label>
                     </div>
                   </div>
@@ -110,7 +110,8 @@
       <!-- Expense List Section -->
       <div class="card shadow-sm">
         <div class="card-body">
-          <h3 class="card-title text-center mb-3">{{ "EXPENSE_YOUR_EXPENSES_TITLE" | translate }}</h3>
+          <h3 class="card-title text-center mb-3"><fa-icon [icon]="faListAlt" class="me-2 text-success"></fa-icon> {{
+            "EXPENSE_YOUR_EXPENSES_TITLE" | translate }}</h3>
 
           <!-- Filter Section -->
           <div class="row justify-content-start mb-4">
@@ -130,9 +131,10 @@
           </div>
 
           <!-- Totals Badges -->
-          <div class="d-flex flex-wrap gap-2 mb-4">
+          <div class="d-flex justify-content-end gap-2 mb-4">
             <ng-container *ngIf="totalExpensesByCurrency$ | async as totals">
-              <div *ngIf="(totals | keyvalue).length > 0; else noTotalsForDate">
+              <div *ngIf="(totals | keyvalue).length > 0; else noTotalsForDate" class="d-flex justify-content-end">
+                <fa-icon [icon]="faCoins" class="me-2 text-center text-warning fs-5"></fa-icon>
                 <button type="button" class="btn btn-sm btn-outline-warning text-wrap total-btn mb-2"
                   *ngFor="let total of totals | keyvalue" (click)="filterByCurrency(total.key)">
                   <span class="expense-amount">

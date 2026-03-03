@@ -3,7 +3,7 @@
     <div class="col-12 col-sm-10 col-md-10 col-lg-8 col-xl-6 col-xxl-6 container-column">
       <div class="card shadow-sm p-3 p-md-4 category-card">
         <h2 class="card-title text-center mb-4">
-          {{ "CREATE_CATEGORY_TITLE" | translate }}
+          <fa-icon [icon]="faTags" class="me-2 text-primary"></fa-icon> {{ "CREATE_CATEGORY_TITLE" | translate }}
         </h2>
 
         <form [formGroup]="addCategoryForm" (ngSubmit)="onAddSubmit()">

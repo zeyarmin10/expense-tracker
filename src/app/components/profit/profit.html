@@ -3,7 +3,7 @@
     <div class="col-12 col-lg-11 col-xl-10 container-column">
       <div class="card shadow-sm px-3 py-3 p-sm-4 p-md-4 p-lg-4 p-xl-4 p-xxl-4 profit-card">
         <h2 class="card-title text-center mb-4">
-          {{ "PROFIT_LOSS_TITLE" | translate }}
+          <fa-icon [icon]="faChartLine" class="me-2 text-primary"></fa-icon> {{ "PROFIT_LOSS_TITLE" | translate }}
         </h2>
 
         <div class="row g-2 d-flex align-items-center mb-3">
@@ -58,7 +58,7 @@
               <button class="accordion-button collapsed  profit-card-header card-header" type="button"
                 data-bs-toggle="collapse" data-bs-target="#collapseIncome" aria-expanded="false"
                 aria-controls="collapseIncome">
-                {{ "ADD_REVENUE" | translate }}
+                <fa-icon [icon]="faMoneyBillWave" class="me-2 text-success"></fa-icon> {{ "ADD_REVENUE" | translate }}
               </button>
             </h2>
             <div id="collapseIncome" class="accordion-collapse collapse" aria-labelledby="headingIncome"
@@ -113,7 +113,7 @@
               <button class="accordion-button collapsed profit-card-header card-header" type="button"
                 data-bs-toggle="collapse" data-bs-target="#collapseRecordedIncomes" aria-expanded="false"
                 aria-controls="collapseRecordedIncomes">
-                {{ "RECORDED_REVENUE" | translate }}
+                <fa-icon [icon]="faMoneyBillWave" class="me-2 text-info"></fa-icon> {{ "RECORDED_REVENUE" | translate }}
               </button>
             </h2>
             <div id="collapseRecordedIncomes" class="accordion-collapse collapse"
@@ -276,7 +276,7 @@
         <div class="col-12">
           <div class="card mb-4 shadow-sm">
             <div class="card-header d-flex justify-content-center align-items-center">
-              {{ "PROFIT_CHART_TITLE" | translate }}
+              <fa-icon [icon]="faChartPie" class="me-2 text-danger"></fa-icon> {{ "PROFIT_CHART_TITLE" | translate }}
             </div>
             <div class="card-body ps-1 pe-1">
               <div class="row">

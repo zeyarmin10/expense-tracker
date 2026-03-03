@@ -1,114 +1,60 @@
-<div class="container mt-3 mb-5">
-  <div class="row d-flex justify-content-center">
-    <div class="col-12 col-sm-10 col-md-10 col-lg-8 col-xl-8 col-xxl-8 container-column">
-      <div class="card shadow-sm p-3 p-md-4 expense-card">
-        <!-- Invite New Member -->
-        <div class="card shadow-sm border-0 mb-4">
-          <div class="card-body p-4">
-            <h2 class="card-title text-center mb-4">
-              <fa-icon [icon]="faUserPlus" class="me-2"></fa-icon>{{ 'MEMBER_MANAGEMENT.INVITE_MEMBER' | translate }}
-            </h2>
+<div class="container my-4">
+  <div class="row justify-content-center">
+    <div class="col-md-10 col-lg-8 col-xl-7">
 
-            <div class="row g-3">
-              <div class="col-md-9">
-                <input type="email" [(ngModel)]="newMemberEmail"
-                  placeholder="{{ 'MEMBER_MANAGEMENT.EMAIL_PLACEHOLDER' | translate }}"
-                  class="form-control form-control shadow-none" />
-              </div>
-              <div class="col-md-3 d-grid">
-                <button (click)="sendInvite()" class="btn btn-primary" [disabled]="isSending">
-                  <span *ngIf="isSending" class="spinner-border spinner-border-sm me-2" role="status"></span>
-                  {{ (isSending ? 'MEMBER_MANAGEMENT.SENDING_INVITE' : 'MEMBER_MANAGEMENT.SEND_INVITE') | translate }}
-                </button>
-              </div>
-            </div>
+      <!-- Invite New Member -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-body">
+          <h5 class="card-title"><fa-icon [icon]="faUserPlus"></fa-icon> {{ 'INVITE_NEW_MEMBER' | translate }}</h5>
+          <div class="input-group">
+            <input type="email" class="form-control" [placeholder]="'EMAIL_PLACEHOLDER' | translate" [(ngModel)]="newMemberEmail" (keyup.enter)="sendInvite()">
+            <button class="btn btn-primary" (click)="sendInvite()" [disabled]="isSending">
+              <fa-icon [icon]="faPaperPlane" *ngIf="!isSending"></fa-icon>
+              <span *ngIf="isSending" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            </button>
           </div>
         </div>
-
-        <!-- Pending Invitations -->
-        <div class="card shadow-sm border-0 mb-4">
-          <div class="card-header bg-white py-3 border-bottom-0">
-            <h2 class="h5 mb-0 fw-bold">{{ 'MEMBER_MANAGEMENT.PENDING_INVITES' | translate }}</h2>
-          </div>
-          <div class="card-body px-4 py-2">
-            <div *ngIf="pendingInvites$ | async as invites; else loadingInvites">
-              <div *ngIf="invites.length > 0; else noInvites" class="list-group list-group-flush border rounded">
-                <div *ngFor="let invite of invites"
-                  class="list-group-item d-flex justify-content-between align-items-center py-2 bg-light-hover">
-                  <div class="d-flex align-items-center">
-                    <fa-icon [icon]="faEnvelope" class="text-secondary me-3"></fa-icon>
-                    <span class="text-break">{{ invite.email }}</span>
-                  </div>
-                  <button (click)="confirmRevokeInvite(invite.key!)" class="btn btn-outline-warning btn-sm px-3">
-                    {{ 'MEMBER_MANAGEMENT.REVOKE' | translate }}
-                  </button>
-                </div>
-              </div>
-              <ng-template #noInvites>
-                <div class="text-center py-1 text-muted">
-                  <fa-icon [icon]="faInbox" class="fs-1 d-block mb-2"></fa-icon>
-                  <p class="mb-0">{{ 'MEMBER_MANAGEMENT.NO_PENDING_INVITES' | translate }}</p>
-                </div>
-              </ng-template>
-            </div>
-            <ng-template #loadingInvites>
-              <div class="d-flex align-items-center text-primary">
-                <span class="spinner-border spinner-border-sm me-2"></span>
-                <span>{{ 'MEMBER_MANAGEMENT.LOADING_INVITES' | translate }}</span>
-              </div>
-            </ng-template>
-          </div>
-        </div>
-
-        <!-- Current Members -->
-        <div class="card shadow-sm border-0">
-          <div class="card-header bg-white py-3 border-bottom-0">
-            <h2 class="h5 mb-0 fw-bold">{{ 'MEMBER_MANAGEMENT.CURRENT_MEMBERS' | translate }}</h2>
-          </div>
-
-          <div class="card-body px-4 py-2">
-            <div *ngIf="(members$ | async) as members; else loadingMembers">
-
-              <div *ngIf="members.length > 0; else noMembers" class="list-group list-group-flush border rounded">
-
-                <div *ngFor="let member of members"
-                  class="list-group-item d-flex justify-content-between align-items-center py-2">
-                  <div class="d-flex align-items-center">
-
-                    <div
-                      class="avatar-circle me-3 bg-primary text-white d-flex align-items-center justify-content-center rounded-circle"
-                      style="width: 40px; height: 40px; min-width: 40px; flex-shrink: 0;">
-                      {{ (member?.displayName?.[0] || '?').toUpperCase() }}
-                    </div>
-
-                    <div>
-                      <div class="fw-bold mb-0 text-dark">{{ member?.displayName || 'Unknown User' }}</div>
-                      <small class="badge bg-light text-dark border fw-normal">{{ member?.role }}</small>
-                    </div>
-                  </div>
-
-                  <button *ngIf="(groupOwnerId$ | async) !== member?.uid" (click)="confirmDeleteMember(member!.uid!)"
-                    class="btn btn-outline-danger btn-sm px-3">
-                    <fa-icon [icon]="faTrash" class="me-1"></fa-icon>
-                  </button>
-                </div>
-              </div>
-
-              <ng-template #noMembers>
-                <p class="text-muted mb-0">{{ 'MEMBER_MANAGEMENT.NO_MEMBERS' | translate }}</p>
-              </ng-template>
-            </div>
-
-            <ng-template #loadingMembers>
-              <div class="d-flex align-items-center text-primary">
-                <span class="spinner-border spinner-border-sm me-2"></span>
-                <span>{{ 'MEMBER_MANAGEMENT.LOADING_MEMBERS' | translate }}</span>
-              </div>
-            </ng-template>
-          </div>
-        </div>
-
       </div>
+
+      <!-- Pending Invites -->
+      <div *ngIf="(pendingInvites$ | async)?.length ?? 0 > 0" class="card shadow-sm mb-4">
+        <div class="card-body">
+          <h5 class="card-title"><fa-icon [icon]="faInbox"></fa-icon> {{ 'PENDING_INVITATIONS' | translate }}</h5>
+          <ul class="list-group list-group-flush">
+            <li *ngFor="let invite of pendingInvites$ | async" class="list-group-item d-flex justify-content-between align-items-center">
+              <div class="d-flex align-items-center">
+                <fa-icon [icon]="faEnvelope" class="me-3 text-secondary"></fa-icon>
+                <span>{{ invite.email }}</span>
+              </div>
+              <button class="btn btn-sm btn-outline-warning" (click)="confirmRevokeInvite(invite.key)">
+                <fa-icon [icon]="faUserSlash"></fa-icon>
+              </button>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Current Members -->
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title"><fa-icon [icon]="faInbox"></fa-icon> {{ 'CURRENT_MEMBERS' | translate }}</h5>
+          <ul class="list-group list-group-flush">
+            <li *ngFor="let member of members$ | async" class="list-group-item d-flex justify-content-between align-items-center">
+              <div class="d-flex align-items-center">
+                <fa-icon [icon]="faUserCircle" class="me-3" [style.color]="getAvatarColor(member.displayName!)" size="2x"></fa-icon>
+                <div>
+                  <div class="fw-bold">{{ member.displayName }}</div>
+                  <small class="text-muted">{{ member.role }}</small>
+                </div>
+              </div>
+              <button class="btn btn-sm btn-outline-danger" *ngIf="(groupOwnerId$ | async) === (userProfile$ | async)?.uid && member.uid !== (userProfile$ | async)?.uid" (click)="confirmDeleteMember(member.uid)">
+                <fa-icon [icon]="faTrash"></fa-icon>
+              </button>
+            </li>
+          </ul>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>

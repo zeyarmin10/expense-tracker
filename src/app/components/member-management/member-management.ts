@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faUserPlus, faEnvelope, faInbox, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faUserPlus, faEnvelope, faInbox, faTrash, faUserSlash, faUserCircle, faPaperPlane } from '@fortawesome/free-solid-svg-icons';
 import { IUserProfile, IInvitation } from '../../core/models/data';
 import { Observable, of, firstValueFrom, from } from 'rxjs';
 import { switchMap, shareReplay, map } from 'rxjs/operators';
@@ -29,6 +29,9 @@ export class MemberManagementComponent implements OnInit {
   faEnvelope = faEnvelope;
   faInbox = faInbox;
   faTrash = faTrash;
+  faUserSlash = faUserSlash;
+  faUserCircle = faUserCircle;
+  faPaperPlane = faPaperPlane;
 
   userProfile$: Observable<IUserProfile | null>;
   members$: Observable<IGroupMemberDetails[]>; 
@@ -70,6 +73,20 @@ export class MemberManagementComponent implements OnInit {
   }
 
   ngOnInit(): void {}
+
+  getAvatarColor(name: string): string {
+    if (!name) return '#ccc';
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+      hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    let color = '#';
+    for (let i = 0; i < 3; i++) {
+      const value = (hash >> (i * 8)) & 0xFF;
+      color += ('00' + value.toString(16)).substr(-2);
+    }
+    return color;
+  }
 
   async sendInvite(): Promise<void> {
     if (this.isSending || !this.newMemberEmail) return;
@@ -164,7 +181,12 @@ export class MemberManagementComponent implements OnInit {
     });
   }
 
-  confirmRevokeInvite(inviteKey: string): void {
+  confirmRevokeInvite(inviteKey: string | undefined): void {
+    if (!inviteKey) {
+        console.error("Cannot revoke invite, key is missing.");
+        Swal.fire({icon: 'error', title: this.translate.instant('TOAST_ERROR_REVOKING_INVITE'), toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true});
+        return;
+    }
     Swal.fire({
         title: this.translate.instant('CONFIRM_REVOKE_TITLE'),
         text: this.translate.instant('CONFIRM_REVOKE_INVITE'),

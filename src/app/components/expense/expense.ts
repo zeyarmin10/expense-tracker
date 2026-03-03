@@ -33,6 +33,9 @@ import {
   faTimes,
   faSync,
   faInfoCircle,
+  faWallet,
+  faListAlt,
+  faCoins,
 } from '@fortawesome/free-solid-svg-icons';
 
 import { CategoryModalComponent } from '../common/category-modal/category-modal';
@@ -111,6 +114,9 @@ export class Expense implements OnInit {
   faTimes = faTimes;
   faSync = faSync;
   faInfoCircle = faInfoCircle;
+  faWallet = faWallet;
+  faListAlt = faListAlt;
+  faCoins = faCoins;
 
   userProfile: UserProfile | null = null;
 
@@ -126,9 +132,9 @@ export class Expense implements OnInit {
       itemName: ['', Validators.required],
       quantity: [1, [Validators.required, Validators.min(1)]],
       unit: [''],
-      price: [0, [Validators.required, Validators.min(0)]],
+      price: ['', [Validators.required, Validators.min(0)]],
     });
-    
+
     this.categories$ = this.categoryService.getCategories();
 
     const storedLang = localStorage.getItem('selectedLanguage');
@@ -144,14 +150,14 @@ export class Expense implements OnInit {
     });
 
     this.authService.userProfile$.subscribe(profile => {
-        this.userProfile = profile;
-        if (profile?.roles && typeof profile.roles === 'object') {
-            this.userRole = Object.values(profile.roles)[0];
-        }
+      this.userProfile = profile;
+      if (profile?.roles && typeof profile.roles === 'object') {
+        this.userRole = Object.values(profile.roles)[0];
+      }
     });
     this.loadCategories();
   }
-  
+
   loadExpenses(): void {
     this.expenses$ = this.refreshExpenses$.pipe(
       switchMap(() => this.expenseService.getExpenses())
@@ -202,8 +208,8 @@ export class Expense implements OnInit {
   async onSubmitNewExpense(): Promise<void> {
     this.newExpenseForm.markAllAsTouched();
     if (this.newExpenseForm.invalid) {
-        Toast.fire({ icon: 'error', title: this.translate.instant('ERROR_FILL_ALL_FIELDS') });
-        return;
+      Toast.fire({ icon: 'error', title: this.translate.instant('ERROR_FILL_ALL_FIELDS') });
+      return;
     }
 
     this.isSaving = true;
@@ -224,12 +230,12 @@ export class Expense implements OnInit {
       await this.expenseService.addExpense(newExpense as any);
       Toast.fire({ icon: 'success', title: this.translate.instant('EXPENSE_SUCCESS_ADDED') });
       this.newExpenseForm.reset({
-          date: this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '',
-          category: '',
-          itemName: '',
-          quantity: 1,
-          unit: '',
-          price: 0
+        date: this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '',
+        category: '',
+        itemName: '',
+        quantity: 1,
+        unit: '',
+        price: ''
       });
       this.resetFilter();
       this.refreshExpenses$.next();
@@ -303,7 +309,7 @@ export class Expense implements OnInit {
     } catch (error: any) {
       Toast.fire({ icon: 'error', title: error.message || this.translate.instant('EXPENSE_ERROR_UPDATE') });
     } finally {
-        this.isSaving = false;
+      this.isSaving = false;
     }
   }
 
@@ -331,26 +337,26 @@ export class Expense implements OnInit {
         } catch (error: any) {
           Toast.fire({ icon: 'error', title: error.message || this.translate.instant('DATA_DELETE_ERROR') });
         } finally {
-            this.isSaving = false;
+          this.isSaving = false;
         }
       }
     });
   }
-  
+
   showExpenseInfo(expense: IExpense): void {
     const title = this.translate.instant('EXPENSE_INFO_TITLE');
-  
+
     const infoBlocks: string[] = [
       `<strong>${this.translate.instant('ITEM_NAME_INFO', { itemName: expense.itemName })}</strong>`
     ];
-  
+
     if (expense.createdByName && expense.createdAt) {
       infoBlocks.push(this.translate.instant('CREATED_BY', {
         name: expense.createdByName,
         date: this.formatLocalizedDate(expense.createdAt, 'medium')
       }));
     }
-  
+
     let hasBeenUpdated = false;
     if (expense.createdAt && expense.updatedAt) {
       const createdAtTime = new Date(expense.createdAt).getTime();
@@ -370,12 +376,12 @@ export class Expense implements OnInit {
       if (expense.editedDevice) {
         let deviceInfo = this.translate.instant('ON_DEVICE', { device: expense.editedDevice });
         if (deviceInfo.startsWith(' ၊ ')) {
-            deviceInfo = deviceInfo.substring(3);
+          deviceInfo = deviceInfo.substring(3);
         }
         infoBlocks.push(deviceInfo);
       }
     }
-  
+
     Swal.fire({
       title: title,
       html: infoBlocks.map(block => `<p class="text-start">${block}</p>`).join(''),
@@ -390,20 +396,20 @@ export class Expense implements OnInit {
     const currentLang = this.translate.currentLang;
 
     if (currentLang === 'my') {
-        const month = this.datePipe.transform(d, 'MMM');
-        const burmeseMonth = month ? BURMESE_MONTH_ABBREVIATIONS[month as keyof typeof BURMESE_MONTH_ABBREVIATIONS] : '';
-        const day = new Intl.NumberFormat('my-MM', { numberingSystem: 'mymr' }).format(d.getDate());
-        const year = new Intl.NumberFormat('my-MM', { numberingSystem: 'mymr' }).format(d.getFullYear());
-        const datePart = `${day} ${burmeseMonth}, ${year}`;
+      const month = this.datePipe.transform(d, 'MMM');
+      const burmeseMonth = month ? BURMESE_MONTH_ABBREVIATIONS[month as keyof typeof BURMESE_MONTH_ABBREVIATIONS] : '';
+      const day = new Intl.NumberFormat('my-MM', { numberingSystem: 'mymr' }).format(d.getDate());
+      const year = new Intl.NumberFormat('my-MM', { numberingSystem: 'mymr' }).format(d.getFullYear());
+      const datePart = `${day} ${burmeseMonth}, ${year}`;
 
-        if (format === 'medium') {
-            const hour = new Intl.NumberFormat('my-MM', { numberingSystem: 'mymr', minimumIntegerDigits: 2 }).format(d.getHours());
-            const minute = new Intl.NumberFormat('my-MM', { numberingSystem: 'mymr', minimumIntegerDigits: 2 }).format(d.getMinutes());
-            return `${datePart}, ${hour}:${minute}`;
-        }
-        return datePart;
+      if (format === 'medium') {
+        const hour = new Intl.NumberFormat('my-MM', { numberingSystem: 'mymr', minimumIntegerDigits: 2 }).format(d.getHours());
+        const minute = new Intl.NumberFormat('my-MM', { numberingSystem: 'mymr', minimumIntegerDigits: 2 }).format(d.getMinutes());
+        return `${datePart}, ${hour}:${minute}`;
+      }
+      return datePart;
     } else {
-        return this.datePipe.transform(d, format === 'medium' ? 'medium' : 'mediumDate', undefined, currentLang) || '';
+      return this.datePipe.transform(d, format === 'medium' ? 'medium' : 'mediumDate', undefined, currentLang) || '';
     }
   }
 
