@@ -1,18 +1,16 @@
 <nav class="app-navbar" *ngIf="showNavbar$ | async">
-  <link
-    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap"
-    rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 
   <style>
     .app-navbar {
       --nav-bg: #0e1117;
-      --nav-border: rgba(255, 255, 255, 0.07);
+      --nav-border: rgba(255,255,255,0.07);
       --nav-text: #9ca3af;
       --nav-text-hover: #f0f2f7;
       --nav-active: #00e5b4;
       --nav-surface: #12151c;
       --nav-surface-2: #1a1e28;
-      --nav-accent-dim: rgba(0, 229, 180, 0.12);
+      --nav-accent-dim: rgba(0,229,180,0.12);
       /* font-family: 'Syne', sans-serif; */
       background: var(--nav-bg);
       border-bottom: 1px solid var(--nav-border);
@@ -59,9 +57,7 @@
     }
 
     @media (min-width: 992px) {
-      .app-navbar .nav-links {
-        display: flex;
-      }
+      .app-navbar .nav-links { display: flex; }
     }
 
     .app-navbar .nav-links a {
@@ -114,7 +110,7 @@
     }
 
     .app-navbar .nav-icon-btn:hover {
-      border-color: rgba(0, 229, 180, 0.3);
+      border-color: rgba(0,229,180,0.3);
       color: var(--nav-active);
       background: var(--nav-accent-dim);
     }
@@ -139,7 +135,7 @@
 
     .app-navbar .user-btn:hover {
       color: var(--nav-text-hover);
-      border-color: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255,255,255,0.15);
     }
 
     .app-navbar .user-avatar {
@@ -147,7 +143,7 @@
       height: 24px;
       border-radius: 6px;
       background: var(--nav-accent-dim);
-      border: 1px solid rgba(0, 229, 180, 0.25);
+      border: 1px solid rgba(0,229,180,0.25);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -163,7 +159,7 @@
       border: 1px solid var(--nav-border);
       border-radius: 12px;
       padding: 0.4rem;
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.5);
       min-width: 180px;
       margin-top: 0.4rem !important;
     }
@@ -198,7 +194,7 @@
     }
 
     .app-navbar .dropdown-item.text-danger-logout:hover {
-      background: rgba(248, 113, 113, 0.1);
+      background: rgba(248,113,113,0.1);
       color: #f87171 !important;
     }
 
@@ -219,14 +215,10 @@
       transition: border-color 0.15s;
     }
 
-    .app-navbar .nav-toggler:hover {
-      border-color: rgba(255, 255, 255, 0.2);
-    }
+    .app-navbar .nav-toggler:hover { border-color: rgba(255,255,255,0.2); }
 
     @media (min-width: 992px) {
-      .app-navbar .nav-toggler {
-        display: none;
-      }
+      .app-navbar .nav-toggler { display: none; }
     }
 
     .app-navbar .toggler-bar {
@@ -247,14 +239,10 @@
       gap: 0.2rem;
     }
 
-    .app-navbar .mobile-drawer.open {
-      display: flex;
-    }
+    .app-navbar .mobile-drawer.open { display: flex; }
 
     @media (min-width: 992px) {
-      .app-navbar .mobile-drawer {
-        display: none !important;
-      }
+      .app-navbar .mobile-drawer { display: none !important; }
     }
 
     .app-navbar .mobile-drawer a,
@@ -303,7 +291,7 @@
       font-size: 0.78rem;
       font-weight: 700;
       color: var(--nav-text);
-      font-family: 'DM Mono', monospace;
+      /* font-family: 'DM Mono', monospace; */
     }
 
     .app-navbar .mobile-logout {
@@ -311,7 +299,7 @@
     }
 
     .app-navbar .mobile-logout:hover {
-      background: rgba(248, 113, 113, 0.08) !important;
+      background: rgba(248,113,113,0.08) !important;
       color: #f87171 !important;
     }
 
@@ -325,9 +313,7 @@
     }
 
     @media (min-width: 992px) {
-      .app-navbar .mobile-group-center {
-        display: none;
-      }
+      .app-navbar .mobile-group-center { display: none; }
     }
   </style>
 
@@ -339,21 +325,14 @@
 
     <!-- Desktop Nav Links -->
     <ul class="nav-links">
-      <li><a routerLink="/dashboard" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_DASHBOARD' |
-          translate }}</a></li>
-      <li><a routerLink="/expense" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_EXPENSE' |
-          translate }}</a></li>
-      <li><a routerLink="/expense-overview" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{
-          'NAV_EXPENSE_OVERVIEW' | translate }}</a></li>
-      <li><a routerLink="/budget" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_BUDGET' | translate
-          }}</a></li>
-      <li><a routerLink="/profit" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_PROFIT' | translate
-          }}</a></li>
-      <li><a routerLink="/category" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_CATEGORY' |
-          translate }}</a></li>
+      <li><a routerLink="/dashboard" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_DASHBOARD' | translate }}</a></li>
+      <li><a routerLink="/expense" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_EXPENSE' | translate }}</a></li>
+      <li><a routerLink="/expense-overview" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_EXPENSE_OVERVIEW' | translate }}</a></li>
+      <li><a routerLink="/budget" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_BUDGET' | translate }}</a></li>
+      <li><a routerLink="/profit" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_PROFIT' | translate }}</a></li>
+      <li><a routerLink="/category" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_CATEGORY' | translate }}</a></li>
       <li *ngIf="isGroupAdmin$ | async">
-        <a routerLink="/member-management" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{
-          'NAV_MEMBER_MANAGEMENT' | translate }}</a>
+        <a routerLink="/member-management" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_MEMBER_MANAGEMENT' | translate }}</a>
       </li>
     </ul>
 
@@ -362,8 +341,8 @@
 
       <!-- Group Members Dropdown (Desktop) -->
       <li class="dropdown d-none d-lg-block" *ngIf="isGroupAccount$ | async">
-        <a class="nav-icon-btn" href="#" id="groupMemberDropdown" role="button" data-bs-toggle="dropdown"
-          aria-expanded="false">
+        <a class="nav-icon-btn" href="#" id="groupMemberDropdown" role="button"
+           data-bs-toggle="dropdown" aria-expanded="false">
           <fa-icon [icon]="faUsers" style="font-size:0.85rem"></fa-icon>
         </a>
         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="groupMemberDropdown">
@@ -378,19 +357,16 @@
 
       <!-- User Dropdown -->
       <li class="dropdown">
-        <a class="user-btn" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <a class="user-btn" href="#" id="navbarDropdown" role="button"
+           data-bs-toggle="dropdown" aria-expanded="false">
           <span class="user-avatar">{{ (user.displayName || 'U').charAt(0).toUpperCase() }}</span>
           <span class="d-none d-lg-inline">{{ user.displayName || 'Profile' }}</span>
           <fa-icon [icon]="faChevronDown" style="font-size:0.65rem; opacity:0.6"></fa-icon>
         </a>
         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-          <li><a class="dropdown-item" routerLink="/profile" (click)="closeNavbarMenu()">{{ 'NAV_PROFILE_AND_SETTING' |
-              translate }}</a></li>
-          <li>
-            <hr class="dropdown-divider">
-          </li>
-          <li><button class="dropdown-item text-danger-logout" (click)="logout()">{{ 'NAV_LOGOUT' | translate
-              }}</button></li>
+          <li><a class="dropdown-item" routerLink="/profile" (click)="closeNavbarMenu()">{{ 'NAV_PROFILE_AND_SETTING' | translate }}</a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><button class="dropdown-item text-danger-logout" (click)="logout()">{{ 'NAV_LOGOUT' | translate }}</button></li>
         </ul>
       </li>
 
@@ -407,8 +383,8 @@
     <!-- Mobile: centered group icon -->
     <div class="mobile-group-center" *ngIf="(isGroupAccount$ | async) && (currentUser$ | async) as user">
       <div class="dropdown">
-        <a class="nav-icon-btn" href="#" id="groupMemberDropdownMobile" role="button" data-bs-toggle="dropdown"
-          aria-expanded="false">
+        <a class="nav-icon-btn" href="#" id="groupMemberDropdownMobile" role="button"
+           data-bs-toggle="dropdown" aria-expanded="false">
           <fa-icon [icon]="faUsers" style="font-size:0.85rem"></fa-icon>
         </a>
         <ul class="dropdown-menu start-50 translate-middle-x" aria-labelledby="groupMemberDropdownMobile">
@@ -427,8 +403,7 @@
   <div class="mobile-drawer" [class.open]="mobileMenuOpen" *ngIf="currentUser$ | async as user">
     <ng-container *ngIf="currentUser$ | async as user">
       <div class="mobile-user-header">
-        <span class="user-avatar"
-          style="width:28px;height:28px;border-radius:7px;background:rgba(0,229,180,0.12);border:1px solid rgba(0,229,180,0.25);display:flex;align-items:center;justify-content:center;font-size:0.72rem;color:#00e5b4;font-weight:700;">
+        <span class="user-avatar" style="width:28px;height:28px;border-radius:7px;background:rgba(0,229,180,0.12);border:1px solid rgba(0,229,180,0.25);display:flex;align-items:center;justify-content:center;font-size:0.72rem;color:#00e5b4;font-weight:700;">
           {{ (user.displayName || 'U').charAt(0).toUpperCase() }}
         </span>
         <span class="mobile-user-name">{{ user.displayName || 'Profile' }}</span>
@@ -436,20 +411,13 @@
       <div class="mobile-divider"></div>
     </ng-container>
 
-    <a routerLink="/dashboard" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_DASHBOARD' | translate
-      }}</a>
-    <a routerLink="/expense" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_EXPENSE' | translate
-      }}</a>
-    <a routerLink="/expense-overview" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{
-      'NAV_EXPENSE_OVERVIEW' | translate }}</a>
-    <a routerLink="/budget" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_BUDGET' | translate
-      }}</a>
-    <a routerLink="/profit" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_PROFIT' | translate
-      }}</a>
-    <a routerLink="/category" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_CATEGORY' | translate
-      }}</a>
-    <a routerLink="/member-management" routerLinkActive="active-link" (click)="closeNavbarMenu()"
-      *ngIf="isGroupAdmin$ | async">{{ 'NAV_MEMBER_MANAGEMENT' | translate }}</a>
+    <a routerLink="/dashboard" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_DASHBOARD' | translate }}</a>
+    <a routerLink="/expense" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_EXPENSE' | translate }}</a>
+    <a routerLink="/expense-overview" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_EXPENSE_OVERVIEW' | translate }}</a>
+    <a routerLink="/budget" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_BUDGET' | translate }}</a>
+    <a routerLink="/profit" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_PROFIT' | translate }}</a>
+    <a routerLink="/category" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_CATEGORY' | translate }}</a>
+    <a routerLink="/member-management" routerLinkActive="active-link" (click)="closeNavbarMenu()" *ngIf="isGroupAdmin$ | async">{{ 'NAV_MEMBER_MANAGEMENT' | translate }}</a>
 
     <div class="mobile-divider"></div>
     <a routerLink="/profile" (click)="closeNavbarMenu()">{{ 'NAV_PROFILE_AND_SETTING' | translate }}</a>
