@@ -9,8 +9,8 @@ import { GroupService } from '../../services/group.service';
 import { DataManagerService } from '../../services/data-manager';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { InvitationService } from '../../services/invitation.service';
-import { ToastService } from '../../services/toast';
 import { CategoryService } from '../../services/category';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-onboarding',
@@ -27,7 +27,6 @@ export class OnboardingComponent implements OnInit {
   private router = inject(Router);
   private translate = inject(TranslateService);
   private invitationService = inject(InvitationService);
-  private toastService = inject(ToastService);
   private categoryService = inject(CategoryService);
 
   userProfile$: Observable<UserProfile | null>;
@@ -64,6 +63,11 @@ export class OnboardingComponent implements OnInit {
       this.router.navigate(['/dashboard']);
     } catch (error) {
       console.error('Error setting up personal account:', error);
+       Swal.fire({
+          icon: 'error',
+          title: this.translate.instant('ERROR_TITLE'),
+          text: this.translate.instant('ONBOARDING_PERSONAL_ACCOUNT_SETUP_ERROR')
+      });
     }
   }
 
@@ -75,7 +79,11 @@ export class OnboardingComponent implements OnInit {
       this.router.navigate(['/dashboard']);
     } catch (error) {
       console.error('Error creating group:', error);
-      alert('Failed to create group. Check console for details.');
+      Swal.fire({
+          icon: 'error',
+          title: this.translate.instant('ERROR_TITLE'),
+          text: this.translate.instant('ONBOARDING_GROUP_CREATION_FAILED')
+      });
     }
   }
 
@@ -85,7 +93,11 @@ export class OnboardingComponent implements OnInit {
 
     const user = await firstValueFrom(this.authService.currentUser$);
     if (!user) {
-      this.toastService.showError('You must be logged in to join a group.');
+      Swal.fire({
+          icon: 'error',
+          title: this.translate.instant('ERROR_TITLE'),
+          text: this.translate.instant('ONBOARDING_MUST_BE_LOGGED_IN')
+      });
       return;
     }
 
@@ -93,7 +105,11 @@ export class OnboardingComponent implements OnInit {
       const invitation = await firstValueFrom(this.invitationService.getInvitation(code));
       if (invitation && invitation.status === 'pending') {
         await this.dataManager.acceptGroupInvitation(code, user.uid);
-        this.toastService.showSuccess('Successfully joined the group!');
+        Swal.fire({
+            icon: 'success',
+            title: this.translate.instant('SUCCESS_TITLE'),
+            text: this.translate.instant('ONBOARDING_JOIN_GROUP_SUCCESS')
+        });
         this.router.navigate(['/dashboard'], { replaceUrl: true });
       } else {
         await this.authService.logout();
@@ -101,7 +117,11 @@ export class OnboardingComponent implements OnInit {
       }
     } catch (error) {
       console.error('Error handling invitation:', error);
-      this.toastService.showError('Failed to process invitation.');
+      Swal.fire({
+          icon: 'error',
+          title: this.translate.instant('ERROR_TITLE'),
+          text: this.translate.instant('ONBOARDING_INVITATION_PROCESS_FAILED')
+      });
     }
   }
 }

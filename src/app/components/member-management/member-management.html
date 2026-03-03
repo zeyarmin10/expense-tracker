@@ -8,7 +8,7 @@
             <h2 class="card-title text-center mb-4">
               <fa-icon [icon]="faUserPlus" class="me-2"></fa-icon>{{ 'MEMBER_MANAGEMENT.INVITE_MEMBER' | translate }}
             </h2>
-            
+
             <div class="row g-3">
               <div class="col-md-9">
                 <input type="email" [(ngModel)]="newMemberEmail"
@@ -33,7 +33,8 @@
           <div class="card-body px-4 py-2">
             <div *ngIf="pendingInvites$ | async as invites; else loadingInvites">
               <div *ngIf="invites.length > 0; else noInvites" class="list-group list-group-flush border rounded">
-                <div *ngFor="let invite of invites" class="list-group-item d-flex justify-content-between align-items-center py-2 bg-light-hover">
+                <div *ngFor="let invite of invites"
+                  class="list-group-item d-flex justify-content-between align-items-center py-2 bg-light-hover">
                   <div class="d-flex align-items-center">
                     <fa-icon [icon]="faEnvelope" class="text-secondary me-3"></fa-icon>
                     <span class="text-break">{{ invite.email }}</span>
@@ -64,38 +65,40 @@
           <div class="card-header bg-white py-3 border-bottom-0">
             <h2 class="h5 mb-0 fw-bold">{{ 'MEMBER_MANAGEMENT.CURRENT_MEMBERS' | translate }}</h2>
           </div>
-          
+
           <div class="card-body px-4 py-2">
             <div *ngIf="(members$ | async) as members; else loadingMembers">
-              
+
               <div *ngIf="members.length > 0; else noMembers" class="list-group list-group-flush border rounded">
-                
-                <div *ngFor="let member of members" class="list-group-item d-flex justify-content-between align-items-center py-2">
+
+                <div *ngFor="let member of members"
+                  class="list-group-item d-flex justify-content-between align-items-center py-2">
                   <div class="d-flex align-items-center">
-                    
-                    <div class="avatar-circle me-3 bg-primary text-white d-flex align-items-center justify-content-center rounded-circle" 
-                         style="width: 40px; height: 40px; min-width: 40px; flex-shrink: 0;">
-                        {{ (member?.displayName?.[0] || '?').toUpperCase() }}
+
+                    <div
+                      class="avatar-circle me-3 bg-primary text-white d-flex align-items-center justify-content-center rounded-circle"
+                      style="width: 40px; height: 40px; min-width: 40px; flex-shrink: 0;">
+                      {{ (member?.displayName?.[0] || '?').toUpperCase() }}
                     </div>
-                    
+
                     <div>
                       <div class="fw-bold mb-0 text-dark">{{ member?.displayName || 'Unknown User' }}</div>
                       <small class="badge bg-light text-dark border fw-normal">{{ member?.role }}</small>
                     </div>
                   </div>
-        
+
                   <button *ngIf="(groupOwnerId$ | async) !== member?.uid" (click)="confirmDeleteMember(member!.uid!)"
                     class="btn btn-outline-danger btn-sm px-3">
                     <fa-icon [icon]="faTrash" class="me-1"></fa-icon>
                   </button>
                 </div>
               </div>
-        
+
               <ng-template #noMembers>
                 <p class="text-muted mb-0">{{ 'MEMBER_MANAGEMENT.NO_MEMBERS' | translate }}</p>
               </ng-template>
             </div>
-        
+
             <ng-template #loadingMembers>
               <div class="d-flex align-items-center text-primary">
                 <span class="spinner-border spinner-border-sm me-2"></span>
@@ -109,23 +112,3 @@
     </div>
   </div>
 </div>
-
-<app-confirmation-modal #deleteMemberModal 
-  [title]="'MEMBER_MANAGEMENT.CONFIRM_DELETE_TITLE' | translate" 
-  [message]="'MEMBER_MANAGEMENT.CONFIRM_DELETE_MESSAGE' | translate" 
-  [confirmButtonText]="'MEMBER_MANAGEMENT.DELETE_BUTTON' | translate" 
-  [cancelButtonText]="'MEMBER_MANAGEMENT.CANCEL_BUTTON' | translate" 
-  messageColor="text-danger" 
-  modalType="confirm"
-  (confirmed)="onDeleteMemberConfirmed($event)">
-</app-confirmation-modal>
-
-<app-confirmation-modal #revokeInviteModal 
-  [title]="'MEMBER_MANAGEMENT.CONFIRM_REVOKE_TITLE' | translate" 
-  [message]="'MEMBER_MANAGEMENT.CONFIRM_REVOKE_MESSAGE' | translate" 
-  [confirmButtonText]="'MEMBER_MANAGEMENT.REVOKE_BUTTON' | translate" 
-  [cancelButtonText]="'MEMBER_MANAGEMENT.CANCEL_BUTTON' | translate" 
-  messageColor="text-warning" 
-  modalType="confirm"
-  (confirmed)="onRevokeInviteConfirmed($event)">
-</app-confirmation-modal>

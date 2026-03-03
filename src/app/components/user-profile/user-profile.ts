@@ -18,9 +18,8 @@ import { FormsModule } from '@angular/forms';
 import { AVAILABLE_CURRENCIES } from '../../core/constants/app.constants';
 import { CustomBudgetPeriodModalComponent } from '../common/custom-budget-period-modal/custom-budget-period-modal.component';
 import { CustomBudgetPeriod, CustomBudgetPeriodService } from '../../services/custom-budget-period.service';
-import { ConfirmationModal } from '../common/confirmation-modal/confirmation-modal';
-import { ToastService } from '../../services/toast';
 import { GroupService } from '../../services/group.service';
+import Swal from 'sweetalert2';
 
 export const AVAILABLE_BUDGET_PERIODS = [
   { code: null, nameKey: 'BUDGET_PERIOD.NONE' },
@@ -39,7 +38,6 @@ export const AVAILABLE_BUDGET_PERIODS = [
     FontAwesomeModule,
     FormsModule,
     CustomBudgetPeriodModalComponent,
-    ConfirmationModal
   ],
   providers: [DatePipe],
   templateUrl: './user-profile.html',
@@ -52,7 +50,6 @@ export class UserProfileComponent implements OnInit {
   private translate = inject(TranslateService);
   private datePipe = inject(DatePipe);
   private customBudgetPeriodService = inject(CustomBudgetPeriodService);
-  private toastService = inject(ToastService);
   private groupService = inject(GroupService);
 
   userProfileForm: FormGroup;
@@ -72,13 +69,6 @@ export class UserProfileComponent implements OnInit {
   customBudgetPeriods: CustomBudgetPeriod[] = [];
   showCustomDateRange = false;
   isCustomBudgetListCollapsed = true;
-
-  @ViewChild(ConfirmationModal) private confirmationModal!: ConfirmationModal;
-  periodToDeleteId: string | null = null;
-  confirmationTitle: string = '';
-  confirmationMessage: string = '';
-  confirmButtonText: string = '';
-  cancelButtonText: string = '';
 
   get isCustomPeriodSelected(): boolean {
     const selectedPeriodId = this.userProfileForm.get('budgetPeriod')?.value;
@@ -165,7 +155,7 @@ export class UserProfileComponent implements OnInit {
             }),
             catchError((err) => {
               console.error('Error fetching user profile data:', err);
-              this.toastService.showError(this.translate.instant('PROFILE_FETCH_ERROR'));
+              Swal.fire({icon: 'error', title: this.translate.instant('ERROR_TITLE'), text: this.translate.instant('PROFILE_FETCH_ERROR')});
               return of(null);
             })
           );
@@ -288,20 +278,18 @@ export class UserProfileComponent implements OnInit {
                     await this.groupService.updateGroupSettings(this.groupId, groupSettings);
                 }
 
-                this.toastService.showSuccess(this.translate.instant('PROFILE_UPDATE_SUCCESS'));
+                Swal.fire({icon: 'success', title: this.translate.instant('PROFILE_UPDATE_SUCCESS'), toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true});
                 this.userProfileForm.markAsPristine();
 
             } catch (error: any) {
                 console.error('Error updating profile:', error);
-                this.toastService.showError(error.message || this.translate.instant('PROFILE_UPDATE_ERROR'));
+                Swal.fire({icon: 'error', title: this.translate.instant('ERROR_TITLE'), text: error.message || this.translate.instant('PROFILE_UPDATE_ERROR')});
             }
         } else {
-            this.toastService.showError(this.translate.instant('AUTH_ERROR_PROFILE_UPDATE'));
+            Swal.fire({icon: 'error', title: this.translate.instant('ERROR_TITLE'), text: this.translate.instant('AUTH_ERROR_PROFILE_UPDATE')});
         }
     } else if (this.userProfileForm.invalid) {
-        this.toastService.showError(this.translate.instant('INVALID_FORM_PROFILE'));
-    } else if (!this.userProfileForm.dirty) {
-        // No changes to save, maybe show a different toast or do nothing
+        Swal.fire({icon: 'error', title: this.translate.instant('ERROR_TITLE'), text: this.translate.instant('INVALID_FORM_PROFILE')});
     }
 }
 
@@ -312,8 +300,8 @@ export class UserProfileComponent implements OnInit {
 
   openBudgetPeriodModal(): void {
     if (this.customBudgetPeriods.length >= 10) {
-      this.toastService.showError(this.translate.instant('CUSTOM_BUDGET_PERIOD_LIMIT_REACHED'));
-      return;
+        Swal.fire({icon: 'error', title: this.translate.instant('ERROR_TITLE'), text: this.translate.instant('CUSTOM_BUDGET_PERIOD_LIMIT_REACHED')});
+        return;
     }
     this.modalComponent.open();
   }
@@ -324,9 +312,9 @@ export class UserProfileComponent implements OnInit {
       try {
         const newPeriodRef = await this.customBudgetPeriodService.addCustomBudgetPeriod(currentUser.uid, period);
         this.userProfileForm.get('budgetPeriod')?.setValue(newPeriodRef.key);
-        this.toastService.showSuccess(this.translate.instant('CUSTOM_BUDGET_PERIOD_SAVE_SUCCESS'));
+        Swal.fire({icon: 'success', title: this.translate.instant('CUSTOM_BUDGET_PERIOD_SAVE_SUCCESS'), toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true});
       } catch (error) {
-        this.toastService.showError(this.translate.instant('CUSTOM_BUDGET_PERIOD_SAVE_ERROR'));
+        Swal.fire({icon: 'error', title: this.translate.instant('ERROR_TITLE'), text: this.translate.instant('CUSTOM_BUDGET_PERIOD_SAVE_ERROR')});
         console.error('Error saving custom budget period:', error);
       }
     }
@@ -340,42 +328,37 @@ export class UserProfileComponent implements OnInit {
     if (currentUser) {
       const userProfile = await firstValueFrom(this.userDataService.getUserProfile(currentUser.uid));
       if (userProfile && userProfile.selectedBudgetPeriodId === periodId) {
-        this.toastService.showError(this.translate.instant('DELETE_ACTIVE_BUDGET_PERIOD_ERROR'));
+        Swal.fire({icon: 'error', title: this.translate.instant('ERROR_TITLE'), text: this.translate.instant('DELETE_ACTIVE_BUDGET_PERIOD_ERROR')});
         return;
       }
     }
 
-    this.periodToDeleteId = periodId;
-    this.translate.get(['CONFIRM_DELETE_TITLE', 'CONFIRM_DELETE_BUDGET_PERIOD', 'DELETE_BUTTON', 'CANCEL_BUTTON'])
-      .subscribe(translations => {
-        this.confirmationTitle = translations['CONFIRM_DELETE_TITLE'];
-        this.confirmationMessage = translations['CONFIRM_DELETE_BUDGET_PERIOD'];
-        this.confirmButtonText = translations['DELETE_BUTTON'];
-        this.cancelButtonText = translations['CANCEL_BUTTON'];
-        this.confirmationModal.open();
-      });
-  }
+    const translations = await firstValueFrom(this.translate.get(['CONFIRM_DELETE_TITLE', 'CONFIRM_DELETE_BUDGET_PERIOD', 'DELETE_BUTTON', 'CANCEL_BUTTON']));
 
-  async onConfirmation(confirmed: boolean): Promise<void> {
-    if (confirmed && this.periodToDeleteId) {
-      const currentUser = await firstValueFrom(this.authService.currentUser$);
-      if (currentUser) {
-        try {
-          await this.customBudgetPeriodService.deleteCustomBudgetPeriod(currentUser.uid, this.periodToDeleteId);
-          if (this.userProfileForm.get('budgetPeriod')?.value === this.periodToDeleteId) {
-            this.userProfileForm.get('budgetPeriod')?.setValue(null);
+    Swal.fire({
+      title: translations['CONFIRM_DELETE_TITLE'],
+      text: translations['CONFIRM_DELETE_BUDGET_PERIOD'],
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: translations['DELETE_BUTTON'],
+      cancelButtonText: translations['CANCEL_BUTTON'],
+      reverseButtons: true
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        if (currentUser) {
+            try {
+              await this.customBudgetPeriodService.deleteCustomBudgetPeriod(currentUser.uid, periodId);
+              if (this.userProfileForm.get('budgetPeriod')?.value === periodId) {
+                this.userProfileForm.get('budgetPeriod')?.setValue(null);
+              }
+              Swal.fire({icon: 'success', title: this.translate.instant('CUSTOM_BUDGET_PERIOD_DELETE_SUCCESS'), toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true});
+            } catch (error) {
+              Swal.fire({icon: 'error', title: this.translate.instant('ERROR_TITLE'), text: this.translate.instant('CUSTOM_BUDGET_PERIOD_DELETE_ERROR')});
+              console.error('Error deleting custom budget period:', error);
+            }
           }
-          this.toastService.showSuccess(this.translate.instant('CUSTOM_BUDGET_PERIOD_DELETE_SUCCESS'));
-        } catch (error) {
-          this.toastService.showError(this.translate.instant('CUSTOM_BUDGET_PERIOD_DELETE_ERROR'));
-          console.error('Error deleting custom budget period:', error);
-        } finally {
-          this.periodToDeleteId = null;
-        }
       }
-    } else {
-      this.periodToDeleteId = null;
-    }
+    });
   }
 
   toggleCustomBudgetList(): void {

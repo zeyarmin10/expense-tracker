@@ -13,11 +13,12 @@ import {
 } from '@angular/fire/auth';
 import { AngularFireDatabase } from '@angular/fire/compat/database';
 import { TranslateService } from '@ngx-translate/core';
-import { Observable, Subject, of, from, firstValueFrom } from 'rxjs';
+import { Observable, Subject, of, from } from 'rxjs';
 import { switchMap, map } from 'rxjs/operators';
 import { UserDataService, UserProfile } from './user-data';
 import { GroupService } from './group.service';
 import { SessionManagementService } from './session-management';
+import Swal from 'sweetalert2';
 
 @Injectable({
   providedIn: 'root'
@@ -95,12 +96,13 @@ export class AuthService {
       await this.handleInvite(userCredential.user);
       return userCredential.user;
     } catch (error: any) {
-      if (error.code === AuthErrorCodes.EMAIL_EXISTS) {
-        alert('ဒီအီးမေးလ်ကို စာရင်းသွင်းထားပြီးသားဖြစ်သည်။ အကောင့် Login ဝင်ကြည့်ပါ။');
-      } else {
-        alert(`Authentication error: ${error.message}`);
-      }
-      throw new Error(this.getFirebaseErrorMessage(error));
+      const errorMessage = this.getFirebaseErrorMessage(error);
+      Swal.fire({
+        icon: 'error',
+        title: this.translateService.instant('AUTH_ERROR_TITLE'),
+        text: errorMessage,
+      });
+      throw new Error(errorMessage);
     }
   }
 
@@ -192,8 +194,8 @@ export class AuthService {
   public getFirebaseErrorMessage(error: any): string {
     if (error && typeof error.code === 'string') {
       switch (error.code) {
-        case 'auth/email-already-in-use':
-          return this.translateService.instant('EMAIL_ALREADY_IN_USE');
+        case AuthErrorCodes.EMAIL_EXISTS:
+          return this.translateService.instant('AUTH_EMAIL_EXISTS_ERROR');
         case 'auth/invalid-email':
           return this.translateService.instant('INVALID_EMAIL');
         case 'auth/operation-not-allowed':
@@ -218,9 +220,9 @@ export class AuthService {
           return this.translateService.instant('GENERIC', { code: error.code });
       }
     } else if (error && typeof error.message === 'string') {
-      return `အမှားတစ်ခု ဖြစ်ပေါ်ခဲ့သည်: ${error.message}`;
+      return this.translateService.instant('AUTH_GENERIC_MESSAGE_ERROR', { message: error.message });
     } else {
-      return 'မမျှော်မှန်းထားသော ပြဿနာတစ်ခု ကြုံတွေ့နေရပါသည်။ ကျေးဇူးပြု၍ နောက်မှ ပြန်လည်ကြိုးစားပါ။';
+      return this.translateService.instant('AUTH_UNEXPECTED_ERROR');
     }
   }
 }

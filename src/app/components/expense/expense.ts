@@ -35,7 +35,6 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 
 import { CategoryModalComponent } from '../common/category-modal/category-modal';
-import { ConfirmationModal } from '../common/confirmation-modal/confirmation-modal';
 import { ToastService } from '../../services/toast';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../services/auth';
@@ -56,7 +55,6 @@ import { FormatService } from '../../services/format.service';
     FontAwesomeModule,
     CategoryModalComponent,
     TranslateModule,
-    ConfirmationModal,
   ],
   providers: [DatePipe],
   templateUrl: './expense.html',
@@ -64,10 +62,6 @@ import { FormatService } from '../../services/format.service';
 })
 export class Expense implements OnInit {
   @ViewChild(CategoryModalComponent) categoryModal!: CategoryModalComponent;
-  @ViewChild('deleteConfirmationModal')
-  deleteConfirmationModal!: ConfirmationModal;
-  @ViewChild('errorModal') errorModal!: ConfirmationModal;
-  @ViewChild('infoModal') infoModal!: ConfirmationModal;
 
   newExpenseForm: FormGroup;
   editingForm: FormGroup | null = null;
@@ -193,7 +187,7 @@ export class Expense implements OnInit {
   async onSubmitNewExpense(): Promise<void> {
     this.newExpenseForm.markAllAsTouched();
     if (this.newExpenseForm.invalid) {
-        this.showErrorModal(this.translate.instant('ERROR_TITLE'), this.translate.instant('ERROR_FILL_ALL_FIELDS'));
+        this.showErrorModal(this.translate.instant('ERROR_FILL_ALL_FIELDS'));
         return;
     }
 
@@ -225,7 +219,7 @@ export class Expense implements OnInit {
       this.resetFilter();
       this.loadExpenses();
     } catch (error: any) {
-      this.showErrorModal(this.translate.instant('ERROR_TITLE'), error.message || this.translate.instant('EXPENSE_ERROR_ADD'));
+      this.showErrorModal(error.message || this.translate.instant('EXPENSE_ERROR_ADD'));
     } finally {
       this.isSaving = false;
     }
@@ -267,11 +261,11 @@ export class Expense implements OnInit {
 
   async saveEdit(): Promise<void> {
     if (!this.editingForm || !this.editingExpenseId) {
-      this.showErrorModal(this.translate.instant('ERROR_TITLE'), this.translate.instant('EXPENSE_ERROR_NO_EXPENSE_SELECTED'));
+      this.showErrorModal(this.translate.instant('EXPENSE_ERROR_NO_EXPENSE_SELECTED'));
       return;
     }
     if (this.editingForm.invalid) {
-      this.showErrorModal(this.translate.instant('ERROR_TITLE'), this.translate.instant('EXPENSE_ERROR_EDIT_FORM_INVALID'));
+      this.showErrorModal(this.translate.instant('EXPENSE_ERROR_EDIT_FORM_INVALID'));
       return;
     }
 
@@ -292,7 +286,7 @@ export class Expense implements OnInit {
       this.cancelEdit();
       this.loadExpenses();
     } catch (error: any) {
-      this.showErrorModal(this.translate.instant('ERROR_TITLE'), error.message || this.translate.instant('EXPENSE_ERROR_UPDATE'));
+      this.showErrorModal(error.message || this.translate.instant('EXPENSE_ERROR_UPDATE'));
     } finally {
         this.isSaving = false;
     }
@@ -304,41 +298,37 @@ export class Expense implements OnInit {
   }
 
   onDelete(expenseId: string): void {
-    this.deleteConfirmationModal.title = this.translate.instant('CONFIRM_DELETE_TITLE');
-    this.deleteConfirmationModal.message = this.translate.instant('CONFIRM_DELETE_EXPENSE');
-    this.deleteConfirmationModal.confirmButtonText = this.translate.instant('DELETE_BUTTON');
-    this.deleteConfirmationModal.cancelButtonText = this.translate.instant('CANCEL_BUTTON');
-    this.deleteConfirmationModal.messageColor = 'text-danger';
-    this.deleteConfirmationModal.modalType = 'confirm';
-
-    this.deleteConfirmationModal.open();
-
-    const subscription = this.deleteConfirmationModal.confirmed.subscribe(async (confirmed: boolean) => {
-      if (confirmed) {
+    Swal.fire({
+      title: this.translate.instant('CONFIRM_DELETE_TITLE'),
+      text: this.translate.instant('CONFIRM_DELETE_EXPENSE'),
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: this.translate.instant('DELETE_BUTTON'),
+      cancelButtonText: this.translate.instant('CANCEL_BUTTON'),
+      reverseButtons: true
+    }).then(async (result) => {
+      if (result.isConfirmed) {
         this.isSaving = true;
         try {
           await this.expenseService.deleteExpense(expenseId);
           this.toastService.showSuccess(this.translate.instant('EXPENSE_DELETED_SUCCESS'));
           this.loadExpenses();
         } catch (error: any) {
-          this.showErrorModal(this.translate.instant('ERROR_TITLE'), error.message || this.translate.instant('DATA_DELETE_ERROR'));
+          this.showErrorModal(error.message || this.translate.instant('DATA_DELETE_ERROR'));
         } finally {
             this.isSaving = false;
         }
       }
-      subscription.unsubscribe();
     });
   }
 
-  showErrorModal(title: string, message: string): void {
-    this.errorModal.title = title;
-    this.errorModal.message = message;
-    this.errorModal.confirmButtonText = this.translate.instant('OK_BUTTON');
-    this.errorModal.cancelButtonText = ''; // No cancel button for alert
-    this.errorModal.messageColor = 'text-danger';
-    this.errorModal.modalType = 'alert';
-
-    this.errorModal.open();
+  showErrorModal(message: string): void {
+    Swal.fire({
+      icon: 'error',
+      title: this.translate.instant('ERROR_TITLE'),
+      text: message,
+      confirmButtonText: this.translate.instant('OK_BUTTON')
+    });
   }
   
   showExpenseInfo(expense: IExpense): void {

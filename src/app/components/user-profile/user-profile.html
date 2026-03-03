@@ -76,8 +76,7 @@
               </div>
 
               <!-- Budget Period -->
-              <div
-                *ngIf="canEditSettings"
+              <div *ngIf="canEditSettings"
                 class="info-container border border-secondary-subtle rounded mb-4 p-2 p-sm-3 p-md-3 p-lg-3 p-xl-3 p-xxl-3">
                 <div class="mb-2">
                   <label for="budgetPeriod" class="form-label"><strong>{{ 'BUDGET_PERIOD_LABEL' | translate
@@ -187,8 +186,3 @@
 </div>
 
 <app-custom-budget-period-modal (periodSaved)="onPeriodSaved($event)"></app-custom-budget-period-modal>
-
-<app-confirmation-modal [title]="confirmationTitle" [message]="confirmationMessage"
-  [confirmButtonText]="confirmButtonText" [cancelButtonText]="cancelButtonText" (confirmed)="onConfirmation($event)"
-  messageColor="text-danger" modalType="confirm">
-</app-confirmation-modal>

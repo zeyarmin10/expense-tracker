@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, ViewChild } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -9,27 +9,20 @@ import { Observable, of, firstValueFrom, from } from 'rxjs';
 import { switchMap, shareReplay, map } from 'rxjs/operators';
 import { AuthService } from '../../services/auth';
 import { DataManagerService, IGroupDetails, IGroupMemberDetails } from '../../services/data-manager';
-import { UserDataService } from '../../services/user-data';
 import { InvitationService } from '../../services/invitation.service';
-import { ToastService } from '../../services/toast';
-import { ConfirmationModal } from '../common/confirmation-modal/confirmation-modal';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-member-management',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, FontAwesomeModule, ConfirmationModal],
+  imports: [CommonModule, FormsModule, TranslateModule, FontAwesomeModule],
   templateUrl: './member-management.html',
 })
 export class MemberManagementComponent implements OnInit {
   private authService = inject(AuthService);
   private dataManager = inject(DataManagerService);
-  private userDataService = inject(UserDataService);
   private invitationService = inject(InvitationService);
-  private toastService = inject(ToastService);
   private translate = inject(TranslateService);
-
-  @ViewChild('deleteMemberModal') private deleteMemberModal!: ConfirmationModal;
-  @ViewChild('revokeInviteModal') private revokeInviteModal!: ConfirmationModal;
 
   // Font Awesome Icons
   faUserPlus = faUserPlus;
@@ -45,9 +38,6 @@ export class MemberManagementComponent implements OnInit {
   
   newMemberEmail: string = '';
   isSending: boolean = false;
-
-  private memberToDeleteId: string | null = null;
-  private inviteToRevokeKey: string | null = null;
 
   constructor() {
     this.userProfile$ = this.authService.userProfile$.pipe(shareReplay(1));
@@ -90,24 +80,22 @@ export class MemberManagementComponent implements OnInit {
 
     if (profile && profile.groupId) {
       try {
-        // Check if user is already a member
         const members = await firstValueFrom(this.members$);
         const isAlreadyMember = members.some(member => member.email === this.newMemberEmail);
 
         if (isAlreadyMember) {
-          this.toastService.showError(this.translate.instant('MEMBER_ALREADY_EXISTS'));
+          Swal.fire({icon: 'error', title: this.translate.instant('MEMBER_ALREADY_EXISTS'), toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true});
           this.isSending = false;
           return;
         }
 
-        // Check if there's a pending invitation for this email
         const pendingInvites = await firstValueFrom(this.pendingInvites$);
         const hasPendingInvite = pendingInvites.some(invite => invite.email === this.newMemberEmail);
 
         if (hasPendingInvite) {
-          this.toastService.showError(this.translate.instant('MEMBER_ALREADY_EXISTS'));
-          this.isSending = false;
-          return;
+            Swal.fire({icon: 'error', title: this.translate.instant('MEMBER_ALREADY_EXISTS'), toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true});
+            this.isSending = false;
+            return;
         }
 
         const groupDetails = await this.dataManager.getGroupDetails(profile.groupId);
@@ -126,13 +114,13 @@ export class MemberManagementComponent implements OnInit {
           profile.groupId
         ).subscribe({
             next: () => {
-              this.toastService.showSuccess('Invitation email sent successfully');
+              Swal.fire({icon: 'success', title: this.translate.instant('INVITE_SENT_SUCCESS'), toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true});
               this.invitationSent = true;
               this.newMemberEmail = '';
             },
             error: (error) => {
               console.error('Failed to send invitation email:', error);
-              this.toastService.showError('Failed to send invitation email. Please try again.');
+              Swal.fire({icon: 'error', title: this.translate.instant('TOAST_INVITATION_FAILED'), toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true});
             },
             complete: () => {
               this.isSending = false;
@@ -141,58 +129,60 @@ export class MemberManagementComponent implements OnInit {
 
       } catch (err) {
         console.error('Error sending invitation:', err);
-        this.toastService.showError('An error occurred while sending the invitation.');
+        Swal.fire({icon: 'error', title: this.translate.instant('TOAST_ERROR_SENDING_INVITE'), toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true});
         this.isSending = false;
       }
     } else {
       console.error('User profile or group ID not found.');
-      this.toastService.showError('Could not find your user or group information.');
+      Swal.fire({icon: 'error', title: this.translate.instant('TOAST_ERROR_USER_INFO'), toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true});
       this.isSending = false;
     }
   }
 
   confirmDeleteMember(memberId: string): void {
-    this.memberToDeleteId = memberId;
-    this.deleteMemberModal.open();
-  }
-
-  async onDeleteMemberConfirmed(confirmed: boolean): Promise<void> {
-    if (confirmed && this.memberToDeleteId) {
-      const profile = await firstValueFrom(this.userProfile$);
-      if (profile && profile.groupId) {
-        try {
-          await this.dataManager.removeGroupMember(profile.groupId, this.memberToDeleteId);
-          this.toastService.showSuccess('Member removed successfully');
-        } catch (err) {
-          console.error('Error removing member:', err);
-          this.toastService.showError('Failed to remove member.');
-        } finally {
-          this.memberToDeleteId = null;
+    Swal.fire({
+      title: this.translate.instant('CONFIRM_DELETE_TITLE'),
+      text: this.translate.instant('CONFIRM_DELETE_MEMBER'),
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: this.translate.instant('DELETE_BUTTON'),
+      cancelButtonText: this.translate.instant('CANCEL_BUTTON'),
+      reverseButtons: true
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        const profile = await firstValueFrom(this.userProfile$);
+        if (profile && profile.groupId) {
+          try {
+            await this.dataManager.removeGroupMember(profile.groupId, memberId);
+            Swal.fire({icon: 'success', title: this.translate.instant('TOAST_MEMBER_REMOVED'), toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true});
+          } catch (err) {
+            console.error('Error removing member:', err);
+            Swal.fire({icon: 'error', title: this.translate.instant('TOAST_ERROR_REMOVING_MEMBER'), toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true});
+          }
         }
       }
-    } else {
-      this.memberToDeleteId = null;
-    }
+    });
   }
 
   confirmRevokeInvite(inviteKey: string): void {
-    this.inviteToRevokeKey = inviteKey;
-    this.revokeInviteModal.open();
-  }
-
-  async onRevokeInviteConfirmed(confirmed: boolean): Promise<void> {
-    if (confirmed && this.inviteToRevokeKey) {
-      try {
-        await this.dataManager.revokeGroupInvitation(this.inviteToRevokeKey);
-        this.toastService.showSuccess('Invitation revoked successfully');
-      } catch (err) {
-        console.error('Error revoking invitation:', err);
-        this.toastService.showError('Failed to revoke invitation.');
-      } finally {
-        this.inviteToRevokeKey = null;
-      }
-    } else {
-      this.inviteToRevokeKey = null;
-    }
+    Swal.fire({
+        title: this.translate.instant('CONFIRM_REVOKE_TITLE'),
+        text: this.translate.instant('CONFIRM_REVOKE_INVITE'),
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: this.translate.instant('REVOKE_BUTTON'),
+        cancelButtonText: this.translate.instant('CANCEL_BUTTON'),
+        reverseButtons: true
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                await this.dataManager.revokeGroupInvitation(inviteKey);
+                Swal.fire({icon: 'success', title: this.translate.instant('TOAST_INVITATION_REVOKED'), toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true});
+              } catch (err) {
+                console.error('Error revoking invitation:', err);
+                Swal.fire({icon: 'error', title: this.translate.instant('TOAST_ERROR_REVOKING_INVITE'), toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true});
+              }
+        }
+      });
   }
 }

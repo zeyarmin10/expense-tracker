@@ -2,9 +2,8 @@ import {
   Component,
   OnInit,
   inject,
-  ViewChild,
   ChangeDetectorRef,
-} from '@angular/core'; // ChangeDetectorRef ကို ထည့်သွင်းပါ။
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -26,8 +25,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
-import { ToastService } from '../../services/toast';
-import { ConfirmationModal } from '../common/confirmation-modal/confirmation-modal';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-category',
@@ -37,16 +35,11 @@ import { ConfirmationModal } from '../common/confirmation-modal/confirmation-mod
     ReactiveFormsModule,
     FontAwesomeModule,
     TranslateModule,
-    ConfirmationModal,
   ],
   templateUrl: './category.html',
   styleUrls: ['./category.css'],
 })
 export class Category implements OnInit {
-  @ViewChild('deleteConfirmationModal')
-  deleteConfirmationModal!: ConfirmationModal; // Reference to the confirmation modal
-  @ViewChild('errorModal') errorModal!: ConfirmationModal; // New: Reference to the error modal
-
   addCategoryForm: FormGroup;
   editingCategoryFormControl: FormControl | null = null;
   editingCategoryId: string | null = null;
@@ -58,8 +51,7 @@ export class Category implements OnInit {
 
   categoryService = inject(CategoryService);
   translateService = inject(TranslateService);
-  toastService = inject(ToastService);
-  private cdr = inject(ChangeDetectorRef); // ChangeDetectorRef ကို ထည့်သွင်းပါ။
+  private cdr = inject(ChangeDetectorRef);
 
   faPlus = faPlus;
   faEdit = faEdit;
@@ -84,7 +76,6 @@ export class Category implements OnInit {
       );
       this._categoriesSubject.next(categories);
     } catch (error) {
-      // Use the new error modal instead of toastService
       this.showErrorModal(
         this.translateService.instant('ERROR_TITLE'),
         (error as any).message ||
@@ -96,7 +87,6 @@ export class Category implements OnInit {
 
   async onAddSubmit(): Promise<void> {
     if (this._categoriesSubject.value.length >= 100) {
-      // Use the new error modal instead of toastService
       this.showErrorModal(
         this.translateService.instant('ERROR_TITLE'),
         this.translateService.instant('CATEGORY_LIMIT_REACHED')
@@ -105,7 +95,6 @@ export class Category implements OnInit {
     }
 
     if (this.addCategoryForm.invalid) {
-      // Use the new error modal instead of toastService
       this.showErrorModal(
         this.translateService.instant('ERROR_TITLE'),
         this.translateService.instant('CATEGORY_NAME_REQUIRED')
@@ -113,16 +102,14 @@ export class Category implements OnInit {
       return;
     }
 
-    const categoryName = this.addCategoryForm.value.name.trim(); // Trim whitespace
+    const categoryName = this.addCategoryForm.value.name.trim();
 
-    // Check for duplicate category name (case-insensitive)
     const categories = this._categoriesSubject.value;
     const isDuplicate = categories.some(
       (category) => category.name.toLowerCase() === categoryName.toLowerCase()
     );
 
     if (isDuplicate) {
-      // Use the new error modal instead of toastService
       this.showErrorModal(
         this.translateService.instant('ERROR_TITLE'),
         this.translateService.instant('CATEGORY_ALREADY_EXISTS')
@@ -132,13 +119,18 @@ export class Category implements OnInit {
 
     try {
       await this.categoryService.addCategory(categoryName);
-      this.toastService.showSuccess(
-        this.translateService.instant('CATEGORY_ADDED_SUCCESS')
-      );
+      Swal.fire({
+        icon: 'success',
+        title: this.translateService.instant('CATEGORY_ADDED_SUCCESS'),
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true
+      });
       this.addCategoryForm.reset();
       await this.loadCategories();
     } catch (error: any) {
-      // Use the new error modal instead of toastService
       this.showErrorModal(
         this.translateService.instant('ERROR_TITLE'),
         error.message || this.translateService.instant('DATA_SAVE_ERROR')
@@ -167,12 +159,10 @@ export class Category implements OnInit {
     categoryId: string,
     oldCategoryName: string
   ): Promise<void> {
-    // Added oldCategoryName
     if (
       this.editingCategoryFormControl &&
       this.editingCategoryFormControl.invalid
     ) {
-      // Use the new error modal instead of toastService
       this.showErrorModal(
         this.translateService.instant('ERROR_TITLE'),
         this.translateService.instant('CATEGORY_NAME_REQUIRED')
@@ -180,7 +170,6 @@ export class Category implements OnInit {
       return;
     }
     if (!this.editingCategoryFormControl || !categoryId) {
-      // Use the new error modal instead of toastService
       this.showErrorModal(
         this.translateService.instant('ERROR_TITLE'),
         this.translateService.instant('CATEGORY_ERROR_UPDATE_INVALID')
@@ -194,14 +183,19 @@ export class Category implements OnInit {
         categoryId,
         oldCategoryName,
         newCategoryName
-      ); // Pass oldCategoryName
-      this.toastService.showSuccess(
-        this.translateService.instant('CATEGORY_SUCCESS_UPDATED')
       );
+      Swal.fire({
+        icon: 'success',
+        title: this.translateService.instant('CATEGORY_SUCCESS_UPDATED'),
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true
+      });
       this.cancelEdit();
       this.loadCategories(); // Reload to reflect changes
     } catch (error: any) {
-      // Use the new error modal instead of toastService
       this.showErrorModal(
         this.translateService.instant('ERROR_TITLE'),
         error.message || this.translateService.instant('CATEGORY_ERROR_UPDATE')
@@ -210,12 +204,6 @@ export class Category implements OnInit {
     }
   }
 
-  /**
-   * Handles the deletion of a category.
-   * First, checks if the category is used in any expenses.
-   * If used, shows an error modal. Otherwise, shows a confirmation modal before deleting.
-   * @param categoryId The ID of the category to delete.
-   */
   async onDelete(categoryId: string): Promise<void> {
     try {
       const isUsed = await this.categoryService.isCategoryUsedInExpenses(
@@ -227,71 +215,48 @@ export class Category implements OnInit {
           this.translateService.instant('DELETE_CATEGORY_ERROR_TITLE'),
           this.translateService.instant('CATEGORY_IN_USE_ERROR')
         );
-        return; // Stop further execution
-      }
-
-      // Ensure the modal is ready before trying to open it
-      if (!this.deleteConfirmationModal) {
-        // Fallback or error handling if modal isn't ready
-        this.showErrorModal(
-          this.translateService.instant('ERROR_TITLE'),
-          this.translateService.instant('MODAL_INIT_ERROR') ||
-            'Modal not ready. Please try again.'
-        );
         return;
       }
 
-      // Get translated message synchronously using await firstValueFrom
       const confirmMsg = await firstValueFrom(
         this.translateService.get('CONFIRM_DELETE_CATEGORY')
       );
 
-      this.deleteConfirmationModal.title = this.translateService.instant(
-        'CONFIRM_DELETE_TITLE'
-      );
-      this.deleteConfirmationModal.message = confirmMsg; // Set the message here
-      this.deleteConfirmationModal.confirmButtonText =
-        this.translateService.instant('DELETE_BUTTON');
-      this.deleteConfirmationModal.cancelButtonText =
-        this.translateService.instant('CANCEL_BUTTON');
-      this.deleteConfirmationModal.messageColor = 'text-danger';
-      this.deleteConfirmationModal.modalType = 'confirm'; // Explicitly set to confirm type
-
-      // Force change detection to ensure @Input properties are updated in the DOM
-      this.cdr.detectChanges(); // <--- Added this line
-
-      // Add a small delay using setTimeout(0) to ensure Bootstrap's show() method is called.
-      setTimeout(() => {
-        this.deleteConfirmationModal.open();
-      }, 0);
-
-      // Re-subscribe to confirmed event each time to ensure fresh subscription
-      // and prevent multiple emissions from old subscriptions
-      const subscription = this.deleteConfirmationModal.confirmed.subscribe(
-        async (confirmed: boolean) => {
-          if (confirmed) {
-            try {
-              await this.categoryService.deleteCategory(categoryId);
-              this.toastService.showSuccess(
-                this.translateService.instant('CATEGORY_DELETED_SUCCESS')
-              );
-              if (this.editingCategoryId === categoryId) {
-                this.cancelEdit();
-              }
-              await this.loadCategories();
-            } catch (error: any) {
-              this.showErrorModal(
-                this.translateService.instant('ERROR_TITLE'),
-                error.message ||
-                  this.translateService.instant('DATA_DELETE_ERROR')
-              );
+      Swal.fire({
+        title: this.translateService.instant('CONFIRM_DELETE_TITLE'),
+        text: confirmMsg,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: this.translateService.instant('DELETE_BUTTON'),
+        cancelButtonText: this.translateService.instant('CANCEL_BUTTON'),
+        reverseButtons: true
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          try {
+            await this.categoryService.deleteCategory(categoryId);
+            Swal.fire({
+                icon: 'success',
+                title: this.translateService.instant('CATEGORY_DELETED_SUCCESS'),
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true
+              });
+            if (this.editingCategoryId === categoryId) {
+              this.cancelEdit();
             }
+            await this.loadCategories();
+          } catch (error: any) {
+            this.showErrorModal(
+              this.translateService.instant('ERROR_TITLE'),
+              error.message ||
+                this.translateService.instant('DATA_DELETE_ERROR')
+            );
           }
-          subscription.unsubscribe(); // Unsubscribe to prevent memory leaks
         }
-      );
+      });
     } catch (error: any) {
-      // Handle errors during the check itself (e.g., network issues)
       this.showErrorModal(
         this.translateService.instant('ERROR_TITLE'),
         error.message ||
@@ -300,26 +265,12 @@ export class Category implements OnInit {
     }
   }
 
-  /**
-   * Displays an error modal with a dynamic title and message.
-   * @param title The title of the error modal.
-   * @param message The error message to display.
-   */
   showErrorModal(title: string, message: string): void {
-    this.errorModal.title = title;
-    this.errorModal.message = message;
-    this.errorModal.confirmButtonText =
-      this.translateService.instant('OK_BUTTON'); // Set to 'OK'
-    this.errorModal.cancelButtonText = ''; // Ensure cancel button is not shown for error
-    this.errorModal.messageColor = 'text-danger'; // Error messages are typically red
-    this.errorModal.modalType = 'alert'; // Set modal type to alert (single button)
-
-    // Force change detection to ensure @Input properties are updated in the DOM
-    this.cdr.detectChanges();
-
-    // Add a small delay using setTimeout(0) to ensure Bootstrap's show() method is called.
-    setTimeout(() => {
-      this.errorModal.open();
-    }, 0);
+    Swal.fire({
+      icon: 'error',
+      title: title,
+      text: message,
+      confirmButtonText: this.translateService.instant('OK_BUTTON')
+    });
   }
 }

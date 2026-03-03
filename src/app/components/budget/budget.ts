@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, ViewChild, OnDestroy } from '@angular/core';
+import { Component, OnInit, inject, OnDestroy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import {
   FormBuilder,
@@ -14,7 +14,6 @@ import {
   map,
   Subscription,
   of,
-  switchMap,
   take,
 } from 'rxjs';
 import { ServiceIBudget, BudgetService } from '../../services/budget';
@@ -33,18 +32,13 @@ import {
   faChartLine,
   faArrowTrendDown,
 } from '@fortawesome/free-solid-svg-icons';
-import { ConfirmationModal } from '../common/confirmation-modal/confirmation-modal';
 import { Chart, registerables } from 'chart.js';
 import { AuthService } from '../../services/auth';
 import { UserDataService, UserProfile } from '../../services/user-data';
 import {
   AVAILABLE_CURRENCIES,
-  BURMESE_CURRENCY_SYMBOL,
-  BURMESE_LOCALE_CODE,
   BURMESE_MONTH_ABBREVIATIONS,
   BURMESE_MONTH_FULL_NAMES,
-  CURRENCY_SYMBOLS,
-  MMK_CURRENCY_CODE,
 } from '../../core/constants/app.constants';
 
 import { FormatService } from '../../services/format.service';
@@ -54,6 +48,7 @@ import {
 } from '../../services/date-filter.service';
 import { CategoryService } from '../../services/category';
 import { ToastService } from '../../services/toast';
+import Swal from 'sweetalert2';
 
 Chart.register(...registerables);
 
@@ -99,7 +94,6 @@ interface SpendingMonitorItem {
     ReactiveFormsModule,
     TranslateModule,
     FontAwesomeModule,
-    ConfirmationModal,
     FormsModule,
   ],
   providers: [DatePipe],
@@ -116,9 +110,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
   public formatService = inject(FormatService);
   private categoryService = inject(CategoryService);
   private toastService = inject(ToastService);
-
-  @ViewChild('deleteConfirmationModal')
-  private deleteConfirmationModal!: ConfirmationModal;
 
   budgetForm: FormGroup;
 
@@ -149,8 +140,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
   faChartLine = faChartLine;
   faArrowTrendDown = faArrowTrendDown;
 
-  private budgetIdToDelete: string | undefined;
-
   isBudgetFormCollapsed: boolean = true;
   isRecordedBudgetsCollapsed: boolean = true;
 
@@ -159,7 +148,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
   private _selectedDateRange$ = new BehaviorSubject<string>('currentMonth');
 
   private authService = inject(AuthService);
-  private userDataService = inject(UserDataService);
   userProfile$: Observable<UserProfile | null> = of(null);
 
   public selectedDateFilter: string = 'currentMonth';
@@ -173,9 +161,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
 
   private subscriptions: Subscription = new Subscription();
   categories: any[] = [];
-
-  private errorModal!: ConfirmationModal;
-  @ViewChild('errorModal') errorModalRef!: ConfirmationModal;
 
   constructor() {
     const now = new Date();
@@ -689,7 +674,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
     // --- Initialize Date Filter & User Profile ---
     this.setDateFilter(this.selectedDateFilter);
 
-    // CORRECTED: Use the userProfile$ from AuthService which includes group settings
     this.userProfile$ = this.authService.userProfile$;
 
     const profileSubscription = this.userProfile$.subscribe((profile) => {
@@ -895,45 +879,47 @@ export class BudgetComponent implements OnInit, OnDestroy {
         message = this.translate.instant('GENERIC_BUDGET_ERROR');
     }
 
-    this.errorModalRef.title = title;
-    this.errorModalRef.message = message;
-    this.errorModalRef.messageColor = 'text-danger';
-    this.errorModalRef.modalType = 'alert';
-    this.errorModalRef.confirmButtonText = this.translate.instant('OK_BUTTON');
-    this.errorModalRef.open();
+    Swal.fire({
+        icon: 'error',
+        title: title,
+        text: message,
+        confirmButtonText: this.translate.instant('OK_BUTTON')
+      });
   }
 
   confirmDeleteBudget(budgetId: string | undefined): void {
     if (budgetId) {
-      this.budgetIdToDelete = budgetId;
-      this.deleteConfirmationModal.open();
-    }
-  }
-
-  onDeleteConfirmed(confirmed: boolean): void {
-    if (confirmed && this.budgetIdToDelete) {
-      this.budgetService
-        .deleteBudget(this.budgetIdToDelete)
-        .then(() => {
-          this.toastService.showSuccess(this.translate.instant('BUDGET_DELETE_SUCCESS'));
-          this.budgetIdToDelete = undefined;
-        })
-        .catch((error) => {
-          console.error('Error deleting budget:', error);
-        });
-    } else {
-      this.budgetIdToDelete = undefined;
+        Swal.fire({
+            title: this.translate.instant('CONFIRM_DELETE_TITLE'),
+            text: this.translate.instant('CONFIRM_DELETE_BUDGET'),
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: this.translate.instant('DELETE_BUTTON'),
+            cancelButtonText: this.translate.instant('CANCEL_BUTTON'),
+            reverseButtons: true
+          }).then((result) => {
+            if (result.isConfirmed) {
+              this.budgetService
+              .deleteBudget(budgetId)
+              .then(() => {
+                this.toastService.showSuccess(this.translate.instant('BUDGET_DELETE_SUCCESS'));
+              })
+              .catch((error) => {
+                console.error('Error deleting budget:', error);
+                Swal.fire(
+                    this.translate.instant('ERROR_TITLE'),
+                    error.message || this.translate.instant('BUDGET_DELETE_ERROR'),
+                    'error'
+                  );
+              });
+            }
+          });
     }
   }
 
   resetForm(): void {
     const defaultCurrency = this.userProfile?.currency || 'MMK';
     const currentDate = new Date();
-    const firstDayOfMonth = new Date(
-      currentDate.getFullYear(),
-      currentDate.getMonth(),
-      1
-    );
 
     this.budgetForm.reset({
       type: 'monthly',

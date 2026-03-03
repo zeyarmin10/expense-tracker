@@ -19,9 +19,6 @@ import {
   Observable,
   BehaviorSubject,
   Subscription,
-  switchMap,
-  of,
-  take,
   combineLatest,
   map,
 } from 'rxjs';
@@ -43,10 +40,9 @@ import {
   faChartLine,
   faArrowTrendDown,
 } from '@fortawesome/free-solid-svg-icons';
-import { ConfirmationModal } from '../common/confirmation-modal/confirmation-modal';
 import { AuthService } from '../../services/auth';
 import { Chart, registerables } from 'chart.js';
-import { UserDataService, UserProfile } from '../../services/user-data';
+import { UserProfile } from '../../services/user-data';
 import {
   AVAILABLE_CURRENCIES,
   BURMESE_MONTH_ABBREVIATIONS,
@@ -58,6 +54,7 @@ import { ExpenseService } from '../../services/expense'; // Added missing import
 // ✅ NEW SERVICE: Assuming a new service handles all the complex combineLatest logic
 import { ProfitLossService } from '../../services/profit-loss.service';
 import { ToastService } from '../../services/toast';
+import Swal from 'sweetalert2';
 
 Chart.register(...registerables);
 
@@ -72,7 +69,6 @@ type CurrencyMap = { [currency: string]: number };
     ReactiveFormsModule,
     TranslateModule,
     FontAwesomeModule,
-    ConfirmationModal,
     FormsModule,
   ],
   providers: [DatePipe],
@@ -90,21 +86,13 @@ export class Profit implements OnInit, OnDestroy {
   private translate = inject(TranslateService);
   private authService = inject(AuthService);
   private cdr = inject(ChangeDetectorRef);
-  private userDataService = inject(UserDataService);
   public formatService = inject(FormatService);
-  // ✅ NEW SERVICE INJECTION
   private profitLossService = inject(ProfitLossService);
-  private library = inject(FaIconLibrary); // Used for pre-loading icons
   private toastService = inject(ToastService);
 
   // --- View Children ---
-  @ViewChild('deleteConfirmationModal')
-  private deleteConfirmationModal!: ConfirmationModal;
   @ViewChild('profitChartCanvas')
   private profitChartCanvas!: ElementRef<HTMLCanvasElement>;
-
-  @ViewChild('deleteBudgetConfirmationModal')
-  private deleteBudgetConfirmationModal!: ConfirmationModal;
 
   // --- Form and Data Observables ---
   incomeForm: FormGroup;
@@ -140,8 +128,6 @@ export class Profit implements OnInit, OnDestroy {
 
   // --- State for Modals/Visibility ---
   private subscriptions: Subscription = new Subscription();
-  private incomeIdToDelete: string | undefined;
-  private budgetIdToDelete: string | undefined;
 
   isIncomeFormCollapsed: boolean = true;
   isRecordedIncomesCollapsed: boolean = true;
@@ -161,7 +147,6 @@ export class Profit implements OnInit, OnDestroy {
     this.incomeForm = this.fb.group({
       description: [''],
       amount: ['', [Validators.required, Validators.min(0.01)]],
-      // Currency is disabled and its value is set from userProfile in ngOnInit
       currency: ['MMK', Validators.required],
       date: [
         this.datePipe.transform(new Date(), 'yyyy-MM-dd'),
@@ -169,7 +154,6 @@ export class Profit implements OnInit, OnDestroy {
       ],
     });
 
-    // --- Date Initialization (Moved from constructor logic) ---
     const oneYearAgo = new Date();
     oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
     this.startDate = this.datePipe.transform(oneYearAgo, 'yyyy-MM-dd') || '';
@@ -178,7 +162,6 @@ export class Profit implements OnInit, OnDestroy {
     this._startDate$.next(this.startDate);
     this._endDate$.next(this.endDate);
 
-    // --- Observable Initialization (Delegated to ProfitLossService) ---
     const dateRange$ = combineLatest([
       this._selectedDateRange$,
       this._startDate$,
@@ -194,7 +177,6 @@ export class Profit implements OnInit, OnDestroy {
       )
     );
 
-    // Use a unified Observable from the service to reduce component coupling
     const profitLossData$ = this.profitLossService.getProfitLossData(
       this.expenseService.getExpenses(),
       this.incomeService.getIncomes(),
@@ -331,12 +313,10 @@ export class Profit implements OnInit, OnDestroy {
       })
     );
 
-    // CORRECTED: Use the userProfile$ from AuthService to get group-aware settings
     const profileSubscription = this.authService.userProfile$.subscribe((profile) => {
         this.userProfile = profile;
         if(profile) {
           const defaultCurrency = profile?.currency || 'MMK';
-          // Note: 'currency' is disabled, so we use setValue on the control.
           this.incomeForm.get('currency')?.setValue(defaultCurrency);
           this.resetForm();
 
@@ -381,8 +361,6 @@ export class Profit implements OnInit, OnDestroy {
   setDateFilter(filter: string, isInitialLoad: boolean = false): void {
     this.selectedDateFilter = filter;
 
-    // If the user clicks on 'Custom' and it's not the initial page load, set a default 1-year range.
-    // This allows the date pickers to show a value, which the user can then change.
     if (filter === 'custom' && !isInitialLoad) {
       if (!this.startDate) {
         const oneYearAgo = new Date();
@@ -401,7 +379,6 @@ export class Profit implements OnInit, OnDestroy {
       this.endDate
     );
 
-    // Only update if the values have actually changed to avoid unnecessary re-renders
     if (
       this._startDate$.getValue() !== dateRange.start ||
       this._endDate$.getValue() !== dateRange.end ||
@@ -413,50 +390,7 @@ export class Profit implements OnInit, OnDestroy {
     }
   }
 
-
-  /**
-   * Sets the date filter to 'custom' using budget start/end months.
-   * @param startMonth YYYY-MM string from user profile (budgetStartMonth).
-   * @param endMonth YYYY-MM string from user profile (budgetEndMonth).
-   */
-  private setCustomDateFilter(startMonth: string, endMonth: string): void {
-    // Convert YYYY-MM to YYYY-MM-DD for the date filter inputs
-    // Start of month is the first day (e.g., '2025-01-01')
-    const customStartDate = `${startMonth}-01`;
-
-    // End of month is a bit trickier, but DateFilterService.getDateRange might handle it better if we use the start date of the next month and subtract a day.
-    // However, for initial setting, we can approximate the end of the month
-    // by finding the last day of the 'endMonth'.
-
-    // A robust way to get the last day of the month is:
-    // 1. Create a date object for the 1st of the *next* month.
-    // 2. Subtract one day.
-    const [year, month] = endMonth.split('-').map(Number);
-    const nextMonth = month === 12 ? 1 : month + 1;
-    const nextYear = month === 12 ? year + 1 : year;
-    // Date: 'yyyy-MM-dd' is required, so we use 'yyyy-MM-01'
-    // new Date(year, monthIndex, day) - monthIndex is 0-based
-    const firstDayOfNextMonth = new Date(nextYear, nextMonth - 1, 1);
-
-    // Go back one day to get the last day of the current month
-    const lastDayOfMonth = new Date(firstDayOfNextMonth);
-    lastDayOfMonth.setDate(firstDayOfNextMonth.getDate() - 1);
-
-    // Format to 'yyyy-MM-dd'
-    const customEndDate = this.datePipe.transform(lastDayOfMonth, 'yyyy-MM-dd');
-
-    if (customStartDate && customEndDate) {
-      this.selectedDateFilter = 'custom';
-      this.startDate = customStartDate;
-      this.endDate = customEndDate;
-      this._startDate$.next(this.startDate);
-      this._endDate$.next(this.endDate);
-      this._selectedDateRange$.next('custom');
-    }
-  }
-
   private initChartSubscription(): void {
-    // Subscription to re-render the chart when data changes
     this.subscriptions.add(
       this.profitChartData$.subscribe((data) => {
         this.cdr.detectChanges(); // Ensure canvas is ready
@@ -468,14 +402,12 @@ export class Profit implements OnInit, OnDestroy {
   // --- Income Management ---
 
   onSubmitIncome(): void {
-    // Currency is disabled, get the value from the form and then reset it to the userProfile's default before sending
     const defaultCurrency = this.userProfile?.currency || 'MMK';
 
     if (this.incomeForm.valid) {
       const incomeData: Omit<ServiceIIncome, 'id' | 'userId' | 'createdAt' | 'device' | 'editedDevice'> = {
         description: this.incomeForm.value.description,
         amount: this.incomeForm.value.amount,
-        // Use the user's default currency, ignoring the disabled form control value
         currency: defaultCurrency,
         date: this.incomeForm.value.date,
       };
@@ -484,36 +416,46 @@ export class Profit implements OnInit, OnDestroy {
         .addIncome(incomeData)
         .then(() => {
           this.toastService.showSuccess(this.translate.instant('INCOME_SAVE_SUCCESS'));
-          // console.log('Income added successfully!');
           this.resetForm();
         })
         .catch((error) => {
           console.error('Error adding income:', error);
+          Swal.fire(
+            this.translate.instant('ERROR_TITLE'),
+            error.message || this.translate.instant('INCOME_SAVE_ERROR'),
+            'error'
+          );
         });
     }
   }
 
   confirmDeleteIncome(incomeId: string | undefined): void {
     if (incomeId) {
-      this.incomeIdToDelete = incomeId;
-      this.deleteConfirmationModal.open();
-    }
-  }
-
-  onDeleteConfirmed(confirmed: boolean): void {
-    if (confirmed && this.incomeIdToDelete) {
-      this.incomeService
-        .deleteIncome(this.incomeIdToDelete)
-        .then(() => {
-          this.toastService.showSuccess(this.translate.instant('INCOME_DELETE_SUCCESS'));
-          // console.log('Income deleted successfully!');
-          this.incomeIdToDelete = undefined;
-        })
-        .catch((error) => {
-          console.error('Error deleting income:', error);
-        });
-    } else {
-      this.incomeIdToDelete = undefined;
+        Swal.fire({
+            title: this.translate.instant('CONFIRM_DELETE_TITLE'),
+            text: this.translate.instant('CONFIRM_DELETE_INCOME'),
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: this.translate.instant('DELETE_BUTTON'),
+            cancelButtonText: this.translate.instant('CANCEL_BUTTON'),
+            reverseButtons: true
+          }).then((result) => {
+            if (result.isConfirmed) {
+              this.incomeService
+                .deleteIncome(incomeId)
+                .then(() => {
+                  this.toastService.showSuccess(this.translate.instant('INCOME_DELETE_SUCCESS'));
+                })
+                .catch((error) => {
+                    console.error('Error deleting income:', error);
+                    Swal.fire(
+                        this.translate.instant('ERROR_TITLE'),
+                        error.message || this.translate.instant('INCOME_DELETE_ERROR'),
+                        'error'
+                      );
+                });
+            }
+          });
     }
   }
 
@@ -521,25 +463,31 @@ export class Profit implements OnInit, OnDestroy {
 
   confirmDeleteBudget(budgetId: string | undefined): void {
     if (budgetId) {
-      this.budgetIdToDelete = budgetId;
-      // You must open the modal here, it's missing in the original code's `confirmDeleteBudget`
-      this.deleteBudgetConfirmationModal.open();
-    }
-  }
-
-  onDeleteBudgetConfirmed(confirmed: boolean): void {
-    if (confirmed && this.budgetIdToDelete) {
-      this.budgetService
-        .deleteBudget(this.budgetIdToDelete)
-        .then(() => {
-          // console.log('Budget deleted successfully!');
-          this.budgetIdToDelete = undefined;
-        })
-        .catch((error) => {
-          console.error('Error deleting budget:', error);
-        });
-    } else {
-      this.budgetIdToDelete = undefined;
+        Swal.fire({
+            title: this.translate.instant('CONFIRM_DELETE_TITLE'),
+            text: this.translate.instant('CONFIRM_DELETE_BUDGET'),
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: this.translate.instant('DELETE_BUTTON'),
+            cancelButtonText: this.translate.instant('CANCEL_BUTTON'),
+            reverseButtons: true
+          }).then((result) => {
+            if (result.isConfirmed) {
+              this.budgetService
+                .deleteBudget(budgetId)
+                .then(() => {
+                  this.toastService.showSuccess(this.translate.instant('BUDGET_DELETE_SUCCESS'));
+                })
+                .catch((error) => {
+                    console.error('Error deleting budget:', error);
+                    Swal.fire(
+                        this.translate.instant('ERROR_TITLE'),
+                        error.message || this.translate.instant('BUDGET_DELETE_ERROR'),
+                        'error'
+                      );
+                });
+            }
+          });
     }
   }
 

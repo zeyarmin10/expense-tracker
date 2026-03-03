@@ -508,5 +508,15 @@
   "DASHBOARD_EXPENSE_BREAKDOWN_BY_CATEGORY": "Expense Breakdown by Category",
   "UNCATEGORIZED": "Uncategorized",
   "SESSION_EXPIRED_TITLE": "Session Expired",
-  "SESSION_EXPIRED_MESSAGE": "Your session has expired. You have been logged out automatically."
+  "SESSION_EXPIRED_MESSAGE": "Your session has expired. You have been logged out automatically.",
+  "CONFIRM_DELETE_MEMBER": "Are you sure you wish to remove this member from the group?",
+  "ONBOARDING_PERSONAL_ACCOUNT_SETUP_ERROR": "An error occurred while setting up your personal account. Please try again.",
+  "ONBOARDING_GROUP_CREATION_FAILED": "Failed to create group. Please check the details and try again.",
+  "ONBOARDING_MUST_BE_LOGGED_IN": "You must be logged in to join a group.",
+  "ONBOARDING_JOIN_GROUP_SUCCESS": "Successfully joined the group!",
+  "ONBOARDING_INVITATION_PROCESS_FAILED": "Failed to process invitation. The invitation may be invalid or expired.",
+  "AUTH_ERROR_TITLE": "Authentication Error",
+  "AUTH_EMAIL_EXISTS_ERROR": "This email is already registered. Please try logging in.",
+  "AUTH_GENERIC_MESSAGE_ERROR": "An error occurred: {{message}}",
+  "AUTH_UNEXPECTED_ERROR": "An unexpected error occurred. Please try again later."
 }

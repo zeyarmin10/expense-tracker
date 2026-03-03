@@ -5,7 +5,6 @@ import {
   inject,
   ChangeDetectorRef,
   OnDestroy,
-  ViewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -19,15 +18,15 @@ import { AuthService } from '../../services/auth';
 import { UserDataService, UserProfile } from '../../services/user-data';
 import { DataManagerService } from '../../services/data-manager'; // Import DataManagerService
 import { CategoryService } from '../../services/category';
-import { debounceTime, Subject, takeUntil, firstValueFrom } from 'rxjs'; 
+import { debounceTime, Subject, takeUntil, firstValueFrom } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { SessionManagementService } from '../../services/session-management';
-import { ConfirmationModal } from '../common/confirmation-modal/confirmation-modal';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import { User } from '@angular/fire/auth';
 import { ToastService } from '../../services/toast'; // Import ToastService
 import { InvitationService } from '../../services/invitation.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-login',
@@ -36,15 +35,12 @@ import { InvitationService } from '../../services/invitation.service';
     CommonModule,
     ReactiveFormsModule,
     TranslateModule,
-    ConfirmationModal,
     FontAwesomeModule,
   ],
   templateUrl: './login.html',
   styleUrls: ['./login.css'],
 })
 export class LoginComponent implements OnInit, OnDestroy {
-  @ViewChild('errorModal') errorModal!: ConfirmationModal;
-
   isMobileView: boolean = false;
   private destroy$ = new Subject<void>();
   private resizeSubject = new Subject<number>();
@@ -63,7 +59,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   router = inject(Router);
   route = inject(ActivatedRoute); // Inject ActivatedRoute
   sessionService = inject(SessionManagementService);
-  toastService = inject(ToastService); // Inject ToastService
+  toastService = inject(ToastService); // Import ToastService
   errorMessage: string | null = null;
   successMessage: string | null = null;
   isLoginMode: boolean = true;
@@ -196,9 +192,6 @@ export class LoginComponent implements OnInit, OnDestroy {
     }
 }
 
-
-  // ... other methods like switchLanguage, toggleMode, onSubmit, etc. remain the same ...
-
   switchLanguage(lang: string) {
     this.translate.use(lang);
     this.currentLang = lang;
@@ -259,16 +252,11 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   private showErrorModal(message: string): void {
-    if (this.errorModal) {
-      this.errorModal.title = this.translate.instant('ERROR_TITLE');
-      this.errorModal.message = message;
-      this.errorModal.confirmButtonText = this.translate.instant('OK_BUTTON');
-      this.errorModal.messageColor = 'text-danger';
-      this.errorModal.modalType = 'alert';
-      this.cdr.detectChanges();
-      setTimeout(() => {
-        this.errorModal.open();
-      }, 0);
-    }
+    Swal.fire({
+      icon: 'error',
+      title: this.translate.instant('ERROR_TITLE'),
+      text: message,
+      confirmButtonText: this.translate.instant('OK_BUTTON')
+    });
   }
 }
