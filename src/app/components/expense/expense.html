@@ -160,13 +160,13 @@
                 <div *ngIf="editingExpenseId !== expense.id">
                   <div class="d-flex w-100 justify-content-between mb-1">
                     <h5 class="mb-1 expense-item-name">{{ expense.itemName }}</h5>
-                    <span class="expense-amount fw-bold fs-6">{{ formatService.formatAmountWithSymbol(expense.totalCost,
+                    <span class="expense-amount fw-bold fs-6">{{ formatService.formatAmountShort(expense.totalCost,
                       expense.currency) }}</span>
                   </div>
                   <p class="mb-1 text-muted small">{{ expense.category }} &bull; {{ formatLocalizedDate(expense.date) }}
                   </p>
                   <small *ngIf="expense.quantity && expense.unit">{{ formatLocalizedNumber(expense.quantity) }} {{
-                    expense.unit }} at {{ formatService.formatAmountWithSymbol(expense.price, expense.currency) }}
+                    expense.unit }} at {{ formatService.formatAmountShort(expense.price, expense.currency) }}
                     each</small>
                   <div class="mt-2 action-buttons d-flex justify-content-between">
                     <div class="col-10 d-flex justify-content-start align-items-center">
