@@ -17,6 +17,7 @@ import Swal from 'sweetalert2';
   standalone: true,
   imports: [CommonModule, FormsModule, TranslateModule, FontAwesomeModule],
   templateUrl: './member-management.html',
+  styleUrls: ['./member-management.css']
 })
 export class MemberManagementComponent implements OnInit {
   private authService = inject(AuthService);

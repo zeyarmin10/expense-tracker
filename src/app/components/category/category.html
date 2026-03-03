@@ -1,95 +1,130 @@
-<div class="container mt-3 mb-5">
-  <div class="row justify-content-center">
-    <div class="col-12 col-sm-10 col-md-10 col-lg-8 col-xl-6 col-xxl-6 container-column">
-      <div class="card shadow-sm p-3 p-md-4 category-card">
-        <h2 class="card-title text-center mb-4">
-          <fa-icon [icon]="faTags" class="me-2 text-primary"></fa-icon> {{ "CREATE_CATEGORY_TITLE" | translate }}
-        </h2>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 
-        <form [formGroup]="addCategoryForm" (ngSubmit)="onAddSubmit()">
-          <div class="mb-3">
-            <label for="newCategoryName" class="form-label">{{ "CATEGORY_NAME_LABEL" | translate }}
-            </label>
-            <input type="text" class="form-control" id="newCategoryName" formControlName="name"
-              placeholder="{{ 'CATEGORY_NAME_PLACEHOLDER' | translate }}" [class.is-invalid]="
-                addCategoryForm.controls['name'].invalid &&
-                addCategoryForm.controls['name'].touched
-              " />
-            <div *ngIf="
-                addCategoryForm.controls['name'].invalid &&
-                addCategoryForm.controls['name'].touched
-              " class="invalid-feedback">
-              {{ "CATEGORY_NAME_REQUIRED" | translate }}
-            </div>
-          </div>
+<div class="cat-wrapper">
+  <div class="cat-container">
 
-          <div class="d-grid gap-2 d-flex justify-content-end">
-            <button type="submit" class="btn btn-outline-info ps-4 pe-4" [ngClass]="{
-                'btn-outline-info': true,
-                'shine-effect': addCategoryForm.valid
-              }" [disabled]="addCategoryForm.invalid">
-              <fa-icon [icon]="faSave"></fa-icon>
-            </button>
-          </div>
-        </form>
+    <!-- ── Page Header ── -->
+    <div class="cat-page-header">
+      <h2 class="cat-page-title">
+        <fa-icon [icon]="faTags" class="cat-icon-accent"></fa-icon>
+        {{ "CREATE_CATEGORY_TITLE" | translate }}
+      </h2>
+    </div>
 
-        <hr class="my-4" />
+    <!-- ── Add Category Panel ── -->
+    <div class="cat-panel">
+      <form [formGroup]="addCategoryForm" (ngSubmit)="onAddSubmit()" class="cat-add-form">
+        <div class="cat-fl-wrap">
+          <input
+            type="text"
+            id="newCategoryName"
+            class="cat-fl-input"
+            formControlName="name"
+            placeholder=" "
+            [class.err]="addCategoryForm.controls['name'].invalid && addCategoryForm.controls['name'].touched"
+          />
+          <label class="cat-fl-label" for="newCategoryName">
+            {{ "CATEGORY_NAME_LABEL" | translate }}
+          </label>
+        </div>
+        <div *ngIf="addCategoryForm.controls['name'].invalid && addCategoryForm.controls['name'].touched"
+          class="cat-error">
+          {{ "CATEGORY_NAME_REQUIRED" | translate }}
+        </div>
+        <div class="cat-add-footer">
+          <button type="submit" class="cat-btn cat-btn-primary"
+            [disabled]="addCategoryForm.invalid">
+            <fa-icon [icon]="faSave"></fa-icon>
+            {{ "SAVE_BUTTON_LABEL" | translate }}
+          </button>
+        </div>
+      </form>
+    </div>
 
-        <h3 class="h5 text-center mb-3">
+    <!-- ── Category List ── -->
+    <div class="cat-list-panel">
+
+      <div class="cat-list-header">
+        <h3 class="cat-list-title">
+          <fa-icon [icon]="faTags" class="cat-icon-success"></fa-icon>
           {{ "EXISTING_CATEGORIES_TITLE" | translate }}
         </h3>
-        <div *ngIf="(categories$ | async)?.length === 0" class="alert alert-info text-center">
-          {{ "NO_CATEGORIES_FOUND" | translate }}
-        </div>
-        <ul class="list-group mb-5">
-          <li *ngFor="let category of categories$ | async"
-            class="list-group-item d-flex justify-content-between align-items-center">
-            <ng-container *ngIf="
-                editingCategoryId === category.id && editingCategoryFormControl;
-                else viewMode
-              ">
-              <input type="text" class="form-control form-control-sm me-2" [formControl]="editingCategoryFormControl"
-                [class.is-invalid]="
-                  editingCategoryFormControl.invalid &&
-                  editingCategoryFormControl.touched
-                " (keydown.enter)="onUpdateInline(category.id!, category.name)" />
-              <div *ngIf="
-                  editingCategoryFormControl.invalid &&
-                  editingCategoryFormControl.touched
-                " class="invalid-feedback d-block">
-                {{ "CATEGORY_NAME_REQUIRED" | translate }}
-              </div>
-            </ng-container>
-            <ng-template #viewMode>
-              <span class="flex-grow-1">{{ category.name }}</span>
-            </ng-template>
+        <span class="cat-count-badge" *ngIf="(categories$ | async) as cats">
+          {{ cats.length }}
+        </span>
+      </div>
 
-            <div class="d-flex align-items-center">
-              <ng-container *ngIf="editingCategoryId === category.id; else defaultButtons">
-                <button class="btn btn-sm btn-outline-success me-2 ps-4 pe-4"
-                  (click)="onUpdateInline(category.id!, category.name)" [disabled]="editingCategoryFormControl?.invalid"
-                  [attr.aria-label]="'SAVE_BUTTON_LABEL' | translate">
-                  <fa-icon [icon]="faSave"></fa-icon>
-                </button>
-                <button class="btn btn-sm btn-outline-secondary" (click)="cancelEdit()"
-                  [attr.aria-label]="'CANCEL_BUTTON_LABEL' | translate">
-                  <fa-icon [icon]="faTimes"></fa-icon>
-                </button>
-              </ng-container>
-              <ng-template #defaultButtons>
-                <button class="btn btn-sm btn-outline-info me-2 ps-4 pe-4" (click)="startEdit(category)"
-                  [disabled]="editingCategoryId !== null" [attr.aria-label]="'EDIT_BUTTON_LABEL' | translate">
+      <!-- Empty state -->
+      <div *ngIf="(categories$ | async)?.length === 0" class="cat-empty">
+        {{ "NO_CATEGORIES_FOUND" | translate }}
+      </div>
+
+      <!-- List -->
+      <div class="cat-list">
+        <div *ngFor="let category of categories$ | async" class="cat-item">
+
+          <!-- View mode -->
+          <ng-container *ngIf="editingCategoryId !== category.id; else editMode">
+            <div class="cat-item-inner">
+              <span class="cat-item-name">{{ category.name }}</span>
+              <div class="cat-item-actions">
+                <button class="cat-action-btn cat-action-edit"
+                  (click)="startEdit(category)"
+                  [disabled]="editingCategoryId !== null"
+                  [attr.aria-label]="'EDIT_BUTTON_LABEL' | translate">
                   <fa-icon [icon]="faEdit"></fa-icon>
                 </button>
-                <button class="btn btn-sm btn-outline-danger" (click)="onDelete(category.id!)"
-                  [disabled]="editingCategoryId !== null" [attr.aria-label]="'DELETE_BUTTON_LABEL' | translate">
+                <button class="cat-action-btn cat-action-delete"
+                  (click)="onDelete(category.id!)"
+                  [disabled]="editingCategoryId !== null"
+                  [attr.aria-label]="'DELETE_BUTTON_LABEL' | translate">
                   <fa-icon [icon]="faTrash"></fa-icon>
                 </button>
-              </ng-template>
+              </div>
             </div>
-          </li>
-        </ul>
+          </ng-container>
+
+          <!-- Edit mode -->
+          <ng-template #editMode>
+            <div class="cat-item-edit">
+              <div class="cat-fl-wrap cat-fl-wrap-edit">
+                <input
+                  type="text"
+                  [id]="'edit-' + category.id"
+                  class="cat-fl-input"
+                  [formControl]="editingCategoryFormControl!"
+                  placeholder=" "
+                  [class.err]="editingCategoryFormControl!.invalid && editingCategoryFormControl!.touched"
+                  (keydown.enter)="onUpdateInline(category.id!, category.name)"
+                />
+                <label class="cat-fl-label" [for]="'edit-' + category.id">
+                  {{ "CATEGORY_NAME_LABEL" | translate }}
+                </label>
+              </div>
+              <div *ngIf="editingCategoryFormControl!.invalid && editingCategoryFormControl!.touched"
+                class="cat-error">
+                {{ "CATEGORY_NAME_REQUIRED" | translate }}
+              </div>
+              <div class="cat-edit-actions">
+                <button class="cat-btn cat-btn-ghost cat-btn-sm" (click)="cancelEdit()">
+                  <fa-icon [icon]="faTimes"></fa-icon>
+                  {{ "CANCEL_BUTTON_LABEL" | translate }}
+                </button>
+                <button class="cat-btn cat-btn-primary cat-btn-sm"
+                  (click)="onUpdateInline(category.id!, category.name)"
+                  [disabled]="editingCategoryFormControl?.invalid">
+                  <fa-icon [icon]="faSave"></fa-icon>
+                  {{ "SAVE_BUTTON_LABEL" | translate }}
+                </button>
+              </div>
+            </div>
+          </ng-template>
+
+        </div>
       </div>
+
     </div>
+    <!-- ── END list panel ── -->
+
   </div>
 </div>
