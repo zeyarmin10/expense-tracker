@@ -35,8 +35,8 @@
     <!-- Custom Date Range -->
     <ng-container *ngIf="selectedDateFilter === 'custom'">
       <div class="filter-bar" style="margin-top: -0.25rem;">
-        <input type="date" class="filter-select" [(ngModel)]="startDate" (change)="setDateFilter('custom')" />
-        <input type="date" class="filter-select" [(ngModel)]="endDate" (change)="setDateFilter('custom')" />
+        <input type="date" class="filter-date-picker" [(ngModel)]="startDate" (change)="setDateFilter('custom')" />
+        <input type="date" class="filter-date-picker" [(ngModel)]="endDate" (change)="setDateFilter('custom')" />
       </div>
     </ng-container>
 
@@ -87,7 +87,7 @@
             </h5>
             <span class="table-count">{{ expenses.length }} items</span>
           </div>
-          <div class="table-responsive">
+          <div class="">
             <table class="expense-table">
               <thead>
                 <tr>
