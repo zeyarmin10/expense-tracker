@@ -21,6 +21,7 @@ import {
   Subscription,
   combineLatest,
   map,
+  switchMap,
 } from 'rxjs';
 import { ServiceIExpense } from '../../services/expense'; // Assuming types are kept here
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -51,12 +52,22 @@ import {
 import { FormatService } from '../../services/format.service';
 import { DateFilterService } from '../../services/date-filter.service';
 import { ExpenseService } from '../../services/expense'; // Added missing import
-// ✅ NEW SERVICE: Assuming a new service handles all the complex combineLatest logic
 import { ProfitLossService } from '../../services/profit-loss.service';
-import { ToastService } from '../../services/toast';
 import Swal from 'sweetalert2';
 
 Chart.register(...registerables);
+
+const Toast = Swal.mixin({
+  toast: true,
+  position: 'top-end',
+  showConfirmButton: false,
+  timer: 3000,
+  timerProgressBar: true,
+  didOpen: (toast) => {
+    toast.addEventListener('mouseenter', Swal.stopTimer)
+    toast.addEventListener('mouseleave', Swal.resumeTimer)
+  }
+});
 
 // Type alias for clarity
 type CurrencyMap = { [currency: string]: number };
@@ -88,7 +99,6 @@ export class Profit implements OnInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
   public formatService = inject(FormatService);
   private profitLossService = inject(ProfitLossService);
-  private toastService = inject(ToastService);
 
   // --- View Children ---
   @ViewChild('profitChartCanvas')
@@ -99,6 +109,9 @@ export class Profit implements OnInit, OnDestroy {
   userProfile: UserProfile | null = null;
   availableCurrencies = AVAILABLE_CURRENCIES;
   public userRole: string | null = null;
+
+  private refreshIncomes$ = new BehaviorSubject<void>(undefined);
+  private refreshBudgets$ = new BehaviorSubject<void>(undefined);
 
   // Observables for filtered data (likely provided by ProfitLossService)
   incomes$!: Observable<ServiceIIncome[]>;
@@ -177,10 +190,18 @@ export class Profit implements OnInit, OnDestroy {
       )
     );
 
+    const incomesData$ = this.refreshIncomes$.pipe(
+      switchMap(() => this.incomeService.getIncomes())
+    );
+
+    const budgetsData$ = this.refreshBudgets$.pipe(
+      switchMap(() => this.budgetService.getBudgets())
+    );
+
     const profitLossData$ = this.profitLossService.getProfitLossData(
       this.expenseService.getExpenses(),
-      this.incomeService.getIncomes(),
-      this.budgetService.getBudgets(),
+      incomesData$,
+      budgetsData$,
       dateRange$
     );
 
@@ -415,16 +436,16 @@ export class Profit implements OnInit, OnDestroy {
       this.incomeService
         .addIncome(incomeData)
         .then(() => {
-          this.toastService.showSuccess(this.translate.instant('INCOME_SAVE_SUCCESS'));
+          Toast.fire({ icon: 'success', title: this.translate.instant('INCOME_SAVE_SUCCESS') });
           this.resetForm();
+          this.refreshIncomes$.next();
         })
         .catch((error) => {
           console.error('Error adding income:', error);
-          Swal.fire(
-            this.translate.instant('ERROR_TITLE'),
-            error.message || this.translate.instant('INCOME_SAVE_ERROR'),
-            'error'
-          );
+          Toast.fire({
+            icon: 'error',
+            title: error.message || this.translate.instant('INCOME_SAVE_ERROR')
+          });
         });
     }
   }
@@ -444,15 +465,15 @@ export class Profit implements OnInit, OnDestroy {
               this.incomeService
                 .deleteIncome(incomeId)
                 .then(() => {
-                  this.toastService.showSuccess(this.translate.instant('INCOME_DELETE_SUCCESS'));
+                  Toast.fire({ icon: 'success', title: this.translate.instant('INCOME_DELETE_SUCCESS') });
+                  this.refreshIncomes$.next();
                 })
                 .catch((error) => {
                     console.error('Error deleting income:', error);
-                    Swal.fire(
-                        this.translate.instant('ERROR_TITLE'),
-                        error.message || this.translate.instant('INCOME_DELETE_ERROR'),
-                        'error'
-                      );
+                    Toast.fire({
+                        icon: 'error',
+                        title: error.message || this.translate.instant('INCOME_DELETE_ERROR')
+                      });
                 });
             }
           });
@@ -476,15 +497,15 @@ export class Profit implements OnInit, OnDestroy {
               this.budgetService
                 .deleteBudget(budgetId)
                 .then(() => {
-                  this.toastService.showSuccess(this.translate.instant('BUDGET_DELETE_SUCCESS'));
+                  Toast.fire({ icon: 'success', title: this.translate.instant('BUDGET_DELETE_SUCCESS') });
+                  this.refreshBudgets$.next();
                 })
                 .catch((error) => {
                     console.error('Error deleting budget:', error);
-                    Swal.fire(
-                        this.translate.instant('ERROR_TITLE'),
-                        error.message || this.translate.instant('BUDGET_DELETE_ERROR'),
-                        'error'
-                      );
+                    Toast.fire({
+                        icon: 'error',
+                        title: error.message || this.translate.instant('BUDGET_DELETE_ERROR')
+                      });
                 });
             }
           });

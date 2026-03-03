@@ -15,6 +15,7 @@ import {
   Subscription,
   of,
   take,
+  switchMap,
 } from 'rxjs';
 import { ServiceIBudget, BudgetService } from '../../services/budget';
 import { ServiceIExpense, ExpenseService } from '../../services/expense';
@@ -47,10 +48,21 @@ import {
   DateRange,
 } from '../../services/date-filter.service';
 import { CategoryService } from '../../services/category';
-import { ToastService } from '../../services/toast';
 import Swal from 'sweetalert2';
 
 Chart.register(...registerables);
+
+const Toast = Swal.mixin({
+  toast: true,
+  position: 'top-end',
+  showConfirmButton: false,
+  timer: 3000,
+  timerProgressBar: true,
+  didOpen: (toast) => {
+    toast.addEventListener('mouseenter', Swal.stopTimer)
+    toast.addEventListener('mouseleave', Swal.resumeTimer)
+  }
+});
 
 // Define interfaces for better type checking and clarity
 interface BudgetSummary {
@@ -109,7 +121,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
   private translate = inject(TranslateService);
   public formatService = inject(FormatService);
   private categoryService = inject(CategoryService);
-  private toastService = inject(ToastService);
 
   budgetForm: FormGroup;
 
@@ -142,6 +153,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
 
   isBudgetFormCollapsed: boolean = true;
   isRecordedBudgetsCollapsed: boolean = true;
+  private refreshBudgets$ = new BehaviorSubject<void>(undefined);
 
   private _startDate$ = new BehaviorSubject<string>('');
   private _endDate$ = new BehaviorSubject<string>('');
@@ -184,7 +196,9 @@ export class BudgetComponent implements OnInit, OnDestroy {
       ],
       description: [''],
     });
-    this.budgets$ = this.budgetService.getBudgets();
+    this.budgets$ = this.refreshBudgets$.pipe(
+      switchMap(() => this.budgetService.getBudgets())
+    );
 
     this.expenses$ = this.expenseService.getExpenses();
 
@@ -843,11 +857,13 @@ export class BudgetComponent implements OnInit, OnDestroy {
           this.budgetService
             .addBudget(budgetData)
             .then(() => {
-              this.toastService.showSuccess(this.translate.instant('BUDGET_SAVE_SUCCESS'));
+              Toast.fire({ icon: 'success', title: this.translate.instant('BUDGET_SAVE_SUCCESS') });
               this.resetForm();
+              this.refreshBudgets$.next();
             })
             .catch((error) => {
               console.error('Error adding budget:', error);
+              Toast.fire({ icon: 'error', title: this.translate.instant('BUDGET_SAVE_ERROR') });
             });
         });
     }
@@ -902,15 +918,15 @@ export class BudgetComponent implements OnInit, OnDestroy {
               this.budgetService
               .deleteBudget(budgetId)
               .then(() => {
-                this.toastService.showSuccess(this.translate.instant('BUDGET_DELETE_SUCCESS'));
+                Toast.fire({ icon: 'success', title: this.translate.instant('BUDGET_DELETE_SUCCESS') });
+                this.refreshBudgets$.next();
               })
               .catch((error) => {
                 console.error('Error deleting budget:', error);
-                Swal.fire(
-                    this.translate.instant('ERROR_TITLE'),
-                    error.message || this.translate.instant('BUDGET_DELETE_ERROR'),
-                    'error'
-                  );
+                Toast.fire({
+                    icon: 'error',
+                    title: error.message || this.translate.instant('BUDGET_DELETE_ERROR')
+                  });
               });
             }
           });

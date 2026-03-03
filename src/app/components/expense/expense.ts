@@ -19,6 +19,7 @@ import {
   BehaviorSubject,
   combineLatest,
   map,
+  switchMap
 } from 'rxjs';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import Swal from 'sweetalert2';
@@ -35,7 +36,6 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 
 import { CategoryModalComponent } from '../common/category-modal/category-modal';
-import { ToastService } from '../../services/toast';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../services/auth';
 import { UserProfile } from '../../services/user-data';
@@ -44,6 +44,18 @@ import {
 } from '../../core/constants/app.constants';
 
 import { FormatService } from '../../services/format.service';
+
+const Toast = Swal.mixin({
+  toast: true,
+  position: 'top-end',
+  showConfirmButton: false,
+  timer: 3000,
+  timerProgressBar: true,
+  didOpen: (toast) => {
+    toast.addEventListener('mouseenter', Swal.stopTimer)
+    toast.addEventListener('mouseleave', Swal.resumeTimer)
+  }
+});
 
 @Component({
   selector: 'app-expense',
@@ -69,6 +81,7 @@ export class Expense implements OnInit {
   expenses$!: Observable<IExpense[]>;
   categories$: Observable<ServiceICategory[]>;
 
+  private refreshExpenses$ = new BehaviorSubject<void>(undefined);
   public _selectedDate$ = new BehaviorSubject<string>('');
   private _activeCurrencyFilter$ = new BehaviorSubject<string | null>(null);
   private _activeCategoryFilter$ = new BehaviorSubject<string | null>(null);
@@ -83,7 +96,6 @@ export class Expense implements OnInit {
   categoryService = inject(CategoryService);
   datePipe = inject(DatePipe);
   translate = inject(TranslateService);
-  toastService = inject(ToastService);
 
   editingExpenseId: string | null = null;
   public userRole: string | null = null;
@@ -140,7 +152,9 @@ export class Expense implements OnInit {
   }
   
   loadExpenses(): void {
-    this.expenses$ = this.expenseService.getExpenses();
+    this.expenses$ = this.refreshExpenses$.pipe(
+      switchMap(() => this.expenseService.getExpenses())
+    );
     this.displayedExpenses$ = combineLatest([
       this.expenses$,
       this._selectedDate$,
@@ -187,7 +201,7 @@ export class Expense implements OnInit {
   async onSubmitNewExpense(): Promise<void> {
     this.newExpenseForm.markAllAsTouched();
     if (this.newExpenseForm.invalid) {
-        this.showErrorModal(this.translate.instant('ERROR_FILL_ALL_FIELDS'));
+        Toast.fire({ icon: 'error', title: this.translate.instant('ERROR_FILL_ALL_FIELDS') });
         return;
     }
 
@@ -207,7 +221,7 @@ export class Expense implements OnInit {
 
     try {
       await this.expenseService.addExpense(newExpense as any);
-      this.toastService.showSuccess(this.translate.instant('EXPENSE_SUCCESS_ADDED'));
+      Toast.fire({ icon: 'success', title: this.translate.instant('EXPENSE_SUCCESS_ADDED') });
       this.newExpenseForm.reset({
           date: this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '',
           category: '',
@@ -217,9 +231,9 @@ export class Expense implements OnInit {
           price: 0
       });
       this.resetFilter();
-      this.loadExpenses();
+      this.refreshExpenses$.next();
     } catch (error: any) {
-      this.showErrorModal(error.message || this.translate.instant('EXPENSE_ERROR_ADD'));
+      Toast.fire({ icon: 'error', title: error.message || this.translate.instant('EXPENSE_ERROR_ADD') });
     } finally {
       this.isSaving = false;
     }
@@ -261,11 +275,11 @@ export class Expense implements OnInit {
 
   async saveEdit(): Promise<void> {
     if (!this.editingForm || !this.editingExpenseId) {
-      this.showErrorModal(this.translate.instant('EXPENSE_ERROR_NO_EXPENSE_SELECTED'));
+      Toast.fire({ icon: 'error', title: this.translate.instant('EXPENSE_ERROR_NO_EXPENSE_SELECTED') });
       return;
     }
     if (this.editingForm.invalid) {
-      this.showErrorModal(this.translate.instant('EXPENSE_ERROR_EDIT_FORM_INVALID'));
+      Toast.fire({ icon: 'error', title: this.translate.instant('EXPENSE_ERROR_EDIT_FORM_INVALID') });
       return;
     }
 
@@ -282,11 +296,11 @@ export class Expense implements OnInit {
 
     try {
       await this.expenseService.updateExpense(this.editingExpenseId, updatedExpense as any);
-      this.toastService.showSuccess(this.translate.instant('EXPENSE_SUCCESS_UPDATED'));
+      Toast.fire({ icon: 'success', title: this.translate.instant('EXPENSE_SUCCESS_UPDATED') });
       this.cancelEdit();
-      this.loadExpenses();
+      this.refreshExpenses$.next();
     } catch (error: any) {
-      this.showErrorModal(error.message || this.translate.instant('EXPENSE_ERROR_UPDATE'));
+      Toast.fire({ icon: 'error', title: error.message || this.translate.instant('EXPENSE_ERROR_UPDATE') });
     } finally {
         this.isSaving = false;
     }
@@ -311,23 +325,14 @@ export class Expense implements OnInit {
         this.isSaving = true;
         try {
           await this.expenseService.deleteExpense(expenseId);
-          this.toastService.showSuccess(this.translate.instant('EXPENSE_DELETED_SUCCESS'));
-          this.loadExpenses();
+          Toast.fire({ icon: 'success', title: this.translate.instant('EXPENSE_DELETED_SUCCESS') });
+          this.refreshExpenses$.next();
         } catch (error: any) {
-          this.showErrorModal(error.message || this.translate.instant('DATA_DELETE_ERROR'));
+          Toast.fire({ icon: 'error', title: error.message || this.translate.instant('DATA_DELETE_ERROR') });
         } finally {
             this.isSaving = false;
         }
       }
-    });
-  }
-
-  showErrorModal(message: string): void {
-    Swal.fire({
-      icon: 'error',
-      title: this.translate.instant('ERROR_TITLE'),
-      text: message,
-      confirmButtonText: this.translate.instant('OK_BUTTON')
     });
   }
   
