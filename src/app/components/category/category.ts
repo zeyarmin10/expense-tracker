@@ -28,6 +28,19 @@ import {
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import Swal from 'sweetalert2';
 
+const Toast = Swal.mixin({
+  toast: true,
+  position: 'top-end',
+  showConfirmButton: false,
+  timer: 3000,
+  timerProgressBar: true,
+  customClass: { popup: 'colored-toast' },
+  didOpen: (toast) => {
+    toast.addEventListener('mouseenter', Swal.stopTimer);
+    toast.addEventListener('mouseleave', Swal.resumeTimer);
+  }
+});
+
 @Component({
   selector: 'app-category',
   standalone: true,
@@ -81,7 +94,7 @@ export class Category implements OnInit {
       this.showErrorModal(
         this.translateService.instant('ERROR_TITLE'),
         (error as any).message ||
-          this.translateService.instant('DATA_LOAD_ERROR')
+        this.translateService.instant('DATA_LOAD_ERROR')
       );
       console.error('Error loading categories:', error);
     }
@@ -121,15 +134,7 @@ export class Category implements OnInit {
 
     try {
       await this.categoryService.addCategory(categoryName);
-      Swal.fire({
-        icon: 'success',
-        title: this.translateService.instant('CATEGORY_ADDED_SUCCESS'),
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true
-      });
+      Toast.fire({ icon: 'success', title: this.translateService.instant('CATEGORY_ADDED_SUCCESS') });
       this.addCategoryForm.reset();
       await this.loadCategories();
     } catch (error: any) {
@@ -184,15 +189,7 @@ export class Category implements OnInit {
         categoryId,
         newCategoryName
       );
-      Swal.fire({
-        icon: 'success',
-        title: this.translateService.instant('CATEGORY_SUCCESS_UPDATED'),
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true
-      });
+      Toast.fire({ icon: 'success', title: this.translateService.instant('CATEGORY_SUCCESS_UPDATED') });
       this.cancelEdit();
       this.loadCategories(); // Reload to reflect changes
     } catch (error: any) {
@@ -234,15 +231,7 @@ export class Category implements OnInit {
         if (result.isConfirmed) {
           try {
             await this.categoryService.deleteCategory(categoryId);
-            Swal.fire({
-                icon: 'success',
-                title: this.translateService.instant('CATEGORY_DELETED_SUCCESS'),
-                toast: true,
-                position: 'top-end',
-                showConfirmButton: false,
-                timer: 3000,
-                timerProgressBar: true
-              });
+            Toast.fire({ icon: 'success', title: this.translateService.instant('CATEGORY_DELETED_SUCCESS') });
             if (this.editingCategoryId === categoryId) {
               this.cancelEdit();
             }
@@ -251,7 +240,7 @@ export class Category implements OnInit {
             this.showErrorModal(
               this.translateService.instant('ERROR_TITLE'),
               error.message ||
-                this.translateService.instant('DATA_DELETE_ERROR')
+              this.translateService.instant('DATA_DELETE_ERROR')
             );
           }
         }
@@ -260,7 +249,7 @@ export class Category implements OnInit {
       this.showErrorModal(
         this.translateService.instant('ERROR_TITLE'),
         error.message ||
-          this.translateService.instant('FAILED_CHECK_CATEGORY_USAGE')
+        this.translateService.instant('FAILED_CHECK_CATEGORY_USAGE')
       );
     }
   }

@@ -11,6 +11,19 @@ import Swal from 'sweetalert2';
 
 declare const bootstrap: any;
 
+const Toast = Swal.mixin({
+  toast: true,
+  position: 'top-end',
+  showConfirmButton: false,
+  timer: 3000,
+  timerProgressBar: true,
+  customClass: { popup: 'colored-toast' },
+  didOpen: (toast) => {
+    toast.addEventListener('mouseenter', Swal.stopTimer);
+    toast.addEventListener('mouseleave', Swal.resumeTimer);
+  }
+});
+
 @Component({
   selector: 'app-category-modal',
   standalone: true,
@@ -24,7 +37,7 @@ export class CategoryModalComponent implements OnInit {
   categoryForm: FormGroup;
   categoryService = inject(CategoryService);
   translateService = inject(TranslateService);
-  
+
   categories: ServiceICategory[] = [];
   isEditMode = false;
   editingCategoryId: string | null = null;
@@ -32,7 +45,7 @@ export class CategoryModalComponent implements OnInit {
   deletingStates: { [key: string]: boolean } = {};
 
   private bsModal: any;
-  
+
   private categories$ = new BehaviorSubject<ServiceICategory[]>([]);
 
   faSave = faSave;
@@ -93,7 +106,7 @@ export class CategoryModalComponent implements OnInit {
       this.bsModal.hide();
     }
   }
-  
+
   private async loadCategories(): Promise<void> {
     try {
       const categories = await firstValueFrom(this.categoryService.getCategories());
@@ -114,7 +127,7 @@ export class CategoryModalComponent implements OnInit {
     this.editingCategoryId = null;
     this.categoryForm.reset();
   }
-  
+
   isDeleting(categoryId: string): boolean {
     return this.deletingStates[categoryId];
   }
@@ -129,8 +142,10 @@ export class CategoryModalComponent implements OnInit {
     try {
       if (this.isEditMode && this.editingCategoryId) {
         await this.categoryService.updateCategory(this.editingCategoryId, categoryName);
+        Toast.fire({ icon: 'success', title: this.translateService.instant('CATEGORY_SUCCESS_UPDATED') });
       } else {
         await this.categoryService.addCategory(categoryName);
+        Toast.fire({ icon: 'success', title: this.translateService.instant('CATEGORY_ADDED_SUCCESS') });
       }
       await this.loadCategories();
       this.categoryAdded.emit();
@@ -146,6 +161,7 @@ export class CategoryModalComponent implements OnInit {
       await this.categoryService.deleteCategory(categoryId);
       await this.loadCategories();
       this.categoryAdded.emit();
+      Toast.fire({ icon: 'success', title: this.translateService.instant('CATEGORY_DELETED_SUCCESS') });
     } catch (error) {
       console.error(`Error deleting category ${categoryId}:`, error);
     } finally {

@@ -28,6 +28,19 @@ export const AVAILABLE_BUDGET_PERIODS = [
   { code: 'yearly', nameKey: 'BUDGET_PERIOD.YEARLY' },
 ];
 
+const Toast = Swal.mixin({
+  toast: true,
+  position: 'top-end',
+  showConfirmButton: false,
+  timer: 3000,
+  timerProgressBar: true,
+  customClass: { popup: 'colored-toast' },
+  didOpen: (toast) => {
+    toast.addEventListener('mouseenter', Swal.stopTimer);
+    toast.addEventListener('mouseleave', Swal.resumeTimer);
+  }
+});
+
 @Component({
   selector: 'app-user-profile',
   standalone: true,
@@ -107,7 +120,7 @@ export class UserProfileComponent implements OnInit {
 
     const getRole = (roles: { [key: string]: string } | null | undefined): string => {
       if (!roles || typeof roles !== 'object' || Object.keys(roles).length === 0) {
-        return 'N/A'; 
+        return 'N/A';
       }
       return Object.values(roles)[0];
     };
@@ -155,7 +168,7 @@ export class UserProfileComponent implements OnInit {
             }),
             catchError((err) => {
               console.error('Error fetching user profile data:', err);
-              Swal.fire({icon: 'error', title: this.translate.instant('ERROR_TITLE'), text: this.translate.instant('PROFILE_FETCH_ERROR')});
+              Swal.fire({ icon: 'error', title: this.translate.instant('ERROR_TITLE'), text: this.translate.instant('PROFILE_FETCH_ERROR') });
               return of(null);
             })
           );
@@ -228,7 +241,7 @@ export class UserProfileComponent implements OnInit {
       startDateControl?.setValue(customPeriod.startDate, { emitEvent: false });
       endDateControl?.setValue(customPeriod.endDate, { emitEvent: false });
     } else {
-      this.showCustomDateRange = periodId === 'custom'; 
+      this.showCustomDateRange = periodId === 'custom';
     }
   }
 
@@ -245,53 +258,53 @@ export class UserProfileComponent implements OnInit {
 
   async onSubmit(): Promise<void> {
     if (this.userProfileForm.valid && this.userProfileForm.dirty) {
-        const currentUser = await firstValueFrom(this.authService.currentUser$);
-        if (currentUser && currentUser.uid) {
-            const formValues = this.userProfileForm.getRawValue();
-            const isCustom = this.customBudgetPeriods.some(p => p.id === formValues.budgetPeriod);
+      const currentUser = await firstValueFrom(this.authService.currentUser$);
+      if (currentUser && currentUser.uid) {
+        const formValues = this.userProfileForm.getRawValue();
+        const isCustom = this.customBudgetPeriods.some(p => p.id === formValues.budgetPeriod);
 
-            const profileData: Partial<UserProfile> = {
-                displayName: formValues.displayName,
-                currency: formValues.currency,
-                budgetPeriod: isCustom ? 'custom' : formValues.budgetPeriod,
-                budgetStartDate: isCustom ? formValues.budgetStartDate : null,
-                budgetEndDate: isCustom ? formValues.budgetEndDate : null,
-                selectedBudgetPeriodId: isCustom ? formValues.budgetPeriod : null
+        const profileData: Partial<UserProfile> = {
+          displayName: formValues.displayName,
+          currency: formValues.currency,
+          budgetPeriod: isCustom ? 'custom' : formValues.budgetPeriod,
+          budgetStartDate: isCustom ? formValues.budgetStartDate : null,
+          budgetEndDate: isCustom ? formValues.budgetEndDate : null,
+          selectedBudgetPeriodId: isCustom ? formValues.budgetPeriod : null
+        };
+
+        try {
+          // Step 1: Update the user's personal profile
+          if (currentUser.displayName !== profileData.displayName) {
+            await updateProfile(currentUser, { displayName: profileData.displayName });
+          }
+          await this.userDataService.updateUserProfile(currentUser.uid, profileData);
+
+          // Step 2: If the user is an admin/owner of a group, update the group's settings
+          if (this.canEditSettings && this.accountType === 'group' && this.groupId) {
+            const groupSettings = {
+              currency: profileData.currency,
+              budgetPeriod: profileData.budgetPeriod,
+              budgetStartDate: profileData.budgetStartDate,
+              budgetEndDate: profileData.budgetEndDate,
+              selectedBudgetPeriodId: profileData.selectedBudgetPeriodId,
             };
+            await this.groupService.updateGroupSettings(this.groupId, groupSettings);
+          }
 
-            try {
-                // Step 1: Update the user's personal profile
-                if (currentUser.displayName !== profileData.displayName) {
-                    await updateProfile(currentUser, { displayName: profileData.displayName });
-                }
-                await this.userDataService.updateUserProfile(currentUser.uid, profileData);
+          Toast.fire({ icon: 'success', title: this.translate.instant('PROFILE_UPDATE_SUCCESS') });
+          this.userProfileForm.markAsPristine();
 
-                // Step 2: If the user is an admin/owner of a group, update the group's settings
-                if (this.canEditSettings && this.accountType === 'group' && this.groupId) {
-                    const groupSettings = {
-                        currency: profileData.currency,
-                        budgetPeriod: profileData.budgetPeriod,
-                        budgetStartDate: profileData.budgetStartDate,
-                        budgetEndDate: profileData.budgetEndDate,
-                        selectedBudgetPeriodId: profileData.selectedBudgetPeriodId,
-                    };
-                    await this.groupService.updateGroupSettings(this.groupId, groupSettings);
-                }
-
-                Swal.fire({icon: 'success', title: this.translate.instant('PROFILE_UPDATE_SUCCESS'), toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true});
-                this.userProfileForm.markAsPristine();
-
-            } catch (error: any) {
-                console.error('Error updating profile:', error);
-                Swal.fire({icon: 'error', title: this.translate.instant('ERROR_TITLE'), text: error.message || this.translate.instant('PROFILE_UPDATE_ERROR')});
-            }
-        } else {
-            Swal.fire({icon: 'error', title: this.translate.instant('ERROR_TITLE'), text: this.translate.instant('AUTH_ERROR_PROFILE_UPDATE')});
+        } catch (error: any) {
+          console.error('Error updating profile:', error);
+          Swal.fire({ icon: 'error', title: this.translate.instant('ERROR_TITLE'), text: error.message || this.translate.instant('PROFILE_UPDATE_ERROR') });
         }
+      } else {
+        Swal.fire({ icon: 'error', title: this.translate.instant('ERROR_TITLE'), text: this.translate.instant('AUTH_ERROR_PROFILE_UPDATE') });
+      }
     } else if (this.userProfileForm.invalid) {
-        Swal.fire({icon: 'error', title: this.translate.instant('ERROR_TITLE'), text: this.translate.instant('INVALID_FORM_PROFILE')});
+      Swal.fire({ icon: 'error', title: this.translate.instant('ERROR_TITLE'), text: this.translate.instant('INVALID_FORM_PROFILE') });
     }
-}
+  }
 
   formatLocalizedDate(date: string | Date | null | undefined, format: string): string {
     const currentLang = this.translate.currentLang;
@@ -300,8 +313,8 @@ export class UserProfileComponent implements OnInit {
 
   openBudgetPeriodModal(): void {
     if (this.customBudgetPeriods.length >= 10) {
-        Swal.fire({icon: 'error', title: this.translate.instant('ERROR_TITLE'), text: this.translate.instant('CUSTOM_BUDGET_PERIOD_LIMIT_REACHED')});
-        return;
+      Swal.fire({ icon: 'error', title: this.translate.instant('ERROR_TITLE'), text: this.translate.instant('CUSTOM_BUDGET_PERIOD_LIMIT_REACHED') });
+      return;
     }
     this.modalComponent.open();
   }
@@ -312,9 +325,9 @@ export class UserProfileComponent implements OnInit {
       try {
         const newPeriodRef = await this.customBudgetPeriodService.addCustomBudgetPeriod(currentUser.uid, period);
         this.userProfileForm.get('budgetPeriod')?.setValue(newPeriodRef.key);
-        Swal.fire({icon: 'success', title: this.translate.instant('CUSTOM_BUDGET_PERIOD_SAVE_SUCCESS'), toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true});
+        Toast.fire({ icon: 'success', title: this.translate.instant('CUSTOM_BUDGET_PERIOD_SAVE_SUCCESS') });
       } catch (error) {
-        Swal.fire({icon: 'error', title: this.translate.instant('ERROR_TITLE'), text: this.translate.instant('CUSTOM_BUDGET_PERIOD_SAVE_ERROR')});
+        Swal.fire({ icon: 'error', title: this.translate.instant('ERROR_TITLE'), text: this.translate.instant('CUSTOM_BUDGET_PERIOD_SAVE_ERROR') });
         console.error('Error saving custom budget period:', error);
       }
     }
@@ -328,7 +341,7 @@ export class UserProfileComponent implements OnInit {
     if (currentUser) {
       const userProfile = await firstValueFrom(this.userDataService.getUserProfile(currentUser.uid));
       if (userProfile && userProfile.selectedBudgetPeriodId === periodId) {
-        Swal.fire({icon: 'error', title: this.translate.instant('ERROR_TITLE'), text: this.translate.instant('DELETE_ACTIVE_BUDGET_PERIOD_ERROR')});
+        Swal.fire({ icon: 'error', title: this.translate.instant('ERROR_TITLE'), text: this.translate.instant('DELETE_ACTIVE_BUDGET_PERIOD_ERROR') });
         return;
       }
     }
@@ -346,17 +359,17 @@ export class UserProfileComponent implements OnInit {
     }).then(async (result) => {
       if (result.isConfirmed) {
         if (currentUser) {
-            try {
-              await this.customBudgetPeriodService.deleteCustomBudgetPeriod(currentUser.uid, periodId);
-              if (this.userProfileForm.get('budgetPeriod')?.value === periodId) {
-                this.userProfileForm.get('budgetPeriod')?.setValue(null);
-              }
-              Swal.fire({icon: 'success', title: this.translate.instant('CUSTOM_BUDGET_PERIOD_DELETE_SUCCESS'), toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true});
-            } catch (error) {
-              Swal.fire({icon: 'error', title: this.translate.instant('ERROR_TITLE'), text: this.translate.instant('CUSTOM_BUDGET_PERIOD_DELETE_ERROR')});
-              console.error('Error deleting custom budget period:', error);
+          try {
+            await this.customBudgetPeriodService.deleteCustomBudgetPeriod(currentUser.uid, periodId);
+            if (this.userProfileForm.get('budgetPeriod')?.value === periodId) {
+              this.userProfileForm.get('budgetPeriod')?.setValue(null);
             }
+            Toast.fire({ icon: 'success', title: this.translate.instant('CUSTOM_BUDGET_PERIOD_DELETE_SUCCESS') });
+          } catch (error) {
+            Swal.fire({ icon: 'error', title: this.translate.instant('ERROR_TITLE'), text: this.translate.instant('CUSTOM_BUDGET_PERIOD_DELETE_ERROR') });
+            console.error('Error deleting custom budget period:', error);
           }
+        }
       }
     });
   }

@@ -12,6 +12,19 @@ import { DataManagerService, IGroupDetails, IGroupMemberDetails } from '../../se
 import { InvitationService } from '../../services/invitation.service';
 import Swal from 'sweetalert2';
 
+const Toast = Swal.mixin({
+  toast: true,
+  position: 'top-end',
+  showConfirmButton: false,
+  timer: 3000,
+  timerProgressBar: true,
+  customClass: { popup: 'colored-toast' },
+  didOpen: (toast) => {
+    toast.addEventListener('mouseenter', Swal.stopTimer);
+    toast.addEventListener('mouseleave', Swal.resumeTimer);
+  }
+});
+
 @Component({
   selector: 'app-member-management',
   standalone: true,
@@ -137,13 +150,13 @@ export class MemberManagementComponent implements OnInit {
           profile.groupId
         ).subscribe({
           next: () => {
-            Swal.fire({ icon: 'success', title: this.translate.instant('MEMBER_MANAGEMENT.INVITE_SENT_SUCCESS'), toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true });
+            Toast.fire({ icon: 'success', title: this.translate.instant('MEMBER_MANAGEMENT.INVITE_SENT_SUCCESS') });
             this.invitationSent = true;
             this.newMemberEmail = '';
           },
           error: (error) => {
             console.error('Failed to send invitation email:', error);
-            Swal.fire({ icon: 'error', title: this.translate.instant('TOAST_INVITATION_FAILED'), toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true });
+            Toast.fire({ icon: 'error', title: this.translate.instant('TOAST_INVITATION_FAILED') });
           },
           complete: () => {
             this.isSending = false;
@@ -152,12 +165,12 @@ export class MemberManagementComponent implements OnInit {
 
       } catch (err) {
         console.error('Error sending invitation:', err);
-        Swal.fire({ icon: 'error', title: this.translate.instant('TOAST_ERROR_SENDING_INVITE'), toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true });
+        Toast.fire({ icon: 'error', title: this.translate.instant('TOAST_ERROR_SENDING_INVITE') });
         this.isSending = false;
       }
     } else {
       console.error('User profile or group ID not found.');
-      Swal.fire({ icon: 'error', title: this.translate.instant('TOAST_ERROR_USER_INFO'), toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true });
+      Toast.fire({ icon: 'error', title: this.translate.instant('TOAST_ERROR_USER_INFO') });
       this.isSending = false;
     }
   }
@@ -177,10 +190,10 @@ export class MemberManagementComponent implements OnInit {
         if (profile && profile.groupId) {
           try {
             await this.dataManager.removeGroupMember(profile.groupId, memberId);
-            Swal.fire({ icon: 'success', title: this.translate.instant('TOAST_MEMBER_REMOVED'), toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true });
+            Toast.fire({ icon: 'error', title: this.translate.instant('TOAST_ERROR_USER_INFO') });
           } catch (err) {
             console.error('Error removing member:', err);
-            Swal.fire({ icon: 'error', title: this.translate.instant('TOAST_ERROR_REMOVING_MEMBER'), toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true });
+            Toast.fire({ icon: 'error', title: this.translate.instant('TOAST_ERROR_REMOVING_MEMBER') });
           }
         }
       }
@@ -190,7 +203,7 @@ export class MemberManagementComponent implements OnInit {
   confirmRevokeInvite(inviteKey: string | undefined): void {
     if (!inviteKey) {
       console.error("Cannot revoke invite, key is missing.");
-      Swal.fire({ icon: 'error', title: this.translate.instant('TOAST_ERROR_REVOKING_INVITE'), toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true });
+      Toast.fire({ icon: 'error', title: this.translate.instant('TOAST_ERROR_REVOKING_INVITE') });
       return;
     }
     Swal.fire({
@@ -205,10 +218,10 @@ export class MemberManagementComponent implements OnInit {
       if (result.isConfirmed) {
         try {
           await this.dataManager.revokeGroupInvitation(inviteKey);
-          Swal.fire({ icon: 'success', title: this.translate.instant('TOAST_INVITATION_REVOKED'), toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true });
+          Toast.fire({ icon: 'success', title: this.translate.instant('TOAST_INVITATION_REVOKED') });
         } catch (err) {
           console.error('Error revoking invitation:', err);
-          Swal.fire({ icon: 'error', title: this.translate.instant('TOAST_ERROR_REVOKING_INVITE'), toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true });
+          Toast.fire({ icon: 'error', title: this.translate.instant('TOAST_ERROR_REVOKING_INVITE') });
         }
       }
     });

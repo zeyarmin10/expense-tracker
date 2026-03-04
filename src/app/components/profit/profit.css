@@ -7,45 +7,6 @@
 }
 
 .pnl-wrapper {
-  --bg: #0a0c10;
-  --surface: #12151c;
-  --surface-2: #1a1e28;
-  --border: rgba(255, 255, 255, 0.07);
-  --accent: #00e5b4;
-  --accent-dim: rgba(0, 229, 180, 0.12);
-
-  --income-color: #34d399;
-  --income-dim: rgba(52, 211, 153, 0.10);
-  --income-border: rgba(52, 211, 153, 0.25);
-
-  --expense-color: #fbbf24;
-  --expense-dim: rgba(251, 191, 36, 0.10);
-  --expense-border: rgba(251, 191, 36, 0.25);
-
-  --budget-color: #60a5fa;
-  --budget-dim: rgba(96, 165, 250, 0.10);
-  --budget-border: rgba(96, 165, 250, 0.25);
-
-  --profit-color: #34d399;
-  --profit-dim: rgba(52, 211, 153, 0.10);
-  --profit-border: rgba(52, 211, 153, 0.25);
-
-  --loss-color: #f87171;
-  --loss-dim: rgba(248, 113, 113, 0.10);
-  --loss-border: rgba(248, 113, 113, 0.25);
-
-  --net-color: #a78bfa;
-  --net-dim: rgba(167, 139, 250, 0.10);
-  --net-border: rgba(167, 139, 250, 0.25);
-
-  --bal-color: #38bdf8;
-  --bal-dim: rgba(56, 189, 248, 0.10);
-  --bal-border: rgba(56, 189, 248, 0.25);
-
-  --text: #f0f2f7;
-  --text-muted: #6b7280;
-  --text-sub: #9ca3af;
-
   /* font-family: 'Syne', sans-serif; */
   background: var(--bg);
   min-height: 100vh;

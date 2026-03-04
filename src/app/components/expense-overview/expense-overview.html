@@ -114,7 +114,7 @@
             <table class="expense-table">
               <thead>
                 <tr>
-                  <th>{{ "DATE_LABEL" | translate }}</th>
+                  <th width="80" class="pe-1">{{ "DATE_LABEL" | translate }}</th>
                   <th class="td-category">{{ "CATEGORY_LABEL" | translate }}</th>
                   <th>{{ "ITEM_NAME_LABEL" | translate }}</th>
                   <th>{{ "TOTAL_COST_LABEL" | translate }}</th>
@@ -122,7 +122,7 @@
               </thead>
               <tbody>
                 <tr *ngFor="let expense of expenses" (click)="onRowClick(expense)">
-                  <td class="td-date">
+                  <td class="td-date pe-1">
                     <span class="d-none d-md-inline">{{ formatLocalizedDate(expense.date) }}</span>
                     <span class="d-md-none">{{ formatMobileDate(expense.date) }}</span>
                   </td>
