@@ -55,7 +55,7 @@ export class FormatService {
     let value: number;
     let suffixKey: string;
 
-    if (isBurmese && Math.abs(amount) >= 100000) {
+    if (isBurmese && Math.abs(amount) >= 1000000) {
       value = amount / 100000;
       suffixKey = 'ABBREVIATIONS.LAKH';
     } else if (Math.abs(amount) >= 1e9) {

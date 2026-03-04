@@ -521,5 +521,7 @@
   "AUTH_GENERIC_MESSAGE_ERROR": "An error occurred: {{message}}",
   "AUTH_UNEXPECTED_ERROR": "An unexpected error occurred. Please try again later.",
   "CONFIRM_REVOKE_INVITE": "Are you sure you want to revoke this invitation?",
-  "REVOKE_BUTTON": "Revoke"
+  "REVOKE_BUTTON": "Revoke",
+  "MEMBER_MANAGEMENT_TITLE": "Member Management",
+  "INVITE_EMAIL_LABEL": "Email Address"
 }

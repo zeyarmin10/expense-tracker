@@ -2,27 +2,58 @@
   <div class="expense-container">
     <!-- Header -->
     <div class="expense-header">
-      <h2 class="expense-title">
-        Expense<span> Overview</span>
-        <!-- <fa-icon [icon]="faChartColumn" class="me-2 text-primary"></fa-icon> 
-        {{ "EXPENSE_OVERVIEW_TITLE" | translate }} -->
-      </h2>
+      <h2 class="expense-title">Expense<span> Overview</span></h2>
       <span class="header-badge">{{ currentPeriodLabel }}</span>
     </div>
 
-    <!-- Filter Bar -->
-    <div class="filter-bar">
-      <select class="filter-select" [(ngModel)]="selectedDateFilter" (change)="setDateFilter(selectedDateFilter)">
-        <option value="currentWeek">{{ "CURRENT_WEEK" | translate }}</option>
-        <option value="last30Days">{{ "LAST_30_DAYS" | translate }}</option>
-        <option value="currentMonth">{{ "CURRENT_MONTH" | translate }}</option>
-        <option value="lastMonth">{{ "LAST_MONTH" | translate }}</option>
-        <option value="lastSixMonths">{{ "LAST_SIX_MONTHS" | translate }}</option>
-        <option value="currentYear">{{ "CURRENT_YEAR" | translate }}</option>
-        <option value="lastYear">{{ "LAST_YEAR" | translate }}</option>
-        <option value="custom">{{ "CUSTOM_DATE" | translate }}</option>
-      </select>
+    <!-- Filter Row: custom=3cols+search below, normal=select+search side by side -->
 
+    <!-- Row 1: date select + (custom: 2 date pickers) | (normal: search) -->
+    <div class="ov-filter-row" [class.ov-filter-row-custom]="selectedDateFilter === 'custom'">
+
+      <!-- Date Range Select -->
+      <div class="ov-fl-wrap">
+        <select class="ov-fl-input ov-fl-select" [(ngModel)]="selectedDateFilter"
+          (change)="setDateFilter(selectedDateFilter)">
+          <option value="currentWeek">{{ "CURRENT_WEEK" | translate }}</option>
+          <option value="last30Days">{{ "LAST_30_DAYS" | translate }}</option>
+          <option value="currentMonth">{{ "CURRENT_MONTH" | translate }}</option>
+          <option value="lastMonth">{{ "LAST_MONTH" | translate }}</option>
+          <option value="lastSixMonths">{{ "LAST_SIX_MONTHS" | translate }}</option>
+          <option value="currentYear">{{ "CURRENT_YEAR" | translate }}</option>
+          <option value="lastYear">{{ "LAST_YEAR" | translate }}</option>
+          <option value="custom">{{ "CUSTOM_DATE" | translate }}</option>
+        </select>
+        <label class="ov-fl-label">{{ "DATE_FILTER" | translate }}</label>
+      </div>
+
+      <!-- Custom: Start Date -->
+      <ng-container *ngIf="selectedDateFilter === 'custom'">
+        <div class="ov-fl-wrap">
+          <input type="date" class="ov-fl-input" [(ngModel)]="startDate" (change)="setDateFilter('custom')"
+            placeholder=" " />
+          <label class="ov-fl-label">{{ "START_DATE" | translate }}</label>
+        </div>
+        <div class="ov-fl-wrap">
+          <input type="date" class="ov-fl-input" [(ngModel)]="endDate" (change)="setDateFilter('custom')"
+            placeholder=" " />
+          <label class="ov-fl-label">{{ "END_DATE" | translate }}</label>
+        </div>
+      </ng-container>
+
+      <!-- Normal: search sits in same row -->
+      <div class="search-group" *ngIf="selectedDateFilter !== 'custom'">
+        <input type="text" class="search-input" placeholder="{{ 'SEARCH_PLACEHOLDER' | translate }}"
+          [(ngModel)]="searchTerm" (keyup.enter)="onSearch()" />
+        <button class="search-btn" type="button" (click)="onSearch()">
+          <fa-icon [icon]="faMagnifyingGlass"></fa-icon>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Row 2: search below when custom dates shown -->
+    <div class="ov-search-row" *ngIf="selectedDateFilter === 'custom'">
       <div class="search-group">
         <input type="text" class="search-input" placeholder="{{ 'SEARCH_PLACEHOLDER' | translate }}"
           [(ngModel)]="searchTerm" (keyup.enter)="onSearch()" />
@@ -31,14 +62,6 @@
         </button>
       </div>
     </div>
-
-    <!-- Custom Date Range -->
-    <ng-container *ngIf="selectedDateFilter === 'custom'">
-      <div class="filter-bar" style="margin-top: -0.25rem;">
-        <input type="date" class="filter-date-picker" [(ngModel)]="startDate" (change)="setDateFilter('custom')" />
-        <input type="date" class="filter-date-picker" [(ngModel)]="endDate" (change)="setDateFilter('custom')" />
-      </div>
-    </ng-container>
 
     <ng-container *ngIf="filteredExpenses$ | async as expenses">
       <div *ngIf="expenses.length > 0; else noData">
@@ -87,7 +110,7 @@
             </h5>
             <span class="table-count">{{ expenses.length }} items</span>
           </div>
-          <div class="">
+          <div class="table-responsive">
             <table class="expense-table">
               <thead>
                 <tr>

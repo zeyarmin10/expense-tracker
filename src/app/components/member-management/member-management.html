@@ -7,7 +7,7 @@
     <div class="mm-page-header">
       <h2 class="mm-page-title">
         <fa-icon [icon]="faUserPlus" class="mm-icon-accent"></fa-icon>
-        {{ 'INVITE_NEW_MEMBER' | translate }}
+        {{ 'MEMBER_MANAGEMENT_TITLE' | translate }}
       </h2>
     </div>
 
@@ -21,24 +21,44 @@
       </div>
       <div class="mm-panel-body">
         <div class="mm-invite-row">
+
+          <!-- Email input with proper floating label -->
           <div class="mm-fl-wrap">
             <input
               type="email"
               id="mm-email"
               class="mm-fl-input"
+              [class.mm-fl-has-value]="newMemberEmail"
+              [class.err]="newMemberEmail && !isValidEmail(newMemberEmail)"
               [(ngModel)]="newMemberEmail"
-              (keyup.enter)="sendInvite()"
+              (keyup.enter)="isValidEmail(newMemberEmail) && !isSending && sendInvite()"
               placeholder=" "
+              autocomplete="email"
             />
+            <!-- Always-floated label (top) -->
             <label class="mm-fl-label" for="mm-email">
-              {{ 'EMAIL_PLACEHOLDER' | translate }}
+              {{ 'INVITE_EMAIL_LABEL' | translate }}
             </label>
+            <!-- Ghost placeholder shown when empty -->
+            <span class="mm-fl-placeholder" *ngIf="!newMemberEmail">
+              {{ 'EMAIL_PLACEHOLDER' | translate }}
+            </span>
           </div>
-          <button class="mm-send-btn" (click)="sendInvite()" [disabled]="isSending || !newMemberEmail">
+
+          <!-- Send button: requires valid email format -->
+          <button class="mm-send-btn"
+            (click)="sendInvite()"
+            [disabled]="isSending || !newMemberEmail || !isValidEmail(newMemberEmail)">
             <span *ngIf="!isSending"><fa-icon [icon]="faPaperPlane"></fa-icon></span>
             <span *ngIf="isSending" class="mm-spinner"></span>
           </button>
         </div>
+
+        <!-- Inline validation hint -->
+        <div class="mm-email-hint" *ngIf="newMemberEmail && !isValidEmail(newMemberEmail)">
+          {{ 'ERROR_EMAIL_INVALID' | translate }}
+        </div>
+
       </div>
     </div>
 

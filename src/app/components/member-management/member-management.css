@@ -4,6 +4,8 @@
 
 :host {
   display: block;
+  overflow-x: hidden;
+  max-width: 100%;
 }
 
 .mm-wrapper {
@@ -27,6 +29,8 @@
   min-height: 100vh;
   padding: 2rem 1rem 5rem;
   color: var(--text);
+  overflow-x: hidden;
+  max-width: 100vw;
 }
 
 .mm-container {
@@ -35,6 +39,8 @@
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+  width: 100%;
+  overflow-x: hidden;
 }
 
 .mm-page-title {
@@ -45,6 +51,10 @@
   display: flex;
   align-items: center;
   gap: 0.6rem;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .mm-panel {
@@ -155,6 +165,11 @@
   box-shadow: 0 0 0 3px var(--accent-dim);
 }
 
+.mm-fl-input.err {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.12);
+}
+
 .mm-fl-label {
   position: absolute;
   left: 0.95rem;
@@ -166,6 +181,30 @@
   color: var(--accent);
   pointer-events: none;
   line-height: 1;
+}
+
+.mm-fl-input.err~.mm-fl-label {
+  color: var(--danger);
+}
+
+/* Ghost placeholder - shown when input empty, sits inside the value area */
+.mm-fl-placeholder {
+  position: absolute;
+  left: 0.95rem;
+  bottom: 0.9rem;
+  /* font-family: DM Mono, monospace; */
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  pointer-events: none;
+  line-height: 1;
+}
+
+/* Validation hint below input */
+.mm-email-hint {
+  font-size: 0.72rem;
+  color: var(--danger);
+  font-weight: 600;
+  padding: 0.3rem 0.2rem 0;
 }
 
 .mm-send-btn {
