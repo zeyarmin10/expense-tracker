@@ -34,13 +34,23 @@
 }
 
 /* ── Filter Bar ── */
-/* ── Filter Bar ── */
 .pnl-filter-bar {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  /* shrink to content width */
   gap: 0.75rem;
+}
+
+/* PC: select + date pickers တစ်ကြောင်းတည်း */
+@media (min-width: 640px) {
+  .pnl-filter-bar {
+    flex-direction: row;
+    align-items: flex-end;
+  }
+
+  .pnl-filter-bar .pnl-date-row {
+    display: contents;
+  }
 }
 
 /* select wrapper: shrink to content */

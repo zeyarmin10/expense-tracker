@@ -523,5 +523,6 @@
   "CONFIRM_REVOKE_INVITE": "Are you sure you want to revoke this invitation?",
   "REVOKE_BUTTON": "Revoke",
   "MEMBER_MANAGEMENT_TITLE": "Member Management",
-  "INVITE_EMAIL_LABEL": "Email Address"
+  "INVITE_EMAIL_LABEL": "Email Address",
+  "ADDED_BY": "Added By"
 }

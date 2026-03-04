@@ -54,6 +54,7 @@
 }
 
 /* ── Filter Row ── */
+/* Mobile: column stack */
 .ov-filter-row {
   display: flex;
   flex-direction: column;
@@ -62,11 +63,32 @@
   margin-bottom: 0.75rem;
 }
 
+/* PC: select + date pickers all in one row */
+@media (min-width: 640px) {
+  .ov-filter-row {
+    flex-direction: row;
+    align-items: flex-end;
+    flex-wrap: nowrap;
+  }
+
+  /* custom mode: select + 2 date pickers side by side */
+  .ov-filter-row-custom .ov-date-row {
+    display: contents; /* date pickers မ wrapper မပါဘဲ row ထဲ ဝင်မယ် */
+  }
+}
+
 /* date pickers: always side by side */
 .ov-date-row {
   display: flex;
   flex-direction: row;
   gap: 0.75rem;
+}
+
+/* PC: date pickers ကို filter row ထဲ inline ဖြစ်အောင် */
+@media (min-width: 640px) {
+  .ov-filter-row-custom .ov-date-row {
+    display: contents;
+  }
 }
 
 .ov-date-row .ov-fl-wrap {
@@ -178,13 +200,14 @@
   display: flex;
   gap: 0;
   min-width: 0;
-  width: 100%;
+  /* width: 100%; */
   height: 54px;
 }
 
+/* PC: search bar ကို 60% width သတ်မှတ် */
 @media (min-width: 640px) {
   .search-group {
-    grid-column: auto;
+    width: 70%;
   }
 }
 
@@ -242,6 +265,8 @@
   .summary-grid {
     grid-template-columns: 1fr 1fr;
   }
+  .summary-card { align-self: stretch; }
+  .category-highlight-card { align-self: stretch; }
 }
 
 @media (min-width: 768px) {
@@ -329,7 +354,7 @@
   gap: 1rem;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 540px) {
   .category-highlight-card {
     grid-column: auto;
   }
@@ -454,12 +479,12 @@
 }
 
 .expense-table th {
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--text-muted);
-  padding: 0.65rem 0.85rem;
+  padding: 0.65rem 0.75rem;
   text-align: left;
   border-bottom: 1px solid var(--border);
   white-space: nowrap;
@@ -476,7 +501,7 @@
 }
 
 .expense-table td {
-  padding: 0.75rem 0.85rem;
+  padding: 0.65rem 0.75rem;
   font-size: 0.85rem;
   border-bottom: 1px solid var(--border);
   color: var(--text);
@@ -532,6 +557,39 @@
 
 .td-name {
   font-weight: 600;
+}
+
+/* Mobile: show creator name below item name */
+.td-name-creator {
+  display: none;
+}
+
+@media (max-width: 639.98px) {
+  .td-name-creator {
+    display: block;
+    font-size: 0.6rem;
+    font-weight: 400;
+    /* color: var(--text-muted); */
+    /* margin-top: 0.15rem; */
+    color: #665008;
+  }
+}
+
+/* PC only: created-by column */
+.td-created-by {
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .td-created-by {
+    display: table-cell;
+  }
+}
+
+.created-by-badge {
+  font-size: 0.78rem;
+  color: var(--text-sub);
+  white-space: nowrap;
 }
 
 .td-amount {

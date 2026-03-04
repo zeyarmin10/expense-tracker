@@ -9,7 +9,7 @@
     <!-- Filter Row: custom=3cols+search below, normal=select+search side by side -->
 
     <!-- Row 1: date select + (custom: 2 date pickers) | (normal: search) -->
-    <div class="ov-filter-row">
+    <div class="ov-filter-row" [class.ov-filter-row-custom]="selectedDateFilter === 'custom'">
 
       <!-- Date Range Select -->
       <div class="ov-fl-wrap">
@@ -114,7 +114,8 @@
             <table class="expense-table">
               <thead>
                 <tr>
-                  <th width="80" class="pe-1">{{ "DATE_LABEL" | translate }}</th>
+                  <th width="90">{{ "DATE_LABEL" | translate }}</th>
+                  <th class="td-created-by">{{ "ADDED_BY" | translate }}</th>
                   <th class="td-category">{{ "CATEGORY_LABEL" | translate }}</th>
                   <th>{{ "ITEM_NAME_LABEL" | translate }}</th>
                   <th>{{ "TOTAL_COST_LABEL" | translate }}</th>
@@ -126,10 +127,16 @@
                     <span class="d-none d-md-inline">{{ formatLocalizedDate(expense.date) }}</span>
                     <span class="d-md-none">{{ formatMobileDate(expense.date) }}</span>
                   </td>
+                  <td class="td-created-by">
+                    <span class="created-by-badge">{{ expense.createdByName || '—' }}</span>
+                  </td>
                   <td class="td-category">
                     <span class="category-badge">{{ expense.category }}</span>
                   </td>
-                  <td class="td-name">{{ expense.itemName }}</td>
+                  <td class="td-name">
+                    {{ expense.itemName }}
+                    <span class="td-name-creator">{{ expense.createdByName || '' }}</span>
+                  </td>
                   <td class="td-amount">
                     {{ formatService.formatAmountShort(expense.totalCost, expense.currency) }}
                   </td>

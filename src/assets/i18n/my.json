@@ -523,5 +523,6 @@
   "CONFIRM_REVOKE_INVITE": "ဤဖိတ်ကြားချက်ကို ပြန်လည်ရုပ်သိမ်းရန် သေချာပါသလား",
   "REVOKE_BUTTON": "ပြန်လည်ရုပ်သိမ်းရန်",
   "MEMBER_MANAGEMENT_TITLE": "အဖွဲ့ဝင် စီမံခန့်ခွဲရန်",
-  "INVITE_EMAIL_LABEL": "အီးမေးလ်လိပ်စာ"
+  "INVITE_EMAIL_LABEL": "အီးမေးလ်လိပ်စာ",
+  "ADDED_BY": "ထည့်သွင်းသူ"
 }
