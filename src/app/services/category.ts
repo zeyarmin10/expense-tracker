@@ -117,7 +117,7 @@ export class CategoryService {
     await push(categoriesRef, newCategory);
   }
 
-  async updateCategory(categoryId: string, oldCategoryName: string, newCategoryName: string): Promise<void> {
+  async updateCategory(categoryId: string, newCategoryName: string): Promise<void> {
     const profile = await firstValueFrom(this.authService.userProfile$) as UserProfile | null;
     if (!profile?.uid) {
       throw new Error('User not authenticated.');
@@ -132,14 +132,19 @@ export class CategoryService {
     } else {
       categoryRef = ref(this.db, `users/${profile.uid}/categories/${categoryId}`);
     }
+    
+    const oldCategorySnap = await get(categoryRef);
+    const oldCategoryName = oldCategorySnap.val()?.name;
 
     await update(categoryRef, { name: newCategoryName.trim() });
 
-    this.categoryUpdatedSource.next({
-      oldName: oldCategoryName,
-      newName: newCategoryName,
-      userId: profile.uid,
-    });
+    if (oldCategoryName) {
+      this.categoryUpdatedSource.next({
+        oldName: oldCategoryName,
+        newName: newCategoryName,
+        userId: profile.uid,
+      });
+    }
   }
 
   async deleteCategory(categoryId: string): Promise<void> {

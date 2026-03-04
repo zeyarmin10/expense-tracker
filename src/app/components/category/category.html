@@ -95,7 +95,7 @@
                   [formControl]="editingCategoryFormControl!"
                   placeholder=" "
                   [class.err]="editingCategoryFormControl!.invalid && editingCategoryFormControl!.touched"
-                  (keydown.enter)="onUpdateInline(category.id!, category.name)"
+                  (keydown.enter)="onUpdateInline(category.id!)"
                 />
                 <label class="cat-fl-label" [for]="'edit-' + category.id">
                   {{ "CATEGORY_NAME_LABEL" | translate }}
@@ -111,7 +111,7 @@
                   {{ "CANCEL_BUTTON_LABEL" | translate }}
                 </button>
                 <button class="cat-btn cat-btn-primary cat-btn-sm"
-                  (click)="onUpdateInline(category.id!, category.name)"
+                  (click)="onUpdateInline(category.id!)"
                   [disabled]="editingCategoryFormControl?.invalid">
                   <fa-icon [icon]="faSave"></fa-icon>
                   {{ "SAVE_BUTTON_LABEL" | translate }}

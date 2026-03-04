@@ -1,4 +1,4 @@
-import { Component, EventEmitter, inject, Output } from '@angular/core';
+import { Component, EventEmitter, inject, Output, HostListener } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -20,8 +20,16 @@ export class CustomBudgetPeriodModalComponent {
   private formBuilder = inject(FormBuilder);
   budgetPeriodForm: FormGroup;
   private modalInstance: any;
+  private isModalOpen = false;
 
   faSave = faSave;
+
+  @HostListener('window:popstate', ['$event'])
+  onPopState(event: PopStateEvent): void {
+    if (this.isModalOpen) {
+      this.modalInstance.hide();
+    }
+  }
 
   constructor() {
     this.budgetPeriodForm = this.formBuilder.group({
@@ -49,7 +57,11 @@ export class CustomBudgetPeriodModalComponent {
 
     const modalElement = document.getElementById('customBudgetPeriodModal');
     if (modalElement) {
-      // Set up autofocus when the modal is shown
+      // When the modal is fully hidden, update the flag.
+      modalElement.addEventListener('hidden.bs.modal', () => {
+        this.isModalOpen = false;
+      }, { once: true });
+      
       modalElement.addEventListener('shown.bs.modal', () => {
         const inputElement = document.getElementById('budgetName');
         if (inputElement) {
@@ -58,12 +70,20 @@ export class CustomBudgetPeriodModalComponent {
       }, { once: true });
 
       this.modalInstance = new bootstrap.Modal(modalElement);
+      
+      // Push state to browser history and update flag before showing
+      history.pushState(null, '');
+      this.isModalOpen = true;
       this.modalInstance.show();
     }
   }
 
   close(): void {
-    if (this.modalInstance) {
+    if (this.isModalOpen) {
+      // Trigger the popstate event by going back in history
+      history.back();
+    } else if (this.modalInstance) {
+      // Fallback for safety
       this.modalInstance.hide();
     }
   }

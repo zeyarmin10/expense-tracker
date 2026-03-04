@@ -1,9 +1,9 @@
-import { Component, ElementRef, EventEmitter, OnInit, Output, ViewChild, inject } from '@angular/core';
+import { Component, ElementRef, EventEmitter, OnInit, Output, ViewChild, inject, HostListener } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CategoryService } from '../../../services/category';
 import { CommonModule } from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { faSave, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faSave, faTimes, faPlus, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { FaIconComponent } from "@fortawesome/angular-fontawesome";
 import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import { ServiceICategory } from '../../../services/category';
@@ -19,22 +19,34 @@ declare const bootstrap: any;
   styleUrls: ['./category-modal.css']
 })
 export class CategoryModalComponent implements OnInit {
-  @ViewChild('categoryModal') modalElementRef!: ElementRef;
   @Output() categoryAdded = new EventEmitter<void>();
 
   categoryForm: FormGroup;
   categoryService = inject(CategoryService);
   translateService = inject(TranslateService);
+  
+  categories: ServiceICategory[] = [];
+  isEditMode = false;
+  editingCategoryId: string | null = null;
+  isModalOpen = false;
+  deletingStates: { [key: string]: boolean } = {};
 
-  private _modalCurrentCategoryCount: number = 0;
+  private bsModal: any;
+  
+  private categories$ = new BehaviorSubject<ServiceICategory[]>([]);
 
   faSave = faSave;
   faTimes = faTimes;
+  faPlus = faPlus;
+  faEdit = faEdit;
+  faTrash = faTrash;
 
-  private bsModal!: any;
-
-  private _categoriesSubject: BehaviorSubject<ServiceICategory[]> = new BehaviorSubject<ServiceICategory[]>([]);
-  
+  @HostListener('window:popstate', ['$event'])
+  onPopState(event: PopStateEvent): void {
+    if (this.isModalOpen) {
+      this.bsModal.hide();
+    }
+  }
 
   constructor(private fb: FormBuilder) {
     this.categoryForm = this.fb.group({
@@ -43,106 +55,102 @@ export class CategoryModalComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.categories$.subscribe(categories => {
+      this.categories = categories;
+    });
   }
 
-  ngAfterViewInit(): void {
-    if (this.modalElementRef) {
-      this.bsModal = new bootstrap.Modal(this.modalElementRef.nativeElement);
-      this.modalElementRef.nativeElement.addEventListener('hidden.bs.modal', () => {
-        this.resetForm();
-      });
-    }
+  private async initializeModal(): Promise<void> {
+    return new Promise((resolve) => {
+      if (!this.bsModal) {
+        const modalElement = document.getElementById('categoryModal');
+        if (modalElement) {
+          this.bsModal = new bootstrap.Modal(modalElement);
+          modalElement.addEventListener('hidden.bs.modal', () => {
+            this.isModalOpen = false;
+            this.resetForm();
+          });
+        }
+      }
+      resolve();
+    });
   }
 
   async open(): Promise<void> {
+    await this.initializeModal();
+    await this.loadCategories();
     this.resetForm();
-    try {
-      const categories = await firstValueFrom(this.categoryService.getCategories());
-      this._modalCurrentCategoryCount = categories.length;
-      this._categoriesSubject.next(categories);
-    } catch (error) {
-      Swal.fire({
-        icon: 'error',
-        title: this.translateService.instant('ERROR_TITLE'),
-        text: (error as any).message || this.translateService.instant('DATA_LOAD_ERROR')
-      });
-      console.error('Error loading categories for modal:', error);
-      this._modalCurrentCategoryCount = 0;
-    }
 
-    if (this.bsModal) {
-      this.bsModal.show();
-    }
+    history.pushState(null, '');
+    this.isModalOpen = true;
+    this.bsModal.show();
   }
 
-  close(): void {
-    if (this.bsModal) {
+  closeModal(): void {
+    if (this.isModalOpen) {
+      history.back();
+    } else {
       this.bsModal.hide();
     }
   }
+  
+  private async loadCategories(): Promise<void> {
+    try {
+      const categories = await firstValueFrom(this.categoryService.getCategories());
+      this.categories$.next(categories);
+    } catch (error) {
+      console.error('Error loading categories:', error);
+    }
+  }
+
+  onEdit(category: ServiceICategory): void {
+    this.isEditMode = true;
+    this.editingCategoryId = category.id!;
+    this.categoryForm.setValue({ name: category.name });
+  }
 
   resetForm(): void {
+    this.isEditMode = false;
+    this.editingCategoryId = null;
     this.categoryForm.reset();
   }
+  
+  isDeleting(categoryId: string): boolean {
+    return this.deletingStates[categoryId];
+  }
 
-  async onSubmit(): Promise<void> {
-    if (this._modalCurrentCategoryCount >= 100) {
-      Swal.fire({
-        icon: 'error',
-        title: this.translateService.instant('ERROR_TITLE'),
-        text: this.translateService.instant('CATEGORY_LIMIT_REACHED')
-      });
-      this.close();
-      return;
-    }
-
+  async onSave(): Promise<void> {
     if (this.categoryForm.invalid) {
-        Swal.fire({
-            icon: 'error',
-            title: this.translateService.instant('ERROR_TITLE'),
-            text: this.translateService.instant('CATEGORY_NAME_REQUIRED')
-          });
       return;
     }
 
-    const newCategoryName = this.categoryForm.value.name;
-
-    const categories = this._categoriesSubject.value;
-    const isDuplicate = categories.some(category => category.name.toLowerCase() === newCategoryName.toLowerCase());
-
-    if (isDuplicate) {
-        Swal.fire({
-            icon: 'error',
-            title: this.translateService.instant('ERROR_TITLE'),
-            text: this.translateService.instant('CATEGORY_ALREADY_EXISTS')
-        });
-        this.close();
-        return;
-    }
+    const categoryName = this.categoryForm.value.name;
 
     try {
-      await this.categoryService.addCategory(newCategoryName);
-      Swal.fire({
-        icon: 'success',
-        title: this.translateService.instant('CATEGORY_ADDED_SUCCESS'),
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true
-      });
-      this.categoryForm.reset();
+      if (this.isEditMode && this.editingCategoryId) {
+        await this.categoryService.updateCategory(this.editingCategoryId, categoryName);
+      } else {
+        await this.categoryService.addCategory(categoryName);
+      }
+      await this.loadCategories();
       this.categoryAdded.emit();
-
-      this._modalCurrentCategoryCount++;
-      this.close();
-    } catch (error: any) {
-        Swal.fire({
-            icon: 'error',
-            title: this.translateService.instant('ERROR_TITLE'),
-            text: error.message || this.translateService.instant('DATA_SAVE_ERROR')
-          });
-      console.error('Error adding category:', error);
+      this.resetForm();
+    } catch (error) {
+      console.error('Error saving category:', error);
     }
   }
+
+  async onDelete(categoryId: string): Promise<void> {
+    this.deletingStates[categoryId] = true;
+    try {
+      await this.categoryService.deleteCategory(categoryId);
+      await this.loadCategories();
+      this.categoryAdded.emit();
+    } catch (error) {
+      console.error(`Error deleting category ${categoryId}:`, error);
+    } finally {
+      this.deletingStates[categoryId] = false;
+    }
+  }
+
 }

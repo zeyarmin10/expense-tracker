@@ -158,8 +158,7 @@ export class Category implements OnInit {
   }
 
   async onUpdateInline(
-    categoryId: string,
-    oldCategoryName: string
+    categoryId: string
   ): Promise<void> {
     if (
       this.editingCategoryFormControl &&
@@ -183,7 +182,6 @@ export class Category implements OnInit {
     try {
       await this.categoryService.updateCategory(
         categoryId,
-        oldCategoryName,
         newCategoryName
       );
       Swal.fire({
