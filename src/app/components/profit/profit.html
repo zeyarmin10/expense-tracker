@@ -14,20 +14,37 @@
 
     <!-- Date Filter Bar -->
     <div class="pnl-filter-bar">
-      <select class="pnl-select" [(ngModel)]="selectedDateFilter" (change)="setDateFilter(selectedDateFilter)">
-        <option value="currentWeek">{{ "CURRENT_WEEK" | translate }}</option>
-        <option value="last30Days">{{ "LAST_30_DAYS" | translate }}</option>
-        <option value="currentMonth">{{ "CURRENT_MONTH" | translate }}</option>
-        <option value="lastMonth">{{ "LAST_MONTH" | translate }}</option>
-        <option value="lastSixMonths">{{ "LAST_SIX_MONTHS" | translate }}</option>
-        <option value="currentYear">{{ "CURRENT_YEAR" | translate }}</option>
-        <option value="lastYear">{{ "LAST_YEAR" | translate }}</option>
-        <option value="custom">{{ "CUSTOM_DATE" | translate }}</option>
-      </select>
-      <ng-container *ngIf="selectedDateFilter === 'custom'">
-        <input type="date" class="pnl-input" [(ngModel)]="startDate" (change)="setDateFilter('custom')" />
-        <input type="date" class="pnl-input" [(ngModel)]="endDate" (change)="setDateFilter('custom')" />
-      </ng-container>
+
+      <!-- Period select -->
+      <div class="pnl-fl-wrap">
+        <select class="pnl-fl-input pnl-fl-select" [(ngModel)]="selectedDateFilter"
+          (change)="setDateFilter(selectedDateFilter)">
+          <option value="currentWeek">{{ "CURRENT_WEEK" | translate }}</option>
+          <option value="last30Days">{{ "LAST_30_DAYS" | translate }}</option>
+          <option value="currentMonth">{{ "CURRENT_MONTH" | translate }}</option>
+          <option value="lastMonth">{{ "LAST_MONTH" | translate }}</option>
+          <option value="lastSixMonths">{{ "LAST_SIX_MONTHS" | translate }}</option>
+          <option value="currentYear">{{ "CURRENT_YEAR" | translate }}</option>
+          <option value="lastYear">{{ "LAST_YEAR" | translate }}</option>
+          <option value="custom">{{ "CUSTOM_DATE" | translate }}</option>
+        </select>
+        <label class="pnl-fl-label">{{ "DATE_FILTER" | translate }}</label>
+      </div>
+
+      <!-- Custom date pickers: side by side row below select -->
+      <div class="pnl-date-row" *ngIf="selectedDateFilter === 'custom'">
+        <div class="pnl-fl-wrap">
+          <input type="date" class="pnl-fl-input" [(ngModel)]="startDate" (change)="setDateFilter('custom')"
+            placeholder=" " />
+          <label class="pnl-fl-label">{{ "START_DATE" | translate }}</label>
+        </div>
+        <div class="pnl-fl-wrap">
+          <input type="date" class="pnl-fl-input" [(ngModel)]="endDate" (change)="setDateFilter('custom')"
+            placeholder=" " />
+          <label class="pnl-fl-label">{{ "END_DATE" | translate }}</label>
+        </div>
+      </div>
+
     </div>
 
     <!-- Summary Cards -->
@@ -160,7 +177,7 @@
         <form [formGroup]="incomeForm" (ngSubmit)="onSubmitIncome()" class="pnl-form">
           <div class="pnl-form-row">
             <div class="pnl-float-field">
-              <input type="date" id="incomeDate" formControlName="date" class="pnl-input pnl-input-field"
+              <input type="date" id="incomeDate" formControlName="date" class="pnl-input pnl-input-field pnl-has-val"
                 placeholder=" "
                 [class.is-invalid]="incomeForm.controls['date'].invalid && incomeForm.controls['date'].touched" />
               <label class="pnl-float-label" for="incomeDate">{{ 'DATE' | translate }}</label>
@@ -170,6 +187,7 @@
               <div class="pnl-float-field" style="flex:1; min-width:0;">
                 <input type="number" id="incomeAmount" formControlName="amount"
                   class="pnl-input pnl-input-field pnl-input-joined" placeholder=" " step="0.01"
+                  [class.pnl-has-val]="incomeForm.get('amount')?.value !== null && incomeForm.get('amount')?.value !== ''"
                   [class.is-invalid]="incomeForm.controls['amount'].invalid && incomeForm.controls['amount'].touched" />
                 <label class="pnl-float-label" for="incomeAmount">{{ 'AMOUNT' | translate }}</label>
               </div>
@@ -177,7 +195,7 @@
           </div>
           <div class="pnl-float-field">
             <textarea id="incomeDesc" formControlName="description" class="pnl-input pnl-input-field pnl-textarea"
-              placeholder=" "></textarea>
+              placeholder=" " [class.pnl-has-val]="incomeForm.get('description')?.value"></textarea>
             <label class="pnl-float-label" for="incomeDesc">{{ 'DESCRIPTION' | translate }}</label>
           </div>
           <div class="pnl-form-footer">

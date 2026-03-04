@@ -173,7 +173,7 @@
                 </fa-icon>
               </div>
 
-              <div *ngIf="userProfile?.accountType === 'group' && expense.userDisplayName" class="exp-created-by">
+              <div *ngIf="userProfile?.accountType === 'group' && expense.userDisplayName" class="exp-created-by p-0">
                 {{ "EXPENSE_CREATED_BY" | translate: { name: expense.userDisplayName } }}
               </div>
             </div>

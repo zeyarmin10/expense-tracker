@@ -13,20 +13,37 @@
     </div>
 
     <!-- ── Date Filter Bar ── -->
-    <div class="bgt-filter-bar">
-      <select class="bgt-select" [(ngModel)]="selectedDateFilter" (change)="setDateFilter(selectedDateFilter)">
-        <option value="currentWeek">{{ "CURRENT_WEEK" | translate }}</option>
-        <option value="last30Days">{{ "LAST_30_DAYS" | translate }}</option>
-        <option value="currentMonth">{{ "CURRENT_MONTH" | translate }}</option>
-        <option value="lastMonth">{{ "LAST_MONTH" | translate }}</option>
-        <option value="lastSixMonths">{{ "LAST_SIX_MONTHS" | translate }}</option>
-        <option value="currentYear">{{ "CURRENT_YEAR" | translate }}</option>
-        <option value="lastYear">{{ "LAST_YEAR" | translate }}</option>
-        <option value="custom">{{ "CUSTOM_DATE" | translate }}</option>
-      </select>
+    <div class="bgt-filter-bar" [class.bgt-filter-bar-custom]="selectedDateFilter === 'custom'">
+
+      <!-- Period Select -->
+      <div class="bgt-fl-wrap">
+        <select class="bgt-fl-input bgt-fl-select" [(ngModel)]="selectedDateFilter"
+          (change)="setDateFilter(selectedDateFilter)">
+          <option value="currentWeek">{{ "CURRENT_WEEK" | translate }}</option>
+          <option value="last30Days">{{ "LAST_30_DAYS" | translate }}</option>
+          <option value="currentMonth">{{ "CURRENT_MONTH" | translate }}</option>
+          <option value="lastSixMonths">{{ "LAST_SIX_MONTHS" | translate }}</option>
+          <option value="currentYear">{{ "CURRENT_YEAR" | translate }}</option>
+          <option value="lastYear">{{ "LAST_YEAR" | translate }}</option>
+          <option value="custom">{{ "CUSTOM_DATE" | translate }}</option>
+        </select>
+        <label class="bgt-fl-label">{{ "DATE_FILTER" | translate }}</label>
+      </div>
+
+      <!-- Custom date pickers -->
       <ng-container *ngIf="selectedDateFilter === 'custom'">
-        <input type="date" class="bgt-input" [(ngModel)]="startDate" (change)="setDateFilter('custom')" />
-        <input type="date" class="bgt-input" [(ngModel)]="endDate" (change)="setDateFilter('custom')" />
+        <div class="bgt-date-row">
+          <div class="bgt-fl-wrap">
+            <input type="date" class="bgt-fl-input" [(ngModel)]="startDate" (change)="setDateFilter('custom')"
+              placeholder=" " />
+            <label class="bgt-fl-label">{{ "START_DATE" | translate }}</label>
+          </div>
+          <div class="bgt-fl-wrap">
+            <input type="date" class="bgt-fl-input" [(ngModel)]="endDate" (change)="setDateFilter('custom')"
+              placeholder=" " />
+            <label class="bgt-fl-label">{{ "END_DATE" | translate }}</label>
+          </div>
+        </div>
       </ng-container>
     </div>
 
@@ -68,7 +85,7 @@
           <div class="bgt-form-row">
             <!-- Period -->
             <div class="bgt-float-field">
-              <input type="date" id="period" formControlName="period" class="bgt-input" placeholder=" "
+              <input type="date" id="period" formControlName="period" class="bgt-input bgt-has-val" placeholder=" "
                 [class.is-invalid]="budgetForm.controls['period'].invalid && budgetForm.controls['period'].touched" />
               <label class="bgt-float-label" for="period">{{ "DATE" | translate }}</label>
             </div>
@@ -79,6 +96,7 @@
               <div class="bgt-float-field" style="flex:1; min-width:0;">
                 <input type="number" id="amount" formControlName="amount" class="bgt-input bgt-input-joined"
                   placeholder=" " step="0.01"
+                  [class.bgt-has-val]="budgetForm.get('amount')?.value !== null && budgetForm.get('amount')?.value !== ''"
                   [class.is-invalid]="budgetForm.controls['amount'].invalid && budgetForm.controls['amount'].touched" />
                 <label class="bgt-float-label" for="amount">{{ "AMOUNT" | translate }}</label>
               </div>
@@ -87,8 +105,8 @@
 
           <!-- Description -->
           <div class="bgt-float-field">
-            <textarea id="description" formControlName="description" class="bgt-input bgt-textarea"
-              placeholder=" "></textarea>
+            <textarea id="description" formControlName="description" class="bgt-input bgt-textarea" placeholder=" "
+              [class.bgt-has-val]="budgetForm.get('description')?.value"></textarea>
             <label class="bgt-float-label" for="description">{{ "DESCRIPTION" | translate }}</label>
           </div>
 
@@ -211,8 +229,8 @@
 
     <!-- ── Budget Comparison Chart ── -->
     <div class="bgt-chart-panel ps-1 pe-1">
-      <h5 class="bgt-chart-title ms-2">
-        <fa-icon [icon]="faChartBar" class="bgt-icon-info"></fa-icon>
+      <h5 class="bgt-chart-title">
+        <fa-icon [icon]="faChartBar" class="bgt-icon-info ms-3"></fa-icon>
         {{ "BUDGET_COMPARISON" | translate }}
       </h5>
       <div class="bgt-chart-container">

@@ -81,7 +81,7 @@ export class FormatService {
     }).format(value);
 
     const suffix = suffixKey ? this.translate.instant(suffixKey) : '';
-    const shortAmount = `${formattedNumber}${suffix}`;
+    const shortAmount = (isBurmese && suffixKey === 'ABBREVIATIONS.LAKH' && value >= 20 && value % 10 === 0) ? `${suffix}${formattedNumber}` : `${formattedNumber}${suffix}`;
 
     if (!currencyCode) {
       return shortAmount;

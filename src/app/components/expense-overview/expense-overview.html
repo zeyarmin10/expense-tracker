@@ -9,7 +9,7 @@
     <!-- Filter Row: custom=3cols+search below, normal=select+search side by side -->
 
     <!-- Row 1: date select + (custom: 2 date pickers) | (normal: search) -->
-    <div class="ov-filter-row" [class.ov-filter-row-custom]="selectedDateFilter === 'custom'">
+    <div class="ov-filter-row">
 
       <!-- Date Range Select -->
       <div class="ov-fl-wrap">
@@ -27,8 +27,8 @@
         <label class="ov-fl-label">{{ "DATE_FILTER" | translate }}</label>
       </div>
 
-      <!-- Custom: Start Date -->
-      <ng-container *ngIf="selectedDateFilter === 'custom'">
+      <!-- Custom: Start + End Date side by side -->
+      <div class="ov-date-row" *ngIf="selectedDateFilter === 'custom'">
         <div class="ov-fl-wrap">
           <input type="date" class="ov-fl-input" [(ngModel)]="startDate" (change)="setDateFilter('custom')"
             placeholder=" " />
@@ -39,7 +39,7 @@
             placeholder=" " />
           <label class="ov-fl-label">{{ "END_DATE" | translate }}</label>
         </div>
-      </ng-container>
+      </div>
 
       <!-- Normal: search sits in same row -->
       <div class="search-group" *ngIf="selectedDateFilter !== 'custom'">

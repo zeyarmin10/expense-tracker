@@ -61,29 +61,32 @@
 
         <!-- ── Budget Period ── -->
         <div class="prof-section" *ngIf="canEditSettings">
-          <div class="prof-section-label">{{ 'BUDGET_PERIOD_LABEL' | translate }}</div>
 
-          <div class="prof-input-group">
-            <select id="budgetPeriod" class="prof-input prof-select" formControlName="budgetPeriod">
-              <option *ngFor="let period of translatedBudgetPeriods" [value]="period.code">{{ period.name }}</option>
-              <optgroup label="{{ 'BUDGET_PERIOD.CUSTOM' | translate }}" *ngIf="customBudgetPeriods.length > 0">
-                <option *ngFor="let period of customBudgetPeriods" [value]="period.id">{{ period.name }}</option>
-              </optgroup>
-            </select>
-            <button class="prof-addon-btn" type="button" (click)="openBudgetPeriodModal()" title="Add custom period">
-              <fa-icon [icon]="faPlus"></fa-icon>
-            </button>
+          <div class="prof-period-wrap">
+            <label class="prof-period-label">{{ 'BUDGET_PERIOD_LABEL' | translate }}</label>
+            <div class="prof-input-group">
+              <select id="budgetPeriod" class="prof-input prof-select prof-has-val" formControlName="budgetPeriod">
+                <option *ngFor="let period of translatedBudgetPeriods" [value]="period.code">{{ period.name }}</option>
+                <optgroup label="{{ 'BUDGET_PERIOD.CUSTOM' | translate }}" *ngIf="customBudgetPeriods.length > 0">
+                  <option *ngFor="let period of customBudgetPeriods" [value]="period.id">{{ period.name }}</option>
+                </optgroup>
+              </select>
+              <button class="prof-addon-btn" type="button" (click)="openBudgetPeriodModal()" title="Add custom period">
+                <fa-icon [icon]="faPlus"></fa-icon>
+              </button>
+            </div>
           </div>
 
           <!-- Custom Date Range -->
           <div *ngIf="showCustomDateRange" class="prof-date-row">
             <div class="prof-float-field">
-              <input type="date" id="budgetStartDate" class="prof-input" formControlName="budgetStartDate"
+              <input type="date" id="budgetStartDate" class="prof-input prof-has-val" formControlName="budgetStartDate"
                 placeholder=" ">
               <label class="prof-float-label" for="budgetStartDate">{{ 'START_DATE_LABEL' | translate }}</label>
             </div>
             <div class="prof-float-field">
-              <input type="date" id="budgetEndDate" class="prof-input" formControlName="budgetEndDate" placeholder=" ">
+              <input type="date" id="budgetEndDate" class="prof-input prof-has-val" formControlName="budgetEndDate"
+                placeholder=" ">
               <label class="prof-float-label" for="budgetEndDate">{{ 'END_DATE_LABEL' | translate }}</label>
             </div>
           </div>
@@ -117,9 +120,9 @@
 
         <!-- ── Currency & Language ── -->
         <div class="prof-section">
-          <div class="prof-section-label">{{ 'CURRENCY' | translate }}</div>
-          <div class="prof-float-field" *ngIf="canEditSettings">
-            <select id="currency" class="prof-input prof-select" formControlName="currency">
+          <div class="prof-period-wrap">
+            <label class="prof-period-label">{{ 'CURRENCY' | translate }}</label>
+            <select id="currency" class="prof-input prof-select" *ngIf="canEditSettings" formControlName="currency">
               <option *ngFor="let currency of translatedCurrencies" [value]="currency.code">
                 {{ currency.name }} ({{ currency.symbol }})
               </option>

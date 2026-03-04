@@ -68,23 +68,56 @@
 
 /* ── Filter Row ── */
 .ov-filter-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   gap: 0.75rem;
   margin-bottom: 0.75rem;
+}
+
+/* date pickers: always side by side */
+.ov-date-row {
+  display: flex;
+  flex-direction: row;
+  gap: 0.75rem;
+}
+
+.ov-date-row .ov-fl-wrap {
+  flex: 0 0 auto;
+}
+
+.ov-date-row .ov-fl-input {
+  min-width: 155px;
+  width: auto;
+}
+
+/* search row */
+.ov-search-row {
+  margin-bottom: 1.25rem;
   width: 100%;
 }
 
-/* custom mode: select + start-date + end-date */
-.ov-filter-row-custom {
-  grid-template-columns: 1fr 1fr 1fr;
+/* select: fit content */
+.ov-fl-wrap .ov-fl-select {
+  min-width: 200px;
+  width: auto;
 }
 
+/* mobile: full width */
 @media (max-width: 540px) {
 
-  .ov-filter-row,
-  .ov-filter-row-custom {
-    grid-template-columns: 1fr;
+  .ov-fl-wrap .ov-fl-select,
+  .ov-date-row .ov-fl-input {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .ov-date-row {
+    width: 100%;
+  }
+
+  .ov-date-row .ov-fl-wrap {
+    flex: 1;
   }
 }
 

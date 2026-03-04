@@ -54,11 +54,11 @@
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 14px;
-  padding: 0.75rem !important;
-  margin-bottom: 0.5rem;
+  padding: 1.3rem 1.4rem;
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
+  margin-bottom: 0.5rem !important;
 }
 
 .prof-section-label {
@@ -225,14 +225,69 @@
 .prof-float-label {
   position: absolute;
   left: 0.9rem;
-  top: 0.6rem;
-  font-size: 0.68rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: var(--text-muted);
+  pointer-events: none;
+  line-height: 1;
+  transition: top 0.15s ease, transform 0.15s ease,
+    font-size 0.15s ease, color 0.15s ease;
+}
+
+/* Floated: focus or has value */
+.prof-input:focus~.prof-float-label,
+.prof-input:not(:placeholder-shown)~.prof-float-label,
+.prof-input.prof-has-val~.prof-float-label {
+  top: 0.55rem;
+  transform: translateY(0);
+  font-size: 0.63rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--accent);
-  pointer-events: none;
+}
+
+/* Budget period: label sits above the input-group (not inside input) */
+.prof-label-above {
+  position: relative;
+  top: auto;
+  transform: none;
+  display: block;
+  margin-top: 0.4rem;
+  font-size: 0.63rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  left: 0.2rem;
+}
+
+/* ── Period / Currency label-above wrap ── */
+.prof-period-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+/* Inside period-wrap: normal height input (no float padding needed) */
+.prof-period-wrap .prof-input,
+.prof-period-wrap .prof-input-group .prof-input {
+  padding: 0 0.9rem;
+  height: 48px;
+}
+
+.prof-period-label {
+  font-size: 0.63rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
   line-height: 1;
+  padding-left: 0.2rem;
 }
 
 /* ── Input Group (select + addon btn) ── */
@@ -267,17 +322,31 @@
   color: #0a0c10;
 }
 
-/* ── Date Row ── */
+/* ── Date Row: always side by side, no overflow ── */
 .prof-date-row {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.75rem;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  min-width: 0;
+  overflow: hidden;
 }
 
-@media (min-width: 480px) {
-  .prof-date-row {
-    grid-template-columns: 1fr 1fr;
-  }
+.prof-date-row .prof-float-field {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.prof-date-row .prof-input {
+  min-width: 0;
+  width: 100%;
+  font-size: 0.82rem;
+  padding-right: 2rem;
+}
+
+/* Calendar icon tight on mobile */
+.prof-date-row .prof-input[type="date"]::-webkit-calendar-picker-indicator {
+  margin-left: 0;
+  padding-left: 0;
 }
 
 /* ── Custom Period Panel ── */

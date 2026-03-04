@@ -2,23 +2,25 @@
    Category — Dark Theme (matches navbar + expense design)
    ============================================================ */
 
-:host { display: block; }
+:host {
+  display: block;
+}
 
 .cat-wrapper {
-  --bg:          #0a0c10;
-  --surface:     #12151c;
-  --surface-2:   #1a1e28;
-  --border:      rgba(255,255,255,0.07);
-  --accent:      #00e5b4;
-  --accent-dim:  rgba(0,229,180,0.12);
-  --info:        #60a5fa;
-  --info-dim:    rgba(96,165,250,0.12);
-  --success:     #34d399;
-  --danger:      #f87171;
-  --danger-dim:  rgba(248,113,113,0.10);
-  --text:        #f0f2f7;
-  --text-muted:  #6b7280;
-  --text-sub:    #9ca3af;
+  --bg: #0a0c10;
+  --surface: #12151c;
+  --surface-2: #1a1e28;
+  --border: rgba(255, 255, 255, 0.07);
+  --accent: #00e5b4;
+  --accent-dim: rgba(0, 229, 180, 0.12);
+  --info: #60a5fa;
+  --info-dim: rgba(96, 165, 250, 0.12);
+  --success: #34d399;
+  --danger: #f87171;
+  --danger-dim: rgba(248, 113, 113, 0.10);
+  --text: #f0f2f7;
+  --text-muted: #6b7280;
+  --text-sub: #9ca3af;
 
   /* font-family: 'Syne', sans-serif; */
   background: var(--bg);
@@ -60,7 +62,9 @@
 .cat-list-panel::before {
   content: '';
   position: absolute;
-  top: 0; left: 0; right: 0;
+  top: 0;
+  left: 0;
+  right: 0;
   height: 2px;
   background: linear-gradient(90deg, var(--accent), transparent);
   opacity: 0.5;
@@ -75,8 +79,14 @@
 }
 
 /* Floating Label */
-.cat-fl-wrap { position: relative; }
-.cat-fl-wrap-edit { flex: 1; min-width: 0; }
+.cat-fl-wrap {
+  position: relative;
+}
+
+.cat-fl-wrap-edit {
+  flex: 1;
+  min-width: 0;
+}
 
 .cat-fl-input {
   width: 100%;
@@ -101,23 +111,45 @@
 
 .cat-fl-input.err {
   border-color: var(--danger);
-  box-shadow: 0 0 0 3px rgba(248,113,113,0.10);
+  box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.10);
 }
 
 .cat-fl-label {
   position: absolute;
   left: 0.95rem;
+  /* empty state: input center မှာ */
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: var(--text-muted);
+  pointer-events: none;
+  line-height: 1;
+  transition: top 0.15s ease, transform 0.15s ease,
+    font-size 0.15s ease, color 0.15s ease;
+}
+
+/* floated state: focus ဒါမဟုတ် value ရှိရင် */
+.cat-fl-input:focus~.cat-fl-label,
+.cat-fl-input:not(:placeholder-shown)~.cat-fl-label {
   top: 0.55rem;
+  transform: translateY(0);
   font-size: 0.65rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--accent);
-  pointer-events: none;
-  line-height: 1;
 }
 
-.cat-fl-input.err ~ .cat-fl-label { color: var(--danger); }
+.cat-fl-input.err~.cat-fl-label {
+  color: var(--danger);
+}
+
+.cat-fl-input.err~.cat-fl-label {
+  color: var(--danger);
+}
 
 .cat-error {
   font-size: 0.72rem;
@@ -126,7 +158,10 @@
   font-weight: 600;
 }
 
-.cat-add-footer { display: flex; justify-content: flex-end; }
+.cat-add-footer {
+  display: flex;
+  justify-content: flex-end;
+}
 
 /* Buttons */
 .cat-btn {
@@ -144,21 +179,53 @@
   white-space: nowrap;
 }
 
-.cat-btn:disabled { opacity: 0.45; cursor: not-allowed; }
-.cat-btn-sm { padding: 0.45rem 0.9rem; font-size: 0.78rem; border-radius: 8px; }
-
-.cat-btn-primary { background: var(--accent); color: #0a0c10; border-color: var(--accent); }
-.cat-btn-primary:not(:disabled) { animation: cat-glow 2.5s ease-in-out infinite; }
-
-@keyframes cat-glow {
-  0%, 100% { box-shadow: 0 0 6px rgba(0,229,180,0.25); }
-  50%       { box-shadow: 0 0 18px rgba(0,229,180,0.5); }
+.cat-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
-.cat-btn-primary:hover:not(:disabled) { opacity: 0.88; }
+.cat-btn-sm {
+  padding: 0.45rem 0.9rem;
+  font-size: 0.78rem;
+  border-radius: 8px;
+}
 
-.cat-btn-ghost { background: var(--surface-2); color: var(--text-sub); border-color: var(--border); }
-.cat-btn-ghost:hover:not(:disabled) { background: var(--surface); color: var(--text); }
+.cat-btn-primary {
+  background: var(--accent);
+  color: #0a0c10;
+  border-color: var(--accent);
+}
+
+.cat-btn-primary:not(:disabled) {
+  animation: cat-glow 2.5s ease-in-out infinite;
+}
+
+@keyframes cat-glow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 6px rgba(0, 229, 180, 0.25);
+  }
+
+  50% {
+    box-shadow: 0 0 18px rgba(0, 229, 180, 0.5);
+  }
+}
+
+.cat-btn-primary:hover:not(:disabled) {
+  opacity: 0.88;
+}
+
+.cat-btn-ghost {
+  background: var(--surface-2);
+  color: var(--text-sub);
+  border-color: var(--border);
+}
+
+.cat-btn-ghost:hover:not(:disabled) {
+  background: var(--surface);
+  color: var(--text);
+}
 
 /* List Panel Header */
 .cat-list-header {
@@ -198,14 +265,20 @@
   padding: 2.5rem 1.5rem;
 }
 
-.cat-list { display: flex; flex-direction: column; }
+.cat-list {
+  display: flex;
+  flex-direction: column;
+}
 
 /* List Items */
 .cat-item {
   border-bottom: 1px solid var(--border);
   transition: background 0.15s;
 }
-.cat-item:last-child { border-bottom: none; }
+
+.cat-item:last-child {
+  border-bottom: none;
+}
 
 .cat-item-inner {
   display: flex;
@@ -215,7 +288,9 @@
   padding: 0.95rem 1.4rem;
 }
 
-.cat-item-inner:hover { background: var(--surface-2); }
+.cat-item-inner:hover {
+  background: var(--surface-2);
+}
 
 .cat-item-name {
   font-size: 0.92rem;
@@ -250,21 +325,34 @@
   background: none;
 }
 
-.cat-action-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.cat-action-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
 
 .cat-action-edit {
-  border-color: rgba(96,165,250,0.25);
-  background: rgba(96,165,250,0.08);
+  border-color: rgba(96, 165, 250, 0.25);
+  background: rgba(96, 165, 250, 0.08);
   color: var(--info);
 }
-.cat-action-edit:hover:not(:disabled) { background: var(--info); color: #0a0c10; border-color: var(--info); }
+
+.cat-action-edit:hover:not(:disabled) {
+  background: var(--info);
+  color: #0a0c10;
+  border-color: var(--info);
+}
 
 .cat-action-delete {
-  border-color: rgba(248,113,113,0.25);
-  background: rgba(248,113,113,0.08);
+  border-color: rgba(248, 113, 113, 0.25);
+  background: rgba(248, 113, 113, 0.08);
   color: var(--danger);
 }
-.cat-action-delete:hover:not(:disabled) { background: var(--danger); color: #0a0c10; border-color: var(--danger); }
+
+.cat-action-delete:hover:not(:disabled) {
+  background: var(--danger);
+  color: #0a0c10;
+  border-color: var(--danger);
+}
 
 /* Edit mode */
 .cat-item-edit {
@@ -282,5 +370,10 @@
 }
 
 /* Icon helpers */
-.cat-icon-accent  { color: var(--accent); }
-.cat-icon-success { color: var(--success); }
+.cat-icon-accent {
+  color: var(--accent);
+}
+
+.cat-icon-success {
+  color: var(--success);
+}
