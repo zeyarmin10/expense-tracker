@@ -8,11 +8,11 @@ import { AuthService } from './services/auth';
 import { User } from '@angular/fire/auth';
 import { Toast } from './components/toast/toast';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faRightFromBracket, faUsers, faChevronDown } from '@fortawesome/free-solid-svg-icons';
 import { InvitationService } from './services/invitation.service';
 import { DataManagerService } from './services/data-manager';
 import { ToastService } from './services/toast';
 import { GroupService } from './services/group.service';
+import { faRightFromBracket, faUsers, faChevronDown, faSun, faMoon } from '@fortawesome/free-solid-svg-icons';
 
 @Component({
   selector: 'app-root',
@@ -41,6 +41,9 @@ export class App implements OnInit {
   faChevronDown = faChevronDown;
   currentLang: string;
   mobileMenuOpen = false;
+  isDarkMode = true;
+  faSun = faSun;
+  faMoon = faMoon;
 
   private authService = inject(AuthService);
   private router = inject(Router);
@@ -109,6 +112,7 @@ export class App implements OnInit {
   }
 
   ngOnInit(): void {
+    this.initTheme();
     this.route.queryParamMap.pipe(
       switchMap(params => {
         const inviteCode = params.get('invite_code');
@@ -162,5 +166,24 @@ export class App implements OnInit {
 
   closeNavbarMenu(): void {
     this.mobileMenuOpen = false;
+  }
+
+  toggleTheme(): void {
+    this.isDarkMode = !this.isDarkMode;
+    if (this.isDarkMode) {
+      document.body.classList.remove('light-mode');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.body.classList.add('light-mode');
+      localStorage.setItem('theme', 'light');
+    }
+  }
+
+  private initTheme(): void {
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    this.isDarkMode = savedTheme === 'dark';
+    if (!this.isDarkMode) {
+      document.body.classList.add('light-mode');
+    }
   }
 }

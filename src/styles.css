@@ -54,6 +54,15 @@
   --text: #f0f2f7;
   --text-muted: #6b7280;
   --text-sub: #9ca3af;
+
+  --nav-bg: #0e1117;
+  --nav-border: rgba(255, 255, 255, 0.07);
+  --nav-text: #9ca3af;
+  --nav-text-hover: #f0f2f7;
+  --nav-active: #00e5b4;
+  --nav-surface: #12151c;
+  --nav-surface-2: #1a1e28;
+  --nav-accent-dim: rgba(0, 229, 180, 0.12);
 }
 
 @font-face {
@@ -93,7 +102,7 @@ body {
 /* ── SweetAlert2 Dark Theme Override ── */
 .swal2-popup {
   background: #12151c !important;
-  border: 1px solid rgba(255, 255, 255, 0.07) !important;
+  border: 1px solid var(--accent) !important;
   border-radius: 20px !important;
   color: #f0f2f7 !important;
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6) !important;
@@ -192,4 +201,106 @@ body {
 
 .swal2-timer-progress-bar {
   background: #00e5b4 !important;
+}
+
+/* ── Light Mode ── */
+body.light-mode {
+  --bg: #f0f4f8;
+  --surface: #ffffff;
+  --surface-2: #e8edf3;
+  --border: rgba(0, 0, 0, 0.08);
+  --accent: #00b894;
+  --accent-dim: rgba(0, 184, 148, 0.12);
+  --accent-2: #e17055;
+  --accent-2-dim: rgba(225, 112, 85, 0.10);
+  --success: #00b894;
+  --success-dim: rgba(0, 184, 148, 0.10);
+  --warning: #fdcb6e;
+  --warning-dim: rgba(253, 203, 110, 0.15);
+  --danger: #d63031;
+  --danger-dim: rgba(214, 48, 49, 0.08);
+  --info: #0984e3;
+  --info-dim: rgba(9, 132, 227, 0.10);
+
+  --income-color: #00b894;
+  --income-dim: rgba(0, 184, 148, 0.10);
+  --income-border: rgba(0, 184, 148, 0.25);
+
+  --budget-color: #0984e3;
+  --budget-dim: rgba(9, 132, 227, 0.10);
+  --budget-border: rgba(9, 132, 227, 0.25);
+
+  --expense-color: #e17055;
+  --expense-dim: rgba(225, 112, 85, 0.10);
+  --expense-border: rgba(225, 112, 85, 0.25);
+
+  --profit-color: #00b894;
+  --profit-dim: rgba(0, 184, 148, 0.10);
+  --profit-border: rgba(0, 184, 148, 0.25);
+
+  --loss-color: #d63031;
+  --loss-dim: rgba(214, 48, 49, 0.08);
+  --loss-border: rgba(214, 48, 49, 0.20);
+
+  --net-color: #6c5ce7;
+  --net-dim: rgba(108, 92, 231, 0.10);
+  --net-border: rgba(108, 92, 231, 0.25);
+
+  --bal-color: #0984e3;
+  --bal-dim: rgba(9, 132, 227, 0.10);
+  --bal-border: rgba(9, 132, 227, 0.25);
+
+  --text: #1a202c;
+  --text-muted: #718096;
+  --text-sub: #4a5568;
+
+  --nav-bg: #ffffff;
+  --nav-border: rgba(0, 0, 0, 0.08);
+  --nav-text: #4a5568;
+  --nav-text-hover: #1a202c;
+  --nav-active: #00b894;
+  --nav-surface: #f8fafc;
+  --nav-surface-2: #e8edf3;
+  --nav-accent-dim: rgba(0, 184, 148, 0.12);
+}
+
+/* Light mode SweetAlert2 */
+body.light-mode .swal2-popup {
+  background: #ffffff !important;
+  color: #1a202c !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.15) !important;
+}
+
+body.light-mode .swal2-title {
+  color: #1a202c !important;
+}
+
+body.light-mode .swal2-html-container,
+body.light-mode .swal2-content {
+  color: #4a5568 !important;
+}
+
+body.light-mode .swal2-confirm {
+  background: #00b894 !important;
+}
+
+body.light-mode .swal2-cancel {
+  background: rgba(0, 0, 0, 0.05) !important;
+  color: #4a5568 !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+}
+
+body.light-mode .swal2-toast {
+  background: #ffffff !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
+}
+
+body.light-mode .swal2-toast .swal2-title {
+  color: #1a202c !important;
+}
+
+body.light-mode .swal2-timer-progress-bar {
+  background: #00b894 !important;
 }

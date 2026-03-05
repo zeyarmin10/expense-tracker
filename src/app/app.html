@@ -1,321 +1,7 @@
 <nav class="app-navbar" *ngIf="showNavbar$ | async">
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-
-  <style>
-    .app-navbar {
-      --nav-bg: #0e1117;
-      --nav-border: rgba(255,255,255,0.07);
-      --nav-text: #9ca3af;
-      --nav-text-hover: #f0f2f7;
-      --nav-active: #00e5b4;
-      --nav-surface: #12151c;
-      --nav-surface-2: #1a1e28;
-      --nav-accent-dim: rgba(0,229,180,0.12);
-      /* font-family: 'Syne', sans-serif; */
-      background: var(--nav-bg);
-      border-bottom: 1px solid var(--nav-border);
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-    }
-
-    .app-navbar .nav-inner {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 1.25rem;
-      height: 60px;
-      max-width: 1400px;
-      margin: 0 auto;
-      position: relative;
-    }
-
-    /* Logo */
-    .app-navbar .nav-logo {
-      display: flex;
-      align-items: center;
-      text-decoration: none;
-      gap: 0.6rem;
-      flex-shrink: 0;
-    }
-
-    .app-navbar .nav-logo img {
-      height: 32px;
-      width: auto;
-      /* filter: brightness(0) invert(1);
-      opacity: 0.9; */
-    }
-
-    /* Desktop Nav Links */
-    .app-navbar .nav-links {
-      display: none;
-      align-items: center;
-      gap: 0.15rem;
-      list-style: none;
-      margin: 0;
-      padding: 0;
-    }
-
-    @media (min-width: 992px) {
-      .app-navbar .nav-links { display: flex; }
-    }
-
-    .app-navbar .nav-links a {
-      display: block;
-      font-size: 0.82rem;
-      font-weight: 600;
-      letter-spacing: 0.03em;
-      color: var(--nav-text);
-      text-decoration: none;
-      padding: 0.45rem 0.85rem;
-      border-radius: 8px;
-      transition: color 0.15s, background 0.15s;
-      white-space: nowrap;
-    }
-
-    .app-navbar .nav-links a:hover {
-      color: var(--nav-text-hover);
-      background: var(--nav-surface-2);
-    }
-
-    .app-navbar .nav-links a.active-link {
-      color: var(--nav-active);
-      background: var(--nav-accent-dim);
-    }
-
-    /* Right Side */
-    .app-navbar .nav-right {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      list-style: none;
-      margin: 0;
-      padding: 0;
-    }
-
-    /* Group Members Dropdown trigger */
-    .app-navbar .nav-icon-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 36px;
-      height: 36px;
-      border-radius: 9px;
-      border: 1px solid var(--nav-border);
-      background: var(--nav-surface);
-      color: var(--nav-text);
-      cursor: pointer;
-      transition: all 0.15s;
-      text-decoration: none;
-    }
-
-    .app-navbar .nav-icon-btn:hover {
-      border-color: rgba(0,229,180,0.3);
-      color: var(--nav-active);
-      background: var(--nav-accent-dim);
-    }
-
-    /* User Dropdown */
-    .app-navbar .user-btn {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 0.82rem;
-      font-weight: 600;
-      color: var(--nav-text);
-      background: var(--nav-surface);
-      border: 1px solid var(--nav-border);
-      border-radius: 9px;
-      padding: 0.35rem 0.75rem;
-      cursor: pointer;
-      text-decoration: none;
-      transition: all 0.15s;
-      white-space: nowrap;
-    }
-
-    .app-navbar .user-btn:hover {
-      color: var(--nav-text-hover);
-      border-color: rgba(255,255,255,0.15);
-    }
-
-    .app-navbar .user-avatar {
-      width: 24px;
-      height: 24px;
-      border-radius: 6px;
-      background: var(--nav-accent-dim);
-      border: 1px solid rgba(0,229,180,0.25);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.7rem;
-      color: var(--nav-active);
-      font-weight: 700;
-      flex-shrink: 0;
-    }
-
-    /* Bootstrap Dropdown Overrides */
-    .app-navbar .dropdown-menu {
-      background: var(--nav-surface);
-      border: 1px solid var(--nav-border);
-      border-radius: 12px;
-      padding: 0.4rem;
-      box-shadow: 0 16px 40px rgba(0,0,0,0.5);
-      min-width: 180px;
-      margin-top: 0.4rem !important;
-    }
-
-    .app-navbar .dropdown-item {
-      /* font-family: 'Syne', sans-serif; */
-      font-size: 0.82rem;
-      font-weight: 600;
-      color: var(--nav-text);
-      border-radius: 8px;
-      padding: 0.5rem 0.85rem;
-      transition: all 0.15s;
-    }
-
-    .app-navbar .dropdown-item:hover,
-    .app-navbar .dropdown-item:focus {
-      background: var(--nav-surface-2);
-      color: var(--nav-text-hover);
-    }
-
-    .app-navbar .dropdown-item.text-info {
-      color: #60a5fa !important;
-    }
-
-    .app-navbar .dropdown-divider {
-      border-color: var(--nav-border);
-      margin: 0.3rem 0.4rem;
-    }
-
-    .app-navbar .dropdown-item.text-danger-logout {
-      color: #f87171 !important;
-    }
-
-    .app-navbar .dropdown-item.text-danger-logout:hover {
-      background: rgba(248,113,113,0.1);
-      color: #f87171 !important;
-    }
-
-    /* Hamburger Toggler */
-    .app-navbar .nav-toggler {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 36px;
-      height: 36px;
-      border-radius: 9px;
-      border: 1px solid var(--nav-border);
-      background: var(--nav-surface);
-      cursor: pointer;
-      flex-direction: column;
-      gap: 4px;
-      padding: 9px 8px;
-      transition: border-color 0.15s;
-    }
-
-    .app-navbar .nav-toggler:hover { border-color: rgba(255,255,255,0.2); }
-
-    @media (min-width: 992px) {
-      .app-navbar .nav-toggler { display: none; }
-    }
-
-    .app-navbar .toggler-bar {
-      width: 18px;
-      height: 2px;
-      background: var(--nav-text);
-      border-radius: 2px;
-      transition: all 0.2s;
-    }
-
-    /* Mobile Drawer */
-    .app-navbar .mobile-drawer {
-      display: none;
-      flex-direction: column;
-      background: var(--nav-bg);
-      border-top: 1px solid var(--nav-border);
-      padding: 0.75rem 1rem 1rem;
-      gap: 0.2rem;
-    }
-
-    .app-navbar .mobile-drawer.open { display: flex; }
-
-    @media (min-width: 992px) {
-      .app-navbar .mobile-drawer { display: none !important; }
-    }
-
-    .app-navbar .mobile-drawer a,
-    .app-navbar .mobile-drawer button {
-      /* font-family: 'Syne', sans-serif; */
-      font-size: 0.88rem;
-      font-weight: 600;
-      color: var(--nav-text);
-      text-decoration: none;
-      padding: 0.6rem 0.85rem;
-      border-radius: 9px;
-      border: none;
-      background: transparent;
-      text-align: left;
-      width: 100%;
-      cursor: pointer;
-      display: block;
-      transition: all 0.15s;
-    }
-
-    .app-navbar .mobile-drawer a:hover,
-    .app-navbar .mobile-drawer button:hover {
-      background: var(--nav-surface-2);
-      color: var(--nav-text-hover);
-    }
-
-    .app-navbar .mobile-drawer a.active-link {
-      color: var(--nav-active);
-      background: var(--nav-accent-dim);
-    }
-
-    .app-navbar .mobile-divider {
-      height: 1px;
-      background: var(--nav-border);
-      margin: 0.4rem 0;
-    }
-
-    .app-navbar .mobile-user-header {
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-      padding: 0.5rem 0.85rem 0.3rem;
-    }
-
-    .app-navbar .mobile-user-name {
-      font-size: 0.78rem;
-      font-weight: 700;
-      color: var(--nav-text);
-      /* font-family: 'DM Mono', monospace; */
-    }
-
-    .app-navbar .mobile-logout {
-      color: #f87171 !important;
-    }
-
-    .app-navbar .mobile-logout:hover {
-      background: rgba(248,113,113,0.08) !important;
-      color: #f87171 !important;
-    }
-
-    /* Mobile center group icon */
-    .app-navbar .mobile-group-center {
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      top: 50%;
-      transform: translate(-50%, -50%);
-    }
-
-    @media (min-width: 992px) {
-      .app-navbar .mobile-group-center { display: none; }
-    }
-  </style>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
 
   <div class="nav-inner">
     <!-- Logo -->
@@ -325,24 +11,31 @@
 
     <!-- Desktop Nav Links -->
     <ul class="nav-links">
-      <li><a routerLink="/dashboard" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_DASHBOARD' | translate }}</a></li>
-      <li><a routerLink="/expense" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_EXPENSE' | translate }}</a></li>
-      <li><a routerLink="/expense-overview" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_EXPENSE_OVERVIEW' | translate }}</a></li>
-      <li><a routerLink="/budget" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_BUDGET' | translate }}</a></li>
-      <li><a routerLink="/profit" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_PROFIT' | translate }}</a></li>
-      <li><a routerLink="/category" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_CATEGORY' | translate }}</a></li>
+      <li><a routerLink="/dashboard" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_DASHBOARD' |
+          translate }}</a></li>
+      <li><a routerLink="/expense" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_EXPENSE' |
+          translate }}</a></li>
+      <li><a routerLink="/expense-overview" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{
+          'NAV_EXPENSE_OVERVIEW' | translate }}</a></li>
+      <li><a routerLink="/budget" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_BUDGET' | translate
+          }}</a></li>
+      <li><a routerLink="/profit" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_PROFIT' | translate
+          }}</a></li>
+      <li><a routerLink="/category" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_CATEGORY' |
+          translate }}</a></li>
       <li *ngIf="isGroupAdmin$ | async">
-        <a routerLink="/member-management" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_MEMBER_MANAGEMENT' | translate }}</a>
+        <a routerLink="/member-management" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{
+          'NAV_MEMBER_MANAGEMENT' | translate }}</a>
       </li>
     </ul>
 
     <!-- Right: Group icon (desktop) + User dropdown + Toggler -->
     <ul class="nav-right" *ngIf="currentUser$ | async as user">
 
-      <!-- Group Members Dropdown (Desktop) -->
-      <li class="dropdown d-none d-lg-block" *ngIf="isGroupAccount$ | async">
-        <a class="nav-icon-btn" href="#" id="groupMemberDropdown" role="button"
-           data-bs-toggle="dropdown" aria-expanded="false">
+      <!-- Group Members Dropdown -->
+      <li class="dropdown" *ngIf="isGroupAccount$ | async">
+        <a class="nav-icon-btn" href="#" id="groupMemberDropdown" role="button" data-bs-toggle="dropdown"
+          aria-expanded="false">
           <fa-icon [icon]="faUsers" style="font-size:0.85rem"></fa-icon>
         </a>
         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="groupMemberDropdown">
@@ -357,17 +50,28 @@
 
       <!-- User Dropdown -->
       <li class="dropdown">
-        <a class="user-btn" href="#" id="navbarDropdown" role="button"
-           data-bs-toggle="dropdown" aria-expanded="false">
+        <a class="user-btn" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
           <span class="user-avatar">{{ (user.displayName || 'U').charAt(0).toUpperCase() }}</span>
           <span class="d-none d-lg-inline">{{ user.displayName || 'Profile' }}</span>
           <fa-icon [icon]="faChevronDown" style="font-size:0.65rem; opacity:0.6"></fa-icon>
         </a>
         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-          <li><a class="dropdown-item" routerLink="/profile" (click)="closeNavbarMenu()">{{ 'NAV_PROFILE_AND_SETTING' | translate }}</a></li>
-          <li><hr class="dropdown-divider"></li>
-          <li><button class="dropdown-item text-danger-logout" (click)="logout()">{{ 'NAV_LOGOUT' | translate }}</button></li>
+          <li><a class="dropdown-item" routerLink="/profile" (click)="closeNavbarMenu()">{{ 'NAV_PROFILE_AND_SETTING' |
+              translate }}</a></li>
+          <li>
+            <hr class="dropdown-divider">
+          </li>
+          <li><button class="dropdown-item text-danger-logout" (click)="logout()">{{ 'NAV_LOGOUT' | translate
+              }}</button></li>
         </ul>
+      </li>
+
+      <!-- Theme Toggle -->
+      <li>
+        <button class="theme-toggle-btn" type="button" (click)="toggleTheme()"
+          [title]="isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
+          <fa-icon [icon]="isDarkMode ? faSun : faMoon" class="theme-icon"></fa-icon>
+        </button>
       </li>
 
       <!-- Hamburger -->
@@ -380,30 +84,14 @@
       </li>
     </ul>
 
-    <!-- Mobile: centered group icon -->
-    <div class="mobile-group-center" *ngIf="(isGroupAccount$ | async) && (currentUser$ | async) as user">
-      <div class="dropdown">
-        <a class="nav-icon-btn" href="#" id="groupMemberDropdownMobile" role="button"
-           data-bs-toggle="dropdown" aria-expanded="false">
-          <fa-icon [icon]="faUsers" style="font-size:0.85rem"></fa-icon>
-        </a>
-        <ul class="dropdown-menu start-50 translate-middle-x" aria-labelledby="groupMemberDropdownMobile">
-          <li *ngFor="let member of groupMembers$ | async">
-            <span class="dropdown-item" [class.text-info]="(currentUser$ | async)?.uid === member.uid">
-              {{ member.displayName }} ({{ member.role }})
-              <span *ngIf="(currentUser$ | async)?.uid === member.uid"> ({{ 'NAV_YOU' | translate }})</span>
-            </span>
-          </li>
-        </ul>
-      </div>
-    </div>
   </div>
 
   <!-- Mobile Drawer -->
   <div class="mobile-drawer" [class.open]="mobileMenuOpen" *ngIf="currentUser$ | async as user">
     <ng-container *ngIf="currentUser$ | async as user">
       <div class="mobile-user-header">
-        <span class="user-avatar" style="width:28px;height:28px;border-radius:7px;background:rgba(0,229,180,0.12);border:1px solid rgba(0,229,180,0.25);display:flex;align-items:center;justify-content:center;font-size:0.72rem;color:#00e5b4;font-weight:700;">
+        <span class="user-avatar"
+          style="width:28px;height:28px;border-radius:7px;background:rgba(0,229,180,0.12);border:1px solid rgba(0,229,180,0.25);display:flex;align-items:center;justify-content:center;font-size:0.72rem;color:#00e5b4;font-weight:700;">
           {{ (user.displayName || 'U').charAt(0).toUpperCase() }}
         </span>
         <span class="mobile-user-name">{{ user.displayName || 'Profile' }}</span>
@@ -411,16 +99,28 @@
       <div class="mobile-divider"></div>
     </ng-container>
 
-    <a routerLink="/dashboard" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_DASHBOARD' | translate }}</a>
-    <a routerLink="/expense" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_EXPENSE' | translate }}</a>
-    <a routerLink="/expense-overview" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_EXPENSE_OVERVIEW' | translate }}</a>
-    <a routerLink="/budget" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_BUDGET' | translate }}</a>
-    <a routerLink="/profit" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_PROFIT' | translate }}</a>
-    <a routerLink="/category" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_CATEGORY' | translate }}</a>
-    <a routerLink="/member-management" routerLinkActive="active-link" (click)="closeNavbarMenu()" *ngIf="isGroupAdmin$ | async">{{ 'NAV_MEMBER_MANAGEMENT' | translate }}</a>
+    <a routerLink="/dashboard" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_DASHBOARD' | translate
+      }}</a>
+    <a routerLink="/expense" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_EXPENSE' | translate
+      }}</a>
+    <a routerLink="/expense-overview" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{
+      'NAV_EXPENSE_OVERVIEW' | translate }}</a>
+    <a routerLink="/budget" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_BUDGET' | translate
+      }}</a>
+    <a routerLink="/profit" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_PROFIT' | translate
+      }}</a>
+    <a routerLink="/category" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_CATEGORY' | translate
+      }}</a>
+    <a routerLink="/member-management" routerLinkActive="active-link" (click)="closeNavbarMenu()"
+      *ngIf="isGroupAdmin$ | async">{{ 'NAV_MEMBER_MANAGEMENT' | translate }}</a>
 
     <div class="mobile-divider"></div>
     <a routerLink="/profile" (click)="closeNavbarMenu()">{{ 'NAV_PROFILE_AND_SETTING' | translate }}</a>
+    <button (click)="toggleTheme(); closeNavbarMenu()" style="display:flex;align-items:center;gap:0.5rem;"
+      class="d-none d-sm-none">
+      <!-- <fa-icon [icon]="isDarkMode ? faSun : faMoon"></fa-icon> -->
+      <span>{{ isDarkMode ? ('NAV_LIGHT_MODE' | translate) : ('NAV_DARK_MODE' | translate) }}</span>
+    </button>
     <button class="mobile-logout" (click)="logout()">{{ 'NAV_LOGOUT' | translate }}</button>
   </div>
 </nav>

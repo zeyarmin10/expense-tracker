@@ -527,5 +527,7 @@
   "ADDED_BY": "ထည့်သွင်းသူ",
   "ADD_BUTTON": "ထည့်ပါ",
   "EXISTING_CATEGORIES": "ရှိပြီးသားအမျိုးအစားများ",
-  "NO_CATEGORIES ": "အမျိုးအစားများမရှိပါ။"
+  "NO_CATEGORIES ": "အမျိုးအစားများမရှိပါ။",
+  "NAV_DARK_MODE": "",
+  "NAV_LIGHT_MODE": ""
 }
