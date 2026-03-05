@@ -1,24 +1,396 @@
-/* နောက်ခံအရောင်အနည်းငယ်ပြောင်းရန် */
-body {
-  background-color: #f8f9fa;
+/* ============================================================
+   Onboarding — Dark Theme (matches app design system)
+   ============================================================ */
+
+.ob-root {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--bg, #0d1117);
+  color: var(--text, #f0f2f7);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
-/* Personal section အတွက် အရောင်အနုလေး */
-.personal-bg {
-  background-color: #f0f7ff;
+/* ── Animated background ── */
+.ob-bg-grid {
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0,229,180,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,229,180,0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+  z-index: 0;
 }
 
-/* Input focus ဖြစ်ရင် ပိုလှအောင် */
-.form-control:focus {
-  box-shadow: none;
-  border-color: #007bff;
+.ob-bg-glow {
+  position: fixed;
+  top: -15vh;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80vw;
+  max-width: 600px;
+  height: 55vh;
+  background: radial-gradient(ellipse, rgba(0,229,180,0.1) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+  animation: ob-pulse 6s ease-in-out infinite;
 }
 
-/* Option ကတ်လေးတွေကို hover တက်ရင် အနည်းငယ် ကြွလာအောင် */
-.option-card {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+@keyframes ob-pulse {
+  0%, 100% { opacity: 0.7; transform: translateX(-50%) scaleY(1); }
+  50%       { opacity: 1;   transform: translateX(-50%) scaleY(1.08); }
 }
 
-.option-card:hover {
+/* ── Scroll container ── */
+.ob-scroll {
+  position: relative;
+  z-index: 1;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 2rem 1rem 4rem;
+}
+
+/* ── Main wrap ── */
+.ob-wrap {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+/* ── Brand ── */
+.ob-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding-top: 0.5rem;
+}
+
+.ob-brand-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--accent-dim, rgba(0,229,180,0.12));
+  border: 1px solid rgba(0,229,180,0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+
+.ob-brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+}
+
+.ob-brand-name {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text, #f0f2f7);
+  letter-spacing: -0.02em;
+}
+
+.ob-brand-tag {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: var(--accent, #00e5b4);
+}
+
+/* ── Hero ── */
+.ob-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.ob-hero-title {
+  font-size: clamp(1.5rem, 5vw, 2rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin: 0;
+  line-height: 1.1;
+}
+
+.ob-hero-sub {
+  font-size: 1rem;
+  color: var(--accent, #00e5b4);
+  font-weight: 600;
+  margin: 0;
+}
+
+.ob-hero-hint {
+  font-size: 0.85rem;
+  color: var(--text-muted, #6b7280);
+  margin: 0;
+}
+
+/* ── Cards container ── */
+.ob-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* ── Card base ── */
+.ob-card {
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.07);
+  background: var(--surface, #141920);
+  overflow: hidden;
+  position: relative;
+  transition: border-color 0.2s, transform 0.2s;
+}
+
+.ob-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.ob-card:hover {
   transform: translateY(-2px);
+}
+
+.ob-card:hover::before { opacity: 1; }
+
+/* Personal card */
+.ob-card-personal {
+  border-color: rgba(0,229,180,0.25);
+  background: linear-gradient(145deg, var(--surface, #141920), rgba(0,229,180,0.05));
+}
+
+.ob-card-personal::before {
+  background: linear-gradient(90deg, var(--accent, #00e5b4), transparent);
+  opacity: 1;
+}
+
+.ob-card-personal:hover {
+  border-color: rgba(0,229,180,0.4);
+}
+
+/* Group card */
+.ob-card-group::before {
+  background: linear-gradient(90deg, #60a5fa, transparent);
+}
+
+.ob-card-group:hover { border-color: rgba(96,165,250,0.3); }
+
+/* Join card */
+.ob-card-join::before {
+  background: linear-gradient(90deg, #a78bfa, transparent);
+}
+
+.ob-card-join:hover { border-color: rgba(167,139,250,0.3); }
+
+/* ── Card inner ── */
+.ob-card-inner {
+  padding: 1.25rem 1.3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.ob-card-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+}
+
+.ob-card-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.ob-icon-personal {
+  background: rgba(0,229,180,0.1);
+  border: 1px solid rgba(0,229,180,0.2);
+}
+
+.ob-icon-group {
+  background: rgba(96,165,250,0.1);
+  border: 1px solid rgba(96,165,250,0.2);
+}
+
+.ob-icon-join {
+  background: rgba(167,139,250,0.1);
+  border: 1px solid rgba(167,139,250,0.2);
+}
+
+.ob-card-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text, #f0f2f7);
+  margin: 0 0 0.2rem;
+}
+
+.ob-card-desc {
+  font-size: 0.78rem;
+  color: var(--text-muted, #6b7280);
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* ── Input row ── */
+.ob-input-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+/* ── Floating label ── */
+.ob-fl-wrap {
+  position: relative;
+}
+
+.ob-fl-input {
+  width: 100%;
+  height: 50px;
+  background: var(--surface-2, #1c2230);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  color: var(--text, #f0f2f7);
+  font-size: 0.88rem;
+  padding: 1.2rem 0.9rem 0.35rem;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.ob-fl-input:focus {
+  border-color: var(--accent, #00e5b4);
+  box-shadow: 0 0 0 3px rgba(0,229,180,0.1);
+}
+
+.ob-fl-mono {
+  letter-spacing: 0.08em;
+  font-size: 0.82rem;
+}
+
+.ob-fl-label {
+  position: absolute;
+  left: 0.9rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.84rem;
+  font-weight: 500;
+  color: var(--text-muted, #6b7280);
+  pointer-events: none;
+  line-height: 1;
+  transition: top 0.15s ease, transform 0.15s ease,
+              font-size 0.15s ease, color 0.15s ease;
+}
+
+.ob-fl-input:focus ~ .ob-fl-label,
+.ob-fl-input:not(:placeholder-shown) ~ .ob-fl-label {
+  top: 0.48rem;
+  transform: translateY(0);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent, #00e5b4);
+}
+
+/* ── Buttons ── */
+.ob-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  width: 100%;
+  height: 46px;
+  border-radius: 10px;
+  border: none;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+}
+
+.ob-btn:active { transform: scale(0.98); }
+.ob-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.ob-btn-primary {
+  background: var(--accent, #00e5b4);
+  color: #0a0c10;
+  animation: ob-glow 2.5s ease-in-out infinite;
+}
+
+@keyframes ob-glow {
+  0%, 100% { box-shadow: 0 0 8px rgba(0,229,180,0.25); }
+  50%       { box-shadow: 0 0 22px rgba(0,229,180,0.5); }
+}
+
+.ob-btn-primary:not(:disabled):hover { opacity: 0.88; }
+
+.ob-btn-accent {
+  background: rgba(96,165,250,0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(96,165,250,0.3);
+}
+
+.ob-btn-accent:not(:disabled):hover {
+  background: #60a5fa;
+  color: #0a0c10;
+}
+
+.ob-btn-outline {
+  background: rgba(167,139,250,0.1);
+  color: #a78bfa;
+  border: 1px solid rgba(167,139,250,0.3);
+}
+
+.ob-btn-outline:not(:disabled):hover {
+  background: #a78bfa;
+  color: #0a0c10;
+}
+
+.ob-btn-arrow {
+  font-size: 1rem;
+  transition: transform 0.15s;
+}
+
+.ob-btn-primary:hover .ob-btn-arrow { transform: translateX(3px); }
+
+/* ── Divider ── */
+.ob-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0 0.25rem;
+}
+
+.ob-divider::before,
+.ob-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(255,255,255,0.07);
+}
+
+.ob-divider span {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted, #6b7280);
 }

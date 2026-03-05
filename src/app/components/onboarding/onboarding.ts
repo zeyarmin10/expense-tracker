@@ -11,11 +11,13 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { InvitationService } from '../../services/invitation.service';
 import { CategoryService } from '../../services/category';
 import Swal from 'sweetalert2';
+import { faCreditCard, faUser, faUsers, faLink } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 
 @Component({
   selector: 'app-onboarding',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule],
+  imports: [CommonModule, FormsModule, TranslateModule, FontAwesomeModule],
   templateUrl: './onboarding.html',
   styleUrls: ['./onboarding.css'],
 })
@@ -28,6 +30,11 @@ export class OnboardingComponent implements OnInit {
   private translate = inject(TranslateService);
   private invitationService = inject(InvitationService);
   private categoryService = inject(CategoryService);
+
+  faCreditCard = faCreditCard;
+  faUser = faUser;
+  faUsers = faUsers;
+  faLink = faLink;
 
   userProfile$: Observable<UserProfile | null>;
   newGroupName = '';
@@ -51,8 +58,8 @@ export class OnboardingComponent implements OnInit {
   async setupPersonalAccount(): Promise<void> {
     const user = await firstValueFrom(this.authService.currentUser$);
     if (!user) {
-        console.error('User not logged in');
-        return;
+      console.error('User not logged in');
+      return;
     }
     try {
       await this.userDataService.updateUserProfile(user.uid, {
@@ -63,10 +70,10 @@ export class OnboardingComponent implements OnInit {
       this.router.navigate(['/dashboard']);
     } catch (error) {
       console.error('Error setting up personal account:', error);
-       Swal.fire({
-          icon: 'error',
-          title: this.translate.instant('ERROR_TITLE'),
-          text: this.translate.instant('ONBOARDING_PERSONAL_ACCOUNT_SETUP_ERROR')
+      Swal.fire({
+        icon: 'error',
+        title: this.translate.instant('ERROR_TITLE'),
+        text: this.translate.instant('ONBOARDING_PERSONAL_ACCOUNT_SETUP_ERROR')
       });
     }
   }
@@ -80,9 +87,9 @@ export class OnboardingComponent implements OnInit {
     } catch (error) {
       console.error('Error creating group:', error);
       Swal.fire({
-          icon: 'error',
-          title: this.translate.instant('ERROR_TITLE'),
-          text: this.translate.instant('ONBOARDING_GROUP_CREATION_FAILED')
+        icon: 'error',
+        title: this.translate.instant('ERROR_TITLE'),
+        text: this.translate.instant('ONBOARDING_GROUP_CREATION_FAILED')
       });
     }
   }
@@ -94,9 +101,9 @@ export class OnboardingComponent implements OnInit {
     const user = await firstValueFrom(this.authService.currentUser$);
     if (!user) {
       Swal.fire({
-          icon: 'error',
-          title: this.translate.instant('ERROR_TITLE'),
-          text: this.translate.instant('ONBOARDING_MUST_BE_LOGGED_IN')
+        icon: 'error',
+        title: this.translate.instant('ERROR_TITLE'),
+        text: this.translate.instant('ONBOARDING_MUST_BE_LOGGED_IN')
       });
       return;
     }
@@ -106,9 +113,9 @@ export class OnboardingComponent implements OnInit {
       if (invitation && invitation.status === 'pending') {
         await this.dataManager.acceptGroupInvitation(code, user.uid);
         Swal.fire({
-            icon: 'success',
-            title: this.translate.instant('SUCCESS_TITLE'),
-            text: this.translate.instant('ONBOARDING_JOIN_GROUP_SUCCESS')
+          icon: 'success',
+          title: this.translate.instant('SUCCESS_TITLE'),
+          text: this.translate.instant('ONBOARDING_JOIN_GROUP_SUCCESS')
         });
         this.router.navigate(['/dashboard'], { replaceUrl: true });
       } else {
@@ -118,9 +125,9 @@ export class OnboardingComponent implements OnInit {
     } catch (error) {
       console.error('Error handling invitation:', error);
       Swal.fire({
-          icon: 'error',
-          title: this.translate.instant('ERROR_TITLE'),
-          text: this.translate.instant('ONBOARDING_INVITATION_PROCESS_FAILED')
+        icon: 'error',
+        title: this.translate.instant('ERROR_TITLE'),
+        text: this.translate.instant('ONBOARDING_INVITATION_PROCESS_FAILED')
       });
     }
   }

@@ -1,43 +1,109 @@
-<div class="container py-5">
-  <div class="row justify-content-center">
-    <div class="col-12 col-md-6 col-lg-5">
-      
-      <div class="onboarding-card shadow-sm p-4 rounded-4 border bg-white">
-        <div class="text-center mb-4" *ngIf="userProfile$ | async as profile">
-          <h2 class="fw-bold h4">{{ 'ONBOARDING.WELCOME' | translate: { name: profile.displayName || profile.email } }}</h2>
-          <p class="text-info">{{ 'ONBOARDING.LETS_GET_YOU_SET_UP' | translate }}</p>
-          <small class="text-secondary">{{ 'ONBOARDING.HOW_WOULD_YOU_LIKE_TO_USE_THIS_APP' | translate }}</small>
-        </div>
+<div class="ob-root">
+  <div class="ob-bg-grid"></div>
+  <div class="ob-bg-glow"></div>
 
-        <div class="option-card personal-bg p-3 rounded-3 mb-4 border border-primary-subtle">
-          <h3 class="h6 fw-bold mb-1">{{ 'ONBOARDING.USE_AS_PERSONAL_ACCOUNT' | translate }}</h3>
-          <p class="small text-info mb-3">{{ 'ONBOARDING.TRACK_YOUR_OWN' | translate }}</p>
-          <button class="btn btn-primary w-100 py-2 shadow-sm" (click)="setupPersonalAccount()">
-            {{ 'ONBOARDING.CONTINUE_WITH_PERSONAL_ACCOUNT' | translate }}
-          </button>
-        </div>
+  <div class="ob-scroll">
+    <div class="ob-wrap">
 
-        <div class="position-relative my-4 text-center">
-          <hr>
-          <span class="position-absolute top-50 start-50 translate-middle bg-white px-3 text-info small">{{ 'ONBOARDING.OR' | translate }}</span>
+      <!-- Brand -->
+      <div class="ob-brand">
+        <div class="ob-brand-logo">
+          <fa-icon [icon]="faCreditCard"></fa-icon>
         </div>
+        <div class="ob-brand-text">
+          <span class="ob-brand-name">Expense</span>
+          <span class="ob-brand-tag">TRACKER</span>
+        </div>
+      </div>
 
-        <div class="option-card p-3 rounded-3 mb-3 border bg-light">
-          <h3 class="h6 fw-bold mb-1">{{ 'ONBOARDING.CREATE_NEW_GROUP' | translate }}</h3>
-          <p class="small text-info mb-2">{{ 'ONBOARDING.CREATE_SHARED_SPACE' | translate }}</p>
-          <div class="mb-2">
-            <input type="text" class="form-control form-control-sm" [(ngModel)]="newGroupName" [placeholder]="'ONBOARDING.ENTER_GROUP_NAME' | translate">
+      <!-- Hero -->
+      <div class="ob-hero" *ngIf="userProfile$ | async as profile">
+        <h1 class="ob-hero-title">
+          {{ 'ONBOARDING.WELCOME' | translate: { name: profile.displayName || profile.email } }}
+        </h1>
+        <p class="ob-hero-sub">{{ 'ONBOARDING.LETS_GET_YOU_SET_UP' | translate }}</p>
+        <p class="ob-hero-hint">{{ 'ONBOARDING.HOW_WOULD_YOU_LIKE_TO_USE_THIS_APP' | translate }}</p>
+      </div>
+
+      <!-- Cards -->
+      <div class="ob-cards">
+
+        <!-- Personal -->
+        <div class="ob-card ob-card-personal">
+          <div class="ob-card-inner">
+            <div class="ob-card-head">
+              <div class="ob-card-icon ob-icon-personal">
+                <fa-icon [icon]="faUser"></fa-icon>
+              </div>
+              <div>
+                <h3 class="ob-card-title">{{ 'ONBOARDING.USE_AS_PERSONAL_ACCOUNT' | translate }}</h3>
+                <p class="ob-card-desc">{{ 'ONBOARDING.TRACK_YOUR_OWN' | translate }}</p>
+              </div>
+            </div>
+            <button class="ob-btn ob-btn-primary" (click)="setupPersonalAccount()">
+              {{ 'ONBOARDING.CONTINUE_WITH_PERSONAL_ACCOUNT' | translate }}
+              <span class="ob-btn-arrow">→</span>
+            </button>
           </div>
-          <button class="btn btn-outline-primary w-100" (click)="createGroup()">{{ 'ONBOARDING.CREATE_GROUP_BUTTON' | translate }}</button>
         </div>
 
-        <div class="option-card p-3 rounded-3 border bg-light">
-          <h3 class="h6 fw-bold mb-1">{{ 'ONBOARDING.JOIN_EXISTING_GROUP' | translate }}</h3>
-          <p class="small text-info mb-2">{{ 'ONBOARDING.USE_INVITE_CODE' | translate }}</p>
-          <div class="mb-2">
-            <input type="text" class="form-control form-control-sm" [(ngModel)]="inviteCode" [placeholder]="'ONBOARDING.ENTER_INVITE_CODE' | translate">
+        <!-- Divider -->
+        <div class="ob-divider">
+          <span>{{ 'ONBOARDING.OR' | translate }}</span>
+        </div>
+
+        <!-- Create Group -->
+        <div class="ob-card ob-card-group">
+          <div class="ob-card-inner">
+            <div class="ob-card-head">
+              <div class="ob-card-icon ob-icon-group">
+                <fa-icon [icon]="faUsers"></fa-icon>
+              </div>
+              <div>
+                <h3 class="ob-card-title">{{ 'ONBOARDING.CREATE_NEW_GROUP' | translate }}</h3>
+                <p class="ob-card-desc">{{ 'ONBOARDING.CREATE_SHARED_SPACE' | translate }}</p>
+              </div>
+            </div>
+            <div class="ob-input-row">
+              <div class="ob-fl-wrap">
+                <input type="text" class="ob-fl-input" id="ob-group-name" [(ngModel)]="newGroupName" placeholder=" "
+                  autocomplete="off" />
+                <label class="ob-fl-label" for="ob-group-name">
+                  {{ 'ONBOARDING.ENTER_GROUP_NAME' | translate }}
+                </label>
+              </div>
+              <button class="ob-btn ob-btn-accent" (click)="createGroup()" [disabled]="!newGroupName.trim()">
+                {{ 'ONBOARDING.CREATE_GROUP_BUTTON' | translate }}
+              </button>
+            </div>
           </div>
-          <button class="btn btn-dark w-100" (click)="joinGroup()">{{ 'ONBOARDING.JOIN_GROUP_BUTTON' | translate }}</button>
+        </div>
+
+        <!-- Join Group -->
+        <div class="ob-card ob-card-join">
+          <div class="ob-card-inner">
+            <div class="ob-card-head">
+              <div class="ob-card-icon ob-icon-join">
+                <fa-icon [icon]="faLink"></fa-icon>
+              </div>
+              <div>
+                <h3 class="ob-card-title">{{ 'ONBOARDING.JOIN_EXISTING_GROUP' | translate }}</h3>
+                <p class="ob-card-desc">{{ 'ONBOARDING.USE_INVITE_CODE' | translate }}</p>
+              </div>
+            </div>
+            <div class="ob-input-row">
+              <div class="ob-fl-wrap">
+                <input type="text" class="ob-fl-input ob-fl-mono" id="ob-invite-code" [(ngModel)]="inviteCode"
+                  placeholder=" " autocomplete="off" />
+                <label class="ob-fl-label" for="ob-invite-code">
+                  {{ 'ONBOARDING.ENTER_INVITE_CODE' | translate }}
+                </label>
+              </div>
+              <button class="ob-btn ob-btn-outline" (click)="joinGroup()" [disabled]="!inviteCode.trim()">
+                {{ 'ONBOARDING.JOIN_GROUP_BUTTON' | translate }}
+              </button>
+            </div>
+          </div>
         </div>
 
       </div>
