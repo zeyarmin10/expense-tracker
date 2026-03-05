@@ -524,5 +524,8 @@
   "REVOKE_BUTTON": "Revoke",
   "MEMBER_MANAGEMENT_TITLE": "Member Management",
   "INVITE_EMAIL_LABEL": "Email Address",
-  "ADDED_BY": "Added By"
+  "ADDED_BY": "Added By",
+  "ADD_BUTTON": "Add",
+  "EXISTING_CATEGORIES": "Existing Categories",
+  "NO_CATEGORIES ": "No Categories"
 }

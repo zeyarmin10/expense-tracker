@@ -90,6 +90,7 @@ export class ExpenseOverview implements OnInit {
   endDate: string = '';
   searchTerm: string = '';
   userProfile$: Observable<UserProfile | null> = of(null);
+  isGroupUser = false;
 
   // --- Summary Statistics Properties ---
   currencySummaries: CurrencySummary[] = [];
@@ -142,6 +143,7 @@ export class ExpenseOverview implements OnInit {
     this.userProfile$.subscribe((profile) => {
       if (profile) {
         this.setInitialDateFilter(profile);
+        this.isGroupUser = profile?.accountType === 'group';
       } else {
         // If there's no profile, fall back to a default.
         this.setDateFilter('currentMonth');

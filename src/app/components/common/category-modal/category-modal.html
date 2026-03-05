@@ -1,37 +1,80 @@
 <div class="modal fade" id="categoryModal" tabindex="-1" aria-labelledby="categoryModalLabel" aria-hidden="true"
   #categoryModal data-bs-backdrop="static" data-bs-keyboard="false">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="categoryModalLabel">{{ (isEditMode ? 'EDIT_CATEGORY_TITLE' : 'CATEGORY_MODAL_TITLE')
-          | translate }}</h5>
-        <button type="button" class="btn-close" (click)="closeModal()"></button>
+  <div class="modal-dialog cat-modal-dialog">
+    <div class="modal-content cat-modal-content">
+
+      <!-- Header -->
+      <div class="cat-modal-header">
+        <div class="cat-modal-title-wrap">
+          <span class="cat-modal-icon">🏷️</span>
+          <h5 class="cat-modal-title" id="categoryModalLabel">
+            {{ (isEditMode ? 'EDIT_CATEGORY_TITLE' : 'CATEGORY_MODAL_TITLE') | translate }}
+          </h5>
+        </div>
+        <button type="button" class="cat-close-btn" (click)="closeModal()">
+          <fa-icon [icon]="faTimes"></fa-icon>
+        </button>
       </div>
-      <div class="modal-body">
-        <form [formGroup]="categoryForm" (ngSubmit)="onSave()">
-          <div class="input-group mb-3">
-            <input type="text" class="form-control" formControlName="name"
-              placeholder="{{ 'CATEGORY_NAME_PLACEHOLDER' | translate }}">
-            <button class="btn btn-primary" type="submit" [disabled]="categoryForm.invalid">
-              <fa-icon [icon]="isEditMode ? faSave : faPlus"></fa-icon>
-            </button>
+
+      <!-- Body -->
+      <div class="cat-modal-body">
+
+        <!-- Add / Edit Form -->
+        <form [formGroup]="categoryForm" (ngSubmit)="onSave()" class="cat-form">
+          <div class="cat-fl-wrap">
+            <input
+              type="text"
+              class="cat-fl-input"
+              formControlName="name"
+              placeholder=" "
+              id="catNameInput"
+              autocomplete="off" />
+            <label class="cat-fl-label" for="catNameInput">
+              {{ 'CATEGORY_NAME_PLACEHOLDER' | translate }}
+            </label>
           </div>
+          <button
+            class="cat-save-btn"
+            type="submit"
+            [disabled]="categoryForm.invalid">
+            <fa-icon [icon]="isEditMode ? faSave : faPlus"></fa-icon>
+            <span>{{ (isEditMode ? 'SAVE_BUTTON_LABEL' : 'ADD_BUTTON') | translate }}</span>
+          </button>
         </form>
-        <ul class="list-group">
-          <li *ngFor="let category of categories"
-            class="list-group-item d-flex justify-content-between align-items-center">
-            {{ category.name }}
-            <div>
-              <button class="btn btn-sm btn-outline-primary me-2" (click)="onEdit(category)">
-                <fa-icon [icon]="faEdit"></fa-icon>
-              </button>
-              <button class="btn btn-sm btn-outline-danger" (click)="onDelete(category.id!)"
-                [disabled]="isDeleting(category.id!)">
-                <fa-icon [icon]="faTrash"></fa-icon>
-              </button>
-            </div>
-          </li>
-        </ul>
+
+        <!-- Category List -->
+        <div class="cat-list-wrap">
+          <div class="cat-list-header">
+            <span class="cat-list-title">{{ 'EXISTING_CATEGORIES' | translate }}</span>
+            <span class="cat-list-count">{{ categories.length }}</span>
+          </div>
+
+          <div class="cat-list-empty" *ngIf="categories.length === 0">
+            {{ 'NO_CATEGORIES' | translate }}
+          </div>
+
+          <ul class="cat-list">
+            <li *ngFor="let category of categories" class="cat-item"
+                [class.cat-item-editing]="editingCategoryId === category.id">
+              <div class="cat-item-avatar">
+                {{ category.name.charAt(0).toUpperCase() }}
+              </div>
+              <span class="cat-item-name">{{ category.name }}</span>
+              <div class="cat-item-actions">
+                <button class="cat-action-btn cat-edit-btn" type="button"
+                  (click)="onEdit(category)" title="Edit">
+                  <fa-icon [icon]="faEdit"></fa-icon>
+                </button>
+                <button class="cat-action-btn cat-delete-btn" type="button"
+                  (click)="onDelete(category.id!)"
+                  [disabled]="isDeleting(category.id!)" title="Delete">
+                  <fa-icon [icon]="faTrash"></fa-icon>
+                </button>
+              </div>
+            </li>
+          </ul>
+        </div>
+
       </div>
     </div>
   </div>

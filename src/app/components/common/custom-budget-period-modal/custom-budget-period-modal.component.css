@@ -1,69 +1,188 @@
-/* Define the shine effect animation */
-@keyframes shine {
-    0% {
-      box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
-    }
-  
-    /* Initial subtle glow for info button */
-    50% {
-      box-shadow: 0 0 5px rgba(0, 123, 255, 0.5), 0 0 15px rgba(0, 123, 255, 0.5);
-    }
-  
-    /* Brighter glow */
-    100% {
-      box-shadow: 0 0 5px rgba(209, 244, 251, 0.3);
-    }
-  
-    /* Return to subtle glow */
-  }
-  
-  /* Define the shine effect animation for success button */
-  @keyframes shine-success {
-    0% {
-      box-shadow: 0 0 5px rgba(40, 167, 69, 0.3);
-    }
-  
-    /* Initial subtle glow for success button */
-    50% {
-      box-shadow: 0 0 5px rgba(40, 167, 69, 0.35), 0 0 15px rgba(40, 167, 69, 0.5);
-    }
-  
-    /* Brighter glow */
-    100% {
-      box-shadow: 0 0 5px rgba(40, 167, 69, 0.3);
-    }
-  
-    /* Return to subtle glow */
-  }
-  
-  
-  
-  /* Apply the animation to buttons with .shine-effect class */
-  .btn.shine-effect {
-    animation: shine 1.5s infinite ease-in-out;
-    transition: background-color 0.3s ease, color 0.3s ease,
-      border-color 0.3s ease;
-  }
-  
-  /* Override for success button animation */
-  .btn.btn-outline-success.shine-effect {
-    /* Changed to btn-outline-success */
-    animation: shine-success 1.5s infinite ease-in-out;
-  }
-  
-  /* Ensure smooth transition when disabled */
-  .btn[disabled] {
-    transition: background-color 0.3s ease, color 0.3s ease,
-      border-color 0.3s ease, box-shadow 0.3s ease;
-    animation: none !important;
-    /* Stop animation when disabled */
-  }
-  
-  /* Ensure smooth transition when disabled */
-  .btn[disabled] {
-    transition: background-color 0.3s ease, color 0.3s ease,
-      border-color 0.3s ease, box-shadow 0.3s ease;
-    animation: none !important;
-    /* Stop animation when disabled */
-  }
-  
+/* ============================================================
+   Custom Budget Period Modal — Dark Theme
+   ============================================================ */
+
+.cbp-dialog {
+  max-width: 440px;
+  margin: 1.5rem auto;
+}
+
+/* ── Shell ── */
+.cbp-content {
+  background: #12151c;
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.6),
+              0 0 0 1px rgba(0,229,180,0.06);
+  padding: 0;
+}
+
+/* ── Top accent line ── */
+.cbp-accent-line {
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent, #00e5b4), rgba(0,229,180,0.2), transparent);
+}
+
+/* ── Header ── */
+.cbp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.2rem 1.4rem 1rem;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.cbp-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.cbp-icon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.cbp-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #f0f2f7;
+  margin: 0;
+  letter-spacing: 0.01em;
+}
+
+.cbp-close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.04);
+  color: #6b7280;
+  cursor: pointer;
+  font-size: 0.78rem;
+  transition: all 0.15s;
+  line-height: 1;
+}
+
+.cbp-close-btn:hover {
+  background: rgba(248,113,113,0.12);
+  border-color: rgba(248,113,113,0.3);
+  color: #f87171;
+}
+
+/* ── Body ── */
+.cbp-body {
+  padding: 1.3rem 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+/* ── Floating label inputs ── */
+.cbp-fl-wrap {
+  position: relative;
+}
+
+.cbp-fl-input {
+  width: 100%;
+  height: 54px;
+  background: #1a1e28;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  color: #f0f2f7;
+  font-size: 0.88rem;
+  padding: 1.3rem 0.95rem 0.38rem;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.cbp-fl-input:focus {
+  border-color: var(--accent, #00e5b4);
+  box-shadow: 0 0 0 3px rgba(0,229,180,0.1);
+}
+
+.cbp-fl-input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.45);
+  cursor: pointer;
+  margin-top: -4px;
+}
+
+/* Label default: centered (placeholder look) */
+.cbp-fl-label {
+  position: absolute;
+  left: 0.95rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #6b7280;
+  pointer-events: none;
+  line-height: 1;
+  transition: top 0.15s ease, transform 0.15s ease,
+              font-size 0.15s ease, color 0.15s ease;
+}
+
+/* Label floated: focus or has value */
+.cbp-fl-input:focus ~ .cbp-fl-label,
+.cbp-fl-input:not(:placeholder-shown) ~ .cbp-fl-label,
+.cbp-fl-input.cbp-has-val ~ .cbp-fl-label {
+  top: 0.5rem;
+  transform: translateY(0);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent, #00e5b4);
+}
+
+/* ── Date row: side by side ── */
+.cbp-date-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.65rem;
+}
+
+/* ── Footer ── */
+.cbp-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 1.4rem 1.4rem;
+}
+
+.cbp-save-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  height: 44px;
+  padding: 0 1.3rem;
+  background: var(--accent, #00e5b4);
+  color: #0a0c10;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  animation: cbp-shine 2s ease-in-out infinite;
+}
+
+.cbp-save-btn:not(:disabled):hover {
+  opacity: 0.85;
+}
+
+.cbp-save-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  animation: none;
+}
+
+@keyframes cbp-shine {
+  0%, 100% { box-shadow: 0 0 6px rgba(0,229,180,0.2); }
+  50%       { box-shadow: 0 0 18px rgba(0,229,180,0.45); }
+}

@@ -115,7 +115,7 @@
               <thead>
                 <tr>
                   <th width="90">{{ "DATE_LABEL" | translate }}</th>
-                  <th class="td-created-by">{{ "ADDED_BY" | translate }}</th>
+                  <th class="td-created-by" *ngIf="isGroupUser">{{ "ADDED_BY" | translate }}</th>
                   <th class="td-category">{{ "CATEGORY_LABEL" | translate }}</th>
                   <th>{{ "ITEM_NAME_LABEL" | translate }}</th>
                   <th>{{ "TOTAL_COST_LABEL" | translate }}</th>
@@ -127,7 +127,7 @@
                     <span class="d-none d-md-inline">{{ formatLocalizedDate(expense.date) }}</span>
                     <span class="d-md-none">{{ formatMobileDate(expense.date) }}</span>
                   </td>
-                  <td class="td-created-by">
+                  <td class="td-created-by" *ngIf="isGroupUser">
                     <span class="created-by-badge">{{ expense.createdByName || '—' }}</span>
                   </td>
                   <td class="td-category">
@@ -135,7 +135,7 @@
                   </td>
                   <td class="td-name">
                     {{ expense.itemName }}
-                    <span class="td-name-creator">{{ expense.createdByName || '' }}</span>
+                    <span class="td-name-creator" *ngIf="isGroupUser">{{ expense.createdByName || '' }}</span>
                   </td>
                   <td class="td-amount">
                     {{ formatService.formatAmountShort(expense.totalCost, expense.currency) }}

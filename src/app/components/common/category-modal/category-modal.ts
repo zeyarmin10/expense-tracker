@@ -156,11 +156,23 @@ export class CategoryModalComponent implements OnInit {
   }
 
   async onDelete(categoryId: string): Promise<void> {
-    this.deletingStates[categoryId] = true;
-    const confirmMsg = await firstValueFrom(
-      this.translateService.get('CONFIRM_DELETE_CATEGORY')
-    );
     try {
+      const isUsed = await this.categoryService.isCategoryUsedInExpenses(
+        categoryId
+      );
+
+      if (isUsed) {
+        this.showErrorModal(
+          this.translateService.instant('DELETE_CATEGORY_ERROR_TITLE'),
+          this.translateService.instant('CATEGORY_IN_USE_ERROR')
+        );
+        return;
+      }
+
+      const confirmMsg = await firstValueFrom(
+        this.translateService.get('CONFIRM_DELETE_CATEGORY')
+      );
+
       Swal.fire({
         title: this.translateService.instant('CONFIRM_DELETE_TITLE'),
         text: confirmMsg,
@@ -173,19 +185,36 @@ export class CategoryModalComponent implements OnInit {
         if (result.isConfirmed) {
           try {
             await this.categoryService.deleteCategory(categoryId);
+            Toast.fire({ icon: 'success', title: this.translateService.instant('CATEGORY_DELETED_SUCCESS') });
+            if (this.editingCategoryId === categoryId) {
+              this.resetForm();
+            }
             await this.loadCategories();
-            this.categoryAdded.emit();
-            Toast.fire({ icon: 'success', title: this.translateService.instant('CATEGORY_DELETED_SUCCESS') });      
           } catch (error: any) {
-            Toast.fire({ icon: 'error', title: this.translateService.instant('DATA_DELETE_ERROR') }); 
+            this.showErrorModal(
+              this.translateService.instant('ERROR_TITLE'),
+              error.message ||
+              this.translateService.instant('DATA_DELETE_ERROR')
+            );
           }
         }
       });
-    } catch (error) {
-      console.error(`Error deleting category ${categoryId}:`, error);
-    } finally {
-      this.deletingStates[categoryId] = false;
+    } catch (error: any) {
+      this.showErrorModal(
+        this.translateService.instant('ERROR_TITLE'),
+        error.message ||
+        this.translateService.instant('FAILED_CHECK_CATEGORY_USAGE')
+      );
     }
+  }
+
+  showErrorModal(title: string, message: string): void {
+    Swal.fire({
+      icon: 'error',
+      title: title,
+      text: message,
+      confirmButtonText: this.translateService.instant('OK_BUTTON')
+    });
   }
 
 }

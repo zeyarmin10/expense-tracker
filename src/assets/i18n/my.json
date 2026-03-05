@@ -524,5 +524,8 @@
   "REVOKE_BUTTON": "ပြန်လည်ရုပ်သိမ်းရန်",
   "MEMBER_MANAGEMENT_TITLE": "အဖွဲ့ဝင် စီမံခန့်ခွဲရန်",
   "INVITE_EMAIL_LABEL": "အီးမေးလ်လိပ်စာ",
-  "ADDED_BY": "ထည့်သွင်းသူ"
+  "ADDED_BY": "ထည့်သွင်းသူ",
+  "ADD_BUTTON": "ထည့်ပါ",
+  "EXISTING_CATEGORIES": "ရှိပြီးသားအမျိုးအစားများ",
+  "NO_CATEGORIES ": "အမျိုးအစားများမရှိပါ။"
 }

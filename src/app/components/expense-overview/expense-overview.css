@@ -24,8 +24,8 @@
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  margin-bottom: 2.5rem;
-  gap: 1rem;
+  margin-bottom: 1.5rem;
+  /* gap: 1rem; */
   flex-wrap: wrap;
 }
 
@@ -73,7 +73,8 @@
 
   /* custom mode: select + 2 date pickers side by side */
   .ov-filter-row-custom .ov-date-row {
-    display: contents; /* date pickers မ wrapper မပါဘဲ row ထဲ ဝင်မယ် */
+    display: contents;
+    /* date pickers မ wrapper မပါဘဲ row ထဲ ဝင်မယ် */
   }
 }
 
@@ -265,8 +266,14 @@
   .summary-grid {
     grid-template-columns: 1fr 1fr;
   }
-  .summary-card { align-self: stretch; }
-  .category-highlight-card { align-self: stretch; }
+
+  .summary-card {
+    align-self: stretch;
+  }
+
+  .category-highlight-card {
+    align-self: stretch;
+  }
 }
 
 @media (min-width: 768px) {
