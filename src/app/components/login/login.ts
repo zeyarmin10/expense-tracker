@@ -22,7 +22,7 @@ import { debounceTime, Subject, takeUntil, firstValueFrom } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { SessionManagementService } from '../../services/session-management';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
+import { faEye, faEyeSlash, faSun, faMoon } from '@fortawesome/free-solid-svg-icons';
 import { User } from '@angular/fire/auth';
 import { ToastService } from '../../services/toast'; // Import ToastService
 import { InvitationService } from '../../services/invitation.service';
@@ -49,6 +49,9 @@ export class LoginComponent implements OnInit, OnDestroy {
   showPassword = false;
   faEye = faEye;
   faEyeSlash = faEyeSlash;
+  faSun = faSun;
+  faMoon = faMoon;
+  isDarkMode = true;
 
   loginForm: FormGroup;
   authService = inject(AuthService);
@@ -98,6 +101,11 @@ export class LoginComponent implements OnInit, OnDestroy {
       }
     });
 
+    // theme init
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    this.isDarkMode = savedTheme === 'dark';
+    if (!this.isDarkMode) document.body.classList.add('light-mode');
+
     this.authService.currentUser$.pipe(takeUntil(this.destroy$)).subscribe(async (user) => {
       if (user) {
         await this.handlePostLogin(user);
@@ -125,18 +133,18 @@ export class LoginComponent implements OnInit, OnDestroy {
   private checkMobileView(width: number): void {
     this.isMobileView = width < this.MOBILE_BREAKPOINT;
   }
-  
+
   async signInWithGoogle(): Promise<void> {
-      this.errorMessage = null;
-      this.successMessage = null;
-      try {
-          const user = await this.authService.signInWithGoogle();
-          // The currentUser$ subscription in ngOnInit will handle post-login actions
-      } catch (error: any) {
-          console.error('Google sign-in error:', error);
-          const translatedErrorMessage = this.authService.getFirebaseErrorMessage(error);
-          this.showErrorModal(translatedErrorMessage);
-      }
+    this.errorMessage = null;
+    this.successMessage = null;
+    try {
+      const user = await this.authService.signInWithGoogle();
+      // The currentUser$ subscription in ngOnInit will handle post-login actions
+    } catch (error: any) {
+      console.error('Google sign-in error:', error);
+      const translatedErrorMessage = this.authService.getFirebaseErrorMessage(error);
+      this.showErrorModal(translatedErrorMessage);
+    }
   }
 
   private async handlePostLogin(user: User): Promise<void> {
@@ -144,53 +152,53 @@ export class LoginComponent implements OnInit, OnDestroy {
 
     // Always create a profile if one doesn't exist
     if (!profile) {
-        const currency = this.currentLang === 'my' ? 'MMK' : 'USD';
-        const newUserProfile: UserProfile = {
-            uid: user.uid,
-            email: user.email || '',
-            displayName: user.displayName || 'New User',
-            currency: currency,
-            language: this.currentLang,
-            createdAt: Date.now(),
-        };
-        await this.userDataService.createUserProfile(newUserProfile);
-        profile = newUserProfile; // use the new profile
+      const currency = this.currentLang === 'my' ? 'MMK' : 'USD';
+      const newUserProfile: UserProfile = {
+        uid: user.uid,
+        email: user.email || '',
+        displayName: user.displayName || 'New User',
+        currency: currency,
+        language: this.currentLang,
+        createdAt: Date.now(),
+      };
+      await this.userDataService.createUserProfile(newUserProfile);
+      profile = newUserProfile; // use the new profile
     }
 
     // If an invite code is present in the URL
     if (this.inviteCode) {
-        const code = this.inviteCode;
-        this.inviteCode = null; // Consume the code
-        this.router.navigate([], { queryParams: { invite_code: null }, queryParamsHandling: 'merge' }); // Clean URL
+      const code = this.inviteCode;
+      this.inviteCode = null; // Consume the code
+      this.router.navigate([], { queryParams: { invite_code: null }, queryParamsHandling: 'merge' }); // Clean URL
 
-        try {
-            const invitation = await firstValueFrom(this.invitationService.getInvitation(code));
+      try {
+        const invitation = await firstValueFrom(this.invitationService.getInvitation(code));
 
-            if (invitation && invitation.status === 'pending') {
-                // VALID: Accept invitation and go to dashboard
-                await this.dataManager.acceptGroupInvitation(code, user.uid);
-                this.toastService.showSuccess(this.translate.instant('GROUP_JOIN_SUCCESS'));
-                this.router.navigate(['/dashboard']);
-            } else {
-                // INVALID: Invitation is used, expired or invalid.
-                throw new Error('Invalid invitation code');
-            }
-        } catch (error) {
-            // This block will catch the thrown error above or any other error from the services
-            console.error('Failed to process invitation code:', error);
-            await this.authService.logout();
-            this.router.navigate(['/login'], { queryParams: { error: 'invite_used' } });
-        }
-    } else {
-        // No invite code, normal login flow
-        if (profile && profile.accountType) {
-            this.sessionService.recordActivity();
-            this.router.navigate(['/dashboard']);
+        if (invitation && invitation.status === 'pending') {
+          // VALID: Accept invitation and go to dashboard
+          await this.dataManager.acceptGroupInvitation(code, user.uid);
+          this.toastService.showSuccess(this.translate.instant('GROUP_JOIN_SUCCESS'));
+          this.router.navigate(['/dashboard']);
         } else {
-            this.router.navigate(['/onboarding']);
+          // INVALID: Invitation is used, expired or invalid.
+          throw new Error('Invalid invitation code');
         }
+      } catch (error) {
+        // This block will catch the thrown error above or any other error from the services
+        console.error('Failed to process invitation code:', error);
+        await this.authService.logout();
+        this.router.navigate(['/login'], { queryParams: { error: 'invite_used' } });
+      }
+    } else {
+      // No invite code, normal login flow
+      if (profile && profile.accountType) {
+        this.sessionService.recordActivity();
+        this.router.navigate(['/dashboard']);
+      } else {
+        this.router.navigate(['/onboarding']);
+      }
     }
-}
+  }
 
   switchLanguage(lang: string) {
     this.translate.use(lang);
@@ -258,5 +266,16 @@ export class LoginComponent implements OnInit, OnDestroy {
       text: message,
       confirmButtonText: this.translate.instant('OK_BUTTON')
     });
+  }
+
+  toggleTheme(): void {
+    this.isDarkMode = !this.isDarkMode;
+    if (this.isDarkMode) {
+      document.body.classList.remove('light-mode');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.body.classList.add('light-mode');
+      localStorage.setItem('theme', 'light');
+    }
   }
 }

@@ -57,11 +57,18 @@
   }
 }
 
-/* ── Language Toggle ── */
-.lgn-lang-btn {
+.lgn-top-controls {
   position: fixed;
   top: 1.25rem;
   right: 1.25rem;
+  display: flex;
+  gap: 0.5rem;
+  z-index: 100;
+}
+
+/* ── Language Toggle ── */
+.lgn-lang-btn {
+  position: static;
   display: flex;
   align-items: center;
   gap: 0.4rem;

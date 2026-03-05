@@ -70,7 +70,7 @@
       <li>
         <button class="theme-toggle-btn" type="button" (click)="toggleTheme()"
           [title]="isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
-          <fa-icon [icon]="isDarkMode ? faSun : faMoon" class="theme-icon"></fa-icon>
+          <fa-icon [icon]="isDarkMode ? faSun : faMoon" class="theme-icon" [ngClass]="isDarkMode ? 'text-white' : 'text-dark'"></fa-icon>
         </button>
       </li>
 
