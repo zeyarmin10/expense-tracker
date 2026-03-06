@@ -1,7 +1,9 @@
 /* ── Global Design Tokens ── */
 :root {
-  --bg: #0d1117;
-  --surface: #141920;
+  /* --bg: #0d1117; */
+  --bg: #000000;
+  /* --surface: #141920; */
+  --surface: #0f0f0f;
   --surface-2: #1c2230;
   --border: rgba(255, 255, 255, 0.07);
   --accent: #00e5b4;
@@ -63,6 +65,10 @@
   --nav-surface: #12151c;
   --nav-surface-2: #1a1e28;
   --nav-accent-dim: rgba(0, 229, 180, 0.12);
+}
+
+body:not(.light-mode) .lgn-root {
+  --bg: #1a222e;
 }
 
 @font-face {

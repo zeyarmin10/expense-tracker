@@ -60,7 +60,7 @@
   height: 32px;
   border-radius: 8px;
   border: 1px solid var(--border);
-  background: var(--bg);
+  background: var(--surface-2);
   color: var(--text-muted);
   cursor: pointer;
   font-size: 0.78rem;
@@ -90,7 +90,7 @@
 .cbp-fl-input {
   width: 100%;
   height: 54px;
-  background: var(--bg);
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
   color: var(--text);
