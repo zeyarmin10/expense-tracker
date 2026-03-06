@@ -516,3 +516,23 @@
     box-shadow: 0 0 20px rgba(0, 229, 180, 0.5);
   }
 }
+
+/* Readonly state for members */
+.prof-input:disabled,
+.prof-select:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.prof-addon-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.prof-delete-btn:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+  pointer-events: none;
+}

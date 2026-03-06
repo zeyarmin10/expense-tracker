@@ -136,6 +136,12 @@ export class UserProfileComponent implements OnInit {
               this.userRole = getRole(profile.roles);
               this.groupId = profile.groupId || null;
 
+              if (!this.canEditSettings) {
+                this.userProfileForm.get('currency')?.disable();
+              } else {
+                this.userProfileForm.get('currency')?.enable();
+              }
+
               // Patch form values
               this.userProfileForm.patchValue({
                 displayName: profile.displayName || user.displayName || '',

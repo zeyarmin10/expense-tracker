@@ -122,7 +122,8 @@
         <div class="prof-section">
           <div class="prof-period-wrap">
             <label class="prof-period-label">{{ 'CURRENCY' | translate }}</label>
-            <select id="currency" class="prof-input prof-select" *ngIf="canEditSettings" formControlName="currency">
+            <select id="currency" class="prof-input prof-select" formControlName="currency"
+              [attr.disabled]="!canEditSettings ? true : null">
               <option *ngFor="let currency of translatedCurrencies" [value]="currency.code">
                 {{ currency.name }} ({{ currency.symbol }})
               </option>
