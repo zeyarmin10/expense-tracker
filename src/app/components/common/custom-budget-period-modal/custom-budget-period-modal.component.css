@@ -5,12 +5,13 @@
 .cbp-dialog {
   max-width: 440px;
   margin: 1.5rem auto;
+  width: 95%;
 }
 
 /* ── Shell ── */
 .cbp-content {
   background: var(--bg);
-  border: 1px solid var(--border);
+  border: 1px solid var(--accent);
   border-radius: 20px;
   overflow: hidden;
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6),
