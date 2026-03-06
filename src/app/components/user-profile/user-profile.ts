@@ -6,7 +6,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { Observable, of, map, firstValueFrom } from 'rxjs';
+import { Observable, of, map, firstValueFrom, combineLatest } from 'rxjs';
 import { switchMap, tap, catchError } from 'rxjs/operators';
 import { AuthService } from '../../services/auth';
 import { UserDataService, UserProfile } from '../../services/user-data';
@@ -158,18 +158,28 @@ export class UserProfileComponent implements OnInit {
                 ? this.groupService.getGroupName(profile.groupId)
                 : of(null);
 
-              return groupName$.pipe(
-                map(groupName => ({
-                  email: profile.email || user.email || 'N/A',
-                  createdAt: profile.createdAt || (user.metadata as any).creationTime || new Date().toISOString(),
-                  currency: profile.currency || 'MMK',
-                  budgetPeriod: profile.budgetPeriod || null,
-                  budgetStartDate: profile.budgetStartDate || null,
-                  budgetEndDate: profile.budgetEndDate || null,
-                  roles: this.userRole,
-                  accountType: this.accountType,
-                  groupName: groupName
-                }))
+              return combineLatest([groupName$, this.authService.userProfile$]).pipe(
+                map(([groupName, mergedProfile]) => {
+                  // group member ဆို mergedProfile မှာ group currency ရှိပြီးသား
+                  const effectiveCurrency = mergedProfile?.currency || profile.currency || 'MMK';
+
+                  // form ကိုလည်း group currency နဲ့ update လုပ်ပါ
+                  this.userProfileForm.patchValue({
+                    currency: effectiveCurrency
+                  }, { emitEvent: false });
+
+                  return ({
+                    email: profile.email || user.email || 'N/A',
+                    createdAt: profile.createdAt || (user.metadata as any).creationTime || new Date().toISOString(),
+                    currency: effectiveCurrency,   // ← group currency သုံးတယ်
+                    budgetPeriod: mergedProfile?.budgetPeriod || profile.budgetPeriod || null,
+                    budgetStartDate: mergedProfile?.budgetStartDate || profile.budgetStartDate || null,
+                    budgetEndDate: mergedProfile?.budgetEndDate || profile.budgetEndDate || null,
+                    roles: this.userRole,
+                    accountType: this.accountType,
+                    groupName: groupName
+                  });
+                })
               );
             }),
             catchError((err) => {
