@@ -8,6 +8,7 @@ import {
   ElementRef,
   AfterViewInit,
 } from '@angular/core';
+import { RouterModule } from '@angular/router';
 import { CommonModule, DatePipe } from '@angular/common';
 import { AuthService } from '../../services/auth';
 import { ServiceIExpense, ExpenseService } from '../../services/expense';
@@ -64,7 +65,7 @@ type CurrencyMap = { [currency: string]: number };
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, FontAwesomeModule],
+  imports: [CommonModule, FormsModule, TranslateModule, FontAwesomeModule, RouterModule],
   providers: [DatePipe],
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.css'],

@@ -16,7 +16,7 @@
     <div class="dash-summary-grid">
 
       <!-- Income -->
-      <div class="dash-card dash-card-income">
+      <div class="dash-card dash-card-income dash-card-link" routerLink="/profit">
         <div class="dash-card-top">
           <span class="dash-card-label">{{ 'TOTAL_INCOMES' | translate }}</span>
           <span class="dash-card-icon dash-icon-income">
@@ -33,7 +33,7 @@
       </div>
 
       <!-- Budget -->
-      <div class="dash-card dash-card-budget">
+      <div class="dash-card dash-card-budget dash-card-link" routerLink="/budget">
         <div class="dash-card-top">
           <span class="dash-card-label">{{ 'TOTAL_BUDGET' | translate }}</span>
           <span class="dash-card-icon dash-icon-budget">
@@ -50,7 +50,7 @@
       </div>
 
       <!-- Expenses -->
-      <div class="dash-card dash-card-expense">
+      <div class="dash-card dash-card-expense dash-card-link" routerLink="/expense-overview">
         <div class="dash-card-top">
           <span class="dash-card-label">{{ 'TOTAL_EXPENSES' | translate }}</span>
           <span class="dash-card-icon dash-icon-expense">
@@ -67,7 +67,7 @@
       </div>
 
       <!-- Profit / Loss -->
-      <div class="dash-card" [ngClass]="getProfitLossCardClass(totalProfitLossByCurrency$ | async)">
+      <div class="dash-card dash-card-link" [ngClass]="getProfitLossCardClass(totalProfitLossByCurrency$ | async)" routerLink="/profit">
         <ng-container *ngIf="totalProfitLossByCurrency$ | async as profitLosses; else cardLoading">
           <ng-container *ngIf="(profitLosses | keyvalue).length > 0; else cardNoData">
             <div *ngFor="let profit of profitLosses | keyvalue">

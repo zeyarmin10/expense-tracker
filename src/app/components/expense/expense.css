@@ -193,7 +193,6 @@
 }
 
 .exp-select {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 0.9rem center;
   padding-right: 2.2rem;
@@ -202,7 +201,7 @@
 
 /* Option styling workaround */
 .exp-select option {
-  background: #1a1e28;
+  background: var(--surface-2);
   color: var(--text);
 }
 
@@ -432,7 +431,7 @@
 
 .exp-total-chip {
   /* font-family: 'DM Mono', monospace; */
-  font-size: 0.76rem;
+  /* font-size: 0.76rem; */
   padding: 0.35rem 0.85rem;
   border-radius: 100px;
   border: 1px solid rgba(251, 191, 36, 0.25);
@@ -628,7 +627,7 @@
 
 .exp-icon-warning {
   color: var(--warning);
-  font-size: 1rem;
+  font-size: 1.25rem;
 }
 
 /* ══════════════════════════════
@@ -687,7 +686,7 @@
 }
 
 .exp-float-select option {
-  background: #1a1e28;
+  background: var(--surface-2);
   color: var(--text);
 }
 

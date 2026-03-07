@@ -112,7 +112,7 @@ body {
   border: 1px solid var(--accent) !important;
   border-radius: 20px !important;
   color: #f0f2f7 !important;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6) !important;
+  box-shadow: 0 0 0 1px rgba(0, 229, 180, 0.15), 0 24px 64px rgba(0, 0, 0, 0.8), 0 0 40px rgba(0, 229, 180, 0.08) !important;
   border-color: var(--accent);
   overflow: hidden;
 }
@@ -310,4 +310,71 @@ body.light-mode .swal2-toast .swal2-title {
 
 body.light-mode .swal2-timer-progress-bar {
   background: #00b894 !important;
+}
+
+/* ── Light mode select/option fix ── */
+body.light-mode select,
+body.light-mode select option {
+  background: #ffffff !important;
+  color: #1a202c !important;
+}
+
+body.light-mode .prof-select option,
+body.light-mode .prof-input-group select option {
+  background: #ffffff !important;
+  color: #1a202c !important;
+}
+
+/* ── Light mode dropdown arrow (SVG fill ပြောင်းပါ) ── */
+body.light-mode .prof-select,
+body.light-mode .pnl-fl-select,
+body.light-mode .pnl-select,
+body.light-mode .ov-fl-select,
+body.light-mode .bgt-fl-select,
+body.light-mode .bgt-input.bgt-select-field,
+body.light-mode .exp-select,
+body.light-mode .exp-fl-select,
+body.light-mode .exp-float-select,
+body.light-mode select.prof-input {
+  background-image: url('/assets/icons/chevron-down-light.svg') !important;
+  background-repeat: no-repeat !important;
+  background-position: right 0.9rem center !important;
+  padding-right: 2.2rem;
+  cursor: pointer;
+}
+
+/* ── Light mode select/option background ── */
+body.light-mode select,
+body.light-mode select option {
+  background-color: #ffffff !important;
+  color: #1a202c !important;
+}
+
+/* ── Light mode calendar picker icon ── */
+body.light-mode input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0) !important;
+  opacity: 0.5;
+}
+
+/* ── Dark mode SweetAlert toast shadow ── */
+.swal2-toast {
+  box-shadow: 0 0 0 1px rgba(0, 229, 180, 0.12), 0 8px 24px rgba(0, 0, 0, 0.6) !important;
+}
+
+/* Dark mode (default) */
+.prof-select,
+.pnl-fl-select,
+.pnl-fl-select,
+.ov-fl-select,
+.exp-select,
+.bgt-fl-select,
+.bgt-input.bgt-select-field,
+.exp-fl-select,
+.exp-float-select,
+select.prof-input {
+  background-image: url('/assets/icons/chevron-down-dark.svg') !important;
+  background-repeat: no-repeat;
+  background-position: right 0.9rem center;
+  padding-right: 2.2rem;
+  cursor: pointer;
 }
