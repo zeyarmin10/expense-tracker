@@ -528,6 +528,7 @@
   "ADD_BUTTON": "ထည့်ပါ",
   "EXISTING_CATEGORIES": "ရှိပြီးသားအမျိုးအစားများ",
   "NO_CATEGORIES ": "အမျိုးအစားများမရှိပါ။",
-  "NAV_DARK_MODE": "",
-  "NAV_LIGHT_MODE": ""
+  "NAV_DARK_MODE": "အမှောင်",
+  "NAV_LIGHT_MODE": "အလင်း",
+  "MORE": "နောက်ထပ်"
 }

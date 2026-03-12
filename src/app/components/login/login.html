@@ -1,18 +1,20 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap"
-  rel="stylesheet">
+  rel="stylesheet" />
 
 <div class="lgn-root">
-
   <!-- Animated background grid -->
   <div class="lgn-bg-grid"></div>
   <div class="lgn-bg-glow"></div>
 
   <div class="lgn-top-controls">
     <!-- Theme toggle -->
-    <button class="lgn-lang-btn" type="button" (click)="toggleTheme()"
-      [title]="isDarkMode ? 'Light Mode' : 'Dark Mode'">
-      <fa-icon [icon]="isDarkMode ? faSun : faMoon" [ngClass]="isDarkMode ? 'text-white' : 'text-dark'"></fa-icon>
-      <span class="lgn-lang-label">{{ isDarkMode ? 'LIGHT' : 'DARK' }}</span>
+    <button class="lgn-lang-btn" type="button" (click)="toggleTheme()" [title]="isDarkMode ? 'Light Mode' : 'Dark Mode'">
+      <img *ngIf="isDarkMode" src="assets/icons/sun-light.svg" class="theme-icon-img" alt="Light mode" />
+    
+      <fa-icon *ngIf="!isDarkMode" [icon]="faMoon" class="theme-icon"></fa-icon>
+      <span [class]="isDarkMode ? 'light-text' : 'dark-text'">
+        {{ (isDarkMode ? 'LOGIN_LIGHT' : 'LOGIN_DARK') | translate }}
+      </span>
     </button>
 
     <!-- Language toggle -->
@@ -24,13 +26,14 @@
   </div>
 
   <div class="lgn-center">
-
     <!-- Logo / Brand -->
     <div class="lgn-brand">
       <div class="lgn-brand-icon">
-        <img src="assets/images/Expense-Tracker-Logo.png" alt="Logo" class="lgn-logo-img"
-          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
-        <div class="lgn-logo-fallback" style="display:none;">₭</div>
+        <img src="assets/images/Expense-Tracker-Logo.png" alt="Logo" class="lgn-logo-img" onerror="
+                                                                                                    this.style.display = 'none';
+                                                                                                    this.nextElementSibling.style.display = 'flex';
+                                                                                                  " />
+        <div class="lgn-logo-fallback" style="display: none">₭</div>
       </div>
       <div class="lgn-brand-text">
         <span class="lgn-brand-name">Expense</span>
@@ -40,7 +43,6 @@
 
     <!-- Card -->
     <div class="lgn-card">
-
       <!-- Tab switcher -->
       <div class="lgn-tabs">
         <button class="lgn-tab" [class.active]="isLoginMode" type="button" (click)="isLoginMode || toggleMode()">
@@ -54,7 +56,6 @@
 
       <!-- Form -->
       <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="lgn-form" autocomplete="off">
-
         <!-- Name (register only) -->
         <div class="lgn-field" *ngIf="!isLoginMode">
           <div class="lgn-float-wrap">
@@ -75,8 +76,7 @@
             <label class="lgn-label" for="lgn-email">{{ 'EMAIL_LABEL' | translate }}</label>
           </div>
           <div class="lgn-error" *ngIf="loginForm.controls['email'].invalid && loginForm.controls['email'].touched">
-            <span *ngIf="loginForm.controls['email'].errors?.['required']">{{ 'ERROR_EMAIL_REQUIRED' | translate
-              }}</span>
+            <span *ngIf="loginForm.controls['email'].errors?.['required']">{{ 'ERROR_EMAIL_REQUIRED' | translate }}</span>
             <span *ngIf="loginForm.controls['email'].errors?.['email']">{{ 'ERROR_EMAIL_INVALID' | translate }}</span>
           </div>
         </div>
@@ -92,18 +92,19 @@
               <fa-icon [icon]="showPassword ? faEyeSlash : faEye"></fa-icon>
             </button>
           </div>
-          <div class="lgn-error"
-            *ngIf="loginForm.controls['password'].invalid && loginForm.controls['password'].touched">
-            <span *ngIf="loginForm.controls['password'].errors?.['required']">{{ 'ERROR_PASSWORD_REQUIRED' | translate
-              }}</span>
-            <span *ngIf="loginForm.controls['password'].errors?.['minlength']">{{ 'ERROR_PASSWORD_MINLENGTH' | translate
-              }}</span>
+          <div class="lgn-error" *ngIf="loginForm.controls['password'].invalid && loginForm.controls['password'].touched">
+            <span *ngIf="loginForm.controls['password'].errors?.['required']">{{ 'ERROR_PASSWORD_REQUIRED' | translate }}</span>
+            <span *ngIf="loginForm.controls['password'].errors?.['minlength']">{{ 'ERROR_PASSWORD_MINLENGTH' | translate }}</span>
           </div>
         </div>
 
         <!-- Error / Success alerts -->
-        <div class="lgn-alert lgn-alert-err" *ngIf="errorMessage" role="alert">{{ errorMessage }}</div>
-        <div class="lgn-alert lgn-alert-ok" *ngIf="successMessage" role="alert">{{ successMessage }}</div>
+        <div class="lgn-alert lgn-alert-err" *ngIf="errorMessage" role="alert">
+          {{ errorMessage }}
+        </div>
+        <div class="lgn-alert lgn-alert-ok" *ngIf="successMessage" role="alert">
+          {{ successMessage }}
+        </div>
 
         <!-- Submit -->
         <button type="submit" class="lgn-submit-btn" [disabled]="loginForm.invalid">
@@ -112,7 +113,6 @@
           </span>
           <span class="lgn-btn-arrow">→</span>
         </button>
-
       </form>
 
       <!-- Divider + Google (login only) -->
@@ -121,23 +121,22 @@
           <span>{{ 'OR_TEXT' | translate }}</span>
         </div>
         <button type="button" class="lgn-google-btn" (click)="signInWithGoogle()">
-          <img src="assets/icons/google-g.svg" class="lgn-google-icon" alt="Google">
+          <img src="assets/icons/google-g.svg" class="lgn-google-icon" alt="Google" />
           {{ 'SIGN_IN_GOOGLE' | translate }}
         </button>
       </ng-container>
-
     </div>
     <!-- END card -->
 
     <!-- Footer link -->
     <p class="lgn-footer-link mt-4">
-      {{ (isLoginMode ? 'NO_ACCOUNT_QUESTION' : 'HAVE_ACCOUNT_QUESTION') | translate }}
+      {{ (isLoginMode ? 'NO_ACCOUNT_QUESTION' : 'HAVE_ACCOUNT_QUESTION') |
+      translate }}
       <a class="lgn-toggle-link" (click)="toggleMode()">
-        {{ (isLoginMode ? 'REGISTER_HERE_LINK' : 'LOGIN_HERE_LINK') | translate }}
+        {{ (isLoginMode ? 'REGISTER_HERE_LINK' : 'LOGIN_HERE_LINK') | translate
+        }}
       </a>
     </p>
-
   </div>
   <!-- END center -->
-
 </div>

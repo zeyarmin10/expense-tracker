@@ -366,7 +366,508 @@ body.light-mode {
 }
 
 .theme-icon {
-  font-size: 0.9rem;
+  font-size: 1rem;
   transition: transform 0.3s ease, opacity 0.2s ease;
   line-height: 1;
+}
+
+.theme-icon-img {
+  width: 1rem;
+  height: 1rem;
+  filter: invert(1);
+}
+/* ═══════════════════════════════════════════════════
+   MOBILE BOTTOM NAVIGATION BAR
+   ═══════════════════════════════════════════════════ */
+
+/* Hide top navbar hamburger on mobile (no longer needed) */
+.app-navbar .nav-toggler {
+  display: none !important;
+}
+
+/* Hide top navbar entirely on mobile - replaced by bottom nav */
+@media (max-width: 991px) {
+  .app-navbar {
+    display: none;
+  }
+}
+
+/* Bottom Nav Container */
+.mob-bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 70px;
+  background: var(--nav-bg, #12151c);
+  border-top: 1px solid var(--nav-border, rgba(255,255,255,0.07));
+  z-index: 1000;
+  padding: 0 0.5rem;
+  padding-bottom: env(safe-area-inset-bottom);
+  align-items: center;
+  justify-content: space-around;
+}
+
+@media (max-width: 991px) {
+  .mob-bottom-nav {
+    display: flex;
+  }
+
+  /* Push page content above bottom nav */
+  router-outlet + * {
+    padding-bottom: calc(68px + env(safe-area-inset-bottom)) !important;
+  }
+}
+
+/* Nav Item base */
+.mob-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  flex: 1;
+  text-decoration: none;
+  color: var(--nav-text, #9ca3af);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.35rem 0;
+  border-radius: 12px;
+  transition: color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  min-width: 0;
+}
+
+.mob-nav-item:active {
+  transform: scale(0.92);
+  transition: transform 0.08s;
+}
+
+.mob-nav-icon {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mob-nav-icon svg {
+  width: 22px;
+  height: 22px;
+  transition: stroke 0.15s;
+}
+
+.mob-nav-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 64px;
+}
+
+/* Active state */
+.mob-nav-active,
+.mob-nav-item.mob-nav-active {
+  color: var(--nav-active, #00e5b4) !important;
+}
+
+.mob-nav-active .mob-nav-icon svg,
+.mob-nav-item.mob-nav-active .mob-nav-icon svg {
+  stroke: var(--nav-active, #00e5b4);
+}
+
+/* More button active */
+.mob-nav-more-btn.mob-nav-active {
+  color: var(--nav-active, #00e5b4);
+}
+
+/* ── FAB (Floating Action Button) Center Item ── */
+.mob-nav-fab {
+  flex: 1.2;
+  position: relative;
+  justify-content: center;
+  padding-bottom: 4px;
+}
+
+.mob-fab-circle {
+  width: 45px;
+  height: 45px;
+  min-width: 45px;
+  min-height: 45px;
+  border-radius: 50%;
+  background: var(--nav-active, #00e5b4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(0, 229, 180, 0.35);
+  /* margin-bottom: 2px; */
+  flex-shrink: 0;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.mob-fab-circle svg {
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  min-height: 22px;
+  stroke: #0a0c10;
+}
+
+.mob-nav-fab:active .mob-fab-circle {
+  transform: scale(0.9);
+  box-shadow: 0 2px 8px rgba(0, 229, 180, 0.2);
+}
+
+.mob-nav-fab-active .mob-fab-circle {
+  background: #00c49e;
+  box-shadow: 0 4px 20px rgba(0, 229, 180, 0.5);
+}
+
+.mob-nav-fab .mob-nav-label {
+  color: var(--nav-text, #9ca3af);
+}
+
+/* ═══════════════════════════════════════════════════
+   MOBILE SLIDE-UP DRAWER
+   ═══════════════════════════════════════════════════ */
+
+/* Backdrop */
+.mob-drawer-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 1010;
+  opacity: 0;
+  transition: opacity 0.25s;
+  backdrop-filter: blur(2px);
+}
+
+@media (max-width: 991px) {
+  .mob-drawer-backdrop {
+    display: block;
+    pointer-events: none;
+  }
+
+  .mob-drawer-backdrop.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+}
+
+/* Drawer panel */
+.mob-drawer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--nav-bg, #12151c);
+  border-radius: 20px 20px 0 0;
+  border-top: 1px solid var(--nav-border, rgba(255,255,255,0.08));
+  z-index: 1020;
+  padding: 0 1rem calc(76px + env(safe-area-inset-bottom));
+  transform: translateY(110%);
+  transition: transform 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+@media (min-width: 992px) {
+  .mob-drawer {
+    display: none !important;
+  }
+}
+
+.mob-drawer.open {
+  transform: translateY(0);
+}
+
+/* Drag handle */
+.mob-drawer-handle {
+  width: 36px;
+  height: 4px;
+  background: var(--nav-border, rgba(255,255,255,0.15));
+  border-radius: 2px;
+  margin: 0.75rem auto 1rem;
+  cursor: grab;
+  touch-action: none;
+}
+
+.mob-drawer-handle:active {
+  cursor: grabbing;
+  background: var(--accent, #00e5b4);
+  opacity: 0.7;
+}
+
+/* User header */
+.mob-drawer-user {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.25rem 0 0.75rem;
+}
+
+.mob-drawer-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: rgba(0, 229, 180, 0.12);
+  border: 1px solid rgba(0, 229, 180, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #00e5b4;
+  flex-shrink: 0;
+}
+
+.mob-drawer-user-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.mob-drawer-username {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--nav-text-hover, #f0f2f7);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mob-drawer-usersub {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--text-muted, #6b7280);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mob-drawer-theme-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  border: 1px solid var(--nav-border);
+  background: var(--nav-surface);
+  color: var(--nav-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* Divider */
+.mob-drawer-divider {
+  height: 1px;
+  background: var(--nav-border, rgba(255,255,255,0.07));
+  margin: 0.5rem 0;
+}
+
+/* Section label */
+.mob-drawer-section-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted, #6b7280);
+  padding: 0.5rem 0 0.25rem 0.5rem;
+}
+
+/* Drawer links */
+.mob-drawer-links,
+.mob-drawer-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.25rem 0;
+}
+
+.mob-drawer-link {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.7rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--nav-text, #9ca3af);
+  text-decoration: none;
+  background: none;
+  border: none;
+  width: 100%;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s, color 0.12s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mob-drawer-link:active {
+  background: var(--nav-surface-2, rgba(255,255,255,0.05));
+}
+
+.mob-drawer-link-icon {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--text-muted, #6b7280);
+}
+
+.mob-drawer-link-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.mob-drawer-active {
+  color: var(--nav-active, #00e5b4) !important;
+  background: var(--nav-accent-dim, rgba(0,229,180,0.08)) !important;
+}
+
+.mob-drawer-active .mob-drawer-link-icon {
+  color: var(--nav-active, #00e5b4);
+}
+
+/* Group members */
+.mob-drawer-members {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.25rem 0.5rem 0.5rem;
+}
+
+.mob-drawer-member {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--nav-text, #9ca3af);
+}
+
+.mob-drawer-member-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-muted, #6b7280);
+  flex-shrink: 0;
+}
+
+.mob-drawer-member-me .mob-drawer-member-dot {
+  background: #00e5b4;
+}
+
+.mob-drawer-member-role {
+  font-size: 0.68rem;
+  color: var(--text-muted, #6b7280);
+  background: var(--nav-surface, rgba(255,255,255,0.04));
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+}
+
+.mob-drawer-member-you {
+  font-size: 0.7rem;
+  color: #00e5b4;
+}
+
+/* Logout */
+.mob-drawer-logout {
+  color: #f87171 !important;
+}
+
+.mob-drawer-logout:active {
+  background: rgba(248, 113, 113, 0.08) !important;
+}
+
+.mob-drawer-logout .mob-drawer-link-icon {
+  color: #f87171 !important;
+}
+
+/* Light mode overrides */
+body.light-mode .mob-bottom-nav {
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+}
+
+body.light-mode .mob-drawer {
+  box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.12);
+}
+
+body.light-mode .mob-drawer-backdrop {
+  background: rgba(0, 0, 0, 0.35);
+}
+
+/* ═══════════════════════════════════════════════════
+   BUG FIXES & IMPROVEMENTS
+   ═══════════════════════════════════════════════════ */
+
+/* ✅ Fix 1: Bottom nav active - color highlight (no dot) */
+.mob-nav-item.mob-nav-active {
+  color: var(--nav-active, #00e5b4) !important;
+}
+
+.mob-nav-item.mob-nav-active .mob-nav-icon svg {
+  stroke: var(--nav-active, #00e5b4) !important;
+}
+
+.mob-nav-item.mob-nav-active .mob-nav-label {
+  color: var(--nav-active, #00e5b4) !important;
+}
+
+/* FAB circle defined above */
+
+/* ✅ Fix 3: FAB active state */
+.mob-nav-fab.mob-nav-fab-active .mob-nav-icon svg {
+  stroke: var(--nav-active, #00e5b4) !important;
+}
+
+.mob-nav-fab.mob-nav-fab-active .mob-nav-icon .ng-fa-icon {
+  stroke: var(--nav-active, #00e5b4) !important;
+  color: var(--nav-active, #00e5b4) !important;
+}
+
+.mob-nav-fab.mob-nav-fab-active .mob-nav-label {
+  color: var(--nav-active, #00e5b4) !important;
+}
+
+/* ✅ Fix 4: FAB label - same size as other nav labels */
+.mob-nav-fab .mob-nav-label {
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  margin-top: 1px;
+  color: var(--nav-text, #9ca3af);
+  max-width: 64px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+
+/* ✅ Fix 5: More button active */
+.mob-nav-more-btn.mob-nav-active {
+  color: var(--nav-active, #00e5b4) !important;
+}
+
+.mob-nav-more-btn.mob-nav-active .mob-nav-icon svg {
+  stroke: var(--nav-active, #00e5b4) !important;
+}
+
+.mob-nav-more-btn.mob-nav-active .mob-nav-label {
+  color: var(--nav-active, #00e5b4) !important;
+}
+
+/* ✅ Fix 6: Drawer active link icon color */
+.mob-drawer-link.mob-drawer-active .mob-drawer-link-icon svg {
+  stroke: var(--nav-active, #00e5b4) !important;
+}
+
+.mob-drawer-link.mob-drawer-active .mob-drawer-link-icon {
+  color: var(--nav-active, #00e5b4) !important;
 }

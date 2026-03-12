@@ -2,7 +2,7 @@
   rel="stylesheet">
 
 <div class="dash-wrapper">
-  <div class="dash-container">
+  <div class="dash-container mb-5">
 
     <!-- ── Header ── -->
     <div class="dash-header">
@@ -17,70 +17,76 @@
 
       <!-- Income -->
       <div class="dash-card dash-card-income dash-card-link" routerLink="/profit">
-        <div class="dash-card-top">
+        <div class="dash-card-left">
           <span class="dash-card-label">{{ 'TOTAL_INCOMES' | translate }}</span>
+          <ng-container *ngIf="totalIncomesByCurrency$ | async as totals; else cardLoading">
+            <ng-container *ngIf="totals && (totals | keyvalue).length > 0; else cardNoData">
+              <span *ngFor="let total of totals | keyvalue" class="dash-card-amount dash-amount-income">
+                {{ formatService.formatAmountShort(total.value, total.key) }}
+              </span>
+            </ng-container>
+          </ng-container>
+          </div>
+        <div class="dash-card-right">
           <span class="dash-card-icon dash-icon-income">
             <fa-icon [icon]="faMoneyBillWave"></fa-icon>
           </span>
         </div>
-        <ng-container *ngIf="totalIncomesByCurrency$ | async as totals; else cardLoading">
-          <ng-container *ngIf="totals && (totals | keyvalue).length > 0; else cardNoData">
-            <span *ngFor="let total of totals | keyvalue" class="dash-card-amount dash-amount-income">
-              {{ formatService.formatAmountShort(total.value, total.key) }}
-            </span>
-          </ng-container>
-        </ng-container>
-      </div>
+        </div>
 
       <!-- Budget -->
       <div class="dash-card dash-card-budget dash-card-link" routerLink="/budget">
-        <div class="dash-card-top">
+        <div class="dash-card-left">
           <span class="dash-card-label">{{ 'TOTAL_BUDGET' | translate }}</span>
+          <ng-container *ngIf="totalBudgetsByCurrency$ | async as totals; else cardLoading">
+            <ng-container *ngIf="totals && (totals | keyvalue).length > 0; else cardNoData">
+              <span *ngFor="let total of totals | keyvalue" class="dash-card-amount dash-amount-budget">
+                {{ formatService.formatAmountShort(total.value, total.key) }}
+              </span>
+            </ng-container>
+          </ng-container>
+          </div>
+        <div class="dash-card-right">
           <span class="dash-card-icon dash-icon-budget">
             <fa-icon [icon]="faPiggyBank"></fa-icon>
           </span>
         </div>
-        <ng-container *ngIf="totalBudgetsByCurrency$ | async as totals; else cardLoading">
-          <ng-container *ngIf="totals && (totals | keyvalue).length > 0; else cardNoData">
-            <span *ngFor="let total of totals | keyvalue" class="dash-card-amount dash-amount-budget">
-              {{ formatService.formatAmountShort(total.value, total.key) }}
-            </span>
-          </ng-container>
-        </ng-container>
-      </div>
+        </div>
 
       <!-- Expenses -->
       <div class="dash-card dash-card-expense dash-card-link" routerLink="/expense-overview">
-        <div class="dash-card-top">
+        <div class="dash-card-left">
           <span class="dash-card-label">{{ 'TOTAL_EXPENSES' | translate }}</span>
+          <ng-container *ngIf="totalExpensesByCurrency$ | async as totals; else cardLoading">
+            <ng-container *ngIf="totals && (totals | keyvalue).length > 0; else cardNoData">
+              <span *ngFor="let total of totals | keyvalue" class="dash-card-amount dash-amount-expense">
+                {{ formatService.formatAmountShort(total.value, total.key) }}
+              </span>
+            </ng-container>
+          </ng-container>
+          </div>
+        <div class="dash-card-right">
           <span class="dash-card-icon dash-icon-expense">
             <fa-icon [icon]="faShoppingCart"></fa-icon>
           </span>
         </div>
-        <ng-container *ngIf="totalExpensesByCurrency$ | async as totals; else cardLoading">
-          <ng-container *ngIf="totals && (totals | keyvalue).length > 0; else cardNoData">
-            <span *ngFor="let total of totals | keyvalue" class="dash-card-amount dash-amount-expense">
-              {{ formatService.formatAmountShort(total.value, total.key) }}
-            </span>
-          </ng-container>
-        </ng-container>
-      </div>
+        </div>
 
       <!-- Profit / Loss -->
       <div class="dash-card dash-card-link" [ngClass]="getProfitLossCardClass(totalProfitLossByCurrency$ | async)" routerLink="/profit">
         <ng-container *ngIf="totalProfitLossByCurrency$ | async as profitLosses; else cardLoading">
           <ng-container *ngIf="(profitLosses | keyvalue).length > 0; else cardNoData">
-            <div *ngFor="let profit of profitLosses | keyvalue">
-              <div class="dash-card-top">
-                <span class="dash-card-label">
-                  {{ ($any(profit).value >= 0 ? 'NET_PROFIT' : 'NET_LOSS') | translate }}
-                </span>
-                <span class="dash-card-icon" [ngClass]="getProfitLossIconClass(totalProfitLossByCurrency$ | async)">
-                  <fa-icon [icon]="getProfitLossIcon(totalProfitLossByCurrency$ | async)"></fa-icon>
-                </span>
-              </div>
+            <div class="dash-card-left" *ngFor="let profit of profitLosses | keyvalue">
+              <span class="dash-card-label">
+                {{ ($any(profit).value >= 0 ? 'NET_PROFIT' : 'NET_LOSS') | translate }}
+              </span>
               <span class="dash-card-amount" [ngClass]="getProfitLossAmountClass($any(profit).value)">
                 {{ formatService.formatAmountShort($any(profit).value, $any(profit).key) }}
+              </span>
+              </div>
+              <div class="dash-card-right">
+              <span class="dash-card-icon" [ngClass]="getProfitLossIconClass(totalProfitLossByCurrency$ | async)">
+                <fa-icon [icon]="getProfitLossIcon(totalProfitLossByCurrency$ | async)"></fa-icon>
               </span>
             </div>
           </ng-container>

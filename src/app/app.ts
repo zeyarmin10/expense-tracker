@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, NavigationEnd, RouterOutlet, RouterModule, ActivatedRoute } from '@angular/router';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
@@ -12,7 +12,10 @@ import { InvitationService } from './services/invitation.service';
 import { DataManagerService } from './services/data-manager';
 import { ToastService } from './services/toast';
 import { GroupService } from './services/group.service';
-import { faRightFromBracket, faUsers, faChevronDown, faSun, faMoon } from '@fortawesome/free-solid-svg-icons';
+import { faRightFromBracket, faUsers, faChevronDown, faSun, faMoon, faPiggyBank, faShoppingCart, faTags } from '@fortawesome/free-solid-svg-icons';
+import { StatusBar, Style } from '@capacitor/status-bar';
+import { SplashScreen } from '@capacitor/splash-screen';
+import { Capacitor } from '@capacitor/core';
 
 @Component({
   selector: 'app-root',
@@ -36,14 +39,21 @@ export class App implements OnInit {
   isGroupAdmin$: Observable<boolean>;
   isGroupAccount$: Observable<boolean>;
   groupMembers$: Observable<any[]>;
+  showFab$: Observable<boolean>;
   faRightFromBracket = faRightFromBracket;
   faUsers = faUsers;
   faChevronDown = faChevronDown;
   currentLang: string;
   mobileMenuOpen = false;
   isDarkMode = true;
+  drawerSwipeStartY = 0;
+  drawerSwipeDelta = 0;
+  drawerSwiping = false;
   faSun = faSun;
   faMoon = faMoon;
+  faPiggyBank = faPiggyBank;
+  faShoppingCart = faShoppingCart;
+  faTags = faTags;
 
   private authService = inject(AuthService);
   private router = inject(Router);
@@ -106,12 +116,46 @@ export class App implements OnInit {
       this.mobileMenuOpen = false;
     });
 
+    // ✅ BUG FIX: /expense-overview ပါ exclude လုပ်ထည့်ပါ
+    const isExpenseRoute$ = this.router.events.pipe(
+      filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+      map((event: NavigationEnd) => event.urlAfterRedirects),
+      startWith(this.router.url)
+    ).pipe(
+      map(url => {
+        // /expense နဲ့ /expense-overview နှစ်ခုလုံး check လုပ်ပါ
+        // /expense ကိုသာ hide လုပ်ပြီး /expense-overview မှာ FAB ပြရမယ်
+        const isExactExpense = url === '/expense' ||
+                               url.startsWith('/expense/') ||
+                               (url.includes('/expense') && !url.includes('/expense-overview'));
+        return isExactExpense;
+      })
+    );
+
+    this.showFab$ = combineLatest([isLoggedIn$, isSpecialRoute$, isExpenseRoute$]).pipe(
+      map(([isLoggedIn, isSpecialRoute, isExpense]) =>
+        isLoggedIn && !isSpecialRoute && !isExpense
+      )
+    );
+
     this.translate.onLangChange.subscribe(event => {
       this.currentLang = event.lang;
     });
   }
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        await StatusBar.setOverlaysWebView({ overlay: false });
+        await StatusBar.setStyle({ style: Style.Dark });
+        await StatusBar.setBackgroundColor({ color: '#0F2340' });
+        await StatusBar.show();
+      } catch (e) {
+        console.warn('StatusBar error:', e);
+      } finally {
+        await SplashScreen.hide();
+      }
+    }
     this.initTheme();
     this.route.queryParamMap.pipe(
       switchMap(params => {
@@ -145,6 +189,40 @@ export class App implements OnInit {
     }
   }
 
+  onDrawerTouchStart(event: TouchEvent): void {
+    this.drawerSwipeStartY = event.touches[0].clientY;
+    this.drawerSwipeDelta = 0;
+    this.drawerSwiping = true;
+  }
+
+  onDrawerTouchMove(event: TouchEvent): void {
+    if (!this.drawerSwiping) return;
+    const deltaY = event.touches[0].clientY - this.drawerSwipeStartY;
+    if (deltaY > 0) {
+      this.drawerSwipeDelta = deltaY;
+      const drawer = document.querySelector('.mob-drawer') as HTMLElement;
+      if (drawer) {
+        drawer.style.transform = `translateY(${deltaY}px)`;
+        drawer.style.transition = 'none';
+      }
+    }
+  }
+
+  onDrawerTouchEnd(): void {
+    this.drawerSwiping = false;
+    const drawer = document.querySelector('.mob-drawer') as HTMLElement;
+    if (drawer) {
+      drawer.style.transition = '';
+      if (this.drawerSwipeDelta > 120) {
+        drawer.style.transform = '';
+        this.mobileMenuOpen = false;
+      } else {
+        drawer.style.transform = 'translateY(0)';
+      }
+    }
+    this.drawerSwipeDelta = 0;
+  }
+
   toggleMobileMenu(): void {
     this.mobileMenuOpen = !this.mobileMenuOpen;
   }
@@ -166,6 +244,11 @@ export class App implements OnInit {
 
   closeNavbarMenu(): void {
     this.mobileMenuOpen = false;
+    const drawer = document.querySelector('.mob-drawer') as HTMLElement;
+    if (drawer) {
+      drawer.style.transform = '';
+      drawer.style.transition = '';
+    }
   }
 
   toggleTheme(): void {

@@ -1,4 +1,5 @@
 import { Injectable, inject, Injector } from '@angular/core';
+import { Capacitor } from '@capacitor/core';
 import {
   Auth,
   createUserWithEmailAndPassword,
@@ -8,8 +9,10 @@ import {
   onAuthStateChanged,
   GoogleAuthProvider,
   signInWithPopup,
+  signInWithCredential,
   AuthErrorCodes,
-  getAdditionalUserInfo
+  getAdditionalUserInfo,
+  getRedirectResult
 } from '@angular/fire/auth';
 import { AngularFireDatabase } from '@angular/fire/compat/database';
 import { TranslateService } from '@ngx-translate/core';
@@ -19,6 +22,7 @@ import { UserDataService, UserProfile } from './user-data';
 import { GroupService } from './group.service';
 import { SessionManagementService } from './session-management';
 import Swal from 'sweetalert2';
+import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 
 @Injectable({
   providedIn: 'root'
@@ -119,16 +123,49 @@ export class AuthService {
 
   async signInWithGoogle(): Promise<User> {
     try {
-      const provider = new GoogleAuthProvider();
-      const userCredential = await signInWithPopup(this.auth, provider);
-      const additionalUserInfo = getAdditionalUserInfo(userCredential);
 
-      if (additionalUserInfo?.isNewUser) {
-        this.newUserRegisteredSource.next(userCredential.user.uid);
+      if (Capacitor.isNativePlatform()) {
+        // ── Android Native Google Sign-In ──
+        await GoogleAuth.initialize({
+          clientId: '114245767214-70122qvh2g7qor3cc4udhghkk4h2s179.apps.googleusercontent.com',
+          scopes: ['profile', 'email'],
+          grantOfflineAccess: true
+        });
+
+        const googleUser = await GoogleAuth.signIn();
+        const idToken = googleUser.authentication.idToken;
+
+        if (!idToken) {
+          throw new Error('Google Sign-In failed: No ID token');
+        }
+
+        const credential = GoogleAuthProvider.credential(idToken);
+        const userCredential = await signInWithCredential(this.auth, credential);
+
+        const additionalUserInfo = getAdditionalUserInfo(userCredential);
+        if (additionalUserInfo?.isNewUser) {
+          this.newUserRegisteredSource.next(userCredential.user.uid);
+        }
+
+        this.setLoginTime();
+        await this.handleInvite(userCredential.user);
+        return userCredential.user;
+
+      } else {
+        // ── Web Popup (အရင်အတိုင်း) ──
+        const provider = new GoogleAuthProvider();
+        const userCredential = await signInWithPopup(this.auth, provider);
+
+        const additionalUserInfo = getAdditionalUserInfo(userCredential);
+        if (additionalUserInfo?.isNewUser) {
+          this.newUserRegisteredSource.next(userCredential.user.uid);
+        }
+
+        this.setLoginTime();
+        await this.handleInvite(userCredential.user);
+        return userCredential.user;
       }
-      this.setLoginTime();
-      await this.handleInvite(userCredential.user);
-      return userCredential.user;
+
     } catch (error: any) {
       console.error('Google sign-in error:', error);
       throw new Error(this.getFirebaseErrorMessage(error));

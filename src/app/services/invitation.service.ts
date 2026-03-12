@@ -1,8 +1,9 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, inject } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { AngularFireDatabase } from '@angular/fire/compat/database';
 import { Observable, from } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
+import { Capacitor } from '@capacitor/core';
 
 export interface Invitation {
   email: string;
@@ -13,28 +14,48 @@ export interface Invitation {
   acceptedAt?: string;
 }
 
+const VERCEL_URL = 'https://expense-tracker-mocha-omega.vercel.app/';
+
 @Injectable({
   providedIn: 'root'
 })
 export class InvitationService {
 
-  private backendUrl = '/api'; 
-
   constructor(private http: HttpClient, private db: AngularFireDatabase) { }
+
+  private get apiUrl(): string {
+    if (Capacitor.isNativePlatform()) {
+      return `${VERCEL_URL}/api`;  // Android/iOS → full URL
+    }
+    return '/api';                  // Web browser → relative URL
+  }
+
+  private get appUrl(): string {
+    if (Capacitor.isNativePlatform()) {
+      return VERCEL_URL;            // Android/iOS → email link က web URL ဖြစ်မယ်
+    }
+    return window.location.origin;  // Web → current domain
+  }
 
   getInvitation(code: string): Observable<Invitation | null> {
     return this.db.object<Invitation>(`invitations/${code}`).valueChanges();
   }
 
-  sendInvitationEmail(recipientEmail: string, inviterName: string, groupName: string, language: string, groupId: string): Observable<any> {
-    
+  sendInvitationEmail(
+    recipientEmail: string,
+    inviterName: string,
+    groupName: string,
+    language: string,
+    groupId: string
+  ): Observable<any> {
+
     const inviteCode = this.generateRandomCode();
-    const loginLink = `${window.location.origin}/login?invite_code=${inviteCode}`;
+    const loginLink = `${this.appUrl}/login?invite_code=${inviteCode}`;
+
     const PrimaryBgColor = '#70BDEF';
     const PrimaryTxtColor = '#1172BD';
     const PrimaryBtnBgColor = '#70BDF0';
     const inviteCodeBgColor = '#e0e0e0';
-
     const isMyanmar = language === 'my';
 
     const subject = isMyanmar
@@ -42,7 +63,7 @@ export class InvitationService {
       : `You're invited to join ${groupName} on Expense Tracker`;
 
     const texts = {
-      title: isMyanmar ? 'သင့်ကို ဖိတ်ခေါ်ထားပါတယ်' : 'You\'re Invited!',
+      title:    isMyanmar ? 'သင့်ကို ဖိတ်ခေါ်ထားပါတယ်' : "You're Invited!",
       greeting: isMyanmar ? 'မင်္ဂလာပါ,' : 'Hi,',
       body1: isMyanmar
         ? `${inviterName} မှ သင့်အား Expense Tracker ရှိ သူတို့၏အဖွဲ့ <strong>"${groupName}"</strong> သို့ ဖိတ်ခေါ်ထားပါသည်။`
@@ -53,7 +74,7 @@ export class InvitationService {
       button: isMyanmar ? 'အဖွဲ့သို့ဝင်ရောက်ပါ' : 'Join the Group',
       body3: isMyanmar
         ? 'သို့မဟုတ်၊ သင်၏ browser တွင် ဤလင့်ခ်ကို ကူးထည့်နိုင်သည်:'
-        : 'If the button doesn\'t work, you can also copy and paste this link into your browser:',
+        : "If the button doesn't work, you can also copy and paste this link into your browser:",
       body4: isMyanmar
         ? 'ဖိတ်ခေါ်ကုဒ်ကို အသုံးပြု၍လည်း ဝင်ရောက်နိုင်ပါသည်:'
         : 'Or, you can use the invitation code:',
@@ -92,17 +113,13 @@ export class InvitationService {
     </div>
     `;
 
-    const emailPayload = {
-      to: recipientEmail,
-      subject: subject,
-      html: htmlBody
-    };
+    const emailPayload = { to: recipientEmail, subject, html: htmlBody };
 
-    return this.http.post(this.backendUrl, emailPayload).pipe(
-      switchMap(response => {
+    return this.http.post(this.apiUrl, emailPayload).pipe(
+      switchMap(() => {
         const invitation: Omit<Invitation, 'acceptedBy' | 'acceptedAt'> = {
           email: recipientEmail,
-          groupId: groupId,
+          groupId,
           status: 'pending',
           createdAt: new Date().toISOString()
         };
@@ -112,12 +129,9 @@ export class InvitationService {
   }
 
   private generateRandomCode(): string {
-    const length = 8;
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let result = '';
-    for (let i = 0; i < length; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
+    return Array.from({ length: 8 }, () =>
+      chars.charAt(Math.floor(Math.random() * chars.length))
+    ).join('');
   }
 }

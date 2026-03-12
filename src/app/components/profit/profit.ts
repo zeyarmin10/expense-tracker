@@ -134,6 +134,7 @@ export class Profit implements OnInit, OnDestroy {
   profitChartData$!: Observable<any>;
   hasChartData$!: Observable<boolean>;
   private profitChartInstance: Chart | undefined;
+  private themeObserver: MutationObserver | undefined;
 
   // --- Date Filtering State ---
   private _selectedDateRange$ = new BehaviorSubject<string>('currentMonth');
@@ -323,6 +324,7 @@ export class Profit implements OnInit, OnDestroy {
     if (this.profitChartInstance) {
       this.profitChartInstance.destroy();
     }
+    this.themeObserver?.disconnect();
   }
 
   // --- Initialization Methods ---
@@ -424,10 +426,21 @@ export class Profit implements OnInit, OnDestroy {
   private initChartSubscription(): void {
     this.subscriptions.add(
       this.profitChartData$.subscribe((data) => {
-        this.cdr.detectChanges(); // Ensure canvas is ready
+        this.cdr.detectChanges();
         this.renderProfitChart(data);
       })
     );
+
+    // Re-render chart when theme changes
+    this.themeObserver = new MutationObserver(() => {
+      this.profitChartData$.subscribe((data) => {
+        if (data) this.renderProfitChart(data);
+      });
+    });
+    this.themeObserver.observe(document.body, {
+      attributes: true,
+      attributeFilter: ['class'],
+    });
   }
 
   // --- Income Management ---
@@ -585,14 +598,15 @@ export class Profit implements OnInit, OnDestroy {
 
   private renderProfitChart(data: any): void {
     const canvas = this.profitChartCanvas?.nativeElement;
-    if (!canvas) {
-      return;
-    }
+    if (!canvas) return;
 
     if (this.profitChartInstance) {
       this.profitChartInstance.destroy();
     }
 
+    const isLight = document.body.classList.contains('light-mode');
+    const gridColor = isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.05)';
+    const tickColor = isLight ? '#4a5568' : '#6b7280';
     const component = this;
 
     this.profitChartInstance = new Chart(canvas, {
@@ -604,19 +618,17 @@ export class Profit implements OnInit, OnDestroy {
         scales: {
           y: {
             beginAtZero: true,
-            grid: { color: 'rgba(255,255,255,0.05)' },
+            grid: { color: gridColor },
             ticks: {
-              color: '#6b7280',
+              color: tickColor,
               font: { family: 'DM Mono, monospace', size: 11 },
               callback: function (value: any) {
                 const currentLang = component.translate?.currentLang;
                 if (currentLang === 'my') {
-                  // Localize numbers to Burmese using Intl.NumberFormat
                   return new Intl.NumberFormat('my-MM', {
                     numberingSystem: 'mymr',
                   }).format(value);
                 }
-                // Default to English locale
                 return new Intl.NumberFormat().format(value);
               },
             },

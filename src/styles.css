@@ -378,3 +378,7 @@ select.prof-input {
   padding-right: 2.2rem;
   cursor: pointer;
 }
+
+.mob-nav-icon .ng-fa-icon .svg-inline--fa {
+  height: 1.25em !important;
+}

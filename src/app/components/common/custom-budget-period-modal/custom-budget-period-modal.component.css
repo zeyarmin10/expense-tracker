@@ -90,6 +90,8 @@
 
 .cbp-fl-input {
   width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   height: 54px;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -147,6 +149,13 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.5rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.cbp-date-row .cbp-fl-wrap {
+  min-width: 0;
+  overflow: hidden;
 }
 
 /* ── Footer ── */
