@@ -56,7 +56,7 @@
           <div class="exp-form-row exp-form-row-3">
             <!-- Quantity -->
             <div class="exp-float-field">
-              <input type="number" class="exp-float-input" id="quantity" formControlName="quantity" min="1"
+              <input type="number" class="exp-float-input" id="quantity" formControlName="quantity" min="0.01" step="0.01"
                 placeholder=" "
                 [class.is-invalid]="newExpenseForm.controls['quantity'].invalid && newExpenseForm.controls['quantity'].touched">
               <label class="exp-float-label" for="quantity">{{ "QUANTITY_LABEL" | translate }}</label>

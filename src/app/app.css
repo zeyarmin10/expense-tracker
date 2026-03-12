@@ -372,8 +372,8 @@ body.light-mode {
 }
 
 .theme-icon-img {
-  width: 1rem;
-  height: 1rem;
+  width: 1.5rem;
+  height: 1.5rem;
   filter: invert(1);
 }
 /* ═══════════════════════════════════════════════════
@@ -651,8 +651,8 @@ body.light-mode {
 }
 
 .mob-drawer-theme-btn {
-  width: 36px;
-  height: 36px;
+  width: 45px;
+  height: 45px;
   border-radius: 9px;
   border: 1px solid var(--nav-border);
   background: var(--nav-surface);

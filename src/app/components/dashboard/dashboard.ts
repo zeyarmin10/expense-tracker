@@ -171,7 +171,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     const browserLang = this.translate.getBrowserLang();
     const defaultLang = browserLang?.match(/my|en/) ? browserLang : 'my';
     this.translate.use(storedLang || defaultLang);
-    Chart.defaults.font.family = 'Syne, MyanmarUIFont, sans-serif';
+    Chart.defaults.font.family = 'MyanmarUIFont, Arial, sans-serif';
     Chart.defaults.color = '#6b7280';
   }
 
@@ -525,7 +525,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
             labels: {
               boxWidth: 20,
               color: legendColor,
-              font: { family: 'Syne, sans-serif', size: 11 }
+              font: { family: 'MyanmarUIFont, Arial, sans-serif', size: 11 }
             }
           },
         },
@@ -564,14 +564,14 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
           x: {
             beginAtZero: true,
             grid: { color: gridColor },
-            ticks: { color: tickColor, font: { family: 'DM Mono, monospace', size: 11 } }
+            ticks: { color: tickColor, font: { family: 'MyanmarUIFont, Arial, sans-serif', size: 11 } }
           },
           y: {
             beginAtZero: true,
             grid: { color: gridColor },
             ticks: {
               color: tickColor,
-              font: { family: 'DM Mono, monospace', size: 11 },
+              font: { family: 'MyanmarUIFont, Arial, sans-serif', size: 11 },
               callback: (value: any) => this.formatService.formatAmountShort(value),
             },
           },

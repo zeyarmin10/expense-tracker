@@ -382,3 +382,6 @@ select.prof-input {
 .mob-nav-icon .ng-fa-icon .svg-inline--fa {
   height: 1.25em !important;
 }
+.mob-drawer-theme-btn .ng-fa-icon .svg-inline--fa {
+  height: 1.5em !important;
+}
