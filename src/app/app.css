@@ -407,6 +407,11 @@ body.light-mode {
   padding-bottom: env(safe-area-inset-bottom);
   align-items: center;
   justify-content: space-around;
+  box-shadow: 0 -1px 3px rgba(0, 184, 148, 0.35);
+}
+
+.mob-bottom-nav.nav-hidden-keyboard {
+  display: none !important;
 }
 
 @media (max-width: 991px) {
@@ -793,7 +798,7 @@ body.light-mode {
 
 /* Light mode overrides */
 body.light-mode .mob-bottom-nav {
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+  /* box-shadow: 0 -3px 6px rgba(0, 0, 0, 0.35) !important; */
 }
 
 body.light-mode .mob-drawer {

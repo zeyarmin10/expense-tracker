@@ -280,6 +280,7 @@
 .bgt-input.bgt-select-field,
 .bgt-input {
   height: 56px;
+  background: var(--surface-2);
   padding: 1.35rem 0.9rem 0.45rem;
   border-radius: 10px;
   width: 100%;
@@ -287,6 +288,7 @@
 
 .bgt-input.bgt-select-field {
   padding-right: 2.2rem;
+  background: var(--surface-2);
   background-repeat: no-repeat;
   background-position: right 0.9rem center;
   cursor: pointer;

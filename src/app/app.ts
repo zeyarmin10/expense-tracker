@@ -16,6 +16,7 @@ import { faRightFromBracket, faUsers, faChevronDown, faSun, faMoon, faPiggyBank,
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { Capacitor } from '@capacitor/core';
+import { Keyboard } from '@capacitor/keyboard';
 
 @Component({
   selector: 'app-root',
@@ -157,6 +158,7 @@ export class App implements OnInit {
       }
     }
     this.initTheme();
+    this.initKeyboardDetection();
     this.route.queryParamMap.pipe(
       switchMap(params => {
         const inviteCode = params.get('invite_code');
@@ -259,6 +261,41 @@ export class App implements OnInit {
     } else {
       document.body.classList.add('light-mode');
       localStorage.setItem('theme', 'light');
+    }
+  }
+
+  private initKeyboardDetection(): void {
+    const hideNav = () => {
+      const nav = document.querySelector('.mob-bottom-nav') as HTMLElement;
+      if (nav) nav.classList.add('nav-hidden-keyboard');
+    };
+    const showNav = () => {
+      const nav = document.querySelector('.mob-bottom-nav') as HTMLElement;
+      if (nav) nav.classList.remove('nav-hidden-keyboard');
+    };
+
+    if (Capacitor.isNativePlatform()) {
+      // Capacitor Keyboard plugin — native Android/iOS
+      Keyboard.addListener('keyboardWillShow', () => hideNav());
+      Keyboard.addListener('keyboardWillHide', () => showNav());
+    } else {
+      // Web fallback
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', () => {
+          const keyboardHeight = window.innerHeight - window.visualViewport!.height;
+          keyboardHeight > 150 ? hideNav() : showNav();
+        });
+      }
+      document.addEventListener('focusin', (e: FocusEvent) => {
+        const tag = (e.target as HTMLElement)?.tagName?.toLowerCase();
+        if (tag === 'input' || tag === 'textarea' || tag === 'select') hideNav();
+      });
+      document.addEventListener('focusout', () => {
+        setTimeout(() => {
+          const active = document.activeElement?.tagName?.toLowerCase();
+          if (active !== 'input' && active !== 'textarea' && active !== 'select') showNav();
+        }, 150);
+      });
     }
   }
 

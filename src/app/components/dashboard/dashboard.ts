@@ -42,7 +42,7 @@ import {
   transition,
   keyframes,
 } from '@angular/animations';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { AVAILABLE_CURRENCIES } from '../../core/constants/app.constants';
 import { CategoryService, ServiceICategory } from '../../services/category';
 import { UserProfile, UserDataService } from '../../services/user-data';
@@ -64,7 +64,7 @@ type CurrencyMap = { [currency: string]: number };
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, FontAwesomeModule],
+  imports: [CommonModule, FormsModule, TranslateModule, FontAwesomeModule, RouterModule],
   providers: [DatePipe],
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.css'],
