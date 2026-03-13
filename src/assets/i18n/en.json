@@ -528,6 +528,7 @@
   "ADD_BUTTON": "Add",
   "EXISTING_CATEGORIES": "Existing Categories",
   "NO_CATEGORIES ": "No Categories",
-  "NAV_DARK_MODE": "အမှောင်",
-  "NAV_LIGHT_MODE": "အလင်း"
+  "NAV_DARK_MODE": "Dark",
+  "NAV_LIGHT_MODE": "Light",
+  "MORE": "More"
 }
