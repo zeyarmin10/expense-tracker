@@ -132,7 +132,7 @@ export class Expense implements OnInit {
       date:     [todayFormatted, Validators.required],
       category: ['', Validators.required],
       itemName: ['', Validators.required],
-      quantity: [1, [Validators.required, Validators.min(1)]],
+      quantity: [1, [Validators.required, Validators.min(0.01)]],
       unit:     [''],
       price:    ['', [Validators.required, Validators.min(0)]],
     });
@@ -269,7 +269,7 @@ export class Expense implements OnInit {
       date:     [expense.date,     Validators.required],
       category: [expense.category, Validators.required],
       itemName: [expense.itemName, Validators.required],
-      quantity: [expense.quantity, [Validators.required, Validators.min(1)]],
+      quantity: [expense.quantity, [Validators.required, Validators.min(0.01)]],
       unit:     [expense.unit],
       price:    [expense.price,    [Validators.required, Validators.min(0)]],
       currency: [expense.currency, Validators.required],

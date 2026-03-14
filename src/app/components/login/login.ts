@@ -27,6 +27,9 @@ import { User } from '@angular/fire/auth';
 import { ToastService } from '../../services/toast'; // Import ToastService
 import { InvitationService } from '../../services/invitation.service';
 import Swal from 'sweetalert2';
+import { getRedirectResult } from '@angular/fire/auth';
+import { Auth } from '@angular/fire/auth';
+import { Capacitor } from '@capacitor/core';
 
 @Component({
   selector: 'app-login',
@@ -45,6 +48,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private resizeSubject = new Subject<number>();
   private readonly MOBILE_BREAKPOINT = 768;
+  private auth = inject(Auth);
 
   showPassword = false;
   faEye = faEye;
@@ -84,7 +88,7 @@ export class LoginComponent implements OnInit, OnDestroy {
       this.translate.currentLang || this.translate.getDefaultLang();
   }
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(params => {
       this.inviteCode = params['invite_code'] || null;
       if (this.inviteCode) {
@@ -118,6 +122,17 @@ export class LoginComponent implements OnInit, OnDestroy {
       .subscribe((width) => {
         this.checkMobileView(width);
       });
+
+    if (Capacitor.isNativePlatform()) {
+        try {
+        const result = await getRedirectResult(this.auth);
+        if (result?.user) {
+            await this.handlePostLogin(result.user);
+        }
+        } catch (error) {
+        console.error('Redirect result error:', error);
+        }
+    }
   }
 
   ngOnDestroy(): void {

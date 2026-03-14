@@ -2,7 +2,7 @@
   rel="stylesheet">
 
 <div class="pnl-wrapper">
-  <div class="pnl-container">
+  <div class="pnl-container mb-5">
 
     <!-- Page Header -->
     <div class="pnl-page-header">
@@ -52,100 +52,110 @@
 
       <!-- Total Income -->
       <div class="pnl-card pnl-card-income">
-        <div class="pnl-card-top">
+        <div class="pnl-card-left">
           <span class="pnl-card-label">{{ 'TOTAL_INCOMES' | translate }}</span>
+          <ng-container *ngIf="totalIncomesByCurrency$ | async as totals; else cardLoading">
+            <ng-container *ngIf="(totals | keyvalue).length > 0; else cardNoData">
+              <span *ngFor="let t of totals | keyvalue" class="pnl-card-amount pnl-amount-income">
+                {{ formatService.formatAmountShort(t.value, t.key) }}
+              </span>
+            </ng-container>
+          </ng-container>
+          </div>
+        <div class="pnl-card-right">
           <span class="pnl-card-icon pnl-icon-income"><fa-icon [icon]="faMoneyBillWave"></fa-icon></span>
         </div>
-        <ng-container *ngIf="totalIncomesByCurrency$ | async as totals; else cardLoading">
-          <ng-container *ngIf="(totals | keyvalue).length > 0; else cardNoData">
-            <span *ngFor="let t of totals | keyvalue" class="pnl-card-amount pnl-amount-income">
-              {{ formatService.formatAmountShort(t.value, t.key) }}
-            </span>
-          </ng-container>
-        </ng-container>
-      </div>
+        </div>
 
       <!-- Total Expenses -->
       <div class="pnl-card pnl-card-expense">
-        <div class="pnl-card-top">
+        <div class="pnl-card-left">
           <span class="pnl-card-label">{{ 'TOTAL_EXPENSES' | translate }}</span>
+          <ng-container *ngIf="totalExpensesByCurrency$ | async as totals; else cardLoading">
+            <ng-container *ngIf="(totals | keyvalue).length > 0; else cardNoData">
+              <span *ngFor="let t of totals | keyvalue" class="pnl-card-amount pnl-amount-expense">
+                {{ formatService.formatAmountShort(t.value, t.key) }}
+              </span>
+            </ng-container>
+          </ng-container>
+          </div>
+        <div class="pnl-card-right">
           <span class="pnl-card-icon pnl-icon-expense"><fa-icon [icon]="faShoppingCart"></fa-icon></span>
         </div>
-        <ng-container *ngIf="totalExpensesByCurrency$ | async as totals; else cardLoading">
-          <ng-container *ngIf="(totals | keyvalue).length > 0; else cardNoData">
-            <span *ngFor="let t of totals | keyvalue" class="pnl-card-amount pnl-amount-expense">
-              {{ formatService.formatAmountShort(t.value, t.key) }}
-            </span>
-          </ng-container>
-        </ng-container>
-      </div>
+        </div>
 
       <!-- Total Budget -->
       <div class="pnl-card pnl-card-budget">
-        <div class="pnl-card-top">
+        <div class="pnl-card-left">
           <span class="pnl-card-label">{{ 'TOTAL_BUDGET' | translate }}</span>
+          <ng-container *ngIf="totalBudgetsByCurrency$ | async as totals; else cardLoading">
+            <ng-container *ngIf="(totals | keyvalue).length > 0; else cardNoData">
+              <span *ngFor="let t of totals | keyvalue" class="pnl-card-amount pnl-amount-budget">
+                {{ formatService.formatAmountShort(t.value, t.key) }}
+              </span>
+            </ng-container>
+          </ng-container>
+          </div>
+        <div class="pnl-card-right">
           <span class="pnl-card-icon pnl-icon-budget"><fa-icon [icon]="faChartPie"></fa-icon></span>
         </div>
-        <ng-container *ngIf="totalBudgetsByCurrency$ | async as totals; else cardLoading">
-          <ng-container *ngIf="(totals | keyvalue).length > 0; else cardNoData">
-            <span *ngFor="let t of totals | keyvalue" class="pnl-card-amount pnl-amount-budget">
-              {{ formatService.formatAmountShort(t.value, t.key) }}
-            </span>
-          </ng-container>
-        </ng-container>
-      </div>
+        </div>
 
       <!-- Profit / Loss -->
       <div class="pnl-card" [ngClass]="getProfitLossCardClass(totalProfitLossByCurrency$ | async)">
         <ng-container *ngIf="totalProfitLossByCurrency$ | async as profits; else cardLoading">
           <ng-container *ngIf="(profits | keyvalue).length > 0; else cardNoData">
-            <div *ngFor="let p of profits | keyvalue">
-              <div class="pnl-card-top">
-                <span class="pnl-card-label">
-                  {{ ($any(p).value >= 0 ? 'NET_PROFIT' : 'NET_LOSS') | translate }}
-                </span>
-                <span class="pnl-card-icon" [ngClass]="getProfitLossIconClass(totalProfitLossByCurrency$ | async)">
-                  <fa-icon [icon]="getProfitLossIcon(totalProfitLossByCurrency$ | async)"></fa-icon>
-                </span>
-              </div>
+            <div class="pnl-card-left" *ngFor="let p of profits | keyvalue">
+              <span class="pnl-card-label">
+                {{ ($any(p).value >= 0 ? 'NET_PROFIT' : 'NET_LOSS') | translate }}
+              </span>
               <span class="pnl-card-amount" [ngClass]="getProfitLossAmountClass($any(p).value)">
                 {{ formatService.formatAmountShort($any(p).value, $any(p).key) }}
               </span>
-            </div>
+              </div>
+              <div class="pnl-card-right">
+              <span class="pnl-card-icon" [ngClass]="getProfitLossIconClass(totalProfitLossByCurrency$ | async)">
+                <fa-icon [icon]="getProfitLossIcon(totalProfitLossByCurrency$ | async)"></fa-icon>
+              </span>
+              </div>
           </ng-container>
         </ng-container>
       </div>
 
       <!-- Net Profit -->
       <div class="pnl-card pnl-card-net">
-        <div class="pnl-card-top">
+        <div class="pnl-card-left">
           <span class="pnl-card-label">{{ 'NET_PROFIT' | translate }}</span>
+          <ng-container *ngIf="netProfitByCurrency$ | async as totals; else cardLoading">
+            <ng-container *ngIf="(totals | keyvalue).length > 0; else cardNoData">
+              <span *ngFor="let t of totals | keyvalue" class="pnl-card-amount" [class.pnl-amount-profit]="t.value >= 0"
+                [class.pnl-amount-loss]="t.value < 0">
+                {{ formatService.formatAmountShort(t.value, t.key) }}
+              </span>
+            </ng-container>
+          </ng-container>
+          </div>
+        <div class="pnl-card-right">
           <span class="pnl-card-icon pnl-icon-net"><fa-icon [icon]="faChartLine"></fa-icon></span>
         </div>
-        <ng-container *ngIf="netProfitByCurrency$ | async as totals; else cardLoading">
-          <ng-container *ngIf="(totals | keyvalue).length > 0; else cardNoData">
-            <span *ngFor="let t of totals | keyvalue" class="pnl-card-amount" [class.pnl-amount-profit]="t.value >= 0"
-              [class.pnl-amount-loss]="t.value < 0">
-              {{ formatService.formatAmountShort(t.value, t.key) }}
-            </span>
-          </ng-container>
-        </ng-container>
-      </div>
+        </div>
 
       <!-- Remaining Balance -->
       <div class="pnl-card pnl-card-balance">
-        <div class="pnl-card-top">
+        <div class="pnl-card-left">
           <span class="pnl-card-label">{{ 'REMAINING_BALANCE' | translate }}</span>
+          <ng-container *ngIf="remainingBalanceByCurrency$ | async as totals; else cardLoading">
+            <ng-container *ngIf="(totals | keyvalue).length > 0; else cardNoData">
+              <span *ngFor="let t of totals | keyvalue" class="pnl-card-amount" [class.pnl-amount-profit]="t.value >= 0"
+                [class.pnl-amount-loss]="t.value < 0">
+                {{ formatService.formatAmountShort(t.value, t.key) }}
+              </span>
+            </ng-container>
+          </ng-container>
+        </div>
+        <div class="pnl-card-right">
           <span class="pnl-card-icon pnl-icon-balance"><fa-icon [icon]="faEllipsisH"></fa-icon></span>
         </div>
-        <ng-container *ngIf="remainingBalanceByCurrency$ | async as totals; else cardLoading">
-          <ng-container *ngIf="(totals | keyvalue).length > 0; else cardNoData">
-            <span *ngFor="let t of totals | keyvalue" class="pnl-card-amount" [class.pnl-amount-profit]="t.value >= 0"
-              [class.pnl-amount-loss]="t.value < 0">
-              {{ formatService.formatAmountShort(t.value, t.key) }}
-            </span>
-          </ng-container>
-        </ng-container>
       </div>
 
     </div>

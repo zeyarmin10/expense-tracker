@@ -8,7 +8,6 @@ import {
   ElementRef,
   AfterViewInit,
 } from '@angular/core';
-import { RouterModule } from '@angular/router';
 import { CommonModule, DatePipe } from '@angular/common';
 import { AuthService } from '../../services/auth';
 import { ServiceIExpense, ExpenseService } from '../../services/expense';
@@ -43,7 +42,7 @@ import {
   transition,
   keyframes,
 } from '@angular/animations';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { AVAILABLE_CURRENCIES } from '../../core/constants/app.constants';
 import { CategoryService, ServiceICategory } from '../../services/category';
 import { UserProfile, UserDataService } from '../../services/user-data';
@@ -132,6 +131,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   availableCurrencies = AVAILABLE_CURRENCIES;
   private expenseChartInstance: Chart | undefined;
   private categoryDonutChart: Chart | undefined;
+  private themeObserver: MutationObserver | undefined;
   hasCategoryDataForChart: boolean = false;
   currentSummaryDateRange$: Observable<string> | undefined;
 
@@ -145,6 +145,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     this.initializeForms();
     this.initializeUserDataAndDateRange();
     this.initializeDataStreams();
+    Chart.defaults.font.family = 'MyanmarUIFont, Arial, sans-serif';
   }
 
   ngAfterViewInit(): void {
@@ -156,6 +157,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     this.destroy$.complete();
     this.expenseChartInstance?.destroy();
     this.categoryDonutChart?.destroy();
+    this.themeObserver?.disconnect();
   }
 
   refreshData(): void {
@@ -169,7 +171,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     const browserLang = this.translate.getBrowserLang();
     const defaultLang = browserLang?.match(/my|en/) ? browserLang : 'my';
     this.translate.use(storedLang || defaultLang);
-    Chart.defaults.font.family = 'Syne, MyanmarUIFont, sans-serif';
+    Chart.defaults.font.family = 'MyanmarUIFont, Arial, sans-serif';
     Chart.defaults.color = '#6b7280';
   }
 
@@ -451,6 +453,26 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       .subscribe(({ expenses }) => {
         this.createCategoryDonutChart(expenses);
       });
+
+    // Re-render charts when theme changes (body.light-mode class toggled)
+    this.themeObserver = new MutationObserver(() => {
+      this.monthlyExpenseChartData$
+        .pipe(takeUntil(this.destroy$))
+        .subscribe((data) => {
+          if (data) this.renderExpenseChart(data);
+        });
+
+      this.filteredExpensesAndIncomes$
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(({ expenses }) => {
+          this.createCategoryDonutChart(expenses);
+        });
+    });
+
+    this.themeObserver.observe(document.body, {
+      attributes: true,
+      attributeFilter: ['class'],
+    });
   }
 
   private createCategoryDonutChart(expenses: ServiceIExpense[]): void {
@@ -477,6 +499,9 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
+    const isLight = document.body.classList.contains('light-mode');
+    const legendColor = isLight ? '#4a5568' : '#9ca3af';
+
     this.categoryDonutChart = new Chart(canvas, {
       type: 'doughnut',
       data: {
@@ -499,8 +524,8 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
             position: 'bottom',
             labels: {
               boxWidth: 20,
-              color: '#9ca3af',
-              font: { family: 'Syne, sans-serif', size: 11 }
+              color: legendColor,
+              font: { family: 'MyanmarUIFont, Arial, sans-serif', size: 11 }
             }
           },
         },
@@ -524,6 +549,10 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.expenseChartInstance?.destroy();
 
+    const isLight = document.body.classList.contains('light-mode');
+    const gridColor = isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.05)';
+    const tickColor = isLight ? '#4a5568' : '#6b7280';
+
     this.expenseChartInstance = new Chart(canvas, {
       type: 'bar',
       data: data,
@@ -534,15 +563,15 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         scales: {
           x: {
             beginAtZero: true,
-            grid: { color: 'rgba(255,255,255,0.05)' },
-            ticks: { color: '#6b7280', font: { family: 'DM Mono, monospace', size: 11 } }
+            grid: { color: gridColor },
+            ticks: { color: tickColor, font: { family: 'MyanmarUIFont, Arial, sans-serif', size: 11 } }
           },
           y: {
             beginAtZero: true,
-            grid: { color: 'rgba(255,255,255,0.05)' },
+            grid: { color: gridColor },
             ticks: {
-              color: '#6b7280',
-              font: { family: 'DM Mono, monospace', size: 11 },
+              color: tickColor,
+              font: { family: 'MyanmarUIFont, Arial, sans-serif', size: 11 },
               callback: (value: any) => this.formatService.formatAmountShort(value),
             },
           },

@@ -2,7 +2,7 @@
   rel="stylesheet">
 
 <div class="bgt-wrapper">
-  <div class="bgt-container">
+  <div class="bgt-container mb-5">
 
     <!-- ── Page Header ── -->
     <div class="bgt-page-header">
@@ -174,47 +174,51 @@
 
       <!-- Total Budget -->
       <div class="bgt-card bgt-card-budget">
-        <div class="bgt-card-top">
+        <div class="bgt-card-left">
           <span class="bgt-card-label">{{ 'TOTAL_BUDGET' | translate }}</span>
+          <ng-container *ngIf="totalBudgetByCurrency$ | async as totals; else cardLoading">
+            <ng-container *ngIf="totals && (totals | keyvalue).length > 0; else cardNoData">
+              <span *ngFor="let total of totals | keyvalue" class="bgt-card-amount bgt-amount-budget">
+                {{ formatService.formatAmountShort(total.value, total.key) }}
+              </span>
+            </ng-container>
+          </ng-container>
+          </div>
+        <div class="bgt-card-right">
           <span class="bgt-card-icon bgt-icon-budget"><fa-icon [icon]="faPiggyBank"></fa-icon></span>
         </div>
-        <ng-container *ngIf="totalBudgetByCurrency$ | async as totals; else cardLoading">
-          <ng-container *ngIf="totals && (totals | keyvalue).length > 0; else cardNoData">
-            <span *ngFor="let total of totals | keyvalue" class="bgt-card-amount bgt-amount-budget">
-              {{ formatService.formatAmountShort(total.value, total.key) }}
-            </span>
-          </ng-container>
-        </ng-container>
-      </div>
+        </div>
 
       <!-- Total Expenses -->
       <div class="bgt-card bgt-card-expense">
-        <div class="bgt-card-top">
+        <div class="bgt-card-left">
           <span class="bgt-card-label">{{ 'TOTAL_EXPENSES' | translate }}</span>
+          <ng-container *ngIf="totalExpensesByCurrency$ | async as totals; else cardLoading">
+            <ng-container *ngIf="totals && (totals | keyvalue).length > 0; else cardNoData">
+              <span *ngFor="let total of totals | keyvalue" class="bgt-card-amount bgt-amount-expense">
+                {{ formatService.formatAmountShort(total.value, total.key) }}
+              </span>
+            </ng-container>
+          </ng-container>
+          </div>
+        <div class="bgt-card-right">
           <span class="bgt-card-icon bgt-icon-expense"><fa-icon [icon]="faShoppingCart"></fa-icon></span>
         </div>
-        <ng-container *ngIf="totalExpensesByCurrency$ | async as totals; else cardLoading">
-          <ng-container *ngIf="totals && (totals | keyvalue).length > 0; else cardNoData">
-            <span *ngFor="let total of totals | keyvalue" class="bgt-card-amount bgt-amount-expense">
-              {{ formatService.formatAmountShort(total.value, total.key) }}
-            </span>
-          </ng-container>
-        </ng-container>
-      </div>
+        </div>
 
       <!-- Remaining Balance -->
       <div class="bgt-card" [ngClass]="getBalanceCardClass(remainingBalanceByCurrency$ | async)">
         <ng-container *ngIf="remainingBalanceByCurrency$ | async as balances; else cardLoading">
           <ng-container *ngIf="(balances | keyvalue).length > 0; else cardNoData">
-            <div *ngFor="let balance of balances | keyvalue">
-              <div class="bgt-card-top">
-                <span class="bgt-card-label">{{ "REMAINING_BALANCE" | translate }}</span>
-                <span class="bgt-card-icon" [ngClass]="getBalanceIconClass(remainingBalanceByCurrency$ | async)">
-                  <fa-icon [icon]="getBalanceIcon(remainingBalanceByCurrency$ | async)"></fa-icon>
-                </span>
-              </div>
+            <div class="bgt-card-left" *ngFor="let balance of balances | keyvalue">
+              <span class="bgt-card-label">{{ "REMAINING_BALANCE" | translate }}</span>
               <span class="bgt-card-amount" [ngClass]="getBalanceAmountClass(balance.value)">
                 {{ formatService.formatAmountShort(balance.value, balance.key) }}
+              </span>
+              </div>
+              <div class="bgt-card-right">
+              <span class="bgt-card-icon" [ngClass]="getBalanceIconClass(remainingBalanceByCurrency$ | async)">
+                <fa-icon [icon]="getBalanceIcon(remainingBalanceByCurrency$ | async)"></fa-icon>
               </span>
             </div>
           </ng-container>

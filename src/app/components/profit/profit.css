@@ -37,8 +37,9 @@
 .pnl-filter-bar {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: stretch;
   gap: 0.75rem;
+  width: 100%;
 }
 
 /* PC: select + date pickers တစ်ကြောင်းတည်း */
@@ -46,6 +47,7 @@
   .pnl-filter-bar {
     flex-direction: row;
     align-items: flex-end;
+    width: auto;
   }
 
   .pnl-filter-bar .pnl-date-row {
@@ -53,30 +55,42 @@
   }
 }
 
-/* select wrapper: shrink to content */
+/* select wrapper */
 .pnl-fl-wrap {
   position: relative;
   min-width: 0;
 }
 
-/* date pickers: always side by side, auto width */
+/* date pickers: always side by side */
 .pnl-date-row {
   display: flex;
   flex-direction: row;
   gap: 0.75rem;
   align-items: flex-start;
+  width: 100%;
 }
 
 .pnl-date-row .pnl-fl-wrap {
-  flex: 0 0 auto;
-  /* don't stretch */
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+@media (min-width: 640px) {
+  .pnl-date-row .pnl-fl-wrap {
+    flex: 0 0 auto;
+  }
+
+  .pnl-date-row .pnl-fl-input[type="date"] {
+    width: 150px;
+  }
 }
 
 /* ── Filter floating label inputs (pnl-fl-*) ── */
 
 .pnl-fl-input {
-  width: auto;
-  min-width: 160px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   height: 54px;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -101,7 +115,7 @@
   background-position: right 0.95rem center;
   padding-right: 2.4rem;
   cursor: pointer;
-  min-width: 200px;
+  min-width: 150px;
   width: auto;
 }
 
@@ -173,9 +187,14 @@
   gap: 0.85rem;
 }
 
-@media (min-width: 480px) {
+@media (min-width: 576px) {
   .pnl-summary-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .pnl-fl-input {
+    min-width: 0;
+    width: 100%;
   }
 }
 
@@ -190,12 +209,28 @@
   border: 1px solid var(--border);
   border-radius: 14px;
   padding: 1.1rem 1.2rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
   position: relative;
   overflow: hidden;
   transition: transform 0.18s;
+}
+
+.pnl-card-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.pnl-card-right {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .pnl-card::before {
@@ -283,16 +318,20 @@
 }
 
 .pnl-card-label {
-  font-size: 0.7rem;
+  font-size: clamp(0.9rem, 1.2vw, 1.1rem);
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .pnl-card-icon {
-  font-size: 1.1rem;
-  opacity: 0.8;
+  font-size: 1.75rem;
+  opacity: 0.85;
+  line-height: 1;
 }
 
 .pnl-icon-income {
@@ -321,10 +360,11 @@
 
 .pnl-card-amount {
   /* font-family: 'DM Mono', monospace; */
-  font-size: clamp(1rem, 2.5vw, 1.35rem);
+  font-size: clamp(1.25rem, 2vw, 1.5rem);
   font-weight: 500;
   display: block;
-  line-height: 1.1;
+  line-height: 1.3;
+  /* white-space: nowrap; */
 }
 
 .pnl-amount-income {
@@ -454,7 +494,7 @@
   gap: 0.85rem;
 }
 
-@media (max-width: 540px) {
+@media (max-width: 576px) {
   .pnl-form-row {
     grid-template-columns: 1fr;
   }
@@ -562,7 +602,7 @@
   /* font-family: 'DM Mono', monospace; */
   font-size: 0.75rem;
   color: var(--text-muted);
-  white-space: nowrap;
+  /* white-space: nowrap; */
   flex-shrink: 0;
   height: 56px;
 }

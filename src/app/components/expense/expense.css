@@ -132,7 +132,7 @@
   grid-template-columns: 1fr 1fr 1fr;
 }
 
-@media (max-width: 540px) {
+@media (max-width: 576px) {
   .exp-form-row {
     grid-template-columns: 1fr;
   }
@@ -431,9 +431,9 @@
 
 .exp-total-chip {
   /* font-family: 'DM Mono', monospace; */
-  /* font-size: 0.76rem; */
+  font-size: 1rem;
   padding: 0.35rem 0.85rem;
-  border-radius: 100px;
+  border-radius: 1rem;
   border: 1px solid rgba(251, 191, 36, 0.25);
   background: rgba(251, 191, 36, 0.08);
   color: var(--text-sub);

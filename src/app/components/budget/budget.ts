@@ -681,6 +681,17 @@ export class BudgetComponent implements OnInit, OnDestroy {
         this.renderChart(data);
       }, 100);
     });
+
+    // Re-render chart when theme changes
+    this.themeObserver = new MutationObserver(() => {
+      this.budgetChartData$.subscribe((data) => {
+        if (data) this.renderChart(data);
+      });
+    });
+    this.themeObserver.observe(document.body, {
+      attributes: true,
+      attributeFilter: ['class'],
+    });
   }
 
   ngOnInit(): void {
@@ -741,6 +752,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
       this.chartInstance.destroy();
       this.chartInstance = undefined;
     }
+    this.themeObserver?.disconnect();
   }
 
   onBudgetTypeChange(type: string): void {
@@ -1043,6 +1055,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
   }
 
   private chartInstance: Chart | undefined;
+  private themeObserver: MutationObserver | undefined;
 
   renderChart(data: any): void {
     const canvas = document.getElementById('budgetChart') as HTMLCanvasElement;
@@ -1056,6 +1069,10 @@ export class BudgetComponent implements OnInit, OnDestroy {
       this.chartInstance.destroy();
       this.chartInstance = undefined;
     }
+
+    const isLight = document.body.classList.contains('light-mode');
+    const gridColor = isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.05)';
+    const tickColor = isLight ? '#4a5568' : '#6b7280';
 
     const component = this;
 
@@ -1071,12 +1088,15 @@ export class BudgetComponent implements OnInit, OnDestroy {
             x: {
               stacked: false,
               beginAtZero: true,
-
+              grid: { color: gridColor },
+              ticks: { color: tickColor },
             },
             y: {
               stacked: false,
               beginAtZero: true,
+              grid: { color: gridColor },
               ticks: {
+                color: tickColor,
                 callback: (value: any) => this.formatService.formatAmountShort(value),
               },
             },
