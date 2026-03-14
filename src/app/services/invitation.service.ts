@@ -14,7 +14,7 @@ export interface Invitation {
   acceptedAt?: string;
 }
 
-const VERCEL_URL = 'https://expense-tracker-mocha-omega.vercel.app/';
+const VERCEL_URL = 'https://expense-tracker-mocha-omega.vercel.app';
 
 @Injectable({
   providedIn: 'root'
