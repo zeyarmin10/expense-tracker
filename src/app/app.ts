@@ -12,11 +12,13 @@ import { InvitationService } from './services/invitation.service';
 import { DataManagerService } from './services/data-manager';
 import { ToastService } from './services/toast';
 import { GroupService } from './services/group.service';
+import { NetworkService } from './services/network.service';
 import { faRightFromBracket, faUsers, faChevronDown, faSun, faMoon, faPiggyBank, faShoppingCart, faTags } from '@fortawesome/free-solid-svg-icons';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { Capacitor } from '@capacitor/core';
 import { Keyboard } from '@capacitor/keyboard';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-root',
@@ -63,6 +65,7 @@ export class App implements OnInit {
   private dataManager = inject(DataManagerService);
   private toastService = inject(ToastService);
   private groupService = inject(GroupService);
+  private networkService = inject(NetworkService);
 
   constructor(private translate: TranslateService) {
     this.translate.setDefaultLang('en');
@@ -159,6 +162,11 @@ export class App implements OnInit {
     }
     this.initTheme();
     this.initKeyboardDetection();
+
+    // ── Network monitoring ──────────────────────
+    await this.networkService.init();
+    this.listenNetworkChanges();
+    // ────────────────────────────────────────────
     this.route.queryParamMap.pipe(
       switchMap(params => {
         const inviteCode = params.get('invite_code');
@@ -169,6 +177,65 @@ export class App implements OnInit {
       })
     ).subscribe();
   }
+
+  // ── Network monitoring: Native + Web ───────────
+  private listenNetworkChanges(): void {
+
+    if (Capacitor.isNativePlatform()) {
+      // ── Android/iOS: NetworkService (Capacitor) ──
+      this.networkService.isOnline$.subscribe(isOnline => {
+        if (!isOnline) {
+          this.showNoNetworkAlert();
+        }
+      });
+
+      this.router.events.pipe(
+        filter((event): event is NavigationEnd => event instanceof NavigationEnd)
+      ).subscribe(() => {
+        if (!this.networkService.isOnline$.getValue()) {
+          this.showNoNetworkAlert();
+        }
+      });
+
+    } else {
+      // ── Web Browser: navigator.onLine + online/offline events ──
+      // App load
+      if (!navigator.onLine) {
+        this.showNoNetworkAlert();
+      }
+
+      // Browser offline event
+      window.addEventListener('offline', () => {
+        this.showNoNetworkAlert();
+      });
+
+      // Page ကူးတိုင်း စစ်ပါ
+      this.router.events.pipe(
+        filter((event): event is NavigationEnd => event instanceof NavigationEnd)
+      ).subscribe(() => {
+        if (!navigator.onLine) {
+          this.showNoNetworkAlert();
+        }
+      });
+    }
+  }
+
+  private showNoNetworkAlert(): void {
+    // Popup တစ်ခုထက်ပိုမပေါ်အောင် စစ်ပါ
+    if (Swal.isVisible()) return;
+
+    Swal.fire({
+      icon: 'warning',
+      title: 'No Internet Connection',
+      text: 'Please check your network and try again.',
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#00e5b4',
+      background: '#12151c',
+      color: '#ffffff',
+      allowOutsideClick: false,
+    });
+  }
+  // ────────────────────────────────────────────────────────────────
 
   private async handleInvitation(inviteCode: string): Promise<void> {
     const user = await firstValueFrom(this.authService.currentUser$);

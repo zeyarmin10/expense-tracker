@@ -126,12 +126,20 @@ export class AuthService {
 
       if (Capacitor.isNativePlatform()) {
         // ── Android Native Google Sign-In ──
+        // ✅ Sign out ကို Google နဲ့ Firebase နှစ်ခုလုံး လုပ်မှ account chooser ပြတယ်
+        try {
+          await GoogleAuth.signOut();
+        } catch (e) {
+          // ပထမဆုံးအကြိမ်မှာ signOut မလိုဘူး — skip
+        }
+
         await GoogleAuth.initialize({
           clientId: '114245767214-70122qvh2g7qor3cc4udhghkk4h2s179.apps.googleusercontent.com',
           scopes: ['profile', 'email'],
           grantOfflineAccess: true
         });
 
+        // ✅ Account chooser အမြဲပေါ်အောင် forceCodeForRefreshToken သုံးပါ
         const googleUser = await GoogleAuth.signIn();
         const idToken = googleUser.authentication.idToken;
 
@@ -152,8 +160,10 @@ export class AuthService {
         return userCredential.user;
 
       } else {
-        // ── Web Popup (အရင်အတိုင်း) ──
+        // ── Web Popup — account chooser အမြဲပေါ်အောင် ──
         const provider = new GoogleAuthProvider();
+        // ✅ prompt: 'select_account' ထည့်ရင် account chooser အမြဲပေါ်တယ်
+        provider.setCustomParameters({ prompt: 'select_account' });
         const userCredential = await signInWithPopup(this.auth, provider);
 
         const additionalUserInfo = getAdditionalUserInfo(userCredential);
@@ -217,6 +227,16 @@ export class AuthService {
   async logout(isManualLogout: boolean = false): Promise<void> {
     const sessionManagementService = this.injector.get(SessionManagementService);
     try {
+      // ✅ Native မှာ Google session ပါ clear လုပ်ပါ
+      // ဒါမှ နောက်တကြိမ် Sign in with Google နှိပ်ရင် account chooser ပြမယ်
+      if (Capacitor.isNativePlatform()) {
+        try {
+          await GoogleAuth.signOut();
+        } catch (e) {
+          console.warn('GoogleAuth signOut error:', e);
+        }
+      }
+
       await signOut(this.auth);
       localStorage.removeItem('loginTime');
       localStorage.removeItem('lastActivityTime');
