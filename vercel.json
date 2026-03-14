@@ -1,9 +1,5 @@
 {
   "installCommand": "npm install --legacy-peer-deps",
   "buildCommand": "ng build --configuration production",
-  "outputDirectory": "dist/expense-tracker/browser",
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/index" },
-    { "source": "/(.*)", "destination": "/index.html" }
-  ]
+  "outputDirectory": "dist/expense-tracker/browser"
 }

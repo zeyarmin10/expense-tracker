@@ -1,0 +1,8 @@
+{
+  "name": "expense-tracker-api",
+  "version": "1.0.0",
+  "dependencies": {
+    "googleapis": "^171.4.0",
+    "nodemailer": "^8.0.1"
+  }
+}
