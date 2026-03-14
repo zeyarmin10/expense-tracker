@@ -12,7 +12,7 @@ import {
   signInWithCredential,
   AuthErrorCodes,
   getAdditionalUserInfo,
-  getRedirectResult
+  getRedirectResult,
 } from '@angular/fire/auth';
 import { AngularFireDatabase } from '@angular/fire/compat/database';
 import { TranslateService } from '@ngx-translate/core';
@@ -25,10 +25,11 @@ import Swal from 'sweetalert2';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AuthService {
   private auth: Auth = inject(Auth);
+  private isGoogleAuthInitialized = false;
   private db: AngularFireDatabase = inject(AngularFireDatabase);
 
   public get currentUserId(): string | null {
@@ -47,14 +48,14 @@ export class AuthService {
   translateService = inject(TranslateService);
 
   constructor(private injector: Injector) {
-    this.currentUser$ = new Observable<User | null>(observer => {
-      onAuthStateChanged(this.auth, user => {
+    this.currentUser$ = new Observable<User | null>((observer) => {
+      onAuthStateChanged(this.auth, (user) => {
         observer.next(user);
       });
     });
 
     this.userProfile$ = this.currentUser$.pipe(
-      switchMap(user => {
+      switchMap((user) => {
         if (!user) {
           return of(null);
         }
@@ -62,40 +63,46 @@ export class AuthService {
         const groupService = this.injector.get(GroupService);
 
         return userDataService.getUserProfile(user.uid).pipe(
-          switchMap(profile => {
+          switchMap((profile) => {
             if (!profile) {
               return of(null);
             }
             if (profile.groupId) {
               return groupService.getGroupSettings(profile.groupId).pipe(
-                map(groupSettings => {
+                map((groupSettings) => {
                   if (groupSettings) {
                     const groupProfile: UserProfile = {
                       ...profile,
                       currency: groupSettings.currency,
-                      budgetPeriod: (groupSettings.budgetPeriod || null) as UserProfile['budgetPeriod'],
+                      budgetPeriod: (groupSettings.budgetPeriod ||
+                        null) as UserProfile['budgetPeriod'],
                       budgetStartDate: groupSettings.budgetStartDate || null,
                       budgetEndDate: groupSettings.budgetEndDate || null,
-                      selectedBudgetPeriodId: groupSettings.selectedBudgetPeriodId || null,
+                      selectedBudgetPeriodId:
+                        groupSettings.selectedBudgetPeriodId || null,
                     };
                     return groupProfile;
                   } else {
                     return profile;
                   }
-                })
+                }),
               );
             } else {
               return of(profile);
             }
-          })
+          }),
         );
-      })
+      }),
     );
   }
 
   async register(email: string, password: string): Promise<User> {
     try {
-      const userCredential = await createUserWithEmailAndPassword(this.auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(
+        this.auth,
+        email,
+        password,
+      );
       this.newUserRegisteredSource.next(userCredential.user.uid);
       await this.handleInvite(userCredential.user);
       return userCredential.user;
@@ -112,7 +119,11 @@ export class AuthService {
 
   async login(email: string, password: string): Promise<User> {
     try {
-      const userCredential = await signInWithEmailAndPassword(this.auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(
+        this.auth,
+        email,
+        password,
+      );
       await this.handleInvite(userCredential.user);
       this.setLoginTime();
       return userCredential.user;
@@ -123,23 +134,27 @@ export class AuthService {
 
   async signInWithGoogle(): Promise<User> {
     try {
-
       if (Capacitor.isNativePlatform()) {
         // ── Android Native Google Sign-In ──
-        // ✅ Sign out ကို Google နဲ့ Firebase နှစ်ခုလုံး လုပ်မှ account chooser ပြတယ်
+
+        // ✅ initialize() ကို တစ်ကြိမ်တည်းသာ ခေါ်ပါ — ထပ်ခေါ်ရင် crash ဖြစ်တယ်
+        if (!this.isGoogleAuthInitialized) {
+          await GoogleAuth.initialize({
+            clientId:
+              '114245767214-70122qvh2g7qor3cc4udhghkk4h2s179.apps.googleusercontent.com',
+            scopes: ['profile', 'email'],
+            grantOfflineAccess: true,
+          });
+          this.isGoogleAuthInitialized = true;
+        }
+
+        // ✅ signOut ကို initialize ပြီးမှသာ ခေါ်ပါ — account chooser အမြဲပေါ်မယ်
         try {
           await GoogleAuth.signOut();
         } catch (e) {
-          // ပထမဆုံးအကြိမ်မှာ signOut မလိုဘူး — skip
+          // signIn မလုပ်ရသေးရင် signOut error ဖြစ်နိုင်တယ် — skip
         }
 
-        await GoogleAuth.initialize({
-          clientId: '114245767214-70122qvh2g7qor3cc4udhghkk4h2s179.apps.googleusercontent.com',
-          scopes: ['profile', 'email'],
-          grantOfflineAccess: true
-        });
-
-        // ✅ Account chooser အမြဲပေါ်အောင် forceCodeForRefreshToken သုံးပါ
         const googleUser = await GoogleAuth.signIn();
         const idToken = googleUser.authentication.idToken;
 
@@ -148,7 +163,10 @@ export class AuthService {
         }
 
         const credential = GoogleAuthProvider.credential(idToken);
-        const userCredential = await signInWithCredential(this.auth, credential);
+        const userCredential = await signInWithCredential(
+          this.auth,
+          credential,
+        );
 
         const additionalUserInfo = getAdditionalUserInfo(userCredential);
         if (additionalUserInfo?.isNewUser) {
@@ -158,7 +176,6 @@ export class AuthService {
         this.setLoginTime();
         await this.handleInvite(userCredential.user);
         return userCredential.user;
-
       } else {
         // ── Web Popup — account chooser အမြဲပေါ်အောင် ──
         const provider = new GoogleAuthProvider();
@@ -175,7 +192,6 @@ export class AuthService {
         await this.handleInvite(userCredential.user);
         return userCredential.user;
       }
-
     } catch (error: any) {
       console.error('Google sign-in error:', error);
       throw new Error(this.getFirebaseErrorMessage(error));
@@ -183,7 +199,9 @@ export class AuthService {
   }
 
   private setLoginTime() {
-    const sessionManagementService = this.injector.get(SessionManagementService);
+    const sessionManagementService = this.injector.get(
+      SessionManagementService,
+    );
     const now = new Date().getTime();
     localStorage.setItem('loginTime', now.toString());
     sessionManagementService.startSessionMonitoring();
@@ -202,22 +220,27 @@ export class AuthService {
         if (inviteData.status === 'pending') {
           const userDataService = this.injector.get(UserDataService);
           const role = 'member';
-          await this.db.object(`group_members/${inviteData.groupId}/${user.uid}`).set({ role: role });
+          await this.db
+            .object(`group_members/${inviteData.groupId}/${user.uid}`)
+            .set({ role: role });
 
           await userDataService.updateUserProfile(user.uid, {
             groupId: inviteData.groupId,
             accountType: 'group',
-            roles: { [inviteData.groupId]: role }
+            roles: { [inviteData.groupId]: role },
           });
 
           try {
             await inviteRef.update({
               status: 'accepted',
               acceptedBy: user.uid,
-              acceptedAt: new Date().toISOString()
+              acceptedAt: new Date().toISOString(),
             });
           } catch (error) {
-            console.warn('Invitation status could not be updated, but the user has been successfully added to the group. This may be due to database security rules, and this warning can likely be ignored.', error);
+            console.warn(
+              'Invitation status could not be updated, but the user has been successfully added to the group. This may be due to database security rules, and this warning can likely be ignored.',
+              error,
+            );
           }
         }
       }
@@ -225,15 +248,20 @@ export class AuthService {
   }
 
   async logout(isManualLogout: boolean = false): Promise<void> {
-    const sessionManagementService = this.injector.get(SessionManagementService);
+    const sessionManagementService = this.injector.get(
+      SessionManagementService,
+    );
     try {
       // ✅ Native မှာ Google session ပါ clear လုပ်ပါ
       // ဒါမှ နောက်တကြိမ် Sign in with Google နှိပ်ရင် account chooser ပြမယ်
       if (Capacitor.isNativePlatform()) {
-        try {
-          await GoogleAuth.signOut();
-        } catch (e) {
-          console.warn('GoogleAuth signOut error:', e);
+        // ✅ initialize ဖြစ်ပြီးမှသာ GoogleAuth.signOut() ခေါ်ပါ
+        if (this.isGoogleAuthInitialized) {
+          try {
+            await GoogleAuth.signOut();
+          } catch (e) {
+            console.warn('GoogleAuth signOut error:', e);
+          }
         }
       }
 
@@ -243,7 +271,7 @@ export class AuthService {
       sessionManagementService.stopSessionMonitoring();
       this._logoutSuccess.next(isManualLogout);
     } catch (error: any) {
-      console.error("Logout failed in AuthService:", error);
+      console.error('Logout failed in AuthService:', error);
       throw new Error(this.getFirebaseErrorMessage(error.code));
     }
   }
@@ -277,7 +305,9 @@ export class AuthService {
           return this.translateService.instant('GENERIC', { code: error.code });
       }
     } else if (error && typeof error.message === 'string') {
-      return this.translateService.instant('AUTH_GENERIC_MESSAGE_ERROR', { message: error.message });
+      return this.translateService.instant('AUTH_GENERIC_MESSAGE_ERROR', {
+        message: error.message,
+      });
     } else {
       return this.translateService.instant('AUTH_UNEXPECTED_ERROR');
     }

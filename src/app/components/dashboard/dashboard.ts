@@ -55,6 +55,7 @@ import {
   faArrowTrendUp,
   faArrowTrendDown,
   faChartPie,
+  faChartColumn
 } from '@fortawesome/free-solid-svg-icons';
 import { FormatService } from '../../services/format.service';
 
@@ -127,11 +128,13 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   faPiggyBank = faPiggyBank;
   faShoppingCart = faShoppingCart;
   faChartPie = faChartPie;
+  faChartColumn = faChartColumn;
 
   availableCurrencies = AVAILABLE_CURRENCIES;
   private expenseChartInstance: Chart | undefined;
   private categoryDonutChart: Chart | undefined;
   private themeObserver: MutationObserver | undefined;
+  hasExpenseDataForChart: boolean = false;
   hasCategoryDataForChart: boolean = false;
   currentSummaryDateRange$: Observable<string> | undefined;
 
@@ -548,6 +551,12 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!canvas) return;
 
     this.expenseChartInstance?.destroy();
+
+    const hasData = data?.datasets?.[0]?.data?.some((v: number) => v > 0) ?? false;
+    this.hasExpenseDataForChart = hasData;
+    this.cdr.detectChanges();
+
+    if (!this.hasExpenseDataForChart) return;
 
     const isLight = document.body.classList.contains('light-mode');
     const gridColor = isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.05)';

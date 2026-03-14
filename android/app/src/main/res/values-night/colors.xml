@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="window_background">#0a0c10</color>
+    <color name="dropdown_background">#1a1f2e</color>
+    <color name="dropdown_text">#ffffff</color>
+</resources>

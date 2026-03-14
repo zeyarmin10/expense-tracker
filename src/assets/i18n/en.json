@@ -532,5 +532,17 @@
   "LOGIN_DARK": "Dark",
   "LOGIN_LIGHT": "Light",
   "NAV_LIGHT_MODE": "Light",
-  "MORE": "More"
+  "MORE": "More",
+  "EMPTY_STATE_TITLE": "Let's start recording",
+  "EMPTY_STATE_SUB": "To manage your finances effectively, please add your first expense.",
+  "ADD_EXPENSE": "Add Expense",
+  "SET_BUDGET": "Set Budget",
+  "NO_EXPENSE_FOR_CATEGORY": "No data available for this category",
+  "NO_EXPENSE_FOR_CHART": "No expense data available for the chart",
+  "BUDGET_EMPTY_TITLE": "No budget set yet",
+  "BUDGET_EMPTY_SUB": "Set a budget to take control of your spending",
+  "NO_BUDGET_CHART_DATA": "No budget data available",
+  "PNL_EMPTY_TITLE": "No income recorded yet",
+  "PNL_EMPTY_SUB": "Record your income to calculate profit and loss",
+  "NO_PNL_CHART_DATA": "No data available to display the chart"
 }

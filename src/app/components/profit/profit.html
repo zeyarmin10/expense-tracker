@@ -97,7 +97,7 @@
           </ng-container>
           </div>
         <div class="pnl-card-right">
-          <span class="pnl-card-icon pnl-icon-budget"><fa-icon [icon]="faChartPie"></fa-icon></span>
+          <span class="pnl-card-icon pnl-icon-budget"><fa-icon [icon]="faPiggyBank"></fa-icon></span>
         </div>
         </div>
 
@@ -154,14 +154,35 @@
           </ng-container>
         </div>
         <div class="pnl-card-right">
-          <span class="pnl-card-icon pnl-icon-balance"><fa-icon [icon]="faEllipsisH"></fa-icon></span>
+          <span class="pnl-card-icon pnl-icon-balance"><fa-icon [icon]="getBalanceIcon(remainingBalanceByCurrency$ | async)"></fa-icon></span>
         </div>
       </div>
 
     </div>
 
-    <ng-template #cardLoading><span class="pnl-card-muted">{{ 'LOADING_DATA' | translate }}</span></ng-template>
-    <ng-template #cardNoData><span class="pnl-card-muted">—</span></ng-template>
+    <ng-template #cardLoading>
+      <div class="pnl-card-skeleton"><div class="pnl-skeleton-line pnl-skeleton-short"></div></div>
+    </ng-template>
+    <ng-template #cardNoData>
+      <span class="pnl-card-empty-hint">{{ 'NO_DATA_YET' | translate }}</span>
+    </ng-template>
+
+    <!-- ── Empty State Banner ── -->
+    <ng-container *ngIf="(totalIncomesByCurrency$ | async) as incTotals">
+      <div class="pnl-empty-banner" *ngIf="!incTotals || (incTotals | keyvalue).length === 0">
+        <div class="pnl-empty-icon"><fa-icon [icon]="faChartColumn"></fa-icon></div>
+        <div class="pnl-empty-content">
+          <p class="pnl-empty-title">{{ 'PNL_EMPTY_TITLE' | translate }}</p>
+          <p class="pnl-empty-sub">{{ 'PNL_EMPTY_SUB' | translate }}</p>
+        </div>
+        <div class="pnl-empty-actions">
+          <button type="button" class="pnl-empty-btn pnl-empty-btn-primary"
+            (click)="toggleVisibility('incomeForm')">
+            + {{ 'ADD_INCOME' | translate }}
+          </button>
+        </div>
+      </div>
+    </ng-container>
 
     <!-- Chart -->
     <div class="pnl-chart-panel">
@@ -171,6 +192,15 @@
       </h5>
       <div class="pnl-chart-container">
         <canvas #profitChartCanvas></canvas>
+        <div *ngIf="!(hasChartData$ | async)" class="pnl-no-chart-data">
+          <div class="pnl-no-chart-inner">
+            <fa-icon [icon]="faChartColumn" class="pnl-no-chart-icon-fa"></fa-icon>
+            <p class="pnl-no-chart-msg">{{ 'NO_PNL_CHART_DATA' | translate }}</p>
+            <button type="button" class="pnl-no-chart-cta" (click)="toggleVisibility('incomeForm')">
+              + {{ 'ADD_INCOME' | translate }}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -195,9 +225,13 @@
             <div class="pnl-float-field pnl-float-group">
               <span class="pnl-currency-badge">{{ userProfile?.currency || 'MMK' }}</span>
               <div class="pnl-float-field" style="flex:1; min-width:0;">
-                <input type="number" id="incomeAmount" formControlName="amount"
-                  class="pnl-input pnl-input-field pnl-input-joined" placeholder=" " step="0.01"
-                  [class.pnl-has-val]="incomeForm.get('amount')?.value !== null && incomeForm.get('amount')?.value !== ''"
+                <input type="text" inputmode="decimal" id="incomeAmount"
+                  class="pnl-input pnl-input-field pnl-input-joined"
+                  [value]="incomeAmountDisplay"
+                  (input)="onIncomeAmountInput($event)"
+                  (focus)="incomeAmountDisplay = (incomeForm.get('amount')?.value > 0 ? formatWithCommas(incomeForm.get('amount')?.value) : '')"
+                  placeholder=" "
+                  [class.pnl-has-val]="incomeAmountDisplay !== ''"
                   [class.is-invalid]="incomeForm.controls['amount'].invalid && incomeForm.controls['amount'].touched" />
                 <label class="pnl-float-label" for="incomeAmount">{{ 'AMOUNT' | translate }}</label>
               </div>
@@ -260,7 +294,7 @@
     <div class="pnl-panel">
       <button class="pnl-panel-toggle" type="button" (click)="toggleVisibility('recordedBudgets')">
         <span class="pnl-panel-toggle-left">
-          <fa-icon [icon]="faChartPie" class="pnl-icon-budget"></fa-icon>
+          <fa-icon [icon]="faPiggyBank" class="pnl-icon-budget"></fa-icon>
           {{ 'RECORDED_BUDGETS' | translate }}
         </span>
         <fa-icon [icon]="isRecordedBudgetsCollapsed ? faChevronDown : faChevronUp" class="pnl-chevron"></fa-icon>

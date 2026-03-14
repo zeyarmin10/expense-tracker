@@ -366,3 +366,218 @@
   transform: translateY(-1px);
   transition: transform 0.08s;
 }
+
+
+/* ══════════════════════════════════════════════
+   EMPTY STATE — data မရှိသေးတဲ့အချိန်
+   ══════════════════════════════════════════════ */
+
+/* ── Main Empty Banner ── */
+.dash-empty-banner {
+  background: linear-gradient(135deg,
+    rgba(0, 229, 180, 0.06) 0%,
+    var(--surface) 50%,
+    rgba(0, 229, 180, 0.04) 100%);
+  border: 1px solid rgba(0, 229, 180, 0.2);
+  border-radius: 16px;
+  padding: 1.5rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  text-align: center;
+  animation: dash-fadein 0.5s ease both;
+  position: relative;
+  overflow: hidden;
+}
+
+.dash-empty-banner::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+}
+
+@media (min-width: 576px) {
+  .dash-empty-banner {
+    flex-direction: row;
+    text-align: left;
+    padding: 1.75rem 2rem;
+    gap: 1.25rem;
+  }
+}
+
+@keyframes dash-fadein {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.dash-empty-icon {
+  font-size: 2.5rem;
+  flex-shrink: 0;
+  animation: dash-bounce 3s ease-in-out infinite;
+}
+
+@keyframes dash-bounce {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-6px); }
+}
+
+.dash-empty-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.dash-empty-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 0.3rem;
+  letter-spacing: -0.01em;
+}
+
+.dash-empty-sub {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.dash-empty-actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+@media (min-width: 576px) {
+  .dash-empty-actions {
+    justify-content: flex-start;
+  }
+}
+
+.dash-empty-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.55rem 1.1rem;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-decoration: none;
+  letter-spacing: 0.02em;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.dash-empty-btn-primary {
+  background: var(--accent);
+  color: #070a0e;
+  box-shadow: 0 4px 14px rgba(0, 229, 180, 0.25);
+}
+
+.dash-empty-btn-primary:hover {
+  background: var(--accent-2, #00e5b4cc);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(0, 229, 180, 0.35);
+}
+
+.dash-empty-btn-secondary {
+  background: var(--surface-2);
+  color: var(--text-sub);
+  border: 1px solid var(--border);
+}
+
+.dash-empty-btn-secondary:hover {
+  border-color: rgba(0, 229, 180, 0.3);
+  color: var(--accent);
+  transform: translateY(-1px);
+}
+
+/* ── Card Skeleton Loading ── */
+.dash-card-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.2rem 0;
+}
+
+.dash-skeleton-line {
+  height: 12px;
+  border-radius: 6px;
+  background: linear-gradient(90deg,
+    var(--surface-2) 25%,
+    rgba(0, 229, 180, 0.08) 50%,
+    var(--surface-2) 75%);
+  background-size: 200% 100%;
+  animation: dash-shimmer 1.5s infinite;
+}
+
+.dash-skeleton-short {
+  width: 60%;
+  height: 20px;
+  border-radius: 6px;
+}
+
+@keyframes dash-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── Card Empty Hint ── */
+.dash-card-empty-hint {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-style: italic;
+  opacity: 0.7;
+}
+
+/* ── Chart Empty State ── */
+.dash-no-chart-data {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dash-no-chart-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  text-align: center;
+  padding: 1rem;
+}
+
+.dash-no-chart-icon {
+  font-size: 2.2rem;
+  opacity: 0.6;
+}
+
+.dash-no-chart-msg {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.dash-no-chart-cta {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.45rem 1rem;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  background: rgba(0, 229, 180, 0.1);
+  color: var(--accent);
+  border: 1px solid rgba(0, 229, 180, 0.2);
+  text-decoration: none;
+  transition: all 0.15s;
+  margin-top: 0.2rem;
+}
+
+.dash-no-chart-cta:hover {
+  background: rgba(0, 229, 180, 0.18);
+  transform: translateY(-1px);
+}

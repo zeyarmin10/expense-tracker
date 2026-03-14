@@ -2,7 +2,10 @@ import {
   Component,
   OnInit,
   inject,
-  ViewChild
+  ViewChild,
+  ElementRef,
+  ViewChildren,
+  QueryList,
 } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import {
@@ -105,6 +108,52 @@ export class Expense implements OnInit {
   isSaving = false;
   isFormOpen = true;   // collapsible add-form state
   objectKeys = Object.keys;
+
+  // ── Comma Formatting for Price inputs ──────────────
+  priceDisplayValue: string = '';
+  editPriceDisplayValue: string = '';
+
+  formatWithCommas(value: number | string | null): string {
+    if (value === null || value === undefined || value === '') return '';
+    const num = typeof value === 'string'
+      ? parseFloat(value.replace(/,/g, ''))
+      : value;
+    if (isNaN(num)) return '';
+    // Integer part comma-separated, decimal part preserved
+    const parts = num.toString().split('.');
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return parts.join('.');
+  }
+
+  parseCommaValue(value: string): number {
+    const cleaned = value.replace(/,/g, '');
+    return parseFloat(cleaned) || 0;
+  }
+
+  onPriceInput(event: Event, formGroup: FormGroup, controlName: string = 'price'): void {
+    const input = event.target as HTMLInputElement;
+    // ကိန်းဂဏန်း + dot + comma သာ ခွင့်ပြု
+    let raw = input.value.replace(/[^\d.]/g, '');
+    // dot တစ်ခုသာ ရှိခွင့်ပြု
+    const parts = raw.split('.');
+    if (parts.length > 2) raw = parts[0] + '.' + parts.slice(1).join('');
+
+    const numericValue = parseFloat(raw.replace(/,/g, '')) || 0;
+    formGroup.get(controlName)?.setValue(numericValue, { emitEvent: true });
+
+    // Display value with commas
+    const intPart = raw.split('.')[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    const decPart = raw.includes('.') ? '.' + (raw.split('.')[1] || '') : '';
+    const formatted = intPart + decPart;
+
+    if (controlName === 'price' && formGroup === this.newExpenseForm) {
+      this.priceDisplayValue = formatted;
+    } else {
+      this.editPriceDisplayValue = formatted;
+    }
+    input.value = formatted;
+  }
+  // ────────────────────────────────────────────────────
 
   // Icons
   faPlus        = faPlus;
@@ -233,6 +282,7 @@ export class Expense implements OnInit {
         date: this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '',
         category: '', itemName: '', quantity: 1, unit: '', price: ''
       });
+      this.priceDisplayValue = '';
       this.resetFilter();
       this.refreshExpenses$.next();
     } catch (error: any) {
@@ -265,6 +315,7 @@ export class Expense implements OnInit {
 
   startEdit(expense: IExpense): void {
     this.editingExpenseId = expense.id!;
+    this.editPriceDisplayValue = this.formatWithCommas(expense.price);
     this.editingForm = this.fb.group({
       date:     [expense.date,     Validators.required],
       category: [expense.category, Validators.required],
@@ -274,6 +325,18 @@ export class Expense implements OnInit {
       price:    [expense.price,    [Validators.required, Validators.min(0)]],
       currency: [expense.currency, Validators.required],
     });
+
+    // ✅ Edit form ပေါ်လာပြီးနောက် itemName ကို focus လုပ်ပါ
+    setTimeout(() => {
+      const editId = 'edit-itemName-' + expense.id;
+      const el = document.getElementById(editId) as HTMLInputElement;
+      if (el) {
+        el.focus();
+        // cursor ကို text အဆုံးသို့ ရောက်အောင်
+        const len = el.value.length;
+        el.setSelectionRange(len, len);
+      }
+    }, 50);
   }
 
   async saveEdit(): Promise<void> {
@@ -308,9 +371,24 @@ export class Expense implements OnInit {
     }
   }
 
+  private focusEditItemName(expenseId: string): void {
+    // DOM render ပြီးမှ focus လုပ်ဖို့ setTimeout သုံးပါ
+    setTimeout(() => {
+      const inputId = `edit-itemName-${expenseId}`;
+      const input = document.getElementById(inputId) as HTMLInputElement;
+      if (input) {
+        input.focus();
+        // cursor ကို text အဆုံးမှာ ထားပါ
+        const len = input.value.length;
+        input.setSelectionRange(len, len);
+      }
+    }, 50);
+  }
+
   cancelEdit(): void {
     this.editingExpenseId = null;
     this.editingForm = null;
+    this.editPriceDisplayValue = '';
   }
 
   onDelete(expenseId: string): void {

@@ -1,4 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <color name="splash_background">#0F2340</color>
+    <color name="splash_background">#0F2340</color>
+    <color name="window_background">#0a0c10</color>
+    <!-- Light mode dropdown -->
+    <color name="dropdown_background">#ffffff</color>
+    <color name="dropdown_text">#1a1a2e</color>
 </resources>

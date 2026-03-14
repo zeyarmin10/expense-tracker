@@ -70,8 +70,11 @@
             <div class="exp-float-field exp-float-group">
               <span class="exp-currency-badge">{{ userProfile?.currency || 'MMK' }}</span>
               <div class="exp-float-field" style="flex:1; min-width:0;">
-                <input type="number" class="exp-float-input exp-float-input-joined" id="price" formControlName="price"
-                  min="0" placeholder=" " (focus)="newExpenseForm.get('price')?.setValue(null)"
+                <input type="text" inputmode="decimal" class="exp-float-input exp-float-input-joined" id="price"
+                  [value]="priceDisplayValue"
+                  (input)="onPriceInput($event, newExpenseForm, 'price')"
+                  (focus)="priceDisplayValue = (newExpenseForm.get('price')?.value > 0 ? formatWithCommas(newExpenseForm.get('price')?.value) : ''); newExpenseForm.get('price')?.markAsTouched()"
+                  placeholder=" "
                   [class.is-invalid]="newExpenseForm.controls['price'].invalid && newExpenseForm.controls['price'].touched">
                 <label class="exp-float-label" for="price">{{ "PRICE_LABEL" | translate }}</label>
               </div>
@@ -227,8 +230,12 @@
                 <div class="exp-float-field exp-float-group">
                   <span class="exp-currency-badge">{{ editingForm.get('currency')?.value }}</span>
                   <div class="exp-float-field" style="flex:1; min-width:0;">
-                    <input type="number" class="exp-float-input exp-float-input-joined"
-                      [id]="'edit-price-' + expense.id" formControlName="price" min="0" placeholder=" ">
+                    <input type="text" inputmode="decimal" class="exp-float-input exp-float-input-joined"
+                      [id]="'edit-price-' + expense.id"
+                      [value]="editPriceDisplayValue"
+                      (input)="onPriceInput($event, editingForm!, 'price')"
+                      (focus)="editPriceDisplayValue = (editingForm?.get('price')?.value > 0 ? formatWithCommas(editingForm?.get('price')?.value) : '')"
+                      placeholder=" ">
                     <label class="exp-float-label" [for]="'edit-price-' + expense.id">{{ "PRICE_LABEL" | translate
                       }}</label>
                   </div>

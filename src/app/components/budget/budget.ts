@@ -33,7 +33,8 @@ import {
   faChartLine,
   faArrowTrendDown,
   faTasks,
-  faChartBar
+  faChartBar,
+  faChartColumn,
 } from '@fortawesome/free-solid-svg-icons';
 import { Chart, registerables } from 'chart.js';
 import { AuthService } from '../../services/auth';
@@ -155,8 +156,11 @@ export class BudgetComponent implements OnInit, OnDestroy {
   faArrowTrendDown = faArrowTrendDown;
   faTasks = faTasks;
   faChartBar = faChartBar;
+  faChartColumn = faChartColumn;
 
   isBudgetFormCollapsed: boolean = true;
+  hasChartData: boolean = false;
+  amountDisplayValue: string = '';
   isRecordedBudgetsCollapsed: boolean = true;
 
   // UI state for dark-theme panels
@@ -960,6 +964,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
     const defaultCurrency = this.userProfile?.currency || 'MMK';
     const currentDate = new Date();
 
+    this.amountDisplayValue = '';
     this.budgetForm.reset({
       type: 'monthly',
       category: 'all',
@@ -1057,6 +1062,30 @@ export class BudgetComponent implements OnInit, OnDestroy {
   private chartInstance: Chart | undefined;
   private themeObserver: MutationObserver | undefined;
 
+  // ── Comma Formatting ─────────────────────────────────────────
+  formatWithCommas(value: number | string | null): string {
+    if (value === null || value === undefined || value === '') return '';
+    const num = typeof value === 'string' ? parseFloat(value.replace(/,/g, '')) : value;
+    if (isNaN(num)) return '';
+    const parts = num.toString().split('.');
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return parts.join('.');
+  }
+
+  onAmountInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    let raw = input.value.replace(/[^\d.]/g, '');
+    const parts = raw.split('.');
+    if (parts.length > 2) raw = parts[0] + '.' + parts.slice(1).join('');
+    const numericValue = parseFloat(raw.replace(/,/g, '')) || null;
+    this.budgetForm.get('amount')?.setValue(numericValue, { emitEvent: true });
+    const intPart = (raw.split('.')[0] || '').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    const decPart = raw.includes('.') ? '.' + (raw.split('.')[1] || '') : '';
+    this.amountDisplayValue = intPart + decPart;
+    input.value = this.amountDisplayValue;
+  }
+  // ─────────────────────────────────────────────────────────────
+
   renderChart(data: any): void {
     const canvas = document.getElementById('budgetChart') as HTMLCanvasElement;
 
@@ -1069,6 +1098,14 @@ export class BudgetComponent implements OnInit, OnDestroy {
       this.chartInstance.destroy();
       this.chartInstance = undefined;
     }
+
+    // ✅ data ရှိမရှိ စစ်ပါ
+    const hasData = data?.datasets?.some((ds: any) =>
+      ds.data?.some((v: number) => v > 0)
+    ) ?? false;
+    this.hasChartData = hasData;
+
+    if (!this.hasChartData) return;
 
     const isLight = document.body.classList.contains('light-mode');
     const gridColor = isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.05)';

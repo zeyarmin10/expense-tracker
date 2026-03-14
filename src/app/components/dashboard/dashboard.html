@@ -12,7 +12,8 @@
       </div>
     </div>
 
-    <!-- ── Summary Cards ── -->
+    <!-- ── Summary Cards — data ရှိမှသာ ပြမည် ── -->
+    <ng-container *ngIf="hasData$ | async">
     <div class="dash-summary-grid">
 
       <!-- Income -->
@@ -94,17 +95,41 @@
       </div>
 
     </div>
+    </ng-container>
     <!-- END Summary Cards -->
+
+    <!-- ── Empty State Banner (data မရှိသေးတဲ့အချိန်) ── -->
+    <ng-container *ngIf="(totalExpensesByCurrency$ | async) as expTotals">
+      <div class="dash-empty-banner"
+           *ngIf="!expTotals || (expTotals | keyvalue).length === 0">
+        <div class="dash-empty-icon">💡</div>
+        <div class="dash-empty-content">
+          <p class="dash-empty-title">{{ 'EMPTY_STATE_TITLE' | translate }}</p>
+          <p class="dash-empty-sub">{{ 'EMPTY_STATE_SUB' | translate }}</p>
+        </div>
+        <div class="dash-empty-actions">
+          <a routerLink="/expense" class="dash-empty-btn dash-empty-btn-primary">
+            + {{ 'ADD_EXPENSE' | translate }}
+          </a>
+          <a routerLink="/budget" class="dash-empty-btn dash-empty-btn-secondary">
+            {{ 'SET_BUDGET' | translate }}
+          </a>
+        </div>
+      </div>
+    </ng-container>
 
     <!-- Shared no-data / loading templates -->
     <ng-template #cardLoading>
-      <span class="dash-card-muted">{{ 'LOADING_DATA' | translate }}</span>
+      <div class="dash-card-skeleton">
+        <div class="dash-skeleton-line dash-skeleton-short"></div>
+      </div>
     </ng-template>
     <ng-template #cardNoData>
-      <span class="dash-card-muted">—</span>
+      <span class="dash-card-empty-hint">{{ 'NO_DATA_YET' | translate }}</span>
     </ng-template>
 
-    <!-- ── Charts ── -->
+    <!-- ── Charts — data ရှိမှသာ ပြမည် ── -->
+    <!-- <ng-container *ngIf="hasData$ | async"> -->
     <div class="dash-charts-grid">
 
       <!-- Bar Chart -->
@@ -114,6 +139,15 @@
         </h5>
         <div class="dash-chart-container">
           <canvas #expenseChartCanvas></canvas>
+          <div *ngIf="!hasExpenseDataForChart" class="dash-no-chart-data">
+            <div class="dash-no-chart-inner">
+                <div class="dash-no-chart-icon"><fa-icon [icon]="faChartColumn"></fa-icon></div>
+                <p class="dash-no-chart-msg">{{ 'NO_EXPENSE_FOR_CHART' | translate }}</p>
+                <a routerLink="/expense" class="dash-no-chart-cta">
+                + {{ 'ADD_FIRST_EXPENSE' | translate }}
+                </a>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -125,12 +159,19 @@
         <div class="dash-chart-container dash-chart-donut">
           <canvas #categoryDonutChartCanvas></canvas>
           <div *ngIf="!hasCategoryDataForChart" class="dash-no-chart-data">
-            <span>{{ 'NO_DATA_AVAILABLE_FOR_CHART' | translate }}</span>
+            <div class="dash-no-chart-inner">
+              <div class="dash-no-chart-icon"><fa-icon [icon]="faChartPie"></fa-icon></div>
+              <p class="dash-no-chart-msg">{{ 'NO_EXPENSE_FOR_CATEGORY' | translate }}</p>
+              <a routerLink="/expense" class="dash-no-chart-cta">
+                + {{ 'ADD_FIRST_EXPENSE' | translate }}
+              </a>
+            </div>
           </div>
         </div>
       </div>
 
     </div>
+    <!-- </ng-container> -->
     <!-- END Charts -->
 
   </div>

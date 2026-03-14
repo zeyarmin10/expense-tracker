@@ -43,7 +43,9 @@ import {
   faChartPie, 
   faFilter, 
   faCalendarAlt, 
-  faEllipsisH
+  faEllipsisH,
+  faPiggyBank,
+  faChartColumn
 } from '@fortawesome/free-solid-svg-icons';
 import { AuthService } from '../../services/auth';
 import { Chart, registerables } from 'chart.js';
@@ -165,6 +167,34 @@ export class Profit implements OnInit, OnDestroy {
   faFilter = faFilter;
   faCalendarAlt = faCalendarAlt;
   faEllipsisH = faEllipsisH;
+  faPiggyBank = faPiggyBank;
+  faChartColumn = faChartColumn;
+
+  // ── Comma formatting ──────────────────────────
+  incomeAmountDisplay: string = '';
+
+  formatWithCommas(value: number | string | null): string {
+    if (value === null || value === undefined || value === '') return '';
+    const num = typeof value === 'string' ? parseFloat(value.replace(/,/g, '')) : value;
+    if (isNaN(num)) return '';
+    const parts = num.toString().split('.');
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return parts.join('.');
+  }
+
+  onIncomeAmountInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    let raw = input.value.replace(/[^\d.]/g, '');
+    const parts = raw.split('.');
+    if (parts.length > 2) raw = parts[0] + '.' + parts.slice(1).join('');
+    const numericValue = parseFloat(raw.replace(/,/g, '')) || null;
+    this.incomeForm.get('amount')?.setValue(numericValue, { emitEvent: true });
+    const intPart = (raw.split('.')[0] || '').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    const decPart = raw.includes('.') ? '.' + (raw.split('.')[1] || '') : '';
+    this.incomeAmountDisplay = intPart + decPart;
+    input.value = this.incomeAmountDisplay;
+  }
+  // ──────────────────────────────────────────────
 
   constructor() {
     this.incomeForm = this.fb.group({
@@ -539,6 +569,7 @@ export class Profit implements OnInit, OnDestroy {
 
   resetForm(): void {
     const defaultCurrency = this.userProfile?.currency || 'MMK';
+    this.incomeAmountDisplay = '';
     this.incomeForm.reset({
       description: '',
       amount: '',
@@ -666,5 +697,16 @@ export class Profit implements OnInit, OnDestroy {
 
   getProfitLossAmountClass(value: number): string {
     return value >= 0 ? 'text-success' : 'text-danger';
+  }
+
+  getBalanceIcon(balances: { [key: string]: number } | null): any {
+    if (!balances) {
+      return this.faChartLine; // Default icon
+    }
+    const totalBalance = Object.values(balances).reduce(
+      (sum, value) => sum + value,
+      0
+    );
+    return totalBalance >= 0 ? this.faChartLine : this.faArrowTrendDown;
   }
 }
