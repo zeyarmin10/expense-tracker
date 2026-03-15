@@ -1134,3 +1134,89 @@
   background: rgba(0, 229, 180, 0.18);
   transform: translateY(-1px);
 }
+
+
+/* ══════════════════════════════════════════════
+   COMPACT BUDGET LIST ROW
+   ══════════════════════════════════════════════ */
+
+.bgt-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.55rem 1rem;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.12s;
+}
+
+.bgt-row:last-child { border-bottom: none; }
+
+.bgt-row:hover { background: var(--surface-2); }
+
+.bgt-row-left {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.bgt-row-amount {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--budget-color, #60a5fa);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.bgt-row-badge {
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: 20px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.bgt-badge-monthly {
+  background: rgba(96, 165, 250, 0.12);
+  color: #60a5fa;
+  border: 1px solid rgba(96, 165, 250, 0.22);
+}
+
+.bgt-badge-yearly {
+  background: rgba(251, 191, 36, 0.12);
+  color: #fbbf24;
+  border: 1px solid rgba(251, 191, 36, 0.22);
+}
+
+.bgt-badge-cat {
+  background: rgba(0, 229, 180, 0.1);
+  color: var(--accent);
+  border: 1px solid rgba(0, 229, 180, 0.2);
+}
+
+.bgt-row-date {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.bgt-row-desc {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-style: italic;
+  overflow: hidden;
+  /* text-overflow: ellipsis;
+  white-space: nowrap; */
+  max-width: fit-content;
+}
+
+/* Light mode adjustments */
+body.light-mode .bgt-badge-monthly { background: rgba(59, 130, 246, 0.08); }
+body.light-mode .bgt-badge-yearly  { background: rgba(217, 119, 6, 0.08); }
+body.light-mode .bgt-badge-cat     { background: rgba(0, 180, 140, 0.08); }

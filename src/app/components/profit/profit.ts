@@ -45,7 +45,8 @@ import {
   faCalendarAlt, 
   faEllipsisH,
   faPiggyBank,
-  faChartColumn
+  faChartColumn,
+  faPlus
 } from '@fortawesome/free-solid-svg-icons';
 import { AuthService } from '../../services/auth';
 import { Chart, registerables } from 'chart.js';
@@ -135,6 +136,7 @@ export class Profit implements OnInit, OnDestroy {
   // Chart data observables
   profitChartData$!: Observable<any>;
   hasChartData$!: Observable<boolean>;
+  hasIncomeData$!: Observable<boolean>;
   private profitChartInstance: Chart | undefined;
   private themeObserver: MutationObserver | undefined;
 
@@ -169,6 +171,7 @@ export class Profit implements OnInit, OnDestroy {
   faEllipsisH = faEllipsisH;
   faPiggyBank = faPiggyBank;
   faChartColumn = faChartColumn;
+  faPlus = faPlus;
 
   // ── Comma formatting ──────────────────────────
   incomeAmountDisplay: string = '';
@@ -319,6 +322,10 @@ export class Profit implements OnInit, OnDestroy {
           ],
         };
       })
+    );
+
+    this.hasIncomeData$ = this.totalIncomesByCurrency$.pipe(
+      map(totals => totals != null && Object.keys(totals).length > 0)
     );
 
     this.hasChartData$ = this.profitChartData$.pipe(
@@ -588,6 +595,18 @@ export class Profit implements OnInit, OnDestroy {
     } else if (section === 'recordedBudgets') {
       this.isRecordedBudgetsCollapsed = !this.isRecordedBudgetsCollapsed;
     }
+  }
+
+  // ✅ Empty state button — form ဖွင့်ပြီး amount field focus
+  openIncomeFormAndFocus(): void {
+    this.isIncomeFormCollapsed = false;
+    setTimeout(() => {
+      const input = document.getElementById('incomeAmount') as HTMLInputElement;
+      if (input) {
+        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        input.focus();
+      }
+    }, 320);
   }
 
   // --- Formatting and Chart Rendering ---

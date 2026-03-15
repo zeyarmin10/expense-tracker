@@ -137,30 +137,26 @@
         <div class="bgt-recorded-body">
           <ng-container *ngIf="filteredBudgets$ | async as budgets; else loadingBudget">
             <ng-container *ngIf="budgets.length > 0; else noBudgetsTemplate">
-              <div *ngFor="let budget of budgets" class="bgt-record-item">
-                <!-- Left: amount + badges -->
-                <div class="bgt-record-main">
-                  <span class="bgt-record-amount-lg">
+              <div *ngFor="let budget of budgets" class="bgt-row">
+                <!-- Amount + badges (inline compact) -->
+                <div class="bgt-row-left">
+                  <span class="bgt-row-amount">
                     {{ formatService.formatAmountWithSymbol(budget.amount, budget.currency) }}
                   </span>
-                  <div class="bgt-record-badges">
-                    <span class="bgt-type-badge" [class.bgt-badge-monthly]="budget.type === 'monthly'"
-                                                  [class.bgt-badge-yearly]="budget.type === 'yearly'">
-                      {{ (budget.type === "monthly" ? "MONTHLY" : "YEARLY") | translate }}
-                    </span>
-                    <span class="bgt-cat-badge" *ngIf="budget.category">
-                      {{ budget.category === "all" ? ("ALL_CATEGORY" | translate) : budget.category }}
-                    </span>
-                  </div>
-                  <div class="bgt-record-bottom">
-                    <span class="bgt-record-date">
-                      <fa-icon [icon]="faChevronDown" style="font-size:0.6rem; opacity:0.5; margin-right:3px;"></fa-icon>
-                      {{ budget.type === "monthly" ? formatLocalizedDate(budget.period) : budget.period || "" }}
-                    </span>
-                    <span class="bgt-record-desc" *ngIf="budget.description">· {{ budget.description }}</span>
-                  </div>
+                  <span class="bgt-row-badge bgt-badge-monthly" *ngIf="budget.type === 'monthly'">
+                    {{ 'MONTHLY' | translate }}
+                  </span>
+                  <span class="bgt-row-badge bgt-badge-yearly" *ngIf="budget.type === 'yearly'">
+                    {{ 'YEARLY' | translate }}
+                  </span>
+                  <span class="bgt-row-badge bgt-badge-cat" *ngIf="budget.category && budget.category !== 'all'">
+                    {{ budget.category }}
+                  </span>
+                  <span class="bgt-row-date">
+                    {{ budget.type === "monthly" ? formatLocalizedDate(budget.period) : budget.period || "" }}
+                  </span>
+                  <span class="bgt-row-desc" *ngIf="budget.description">· {{ budget.description }}</span>
                 </div>
-                <!-- Right: delete btn -->
                 <button *ngIf="userProfile?.accountType === 'personal' || userRole === 'admin'"
                   class="bgt-delete-btn" type="button" (click)="confirmDeleteBudget(budget.id)">
                   <fa-icon [icon]="faTrash"></fa-icon>
@@ -187,7 +183,7 @@
           <p class="bgt-empty-sub">{{ 'BUDGET_EMPTY_SUB' | translate }}</p>
         </div>
         <div class="bgt-empty-actions">
-          <button type="button" class="bgt-empty-btn bgt-empty-btn-primary" (click)="toggleAddForm()">
+          <button type="button" class="bgt-empty-btn bgt-empty-btn-primary" (click)="openBudgetFormAndFocus()">
             + {{ 'SET_BUDGET' | translate }}
           </button>
         </div>
@@ -272,7 +268,7 @@
           <div class="bgt-no-chart-inner">
             <fa-icon [icon]="faChartColumn" class="bgt-no-chart-icon-fa"></fa-icon>
             <p class="bgt-no-chart-msg">{{ 'NO_BUDGET_CHART_DATA' | translate }}</p>
-            <button type="button" class="bgt-no-chart-cta" (click)="toggleAddForm()">
+            <button type="button" class="bgt-no-chart-cta" (click)="openBudgetFormAndFocus()">
               + {{ 'SET_BUDGET' | translate }}
             </button>
           </div>

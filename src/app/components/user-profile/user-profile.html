@@ -50,12 +50,40 @@
           </div>
         </div>
 
-        <!-- ── Display Name ── -->
-        <div class="prof-section">
-          <div class="prof-section-label">{{ 'DISPLAY_NAME_LABEL' | translate }}</div>
-          <div class="prof-float-field">
-            <input type="text" id="displayName" class="prof-input" formControlName="displayName" placeholder=" ">
-            <label class="prof-float-label" for="displayName">{{ 'DISPLAY_NAME_LABEL' | translate }}</label>
+        <!-- ── Display Name — Inline Edit ── -->
+        <div class="prof-section prof-name-section">
+          <span class="prof-section-label">{{ 'DISPLAY_NAME_LABEL' | translate }}</span>
+
+          <!-- ── View mode ── -->
+          <div class="prof-name-row" *ngIf="!isEditingName">
+            <span class="prof-name-display">
+              {{ userProfileForm.get('displayName')?.value || '—' }}
+            </span>
+            <div class="prof-name-actions">
+              <button type="button" class="prof-name-btn prof-name-btn-edit"
+                (click)="startEditName()">
+                <fa-icon [icon]="faEdit"></fa-icon>
+              </button>
+            </div>
+          </div>
+
+          <!-- ── Edit mode ── -->
+          <div class="prof-name-row" *ngIf="isEditingName">
+            <input type="text" id="displayName" class="prof-input prof-name-input"
+              formControlName="displayName" placeholder=" "
+              (keyup.enter)="saveDisplayName()"
+              (keyup.escape)="cancelEditName()">
+            <div class="prof-name-actions">
+              <button type="button" class="prof-name-btn prof-name-btn-save"
+                (click)="saveDisplayName()"
+                [disabled]="userProfileForm.get('displayName')?.invalid">
+                <fa-icon [icon]="faSave"></fa-icon>
+              </button>
+              <button type="button" class="prof-name-btn prof-name-btn-cancel"
+                (click)="cancelEditName()">
+                <fa-icon [icon]="faTimes"></fa-icon>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -65,7 +93,8 @@
           <div class="prof-period-wrap">
             <label class="prof-period-label">{{ 'BUDGET_PERIOD_LABEL' | translate }}</label>
             <div class="prof-input-group">
-              <select id="budgetPeriod" class="prof-input prof-select prof-has-val" formControlName="budgetPeriod">
+              <select id="budgetPeriod" class="prof-input prof-select prof-has-val" formControlName="budgetPeriod"
+                (change)="autoSaveField('budgetPeriod')">
                 <option *ngFor="let period of translatedBudgetPeriods" [value]="period.code">{{ period.name }}</option>
                 <optgroup label="{{ 'BUDGET_PERIOD.CUSTOM' | translate }}" *ngIf="customBudgetPeriods.length > 0">
                   <option *ngFor="let period of customBudgetPeriods" [value]="period.id">{{ period.name }}</option>
@@ -123,7 +152,8 @@
           <div class="prof-period-wrap">
             <label class="prof-period-label">{{ 'CURRENCY' | translate }}</label>
             <select id="currency" class="prof-input prof-select" formControlName="currency"
-              [attr.disabled]="!canEditSettings ? true : null">
+              [attr.disabled]="!canEditSettings ? true : null"
+              (change)="autoSaveField('currency')">
               <option *ngFor="let currency of translatedCurrencies" [value]="currency.code">
                 {{ currency.name }} ({{ currency.symbol }})
               </option>
@@ -143,14 +173,7 @@
           </div>
         </div>
 
-        <!-- ── Sticky Save ── -->
-        <div class="prof-save-wrap">
-          <button type="submit" class="prof-save-btn" [class.active]="userProfileForm.valid && userProfileForm.dirty"
-            [disabled]="userProfileForm.invalid || !userProfileForm.dirty">
-            <fa-icon [icon]="faSave" class="me-2"></fa-icon>
-            {{ 'SAVE_BUTTON_LABEL' | translate }}
-          </button>
-        </div>
+        <!-- Save button removed: all fields auto-save or use inline edit -->
 
       </form>
     </ng-container>

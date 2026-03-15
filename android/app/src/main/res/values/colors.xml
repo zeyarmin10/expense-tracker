@@ -1,6 +1,7 @@
 <resources>
     <color name="splash_background">#0F2340</color>
     <color name="window_background">#0a0c10</color>
+    <!-- ic_launcher_background is defined in its own file -->
     <!-- Light mode dropdown -->
     <color name="dropdown_background">#ffffff</color>
     <color name="dropdown_text">#1a1a2e</color>

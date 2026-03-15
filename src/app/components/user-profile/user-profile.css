@@ -535,3 +535,110 @@
   cursor: not-allowed;
   pointer-events: none;
 }
+
+/* ══════════════════════════════════════════════
+   DISPLAY NAME INLINE EDIT
+   ══════════════════════════════════════════════ */
+
+.prof-name-section {
+  padding: 1rem 1.4rem;
+}
+
+/* View mode: label + name on left, edit btn on right */
+.prof-name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.prof-name-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.prof-name-display {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.01em;
+  line-height: 1.4;
+}
+
+/* Edit mode: input fills row width */
+.prof-name-input-wrap {
+  flex: 1;
+  min-width: 0;
+}
+
+.prof-name-input {
+  height: 44px !important;
+  font-size: 0.92rem !important;
+  padding: 0 0.9rem !important;
+  border-radius: 10px !important;
+}
+
+/* Action buttons — center-aligned with input/text */
+.prof-name-actions {
+  display: flex;
+  gap: 0.35rem;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.prof-name-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  background: var(--surface-2);
+}
+
+.prof-name-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* Edit btn — subtle */
+.prof-name-btn-edit {
+  color: var(--text-muted);
+}
+
+.prof-name-btn-edit:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-dim);
+}
+
+/* Save btn — accent */
+.prof-name-btn-save {
+  color: var(--accent);
+  border-color: rgba(0, 229, 180, 0.3);
+  background: rgba(0, 229, 180, 0.08);
+}
+
+.prof-name-btn-save:hover:not(:disabled) {
+  background: var(--accent);
+  color: #0a0c10;
+  border-color: var(--accent);
+}
+
+/* Cancel btn — danger subtle */
+.prof-name-btn-cancel {
+  color: var(--text-muted);
+}
+
+.prof-name-btn-cancel:hover {
+  border-color: rgba(248, 113, 113, 0.3);
+  color: var(--loss-color);
+  background: rgba(248, 113, 113, 0.08);
+}

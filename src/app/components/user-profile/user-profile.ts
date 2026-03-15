@@ -12,7 +12,7 @@ import { AuthService } from '../../services/auth';
 import { UserDataService, UserProfile } from '../../services/user-data';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faSave, faUserCircle, faTrash, faPlus, faChevronDown, faChevronUp, faListUl } from '@fortawesome/free-solid-svg-icons';
+import { faSave, faUserCircle, faTrash, faPlus, faChevronDown, faChevronUp, faListUl, faEdit, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { updateProfile } from '@angular/fire/auth';
 import { FormsModule } from '@angular/forms';
 import { AVAILABLE_CURRENCIES } from '../../core/constants/app.constants';
@@ -103,10 +103,14 @@ export class UserProfileComponent implements OnInit {
   faPlus = faPlus;
   faSave = faSave;
   faUserCircle = faUserCircle;
+  faEdit = faEdit;
+  faTimes = faTimes;
   faTrash = faTrash;
   faChevronDown = faChevronDown;
   faChevronUp = faChevronUp;
   imageLoadError: boolean = false;
+  isEditingName: boolean = false;
+  isFormReady: boolean = false;
   faListUl = faListUl;
 
   constructor() {
@@ -149,7 +153,7 @@ export class UserProfileComponent implements OnInit {
                 budgetPeriod: profile.selectedBudgetPeriodId || profile.budgetPeriod || null,
                 budgetStartDate: profile.budgetStartDate || null,
                 budgetEndDate: profile.budgetEndDate || null,
-              });
+              }, { emitEvent: false });
               this.selectedCurrency = profile.currency || 'MMK';
               this.handleBudgetPeriodChange(this.userProfileForm.get('budgetPeriod')?.value, true);
 
@@ -200,9 +204,16 @@ export class UserProfileComponent implements OnInit {
       })
     );
 
+    // ✅ isFormReady flag — initial patch ပြီးမှသာ autoSave trigger ဖြစ်မည်
+    setTimeout(() => { this.isFormReady = true; }, 500);
+
     this.userProfileForm.get('budgetPeriod')?.valueChanges.subscribe((periodId) => {
       this.handleBudgetPeriodChange(periodId);
+      if (this.isFormReady && periodId && periodId !== 'custom') {
+        this.autoSaveField('budgetPeriod');
+      }
     });
+
   }
 
   ngOnInit(): void {
@@ -258,6 +269,78 @@ export class UserProfileComponent implements OnInit {
       endDateControl?.setValue(customPeriod.endDate, { emitEvent: false });
     } else {
       this.showCustomDateRange = periodId === 'custom';
+    }
+  }
+
+  // ✅ Auto-save: budget period / currency ပြောင်းလဲတာနဲ့ ချက်ချင်း သိမ်းမယ်
+  async autoSaveField(field: 'budgetPeriod' | 'currency'): Promise<void> {
+    const currentUser = await firstValueFrom(this.authService.currentUser$);
+    if (!currentUser) return;
+
+    const formValues = this.userProfileForm.getRawValue();
+    const isCustom = this.customBudgetPeriods.some(p => p.id === formValues.budgetPeriod);
+
+    const profileData: Partial<UserProfile> = {
+      currency: formValues.currency,
+      budgetPeriod: isCustom ? 'custom' : formValues.budgetPeriod,
+      budgetStartDate: isCustom ? formValues.budgetStartDate : null,
+      budgetEndDate: isCustom ? formValues.budgetEndDate : null,
+      selectedBudgetPeriodId: isCustom ? formValues.budgetPeriod : null
+    };
+
+    try {
+      await this.userDataService.updateUserProfile(currentUser.uid, profileData);
+
+      if (this.canEditSettings && this.accountType === 'group' && this.groupId) {
+        await this.groupService.updateGroupSettings(this.groupId, {
+          currency: profileData.currency,
+          budgetPeriod: profileData.budgetPeriod,
+          budgetStartDate: profileData.budgetStartDate,
+          budgetEndDate: profileData.budgetEndDate,
+          selectedBudgetPeriodId: profileData.selectedBudgetPeriodId,
+        });
+      }
+      this.userProfileForm.markAsPristine();
+      Toast.fire({ icon: 'success', title: this.translate.instant('PROFILE_UPDATE_SUCCESS') });
+    } catch (error: any) {
+      console.error('Auto-save error:', error);
+    }
+  }
+
+  // ✅ Display name: edit mode toggle
+  startEditName(): void {
+    this.isEditingName = true;
+    setTimeout(() => {
+      const input = document.getElementById('displayName') as HTMLInputElement;
+      if (input) { input.focus(); input.select(); }
+    }, 50);
+  }
+
+  cancelEditName(): void {
+    this.isEditingName = false;
+    // revert to original value
+    this.authService.currentUser$.pipe(
+      switchMap(user => user ? this.userDataService.getUserProfile(user.uid) : of(null)),
+    ).subscribe(profile => {
+      if (profile) {
+        this.userProfileForm.patchValue({ displayName: profile.displayName || '' }, { emitEvent: false });
+        this.userProfileForm.get('displayName')?.markAsPristine();
+      }
+    });
+  }
+
+  async saveDisplayName(): Promise<void> {
+    const currentUser = await firstValueFrom(this.authService.currentUser$);
+    if (!currentUser) return;
+    const displayName = this.userProfileForm.get('displayName')?.value || '';
+    try {
+      await updateProfile(currentUser, { displayName });
+      await this.userDataService.updateUserProfile(currentUser.uid, { displayName });
+      this.userProfileForm.get('displayName')?.markAsPristine();
+      this.isEditingName = false;
+      Toast.fire({ icon: 'success', title: this.translate.instant('PROFILE_UPDATE_SUCCESS') });
+    } catch (error: any) {
+      console.error('Name save error:', error);
     }
   }
 

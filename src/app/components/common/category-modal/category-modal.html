@@ -6,7 +6,7 @@
       <!-- Header -->
       <div class="cat-modal-header">
         <div class="cat-modal-title-wrap">
-          <span class="cat-modal-icon">🏷️</span>
+          <fa-icon [icon]="faTags" class="cat-modal-icon"></fa-icon>
           <h5 class="cat-modal-title" id="categoryModalLabel">
             {{ (isEditMode ? 'EDIT_CATEGORY_TITLE' : 'CATEGORY_MODAL_TITLE') | translate }}
           </h5>
@@ -30,7 +30,7 @@
               id="catNameInput"
               autocomplete="off" />
             <label class="cat-fl-label" for="catNameInput">
-              {{ 'CATEGORY_NAME_PLACEHOLDER' | translate }}
+              {{ 'CATEGORY_NAME_LABEL' | translate }}
             </label>
           </div>
           <button

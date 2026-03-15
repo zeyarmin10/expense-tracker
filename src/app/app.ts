@@ -221,20 +221,49 @@ export class App implements OnInit {
   }
 
   private showNoNetworkAlert(): void {
-    // Popup တစ်ခုထက်ပိုမပေါ်အောင် စစ်ပါ
-    if (Swal.isVisible()) return;
+  if (Swal.isVisible()) return;
 
-    Swal.fire({
-      icon: 'warning',
-      title: 'No Internet Connection',
-      text: 'Please check your network and try again.',
-      confirmButtonText: 'OK',
-      confirmButtonColor: '#00e5b4',
-      background: '#12151c',
-      color: '#ffffff',
-      allowOutsideClick: false,
-    });
-  }
+  const lang = this.translate.currentLang || this.translate.getDefaultLang();
+  const isMy = lang === 'my';
+
+  const title = isMy
+    ? 'အင်တာနက် ချိတ်ဆက်မှု မရှိပါ\nNo Internet Connection'
+    : 'No Internet Connection\nအင်တာနက် ချိတ်ဆက်မှု မရှိပါ';
+
+  const text = isMy
+    ? 'ကွန်ရက်ချိတ်ဆက်မှု စစ်ဆေးပြီး နောက်မှ ထပ်ကြိုးစားပါ\nPlease check your network and try again.'
+    : 'Please check your network and try again.\nကွန်ရက်ချိတ်ဆက်မှု စစ်ဆေးပြီး နောက်မှ ထပ်ကြိုးစားပါ';
+
+  const btnText = isMy ? 'သိပြီ' : 'OK';
+
+  // ✅ No-wifi SVG — inline base64 (internet မလိုဘဲ ပြနိုင်တယ်)
+  const noWifiSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+    stroke="#9ca3af" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="1" y1="1" x2="23" y2="23"/>
+    <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/>
+    <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/>
+    <path d="M10.71 5.05A16 16 0 0 1 22.56 9"/>
+    <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/>
+    <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+    <circle cx="12" cy="20" r="1" fill="#9ca3af"/>
+  </svg>`;
+
+  const svgBase64 = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(noWifiSvg)));
+
+  Swal.fire({
+    imageUrl: svgBase64,
+    imageWidth: 80,
+    imageHeight: 80,
+    imageAlt: 'No internet',
+    title: title,
+    text: text,
+    confirmButtonText: btnText,
+    confirmButtonColor: '#00e5b4',
+    background: '#12151c',
+    color: '#ffffff',
+    allowOutsideClick: false,
+  });
+}
   // ────────────────────────────────────────────────────────────────
 
   private async handleInvitation(inviteCode: string): Promise<void> {
