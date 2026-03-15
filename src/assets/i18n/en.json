@@ -163,7 +163,7 @@
   "CANCEL_EDIT": "Cancel",
   "USER_PROFILE_TITLE": "User Profile",
   "DISPLAY_NAME_LABEL": "Display Name",
-  "MEMBER_SINCE_LABEL": "Member Since",
+  "MEMBER_SINCE_LABEL": "Account created on",
   "SAVE_PROFILE_BUTTON": "Save Profile",
   "DISPLAY_NAME_MAX_LENGTH_ERROR": "Display name cannot exceed 50 characters.",
   "PROFILE_UPDATE_SUCCESS": "Profile updated successfully!",

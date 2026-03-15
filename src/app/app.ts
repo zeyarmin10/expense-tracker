@@ -2,8 +2,8 @@ import { Component, inject, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, NavigationEnd, RouterOutlet, RouterModule, ActivatedRoute } from '@angular/router';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
-import { Observable, combineLatest, of, firstValueFrom } from 'rxjs';
-import { map, filter, startWith, switchMap } from 'rxjs/operators';
+import { Observable, combineLatest, of, firstValueFrom, skip } from 'rxjs';
+import { map, filter, startWith, switchMap, distinctUntilChanged } from 'rxjs/operators';
 import { AuthService } from './services/auth';
 import { User } from '@angular/fire/auth';
 import { Toast } from './components/toast/toast';
@@ -182,88 +182,122 @@ export class App implements OnInit {
   private listenNetworkChanges(): void {
 
     if (Capacitor.isNativePlatform()) {
-      // ── Android/iOS: NetworkService (Capacitor) ──
-      this.networkService.isOnline$.subscribe(isOnline => {
+      // ── Android/iOS ──────────────────────────────────
+
+      // App start: offline ဆိုရင်သာ alert ပြ (online ဆိုရင် မပြ)
+      if (!this.networkService.isOnline$.getValue()) {
+        this.showNoNetworkAlert();
+      }
+
+      // Connection ပြောင်းတိုင်း detect လုပ်ပါ
+      // distinctUntilChanged — တူတဲ့ value ထပ်ထပ် emit ဖြစ်ရင် skip
+      // skip(1) — init() ရဲ့ first emit (app start) ကို skip
+      // Home key နှိပ်ပြီး ပြန်ဝင်ရင် init() ထပ် run မဖြစ်တာကြောင့်
+      // isOnline$ က တကယ် ပြောင်းမှသာ emit ဖြစ်မယ်
+      this.networkService.isOnline$.pipe(
+        skip(1),
+        distinctUntilChanged()
+      ).subscribe(isOnline => {
         if (!isOnline) {
           this.showNoNetworkAlert();
+        } else {
+          Swal.close();
+          this.showNetworkRestoredToast();
         }
       });
 
-      this.router.events.pipe(
-        filter((event): event is NavigationEnd => event instanceof NavigationEnd)
-      ).subscribe(() => {
-        if (!this.networkService.isOnline$.getValue()) {
-          this.showNoNetworkAlert();
-        }
-      });
+      // ❌ NavigationEnd စစ်တာ ဖယ်ထားတယ် — page ကူးတိုင်း
+      //    alert ပေါ်နေတာ UX မကောင်းဘူး
+      //    real-time listener ကသာ handle လုပ်ရမှာ
 
     } else {
-      // ── Web Browser: navigator.onLine + online/offline events ──
-      // App load
+      // ── Web Browser ──────────────────────────────────
+
+      // App start check
       if (!navigator.onLine) {
         this.showNoNetworkAlert();
       }
 
-      // Browser offline event
+      // Browser offline/online events — တကယ် ပြောင်းမှသာ fire ဖြစ်တယ်
       window.addEventListener('offline', () => {
         this.showNoNetworkAlert();
       });
 
-      // Page ကူးတိုင်း စစ်ပါ
-      this.router.events.pipe(
-        filter((event): event is NavigationEnd => event instanceof NavigationEnd)
-      ).subscribe(() => {
-        if (!navigator.onLine) {
-          this.showNoNetworkAlert();
-        }
+      window.addEventListener('online', () => {
+        Swal.close();
+        this.showNetworkRestoredToast();
       });
+
+      // ❌ NavigationEnd စစ်တာ ဖယ်ထားတယ်
     }
   }
 
   private showNoNetworkAlert(): void {
-  if (Swal.isVisible()) return;
+    if (Swal.isVisible()) return;
 
-  const lang = this.translate.currentLang || this.translate.getDefaultLang();
-  const isMy = lang === 'my';
+    const lang = this.translate.currentLang || this.translate.getDefaultLang();
+    const isMy = lang === 'my';
 
-  const title = isMy
-    ? 'အင်တာနက် ချိတ်ဆက်မှု မရှိပါ\nNo Internet Connection'
-    : 'No Internet Connection\nအင်တာနက် ချိတ်ဆက်မှု မရှိပါ';
+    // ✅ WiFi with X icon (screenshot style — rounded, clean)
+    const wifiIcon = `
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64"
+           fill="none" stroke="#f59e0b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+        <!-- Wifi arcs -->
+        <path d="M8 26 C16 18 26 14 32 14 C38 14 48 18 56 26" stroke-width="4.5"/>
+        <path d="M14 33 C19 27 25 24 32 24 C39 24 45 27 50 33" stroke-width="4.5"/>
+        <path d="M22 40 C25 37 28 35.5 32 35.5 C36 35.5 39 37 42 40" stroke-width="4.5"/>
+        <!-- Dot -->
+        <circle cx="32" cy="50" r="3.5" fill="#f59e0b" stroke="none"/>
+        <!-- X mark -->
+        <line x1="43" y1="10" x2="57" y2="24" stroke="#ef4444" stroke-width="5"/>
+        <line x1="57" y1="10" x2="43" y2="24" stroke="#ef4444" stroke-width="5"/>
+      </svg>`;
 
-  const text = isMy
-    ? 'ကွန်ရက်ချိတ်ဆက်မှု စစ်ဆေးပြီး နောက်မှ ထပ်ကြိုးစားပါ\nPlease check your network and try again.'
-    : 'Please check your network and try again.\nကွန်ရက်ချိတ်ဆက်မှု စစ်ဆေးပြီး နောက်မှ ထပ်ကြိုးစားပါ';
+    const title = isMy
+      ? 'အင်တာနက် ချိတ်ဆက်မှု မရှိပါ'
+      : 'No Internet Connection';
 
-  const btnText = isMy ? 'သိပြီ' : 'OK';
+    const text = isMy
+      ? 'ကွန်ရက်ချိတ်ဆက်မှု စစ်ဆေးပြီး နောက်မှ ထပ်ကြိုးစားပါ\nPlease check your network and try again.'
+      : 'Please check your network and try again.\nကွန်ရက်ချိတ်ဆက်မှု စစ်ဆေးပြီး ထပ်ကြိုးစားပါ';
 
-  // ✅ No-wifi SVG — inline base64 (internet မလိုဘဲ ပြနိုင်တယ်)
-  const noWifiSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-    stroke="#9ca3af" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-    <line x1="1" y1="1" x2="23" y2="23"/>
-    <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/>
-    <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/>
-    <path d="M10.71 5.05A16 16 0 0 1 22.56 9"/>
-    <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/>
-    <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
-    <circle cx="12" cy="20" r="1" fill="#9ca3af"/>
-  </svg>`;
+    const btnText = isMy ? 'သိပြီ' : 'OK';
 
-  const svgBase64 = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(noWifiSvg)));
+    Swal.fire({
+      html: `
+        <div style="display:flex;flex-direction:column;align-items:center;gap:12px;">
+          ${wifiIcon}
+          <div style="font-size:1rem;font-weight:700;color:#fff;">${title}</div>
+          <div style="font-size:0.82rem;color:#9ca3af;white-space:pre-line;text-align:center;">${text}</div>
+        </div>`,
+      confirmButtonText: btnText,
+      confirmButtonColor: '#00e5b4',
+      background: '#12151c',
+      color: '#ffffff',
+      allowOutsideClick: false,
+      showClass: { popup: 'swal2-show' },
+    });
+  }
 
-  Swal.fire({
-    imageUrl: svgBase64,
-    imageWidth: 80,
-    imageHeight: 80,
-    imageAlt: 'No internet',
-    title: title,
-    text: text,
-    confirmButtonText: btnText,
-    confirmButtonColor: '#00e5b4',
-    background: '#12151c',
-    color: '#ffffff',
-    allowOutsideClick: false,
-  });
-}
+  private showNetworkRestoredToast(): void {
+    const lang = this.translate.currentLang || this.translate.getDefaultLang();
+    const isMy = lang === 'my';
+    const msg = isMy
+      ? 'အင်တာနက် ချိတ်ဆက်မှု ပြန်ရပြီ 🌐'
+      : 'Internet connection restored 🌐';
+
+    const Toast = Swal.mixin({
+      toast: true,
+      position: 'top-end',
+      showConfirmButton: false,
+      timer: 3000,
+      timerProgressBar: true,
+      background: '#12151c',
+      color: '#ffffff',
+      iconColor: '#00e5b4',
+    });
+    Toast.fire({ icon: 'success', title: msg });
+  }
   // ────────────────────────────────────────────────────────────────
 
   private async handleInvitation(inviteCode: string): Promise<void> {
