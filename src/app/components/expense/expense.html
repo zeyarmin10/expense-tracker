@@ -11,75 +11,135 @@
 
     <!-- ── ADD EXPENSE PANEL ── -->
     <div class="exp-panel">
-      <button class="exp-panel-toggle" type="button" (click)="toggleForm()" [attr.aria-expanded]="isFormOpen">
-        <span class="exp-panel-toggle-left">
-          <fa-icon [icon]="faWallet" class="exp-icon-accent"></fa-icon>
-          <span>{{ "EXPENSE_ADD_TITLE" | translate }}</span>
-        </span>
-        <fa-icon [icon]="isFormOpen ? faChevronUp : faChevronDown" class="exp-chevron"></fa-icon>
-      </button>
+      <div class="exp-panel-header">
+        <button class="exp-panel-toggle" type="button" (click)="toggleForm()" [attr.aria-expanded]="isFormOpen">
+          <span class="exp-panel-toggle-left">
+            <fa-icon [icon]="faWallet" class="exp-icon-accent"></fa-icon>
+            <span>{{ "EXPENSE_ADD_TITLE" | translate }}</span>
+          </span>
+          <fa-icon [icon]="isFormOpen ? faChevronUp : faChevronDown" class="exp-chevron"></fa-icon>
+        </button>
+        <!-- ✅ Quick/Full toggle — personal account-->
+        <button *ngIf="userProfile?.accountType === 'personal'" type="button" class="exp-quick-toggle ms-2"
+          (click)="toggleQuickMode()" [class.active]="!isQuickMode"
+          [title]="isQuickMode ? ('SWITCH_TO_FULL_FORM' | translate) : ('SWITCH_TO_QUICK_ADD' | translate)">
+          <span *ngIf="isQuickMode">⚡ {{ 'QUICK' | translate }}</span>
+          <span *ngIf="!isQuickMode">📋 {{ 'FULL' | translate }}</span>
+        </button>
+        </div>
 
       <div class="exp-panel-body" [class.open]="isFormOpen">
         <form [formGroup]="newExpenseForm" (ngSubmit)="onSubmitNewExpense()" class="exp-form">
 
-          <div class="exp-form-row">
-            <!-- Date -->
-            <div class="exp-float-field">
-              <input type="date" class="exp-float-input" id="date" formControlName="date" placeholder=" "
-                [class.is-invalid]="newExpenseForm.controls['date'].invalid && newExpenseForm.controls['date'].touched">
-              <label class="exp-float-label" for="date">{{ "EXPENSE_DATE_LABEL" | translate }}</label>
-            </div>
-            <!-- Category -->
-            <div class="exp-float-field exp-float-group">
-              <div class="exp-float-field" style="flex:1; min-width:0;">
-                <select class="exp-float-input exp-float-select" id="category" formControlName="category"
-                  placeholder=" "
-                  [class.is-invalid]="newExpenseForm.controls['category'].invalid && newExpenseForm.controls['category'].touched">
-                  <option value="" disabled selected>{{ "EXPENSE_SELECT_CATEGORY" | translate }}</option>
-                  <option *ngFor="let cat of categories$ | async" [value]="cat.name">{{ cat.name }}</option>
-                </select>
-                <label class="exp-float-label" for="category">{{ "EXPENSE_CATEGORY_LABEL" | translate }}</label>
+          <!-- ── Quick Mode: Category + ItemName + Price ── -->
+          <ng-container *ngIf="userProfile?.accountType === 'personal' && isQuickMode">
+          
+            <!-- Category + Date row -->
+            <div class="exp-form-row">
+              <div class="exp-float-field exp-float-group">
+                <div class="exp-float-field" style="flex:1; min-width:0;">
+                  <select class="exp-float-input exp-float-select" id="category" formControlName="category" placeholder=" "
+                    [class.is-invalid]="newExpenseForm.controls['category'].invalid && newExpenseForm.controls['category'].touched">
+                    <option value="" disabled selected>{{ "EXPENSE_SELECT_CATEGORY" | translate }}</option>
+                    <option *ngFor="let cat of categories$ | async" [value]="cat.name">{{ cat.name }}</option>
+                  </select>
+                  <label class="exp-float-label" for="category">{{ "EXPENSE_CATEGORY_LABEL" | translate }}</label>
+                </div>
+                <button type="button" class="exp-addon-btn" (click)="openCategoryModal()" title="Add category">
+                  <fa-icon [icon]="faPlus"></fa-icon>
+                </button>
               </div>
-              <button type="button" class="exp-addon-btn" (click)="openCategoryModal()" title="Add category">
-                <fa-icon [icon]="faPlus"></fa-icon>
-              </button>
+              <div class="exp-float-field">
+                <input type="date" class="exp-float-input" id="date-quick" formControlName="date" placeholder=" ">
+                <label class="exp-float-label" for="date-quick">{{ "EXPENSE_DATE_LABEL" | translate }}</label>
+              </div>
             </div>
-          </div>
-
-          <!-- Item Name -->
-          <div class="exp-float-field">
-            <input type="text" class="exp-float-input" id="itemName" formControlName="itemName" placeholder=" "
-              [class.is-invalid]="newExpenseForm.controls['itemName'].invalid && newExpenseForm.controls['itemName'].touched">
-            <label class="exp-float-label" for="itemName">{{ "EXPENSE_ITEM_NAME_LABEL" | translate }}</label>
-          </div>
-
-          <div class="exp-form-row exp-form-row-3">
-            <!-- Quantity -->
+          
+            <!-- Item Name (optional in quick mode) -->
             <div class="exp-float-field">
-              <input type="number" class="exp-float-input" id="quantity" formControlName="quantity" min="0.01" step="0.01"
-                placeholder=" "
-                [class.is-invalid]="newExpenseForm.controls['quantity'].invalid && newExpenseForm.controls['quantity'].touched">
-              <label class="exp-float-label" for="quantity">{{ "QUANTITY_LABEL" | translate }}</label>
+              <input type="text" class="exp-float-input" id="itemName-quick" formControlName="itemName" placeholder=" ">
+              <label class="exp-float-label" for="itemName-quick">
+                {{ "EXPENSE_ITEM_NAME_LABEL" | translate }}
+                <span class="exp-optional-hint">({{ 'OPTIONAL' | translate }})</span>
+              </label>
             </div>
-            <!-- Unit -->
-            <div class="exp-float-field">
-              <input type="text" class="exp-float-input" id="unit" formControlName="unit" placeholder=" ">
-              <label class="exp-float-label" for="unit">{{ "EXPENSE_UNIT_LABEL" | translate }}</label>
-            </div>
-            <!-- Price -->
+          
+            <!-- Price only -->
             <div class="exp-float-field exp-float-group">
               <span class="exp-currency-badge">{{ userProfile?.currency || 'MMK' }}</span>
               <div class="exp-float-field" style="flex:1; min-width:0;">
-                <input type="text" inputmode="decimal" class="exp-float-input exp-float-input-joined" id="price"
-                  [value]="priceDisplayValue"
-                  (input)="onPriceInput($event, newExpenseForm, 'price')"
+                <input type="text" inputmode="decimal" class="exp-float-input exp-float-input-joined" id="price-quick"
+                  [value]="priceDisplayValue" (input)="onPriceInput($event, newExpenseForm, 'price')"
                   (focus)="priceDisplayValue = (newExpenseForm.get('price')?.value > 0 ? formatWithCommas(newExpenseForm.get('price')?.value) : ''); newExpenseForm.get('price')?.markAsTouched()"
                   placeholder=" "
                   [class.is-invalid]="newExpenseForm.controls['price'].invalid && newExpenseForm.controls['price'].touched">
-                <label class="exp-float-label" for="price">{{ "PRICE_LABEL" | translate }}</label>
+                <label class="exp-float-label" for="price-quick">{{ "PRICE_LABEL" | translate }}</label>
               </div>
             </div>
-          </div>
+          
+          </ng-container>
+          
+          <!-- ── Full Mode (group account or toggled full) ── -->
+          <ng-container *ngIf="userProfile?.accountType !== 'personal' || !isQuickMode">
+
+            <div class="exp-form-row">
+              <!-- Date -->
+              <div class="exp-float-field">
+                <input type="date" class="exp-float-input" id="date" formControlName="date" placeholder=" "
+                  [class.is-invalid]="newExpenseForm.controls['date'].invalid && newExpenseForm.controls['date'].touched">
+                <label class="exp-float-label" for="date">{{ "EXPENSE_DATE_LABEL" | translate }}</label>
+              </div>
+              <!-- Category -->
+              <div class="exp-float-field exp-float-group">
+                <div class="exp-float-field" style="flex:1; min-width:0;">
+                  <select class="exp-float-input exp-float-select" id="category-full" formControlName="category" placeholder=" "
+                    [class.is-invalid]="newExpenseForm.controls['category'].invalid && newExpenseForm.controls['category'].touched">
+                    <option value="" disabled selected>{{ "EXPENSE_SELECT_CATEGORY" | translate }}</option>
+                    <option *ngFor="let cat of categories$ | async" [value]="cat.name">{{ cat.name }}</option>
+                  </select>
+                  <label class="exp-float-label" for="category-full">{{ "EXPENSE_CATEGORY_LABEL" | translate }}</label>
+                  </div>
+                  <button type="button" class="exp-addon-btn" (click)="openCategoryModal()" title="Add category">
+                    <fa-icon [icon]="faPlus"></fa-icon>
+                  </button>
+                  </div>
+                  </div>
+
+            <!-- Item Name -->
+            <div class="exp-float-field">
+              <input type="text" class="exp-float-input" id="itemName" formControlName="itemName" placeholder=" "
+                [class.is-invalid]="newExpenseForm.controls['itemName'].invalid && newExpenseForm.controls['itemName'].touched">
+              <label class="exp-float-label" for="itemName">{{ "EXPENSE_ITEM_NAME_LABEL" | translate }}</label>
+            </div>
+
+            <div class="exp-form-row exp-form-row-3">
+              <!-- Quantity -->
+              <div class="exp-float-field">
+                <input type="number" class="exp-float-input" id="quantity" formControlName="quantity" min="0.01" step="0.01"
+                  placeholder=" "
+                  [class.is-invalid]="newExpenseForm.controls['quantity'].invalid && newExpenseForm.controls['quantity'].touched">
+                <label class="exp-float-label" for="quantity">{{ "QUANTITY_LABEL" | translate }}</label>
+              </div>
+              <!-- Unit -->
+              <div class="exp-float-field">
+                <input type="text" class="exp-float-input" id="unit" formControlName="unit" placeholder=" ">
+                <label class="exp-float-label" for="unit">{{ "EXPENSE_UNIT_LABEL" | translate }}</label>
+              </div>
+              <!-- Price -->
+              <div class="exp-float-field exp-float-group">
+                <span class="exp-currency-badge">{{ userProfile?.currency || 'MMK' }}</span>
+                <div class="exp-float-field" style="flex:1; min-width:0;">
+                  <input type="text" inputmode="decimal" class="exp-float-input exp-float-input-joined" id="price"
+                    [value]="priceDisplayValue" (input)="onPriceInput($event, newExpenseForm, 'price')"
+                    (focus)="priceDisplayValue = (newExpenseForm.get('price')?.value > 0 ? formatWithCommas(newExpenseForm.get('price')?.value) : ''); newExpenseForm.get('price')?.markAsTouched()"
+                    placeholder=" "
+                    [class.is-invalid]="newExpenseForm.controls['price'].invalid && newExpenseForm.controls['price'].touched">
+                  <label class="exp-float-label" for="price">{{ "PRICE_LABEL" | translate }}</label>
+                </div>
+              </div>
+            </div>
+
+          </ng-container>
 
           <div class="exp-form-footer">
             <button type="submit" class="exp-btn exp-btn-primary" [disabled]="newExpenseForm.invalid">

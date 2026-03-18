@@ -107,6 +107,7 @@ export class Expense implements OnInit {
   public userRole: string | null = null;
   isSaving = false;
   isFormOpen = true;   // collapsible add-form state
+  isQuickMode = true;  // ✅ Quick mode (personal): category + itemName + price only
   objectKeys = Object.keys;
 
   // ── Comma Formatting for Price inputs ──────────────
@@ -213,6 +214,22 @@ export class Expense implements OnInit {
     this.isFormOpen = !this.isFormOpen;
   }
 
+  // ✅ Quick/Full mode toggle — personal account မှာပဲ သုံးတယ်
+  toggleQuickMode(): void {
+    this.isQuickMode = !this.isQuickMode;
+    const itemNameCtrl = this.newExpenseForm.get('itemName');
+    if (this.isQuickMode) {
+      // Quick mode: itemName optional ဖြစ်အောင်
+      itemNameCtrl?.clearValidators();
+      itemNameCtrl?.updateValueAndValidity();
+      this.newExpenseForm.patchValue({ quantity: 1, unit: '' });
+    } else {
+      // Full mode: itemName required ပြန်ဖြစ်အောင်
+      itemNameCtrl?.setValidators(Validators.required);
+      itemNameCtrl?.updateValueAndValidity();
+    }
+  }
+
   loadExpenses(): void {
     this.expenses$ = this.refreshExpenses$.pipe(
       switchMap(() => this.expenseService.getExpenses())
@@ -264,6 +281,10 @@ export class Expense implements OnInit {
 
     this.isSaving = true;
     const fv = this.newExpenseForm.value;
+    // ✅ Quick mode: itemName မဖြည့်ရင် category ကိုပဲ သုံးတယ်
+    if (this.isQuickMode && !fv.itemName) {
+      fv.itemName = fv.category || '-';
+    }
     const newExpense: Omit<IExpense, 'id'> = {
       date:      fv.date,
       category:  fv.category,

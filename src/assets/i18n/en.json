@@ -545,5 +545,10 @@
   "NO_BUDGET_CHART_DATA": "No budget data available",
   "PNL_EMPTY_TITLE": "No income recorded yet",
   "PNL_EMPTY_SUB": "Record your income to calculate profit and loss",
-  "NO_PNL_CHART_DATA": "No data available to display the chart"
+  "NO_PNL_CHART_DATA": "No data available to display the chart",
+  "QUICK": "Quick",
+  "FULL": "Full",
+  "OPTIONAL": "optional",
+  "SWITCH_TO_FULL_FORM": "Switch to Full Form",
+  "SWITCH_TO_QUICK_ADD": "Switch to Quick Add"
 }
