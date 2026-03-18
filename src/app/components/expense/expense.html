@@ -234,7 +234,7 @@
                       [id]="'edit-price-' + expense.id"
                       [value]="editPriceDisplayValue"
                       (input)="onPriceInput($event, editingForm!, 'price')"
-                      (focus)="editPriceDisplayValue = (editingForm?.get('price')?.value > 0 ? formatWithCommas(editingForm?.get('price')?.value) : '')"
+                      (focus)="editPriceDisplayValue = (editingForm!.get('price')!.value > 0 ? formatWithCommas(editingForm!.get('price')!.value) : '')"
                       placeholder=" ">
                     <label class="exp-float-label" [for]="'edit-price-' + expense.id">{{ "PRICE_LABEL" | translate
                       }}</label>

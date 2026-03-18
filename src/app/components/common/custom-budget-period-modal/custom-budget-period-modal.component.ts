@@ -3,7 +3,7 @@ import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } 
 import { CommonModule } from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faSave } from '@fortawesome/free-solid-svg-icons';
+import { faSave, faTimes } from '@fortawesome/free-solid-svg-icons';
 
 declare var bootstrap: any;
 
@@ -23,6 +23,7 @@ export class CustomBudgetPeriodModalComponent {
   private isModalOpen = false;
 
   faSave = faSave;
+  faTimes = faTimes;
 
   @HostListener('window:popstate', ['$event'])
   onPopState(event: PopStateEvent): void {

@@ -13,5 +13,7 @@
     <item name="android:windowOptOutEdgeToEdgeEnforcement">true</item>
     <item name="android:popupMenuStyle">@style/DarkPopupMenu</item>
     <item name="android:dropDownListViewStyle">@style/DarkDropDown</item>
+    <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    <item name="android:fitsSystemWindows">false</item>
   </style>
 </resources>

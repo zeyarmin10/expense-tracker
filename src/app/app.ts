@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, NavigationEnd, RouterOutlet, RouterModule, ActivatedRoute } from '@angular/router';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { Observable, combineLatest, of, firstValueFrom, skip } from 'rxjs';
-import { map, filter, startWith, switchMap, distinctUntilChanged } from 'rxjs/operators';
+import { map, filter, startWith, switchMap, distinctUntilChanged, debounceTime } from 'rxjs/operators';
 import { AuthService } from './services/auth';
 import { User } from '@angular/fire/auth';
 import { Toast } from './components/toast/toast';
@@ -179,56 +179,61 @@ export class App implements OnInit {
   }
 
   // ── Network monitoring: Native + Web ───────────
+  // ── wasOffline: offline ဖြစ်ဖူးမှသာ "restored" toast ပြမယ် ──
+  private wasOffline = false;
+
   private listenNetworkChanges(): void {
 
     if (Capacitor.isNativePlatform()) {
       // ── Android/iOS ──────────────────────────────────
 
-      // App start: offline ဆိုရင်သာ alert ပြ (online ဆိုရင် မပြ)
+      // App start: offline ဆိုရင်သာ flag + alert ပြ
       if (!this.networkService.isOnline$.getValue()) {
+        this.wasOffline = true;
         this.showNoNetworkAlert();
       }
 
-      // Connection ပြောင်းတိုင်း detect လုပ်ပါ
-      // distinctUntilChanged — တူတဲ့ value ထပ်ထပ် emit ဖြစ်ရင် skip
-      // skip(1) — init() ရဲ့ first emit (app start) ကို skip
-      // Home key နှိပ်ပြီး ပြန်ဝင်ရင် init() ထပ် run မဖြစ်တာကြောင့်
-      // isOnline$ က တကယ် ပြောင်းမှသာ emit ဖြစ်မယ်
+      // NetworkService.init() မှာ initialized flag ထည့်ထားတာကြောင့်
+      // listener တစ်ကြိမ်တည်းသာ register ဖြစ်မယ်
+      // debounceTime: rapid/spurious emit တွေ filter ဆွဲတယ်
       this.networkService.isOnline$.pipe(
         skip(1),
-        distinctUntilChanged()
+        distinctUntilChanged(),
+        debounceTime(800)
       ).subscribe(isOnline => {
         if (!isOnline) {
+          // တကယ် offline ဖြစ်သွားမှသာ
+          this.wasOffline = true;
           this.showNoNetworkAlert();
-        } else {
+        } else if (this.wasOffline) {
+          // offline ဖြစ်ဖူးပြီး online ပြန်ရမှသာ toast ပြ
+          this.wasOffline = false;
           Swal.close();
           this.showNetworkRestoredToast();
         }
+        // online ဖြစ်နေချိန် emit ဖြစ်ရင် (wasOffline=false) လုံးဝမပြ
       });
-
-      // ❌ NavigationEnd စစ်တာ ဖယ်ထားတယ် — page ကူးတိုင်း
-      //    alert ပေါ်နေတာ UX မကောင်းဘူး
-      //    real-time listener ကသာ handle လုပ်ရမှာ
 
     } else {
       // ── Web Browser ──────────────────────────────────
 
-      // App start check
       if (!navigator.onLine) {
+        this.wasOffline = true;
         this.showNoNetworkAlert();
       }
 
-      // Browser offline/online events — တကယ် ပြောင်းမှသာ fire ဖြစ်တယ်
       window.addEventListener('offline', () => {
+        this.wasOffline = true;
         this.showNoNetworkAlert();
       });
 
       window.addEventListener('online', () => {
-        Swal.close();
-        this.showNetworkRestoredToast();
+        if (this.wasOffline) {
+          this.wasOffline = false;
+          Swal.close();
+          this.showNetworkRestoredToast();
+        }
       });
-
-      // ❌ NavigationEnd စစ်တာ ဖယ်ထားတယ်
     }
   }
 
@@ -238,44 +243,48 @@ export class App implements OnInit {
     const lang = this.translate.currentLang || this.translate.getDefaultLang();
     const isMy = lang === 'my';
 
-    // ✅ WiFi with X icon (screenshot style — rounded, clean)
+    // ✅ Theme detect — isDarkMode property သို့မဟုတ် body class စစ်တယ်
+    const isDark = document.body.classList.contains('light-mode') === false;
+
+    // Theme colors
+    const bgColor = isDark ? '#12151c' : '#ffffff';
+    const titleColor = isDark ? '#ffffff' : '#111827';
+    const textColor = isDark ? '#9ca3af' : '#4b5563';
+    const borderColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
+
     const wifiIcon = `
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64"
-           fill="none" stroke="#f59e0b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
-        <!-- Wifi arcs -->
+          fill="none" stroke="#f59e0b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
         <path d="M8 26 C16 18 26 14 32 14 C38 14 48 18 56 26" stroke-width="4.5"/>
         <path d="M14 33 C19 27 25 24 32 24 C39 24 45 27 50 33" stroke-width="4.5"/>
         <path d="M22 40 C25 37 28 35.5 32 35.5 C36 35.5 39 37 42 40" stroke-width="4.5"/>
-        <!-- Dot -->
         <circle cx="32" cy="50" r="3.5" fill="#f59e0b" stroke="none"/>
-        <!-- X mark -->
         <line x1="43" y1="10" x2="57" y2="24" stroke="#ef4444" stroke-width="5"/>
         <line x1="57" y1="10" x2="43" y2="24" stroke="#ef4444" stroke-width="5"/>
       </svg>`;
 
-    const title = isMy
-      ? 'အင်တာနက် ချိတ်ဆက်မှု မရှိပါ'
-      : 'No Internet Connection';
-
+    const title = isMy ? 'အင်တာနက် ချိတ်ဆက်မှု မရှိပါ' : 'No Internet Connection';
     const text = isMy
       ? 'ကွန်ရက်ချိတ်ဆက်မှု စစ်ဆေးပြီး နောက်မှ ထပ်ကြိုးစားပါ\nPlease check your network and try again.'
       : 'Please check your network and try again.\nကွန်ရက်ချိတ်ဆက်မှု စစ်ဆေးပြီး ထပ်ကြိုးစားပါ';
-
     const btnText = isMy ? 'သိပြီ' : 'OK';
 
     Swal.fire({
       html: `
         <div style="display:flex;flex-direction:column;align-items:center;gap:12px;">
           ${wifiIcon}
-          <div style="font-size:1rem;font-weight:700;color:#fff;">${title}</div>
-          <div style="font-size:0.82rem;color:#9ca3af;white-space:pre-line;text-align:center;">${text}</div>
+          <div style="font-size:1rem;font-weight:700;color:${titleColor};">${title}</div>
+          <div style="font-size:0.82rem;color:${textColor};white-space:pre-line;text-align:center;">${text}</div>
         </div>`,
       confirmButtonText: btnText,
       confirmButtonColor: '#00e5b4',
-      background: '#12151c',
-      color: '#ffffff',
+      background: bgColor,
+      color: titleColor,
       allowOutsideClick: false,
       showClass: { popup: 'swal2-show' },
+      customClass: {
+        popup: isDark ? 'swal-dark' : 'swal-light',
+      }
     });
   }
 

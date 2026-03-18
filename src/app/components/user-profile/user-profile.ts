@@ -244,10 +244,16 @@ export class UserProfileComponent implements OnInit {
   }
 
   translateCurrencyNames() {
+    const currentCurrency = this.userProfileForm.get('currency')?.value;
     this.translatedCurrencies = this.availableCurrencies.map((currency) => ({
       ...currency,
       name: this.translate.instant('CURRENCY_NAMES.' + currency.code),
     }));
+    if (currentCurrency) {
+      setTimeout(() => {
+        this.userProfileForm.get('currency')?.setValue(currentCurrency, { emitEvent: false });
+      }, 0);
+    }
   }
 
   translateBudgetPeriodNames() {

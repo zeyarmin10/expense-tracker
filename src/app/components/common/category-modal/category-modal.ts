@@ -95,9 +95,28 @@ export class CategoryModalComponent implements OnInit {
     await this.loadCategories();
     this.resetForm();
 
-    history.pushState(null, '');
-    this.isModalOpen = true;
-    this.bsModal.show();
+
+    const modalElement = document.getElementById('categoryModal');
+    if (modalElement) {
+      // When the modal is fully hidden, update the flag.
+      modalElement.addEventListener('hidden.bs.modal', () => {
+        this.isModalOpen = false;
+      }, { once: true });
+
+      modalElement.addEventListener('shown.bs.modal', () => {
+        const inputElement = document.getElementById('catNameInput');
+        if (inputElement) {
+          inputElement.focus();
+        }
+      }, { once: true });
+
+      this.bsModal = new bootstrap.Modal(modalElement);
+
+    // Push state to browser history and update flag before showing
+      history.pushState(null, '');
+      this.isModalOpen = true;
+      this.bsModal.show();
+    }
   }
 
   closeModal(): void {

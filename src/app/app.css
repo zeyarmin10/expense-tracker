@@ -399,12 +399,11 @@ body.light-mode {
   bottom: 0;
   left: 0;
   right: 0;
-  height: 70px;
+  height: 68px;
   background: var(--nav-bg, #12151c);
   border-top: 1px solid var(--nav-border, rgba(255,255,255,0.07));
   z-index: 1000;
   padding: 0 0.5rem;
-  padding-bottom: env(safe-area-inset-bottom);
   align-items: center;
   justify-content: space-around;
   box-shadow: 0 -1px 3px rgba(0, 184, 148, 0.35);
@@ -421,7 +420,7 @@ body.light-mode {
 
   /* Push page content above bottom nav */
   router-outlet + * {
-    padding-bottom: calc(68px + env(safe-area-inset-bottom)) !important;
+    padding-bottom: 68px !important;
   }
 }
 
@@ -574,7 +573,7 @@ body.light-mode {
   border-radius: 20px 20px 0 0;
   border-top: 1px solid var(--nav-border, rgba(255,255,255,0.08));
   z-index: 1020;
-  padding: 0 1rem calc(76px + env(safe-area-inset-bottom));
+  padding: 0 1rem 76px;
   transform: translateY(110%);
   transition: transform 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
   max-height: 85vh;

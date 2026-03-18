@@ -124,8 +124,8 @@
           <div class="prof-custom-list-panel" *ngIf="customBudgetPeriods.length > 0">
             <button class="prof-custom-list-toggle" type="button" (click)="toggleCustomBudgetList()">
               <span>
-                <fa-icon [icon]="faListUl" class="me-2"></fa-icon>
-                {{ 'BUDGET_PERIOD.CUSTOM' | translate }}
+                <img src="assets/icons/calendar-range.svg" class="calendar-range-icon" alt="Calendar Range" />
+                {{ 'CUSTOM_BUDGET_PERIOD' | translate }}
               </span>
               <fa-icon [icon]="isCustomBudgetListCollapsed ? faChevronDown : faChevronUp"
                 class="prof-chevron"></fa-icon>

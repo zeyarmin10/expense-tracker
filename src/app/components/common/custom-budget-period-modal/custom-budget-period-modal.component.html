@@ -9,14 +9,14 @@
       <!-- Header -->
       <div class="cbp-header">
         <div class="cbp-title-wrap">
-          <span class="cbp-icon">📅</span>
+          <span class="cbp-icon"><img src="assets/icons/calendar-range.svg" class="calendar-range-icon"
+              alt="Calendar Range" /></span>
           <h5 class="cbp-title" id="customBudgetPeriodModalLabel">
             {{ 'CREATE_CUSTOM_BUDGET_PERIOD' | translate }}
           </h5>
         </div>
         <button type="button" class="cbp-close-btn" (click)="close()">
-          <fa-icon [icon]="faSave" style="display:none"></fa-icon>
-          ✕
+          <fa-icon [icon]="faTimes"></fa-icon>
         </button>
       </div>
 

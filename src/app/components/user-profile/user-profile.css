@@ -366,6 +366,12 @@
   color: var(--text-muted);
 }
 
+.calendar-range-icon {
+  width: 1.75rem;
+  height: 1.75rem;
+  /* filter: invert(1); */
+}
+
 .prof-custom-list-body {
   max-height: 0;
   overflow: hidden;
