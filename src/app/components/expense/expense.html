@@ -1,5 +1,7 @@
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap"
-  rel="stylesheet">
+<link
+  href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap"
+  rel="stylesheet"
+/>
 
 <!-- Loading Overlay -->
 <div class="exp-overlay" *ngIf="isSaving">
@@ -8,146 +10,271 @@
 
 <div class="exp-wrapper">
   <div class="exp-container mb-5">
-
     <!-- ── ADD EXPENSE PANEL ── -->
     <div class="exp-panel">
       <div class="exp-panel-header">
-        <button class="exp-panel-toggle" type="button" (click)="toggleForm()" [attr.aria-expanded]="isFormOpen">
+        <button
+          class="exp-panel-toggle"
+          type="button"
+          (click)="toggleForm()"
+          [attr.aria-expanded]="isFormOpen"
+        >
           <span class="exp-panel-toggle-left">
             <fa-icon [icon]="faWallet" class="exp-icon-accent"></fa-icon>
             <span>{{ "EXPENSE_ADD_TITLE" | translate }}</span>
           </span>
-          <fa-icon [icon]="isFormOpen ? faChevronUp : faChevronDown" class="exp-chevron"></fa-icon>
+          <fa-icon
+            [icon]="isFormOpen ? faChevronUp : faChevronDown"
+            class="exp-chevron"
+          ></fa-icon>
         </button>
         <!-- ✅ Quick/Full toggle — personal account-->
-        <button *ngIf="userProfile?.accountType === 'personal'" type="button" class="exp-quick-toggle ms-2"
-          (click)="toggleQuickMode()" [class.active]="!isQuickMode"
-          [title]="isQuickMode ? ('SWITCH_TO_FULL_FORM' | translate) : ('SWITCH_TO_QUICK_ADD' | translate)">
+        <button
+          *ngIf="userProfile?.accountType === 'personal'"
+          type="button"
+          class="exp-quick-toggle ms-2"
+          (click)="toggleQuickMode()"
+          [class.active]="!isQuickMode"
+          [title]="isQuickMode ? ('SWITCH_TO_FULL_FORM' | translate) : ('SWITCH_TO_QUICK_ADD' | translate)"
+        >
           <span *ngIf="isQuickMode">⚡ {{ 'QUICK' | translate }}</span>
           <span *ngIf="!isQuickMode">📋 {{ 'FULL' | translate }}</span>
         </button>
-        </div>
+      </div>
 
       <div class="exp-panel-body" [class.open]="isFormOpen">
-        <form [formGroup]="newExpenseForm" (ngSubmit)="onSubmitNewExpense()" class="exp-form">
-
+        <form
+          [formGroup]="newExpenseForm"
+          (ngSubmit)="onSubmitNewExpense()"
+          class="exp-form"
+        >
           <!-- ── Quick Mode: Category + ItemName + Price ── -->
-          <ng-container *ngIf="userProfile?.accountType === 'personal' && isQuickMode">
-          
+          <ng-container
+            *ngIf="userProfile?.accountType === 'personal' && isQuickMode"
+          >
             <!-- Category + Date row -->
             <div class="exp-form-row">
               <div class="exp-float-field exp-float-group">
-                <div class="exp-float-field" style="flex:1; min-width:0;">
-                  <select class="exp-float-input exp-float-select" id="category" formControlName="category" placeholder=" "
-                    [class.is-invalid]="newExpenseForm.controls['category'].invalid && newExpenseForm.controls['category'].touched">
-                    <option value="" disabled selected>{{ "EXPENSE_SELECT_CATEGORY" | translate }}</option>
-                    <option *ngFor="let cat of categories$ | async" [value]="cat.name">{{ cat.name }}</option>
+                <div class="exp-float-field" style="flex: 1; min-width: 0">
+                  <select
+                    class="exp-float-input exp-float-select"
+                    id="category"
+                    formControlName="category"
+                    placeholder=" "
+                    [class.is-invalid]="newExpenseForm.controls['category'].invalid && newExpenseForm.controls['category'].touched"
+                  >
+                    <option value="" disabled selected>
+                      {{ "EXPENSE_SELECT_CATEGORY" | translate }}
+                    </option>
+                    <option
+                      *ngFor="let cat of categories$ | async"
+                      [value]="cat.name"
+                    >
+                      {{ cat.name }}
+                    </option>
                   </select>
-                  <label class="exp-float-label" for="category">{{ "EXPENSE_CATEGORY_LABEL" | translate }}</label>
+                  <label class="exp-float-label" for="category"
+                    >{{ "EXPENSE_CATEGORY_LABEL" | translate }}</label
+                  >
                 </div>
-                <button type="button" class="exp-addon-btn" (click)="openCategoryModal()" title="Add category">
+                <button
+                  type="button"
+                  class="exp-addon-btn"
+                  (click)="openCategoryModal()"
+                  title="Add category"
+                >
                   <fa-icon [icon]="faPlus"></fa-icon>
                 </button>
               </div>
               <div class="exp-float-field">
-                <input type="date" class="exp-float-input" id="date-quick" formControlName="date" placeholder=" ">
-                <label class="exp-float-label" for="date-quick">{{ "EXPENSE_DATE_LABEL" | translate }}</label>
+                <input
+                  type="date"
+                  class="exp-float-input"
+                  id="date-quick"
+                  formControlName="date"
+                  placeholder=" "
+                />
+                <label class="exp-float-label" for="date-quick"
+                  >{{ "EXPENSE_DATE_LABEL" | translate }}</label
+                >
               </div>
             </div>
-          
+
             <!-- Item Name (optional in quick mode) -->
             <div class="exp-float-field">
-              <input type="text" class="exp-float-input" id="itemName-quick" formControlName="itemName" placeholder=" ">
+              <input
+                type="text"
+                class="exp-float-input"
+                id="itemName-quick"
+                formControlName="itemName"
+                placeholder=" "
+              />
               <label class="exp-float-label" for="itemName-quick">
                 {{ "EXPENSE_ITEM_NAME_LABEL" | translate }}
-                <span class="exp-optional-hint">({{ 'OPTIONAL' | translate }})</span>
+                <span class="exp-optional-hint"
+                  >({{ 'OPTIONAL' | translate }})</span
+                >
               </label>
             </div>
-          
+
             <!-- Price only -->
             <div class="exp-float-field exp-float-group">
-              <span class="exp-currency-badge">{{ userProfile?.currency || 'MMK' }}</span>
-              <div class="exp-float-field" style="flex:1; min-width:0;">
-                <input type="text" inputmode="decimal" class="exp-float-input exp-float-input-joined" id="price-quick"
-                  [value]="priceDisplayValue" (input)="onPriceInput($event, newExpenseForm, 'price')"
+              <span class="exp-currency-badge"
+                >{{ userProfile?.currency || 'MMK' }}</span
+              >
+              <div class="exp-float-field" style="flex: 1; min-width: 0">
+                <input
+                  type="text"
+                  inputmode="decimal"
+                  class="exp-float-input exp-float-input-joined"
+                  id="price-quick"
+                  [value]="priceDisplayValue"
+                  (input)="onPriceInput($event, newExpenseForm, 'price')"
                   (focus)="priceDisplayValue = (newExpenseForm.get('price')?.value > 0 ? formatWithCommas(newExpenseForm.get('price')?.value) : ''); newExpenseForm.get('price')?.markAsTouched()"
                   placeholder=" "
-                  [class.is-invalid]="newExpenseForm.controls['price'].invalid && newExpenseForm.controls['price'].touched">
-                <label class="exp-float-label" for="price-quick">{{ "PRICE_LABEL" | translate }}</label>
+                  [class.is-invalid]="newExpenseForm.controls['price'].invalid && newExpenseForm.controls['price'].touched"
+                />
+                <label class="exp-float-label" for="price-quick"
+                  >{{ "PRICE_LABEL" | translate }}</label
+                >
               </div>
             </div>
-          
           </ng-container>
-          
-          <!-- ── Full Mode (group account or toggled full) ── -->
-          <ng-container *ngIf="userProfile?.accountType !== 'personal' || !isQuickMode">
 
+          <!-- ── Full Mode (group account or toggled full) ── -->
+          <ng-container
+            *ngIf="userProfile?.accountType !== 'personal' || !isQuickMode"
+          >
             <div class="exp-form-row">
               <!-- Date -->
               <div class="exp-float-field">
-                <input type="date" class="exp-float-input" id="date" formControlName="date" placeholder=" "
-                  [class.is-invalid]="newExpenseForm.controls['date'].invalid && newExpenseForm.controls['date'].touched">
-                <label class="exp-float-label" for="date">{{ "EXPENSE_DATE_LABEL" | translate }}</label>
+                <input
+                  type="date"
+                  class="exp-float-input"
+                  id="date"
+                  formControlName="date"
+                  placeholder=" "
+                  [class.is-invalid]="newExpenseForm.controls['date'].invalid && newExpenseForm.controls['date'].touched"
+                />
+                <label class="exp-float-label" for="date"
+                  >{{ "EXPENSE_DATE_LABEL" | translate }}</label
+                >
               </div>
               <!-- Category -->
               <div class="exp-float-field exp-float-group">
-                <div class="exp-float-field" style="flex:1; min-width:0;">
-                  <select class="exp-float-input exp-float-select" id="category-full" formControlName="category" placeholder=" "
-                    [class.is-invalid]="newExpenseForm.controls['category'].invalid && newExpenseForm.controls['category'].touched">
-                    <option value="" disabled selected>{{ "EXPENSE_SELECT_CATEGORY" | translate }}</option>
-                    <option *ngFor="let cat of categories$ | async" [value]="cat.name">{{ cat.name }}</option>
+                <div class="exp-float-field" style="flex: 1; min-width: 0">
+                  <select
+                    class="exp-float-input exp-float-select"
+                    id="category-full"
+                    formControlName="category"
+                    placeholder=" "
+                    [class.is-invalid]="newExpenseForm.controls['category'].invalid && newExpenseForm.controls['category'].touched"
+                  >
+                    <option value="" disabled selected>
+                      {{ "EXPENSE_SELECT_CATEGORY" | translate }}
+                    </option>
+                    <option
+                      *ngFor="let cat of categories$ | async"
+                      [value]="cat.name"
+                    >
+                      {{ cat.name }}
+                    </option>
                   </select>
-                  <label class="exp-float-label" for="category-full">{{ "EXPENSE_CATEGORY_LABEL" | translate }}</label>
-                  </div>
-                  <button type="button" class="exp-addon-btn" (click)="openCategoryModal()" title="Add category">
-                    <fa-icon [icon]="faPlus"></fa-icon>
-                  </button>
-                  </div>
-                  </div>
+                  <label class="exp-float-label" for="category-full"
+                    >{{ "EXPENSE_CATEGORY_LABEL" | translate }}</label
+                  >
+                </div>
+                <button
+                  type="button"
+                  class="exp-addon-btn"
+                  (click)="openCategoryModal()"
+                  title="Add category"
+                >
+                  <fa-icon [icon]="faPlus"></fa-icon>
+                </button>
+              </div>
+            </div>
 
             <!-- Item Name -->
             <div class="exp-float-field">
-              <input type="text" class="exp-float-input" id="itemName" formControlName="itemName" placeholder=" "
-                [class.is-invalid]="newExpenseForm.controls['itemName'].invalid && newExpenseForm.controls['itemName'].touched">
-              <label class="exp-float-label" for="itemName">{{ "EXPENSE_ITEM_NAME_LABEL" | translate }}</label>
+              <input
+                type="text"
+                class="exp-float-input"
+                id="itemName"
+                formControlName="itemName"
+                placeholder=" "
+                [class.is-invalid]="newExpenseForm.controls['itemName'].invalid && newExpenseForm.controls['itemName'].touched"
+              />
+              <label class="exp-float-label" for="itemName"
+                >{{ "EXPENSE_ITEM_NAME_LABEL" | translate }}</label
+              >
             </div>
 
             <div class="exp-form-row exp-form-row-3">
               <!-- Quantity -->
               <div class="exp-float-field">
-                <input type="number" class="exp-float-input" id="quantity" formControlName="quantity" min="0.01" step="0.01"
+                <input
+                  type="number"
+                  class="exp-float-input"
+                  id="quantity"
+                  formControlName="quantity"
+                  min="0.01"
+                  step="0.01"
                   placeholder=" "
-                  [class.is-invalid]="newExpenseForm.controls['quantity'].invalid && newExpenseForm.controls['quantity'].touched">
-                <label class="exp-float-label" for="quantity">{{ "QUANTITY_LABEL" | translate }}</label>
+                  [class.is-invalid]="newExpenseForm.controls['quantity'].invalid && newExpenseForm.controls['quantity'].touched"
+                />
+                <label class="exp-float-label" for="quantity"
+                  >{{ "QUANTITY_LABEL" | translate }}</label
+                >
               </div>
               <!-- Unit -->
               <div class="exp-float-field">
-                <input type="text" class="exp-float-input" id="unit" formControlName="unit" placeholder=" ">
-                <label class="exp-float-label" for="unit">{{ "EXPENSE_UNIT_LABEL" | translate }}</label>
+                <input
+                  type="text"
+                  class="exp-float-input"
+                  id="unit"
+                  formControlName="unit"
+                  placeholder=" "
+                />
+                <label class="exp-float-label" for="unit"
+                  >{{ "EXPENSE_UNIT_LABEL" | translate }}</label
+                >
               </div>
               <!-- Price -->
               <div class="exp-float-field exp-float-group">
-                <span class="exp-currency-badge">{{ userProfile?.currency || 'MMK' }}</span>
-                <div class="exp-float-field" style="flex:1; min-width:0;">
-                  <input type="text" inputmode="decimal" class="exp-float-input exp-float-input-joined" id="price"
-                    [value]="priceDisplayValue" (input)="onPriceInput($event, newExpenseForm, 'price')"
+                <span class="exp-currency-badge"
+                  >{{ userProfile?.currency || 'MMK' }}</span
+                >
+                <div class="exp-float-field" style="flex: 1; min-width: 0">
+                  <input
+                    type="text"
+                    inputmode="decimal"
+                    class="exp-float-input exp-float-input-joined"
+                    id="price"
+                    [value]="priceDisplayValue"
+                    (input)="onPriceInput($event, newExpenseForm, 'price')"
                     (focus)="priceDisplayValue = (newExpenseForm.get('price')?.value > 0 ? formatWithCommas(newExpenseForm.get('price')?.value) : ''); newExpenseForm.get('price')?.markAsTouched()"
                     placeholder=" "
-                    [class.is-invalid]="newExpenseForm.controls['price'].invalid && newExpenseForm.controls['price'].touched">
-                  <label class="exp-float-label" for="price">{{ "PRICE_LABEL" | translate }}</label>
+                    [class.is-invalid]="newExpenseForm.controls['price'].invalid && newExpenseForm.controls['price'].touched"
+                  />
+                  <label class="exp-float-label" for="price"
+                    >{{ "PRICE_LABEL" | translate }}</label
+                  >
                 </div>
               </div>
             </div>
-
           </ng-container>
 
           <div class="exp-form-footer">
-            <button type="submit" class="exp-btn exp-btn-primary" [disabled]="newExpenseForm.invalid">
+            <button
+              type="submit"
+              class="exp-btn exp-btn-primary"
+              [disabled]="newExpenseForm.invalid"
+            >
               <fa-icon [icon]="faSave" class="me-2"></fa-icon>
               {{ "SAVE_BUTTON_LABEL" | translate }}
             </button>
           </div>
-
         </form>
       </div>
     </div>
@@ -155,7 +282,6 @@
 
     <!-- ── EXPENSE LIST ── -->
     <div class="exp-list-section">
-
       <!-- List Header -->
       <div class="exp-list-header">
         <h3 class="exp-section-title">
@@ -164,27 +290,61 @@
         </h3>
         <!-- Reset filter button -->
         <div class="exp-filter-reset">
-          <button type="button" class="exp-icon-btn" (click)="resetFilter()" title="Reset">
+          <button
+            type="button"
+            class="exp-icon-btn"
+            (click)="resetFilter()"
+            title="Reset"
+          >
             <fa-icon [icon]="faSync"></fa-icon>
           </button>
         </div>
       </div>
 
-      <div class="exp-filter-row">
+      <div  class="exp-filter-row">
         <!-- Date Filter Chips -->
         <div class="exp-filter-modes">
-          <button type="button" class="exp-filter-chip" [class.active]="dateFilterMode === 'today'"
-            (click)="setDateFilterMode('today')">{{ 'TODAY' | translate }}</button>
-          <button type="button" class="exp-filter-chip" [class.active]="dateFilterMode === 'week'"
-            (click)="setDateFilterMode('week')">{{ 'THIS_WEEK' | translate }}</button>
-          <button type="button" class="exp-filter-chip" [class.active]="dateFilterMode === 'month'"
-            (click)="setDateFilterMode('month')">{{ 'THIS_MONTH' | translate }}</button>
-          <button type="button" class="exp-filter-chip" [class.active]="dateFilterMode === 'custom'"
-            (click)="setDateFilterMode('custom')">{{ 'CUSTOM' | translate }}</button>
+          <button
+            type="button"
+            class="exp-filter-chip"
+            [class.active]="dateFilterMode === 'today'"
+            (click)="setDateFilterMode('today')"
+          >
+            {{ 'TODAY' | translate }}
+          </button>
+          <button
+            type="button"
+            class="exp-filter-chip"
+            [class.active]="dateFilterMode === 'week'"
+            (click)="setDateFilterMode('week')"
+          >
+            {{ 'THIS_WEEK' | translate }}
+          </button>
+          <button
+            type="button"
+            class="exp-filter-chip"
+            [class.active]="dateFilterMode === 'month'"
+            (click)="setDateFilterMode('month')"
+          >
+            {{ 'THIS_MONTH' | translate }}
+          </button>
+          <button
+            type="button"
+            class="exp-filter-chip"
+            [class.active]="dateFilterMode === 'custom'"
+            (click)="setDateFilterMode('custom')"
+          >
+            {{ 'CUSTOM' | translate }}
+          </button>
           <!-- Custom date picker — single date -->
           <div class="exp-custom-dates" *ngIf="showCustomDatePicker">
-            <input type="date" class="exp-input exp-date-input" [(ngModel)]="customStartDate"
-              (ngModelChange)="onCustomDateChange()" [ngModelOptions]="{standalone: true}">
+            <input
+              type="date"
+              class="exp-input exp-date-input"
+              [(ngModel)]="customStartDate"
+              (ngModelChange)="onCustomDateChange()"
+              [ngModelOptions]="{standalone: true}"
+            />
           </div>
         </div>
       </div>
@@ -192,12 +352,21 @@
       <!-- Currency Totals -->
       <div class="exp-totals-row">
         <ng-container *ngIf="totalExpensesByCurrency$ | async as totals">
-          <ng-container *ngIf="(totals | keyvalue).length > 0; else noTotalsForDate">
+          <ng-container
+            *ngIf="(totals | keyvalue).length > 0; else noTotalsForDate"
+          >
             <fa-icon [icon]="faCoins" class="exp-icon-warning"></fa-icon>
-            <button type="button" class="exp-total-chip" *ngFor="let total of totals | keyvalue"
-              (click)="filterByCurrency(total.key)">
+            <button
+              type="button"
+              class="exp-total-chip"
+              *ngFor="let total of totals | keyvalue"
+              (click)="filterByCurrency(total.key)"
+            >
               {{ "TOTAL_FOR_CURRENCY" | translate : { currency: total.key } }}:
-              <span class="exp-total-amt">{{ formatService.formatAmountWithSymbol(total.value, total.key) }}</span>
+              <span class="exp-total-amt"
+                >{{ formatService.formatAmountWithSymbol(total.value, total.key)
+                }}</span
+              >
             </button>
           </ng-container>
         </ng-container>
@@ -205,167 +374,319 @@
 
       <!-- List Items -->
       <div *ngIf="displayedExpenses$ | async as expenses; else loading">
-
         <div *ngIf="expenses.length === 0" class="exp-empty">
           {{ "EXPENSE_NO_EXPENSES_HINT" | translate }}
         </div>
 
         <div class="exp-list" *ngIf="expenses.length > 0">
           <div *ngFor="let expense of expenses" class="exp-item">
-
             <!-- Default View -->
             <div *ngIf="editingExpenseId !== expense.id" class="exp-item-inner">
               <div class="exp-item-top">
                 <span class="exp-item-name">{{ expense.itemName }}</span>
                 <span class="exp-item-amount">
-                  {{ formatService.formatAmountShort(expense.totalCost, expense.currency) }}
+                  {{ formatService.formatAmountShort(expense.totalCost,
+                  expense.currency) }}
                 </span>
               </div>
 
               <div class="exp-item-meta">
                 <span class="exp-cat-badge">{{ expense.category }}</span>
                 <span class="exp-meta-dot">·</span>
-                <span class="exp-item-date">{{ formatLocalizedDate(expense.date) }}</span>
-                <span *ngIf="expense.quantity && expense.unit" class="exp-meta-dot">·</span>
-                <span *ngIf="expense.quantity && expense.unit" class="exp-item-qty">
-                  {{ formatLocalizedNumber(expense.quantity) }} {{ expense.unit }} &#64; {{
-                  formatService.formatAmountShort(expense.price, expense.currency) }}
+                <span class="exp-item-date"
+                  >{{ formatLocalizedDate(expense.date) }}</span
+                >
+                <span
+                  *ngIf="expense.quantity && expense.unit"
+                  class="exp-meta-dot"
+                  >·</span
+                >
+                <span
+                  *ngIf="expense.quantity && expense.unit"
+                  class="exp-item-qty"
+                >
+                  {{ formatLocalizedNumber(expense.quantity) }} {{ expense.unit
+                  }} &#64; {{ formatService.formatAmountShort(expense.price,
+                  expense.currency) }}
                 </span>
               </div>
 
               <div class="exp-item-actions">
                 <div class="exp-item-actions-left">
-                  <button class="exp-btn exp-btn-sm exp-btn-outline-info" (click)="startEdit(expense)"
-                    [disabled]="editingExpenseId !== null">
+                  <button
+                    class="exp-btn exp-btn-sm exp-btn-outline-info"
+                    (click)="startEdit(expense)"
+                    [disabled]="editingExpenseId !== null"
+                  >
                     <fa-icon [icon]="faEdit"></fa-icon>
                     {{ "EDIT_BUTTON_LABEL" | translate }}
                   </button>
-                  <button *ngIf="userProfile?.accountType === 'personal' || userRole === 'admin'"
-                    class="exp-btn exp-btn-sm exp-btn-outline-danger" (click)="onDelete(expense.id!)"
-                    [disabled]="editingExpenseId !== null">
+                  <button
+                    *ngIf="userProfile?.accountType === 'personal' || userRole === 'admin'"
+                    class="exp-btn exp-btn-sm exp-btn-outline-danger"
+                    (click)="onDelete(expense.id!)"
+                    [disabled]="editingExpenseId !== null"
+                  >
                     <fa-icon [icon]="faTrash"></fa-icon>
                     {{ "DELETE_BUTTON_LABEL" | translate }}
                   </button>
                 </div>
-                <fa-icon *ngIf="userProfile?.accountType === 'group'" [icon]="faInfoCircle" class="exp-info-icon"
-                  (click)="showExpenseInfo(expense)">
+                <fa-icon
+                  *ngIf="userProfile?.accountType === 'group'"
+                  [icon]="faInfoCircle"
+                  class="exp-info-icon"
+                  (click)="showExpenseInfo(expense)"
+                >
                 </fa-icon>
               </div>
 
-              <div *ngIf="userProfile?.accountType === 'group' && expense.userDisplayName" class="exp-created-by p-0">
-                {{ "EXPENSE_CREATED_BY" | translate: { name: expense.userDisplayName } }}
+              <div
+                *ngIf="userProfile?.accountType === 'group' && expense.userDisplayName"
+                class="exp-created-by p-0"
+              >
+                {{ "EXPENSE_CREATED_BY" | translate: { name:
+                expense.userDisplayName } }}
               </div>
             </div>
 
             <!-- Edit Form -->
-            <div *ngIf="editingExpenseId === expense.id && editingForm" [formGroup]="editingForm" class="exp-edit-form">
-
+            <div
+              *ngIf="editingExpenseId === expense.id && editingForm"
+              [formGroup]="editingForm"
+              class="exp-edit-form"
+            >
               <!-- Edit header with Quick/Full toggle -->
               <div class="exp-edit-label">
-                <span style="display:flex;align-items:center;gap:0.5rem;">
+                <span style="display: flex; align-items: center; gap: 0.5rem">
                   <fa-icon [icon]="faEdit" class="exp-icon-accent"></fa-icon>
                   {{ "EDIT_BUTTON_LABEL" | translate }}
                 </span>
-                <button *ngIf="userProfile?.accountType === 'personal'" type="button" class="exp-quick-toggle"
-                  [class.active]="!isEditQuickMode" (click)="toggleEditQuickMode()">
-                  <span *ngIf="isEditQuickMode">⚡ {{ 'QUICK' | translate }}</span>
-                  <span *ngIf="!isEditQuickMode">📋 {{ 'FULL' | translate }}</span>
+                <button
+                  *ngIf="userProfile?.accountType === 'personal'"
+                  type="button"
+                  class="exp-quick-toggle"
+                  [class.active]="!isEditQuickMode"
+                  (click)="toggleEditQuickMode()"
+                >
+                  <span *ngIf="isEditQuickMode"
+                    >⚡ {{ 'QUICK' | translate }}</span
+                  >
+                  <span *ngIf="!isEditQuickMode"
+                    >📋 {{ 'FULL' | translate }}</span
+                  >
                 </button>
-                </div>
-                <!-- Edit Quick Mode -->
-                <ng-container *ngIf="userProfile?.accountType === 'personal' && isEditQuickMode">
-                  <div class="exp-form-row">
-                    <div class="exp-float-field">
-                      <select class="exp-float-input exp-float-select" [id]="'eq-cat-' + expense.id" formControlName="category"
-                        placeholder=" ">
-                        <option value="" disabled></option>
-                        <option *ngFor="let cat of categories$ | async" [value]="cat.name">{{ cat.name }}</option>
-                      </select>
-                      <label class="exp-float-label" [for]="'eq-cat-' + expense.id">{{ "EXPENSE_CATEGORY_LABEL" | translate }}</label>
-                    </div>
-                    <div class="exp-float-field">
-                      <input type="date" class="exp-float-input" [id]="'eq-date-' + expense.id" formControlName="date" placeholder=" ">
-                      <label class="exp-float-label" [for]="'eq-date-' + expense.id">{{ "EXPENSE_DATE_LABEL" | translate }}</label>
-                    </div>
+              </div>
+              <!-- Edit Quick Mode -->
+              <ng-container
+                *ngIf="userProfile?.accountType === 'personal' && isEditQuickMode"
+              >
+                <div class="exp-form-row">
+                  <div class="exp-float-field">
+                    <select
+                      class="exp-float-input exp-float-select"
+                      [id]="'eq-cat-' + expense.id"
+                      formControlName="category"
+                      placeholder=" "
+                    >
+                      <option value="" disabled></option>
+                      <option
+                        *ngFor="let cat of categories$ | async"
+                        [value]="cat.name"
+                      >
+                        {{ cat.name }}
+                      </option>
+                    </select>
+                    <label
+                      class="exp-float-label"
+                      [for]="'eq-cat-' + expense.id"
+                      >{{ "EXPENSE_CATEGORY_LABEL" | translate }}</label
+                    >
                   </div>
                   <div class="exp-float-field">
-                    <input type="text" class="exp-float-input" [id]="'eq-name-' + expense.id" formControlName="itemName"
-                      placeholder=" ">
-                    <label class="exp-float-label" [for]="'eq-name-' + expense.id">
-                      {{ "EXPENSE_ITEM_NAME_LABEL" | translate }}
-                      <span class="exp-optional-hint">({{ 'OPTIONAL' | translate }})</span>
-                    </label>
+                    <input
+                      type="date"
+                      class="exp-float-input"
+                      [id]="'eq-date-' + expense.id"
+                      formControlName="date"
+                      placeholder=" "
+                    />
+                    <label
+                      class="exp-float-label"
+                      [for]="'eq-date-' + expense.id"
+                      >{{ "EXPENSE_DATE_LABEL" | translate }}</label
+                    >
                   </div>
-                  <div class="exp-float-field exp-float-group">
-                    <span class="exp-currency-badge">{{ editingForm.get('currency')?.value }}</span>
-                    <div class="exp-float-field" style="flex:1;min-width:0;">
-                      <input type="text" inputmode="decimal" class="exp-float-input exp-float-input-joined"
-                        [id]="'eq-price-' + expense.id" [value]="editPriceDisplayValue"
-                        (input)="onPriceInput($event, editingForm!, 'price')"
-                        (focus)="editPriceDisplayValue = (editingForm!.get('price')!.value > 0 ? formatWithCommas(editingForm!.get('price')!.value) : '')"
-                        placeholder=" ">
-                      <label class="exp-float-label" [for]="'eq-price-' + expense.id">{{ "PRICE_LABEL" | translate }}</label>
-                    </div>
-                  </div>
-                  </ng-container>
-                        
-                        <!-- Edit Full Mode -->
-                        <ng-container *ngIf="userProfile?.accountType !== 'personal' || !isEditQuickMode">
-                          <div class="exp-form-row">
-                            <div class="exp-float-field">
-                              <input type="date" class="exp-float-input" [id]="'edit-date-' + expense.id" formControlName="date" placeholder=" ">
-                              <label class="exp-float-label" [for]="'edit-date-' + expense.id">{{ "EXPENSE_DATE_LABEL" | translate }}</label>
-                              </div>
-                              <div class="exp-float-field">
-                    <select class="exp-float-input exp-float-select" [id]="'edit-category-' + expense.id" formControlName="category"
-                      placeholder=" ">
-                      <option value="" disabled></option>
-                      <option *ngFor="let cat of categories$ | async" [value]="cat.name">{{ cat.name }}</option>
-                    </select>
-                    <label class="exp-float-label" [for]="'edit-category-' + expense.id">{{ "EXPENSE_CATEGORY_LABEL" | translate }}</label>
-                    </div>
-                    </div>
+                </div>
                 <div class="exp-float-field">
-                  <input type="text" class="exp-float-input" [id]="'edit-itemName-' + expense.id" formControlName="itemName"
-                    placeholder=" ">
-                  <label class="exp-float-label" [for]="'edit-itemName-' + expense.id">{{ "EXPENSE_ITEM_NAME_LABEL" | translate }}</label>
+                  <input
+                    type="text"
+                    class="exp-float-input"
+                    [id]="'eq-name-' + expense.id"
+                    formControlName="itemName"
+                    placeholder=" "
+                  />
+                  <label
+                    class="exp-float-label"
+                    [for]="'eq-name-' + expense.id"
+                  >
+                    {{ "EXPENSE_ITEM_NAME_LABEL" | translate }}
+                    <span class="exp-optional-hint"
+                      >({{ 'OPTIONAL' | translate }})</span
+                    >
+                  </label>
+                </div>
+                <div class="exp-float-field exp-float-group">
+                  <span class="exp-currency-badge"
+                    >{{ editingForm.get('currency')?.value }}</span
+                  >
+                  <div class="exp-float-field" style="flex: 1; min-width: 0">
+                    <input
+                      type="text"
+                      inputmode="decimal"
+                      class="exp-float-input exp-float-input-joined"
+                      [id]="'eq-price-' + expense.id"
+                      [value]="editPriceDisplayValue"
+                      (input)="onPriceInput($event, editingForm!, 'price')"
+                      (focus)="editPriceDisplayValue = (editingForm!.get('price')!.value > 0 ? formatWithCommas(editingForm!.get('price')!.value) : '')"
+                      placeholder=" "
+                    />
+                    <label
+                      class="exp-float-label"
+                      [for]="'eq-price-' + expense.id"
+                      >{{ "PRICE_LABEL" | translate }}</label
+                    >
                   </div>
+                </div>
+              </ng-container>
+
+              <!-- Edit Full Mode -->
+              <ng-container
+                *ngIf="userProfile?.accountType !== 'personal' || !isEditQuickMode"
+              >
+                <div class="exp-form-row">
+                  <div class="exp-float-field">
+                    <input
+                      type="date"
+                      class="exp-float-input"
+                      [id]="'edit-date-' + expense.id"
+                      formControlName="date"
+                      placeholder=" "
+                    />
+                    <label
+                      class="exp-float-label"
+                      [for]="'edit-date-' + expense.id"
+                      >{{ "EXPENSE_DATE_LABEL" | translate }}</label
+                    >
+                  </div>
+                  <div class="exp-float-field">
+                    <select
+                      class="exp-float-input exp-float-select"
+                      [id]="'edit-category-' + expense.id"
+                      formControlName="category"
+                      placeholder=" "
+                    >
+                      <option value="" disabled></option>
+                      <option
+                        *ngFor="let cat of categories$ | async"
+                        [value]="cat.name"
+                      >
+                        {{ cat.name }}
+                      </option>
+                    </select>
+                    <label
+                      class="exp-float-label"
+                      [for]="'edit-category-' + expense.id"
+                      >{{ "EXPENSE_CATEGORY_LABEL" | translate }}</label
+                    >
+                  </div>
+                </div>
+                <div class="exp-float-field">
+                  <input
+                    type="text"
+                    class="exp-float-input"
+                    [id]="'edit-itemName-' + expense.id"
+                    formControlName="itemName"
+                    placeholder=" "
+                  />
+                  <label
+                    class="exp-float-label"
+                    [for]="'edit-itemName-' + expense.id"
+                    >{{ "EXPENSE_ITEM_NAME_LABEL" | translate }}</label
+                  >
+                </div>
                 <div class="exp-form-row exp-form-row-3">
                   <div class="exp-float-field">
-                    <input type="number" class="exp-float-input" [id]="'edit-quantity-' + expense.id" formControlName="quantity" min="1"
-                      placeholder=" ">
-                    <label class="exp-float-label" [for]="'edit-quantity-' + expense.id">{{ "QUANTITY_LABEL" | translate }}</label>
-                    </div>
-                    <div class="exp-float-field">
-                    <input type="text" class="exp-float-input" [id]="'edit-unit-' + expense.id" formControlName="unit" placeholder=" ">
-                    <label class="exp-float-label" [for]="'edit-unit-' + expense.id">{{ "EXPENSE_UNIT_LABEL" | translate }}</label>
-                    </div>
-                    <div class="exp-float-field exp-float-group">
-                      <span class="exp-currency-badge">{{ editingForm.get('currency')?.value }}</span>
-                    <div class="exp-float-field" style="flex:1;min-width:0;">
-                      <input type="text" inputmode="decimal" class="exp-float-input exp-float-input-joined"
-                        [id]="'edit-price-' + expense.id" [value]="editPriceDisplayValue"
+                    <input
+                      type="number"
+                      class="exp-float-input"
+                      [id]="'edit-quantity-' + expense.id"
+                      formControlName="quantity"
+                      min="1"
+                      placeholder=" "
+                    />
+                    <label
+                      class="exp-float-label"
+                      [for]="'edit-quantity-' + expense.id"
+                      >{{ "QUANTITY_LABEL" | translate }}</label
+                    >
+                  </div>
+                  <div class="exp-float-field">
+                    <input
+                      type="text"
+                      class="exp-float-input"
+                      [id]="'edit-unit-' + expense.id"
+                      formControlName="unit"
+                      placeholder=" "
+                    />
+                    <label
+                      class="exp-float-label"
+                      [for]="'edit-unit-' + expense.id"
+                      >{{ "EXPENSE_UNIT_LABEL" | translate }}</label
+                    >
+                  </div>
+                  <div class="exp-float-field exp-float-group">
+                    <span class="exp-currency-badge"
+                      >{{ editingForm.get('currency')?.value }}</span
+                    >
+                    <div class="exp-float-field" style="flex: 1; min-width: 0">
+                      <input
+                        type="text"
+                        inputmode="decimal"
+                        class="exp-float-input exp-float-input-joined"
+                        [id]="'edit-price-' + expense.id"
+                        [value]="editPriceDisplayValue"
                         (input)="onPriceInput($event, editingForm!, 'price')"
                         (focus)="editPriceDisplayValue = (editingForm!.get('price')!.value > 0 ? formatWithCommas(editingForm!.get('price')!.value) : '')"
-                        placeholder=" ">
-                      <label class="exp-float-label" [for]="'edit-price-' + expense.id">{{ "PRICE_LABEL" | translate }}</label>
-                      </div>
-                      </div>
-                      </div>
+                        placeholder=" "
+                      />
+                      <label
+                        class="exp-float-label"
+                        [for]="'edit-price-' + expense.id"
+                        >{{ "PRICE_LABEL" | translate }}</label
+                      >
+                    </div>
+                  </div>
+                </div>
               </ng-container>
 
               <div class="exp-edit-actions">
-                <button class="exp-btn exp-btn-sm exp-btn-ghost" (click)="cancelEdit()">
+                <button
+                  class="exp-btn exp-btn-sm exp-btn-ghost"
+                  (click)="cancelEdit()"
+                >
                   <fa-icon [icon]="faTimes"></fa-icon>
                   {{ "CANCEL_BUTTON_LABEL" | translate }}
                 </button>
-                <button class="exp-btn exp-btn-sm exp-btn-primary" (click)="saveEdit()" [disabled]="editingForm.invalid">
+                <button
+                  class="exp-btn exp-btn-sm exp-btn-primary"
+                  (click)="saveEdit()"
+                  [disabled]="editingForm.invalid"
+                >
                   <fa-icon [icon]="faSave"></fa-icon>
                   {{ "SAVE_BUTTON_LABEL" | translate }}
                 </button>
               </div>
             </div>
-
           </div>
         </div>
       </div>
@@ -377,12 +698,12 @@
       </ng-template>
 
       <ng-template #noTotalsForDate>
-        <span class="exp-no-totals">{{ "NO_TOTALS_FOR_DATE" | translate }}</span>
+        <span class="exp-no-totals"
+          >{{ "NO_TOTALS_FOR_DATE" | translate }}</span
+        >
       </ng-template>
-
     </div>
     <!-- ── END EXPENSE LIST ── -->
-
   </div>
 </div>
 

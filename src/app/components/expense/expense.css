@@ -419,7 +419,8 @@
 }
 
 .exp-filter-row {
-  padding: 0.9rem 1.4rem;
+  padding: 0.9rem 0.75rem 0.9rem 1.4rem;
+  border-bottom: 1px solid var(--border);
 }
 
 /* ── Totals Row ── */
@@ -786,7 +787,7 @@
 
 .exp-float-group>.exp-float-field>.exp-float-input {
   border-radius: 10px 0 0 10px;
-  border-right: none;
+  /* border-right: none; */
   height: 56px;
 }
 
@@ -858,18 +859,18 @@
 .exp-filter-modes {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.3rem;
   flex-wrap: wrap;
   margin-top: 0.5rem;
 }
 
 .exp-filter-chip {
-  padding: 0.3rem 0.7rem;
+  padding: 0.25rem 0.7rem;
   border-radius: 20px;
   border: 1px solid var(--border, rgba(255,255,255,0.1));
   background: var(--surface-2);
   color: var(--text-muted);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
@@ -974,7 +975,7 @@ body.light-mode .exp-filter-chip.active {
   .exp-custom-dates {
     flex-direction: column;
     align-items: stretch;
-    width: 100%;
+    width: 95%;
     margin-top: 0.5rem;
   }
 
