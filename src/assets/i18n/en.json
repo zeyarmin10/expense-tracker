@@ -550,5 +550,9 @@
   "FULL": "Full",
   "OPTIONAL": "optional",
   "SWITCH_TO_FULL_FORM": "Switch to Full Form",
-  "SWITCH_TO_QUICK_ADD": "Switch to Quick Add"
+  "SWITCH_TO_QUICK_ADD": "Switch to Quick Add",
+  "TODAY": "Today",
+  "THIS_WEEK": "This Week",
+  "THIS_MONTH": "This Month",
+  "CUSTOM": "Custom"
 }

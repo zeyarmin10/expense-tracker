@@ -107,7 +107,15 @@ export class Expense implements OnInit {
   public userRole: string | null = null;
   isSaving = false;
   isFormOpen = true;   // collapsible add-form state
-  isQuickMode = true;  // ✅ Quick mode (personal): category + itemName + price only
+  isQuickMode = true;       // Quick mode add form
+  isEditQuickMode = true;   // Quick mode edit form
+
+  // ── Date filter mode ──────────────────────────────
+  public dateFilterMode: 'today' | 'week' | 'month' | 'custom' = 'today';
+  public customStartDate: string = '';
+  public customEndDate: string = '';
+  public showCustomDatePicker = false;
+  // ──────────────────────────────────────────────────
   objectKeys = Object.keys;
 
   // ── Comma Formatting for Price inputs ──────────────
@@ -197,8 +205,31 @@ export class Expense implements OnInit {
     this.loadExpenses();
     this.route.paramMap.subscribe(params => {
       const date = params.get('date');
-      const initialDate = date || this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
-      this._selectedDate$.next(initialDate);
+      const todayStr = this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
+
+      if (date) {
+        if (date === todayStr) {
+          // overview ကနေ ဒီနေ့ date နဲ့ ရောက်လာ → Today chip select
+          this.dateFilterMode = 'today';
+          this.showCustomDatePicker = false;
+          this.customStartDate = '';
+          this.customEndDate = '';
+        } else {
+          // တခြား date → custom mode + single date ပြ
+          this.dateFilterMode = 'custom';
+          this.showCustomDatePicker = true;
+          this.customStartDate = date;
+          this.customEndDate = date;
+        }
+      } else {
+        // /expense တိုက်ရိုက်ဝင်တာ → today default
+        this.dateFilterMode = 'today';
+        this.showCustomDatePicker = false;
+        this.customStartDate = '';
+        this.customEndDate = '';
+      }
+      this._selectedDate$.next(date || todayStr);
+      this.refreshExpenses$.next();
     });
 
     this.authService.userProfile$.subscribe(profile => {
@@ -242,7 +273,7 @@ export class Expense implements OnInit {
       this._activeCategoryFilter$,
     ]).pipe(
       map(([expenses, selectedDate, activeCurrency, activeCategory]) => {
-        let filtered = expenses.filter(e => e.date === selectedDate);
+        let filtered = this.filterByDateMode(expenses);
         if (activeCurrency) filtered = filtered.filter(e => e.currency === activeCurrency);
         if (activeCategory) filtered = filtered.filter(e => e.category === activeCategory);
         return filtered.sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
@@ -318,9 +349,70 @@ export class Expense implements OnInit {
     this._activeCategoryFilter$.next(null);
   }
 
+  setDateFilterMode(mode: 'today' | 'week' | 'month' | 'custom'): void {
+    this.dateFilterMode = mode;
+    this.showCustomDatePicker = mode === 'custom';
+    if (mode === 'custom') {
+      // ✅ default: yesterday
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      this.customStartDate = this.datePipe.transform(yesterday, 'yyyy-MM-dd') || '';
+      this.customEndDate = this.customStartDate;
+      this.refreshExpenses$.next();
+    } else {
+      this.resetActiveFilters();
+      this.refreshExpenses$.next();
+    }
+  }
+
+  onCustomDateChange(): void {
+    if (this.customStartDate) {
+      // single date picker — end = start
+      this.customEndDate = this.customStartDate;
+      this.resetActiveFilters();
+      this.refreshExpenses$.next();
+    }
+  }
+
+  private filterByDateMode(expenses: IExpense[]): IExpense[] {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayStr = this.datePipe.transform(today, 'yyyy-MM-dd') || '';
+
+    switch (this.dateFilterMode) {
+      case 'today':
+        return expenses.filter(e => e.date === todayStr);
+      case 'week': {
+        const dow = today.getDay();
+        const startOfWeek = new Date(today);
+        startOfWeek.setDate(today.getDate() - dow);
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 6);
+        const s = this.datePipe.transform(startOfWeek, 'yyyy-MM-dd') || '';
+        const e = this.datePipe.transform(endOfWeek, 'yyyy-MM-dd') || '';
+        return expenses.filter(exp => exp.date >= s && exp.date <= e);
+      }
+      case 'month': {
+        const monthStr = this.datePipe.transform(today, 'yyyy-MM') || '';
+        return expenses.filter(exp => exp.date?.startsWith(monthStr));
+      }
+      case 'custom':
+        if (this.customStartDate && this.customEndDate) {
+          return expenses.filter(exp => exp.date >= this.customStartDate && exp.date <= this.customEndDate);
+        }
+        return expenses.filter(e => e.date === todayStr);
+      default:
+        return expenses.filter(e => e.date === todayStr);
+    }
+  }
+
   resetFilter(): void {
     const todayFormatted = this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
     this._selectedDate$.next(todayFormatted);
+    this.dateFilterMode = 'today';
+    this.showCustomDatePicker = false;
+    this.customStartDate = '';
+    this.customEndDate = '';
     this.resetActiveFilters();
   }
 
@@ -337,6 +429,7 @@ export class Expense implements OnInit {
   startEdit(expense: IExpense): void {
     this.editingExpenseId = expense.id!;
     this.editPriceDisplayValue = this.formatWithCommas(expense.price);
+    this.isEditQuickMode = this.userProfile?.accountType === 'personal';
     this.editingForm = this.fb.group({
       date:     [expense.date,     Validators.required],
       category: [expense.category, Validators.required],
@@ -404,6 +497,10 @@ export class Expense implements OnInit {
         input.setSelectionRange(len, len);
       }
     }, 50);
+  }
+
+  toggleEditQuickMode(): void {
+    this.isEditQuickMode = !this.isEditQuickMode;
   }
 
   cancelEdit(): void {
