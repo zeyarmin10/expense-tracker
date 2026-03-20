@@ -325,7 +325,7 @@
   top: 50%;
   transform: translateY(-50%);
   font-size: 0.88rem;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: 0.01em;
   text-transform: none;
   color: var(--text-sub);
@@ -395,7 +395,7 @@
   font-size: 0.72rem;
   color: var(--danger);
   padding-left: 0.2rem;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 /* Alert banners */
@@ -403,7 +403,7 @@
   font-size: 0.8rem;
   padding: 0.7rem 0.9rem;
   border-radius: 10px;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .lgn-alert-err {
@@ -507,7 +507,7 @@
 
 .lgn-divider span {
   font-size: 0.72rem;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--text-muted);

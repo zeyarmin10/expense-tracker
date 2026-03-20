@@ -34,7 +34,7 @@
   font-weight: 800;
   letter-spacing: -0.03em;
   margin: 0;
-  line-height: auto !important;
+  line-height: 1.3 !important;
 }
 
 .expense-title span {
@@ -280,7 +280,7 @@
 
 @media (min-width: 576px) {
   .summary-grid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .summary-card {
@@ -289,18 +289,6 @@
 
   .category-highlight-card {
     align-self: stretch;
-  }
-}
-
-@media (min-width: 768px) {
-  .summary-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-@media (min-width: 992px) {
-  .summary-grid {
-    grid-template-columns: repeat(3, 1fr);
   }
 }
 
@@ -361,7 +349,7 @@
 
 .summary-label {
   font-size: clamp(0.9rem, 1.2vw, 1.1rem);
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--text-muted);
@@ -370,7 +358,7 @@
 
 .summary-amount {
   /* font-family: 'DM Mono', monospace; */
-  font-size: clamp(1.5rem, 3vw, 2.25rem);
+  font-size: clamp(1.25rem, 3vw, 2.25rem);
   /* font-size: clamp(1.25rem, 2vw, 1.5rem); */
   font-weight: 500;
   color: var(--expense-color);
@@ -530,7 +518,7 @@
 
 .expense-table th {
   font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--text-muted);
@@ -606,7 +594,7 @@
 }
 
 .td-name {
-  font-weight: 600;
+  font-weight: 500;
 }
 
 /* Mobile: show creator name below item name */

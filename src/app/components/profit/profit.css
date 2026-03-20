@@ -319,7 +319,7 @@
 
 .pnl-card-label {
   font-size: clamp(0.9rem, 1.2vw, 1.1rem);
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--text-muted);
@@ -550,7 +550,7 @@
   top: 50%;
   transform: translateY(-50%);
   font-size: 0.82rem;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: 0.02em;
   text-transform: none;
   color: var(--text-muted);
@@ -711,7 +711,7 @@
 .pnl-type-badge {
   /* font-family: 'DM Mono', monospace; */
   font-size: 0.65rem;
-  font-weight: 600;
+  font-weight: 500;
   padding: 0.15rem 0.55rem;
   border-radius: 6px;
   background: var(--budget-dim);

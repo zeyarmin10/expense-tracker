@@ -86,7 +86,7 @@ body:not(.light-mode) .lgn-root {
 }
 
 @font-face {
-  font-family: 'MyanmarUIFont';
+  font-family: 'MyanmarUIFontBold';
   src: url('assets/fonts/MyanmarUI.ttf') format('truetype');
   font-weight: bold;
   /* This file is for the bold weight */

@@ -154,7 +154,7 @@
 
 .exp-label {
   font-size: 0.72rem;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-muted);
@@ -709,7 +709,7 @@
   transform: translateY(-50%);
   /* font-family: 'Syne', sans-serif; */
   font-size: 0.88rem;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--text-muted);
   pointer-events: none;
   transition: top 0.18s ease, font-size 0.18s ease, color 0.18s ease, transform 0.18s ease;
@@ -870,7 +870,7 @@
   background: var(--surface-2);
   color: var(--text-muted);
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.15s;
   white-space: nowrap;
@@ -885,6 +885,7 @@
   background: rgba(0, 229, 180, 0.12);
   border-color: rgba(0, 229, 180, 0.4);
   color: var(--accent, #00e5b4);
+  font-weight: 600;
 }
 
 .exp-custom-dates {

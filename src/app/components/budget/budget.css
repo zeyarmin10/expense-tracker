@@ -309,7 +309,7 @@
   top: 50%;
   transform: translateY(-50%);
   font-size: 0.82rem;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: 0.02em;
   text-transform: none;
   color: var(--text-muted);
@@ -470,7 +470,7 @@
 .bgt-type-badge {
   /* font-family: 'DM Mono', monospace; */
   font-size: 0.65rem;
-  font-weight: 600;
+  font-weight: 500;
   padding: 0.15rem 0.55rem;
   border-radius: 6px;
   background: var(--budget-dim);
@@ -488,7 +488,7 @@
 
 .bgt-record-cat {
   font-size: 0.8rem;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--text-sub);
 }
 
@@ -618,7 +618,7 @@
 
 .bgt-card-label {
   font-size: clamp(0.9rem, 1.2vw, 1.1rem);
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--text-muted);
@@ -1052,7 +1052,7 @@
 
 .bgt-cat-badge {
   font-size: 0.68rem;
-  font-weight: 600;
+  font-weight: 500;
   padding: 0.2rem 0.55rem;
   border-radius: 20px;
   background: rgba(0, 229, 180, 0.1);

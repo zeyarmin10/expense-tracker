@@ -208,7 +208,7 @@
 
 .cat-list-count {
   font-size: 0.68rem;
-  font-weight: 600;
+  font-weight: 500;
   background: rgba(52, 211, 153, 0.12);
   color: #34d399;
   border: 1px solid rgba(52, 211, 153, 0.2);
@@ -292,7 +292,7 @@
 .cat-item-name {
   flex: 1;
   font-size: 0.88rem;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--text);
   min-width: 0;
   overflow: hidden;
