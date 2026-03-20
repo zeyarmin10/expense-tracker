@@ -34,10 +34,11 @@
   font-weight: 800;
   letter-spacing: -0.03em;
   margin: 0;
-  line-height: 1;
+  line-height: auto !important;
 }
 
 .expense-title span {
+  margin-left: 0.5rem;
   color: var(--accent);
 }
 
@@ -320,7 +321,7 @@
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(90deg, var(--accent), transparent);
+  background: linear-gradient(90deg, var(--expense-color), transparent);
   opacity: 0;
   transition: opacity 0.2s;
 }
@@ -335,8 +336,10 @@
 }
 
 .summary-card.highlight {
-  background: var(--accent-dim);
-  border-color: rgba(0, 229, 180, 0.25);
+  /* background: var(--accent-dim);
+  border-color: rgba(0, 229, 180, 0.25); */
+  border-color: var(--expense-border);
+  background: linear-gradient(145deg, var(--surface), var(--expense-dim));
 }
 
 .summary-card.highlight::before {
@@ -370,7 +373,7 @@
   font-size: clamp(1.5rem, 3vw, 2.25rem);
   /* font-size: clamp(1.25rem, 2vw, 1.5rem); */
   font-weight: 500;
-  color: var(--accent);
+  color: var(--expense-color);
   line-height: 1;
   margin-bottom: 0.4rem;
   display: block;
