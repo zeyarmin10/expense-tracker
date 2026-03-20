@@ -139,6 +139,13 @@ export class CategoryService {
     await update(categoryRef, { name: newCategoryName.trim() });
 
     if (oldCategoryName) {
+      // ✅ Expense တွေမှာ category name ကိုပါ တပြိုင်နက် update လုပ်မည်
+      await this.updateExpensesByCategory(
+        oldCategoryName,
+        newCategoryName.trim(),
+        profile
+      );
+
       this.categoryUpdatedSource.next({
         oldName: oldCategoryName,
         newName: newCategoryName,
@@ -146,6 +153,39 @@ export class CategoryService {
       });
     }
   }
+
+  // ── Bulk update expenses when category name changes ──────────────────────
+  private async updateExpensesByCategory(
+    oldName: string,
+    newName: string,
+    profile: UserProfile
+  ): Promise<void> {
+    const expensesRef = profile.groupId
+      ? this.getGroupExpensesRef(profile.groupId)
+      : this.getExpensesRef(profile.uid);
+
+    // category name ဖြင့် filter ဆွဲ
+    const expensesQuery = query(
+      expensesRef,
+      orderByChild('category'),
+      equalTo(oldName)
+    );
+
+    const snapshot = await get(expensesQuery);
+    if (!snapshot.exists()) return;
+
+    // batch update — Promise.all ဖြင့် တပြိုင်နက် update
+    const updates: Promise<void>[] = [];
+    snapshot.forEach((childSnap) => {
+      const directRef = profile.groupId
+        ? ref(this.db, `group_data/${profile.groupId}/expenses/${childSnap.key}`)
+        : ref(this.db, `users/${profile.uid}/expenses/${childSnap.key}`);
+      updates.push(update(directRef, { category: newName }));
+    });
+
+    await Promise.all(updates);
+  }
+  // ─────────────────────────────────────────────────────────────────────────
 
   async deleteCategory(categoryId: string): Promise<void> {
     const profile = await firstValueFrom(this.authService.userProfile$) as UserProfile | null;
