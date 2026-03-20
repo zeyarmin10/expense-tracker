@@ -671,9 +671,9 @@
   border-color: var(--accent);
 }
 
-.exp-float-input.is-invalid {
-  border-color: var(--accent-2);
-}
+/* .exp-float-input.is-invalid {
+  border-color: var(--accent);
+} */
 
 /* Date input calendar icon */
 .exp-float-input[type="date"]::-webkit-calendar-picker-indicator {
@@ -698,7 +698,7 @@
 /* Joined input (after currency badge) */
 .exp-float-input-joined {
   border-radius: 0 10px 10px 0;
-  border-left: none;
+  /* border-left: none; */
 }
 
 /* Floating Label */
@@ -743,7 +743,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--surface-2);
+  background: var(--info-dim);
   border: 1px solid var(--border);
   border-right: none;
   border-radius: 10px 0 0 10px;
@@ -761,7 +761,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(96, 165, 250, 0.1);
+  background: var(--info-dim);
   border: 1px solid var(--border);
   border-left: none;
   border-radius: 0 10px 10px 0;
@@ -794,7 +794,7 @@
 /* For price field: left side is currency badge, so input loses left radius */
 .exp-float-group>.exp-currency-badge+.exp-float-field>.exp-float-input {
   border-radius: 0 10px 10px 0;
-  border-left: none;
+  /* border-left: none; */
 }
 
 /* ══════════════════════════════════════════════
@@ -861,7 +861,6 @@
   align-items: center;
   gap: 0.3rem;
   flex-wrap: wrap;
-  margin-top: 0.5rem;
 }
 
 .exp-filter-chip {

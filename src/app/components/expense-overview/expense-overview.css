@@ -343,6 +343,19 @@
   opacity: 1;
 }
 
+.summary-card.highlight .summary-amount {
+  font-family: 'DM Mono', monospace, 'MyanmarUIFont';
+  /* Give your font a logical name */
+  src: url('../../../assets/fonts/DMMono-Regular.ttf') format('truetype');
+  /* Path to your .ttf file */
+  font-weight: normal;
+  /* Adjust based on the font file's weight */
+  font-style: normal;
+  /* Adjust based on the font file's style */
+  font-display: swap;
+  /* Important for performance: prevents FOIT */
+} 
+
 .summary-label {
   font-size: clamp(0.9rem, 1.2vw, 1.1rem);
   font-weight: 600;
@@ -354,8 +367,8 @@
 
 .summary-amount {
   /* font-family: 'DM Mono', monospace; */
-  /* font-size: clamp(1.5rem, 3vw, 2.25rem); */
-  font-size: clamp(1.25rem, 2vw, 1.5rem);
+  font-size: clamp(1.5rem, 3vw, 2.25rem);
+  /* font-size: clamp(1.25rem, 2vw, 1.5rem); */
   font-weight: 500;
   color: var(--accent);
   line-height: 1;
@@ -408,7 +421,7 @@
 
 .category-highlight-card .summary-amount {
   /* font-family: 'Syne', sans-serif; */
-  font-size: 1.1rem;
+  /* font-size: 1.1rem; */
   font-weight: 700;
   color: var(--text);
 }
@@ -425,8 +438,8 @@
 
 .chip {
   /* font-family: 'DM Mono', monospace; */
-  font-size: 0.85rem;
-  padding: 0.4rem 0.9rem;
+  font-size: 0.9rem;
+  padding: 0.4rem 0.8rem;
   border-radius: 100px;
   border: 1px solid var(--border);
   background: var(--surface);
@@ -450,7 +463,7 @@
 }
 
 .chip .chip-amount {
-  opacity: 0.7;
+  opacity: 0.75;
   margin-left: 0.3rem;
   color: var(--warning);
 }

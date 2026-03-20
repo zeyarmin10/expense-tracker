@@ -12,10 +12,12 @@
 
 .lgn-lang-btn .light-text {
   color: #fffafa;
+  font-size: 0.8rem;
 }
 
 .lgn-lang-btn .dark-text {
   color: var(--text);
+  font-size: 0.8rem;
 }
 
 .lgn-root {
