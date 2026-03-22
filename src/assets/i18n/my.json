@@ -548,12 +548,16 @@
   "PNL_EMPTY_SUB": "ဝင်ငွေ ထည့်သွင်းပြီး အမြတ်အစွန်း တွက်ချက်ပါ",
   "NO_PNL_CHART_DATA": "ဒေတာ မရှိသေးသဖြင့် chart မပြနိုင်ပါ",
   "QUICK": "အမြန်",
-  "FULL": "အပြည့်အစုံ",
+  "FULL": "အပြည့်",
   "OPTIONAL": "စိတ်ကြိုက်",
   "SWITCH_TO_FULL_FORM": "ပုံစံအပြည့်အစုံသို့ ပြောင်းရန်",
   "SWITCH_TO_QUICK_ADD": "အမြန်ထည့်သွင်းရန်သို့ ပြောင်းရန်",
   "TODAY": "ယနေ့",
   "THIS_WEEK": "ဒီသီတင်းပတ်",
   "THIS_MONTH": "ဒီလ",
-  "CUSTOM": "စိတ်ကြိုက်"
+  "CUSTOM": "စိတ်ကြိုက်",
+  "CREATED_BY_LABEL": "ဖန်တီးသူ",
+  "LAST_UPDATED_BY_LABEL": "နောက်ဆုံးပြင်ဆင်သူ",
+  "DEVICE_LABEL": "စက်ပစ္စည်း",
+  "EDIT_HISTORY_LABEL": "ပြင်ဆင်မှတ်တမ်း"
 }

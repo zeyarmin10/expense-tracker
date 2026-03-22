@@ -74,7 +74,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1.1rem 1.4rem;
+  padding: 1.1rem 1rem 1.1rem 1.4rem;
   background: none;
   border: none;
   cursor: pointer;
@@ -815,7 +815,7 @@
   display: flex;
   align-items: center;
   gap: 0.3rem;
-  padding: 0.3rem 0.75rem;
+  padding: 0.25rem 0.5rem;
   border-radius: 20px;
   border: 1px solid rgba(0, 229, 180, 0.3);
   background: rgba(0, 229, 180, 0.08);
@@ -825,7 +825,7 @@
   cursor: pointer;
   transition: all 0.15s;
   white-space: nowrap;
-  margin-right: 0.75rem;
+  margin: 0 0.75rem 0 0.25rem;
   flex-shrink: 0;
 }
 

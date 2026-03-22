@@ -192,19 +192,45 @@ export class ExpenseService {
         ? this.getGroupExpenseRef(profile.groupId, expenseId)
         : this.getExpenseRef(profile.uid, expenseId);
 
+    // ── ပြောင်းလဲမှုမတိုင်မှီ current data ယူပြီး diff စစ်မည် ──
+    const currentExpense = await this.getExpense(expenseId);
+
+    // ── Changed fields ကို detect ──
+    const TRACKED_FIELDS: (keyof IExpense)[] = ['itemName', 'price', 'quantity', 'unit', 'category', 'date'];
+    const changes: Record<string, { from: any; to: any }> = {};
+    for (const field of TRACKED_FIELDS) {
+      const oldVal = (currentExpense as any)[field];
+      const newVal = (updates as any)[field];
+      if (newVal !== undefined && String(newVal) !== String(oldVal)) {
+        changes[field] = { from: oldVal, to: newVal };
+      }
+    }
+
+    const now = new Date().toISOString();
+    const historyKey = `editHistory/${Date.now()}`;
+
     const updatedData: any = {
       ...updates,
-      updatedAt: new Date().toISOString(),
+      updatedAt: now,
       editedDevice: editedDevice,
-      updatedBy: profile.uid
+      updatedBy: profile.uid,
     };
 
-    if (updates.quantity || updates.price) {
-        const currentExpense = await this.getExpense(expenseId);
-        const quantity = updates.quantity || currentExpense.quantity;
-        const price = updates.price || currentExpense.price;
-        updatedData.totalCost = quantity * price;
-      }
+    // ── history entry — changes ရှိမှသာ ထည့် ──
+    if (Object.keys(changes).length > 0) {
+      updatedData[historyKey] = {
+        editedAt: now,
+        editedBy: profile.uid,
+        editedByName: profile.displayName || 'Unknown',
+        device: editedDevice,
+        changes,
+      };
+    }
+
+    // ── totalCost recalculate ──
+    const quantity = updates.quantity ?? currentExpense.quantity;
+    const price    = updates.price    ?? currentExpense.price;
+    updatedData.totalCost = quantity * price;
 
     await update(expenseRef, updatedData);
   }

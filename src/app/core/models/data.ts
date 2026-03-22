@@ -37,6 +37,17 @@ export interface DataICategory {
   createdAt?: string;
 }
 
+// ── Edit history entry (stored per edit under editHistory/{timestamp}) ──
+export interface IEditHistoryEntry {
+  editedAt: string;
+  editedBy: string;
+  editedByName: string;
+  device?: string;
+  changes: {
+    [field: string]: { from: any; to: any };
+  };
+}
+
 export interface DataIExpense {
   id?: string;
   date: string;
@@ -45,17 +56,19 @@ export interface DataIExpense {
   itemName: string;
   quantity: number;
   unit?: string;
-  price: number; 
+  price: number;
   totalCost?: number;
   currency: string;
   description?: string;
   // Tracking
-  userId?: string; // This is createdById
-  createdByName?: string; // Creator's name at the time of creation
+  userId?: string;         // createdById
+  createdByName?: string;  // Creator's name at creation time
   groupId?: string;
   createdAt?: string;
   updatedAt?: string;
-  updatedBy?: string; // UID of user who last updated
+  updatedBy?: string;      // UID of last editor
   device?: string;
   editedDevice?: string;
+  // ── Edit history: key = timestamp (Date.now()), value = IEditHistoryEntry ──
+  editHistory?: { [key: string]: IEditHistoryEntry };
 }

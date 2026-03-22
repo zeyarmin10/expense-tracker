@@ -32,7 +32,7 @@
         <button
           *ngIf="userProfile?.accountType === 'personal'"
           type="button"
-          class="exp-quick-toggle ms-2"
+          class="exp-quick-toggle"
           (click)="toggleQuickMode()"
           [class.active]="!isQuickMode"
           [title]="isQuickMode ? ('SWITCH_TO_FULL_FORM' | translate) : ('SWITCH_TO_QUICK_ADD' | translate)"
@@ -432,10 +432,10 @@
                   </button>
                 </div>
                 <fa-icon
-                  *ngIf="userProfile?.accountType === 'group'"
                   [icon]="faInfoCircle"
                   class="exp-info-icon"
                   (click)="showExpenseInfo(expense)"
+                  [title]="'EXPENSE_INFO_TITLE' | translate"
                 >
                 </fa-icon>
               </div>

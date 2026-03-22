@@ -136,6 +136,10 @@ export class CategoryService {
     const oldCategorySnap = await get(categoryRef);
     const oldCategoryName = oldCategorySnap.val()?.name;
 
+    if (oldCategoryName?.trim() === newCategoryName.trim()) {
+      return;
+    }
+
     await update(categoryRef, { name: newCategoryName.trim() });
 
     if (oldCategoryName) {

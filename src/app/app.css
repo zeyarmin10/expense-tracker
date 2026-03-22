@@ -875,3 +875,43 @@ body.light-mode .mob-drawer-backdrop {
 .mob-drawer-link.mob-drawer-active .mob-drawer-link-icon {
   color: var(--nav-active, #00e5b4) !important;
 }
+
+
+
+
+/* ══════════════════════════════════════════════
+   GROUP NAME — Desktop dropdown header
+   ══════════════════════════════════════════════ */
+.dropdown-group-name {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 1rem 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--accent, #00e5b4);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+/* ══════════════════════════════════════════════
+   GROUP NAME — Mobile drawer above members title
+   ══════════════════════════════════════════════ */
+.mob-drawer-group-name-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.2rem 0.3rem;
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: var(--accent, #00e5b4);
+  letter-spacing: -0.01em;
+}
+
+body.light-mode .dropdown-group-name,
+body.light-mode .mob-drawer-group-name-title {
+  color: #009e7a;
+}

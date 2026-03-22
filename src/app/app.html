@@ -9,6 +9,7 @@
       <img src="assets/images/Expense-Tracker-Logo.png" alt="Expense Tracker" id="navbarLogo" />
     </a>
 
+
     <!-- Desktop Nav Links -->
     <ul class="nav-links">
       <li><a routerLink="/dashboard" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_DASHBOARD' | translate
@@ -34,9 +35,23 @@
       <!-- Group Members Dropdown -->
       <li class="dropdown" *ngIf="isGroupAccount$ | async">
         <a class="nav-icon-btn" href="#" id="groupMemberDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-          <fa-icon [icon]="faUsers" style="font-size: 0.85rem"></fa-icon>
+          <fa-icon [icon]="faUsers"></fa-icon>
         </a>
         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="groupMemberDropdown">
+          <!-- Group Name Header -->
+          <li *ngIf="groupName$ | async as gName">
+            <div class="dropdown-group-name">
+              <!-- <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;flex-shrink:0;">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg> -->
+              <fa-icon [icon]="faUsers"></fa-icon>
+              {{ gName }}
+            </div>
+          </li>
+          <li><hr class="dropdown-divider my-1"></li>
           <li *ngFor="let member of groupMembers$ | async">
             <span class="dropdown-item" [class.text-info]="member.uid === user.uid">
               {{ member.displayName }} ({{ member.role }})
@@ -186,6 +201,7 @@
         <fa-icon *ngIf="!isDarkMode" [icon]="faMoon" class="theme-icon"></fa-icon>
       </button>
     </div>
+
   </ng-container>
   
   <div class="mob-drawer-divider"></div>
@@ -216,13 +232,14 @@
     <a class="mob-drawer-link" *ngIf="isGroupAdmin$ | async" routerLink="/member-management"
       routerLinkActive="mob-drawer-active" (click)="closeNavbarMenu()">
       <span class="mob-drawer-link-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+        <!-- <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
           stroke-linejoin="round">
           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
           <circle cx="9" cy="7" r="4" />
           <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
           <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-        </svg>
+        </svg> -->
+        <fa-icon [icon]="faUsers"></fa-icon>
       </span>
       <span>{{ 'NAV_MEMBER_MANAGEMENT' | translate }}</span>
     </a>
@@ -230,6 +247,18 @@
     <!-- Group members -->
     <ng-container *ngIf="isGroupAccount$ | async">
       <div class="mob-drawer-divider"></div>
+      <ng-container *ngIf="groupName$ | async as gName">
+        <div class="mob-drawer-group-name-title">
+          <!-- <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;flex-shrink:0;">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg> -->
+          <fa-icon [icon]="faUsers"></fa-icon>
+          {{ gName }}
+        </div>
+      </ng-container>
       <div class="mob-drawer-section-label">Group Members</div>
       <div class="mob-drawer-members">
         <ng-container *ngIf="currentUser$ | async as user">

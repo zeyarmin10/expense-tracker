@@ -298,8 +298,8 @@ export class ExpenseOverview implements OnInit {
   updateCurrentPeriodLabel(filter: string): void {
     if (filter === 'custom') {
       if (this.startDate && this.endDate) {
-        const start = this.datePipe.transform(this.startDate, 'shortDate');
-        const end = this.datePipe.transform(this.endDate, 'shortDate');
+        const start = this.formatLocalizedDate(this.datePipe.transform(this.startDate, 'shortDate'));
+        const end = this.formatLocalizedDate(this.datePipe.transform(this.endDate, 'shortDate'));
         this.currentPeriodLabel = `${start} - ${end}`;
       } else {
         this.currentPeriodLabel = this.translate.instant('CUSTOM_DATE_RANGE');

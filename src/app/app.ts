@@ -2,7 +2,7 @@ import { Component, inject, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, NavigationEnd, RouterOutlet, RouterModule, ActivatedRoute } from '@angular/router';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
-import { Observable, combineLatest, of, firstValueFrom, skip } from 'rxjs';
+import { Observable, combineLatest, of, from, firstValueFrom, skip } from 'rxjs';
 import { map, filter, startWith, switchMap, distinctUntilChanged, debounceTime } from 'rxjs/operators';
 import { AuthService } from './services/auth';
 import { User } from '@angular/fire/auth';
@@ -42,6 +42,7 @@ export class App implements OnInit {
   isGroupAdmin$: Observable<boolean>;
   isGroupAccount$: Observable<boolean>;
   groupMembers$: Observable<any[]>;
+  groupName$: Observable<string | null>;
   showFab$: Observable<boolean>;
   faRightFromBracket = faRightFromBracket;
   faUsers = faUsers;
@@ -96,6 +97,17 @@ export class App implements OnInit {
           return this.groupService.getGroupMembers(profile.groupId);
         }
         return of([]);
+      })
+    );
+
+    this.groupName$ = this.authService.userProfile$.pipe(
+      switchMap(profile => {
+        if (profile?.accountType === 'group' && profile.groupId) {
+          return from(this.dataManager.getGroupDetails(profile.groupId)).pipe(
+            map(details => details?.groupName || null)
+          );
+        }
+        return of(null);
       })
     );
 

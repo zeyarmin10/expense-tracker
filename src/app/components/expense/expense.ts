@@ -15,17 +15,14 @@ import {
   ReactiveFormsModule,
   FormsModule,
 } from '@angular/forms';
-import {
-  ServiceIExpense as IExpense,
-  ExpenseService,
-} from '../../services/expense';
+import { ServiceIExpense as IExpense, ExpenseService } from '../../services/expense';
 import { ServiceICategory, CategoryService } from '../../services/category';
 import {
   Observable,
   BehaviorSubject,
   combineLatest,
   map,
-  switchMap,
+  switchMap
 } from 'rxjs';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import Swal from 'sweetalert2';
@@ -44,6 +41,11 @@ import {
   faCoins,
   faChevronDown,
   faChevronUp,
+  faCalendarDay,
+  faCalendarWeek,
+  faCalendar,
+  faSliders,
+  faRotateLeft,
 } from '@fortawesome/free-solid-svg-icons';
 
 import { CategoryModalComponent } from '../common/category-modal/category-modal';
@@ -63,7 +65,7 @@ const Toast = Swal.mixin({
   didOpen: (toast) => {
     toast.addEventListener('mouseenter', Swal.stopTimer);
     toast.addEventListener('mouseleave', Swal.resumeTimer);
-  },
+  }
 });
 
 @Component({
@@ -109,9 +111,9 @@ export class Expense implements OnInit {
   editingExpenseId: string | null = null;
   public userRole: string | null = null;
   isSaving = false;
-  isFormOpen = true; // collapsible add-form state
-  isQuickMode = true; // Quick mode add form
-  isEditQuickMode = true; // Quick mode edit form
+  isFormOpen = true;   // collapsible add-form state
+  isQuickMode = true;       // Quick mode add form
+  isEditQuickMode = true;   // Quick mode edit form
 
   // ── Date filter mode ──────────────────────────────
   public dateFilterMode: 'today' | 'week' | 'month' | 'custom' = 'today';
@@ -127,8 +129,9 @@ export class Expense implements OnInit {
 
   formatWithCommas(value: number | string | null): string {
     if (value === null || value === undefined || value === '') return '';
-    const num =
-      typeof value === 'string' ? parseFloat(value.replace(/,/g, '')) : value;
+    const num = typeof value === 'string'
+      ? parseFloat(value.replace(/,/g, ''))
+      : value;
     if (isNaN(num)) return '';
     // Integer part comma-separated, decimal part preserved
     const parts = num.toString().split('.');
@@ -141,11 +144,7 @@ export class Expense implements OnInit {
     return parseFloat(cleaned) || 0;
   }
 
-  onPriceInput(
-    event: Event,
-    formGroup: FormGroup,
-    controlName: string = 'price',
-  ): void {
+  onPriceInput(event: Event, formGroup: FormGroup, controlName: string = 'price'): void {
     const input = event.target as HTMLInputElement;
     // ကိန်းဂဏန်း + dot + comma သာ ခွင့်ပြု
     let raw = input.value.replace(/[^\d.]/g, '');
@@ -171,35 +170,39 @@ export class Expense implements OnInit {
   // ────────────────────────────────────────────────────
 
   // Icons
-  faPlus = faPlus;
-  faEdit = faEdit;
-  faTrash = faTrash;
-  faSave = faSave;
-  faTimes = faTimes;
-  faSync = faSync;
-  faInfoCircle = faInfoCircle;
-  faWallet = faWallet;
-  faTasks = faTasks;
-  faCoins = faCoins;
+  faPlus        = faPlus;
+  faEdit        = faEdit;
+  faTrash       = faTrash;
+  faSave        = faSave;
+  faTimes       = faTimes;
+  faSync        = faSync;
+  faCalendarDay  = faCalendarDay;
+  faCalendarWeek = faCalendarWeek;
+  faCalendar     = faCalendar;
+  faSliders      = faSliders;
+  faRotateLeft   = faRotateLeft;
+  faInfoCircle  = faInfoCircle;
+  faWallet      = faWallet;
+  faTasks       = faTasks;
+  faCoins       = faCoins;
   faChevronDown = faChevronDown;
-  faChevronUp = faChevronUp;
+  faChevronUp   = faChevronUp;
 
   userProfile: UserProfile | null = null;
 
   router = inject(Router);
-  route = inject(ActivatedRoute);
+  route  = inject(ActivatedRoute);
 
   constructor(private fb: FormBuilder) {
-    const todayFormatted =
-      this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
+    const todayFormatted = this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
 
     this.newExpenseForm = this.fb.group({
-      date: [todayFormatted, Validators.required],
+      date:     [todayFormatted, Validators.required],
       category: ['', Validators.required],
       itemName: ['', Validators.required],
       quantity: [1, [Validators.required, Validators.min(0.01)]],
-      unit: [''],
-      price: ['', [Validators.required, Validators.min(0)]],
+      unit:     [''],
+      price:    ['', [Validators.required, Validators.min(0)]],
     });
 
     this.categories$ = this.categoryService.getCategories();
@@ -210,36 +213,38 @@ export class Expense implements OnInit {
 
   ngOnInit(): void {
     this.loadExpenses();
-    this.route.paramMap.subscribe((params) => {
+    this.route.paramMap.subscribe(params => {
       const date = params.get('date');
       const todayStr = this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
 
       if (date) {
+        // expense-overview ကနေ date param နဲ့ ရောက်လာတဲ့ အခြေအနေ
         if (date === todayStr) {
-          // overview ကနေ ဒီနေ့ date နဲ့ ရောက်လာ → Today chip select
+          // ဒီနေ့ date ဆိုရင် → Today chip select
           this.dateFilterMode = 'today';
           this.showCustomDatePicker = false;
           this.customStartDate = '';
           this.customEndDate = '';
         } else {
-          // တခြား date → custom mode + single date ပြ
+          // တခြား date ဆိုရင် → custom mode + single date ပြ
           this.dateFilterMode = 'custom';
           this.showCustomDatePicker = true;
           this.customStartDate = date;
           this.customEndDate = date;
         }
+        this._selectedDate$.next(date);
       } else {
         // /expense တိုက်ရိုက်ဝင်တာ → today default
         this.dateFilterMode = 'today';
         this.showCustomDatePicker = false;
         this.customStartDate = '';
         this.customEndDate = '';
+        this._selectedDate$.next(todayStr);
       }
-      this._selectedDate$.next(date || todayStr);
       this.refreshExpenses$.next();
     });
 
-    this.authService.userProfile$.subscribe((profile) => {
+    this.authService.userProfile$.subscribe(profile => {
       this.userProfile = profile;
       if (profile?.roles && typeof profile.roles === 'object') {
         this.userRole = Object.values(profile.roles)[0];
@@ -270,7 +275,7 @@ export class Expense implements OnInit {
 
   loadExpenses(): void {
     this.expenses$ = this.refreshExpenses$.pipe(
-      switchMap(() => this.expenseService.getExpenses()),
+      switchMap(() => this.expenseService.getExpenses())
     );
 
     this.displayedExpenses$ = combineLatest([
@@ -281,31 +286,19 @@ export class Expense implements OnInit {
     ]).pipe(
       map(([expenses, selectedDate, activeCurrency, activeCategory]) => {
         let filtered = this.filterByDateMode(expenses);
-        if (activeCurrency)
-          filtered = filtered.filter((e) => e.currency === activeCurrency);
-        if (activeCategory)
-          filtered = filtered.filter((e) => e.category === activeCategory);
-        return filtered.sort((a, b) => {
-          const dateDiff =
-            new Date(b.date).getTime() - new Date(a.date).getTime();
-          if (dateDiff !== 0) return dateDiff;
-          return (
-            new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime()
-          );
-        });
-      }),
+        if (activeCurrency) filtered = filtered.filter(e => e.currency === activeCurrency);
+        if (activeCategory) filtered = filtered.filter(e => e.category === activeCategory);
+        return filtered.sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
+      })
     );
 
     this.totalExpensesByCurrency$ = this.displayedExpenses$.pipe(
-      map((expenses) =>
-        expenses.reduce(
-          (acc, e) => {
-            acc[e.currency] = (acc[e.currency] || 0) + e.totalCost;
-            return acc;
-          },
-          {} as { [key: string]: number },
-        ),
-      ),
+      map(expenses =>
+        expenses.reduce((acc, e) => {
+          acc[e.currency] = (acc[e.currency] || 0) + e.totalCost;
+          return acc;
+        }, {} as { [key: string]: number })
+      )
     );
   }
 
@@ -325,10 +318,7 @@ export class Expense implements OnInit {
   async onSubmitNewExpense(): Promise<void> {
     this.newExpenseForm.markAllAsTouched();
     if (this.newExpenseForm.invalid) {
-      Toast.fire({
-        icon: 'error',
-        title: this.translate.instant('ERROR_FILL_ALL_FIELDS'),
-      });
+      Toast.fire({ icon: 'error', title: this.translate.instant('ERROR_FILL_ALL_FIELDS') });
       return;
     }
 
@@ -339,38 +329,28 @@ export class Expense implements OnInit {
       fv.itemName = fv.category || '-';
     }
     const newExpense: Omit<IExpense, 'id'> = {
-      date: fv.date,
-      category: fv.category,
-      itemName: fv.itemName,
-      quantity: fv.quantity,
-      unit: fv.unit,
-      price: fv.price,
-      currency: this.userProfile?.currency || 'MMK',
+      date:      fv.date,
+      category:  fv.category,
+      itemName:  fv.itemName,
+      quantity:  fv.quantity,
+      unit:      fv.unit,
+      price:     fv.price,
+      currency:  this.userProfile?.currency || 'MMK',
       totalCost: fv.quantity * fv.price,
     };
 
     try {
       await this.expenseService.addExpense(newExpense as any);
-      Toast.fire({
-        icon: 'success',
-        title: this.translate.instant('EXPENSE_SUCCESS_ADDED'),
-      });
+      Toast.fire({ icon: 'success', title: this.translate.instant('EXPENSE_SUCCESS_ADDED') });
       this.newExpenseForm.reset({
         date: this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '',
-        category: '',
-        itemName: '',
-        quantity: 1,
-        unit: '',
-        price: '',
+        category: '', itemName: '', quantity: 1, unit: '', price: ''
       });
       this.priceDisplayValue = '';
-      //   this.resetFilter();
+    //   this.resetFilter();
       this.refreshExpenses$.next();
     } catch (error: any) {
-      Toast.fire({
-        icon: 'error',
-        title: error.message || this.translate.instant('EXPENSE_ERROR_ADD'),
-      });
+      Toast.fire({ icon: 'error', title: error.message || this.translate.instant('EXPENSE_ERROR_ADD') });
     } finally {
       this.isSaving = false;
     }
@@ -385,12 +365,13 @@ export class Expense implements OnInit {
     this.dateFilterMode = mode;
     this.showCustomDatePicker = mode === 'custom';
     if (mode === 'custom') {
-      // ✅ default: yesterday
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      this.customStartDate =
-        this.datePipe.transform(yesterday, 'yyyy-MM-dd') || '';
-      this.customEndDate = this.customStartDate;
+      // ✅ custom ကို ရွေးချိန်မှာ default: yesterday
+      if (!this.customStartDate) {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        this.customStartDate = this.datePipe.transform(yesterday, 'yyyy-MM-dd') || '';
+        this.customEndDate = this.customStartDate;
+      }
       this.refreshExpenses$.next();
     } else {
       this.resetActiveFilters();
@@ -400,8 +381,7 @@ export class Expense implements OnInit {
 
   onCustomDateChange(): void {
     if (this.customStartDate) {
-      // single date picker — end = start
-      this.customEndDate = this.customStartDate;
+      this.customEndDate = this.customStartDate; // single date picker
       this.resetActiveFilters();
       this.refreshExpenses$.next();
     }
@@ -414,7 +394,7 @@ export class Expense implements OnInit {
 
     switch (this.dateFilterMode) {
       case 'today':
-        return expenses.filter((e) => e.date === todayStr);
+        return expenses.filter(e => e.date === todayStr);
       case 'week': {
         const dow = today.getDay();
         const startOfWeek = new Date(today);
@@ -423,29 +403,24 @@ export class Expense implements OnInit {
         endOfWeek.setDate(startOfWeek.getDate() + 6);
         const s = this.datePipe.transform(startOfWeek, 'yyyy-MM-dd') || '';
         const e = this.datePipe.transform(endOfWeek, 'yyyy-MM-dd') || '';
-        return expenses.filter((exp) => exp.date >= s && exp.date <= e);
+        return expenses.filter(exp => exp.date >= s && exp.date <= e);
       }
       case 'month': {
         const monthStr = this.datePipe.transform(today, 'yyyy-MM') || '';
-        return expenses.filter((exp) => exp.date?.startsWith(monthStr));
+        return expenses.filter(exp => exp.date?.startsWith(monthStr));
       }
       case 'custom':
         if (this.customStartDate && this.customEndDate) {
-          return expenses.filter(
-            (exp) =>
-              exp.date >= this.customStartDate &&
-              exp.date <= this.customEndDate,
-          );
+          return expenses.filter(exp => exp.date >= this.customStartDate && exp.date <= this.customEndDate);
         }
-        return expenses.filter((e) => e.date === todayStr);
+        return expenses.filter(e => e.date === todayStr);
       default:
-        return expenses.filter((e) => e.date === todayStr);
+        return expenses.filter(e => e.date === todayStr);
     }
   }
 
   resetFilter(): void {
-    const todayFormatted =
-      this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
+    const todayFormatted = this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
     this._selectedDate$.next(todayFormatted);
     this.dateFilterMode = 'today';
     this.showCustomDatePicker = false;
@@ -468,14 +443,13 @@ export class Expense implements OnInit {
     this.editingExpenseId = expense.id!;
     this.editPriceDisplayValue = this.formatWithCommas(expense.price);
     this.isEditQuickMode = this.userProfile?.accountType === 'personal';
-
     this.editingForm = this.fb.group({
-      date: [expense.date, Validators.required],
+      date:     [expense.date,     Validators.required],
       category: [expense.category, Validators.required],
       itemName: [expense.itemName, Validators.required],
       quantity: [expense.quantity, [Validators.required, Validators.min(0.01)]],
-      unit: [expense.unit],
-      price: [expense.price, [Validators.required, Validators.min(0)]],
+      unit:     [expense.unit],
+      price:    [expense.price,    [Validators.required, Validators.min(0)]],
       currency: [expense.currency, Validators.required],
     });
 
@@ -503,17 +477,11 @@ export class Expense implements OnInit {
 
   async saveEdit(): Promise<void> {
     if (!this.editingForm || !this.editingExpenseId) {
-      Toast.fire({
-        icon: 'error',
-        title: this.translate.instant('EXPENSE_ERROR_NO_EXPENSE_SELECTED'),
-      });
+      Toast.fire({ icon: 'error', title: this.translate.instant('EXPENSE_ERROR_NO_EXPENSE_SELECTED') });
       return;
     }
     if (this.editingForm.invalid) {
-      Toast.fire({
-        icon: 'error',
-        title: this.translate.instant('EXPENSE_ERROR_EDIT_FORM_INVALID'),
-      });
+      Toast.fire({ icon: 'error', title: this.translate.instant('EXPENSE_ERROR_EDIT_FORM_INVALID') });
       return;
     }
 
@@ -521,28 +489,19 @@ export class Expense implements OnInit {
     const fv = this.editingForm.value;
     const updated: Partial<IExpense> = {
       ...fv,
-      totalCost: fv.quantity * fv.price,
-      updatedAt: new Date().toISOString(),
+      totalCost:     fv.quantity * fv.price,
+      updatedAt:     new Date().toISOString(),
       updatedByName: this.userProfile?.displayName,
-      editedDevice: 'Web Browser',
+      editedDevice:  'Web Browser',
     };
 
     try {
-      await this.expenseService.updateExpense(
-        this.editingExpenseId,
-        updated as any,
-      );
-      Toast.fire({
-        icon: 'success',
-        title: this.translate.instant('EXPENSE_SUCCESS_UPDATED'),
-      });
+      await this.expenseService.updateExpense(this.editingExpenseId, updated as any);
+      Toast.fire({ icon: 'success', title: this.translate.instant('EXPENSE_SUCCESS_UPDATED') });
       this.cancelEdit();
       this.refreshExpenses$.next();
     } catch (error: any) {
-      Toast.fire({
-        icon: 'error',
-        title: error.message || this.translate.instant('EXPENSE_ERROR_UPDATE'),
-      });
+      Toast.fire({ icon: 'error', title: error.message || this.translate.instant('EXPENSE_ERROR_UPDATE') });
     } finally {
       this.isSaving = false;
     }
@@ -575,27 +534,21 @@ export class Expense implements OnInit {
   onDelete(expenseId: string): void {
     Swal.fire({
       title: this.translate.instant('CONFIRM_DELETE_TITLE'),
-      text: this.translate.instant('CONFIRM_DELETE_EXPENSE'),
-      icon: 'warning',
+      text:  this.translate.instant('CONFIRM_DELETE_EXPENSE'),
+      icon:  'warning',
       showCancelButton: true,
       confirmButtonText: this.translate.instant('DELETE_BUTTON'),
-      cancelButtonText: this.translate.instant('CANCEL_BUTTON'),
-      reverseButtons: true,
-    }).then(async (result) => {
+      cancelButtonText:  this.translate.instant('CANCEL_BUTTON'),
+      reverseButtons: true
+    }).then(async result => {
       if (result.isConfirmed) {
         this.isSaving = true;
         try {
           await this.expenseService.deleteExpense(expenseId);
-          Toast.fire({
-            icon: 'success',
-            title: this.translate.instant('EXPENSE_DELETED_SUCCESS'),
-          });
+          Toast.fire({ icon: 'success', title: this.translate.instant('EXPENSE_DELETED_SUCCESS') });
           this.refreshExpenses$.next();
         } catch (error: any) {
-          Toast.fire({
-            icon: 'error',
-            title: error.message || this.translate.instant('DATA_DELETE_ERROR'),
-          });
+          Toast.fire({ icon: 'error', title: error.message || this.translate.instant('DATA_DELETE_ERROR') });
         } finally {
           this.isSaving = false;
         }
@@ -604,105 +557,133 @@ export class Expense implements OnInit {
   }
 
   showExpenseInfo(expense: IExpense): void {
-    const title = this.translate.instant('EXPENSE_INFO_TITLE');
-    const infoBlocks: string[] = [
-      `<strong>${this.translate.instant('ITEM_NAME_INFO', { itemName: expense.itemName })}</strong>`,
-    ];
+    const isDark     = !document.body.classList.contains('light-mode');
+    const bg         = isDark ? '#12151c' : '#ffffff';
+    const textColor  = isDark ? '#e5e7eb' : '#111827';
+    const subColor   = isDark ? '#9ca3af' : '#6b7280';
+    const border     = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.08)';
+    const surfaceAlt = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)';
+    const accent     = '#00e5b4';
+    const isPersonal = this.userProfile?.accountType === 'personal';
 
-    if (expense.createdByName && expense.createdAt) {
-      infoBlocks.push(
-        this.translate.instant('CREATED_BY', {
-          name: expense.createdByName,
-          date: this.formatLocalizedDate(expense.createdAt, 'medium'),
-        }),
-      );
+    // ── Row builder ──
+    const row = (icon: string, label: string, value: string, color = textColor, noBorder = false) => `
+      <div style="display:flex;align-items:flex-start;gap:0.6rem;padding:0.55rem 0;${noBorder ? '' : `border-bottom:1px solid ${border};`}">
+        <span style="font-size:1rem;flex-shrink:0;line-height:1.5;">${icon}</span>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:0.6rem;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;color:${subColor};margin-bottom:0.1rem;">${label}</div>
+          <div style="font-size:0.85rem;font-weight:600;color:${color};word-break:break-word;">${value}</div>
+        </div>
+      </div>`;
+
+    // ── Field label helper ──
+    const fieldLabel = (field: string): string => {
+      const map: Record<string, string> = {
+        itemName: this.translate.instant('EXPENSE_ITEM_NAME_LABEL'),
+        price:    this.translate.instant('PRICE_LABEL'),
+        quantity: this.translate.instant('QUANTITY_LABEL'),
+        unit:     this.translate.instant('EXPENSE_UNIT_LABEL'),
+        category: this.translate.instant('EXPENSE_CATEGORY_LABEL'),
+        date:     this.translate.instant('EXPENSE_DATE_LABEL'),
+      };
+      return map[field] || field;
+    };
+
+    // ── Parse editHistory ──
+    const rawHistory = (expense as any).editHistory;
+    type HistoryEntry = {
+      editedAt: string; editedByName: string; editedBy: string;
+      changes: Record<string, { from: any; to: any }>;
+    };
+    const historyEntries: HistoryEntry[] = rawHistory
+      ? (Object.values(rawHistory) as HistoryEntry[]).sort((a, b) =>
+          new Date(a.editedAt).getTime() - new Date(b.editedAt).getTime()
+        )
+      : [];
+
+    // ── Build rows ──
+    let rows = '';
+
+    // Basic info rows — personal မဆိုရင် created/updated by မပြ
+    rows += row('🧾', this.translate.instant('EXPENSE_ITEM_NAME_LABEL'), expense.itemName || '—');
+    rows += row('🏷️', this.translate.instant('EXPENSE_CATEGORY_LABEL'), expense.category || '—', accent);
+    const amt = this.formatService.formatAmountWithSymbol(expense.totalCost, expense.currency);
+    rows += row('💰', this.translate.instant('TOTAL_COST_LABEL'), amt, accent);
+
+    if (!isPersonal && expense.createdByName) {
+      const dt = expense.createdAt ? this.formatLocalizedDate(expense.createdAt, 'medium') : '';
+      rows += row('👤', this.translate.instant('CREATED_BY_LABEL'), `${expense.createdByName}${dt ? ' · ' + dt : ''}`);
     }
 
-    let hasBeenUpdated = false;
-    if (expense.createdAt && expense.updatedAt) {
-      const diff =
-        new Date(expense.updatedAt).getTime() -
-        new Date(expense.createdAt).getTime();
-      if (diff > 5000) hasBeenUpdated = true;
+    // ── Edit History section ──
+    if (historyEntries.length > 0) {
+      // section header
+      rows += `<div style="margin-top:0.6rem;margin-bottom:0.3rem;font-size:0.6rem;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;color:${subColor};">
+        ── ${this.translate.instant('EDIT_HISTORY_LABEL')} ──
+      </div>`;
+
+      historyEntries.forEach((entry, idx) => {
+        const isLast = idx === historyEntries.length - 1;
+        const dt = this.formatLocalizedDate(entry.editedAt, 'medium');
+
+        // who & when
+        const whoWhen = isPersonal
+          ? dt
+          : `${entry.editedByName} · ${dt}`;
+
+        // changes list
+        const changeLines = Object.entries(entry.changes)
+          .map(([field, { from, to }]) =>
+            `<span style="color:${subColor};">${fieldLabel(field)}:</span> ` +
+            `<span style="text-decoration:line-through;opacity:0.5;">${from}</span> ` +
+            `→ <span style="color:${accent};">${to}</span>`
+          ).join('<br>');
+
+        rows += `
+          <div style="background:${surfaceAlt};border-radius:8px;padding:0.55rem 0.7rem;margin-bottom:0.35rem;${isLast ? '' : `border-bottom:1px solid ${border};`}">
+            <div style="font-size:0.72rem;color:${subColor};margin-bottom:0.3rem;">✏️ ${whoWhen}</div>
+            <div style="font-size:0.82rem;line-height:1.6;">${changeLines}</div>
+          </div>`;
+      });
     }
 
-    if (hasBeenUpdated) {
-      if (expense.updatedByName && expense.updatedAt) {
-        infoBlocks.push(
-          this.translate.instant('LAST_UPDATED_BY', {
-            name: expense.updatedByName,
-            date: this.formatLocalizedDate(expense.updatedAt, 'medium'),
-          }),
-        );
-      }
-      if (expense.editedDevice) {
-        let deviceInfo = this.translate.instant('ON_DEVICE', {
-          device: expense.editedDevice,
-        });
-        if (deviceInfo.startsWith(' ၊ ')) deviceInfo = deviceInfo.substring(3);
-        infoBlocks.push(deviceInfo);
-      }
-    }
+    const html = `<div style="text-align:left;">${rows}</div>`;
 
     Swal.fire({
-      title,
-      html: infoBlocks.map((b) => `<p class="text-start">${b}</p>`).join(''),
-      icon: 'info',
+      html,
+      background: bg,
+      color: textColor,
       confirmButtonText: this.translate.instant('OK_BUTTON'),
+      confirmButtonColor: accent,
+      customClass: { popup: 'exp-info-swal' },
+      width: '380px',
     });
   }
 
-  formatLocalizedDate(
-    date: string | Date | null | undefined,
-    format: 'medium' | 'shortDate' = 'shortDate',
-  ): string {
+  formatLocalizedDate(date: string | Date | null | undefined, format: 'medium' | 'shortDate' = 'shortDate'): string {
     if (!date) return '';
     const d = new Date(date);
     const lang = this.translate.currentLang;
 
     if (lang === 'my') {
       const month = this.datePipe.transform(d, 'MMM');
-      const burmeseMonth = month
-        ? BURMESE_MONTH_ABBREVIATIONS[
-            month as keyof typeof BURMESE_MONTH_ABBREVIATIONS
-          ]
-        : '';
-      const day = new Intl.NumberFormat('my-MM', {
-        numberingSystem: 'mymr',
-      }).format(d.getDate());
-      const year = new Intl.NumberFormat('my-MM', {
-        numberingSystem: 'mymr',
-      }).format(d.getFullYear());
+      const burmeseMonth = month ? BURMESE_MONTH_ABBREVIATIONS[month as keyof typeof BURMESE_MONTH_ABBREVIATIONS] : '';
+      const day  = new Intl.NumberFormat('my-MM', { numberingSystem: 'mymr' }).format(d.getDate());
+      const year = new Intl.NumberFormat('my-MM', { numberingSystem: 'mymr' }).format(d.getFullYear());
       const datePart = `${day} ${burmeseMonth}, ${year}`;
       if (format === 'medium') {
-        const h = new Intl.NumberFormat('my-MM', {
-          numberingSystem: 'mymr',
-          minimumIntegerDigits: 2,
-        }).format(d.getHours());
-        const m = new Intl.NumberFormat('my-MM', {
-          numberingSystem: 'mymr',
-          minimumIntegerDigits: 2,
-        }).format(d.getMinutes());
+        const h = new Intl.NumberFormat('my-MM', { numberingSystem: 'mymr', minimumIntegerDigits: 2 }).format(d.getHours());
+        const m = new Intl.NumberFormat('my-MM', { numberingSystem: 'mymr', minimumIntegerDigits: 2 }).format(d.getMinutes());
         return `${datePart}, ${h}:${m}`;
       }
       return datePart;
     }
-    return (
-      this.datePipe.transform(
-        d,
-        format === 'medium' ? 'medium' : 'mediumDate',
-        undefined,
-        lang,
-      ) || ''
-    );
+    return this.datePipe.transform(d, format === 'medium' ? 'medium' : 'mediumDate', undefined, lang) || '';
   }
 
   formatLocalizedNumber(amount: number): string {
     const lang = this.translate.currentLang;
-    if (lang === 'my')
-      return new Intl.NumberFormat('my-MM', { numberingSystem: 'mymr' }).format(
-        amount,
-      );
+    if (lang === 'my') return new Intl.NumberFormat('my-MM', { numberingSystem: 'mymr' }).format(amount);
     return amount.toLocaleString(lang);
   }
 }

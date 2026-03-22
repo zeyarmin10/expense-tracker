@@ -555,5 +555,9 @@
   "TODAY": "Today",
   "THIS_WEEK": "This Week",
   "THIS_MONTH": "This Month",
-  "CUSTOM": "Custom"
+  "CUSTOM": "Custom",
+  "CREATED_BY_LABEL": "Created By",
+  "LAST_UPDATED_BY_LABEL": "Last Updated By",
+  "DEVICE_LABEL": "Device",
+  "EDIT_HISTORY_LABEL": "Edit History"
 }

@@ -44,6 +44,7 @@
 .cat-modal-icon {
   font-size: 1.1rem;
   line-height: 1;
+    color: var(--accent, #00e5b4);
 }
 
 .cat-modal-title {
