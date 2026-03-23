@@ -17,6 +17,7 @@ import { faRightFromBracket, faUsers, faChevronDown, faSun, faMoon, faPiggyBank,
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { Capacitor } from '@capacitor/core';
+import { App as CapacitorApp } from '@capacitor/app';
 import { Keyboard } from '@capacitor/keyboard';
 import Swal from 'sweetalert2';
 
@@ -175,10 +176,23 @@ export class App implements OnInit {
     this.initTheme();
     this.initKeyboardDetection();
 
+    this.initBackButton();
+
     // ── Network monitoring ──────────────────────
     await this.networkService.init();
     this.listenNetworkChanges();
     // ────────────────────────────────────────────
+
+    // Foreground ပြန်လာတိုင်း network စစ်မယ်
+    if (Capacitor.isNativePlatform()) {
+      CapacitorApp.addListener('appStateChange', async ({ isActive }) => {
+        if (isActive) {
+          // foreground ပြန်ရောက်မှ current status စစ်
+          await this.networkService.checkOnResume();
+        }
+      });
+    }
+
     this.route.queryParamMap.pipe(
       switchMap(params => {
         const inviteCode = params.get('invite_code');
@@ -195,40 +209,8 @@ export class App implements OnInit {
   private wasOffline = false;
 
   private listenNetworkChanges(): void {
-
-    if (Capacitor.isNativePlatform()) {
-      // ── Android/iOS ──────────────────────────────────
-
-      // App start: offline ဆိုရင်သာ flag + alert ပြ
-      if (!this.networkService.isOnline$.getValue()) {
-        this.wasOffline = true;
-        this.showNoNetworkAlert();
-      }
-
-      // NetworkService.init() မှာ initialized flag ထည့်ထားတာကြောင့်
-      // listener တစ်ကြိမ်တည်းသာ register ဖြစ်မယ်
-      // debounceTime: rapid/spurious emit တွေ filter ဆွဲတယ်
-      this.networkService.isOnline$.pipe(
-        skip(1),
-        distinctUntilChanged(),
-        debounceTime(800)
-      ).subscribe(isOnline => {
-        if (!isOnline) {
-          // တကယ် offline ဖြစ်သွားမှသာ
-          this.wasOffline = true;
-          this.showNoNetworkAlert();
-        } else if (this.wasOffline) {
-          // offline ဖြစ်ဖူးပြီး online ပြန်ရမှသာ toast ပြ
-          this.wasOffline = false;
-          Swal.close();
-          this.showNetworkRestoredToast();
-        }
-        // online ဖြစ်နေချိန် emit ဖြစ်ရင် (wasOffline=false) လုံးဝမပြ
-      });
-
-    } else {
-      // ── Web Browser ──────────────────────────────────
-
+    // Web browser
+    if (!Capacitor.isNativePlatform()) {
       if (!navigator.onLine) {
         this.wasOffline = true;
         this.showNoNetworkAlert();
@@ -246,7 +228,34 @@ export class App implements OnInit {
           this.showNetworkRestoredToast();
         }
       });
+      return;
     }
+
+    // Android/iOS native
+    // app စဖွင့်ချိန်း offline ဆိုရင်သာ alert ပြ
+    if (!this.networkService.isOnline$.getValue()) {
+      this.wasOffline = true;
+      this.showNoNetworkAlert();
+    }
+
+    // status ပြောင်းမှသာ react လုပ်မယ်
+    this.networkService.isOnline$.pipe(
+      distinctUntilChanged(),  // တူတဲ့ value ထပ်မ emit မဖြစ်အောင်
+      debounceTime(500)
+    ).subscribe(isOnline => {
+      if (!isOnline) {
+        this.wasOffline = true;
+        this.showNoNetworkAlert();
+      } else {
+        if (this.wasOffline) {
+          this.wasOffline = false;
+          Swal.close();
+          this.showNetworkRestoredToast();
+        }
+        // wasOffline = false ဆိုရင် (online ဖြစ်နေဆဲ foreground ပြန်လာ)
+        // → ဘာမှမပြဘူး ✓
+      }
+    });
   }
 
   private showNoNetworkAlert(): void {
@@ -425,27 +434,48 @@ export class App implements OnInit {
       if (nav) nav.classList.remove('nav-hidden-keyboard');
     };
 
+    // keyboard တကယ်တက်မဲ့ input တွေကိုသာ true ပြန်တယ်
+    const isTextInput = (el: Element | null): boolean => {
+      if (!el) return false;
+      const tag = el.tagName.toLowerCase();
+      if (tag === 'textarea') return true;
+      if (tag === 'select') return false;
+      if (tag === 'input') {
+        const type = (el as HTMLInputElement).type?.toLowerCase() || 'text';
+        const noKeyboardTypes = [
+          'date', 'time', 'datetime-local', 'month', 'week',
+          'color', 'range', 'checkbox', 'radio', 'file',
+          'button', 'submit', 'reset'
+        ];
+        return !noKeyboardTypes.includes(type);
+      }
+      return false;
+    };
+
     if (Capacitor.isNativePlatform()) {
-      // Capacitor Keyboard plugin — native Android/iOS
+      // Android/iOS native — Capacitor keyboard events သုံး
       Keyboard.addListener('keyboardWillShow', () => hideNav());
       Keyboard.addListener('keyboardWillHide', () => showNav());
     } else {
-      // Web fallback
-      if (window.visualViewport) {
-        window.visualViewport.addEventListener('resize', () => {
-          const keyboardHeight = window.innerHeight - window.visualViewport!.height;
-          keyboardHeight > 150 ? hideNav() : showNav();
-        });
-      }
+      // Mobile web browser — focusin/focusout သုံး
+      // text input တွေမှာသာ hide လုပ်မယ် (date/select မဟုတ်ရင်)
       document.addEventListener('focusin', (e: FocusEvent) => {
-        const tag = (e.target as HTMLElement)?.tagName?.toLowerCase();
-        if (tag === 'input' || tag === 'textarea' || tag === 'select') hideNav();
+        if (isTextInput(e.target as Element)) {
+          hideNav();
+        }
+        // date, select တွေ focus ဝင်ရင် nav ကို မထိဘူး → ပေါ်နေဆဲ
       });
-      document.addEventListener('focusout', () => {
-        setTimeout(() => {
-          const active = document.activeElement?.tagName?.toLowerCase();
-          if (active !== 'input' && active !== 'textarea' && active !== 'select') showNav();
-        }, 150);
+
+      document.addEventListener('focusout', (e: FocusEvent) => {
+        // text input မှ focus ထွက်မှသာ showNav လုပ်မယ်
+        if (isTextInput(e.target as Element)) {
+          setTimeout(() => {
+            // focus သည် တခြား text input ကို မရောက်ဘူးဆိုမှ show လုပ်
+            if (!isTextInput(document.activeElement)) {
+              showNav();
+            }
+          }, 100);
+        }
       });
     }
   }
@@ -456,5 +486,33 @@ export class App implements OnInit {
     if (!this.isDarkMode) {
       document.body.classList.add('light-mode');
     }
+  }
+
+  private initBackButton(): void {
+    if (!Capacitor.isNativePlatform()) return;
+
+    CapacitorApp.addListener('backButton', ({ canGoBack }) => {
+      const url = this.router.url;
+
+      // Drawer ဖွင့်ထားရင် အရင်ပိတ်
+      if (this.mobileMenuOpen) {
+        this.closeNavbarMenu();
+        return;
+      }
+
+      // Dashboard / Login မှာဆိုရင် app ထွက်
+      if (url === '/dashboard' || url === '/login' || url === '/onboarding') {
+        CapacitorApp.exitApp();
+        return;
+      }
+
+      // တခြားနေရာဆိုရင် ပြန်သွား
+      if (canGoBack) {
+        window.history.back();
+      } else {
+        // history မရှိရင် dashboard ပြန်သွား
+        this.router.navigate(['/dashboard']);
+      }
+    });
   }
 }

@@ -454,7 +454,7 @@
 .exp-total-amt {
   color: var(--warning);
   margin-left: 0.3rem;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .exp-no-totals {
