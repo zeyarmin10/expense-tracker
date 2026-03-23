@@ -455,6 +455,7 @@ export class Expense implements OnInit {
 
     const { value: formValues } = await Swal.fire({
       title: this.translate.instant('EDIT_BUTTON_LABEL'),
+      position: 'top',
       html: `
       <div style="text-align:left; display:flex; flex-direction:column; gap:0.1rem;">
 
