@@ -207,32 +207,40 @@ export class ExpenseService {
     }
 
     const now = new Date().toISOString();
-    const historyKey = `editHistory/${Date.now()}`;
+
+    // ── totalCost recalculate ──
+    const quantity = updates.quantity ?? currentExpense.quantity;
+    const price    = updates.price    ?? currentExpense.price;
 
     const updatedData: any = {
       ...updates,
       updatedAt: now,
       editedDevice: editedDevice,
       updatedBy: profile.uid,
+      totalCost: quantity * price,
     };
 
-    // ── history entry — changes ရှိမှသာ ထည့် ──
+    // ── Step 1: main fields update ──
+    await update(expenseRef, updatedData);
+
+    // ── Step 2: editHistory ကို push() နဲ့ သပ်သပ်ထည့် ──
+    // Firebase update() မှာ nested path (editHistory/key) မသုံးနိုင်
+    // push() သုံးမှသာ auto-key နဲ့ array-like node ဖြစ်မယ်
     if (Object.keys(changes).length > 0) {
-      updatedData[historyKey] = {
+      const historyRef = ref(
+        this.db,
+        profile.groupId
+          ? `group_data/${profile.groupId}/expenses/${expenseId}/editHistory`
+          : `users/${profile.uid}/expenses/${expenseId}/editHistory`
+      );
+      await push(historyRef, {
         editedAt: now,
         editedBy: profile.uid,
         editedByName: profile.displayName || 'Unknown',
         device: editedDevice,
         changes,
-      };
+      });
     }
-
-    // ── totalCost recalculate ──
-    const quantity = updates.quantity ?? currentExpense.quantity;
-    const price    = updates.price    ?? currentExpense.price;
-    updatedData.totalCost = quantity * price;
-
-    await update(expenseRef, updatedData);
   }
 
   async deleteExpense(expenseId: string): Promise<void> {
