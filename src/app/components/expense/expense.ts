@@ -22,7 +22,8 @@ import {
   BehaviorSubject,
   combineLatest,
   map,
-  switchMap
+  switchMap,
+  firstValueFrom,
 } from 'rxjs';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import Swal from 'sweetalert2';
@@ -87,7 +88,6 @@ export class Expense implements OnInit {
   @ViewChild(CategoryModalComponent) categoryModal!: CategoryModalComponent;
 
   newExpenseForm: FormGroup;
-  editingForm: FormGroup | null = null;
 
   expenses$!: Observable<IExpense[]>;
   categories$: Observable<ServiceICategory[]>;
@@ -108,12 +108,10 @@ export class Expense implements OnInit {
   datePipe = inject(DatePipe);
   translate = inject(TranslateService);
 
-  editingExpenseId: string | null = null;
   public userRole: string | null = null;
   isSaving = false;
-  isFormOpen = true;   // collapsible add-form state
-  isQuickMode = true;       // Quick mode add form
-  isEditQuickMode = true;   // Quick mode edit form
+  isFormOpen = true;
+  isQuickMode = true;
 
   // ── Date filter mode ──────────────────────────────
   public dateFilterMode: 'today' | 'week' | 'month' | 'custom' = 'today';
@@ -125,7 +123,6 @@ export class Expense implements OnInit {
 
   // ── Comma Formatting for Price inputs ──────────────
   priceDisplayValue: string = '';
-  editPriceDisplayValue: string = '';
 
   formatWithCommas(value: number | string | null): string {
     if (value === null || value === undefined || value === '') return '';
@@ -133,7 +130,6 @@ export class Expense implements OnInit {
       ? parseFloat(value.replace(/,/g, ''))
       : value;
     if (isNaN(num)) return '';
-    // Integer part comma-separated, decimal part preserved
     const parts = num.toString().split('.');
     parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     return parts.join('.');
@@ -146,63 +142,58 @@ export class Expense implements OnInit {
 
   onPriceInput(event: Event, formGroup: FormGroup, controlName: string = 'price'): void {
     const input = event.target as HTMLInputElement;
-    // ကိန်းဂဏန်း + dot + comma သာ ခွင့်ပြု
     let raw = input.value.replace(/[^\d.]/g, '');
-    // dot တစ်ခုသာ ရှိခွင့်ပြု
     const parts = raw.split('.');
     if (parts.length > 2) raw = parts[0] + '.' + parts.slice(1).join('');
 
     const numericValue = parseFloat(raw.replace(/,/g, '')) || 0;
     formGroup.get(controlName)?.setValue(numericValue, { emitEvent: true });
 
-    // Display value with commas
     const intPart = raw.split('.')[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     const decPart = raw.includes('.') ? '.' + (raw.split('.')[1] || '') : '';
     const formatted = intPart + decPart;
 
     if (controlName === 'price' && formGroup === this.newExpenseForm) {
       this.priceDisplayValue = formatted;
-    } else {
-      this.editPriceDisplayValue = formatted;
     }
     input.value = formatted;
   }
   // ────────────────────────────────────────────────────
 
   // Icons
-  faPlus        = faPlus;
-  faEdit        = faEdit;
-  faTrash       = faTrash;
-  faSave        = faSave;
-  faTimes       = faTimes;
-  faSync        = faSync;
-  faCalendarDay  = faCalendarDay;
+  faPlus = faPlus;
+  faEdit = faEdit;
+  faTrash = faTrash;
+  faSave = faSave;
+  faTimes = faTimes;
+  faSync = faSync;
+  faCalendarDay = faCalendarDay;
   faCalendarWeek = faCalendarWeek;
-  faCalendar     = faCalendar;
-  faSliders      = faSliders;
-  faRotateLeft   = faRotateLeft;
-  faInfoCircle  = faInfoCircle;
-  faWallet      = faWallet;
-  faTasks       = faTasks;
-  faCoins       = faCoins;
+  faCalendar = faCalendar;
+  faSliders = faSliders;
+  faRotateLeft = faRotateLeft;
+  faInfoCircle = faInfoCircle;
+  faWallet = faWallet;
+  faTasks = faTasks;
+  faCoins = faCoins;
   faChevronDown = faChevronDown;
-  faChevronUp   = faChevronUp;
+  faChevronUp = faChevronUp;
 
   userProfile: UserProfile | null = null;
 
   router = inject(Router);
-  route  = inject(ActivatedRoute);
+  route = inject(ActivatedRoute);
 
   constructor(private fb: FormBuilder) {
-    const todayFormatted = this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
+    const todayFormatted = new DatePipe('en').transform(new Date(), 'yyyy-MM-dd') || '';
 
     this.newExpenseForm = this.fb.group({
-      date:     [todayFormatted, Validators.required],
+      date: [todayFormatted, Validators.required],
       category: ['', Validators.required],
       itemName: ['', Validators.required],
       quantity: [1, [Validators.required, Validators.min(0.01)]],
-      unit:     [''],
-      price:    ['', [Validators.required, Validators.min(0)]],
+      unit: [''],
+      price: ['', [Validators.required, Validators.min(0)]],
     });
 
     this.categories$ = this.categoryService.getCategories();
@@ -218,15 +209,12 @@ export class Expense implements OnInit {
       const todayStr = this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
 
       if (date) {
-        // expense-overview ကနေ date param နဲ့ ရောက်လာတဲ့ အခြေအနေ
         if (date === todayStr) {
-          // ဒီနေ့ date ဆိုရင် → Today chip select
           this.dateFilterMode = 'today';
           this.showCustomDatePicker = false;
           this.customStartDate = '';
           this.customEndDate = '';
         } else {
-          // တခြား date ဆိုရင် → custom mode + single date ပြ
           this.dateFilterMode = 'custom';
           this.showCustomDatePicker = true;
           this.customStartDate = date;
@@ -234,7 +222,6 @@ export class Expense implements OnInit {
         }
         this._selectedDate$.next(date);
       } else {
-        // /expense တိုက်ရိုက်ဝင်တာ → today default
         this.dateFilterMode = 'today';
         this.showCustomDatePicker = false;
         this.customStartDate = '';
@@ -257,17 +244,14 @@ export class Expense implements OnInit {
     this.isFormOpen = !this.isFormOpen;
   }
 
-  // ✅ Quick/Full mode toggle — personal account မှာပဲ သုံးတယ်
   toggleQuickMode(): void {
     this.isQuickMode = !this.isQuickMode;
     const itemNameCtrl = this.newExpenseForm.get('itemName');
     if (this.isQuickMode) {
-      // Quick mode: itemName optional ဖြစ်အောင်
       itemNameCtrl?.clearValidators();
       itemNameCtrl?.updateValueAndValidity();
       this.newExpenseForm.patchValue({ quantity: 1, unit: '' });
     } else {
-      // Full mode: itemName required ပြန်ဖြစ်အောင်
       itemNameCtrl?.setValidators(Validators.required);
       itemNameCtrl?.updateValueAndValidity();
     }
@@ -324,18 +308,17 @@ export class Expense implements OnInit {
 
     this.isSaving = true;
     const fv = this.newExpenseForm.value;
-    // ✅ Quick mode: itemName မဖြည့်ရင် category ကိုပဲ သုံးတယ်
     if (this.isQuickMode && !fv.itemName) {
       fv.itemName = fv.category || '-';
     }
     const newExpense: Omit<IExpense, 'id'> = {
-      date:      fv.date,
-      category:  fv.category,
-      itemName:  fv.itemName,
-      quantity:  fv.quantity,
-      unit:      fv.unit,
-      price:     fv.price,
-      currency:  this.userProfile?.currency || 'MMK',
+      date: fv.date,
+      category: fv.category,
+      itemName: fv.itemName,
+      quantity: fv.quantity,
+      unit: fv.unit,
+      price: fv.price,
+      currency: this.userProfile?.currency || 'MMK',
       totalCost: fv.quantity * fv.price,
     };
 
@@ -347,7 +330,6 @@ export class Expense implements OnInit {
         category: '', itemName: '', quantity: 1, unit: '', price: ''
       });
       this.priceDisplayValue = '';
-    //   this.resetFilter();
       this.refreshExpenses$.next();
     } catch (error: any) {
       Toast.fire({ icon: 'error', title: error.message || this.translate.instant('EXPENSE_ERROR_ADD') });
@@ -365,7 +347,6 @@ export class Expense implements OnInit {
     this.dateFilterMode = mode;
     this.showCustomDatePicker = mode === 'custom';
     if (mode === 'custom') {
-      // ✅ custom ကို ရွေးချိန်မှာ default: yesterday
       if (!this.customStartDate) {
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
@@ -381,7 +362,7 @@ export class Expense implements OnInit {
 
   onCustomDateChange(): void {
     if (this.customStartDate) {
-      this.customEndDate = this.customStartDate; // single date picker
+      this.customEndDate = this.customStartDate;
       this.resetActiveFilters();
       this.refreshExpenses$.next();
     }
@@ -439,66 +420,162 @@ export class Expense implements OnInit {
     this._activeCategoryFilter$.next(category);
   }
 
-  startEdit(expense: IExpense): void {
-    this.editingExpenseId = expense.id!;
-    this.editPriceDisplayValue = this.formatWithCommas(expense.price);
-    this.isEditQuickMode = this.userProfile?.accountType === 'personal';
-    this.editingForm = this.fb.group({
-      date:     [expense.date,     Validators.required],
-      category: [expense.category, Validators.required],
-      itemName: [expense.itemName, Validators.required],
-      quantity: [expense.quantity, [Validators.required, Validators.min(0.01)]],
-      unit:     [expense.unit],
-      price:    [expense.price,    [Validators.required, Validators.min(0)]],
-      currency: [expense.currency, Validators.required],
+  // ── Swal-based Edit ────────────────────────────────────────────────────────
+  async startEdit(expense: IExpense): Promise<void> {
+    const categories = await firstValueFrom(this.categories$);
+    const isPersonal = this.userProfile?.accountType === 'personal';
+    const currency = expense.currency || this.userProfile?.currency || 'MMK';
+    const hasQtyOrUnit = (expense.quantity != null && expense.quantity !== 1) || !!(expense.unit);
+    const showQtyUnit = !isPersonal || hasQtyOrUnit;
+
+    const categoryOptions = categories
+      .map(cat => `<option value="${cat.name}" ${cat.name === expense.category ? 'selected' : ''}>${cat.name}</option>`)
+      .join('');
+
+    const isDark = !document.body.classList.contains('light-mode');
+    const inputBg = isDark ? '#1c2230' : '#f0f4f8';
+    const inputClr = isDark ? '#f0f2f7' : '#1a202c';
+    const borderClr = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.12)';
+    const labelClr = isDark ? '#9ca3af' : '#6b7280';
+    const accentClr = '#00e5b4';
+
+    const inputStyle = `
+    width:100%; box-sizing:border-box;
+    background:${inputBg}; color:${inputClr};
+    border:1px solid ${borderClr}; border-radius:10px;
+    font-size:0.88rem; padding:0.6rem 0.85rem;
+    outline:none; margin-bottom:0.6rem;
+    font-family:inherit;
+  `;
+    const labelStyle = `
+    display:block; font-size:0.65rem; font-weight:700;
+    letter-spacing:0.09em; text-transform:uppercase;
+    color:${labelClr}; margin-bottom:0.2rem;
+  `;
+
+    const { value: formValues } = await Swal.fire({
+      title: this.translate.instant('EDIT_BUTTON_LABEL'),
+      html: `
+      <div style="text-align:left; display:flex; flex-direction:column; gap:0.1rem;">
+
+        <label style="${labelStyle}">${this.translate.instant('EXPENSE_DATE_LABEL')}</label>
+        <input id="swal-date" type="date" value="${expense.date}"
+          style="${inputStyle}" />
+
+        <label style="${labelStyle}">${this.translate.instant('EXPENSE_CATEGORY_LABEL')}</label>
+        <select id="swal-category" style="${inputStyle} appearance:none; -webkit-appearance:none; cursor:pointer;">
+          ${categoryOptions}
+        </select>
+
+        <label style="${labelStyle}">${this.translate.instant('EXPENSE_ITEM_NAME_LABEL')}</label>
+        <input id="swal-itemName" type="text" value="${expense.itemName || ''}"
+          style="${inputStyle}" />
+
+        ${showQtyUnit ? `
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.6rem;">
+            <div>
+              <label style="${labelStyle}">${this.translate.instant('QUANTITY_LABEL')}</label>
+              <input id="swal-quantity" type="number" min="0.01" step="0.01" value="${expense.quantity}"
+                style="${inputStyle}" />
+            </div>
+            <div>
+              <label style="${labelStyle}">${this.translate.instant('EXPENSE_UNIT_LABEL')}</label>
+              <input id="swal-unit" type="text" value="${expense.unit || ''}"
+                style="${inputStyle}" />
+            </div>
+          </div>
+        ` : ''}
+
+        <label style="${labelStyle}">${this.translate.instant('PRICE_LABEL')} (${currency})</label>
+        <input id="swal-price" type="text" inputmode="decimal"
+          value="${this.formatWithCommas(expense.price)}"
+          style="${inputStyle}" />
+
+      </div>
+    `,
+      showCancelButton: true,
+      confirmButtonText: this.translate.instant('SAVE_BUTTON_LABEL'),
+      cancelButtonText: this.translate.instant('CANCEL_BUTTON_LABEL'),
+      confirmButtonColor: accentClr,
+      focusConfirm: false,
+      width: '420px',
+      customClass: {
+        popup: isDark ? '' : 'swal-light',
+      },
+      didOpen: () => {
+        const itemNameInput = document.getElementById('swal-itemName') as HTMLInputElement;
+        if (itemNameInput) {
+          itemNameInput.focus();
+          // selection မဟုတ်ဘဲ cursor ကို text အဆုံးမှာ ချမည်
+          const len = itemNameInput.value.length;
+          itemNameInput.setSelectionRange(len, len);
+        }
+
+        // ── Price comma formatting ──
+        const priceInput = document.getElementById('swal-price') as HTMLInputElement;
+        if (priceInput) {
+          priceInput.addEventListener('input', () => {
+            let raw = priceInput.value.replace(/[^\d.]/g, '');
+            const parts = raw.split('.');
+            if (parts.length > 2) raw = parts[0] + '.' + parts.slice(1).join('');
+            const intPart = (parts[0] || '').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            const decPart = raw.includes('.') ? '.' + (raw.split('.')[1] || '') : '';
+            priceInput.value = intPart + decPart;
+          });
+        }
+      },
+      preConfirm: () => {
+        const date = (document.getElementById('swal-date') as HTMLInputElement)?.value?.trim();
+        const category = (document.getElementById('swal-category') as HTMLSelectElement)?.value?.trim();
+        const itemName = (document.getElementById('swal-itemName') as HTMLInputElement)?.value?.trim();
+
+        // ── comma ဖယ်ပြီး parse ──
+        const priceRaw = (document.getElementById('swal-price') as HTMLInputElement)?.value?.replace(/,/g, '') || '0';
+        const price = parseFloat(priceRaw);
+
+        const quantity = showQtyUnit
+          ? parseFloat((document.getElementById('swal-quantity') as HTMLInputElement)?.value || '1')
+          : (expense.quantity ?? 1);
+        const unit = showQtyUnit
+          ? ((document.getElementById('swal-unit') as HTMLInputElement)?.value?.trim() || '')
+          : (expense.unit || '');
+
+        if (!date) {
+          Swal.showValidationMessage(this.translate.instant('EXPENSE_DATE_LABEL') + ' ' + this.translate.instant('ERROR_FILL_ALL_FIELDS'));
+          return false;
+        }
+        if (!category) {
+          Swal.showValidationMessage(this.translate.instant('EXPENSE_CATEGORY_LABEL') + ' ' + this.translate.instant('ERROR_FILL_ALL_FIELDS'));
+          return false;
+        }
+        if (isNaN(price) || price < 0) {
+          Swal.showValidationMessage(this.translate.instant('PRICE_LABEL') + ' ' + this.translate.instant('ERROR_FILL_ALL_FIELDS'));
+          return false;
+        }
+
+        return { date, category, itemName: itemName || category, quantity, unit, price };
+      }
     });
 
-    this.focusEditInput(expense.id!, this.isEditQuickMode);
-  }
-
-  private focusEditInput(
-    expenseId: number | string,
-    isQuickMode: boolean,
-  ): void {
-    setTimeout(() => {
-      const inputId = isQuickMode
-        ? `eq-name-${expenseId}`
-        : `edit-itemName-${expenseId}`;
-
-      const el = document.getElementById(inputId) as HTMLInputElement | null;
-
-      if (!el) return;
-
-      el.focus();
-      const len = el.value.length;
-      el.setSelectionRange(len, len);
-    }, 50);
-  }
-
-  async saveEdit(): Promise<void> {
-    if (!this.editingForm || !this.editingExpenseId) {
-      Toast.fire({ icon: 'error', title: this.translate.instant('EXPENSE_ERROR_NO_EXPENSE_SELECTED') });
-      return;
-    }
-    if (this.editingForm.invalid) {
-      Toast.fire({ icon: 'error', title: this.translate.instant('EXPENSE_ERROR_EDIT_FORM_INVALID') });
-      return;
-    }
+    if (!formValues) return;
 
     this.isSaving = true;
-    const fv = this.editingForm.value;
-    const updated: Partial<IExpense> = {
-      ...fv,
-      totalCost:     fv.quantity * fv.price,
-      updatedAt:     new Date().toISOString(),
-      updatedByName: this.userProfile?.displayName,
-      editedDevice:  'Web Browser',
-    };
-
     try {
-      await this.expenseService.updateExpense(this.editingExpenseId, updated as any);
+      const updated: any = {
+        date: formValues.date,
+        category: formValues.category,
+        itemName: formValues.itemName,
+        quantity: formValues.quantity,
+        unit: formValues.unit,
+        price: formValues.price,
+        totalCost: formValues.quantity * formValues.price,
+        updatedAt: new Date().toISOString(),
+        updatedByName: this.userProfile?.displayName,
+        editedDevice: 'Web Browser',
+      };
+
+      await this.expenseService.updateExpense(expense.id!, updated);
       Toast.fire({ icon: 'success', title: this.translate.instant('EXPENSE_SUCCESS_UPDATED') });
-      this.cancelEdit();
       this.refreshExpenses$.next();
     } catch (error: any) {
       Toast.fire({ icon: 'error', title: error.message || this.translate.instant('EXPENSE_ERROR_UPDATE') });
@@ -506,39 +583,16 @@ export class Expense implements OnInit {
       this.isSaving = false;
     }
   }
-
-  private focusEditItemName(expenseId: string): void {
-    // DOM render ပြီးမှ focus လုပ်ဖို့ setTimeout သုံးပါ
-    setTimeout(() => {
-      const inputId = `edit-itemName-${expenseId}`;
-      const input = document.getElementById(inputId) as HTMLInputElement;
-      if (input) {
-        input.focus();
-        // cursor ကို text အဆုံးမှာ ထားပါ
-        const len = input.value.length;
-        input.setSelectionRange(len, len);
-      }
-    }, 50);
-  }
-
-  toggleEditQuickMode(): void {
-    this.isEditQuickMode = !this.isEditQuickMode;
-  }
-
-  cancelEdit(): void {
-    this.editingExpenseId = null;
-    this.editingForm = null;
-    this.editPriceDisplayValue = '';
-  }
+  // ─────────────────────────────────────────────────────────────────────────
 
   onDelete(expenseId: string): void {
     Swal.fire({
       title: this.translate.instant('CONFIRM_DELETE_TITLE'),
-      text:  this.translate.instant('CONFIRM_DELETE_EXPENSE'),
-      icon:  'warning',
+      text: this.translate.instant('CONFIRM_DELETE_EXPENSE'),
+      icon: 'warning',
       showCancelButton: true,
       confirmButtonText: this.translate.instant('DELETE_BUTTON'),
-      cancelButtonText:  this.translate.instant('CANCEL_BUTTON'),
+      cancelButtonText: this.translate.instant('CANCEL_BUTTON'),
       reverseButtons: true
     }).then(async result => {
       if (result.isConfirmed) {
@@ -557,16 +611,15 @@ export class Expense implements OnInit {
   }
 
   showExpenseInfo(expense: IExpense): void {
-    const isDark     = !document.body.classList.contains('light-mode');
-    const bg         = isDark ? '#12151c' : '#ffffff';
-    const textColor  = isDark ? '#e5e7eb' : '#111827';
-    const subColor   = isDark ? '#9ca3af' : '#6b7280';
-    const border     = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.08)';
+    const isDark = !document.body.classList.contains('light-mode');
+    const bg = isDark ? '#12151c' : '#ffffff';
+    const textColor = isDark ? '#e5e7eb' : '#111827';
+    const subColor = isDark ? '#9ca3af' : '#6b7280';
+    const border = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.08)';
     const surfaceAlt = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)';
-    const accent     = '#00e5b4';
+    const accent = '#00e5b4';
     const isPersonal = this.userProfile?.accountType === 'personal';
 
-    // ── Row builder ──
     const row = (icon: string, label: string, value: string, color = textColor, noBorder = false) => `
       <div style="display:flex;align-items:flex-start;gap:0.6rem;padding:0.55rem 0;${noBorder ? '' : `border-bottom:1px solid ${border};`}">
         <span style="font-size:1rem;flex-shrink:0;line-height:1.5;">${icon}</span>
@@ -576,20 +629,18 @@ export class Expense implements OnInit {
         </div>
       </div>`;
 
-    // ── Field label helper ──
     const fieldLabel = (field: string): string => {
       const map: Record<string, string> = {
         itemName: this.translate.instant('EXPENSE_ITEM_NAME_LABEL'),
-        price:    this.translate.instant('PRICE_LABEL'),
+        price: this.translate.instant('PRICE_LABEL'),
         quantity: this.translate.instant('QUANTITY_LABEL'),
-        unit:     this.translate.instant('EXPENSE_UNIT_LABEL'),
+        unit: this.translate.instant('EXPENSE_UNIT_LABEL'),
         category: this.translate.instant('EXPENSE_CATEGORY_LABEL'),
-        date:     this.translate.instant('EXPENSE_DATE_LABEL'),
+        date: this.translate.instant('EXPENSE_DATE_LABEL'),
       };
       return map[field] || field;
     };
 
-    // ── Parse editHistory ──
     const rawHistory = (expense as any).editHistory;
     type HistoryEntry = {
       editedAt: string; editedByName: string; editedBy: string;
@@ -597,14 +648,12 @@ export class Expense implements OnInit {
     };
     const historyEntries: HistoryEntry[] = rawHistory
       ? (Object.values(rawHistory) as HistoryEntry[]).sort((a, b) =>
-          new Date(a.editedAt).getTime() - new Date(b.editedAt).getTime()
-        )
+        new Date(a.editedAt).getTime() - new Date(b.editedAt).getTime()
+      )
       : [];
 
-    // ── Build rows ──
     let rows = '';
 
-    // Basic info rows — personal မဆိုရင် created/updated by မပြ
     rows += row('🧾', this.translate.instant('EXPENSE_ITEM_NAME_LABEL'), expense.itemName || '—');
     rows += row('🏷️', this.translate.instant('EXPENSE_CATEGORY_LABEL'), expense.category || '—', accent);
     const amt = this.formatService.formatAmountWithSymbol(expense.totalCost, expense.currency);
@@ -615,9 +664,7 @@ export class Expense implements OnInit {
       rows += row('👤', this.translate.instant('CREATED_BY_LABEL'), `${expense.createdByName}${dt ? ' · ' + dt : ''}`);
     }
 
-    // ── Edit History section ──
     if (historyEntries.length > 0) {
-      // section header
       rows += `<div style="margin-top:0.6rem;margin-bottom:0.3rem;font-size:0.6rem;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;color:${subColor};">
         ── ${this.translate.instant('EDIT_HISTORY_LABEL')} ──
       </div>`;
@@ -626,12 +673,10 @@ export class Expense implements OnInit {
         const isLast = idx === historyEntries.length - 1;
         const dt = this.formatService.formatLocalizedDate(entry.editedAt, 'longDateTime');
 
-        // who & when
         const whoWhen = isPersonal
           ? dt
           : `${entry.editedByName} · ${dt}`;
 
-        // changes list
         const changeLines = Object.entries(entry.changes)
           .map(([field, { from, to }]) =>
             `<span style="color:${subColor};">${fieldLabel(field)}:</span> ` +

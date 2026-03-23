@@ -655,9 +655,9 @@ body.light-mode {
 }
 
 .mob-drawer-theme-btn {
-  width: 45px;
-  height: 45px;
-  border-radius: 9px;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
   border: 1px solid var(--nav-border);
   background: var(--nav-accent-dim);
   color: var(--nav-text);
@@ -666,6 +666,7 @@ body.light-mode {
   justify-content: center;
   cursor: pointer;
   flex-shrink: 0;
+  font-size: 1rem;
 }
 
 /* Divider */
