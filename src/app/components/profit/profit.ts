@@ -611,40 +611,7 @@ export class Profit implements OnInit, OnDestroy {
 
   // --- Formatting and Chart Rendering ---
 
-  formatLocalizedDate(date: string | Date | null | undefined): string {
-    const currentLang = this.translate.currentLang;
-
-    if (!date) {
-      return '';
-    }
-
-    if (currentLang === 'my') {
-      const d = new Date(date);
-      const month = this.datePipe.transform(d, 'MMM');
-      const burmeseMonth = month
-        ? BURMESE_MONTH_ABBREVIATIONS[
-        month as keyof typeof BURMESE_MONTH_ABBREVIATIONS
-        ]
-        : '';
-
-      const options: Intl.NumberFormatOptions = {
-        numberingSystem: 'mymr',
-        useGrouping: false,
-      };
-
-      const day = new Intl.NumberFormat('my-MM', options).format(d.getDate());
-      const year = new Intl.NumberFormat('my-MM', options).format(
-        d.getFullYear()
-      );
-
-      return `${day} ${burmeseMonth} ${year}`;
-    } else {
-      return (
-        this.datePipe.transform(date, 'mediumDate', undefined, currentLang) ||
-        ''
-      );
-    }
-  }
+  
 
   private renderProfitChart(data: any): void {
     const canvas = this.profitChartCanvas?.nativeElement;

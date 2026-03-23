@@ -394,7 +394,7 @@
                 <span class="exp-cat-badge">{{ expense.category }}</span>
                 <span class="exp-meta-dot">·</span>
                 <span class="exp-item-date"
-                  >{{ formatLocalizedDate(expense.date) }}</span
+                  >{{ this.formatService.formatLocalizedDate(expense.date) }}</span
                 >
                 <span
                   *ngIf="expense.quantity && expense.unit"

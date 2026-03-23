@@ -54,7 +54,7 @@
           <li><hr class="dropdown-divider my-1"></li>
           <li *ngFor="let member of groupMembers$ | async">
             <span class="dropdown-item" [class.text-info]="member.uid === user.uid">
-              {{ member.displayName }} ({{ member.role }})
+              {{ member.displayName }} ({{ member.role === 'admin' ? ('NAV_ADMIN' | translate) : ('NAV_MEMBER' | translate) }})
               <span *ngIf="member.uid === user.uid">({{ 'NAV_YOU' | translate }})</span>
             </span>
           </li>
@@ -259,14 +259,14 @@
           {{ gName }}
         </div>
       </ng-container>
-      <div class="mob-drawer-section-label">Group Members</div>
+      <div class="mob-drawer-section-label">{{ 'NAV_GROUP_MEMBERS' | translate }}</div>
       <div class="mob-drawer-members">
         <ng-container *ngIf="currentUser$ | async as user">
           <span class="mob-drawer-member" *ngFor="let member of groupMembers$ | async"
             [class.mob-drawer-member-me]="member.uid === user.uid">
             <span class="mob-drawer-member-dot"></span>
             {{ member.displayName }}
-            <span class="mob-drawer-member-role">{{ member.role }}</span>
+            <span class="mob-drawer-member-role">{{ (member.role == 'admin' ? 'NAV_ADMIN' : 'NAV_MEMBER')  | translate }}</span>
             <span *ngIf="member.uid === user.uid" class="mob-drawer-member-you">({{ 'NAV_YOU' | translate }})</span>
           </span>
         </ng-container>

@@ -268,7 +268,7 @@
             <ng-container *ngIf="incomes.length > 0; else listEmpty">
               <div *ngFor="let income of incomes" class="pnl-record-item">
                 <div class="pnl-record-left">
-                  <span class="pnl-record-date">{{ formatLocalizedDate(income.date) }}</span>
+                  <span class="pnl-record-date">{{ this.formatService.formatLocalizedDate(income.date) }}</span>
                   <span class="pnl-record-amount pnl-amount-income">
                     {{ formatService.formatAmountWithSymbol(income.amount, income.currency) }}
                   </span>

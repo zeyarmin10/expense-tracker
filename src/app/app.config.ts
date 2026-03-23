@@ -4,6 +4,7 @@ import {
   // provideBrowserGlobalErrorListeners,
   // provideZonelessChangeDetection,
 } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { provideRouter } from '@angular/router';
 import { AngularFireModule } from '@angular/fire/compat';
 import { AngularFireDatabaseModule } from '@angular/fire/compat/database';
@@ -34,6 +35,7 @@ export function HttpLoaderFactory(http: HttpClient) {
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    DatePipe,
     // provideBrowserGlobalErrorListeners(),
     // provideZonelessChangeDetection(),
     provideRouter(routes),

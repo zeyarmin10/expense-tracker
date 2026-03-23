@@ -1183,55 +1183,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
     }
   }
 
-  formatLocalizedDate(date: string | Date | null | undefined): string {
-    if (!date) {
-      return '';
-    }
-
-    let dateObj: Date;
-    if (typeof date === 'string') {
-      dateObj = new Date(date);
-    } else {
-      dateObj = new Date(date);
-    }
-
-    if (isNaN(dateObj.getTime())) {
-      console.warn('Invalid date:', date);
-      return String(date);
-    }
-
-    const currentLang = this.translate.currentLang;
-
-    if (currentLang === 'my') {
-      const month = this.datePipe.transform(dateObj, 'MMM');
-      const burmeseMonth = month
-        ? BURMESE_MONTH_ABBREVIATIONS[
-        month as keyof typeof BURMESE_MONTH_ABBREVIATIONS
-        ]
-        : '';
-
-      const day = new Intl.NumberFormat('my-MM', {
-        numberingSystem: 'mymr',
-        useGrouping: false,
-      }).format(dateObj.getDate());
-      const year = new Intl.NumberFormat('my-MM', {
-        numberingSystem: 'mymr',
-        useGrouping: false,
-      }).format(dateObj.getFullYear());
-
-      return `${day} ${burmeseMonth} ${year}`;
-    } else {
-      return (
-        this.datePipe.transform(
-          dateObj,
-          'mediumDate',
-          undefined,
-          currentLang
-        ) || String(date)
-      );
-    }
-  }
-
   getBalanceCardClass(balances: any): string {
     if (!balances) {
       return 'balance-positive';

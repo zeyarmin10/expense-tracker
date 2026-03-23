@@ -153,7 +153,7 @@
                     {{ budget.category }}
                   </span>
                   <span class="bgt-row-date">
-                    {{ budget.type === "monthly" ? formatLocalizedDate(budget.period) : budget.period || "" }}
+                    {{ budget.type === "monthly" ? this.formatService.formatLocalizedDate(budget.period) : budget.period || "" }}
                   </span>
                   <span class="bgt-row-desc" *ngIf="budget.description">· {{ budget.description }}</span>
                 </div>

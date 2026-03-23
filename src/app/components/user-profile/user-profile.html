@@ -41,7 +41,7 @@
             </div>
             <div class="prof-since">
               <span class="prof-since-label">{{ 'MEMBER_SINCE_LABEL' | translate }}</span>
-              <span class="prof-since-value">{{ formatLocalizedDate(userData.createdAt, 'MMM d, yyyy') }}</span>
+              <span class="prof-since-value">{{ this.formatService.formatLocalizedDate(userData.createdAt, 'MMM d, yyyy') }}</span>
             </div>
             <div class="prof-group-name" *ngIf="userData.accountType === 'group' && userData.groupName">
               <span class="prof-since-label">{{ 'GROUP_NAME' | translate }}</span>
@@ -135,8 +135,7 @@
                 <div class="prof-custom-period-info">
                   <span class="prof-custom-period-name">{{ period.name }}</span>
                   <span class="prof-custom-period-range">
-                    {{ formatLocalizedDate(period.startDate, 'shortDate') }} — {{ formatLocalizedDate(period.endDate,
-                    'shortDate') }}
+                    {{ this.formatService.formatLocalizedDate(period.startDate, 'shortDate') }} — {{ this.formatService.formatLocalizedDate(period.endDate, 'shortDate') }}
                   </span>
                 </div>
                 <button class="prof-delete-btn" type="button" (click)="deleteCustomPeriod(period.id, $event)">

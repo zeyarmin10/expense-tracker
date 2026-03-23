@@ -611,7 +611,7 @@ export class Expense implements OnInit {
     rows += row('💰', this.translate.instant('TOTAL_COST_LABEL'), amt, accent);
 
     if (!isPersonal && expense.createdByName) {
-      const dt = expense.createdAt ? this.formatLocalizedDate(expense.createdAt, 'medium') : '';
+      const dt = expense.createdAt ? this.formatService.formatLocalizedDate(expense.createdAt, 'longDateTime') : '';
       rows += row('👤', this.translate.instant('CREATED_BY_LABEL'), `${expense.createdByName}${dt ? ' · ' + dt : ''}`);
     }
 
@@ -624,7 +624,7 @@ export class Expense implements OnInit {
 
       historyEntries.forEach((entry, idx) => {
         const isLast = idx === historyEntries.length - 1;
-        const dt = this.formatLocalizedDate(entry.editedAt, 'medium');
+        const dt = this.formatService.formatLocalizedDate(entry.editedAt, 'longDateTime');
 
         // who & when
         const whoWhen = isPersonal
@@ -658,27 +658,6 @@ export class Expense implements OnInit {
       customClass: { popup: 'exp-info-swal' },
       width: '380px',
     });
-  }
-
-  formatLocalizedDate(date: string | Date | null | undefined, format: 'medium' | 'shortDate' = 'shortDate'): string {
-    if (!date) return '';
-    const d = new Date(date);
-    const lang = this.translate.currentLang;
-
-    if (lang === 'my') {
-      const month = this.datePipe.transform(d, 'MMM');
-      const burmeseMonth = month ? BURMESE_MONTH_ABBREVIATIONS[month as keyof typeof BURMESE_MONTH_ABBREVIATIONS] : '';
-      const day  = new Intl.NumberFormat('my-MM', { numberingSystem: 'mymr' }).format(d.getDate());
-      const year = new Intl.NumberFormat('my-MM', { numberingSystem: 'mymr' }).format(d.getFullYear());
-      const datePart = `${day} ${burmeseMonth}, ${year}`;
-      if (format === 'medium') {
-        const h = new Intl.NumberFormat('my-MM', { numberingSystem: 'mymr', minimumIntegerDigits: 2 }).format(d.getHours());
-        const m = new Intl.NumberFormat('my-MM', { numberingSystem: 'mymr', minimumIntegerDigits: 2 }).format(d.getMinutes());
-        return `${datePart}, ${h}:${m}`;
-      }
-      return datePart;
-    }
-    return this.datePipe.transform(d, format === 'medium' ? 'medium' : 'mediumDate', undefined, lang) || '';
   }
 
   formatLocalizedNumber(amount: number): string {

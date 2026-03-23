@@ -2,15 +2,19 @@ import { Injectable, inject } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import {
   BURMESE_CURRENCY_SYMBOL,
+  BURMESE_MONTH_ABBREVIATIONS,
+  BURMESE_DAY_NAMES,
   CURRENCY_SYMBOLS,
   MMK_CURRENCY_CODE,
 } from '../core/constants/app.constants';
+import { CommonModule, DatePipe } from '@angular/common';
 
 @Injectable({
   providedIn: 'root',
 })
 export class FormatService {
   private translate = inject(TranslateService);
+  datePipe = inject(DatePipe);
 
   formatAmountWithSymbol(amount: number, currencyCode: string): string {
     const locale = this.translate.currentLang;
@@ -81,7 +85,13 @@ export class FormatService {
     }).format(value);
 
     const suffix = suffixKey ? this.translate.instant(suffixKey) : '';
-    const shortAmount = (isBurmese && suffixKey === 'ABBREVIATIONS.LAKH' && value >= 20 && value % 10 === 0) ? `${suffix}${formattedNumber}` : `${formattedNumber}${suffix}`;
+    const shortAmount =
+      isBurmese &&
+      suffixKey === 'ABBREVIATIONS.LAKH' &&
+      value >= 20 &&
+      value % 10 === 0
+        ? `${suffix}${formattedNumber}`
+        : `${formattedNumber}${suffix}`;
 
     if (!currencyCode) {
       return shortAmount;
@@ -97,6 +107,133 @@ export class FormatService {
       return `${shortAmount} ${symbol}`;
     } else {
       return `${symbol} ${shortAmount}`;
+    }
+  }
+
+  formatLocalizedDate(
+    date: string | Date | null | undefined,
+    format?: string,
+  ): string {
+    const currentLang = this.translate.currentLang;
+
+    if (!date) return '';
+
+    if (format === 'shortDate') {
+      return (
+        this.datePipe.transform(date, 'shortDate', undefined, currentLang) || ''
+      );
+    }
+
+    // ── longDateTime ─────────────────────────────────────────
+    if (format === 'longDateTime') {
+      const d = new Date(date);
+
+      if (currentLang === 'my') {
+        const dayName = BURMESE_DAY_NAMES[d.getDay()];
+
+        const month = this.datePipe.transform(d, 'MMM');
+        const burmeseMonth = month
+          ? BURMESE_MONTH_ABBREVIATIONS[
+              month as keyof typeof BURMESE_MONTH_ABBREVIATIONS
+            ]
+          : '';
+
+        const toMy = (n: number, pad = false) =>
+          new Intl.NumberFormat('my-MM', {
+            numberingSystem: 'mymr',
+            useGrouping: false,
+            minimumIntegerDigits: pad ? 2 : 1,
+          }).format(n);
+
+        const day = toMy(d.getDate());
+        const year = toMy(d.getFullYear());
+        const h = toMy(d.getHours(), true);
+        const m = toMy(d.getMinutes(), true);
+
+        // တနင်္ဂနွေနေ့၊ ၅ ဧပြီ ၂၀၂၆၊ ၁၄:၀၀
+        return `${dayName}၊ ${day} ${burmeseMonth} ${year}၊ ${h}:${m}`;
+      } else {
+        // Sunday, April 5, 2026, 14:00
+        const dayName = this.datePipe.transform(d, 'EEEE', undefined, 'en');
+        const datePart = this.datePipe.transform(
+          d,
+          'MMMM d, y',
+          undefined,
+          'en',
+        );
+        const timePart = this.datePipe.transform(d, 'HH:mm', undefined, 'en');
+        return `${dayName}, ${datePart}, ${timePart}`;
+      }
+    }
+    // ─────────────────────────────────────────────────────────
+
+    if (currentLang === 'my') {
+      const d = new Date(date);
+      const month = this.datePipe.transform(d, 'MMM');
+      const burmeseMonth = month
+        ? BURMESE_MONTH_ABBREVIATIONS[
+            month as keyof typeof BURMESE_MONTH_ABBREVIATIONS
+          ]
+        : '';
+      const day = new Intl.NumberFormat('my-MM', {
+        numberingSystem: 'mymr',
+        useGrouping: false,
+      }).format(d.getDate());
+      const year = new Intl.NumberFormat('my-MM', {
+        numberingSystem: 'mymr',
+        useGrouping: false,
+      }).format(d.getFullYear());
+
+      if (format === 'medium') {
+        const h = new Intl.NumberFormat('my-MM', {
+          numberingSystem: 'mymr',
+          minimumIntegerDigits: 2,
+        }).format(d.getHours());
+        const m = new Intl.NumberFormat('my-MM', {
+          numberingSystem: 'mymr',
+          minimumIntegerDigits: 2,
+        }).format(d.getMinutes());
+        return `${day} ${burmeseMonth}, ${year}, ${h}:${m}`;
+      }
+      return `${day} ${burmeseMonth} ${year}`;
+    } else {
+      return (
+        this.datePipe.transform(
+          date,
+          format || 'mediumDate',
+          undefined,
+          currentLang,
+        ) || ''
+      );
+    }
+  }
+
+  formatMobileDate(date: string | Date | null | undefined): string {
+    const currentLang = this.translate.currentLang;
+
+    if (!date) {
+      return '';
+    }
+
+    if (currentLang === 'my') {
+      const d = new Date(date);
+      const month = this.datePipe.transform(d, 'MMM');
+      const burmeseMonth = month
+        ? BURMESE_MONTH_ABBREVIATIONS[
+            month as keyof typeof BURMESE_MONTH_ABBREVIATIONS
+          ]
+        : '';
+
+      const day = new Intl.NumberFormat('my-MM', {
+        numberingSystem: 'mymr',
+        useGrouping: false,
+      }).format(d.getDate());
+
+      return `${burmeseMonth} ${day}`;
+    } else {
+      return (
+        this.datePipe.transform(date, 'MMM d', undefined, currentLang) || ''
+      );
     }
   }
 }

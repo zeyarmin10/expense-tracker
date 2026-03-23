@@ -25,10 +25,7 @@ import {
 import { Router } from '@angular/router';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faMagnifyingGlass, faChartPie, faCalendarAlt, faFilter, faList, faChartColumn } from '@fortawesome/free-solid-svg-icons';
-import {
-  CURRENCY_SYMBOLS,
-  BURMESE_MONTH_ABBREVIATIONS,
-} from '../../core/constants/app.constants';
+
 
 import { FormatService } from '../../services/format.service';
 import {
@@ -95,9 +92,6 @@ export class ExpenseOverview implements OnInit {
   // --- Summary Statistics Properties ---
   currencySummaries: CurrencySummary[] = [];
   mostExpenseCategory: string = 'N/A';
-
-  // --- Currency Properties ---
-  currencySymbols: { [key: string]: string } = CURRENCY_SYMBOLS;
 
   categoryTotals: CategoryTotal[] = [];
 
@@ -298,8 +292,8 @@ export class ExpenseOverview implements OnInit {
   updateCurrentPeriodLabel(filter: string): void {
     if (filter === 'custom') {
       if (this.startDate && this.endDate) {
-        const start = this.formatLocalizedDate(this.datePipe.transform(this.startDate, 'shortDate'));
-        const end = this.formatLocalizedDate(this.datePipe.transform(this.endDate, 'shortDate'));
+        const start = this.formatService.formatLocalizedDate(this.datePipe.transform(this.startDate));
+        const end = this.formatService.formatLocalizedDate(this.datePipe.transform(this.endDate));
         this.currentPeriodLabel = `${start} - ${end}`;
       } else {
         this.currentPeriodLabel = this.translate.instant('CUSTOM_DATE_RANGE');
@@ -417,68 +411,5 @@ export class ExpenseOverview implements OnInit {
 
   filterByCategory(category: string): void {
     this._selectedCategory$.next(category);
-  }
-
-  formatLocalizedDate(date: string | Date | null | undefined): string {
-    const currentLang = this.translate.currentLang;
-
-    if (!date) {
-      return '';
-    }
-
-    if (currentLang === 'my') {
-      const d = new Date(date);
-      const month = this.datePipe.transform(d, 'MMM');
-      const burmeseMonth = month
-        ? BURMESE_MONTH_ABBREVIATIONS[
-        month as keyof typeof BURMESE_MONTH_ABBREVIATIONS
-        ]
-        : '';
-
-      const day = new Intl.NumberFormat('my-MM', {
-        numberingSystem: 'mymr',
-        useGrouping: false,
-      }).format(d.getDate());
-      const year = new Intl.NumberFormat('my-MM', {
-        numberingSystem: 'mymr',
-        useGrouping: false,
-      }).format(d.getFullYear());
-
-      return `${day} ${burmeseMonth} ${year}`;
-    } else {
-      return (
-        this.datePipe.transform(date, 'mediumDate', undefined, currentLang) ||
-        ''
-      );
-    }
-  }
-
-  formatMobileDate(date: string | Date | null | undefined): string {
-    const currentLang = this.translate.currentLang;
-
-    if (!date) {
-      return '';
-    }
-
-    if (currentLang === 'my') {
-      const d = new Date(date);
-      const month = this.datePipe.transform(d, 'MMM');
-      const burmeseMonth = month
-        ? BURMESE_MONTH_ABBREVIATIONS[
-        month as keyof typeof BURMESE_MONTH_ABBREVIATIONS
-        ]
-        : '';
-
-      const day = new Intl.NumberFormat('my-MM', {
-        numberingSystem: 'mymr',
-        useGrouping: false,
-      }).format(d.getDate());
-
-      return `${burmeseMonth} ${day}`;
-    } else {
-      return (
-        this.datePipe.transform(date, 'MMM d', undefined, currentLang) || ''
-      );
-    }
   }
 }

@@ -19,6 +19,7 @@ import { AVAILABLE_CURRENCIES } from '../../core/constants/app.constants';
 import { CustomBudgetPeriodModalComponent } from '../common/custom-budget-period-modal/custom-budget-period-modal.component';
 import { CustomBudgetPeriod, CustomBudgetPeriodService } from '../../services/custom-budget-period.service';
 import { GroupService } from '../../services/group.service';
+import { FormatService } from '../../services/format.service';
 import Swal from 'sweetalert2';
 
 export const AVAILABLE_BUDGET_PERIODS = [
@@ -64,6 +65,7 @@ export class UserProfileComponent implements OnInit {
   private datePipe = inject(DatePipe);
   private customBudgetPeriodService = inject(CustomBudgetPeriodService);
   private groupService = inject(GroupService);
+  public formatService = inject(FormatService);
 
   userProfileForm: FormGroup;
   userDisplayData$: Observable<any>;
@@ -409,11 +411,6 @@ export class UserProfileComponent implements OnInit {
     } else if (this.userProfileForm.invalid) {
       Swal.fire({ icon: 'error', title: this.translate.instant('ERROR_TITLE'), text: this.translate.instant('INVALID_FORM_PROFILE') });
     }
-  }
-
-  formatLocalizedDate(date: string | Date | null | undefined, format: string): string {
-    const currentLang = this.translate.currentLang;
-    return this.datePipe.transform(date, format, undefined, currentLang) || '';
   }
 
   openBudgetPeriodModal(): void {

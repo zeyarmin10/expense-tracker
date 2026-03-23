@@ -6,7 +6,7 @@
     <!-- Page Header -->
     <div class="mm-page-header">
       <h2 class="mm-page-title">
-        <fa-icon [icon]="faUserPlus" class="mm-icon-accent"></fa-icon>
+        <fa-icon [icon]="faUsers" class="mm-icon-accent"></fa-icon>
         {{ 'MEMBER_MANAGEMENT_TITLE' | translate }}
       </h2>
     </div>
@@ -111,7 +111,8 @@
                 <span class="mm-item-name">{{ member.displayName }}</span>
                 <span class="mm-owner-badge" *ngIf="member.uid === (groupOwnerId$ | async)">👑</span>
               </div>
-              <span class="mm-item-sub">{{ member.role }}</span>
+              <span class="mm-item-sub">{{ member.role === 'admin' ? ('NAV_ADMIN' | translate) : ('NAV_MEMBER' | translate) }}</span>
+              <span class="mm-item-email">{{ member.email }}</span>
             </div>
           </div>
           <button class="mm-action-btn mm-action-danger"

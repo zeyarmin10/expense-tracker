@@ -40,6 +40,7 @@
   overflow-wrap: anywhere;
   min-width: 0;
   overflow: hidden;
+  line-height: 1.4 !important;
 }
 
 .mm-panel {
@@ -334,6 +335,12 @@
   font-size: 0.68rem;
   color: var(--text-muted);
   text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.mm-item-email {
+  font-size: 0.75rem;
+  color: var(--text-muted);
   letter-spacing: 0.06em;
 }
 

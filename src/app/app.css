@@ -659,7 +659,7 @@ body.light-mode {
   height: 45px;
   border-radius: 9px;
   border: 1px solid var(--nav-border);
-  background: var(--nav-surface);
+  background: var(--nav-accent-dim);
   color: var(--nav-text);
   display: flex;
   align-items: center;

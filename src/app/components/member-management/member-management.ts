@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faUserPlus, faEnvelope, faInbox, faTrash, faUserSlash, faUserCircle, faPaperPlane } from '@fortawesome/free-solid-svg-icons';
+import { faUserPlus, faEnvelope, faInbox, faTrash, faUserSlash, faUserCircle, faPaperPlane, faUsers } from '@fortawesome/free-solid-svg-icons';
 import { IUserProfile, IInvitation } from '../../core/models/data';
 import { Observable, of, firstValueFrom, from } from 'rxjs';
 import { switchMap, shareReplay, map } from 'rxjs/operators';
@@ -46,6 +46,7 @@ export class MemberManagementComponent implements OnInit {
   faUserSlash = faUserSlash;
   faUserCircle = faUserCircle;
   faPaperPlane = faPaperPlane;
+  faUsers = faUsers;
 
   userProfile$: Observable<IUserProfile | null>;
   members$: Observable<IGroupMemberDetails[]>;

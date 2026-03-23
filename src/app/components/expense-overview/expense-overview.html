@@ -124,8 +124,8 @@
               <tbody>
                 <tr *ngFor="let expense of expenses" (click)="onRowClick(expense)">
                   <td class="td-date pe-1">
-                    <span class="d-none d-md-inline">{{ formatLocalizedDate(expense.date) }}</span>
-                    <span class="d-md-none">{{ formatMobileDate(expense.date) }}</span>
+                    <span class="d-none d-md-inline">{{ this.formatService.formatLocalizedDate(expense.date) }}</span>
+                    <span class="d-md-none">{{ this.formatService.formatMobileDate(expense.date) }}</span>
                   </td>
                   <td class="td-created-by" *ngIf="isGroupUser">
                     <span class="created-by-badge">{{ expense.createdByName || '—' }}</span>

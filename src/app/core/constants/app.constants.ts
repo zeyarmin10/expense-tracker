@@ -82,6 +82,16 @@ export const BURMESE_MONTH_FULL_NAMES = {
   December: 'ဒီဇင်ဘာ',
 };
 
+export const BURMESE_DAY_NAMES = [
+  'တနင်္ဂနွေနေ့',   // 0 Sunday
+  'တနင်္လာနေ့',     // 1 Monday
+  'အင်္ဂါနေ့',      // 2 Tuesday
+  'ဗုဒ္ဓဟူးနေ့',    // 3 Wednesday
+  'ကြာသပတေးနေ့',   // 4 Thursday
+  'သောကြာနေ့',     // 5 Friday
+  'စနေနေ့',        // 6 Saturday
+];
+
 export const BURMESE_CURRENCY_SYMBOL = 'ကျပ်';
 export const MMK_CURRENCY_CODE = 'MMK';
 export const BURMESE_LOCALE_CODE = 'my';

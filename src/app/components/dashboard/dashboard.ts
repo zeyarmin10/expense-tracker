@@ -266,8 +266,8 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       )})`;
     } else if (budgetPeriod === 'custom') {
       titleKey = 'CUSTOM_SUMMARY_TITLE';
-      const start = this.datePipe.transform(startDateValue, 'MMM d, yyyy');
-      const end = this.datePipe.transform(endDateValue, 'MMM d, yyyy');
+      const start = this.formatService.formatLocalizedDate(startDateValue, 'MMM d, yyyy');
+      const end = this.formatService.formatLocalizedDate(endDateValue, 'MMM d, yyyy');
       summaryDateRange = `(${start} - ${end})`;
     } else {
       if (startDateValue) {
