@@ -198,11 +198,15 @@ export class ExpenseService {
     // ── Changed fields ကို detect ──
     const TRACKED_FIELDS: (keyof IExpense)[] = ['itemName', 'price', 'quantity', 'unit', 'category', 'date'];
     const changes: Record<string, { from: any; to: any }> = {};
+    const sanitize = (val: any) => (val === undefined || val === null) ? '' : val;
     for (const field of TRACKED_FIELDS) {
       const oldVal = (currentExpense as any)[field];
       const newVal = (updates as any)[field];
       if (newVal !== undefined && String(newVal) !== String(oldVal)) {
-        changes[field] = { from: oldVal, to: newVal };
+        changes[field] = {
+          from: sanitize(oldVal),
+          to: sanitize(newVal)
+        };
       }
     }
 
