@@ -440,66 +440,67 @@ export class Expense implements OnInit {
     const accentClr = '#00e5b4';
 
     const inputStyle = `
-    width:100%; box-sizing:border-box;
-    background:${inputBg}; color:${inputClr};
-    border:1px solid ${borderClr}; border-radius:10px;
-    font-size:0.88rem; padding:0.6rem 0.85rem;
-    outline:none; margin-bottom:0.6rem;
-    font-family:inherit;
-  `;
+      width:100%; box-sizing:border-box;
+      background:${inputBg}; color:${inputClr};
+      border:1px solid ${borderClr}; border-radius:8px;
+      font-size:0.85rem; padding:0.4rem 0.75rem;
+      outline:none; margin-bottom:0.35rem;
+      font-family:inherit;
+      appearance: none;
+    `;
     const labelStyle = `
-    display:block; font-size:0.65rem; font-weight:700;
-    letter-spacing:0.09em; text-transform:uppercase;
-    color:${labelClr}; margin-bottom:0.2rem;
-  `;
+      display:block; font-size:0.6rem; font-weight:700;
+      letter-spacing:0.08em; text-transform:uppercase;
+      color:${labelClr}; margin-bottom:0.1rem;
+    `;
 
     const { value: formValues } = await Swal.fire({
       title: this.translate.instant('EDIT_BUTTON_LABEL'),
       position: 'top',
       html: `
-      <div style="text-align:left; display:flex; flex-direction:column; gap:0.1rem;">
-
+  <div style="text-align:left; display:flex; flex-direction:column; gap:0;">
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.4rem;">
+      <div>
         <label style="${labelStyle}">${this.translate.instant('EXPENSE_DATE_LABEL')}</label>
-        <input id="swal-date" type="date" value="${expense.date}"
-          style="${inputStyle}" />
-
+        <input id="swal-date" type="date" value="${expense.date}" style="${inputStyle}" />
+      </div>
+      <div>
         <label style="${labelStyle}">${this.translate.instant('EXPENSE_CATEGORY_LABEL')}</label>
         <select id="swal-category" style="${inputStyle} appearance:none; -webkit-appearance:none; cursor:pointer;">
           ${categoryOptions}
         </select>
-
-        <label style="${labelStyle}">${this.translate.instant('EXPENSE_ITEM_NAME_LABEL')}</label>
-        <input id="swal-itemName" type="text" value="${expense.itemName || ''}"
-          style="${inputStyle}" />
-
-        ${showQtyUnit ? `
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.6rem;">
-            <div>
-              <label style="${labelStyle}">${this.translate.instant('QUANTITY_LABEL')}</label>
-              <input id="swal-quantity" type="number" min="0.01" step="0.01" value="${expense.quantity}"
-                style="${inputStyle}" />
-            </div>
-            <div>
-              <label style="${labelStyle}">${this.translate.instant('EXPENSE_UNIT_LABEL')}</label>
-              <input id="swal-unit" type="text" value="${expense.unit || ''}"
-                style="${inputStyle}" />
-            </div>
-          </div>
-        ` : ''}
-
-        <label style="${labelStyle}">${this.translate.instant('PRICE_LABEL')} (${currency})</label>
-        <input id="swal-price" type="text" inputmode="decimal"
-          value="${this.formatWithCommas(expense.price)}"
-          style="${inputStyle}" />
-
       </div>
-    `,
+    </div>
+
+    <label style="${labelStyle}">${this.translate.instant('EXPENSE_ITEM_NAME_LABEL')}</label>
+    <input id="swal-itemName" type="text" value="${expense.itemName || ''}" style="${inputStyle}" />
+
+    ${showQtyUnit ? `
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.4rem;">
+        <div>
+          <label style="${labelStyle}">${this.translate.instant('QUANTITY_LABEL')}</label>
+          <input id="swal-quantity" type="number" min="0.01" step="0.01" value="${expense.quantity}" style="${inputStyle}" />
+        </div>
+        <div>
+          <label style="${labelStyle}">${this.translate.instant('EXPENSE_UNIT_LABEL')}</label>
+          <input id="swal-unit" type="text" value="${expense.unit || ''}" style="${inputStyle}" />
+        </div>
+      </div>
+    ` : ''}
+
+    <label style="${labelStyle}">${this.translate.instant('PRICE_LABEL')} (${currency})</label>
+    <input id="swal-price" type="text" inputmode="decimal"
+      value="${this.formatWithCommas(expense.price)}" style="${inputStyle}" />
+
+  </div>
+`,
       showCancelButton: true,
       confirmButtonText: this.translate.instant('SAVE_BUTTON_LABEL'),
       cancelButtonText: this.translate.instant('CANCEL_BUTTON_LABEL'),
       confirmButtonColor: accentClr,
       focusConfirm: false,
       width: '420px',
+      padding: '0.75rem',
       customClass: {
         popup: isDark ? '' : 'swal-light',
       },
