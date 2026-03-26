@@ -335,9 +335,9 @@
 }
 
 .summary-card.highlight .summary-amount {
-  font-family: 'DM Mono', monospace, 'MyanmarUIFont';
+  /* font-family: 'DM Mono', monospace, 'MyanmarUIFont'; */
   /* Give your font a logical name */
-  src: url('../../../assets/fonts/DMMono-Regular.ttf') format('truetype');
+  /* src: url('../../../assets/fonts/DMMono-Regular.ttf') format('truetype'); */
   /* Path to your .ttf file */
   font-weight: normal;
   /* Adjust based on the font file's weight */
@@ -363,7 +363,7 @@
   font-weight: 500;
   color: var(--expense-color);
   line-height: 1;
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.5rem;
   display: block;
 }
 

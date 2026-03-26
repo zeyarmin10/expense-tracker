@@ -13,6 +13,7 @@ import { UserDataService, UserProfile } from '../../services/user-data';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faSave, faUserCircle, faTrash, faPlus, faChevronDown, faChevronUp, faListUl, faEdit, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faTrashCan } from '@fortawesome/free-regular-svg-icons';
 import { updateProfile } from '@angular/fire/auth';
 import { FormsModule } from '@angular/forms';
 import { AVAILABLE_CURRENCIES } from '../../core/constants/app.constants';
@@ -114,6 +115,7 @@ export class UserProfileComponent implements OnInit {
   isEditingName: boolean = false;
   isFormReady: boolean = false;
   faListUl = faListUl;
+  faTrashCan = faTrashCan;
 
   constructor() {
     this.userProfileForm = this.fb.group({

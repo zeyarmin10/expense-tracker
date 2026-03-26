@@ -671,7 +671,7 @@
 
 .pnl-record-item {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
   padding: 0.9rem 1.3rem;
@@ -744,7 +744,7 @@
   cursor: pointer;
   transition: all 0.15s;
   flex-shrink: 0;
-  font-size: 0.75rem;
+  font-size: 1rem;
 }
 
 .pnl-delete-btn:hover {

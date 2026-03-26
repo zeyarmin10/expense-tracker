@@ -47,7 +47,9 @@ import {
   faCalendar,
   faSliders,
   faRotateLeft,
+  faArrowRotateLeft,
 } from '@fortawesome/free-solid-svg-icons';
+import { faTrashCan, faPenToSquare } from '@fortawesome/free-regular-svg-icons';
 
 import { CategoryModalComponent } from '../common/category-modal/category-modal';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -178,6 +180,9 @@ export class Expense implements OnInit {
   faCoins = faCoins;
   faChevronDown = faChevronDown;
   faChevronUp = faChevronUp;
+  faArrowRotateLeft = faArrowRotateLeft;
+  faTrashCan = faTrashCan;
+  faPenToSquare = faPenToSquare;
 
   userProfile: UserProfile | null = null;
 
@@ -272,7 +277,7 @@ export class Expense implements OnInit {
         let filtered = this.filterByDateMode(expenses);
         if (activeCurrency) filtered = filtered.filter(e => e.currency === activeCurrency);
         if (activeCategory) filtered = filtered.filter(e => e.category === activeCategory);
-        return filtered.sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
+        return filtered.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       })
     );
 
@@ -621,15 +626,16 @@ export class Expense implements OnInit {
     const surfaceAlt = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)';
     const accent = '#00e5b4';
     const isPersonal = this.userProfile?.accountType === 'personal';
+    const iconFilter = isDark ? 'invert(1) brightness(2)' : 'none';
 
-    const row = (icon: string, label: string, value: string, color = textColor, noBorder = false) => `
-      <div style="display:flex;align-items:flex-start;gap:0.6rem;padding:0.55rem 0;${noBorder ? '' : `border-bottom:1px solid ${border};`}">
-        <span style="font-size:1rem;flex-shrink:0;line-height:1.5;">${icon}</span>
-        <div style="flex:1;min-width:0;">
-          <div style="font-size:0.6rem;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;color:${subColor};margin-bottom:0.1rem;">${label}</div>
-          <div style="font-size:0.85rem;font-weight:600;color:${color};word-break:break-word;">${value}</div>
-        </div>
-      </div>`;
+    const row = (iconSvg: string, label: string, value: string, color = textColor, noBorder = false) => `
+    <div style="display:flex;align-items:flex-start;gap:0.6rem;padding:0.55rem 0;${noBorder ? '' : `border-bottom:1px solid ${border};`}">
+      <span style="font-size:1rem;flex-shrink:0;line-height:1.5;">${iconSvg}</span>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:0.6rem;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;color:${subColor};margin-bottom:0.1rem;">${label}</div>
+        <div style="font-size:0.85rem;font-weight:600;color:${color};word-break:break-word;">${value}</div>
+      </div>
+    </div>`;
 
     const fieldLabel = (field: string): string => {
       const map: Record<string, string> = {
@@ -656,14 +662,14 @@ export class Expense implements OnInit {
 
     let rows = '';
 
-    rows += row('🧾', this.translate.instant('EXPENSE_ITEM_NAME_LABEL'), expense.itemName || '—');
-    rows += row('🏷️', this.translate.instant('EXPENSE_CATEGORY_LABEL'), expense.category || '—', accent);
+    rows += row(`<img src="../../assets/icons/bill.svg" alt="bill" style="width:25px;height:25px;filter:${iconFilter};vertical-align:middle;">`, this.translate.instant('EXPENSE_ITEM_NAME_LABEL'), expense.itemName || '—');
+    rows += row(`<img src="../../assets/icons/tag.svg" alt="tag" style="width:25px;height:25px;filter:${iconFilter};vertical-align:middle;">`, this.translate.instant('EXPENSE_CATEGORY_LABEL'), expense.category || '—', accent);
     const amt = this.formatService.formatAmountWithSymbol(expense.totalCost, expense.currency);
-    rows += row('💰', this.translate.instant('TOTAL_COST_LABEL'), amt, accent);
+    rows += row(`<img src="../../assets/icons/money-bag.svg" alt="money-bag" style="width:25px;height:25px;filter:${iconFilter};vertical-align:middle;">`, this.translate.instant('TOTAL_COST_LABEL'), amt, accent);
 
     if (!isPersonal && expense.createdByName) {
       const dt = expense.createdAt ? this.formatService.formatLocalizedDate(expense.createdAt, 'longDateTime') : '';
-      rows += row('👤', this.translate.instant('CREATED_BY_LABEL'), `${expense.createdByName}${dt ? ' · ' + dt : ''}`);
+      rows += row(`<img src="../../assets/icons/user.svg" alt="user" style="width:25px;height:25px;filter:${iconFilter};vertical-align:middle;">`, this.translate.instant('CREATED_BY_LABEL'), `${expense.createdByName}${dt ? ' · ' + dt : ''}`);
     }
 
     if (historyEntries.length > 0) {
@@ -688,7 +694,7 @@ export class Expense implements OnInit {
 
         rows += `
           <div style="background:${surfaceAlt};border-radius:8px;padding:0.55rem 0.7rem;margin-bottom:0.35rem;${isLast ? '' : `border-bottom:1px solid ${border};`}">
-            <div style="font-size:0.72rem;color:${subColor};margin-bottom:0.3rem;">✏️ ${whoWhen}</div>
+            <div style="font-size:0.72rem;color:${subColor};margin-bottom:0.3rem;"><img src="../../assets/icons/pencil-crayon.svg" alt="pencil" style="width:15px;height:15px;filter:${iconFilter};vertical-align:middle;"> ${whoWhen}</div>
             <div style="font-size:0.82rem;line-height:1.6;">${changeLines}</div>
           </div>`;
       });

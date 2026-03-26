@@ -63,12 +63,12 @@
               <div class="cat-item-actions">
                 <button class="cat-action-btn cat-edit-btn" type="button"
                   (click)="onEdit(category)" title="Edit">
-                  <fa-icon [icon]="faEdit"></fa-icon>
+                  <fa-icon [icon]="faPenToSquare" class="fa-regular-icon fa-edit-btn"></fa-icon>
                 </button>
                 <button class="cat-action-btn cat-delete-btn" type="button"
                   (click)="onDelete(category.id!)"
                   [disabled]="isDeleting(category.id!)" title="Delete">
-                  <fa-icon [icon]="faTrash"></fa-icon>
+                  <fa-icon [icon]="faTrashCan" class="fa-regular-icon fa-delete-btn"></fa-icon>
                 </button>
               </div>
             </li>

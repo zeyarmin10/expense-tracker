@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faUserPlus, faEnvelope, faInbox, faTrash, faUserSlash, faUserCircle, faPaperPlane, faUsers } from '@fortawesome/free-solid-svg-icons';
+import { faTrashCan } from '@fortawesome/free-regular-svg-icons';
 import { IUserProfile, IInvitation } from '../../core/models/data';
 import { Observable, of, firstValueFrom, from } from 'rxjs';
 import { switchMap, shareReplay, map } from 'rxjs/operators';
@@ -47,6 +48,7 @@ export class MemberManagementComponent implements OnInit {
   faUserCircle = faUserCircle;
   faPaperPlane = faPaperPlane;
   faUsers = faUsers;
+  faTrashCan = faTrashCan;
 
   userProfile$: Observable<IUserProfile | null>;
   members$: Observable<IGroupMemberDetails[]>;

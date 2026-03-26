@@ -159,7 +159,7 @@
                 </div>
                 <button *ngIf="userProfile?.accountType === 'personal' || userRole === 'admin'"
                   class="bgt-delete-btn" type="button" (click)="confirmDeleteBudget(budget.id)">
-                  <fa-icon [icon]="faTrash"></fa-icon>
+                  <fa-icon [icon]="faTrashCan" class="fa-delete-btn"></fa-icon>
                 </button>
               </div>
             </ng-container>

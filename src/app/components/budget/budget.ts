@@ -36,6 +36,7 @@ import {
   faChartBar,
   faChartColumn,
 } from '@fortawesome/free-solid-svg-icons';
+import { faTrashCan } from '@fortawesome/free-regular-svg-icons';
 import { Chart, registerables } from 'chart.js';
 import { AuthService } from '../../services/auth';
 import { UserDataService, UserProfile } from '../../services/user-data';
@@ -157,6 +158,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
   faTasks = faTasks;
   faChartBar = faChartBar;
   faChartColumn = faChartColumn;
+  faTrashCan = faTrashCan;
 
   isBudgetFormCollapsed: boolean = true;
   hasChartData: boolean = false;

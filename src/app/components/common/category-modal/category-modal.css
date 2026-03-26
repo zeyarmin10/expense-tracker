@@ -350,3 +350,6 @@
   opacity: 0.35;
   cursor: not-allowed;
 }
+.fa-regular-icon {
+  font-size: 1rem !important;
+}

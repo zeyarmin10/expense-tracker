@@ -48,6 +48,7 @@ import {
   faChartColumn,
   faPlus
 } from '@fortawesome/free-solid-svg-icons';
+import { faTrashCan } from '@fortawesome/free-regular-svg-icons';
 import { AuthService } from '../../services/auth';
 import { Chart, registerables } from 'chart.js';
 import { UserProfile } from '../../services/user-data';
@@ -172,6 +173,7 @@ export class Profit implements OnInit, OnDestroy {
   faPiggyBank = faPiggyBank;
   faChartColumn = faChartColumn;
   faPlus = faPlus;
+  faTrashCan = faTrashCan;
 
   // ── Comma formatting ──────────────────────────
   incomeAmountDisplay: string = '';

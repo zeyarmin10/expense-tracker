@@ -290,7 +290,7 @@
 }
 
 .exp-btn-sm {
-  font-size: 0.76rem;
+  font-size: 0.75rem;
   padding: 0.4rem 0.85rem;
   border-radius: 8px;
 }
@@ -306,6 +306,9 @@
   box-shadow: 0 0 16px rgba(0, 229, 180, 0.3);
 }
 
+.fa-regular-icon {
+  font-size: 1rem !important;
+}
 /* Shine pulse for primary */
 @keyframes exp-shine {
 
@@ -899,6 +902,10 @@
   flex: 1;
   min-width: 130px;
   max-width: 160px;
+  background: rgba(0, 229, 180, 0.12);
+    border-color: rgba(0, 229, 180, 0.4);
+    color: var(--accent, #00e5b4);
+    font-weight: 600;
 }
 
 .exp-date-sep {

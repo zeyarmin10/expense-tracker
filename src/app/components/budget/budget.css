@@ -510,7 +510,7 @@
   cursor: pointer;
   transition: all 0.15s;
   flex-shrink: 0;
-  font-size: 0.75rem;
+  font-size: 1rem;
 }
 
 .bgt-delete-btn:hover {

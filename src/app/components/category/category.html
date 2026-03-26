@@ -72,13 +72,13 @@
                   (click)="startEdit(category)"
                   [disabled]="editingCategoryId !== null"
                   [attr.aria-label]="'EDIT_BUTTON_LABEL' | translate">
-                  <fa-icon [icon]="faEdit"></fa-icon>
+                  <fa-icon [icon]="faPenToSquare" class="fa-edit-btn"></fa-icon>
                 </button>
                 <button class="cat-action-btn cat-action-delete"
                   (click)="onDelete(category.id!)"
                   [disabled]="editingCategoryId !== null"
                   [attr.aria-label]="'DELETE_BUTTON_LABEL' | translate">
-                  <fa-icon [icon]="faTrash"></fa-icon>
+                  <fa-icon [icon]="faTrashCan" class="fa-delete-btn"></fa-icon>
                 </button>
               </div>
             </div>

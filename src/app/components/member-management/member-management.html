@@ -119,7 +119,7 @@
             *ngIf="(groupOwnerId$ | async) === (userProfile$ | async)?.uid && member.uid !== (userProfile$ | async)?.uid"
             (click)="confirmDeleteMember(member.uid)"
             title="{{ 'DELETE_BUTTON_LABEL' | translate }}">
-            <fa-icon [icon]="faTrash"></fa-icon>
+            <fa-icon [icon]="faTrashCan" class="fa-delete-btn"></fa-icon>
           </button>
         </div>
       </div>

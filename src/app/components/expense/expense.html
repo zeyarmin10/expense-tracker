@@ -288,7 +288,7 @@
             (click)="resetFilter()"
             title="Reset"
           >
-            <fa-icon [icon]="faSync"></fa-icon>
+            <fa-icon [icon]="faArrowRotateLeft"></fa-icon>
           </button>
         </div>
       </div>
@@ -408,7 +408,7 @@
                     class="exp-btn exp-btn-sm exp-btn-outline-info"
                     (click)="startEdit(expense)"
                   >
-                    <fa-icon [icon]="faEdit"></fa-icon>
+                    <fa-icon class="fa-regular-icon fa-edit-btn" [icon]="faPenToSquare"></fa-icon>
                     {{ "EDIT_BUTTON_LABEL" | translate }}
                   </button>
                   <button
@@ -416,8 +416,8 @@
                     class="exp-btn exp-btn-sm exp-btn-outline-danger"
                     (click)="onDelete(expense.id!)"
                   >
-                    <fa-icon [icon]="faTrash"></fa-icon>
-                    {{ "DELETE_BUTTON_LABEL" | translate }}
+                    <fa-icon class="fa-regular-icon fa-delete-btn" [icon]="faTrashCan"></fa-icon>
+                    <!-- {{ "DELETE_BUTTON_LABEL" | translate }} -->
                   </button>
                 </div>
                 <fa-icon

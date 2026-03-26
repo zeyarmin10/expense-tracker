@@ -24,6 +24,7 @@ import {
   faTimes,
   faTags
 } from '@fortawesome/free-solid-svg-icons';
+import { faTrashCan, faPenToSquare } from '@fortawesome/free-regular-svg-icons';
 
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import Swal from 'sweetalert2';
@@ -73,6 +74,8 @@ export class Category implements OnInit {
   faSave = faSave;
   faTimes = faTimes;
   faTags = faTags;
+  faTrashCan = faTrashCan;
+  faPenToSquare = faPenToSquare;
 
   constructor(private fb: FormBuilder) {
     this.addCategoryForm = this.fb.group({
