@@ -167,6 +167,7 @@ export class App implements OnInit {
         await StatusBar.setStyle({ style: Style.Dark });
         await StatusBar.setBackgroundColor({ color: '#0F2340' });
         await StatusBar.show();
+
       } catch (e) {
         console.warn('StatusBar error:', e);
       } finally {

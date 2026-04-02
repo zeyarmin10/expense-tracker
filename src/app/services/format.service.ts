@@ -76,7 +76,7 @@ export class FormatService {
       suffixKey = '';
     }
 
-    const precision = value % 1 === 0 ? 0 : 1;
+    const precision = value % 1 === 0 ? 0 : 2;
 
     const formattedNumber = new Intl.NumberFormat(numberLocale, {
       minimumFractionDigits: precision,

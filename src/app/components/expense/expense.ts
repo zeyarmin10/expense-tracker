@@ -331,7 +331,7 @@ export class Expense implements OnInit {
       await this.expenseService.addExpense(newExpense as any);
       Toast.fire({ icon: 'success', title: this.translate.instant('EXPENSE_SUCCESS_ADDED') });
       this.newExpenseForm.reset({
-        date: this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '',
+        date: this.datePipe.transform(fv.date, 'yyyy-MM-dd') || '',
         category: '', itemName: '', quantity: 1, unit: '', price: ''
       });
       this.priceDisplayValue = '';

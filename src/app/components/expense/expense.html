@@ -30,7 +30,6 @@
         </button>
         <!-- Quick/Full toggle — personal account -->
         <button
-          *ngIf="userProfile?.accountType === 'personal'"
           type="button"
           class="exp-quick-toggle"
           (click)="toggleQuickMode()"
@@ -50,7 +49,7 @@
         >
           <!-- ── Quick Mode: Category + ItemName + Price ── -->
           <ng-container
-            *ngIf="userProfile?.accountType === 'personal' && isQuickMode"
+            *ngIf="isQuickMode"
           >
             <!-- Category + Date row -->
             <div class="exp-form-row">
@@ -135,7 +134,7 @@
 
           <!-- ── Full Mode (group account or toggled full) ── -->
           <ng-container
-            *ngIf="userProfile?.accountType !== 'personal' || !isQuickMode"
+            *ngIf="!isQuickMode"
           >
             <div class="exp-form-row">
               <!-- Date -->

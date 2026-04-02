@@ -173,6 +173,7 @@ export class CategoryModalComponent implements OnInit {
       await this.loadCategories();
       this.categoryAdded.emit();
       this.resetForm();
+      this.closeModal();
     } catch (error) {
       console.error('Error saving category:', error);
     }
