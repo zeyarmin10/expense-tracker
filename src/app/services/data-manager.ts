@@ -51,22 +51,37 @@ export class DataManagerService {
     const groupId = invitation.groupId;
     const role = 'member'; // Default role for new members
 
-    const updates: { [key: string]: any } = {};
+    const groupDetails = await this.getGroupDetails(groupId);
+    const legacyUpdates: { [key: string]: any } = {};
 
-    // Add user to group_members
-    updates[`/group_members/${groupId}/${userId}`] = { role };
+    legacyUpdates[`/group_members/${groupId}/${userId}`] = { role };
+    legacyUpdates[`/users/${userId}/accountType`] = 'group';
+    legacyUpdates[`/users/${userId}/groupId`] = groupId;
+    legacyUpdates[`/users/${userId}/currentSpaceId`] = groupId;
+    legacyUpdates[`/users/${userId}/currentSpaceType`] = 'group';
+    legacyUpdates[`/users/${userId}/currentSpaceName`] = groupDetails?.groupName || 'Group';
+    legacyUpdates[`/users/${userId}/currentSpaceRole`] = role;
+    legacyUpdates[`/users/${userId}/roles/${groupId}`] = role;
+    legacyUpdates[`/users/${userId}/spaceMemberships/${groupId}`] = role;
+    legacyUpdates[`/invitations/${inviteCode}/status`] = 'accepted';
+    legacyUpdates[`/invitations/${inviteCode}/acceptedBy`] = userId;
+    legacyUpdates[`/invitations/${inviteCode}/acceptedAt`] = new Date().toISOString();
 
-    // Update user's profile
-    updates[`/users/${userId}/accountType`] = 'group';
-    updates[`/users/${userId}/groupId`] = groupId;
-    updates[`/users/${userId}/roles/${groupId}`] = role;
+    await update(ref(this.db), legacyUpdates);
 
-    // Update invitation status
-    updates[`/invitations/${inviteCode}/status`] = 'accepted';
-    updates[`/invitations/${inviteCode}/acceptedBy`] = userId;
-    updates[`/invitations/${inviteCode}/acceptedAt`] = new Date().toISOString();
+    try {
+      await update(ref(this.db), {
+        [`/space_members/${groupId}/${userId}`]: { role },
+      });
+    } catch (error: any) {
+      const isPermissionDenied =
+        error?.code === 'PERMISSION_DENIED' ||
+        error?.message === 'permission_denied';
 
-    return update(ref(this.db), updates);
+      if (!isPermissionDenied) {
+        throw error;
+      }
+    }
   }
 
   getGroupMembersWithProfile(groupId: string): Observable<IGroupMemberDetails[]> {
@@ -93,10 +108,13 @@ export class DataManagerService {
   async removeGroupMember(groupId: string, memberId: string): Promise<void> {
     const updates: { [key:string]: any } = {};
     updates[`/group_members/${groupId}/${memberId}`] = null;
+    updates[`/space_members/${groupId}/${memberId}`] = null;
+    updates[`/users/${memberId}/spaceMemberships/${groupId}`] = null;
 
     const userProfile = await firstValueFrom(this.userDataService.getUserProfile(memberId));
-    if (userProfile?.groupId === groupId) {
-      updates[`/users/${memberId}/groupId`] = null;
+    if (userProfile?.currentSpaceId === groupId || userProfile?.groupId === groupId) {
+      updates[`/users/${memberId}/currentSpaceId`] = userProfile?.personalSpaceId || null;
+      updates[`/users/${memberId}/currentSpaceType`] = 'personal';
       updates[`/users/${memberId}/groupId`] = null;
       updates[`/users/${memberId}/accountType`] = 'personal';
       updates[`/users/${memberId}/roles/${groupId}`] = null;

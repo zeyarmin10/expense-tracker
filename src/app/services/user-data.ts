@@ -11,6 +11,7 @@ import {
 import { Observable } from 'rxjs';
 import { GroupService } from './group.service';
 import { Group } from './group.model'; // Import Group from the new model file
+import { SpaceRole, SpaceType } from './space.model';
 
 export type Role = 'admin' | 'member';
 
@@ -22,8 +23,14 @@ export interface UserProfile {
   language: string;
   createdAt: number; 
   accountType?: 'personal' | 'group';
-  groupId?: string;
+  groupId?: string | null;
   roles?: { [key: string]: Role }; 
+  personalSpaceId?: string;
+  currentSpaceId?: string;
+  currentSpaceType?: SpaceType;
+  currentSpaceName?: string;
+  currentSpaceRole?: SpaceRole;
+  spaceMemberships?: { [key: string]: SpaceRole };
   budgetPeriod?: 'weekly' | 'monthly' | 'yearly' | 'custom' | null;
   budgetStartDate?: string | null;
   budgetEndDate?: string | null;
@@ -67,7 +74,14 @@ export class UserDataService {
     await update(userRef, data);
 
     const userProfile = await this.fetchUserProfile(userId);
-    if (userProfile?.groupId && userProfile.roles?.[userProfile.groupId] === 'admin') {
+    const activeGroupId = userProfile?.currentSpaceType === 'group'
+      ? userProfile.currentSpaceId
+      : userProfile?.groupId;
+    const activeRole = activeGroupId
+      ? userProfile?.spaceMemberships?.[activeGroupId] || userProfile?.roles?.[activeGroupId]
+      : null;
+
+    if (activeGroupId && (activeRole === 'admin' || activeRole === 'owner')) {
       const groupSettings: Partial<Group> = {};
       if (data.currency) {
         groupSettings.currency = data.currency;
@@ -76,7 +90,7 @@ export class UserDataService {
         groupSettings.budgetPeriod = data.budgetPeriod;
       }
       if (Object.keys(groupSettings).length > 0) {
-        await this.getGroupService().updateGroupSettings(userProfile.groupId, groupSettings);
+        await this.getGroupService().updateGroupSettings(activeGroupId, groupSettings);
       }
     }
   }

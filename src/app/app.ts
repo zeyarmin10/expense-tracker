@@ -20,6 +20,8 @@ import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Keyboard } from '@capacitor/keyboard';
 import Swal from 'sweetalert2';
+import { SpaceContextService } from './services/space-context.service';
+import { UserSpaceSummary } from './services/space.model';
 
 @Component({
   selector: 'app-root',
@@ -44,6 +46,10 @@ export class App implements OnInit {
   isGroupAccount$: Observable<boolean>;
   groupMembers$: Observable<any[]>;
   groupName$: Observable<string | null>;
+  userSpaces$: Observable<UserSpaceSummary[]>;
+  currentSpaceName$: Observable<string | null>;
+  currentSpaceId$: Observable<string | null>;
+  currentSpaceLabel$: Observable<string | null>;
   showFab$: Observable<boolean>;
   faRightFromBracket = faRightFromBracket;
   faUsers = faUsers;
@@ -68,6 +74,7 @@ export class App implements OnInit {
   private toastService = inject(ToastService);
   private groupService = inject(GroupService);
   private networkService = inject(NetworkService);
+  private spaceContextService = inject(SpaceContextService);
 
   constructor(private translate: TranslateService) {
     this.translate.setDefaultLang('en');
@@ -80,11 +87,28 @@ export class App implements OnInit {
       map(profile => profile ? (profile.displayName || 'User') : null)
     );
 
+    this.currentSpaceName$ = this.authService.userProfile$.pipe(
+      map(profile => profile?.currentSpaceName || profile?.displayName || null)
+    );
+
+    this.currentSpaceId$ = this.authService.userProfile$.pipe(
+      map(profile => profile?.currentSpaceId || null)
+    );
+
+    this.currentSpaceLabel$ = this.authService.userProfile$.pipe(
+      map(profile => {
+        if (!profile) return null;
+        return this.getDisplaySpaceName({
+          type: profile.currentSpaceType || 'personal',
+          name: profile.currentSpaceName || 'My Personal',
+        });
+      })
+    );
+
     this.isGroupAdmin$ = this.authService.userProfile$.pipe(
       map(profile => {
-        if (profile?.accountType !== 'group' || !profile?.roles) return false;
-        const userRoles = Object.values(profile.roles);
-        return userRoles.includes('admin');
+        if (profile?.accountType !== 'group') return false;
+        return profile.currentSpaceRole === 'admin' || profile.currentSpaceRole === 'owner';
       })
     );
 
@@ -110,6 +134,10 @@ export class App implements OnInit {
         }
         return of(null);
       })
+    );
+
+    this.userSpaces$ = this.currentUser$.pipe(
+      switchMap((user) => user ? this.spaceContextService.getUserSpaces(user.uid) : of([]))
     );
 
     const isLoggedIn$ = this.currentUser$.pipe(map(user => !!user));
@@ -403,6 +431,36 @@ export class App implements OnInit {
     } catch (error) {
       console.error('Logout failed', error);
     }
+  }
+
+  async switchSpace(spaceId: string): Promise<void> {
+    const user = await firstValueFrom(this.currentUser$);
+    if (!user || !spaceId) {
+      return;
+    }
+
+    try {
+      await this.spaceContextService.switchSpace(user.uid, spaceId);
+      this.closeNavbarMenu();
+      if (this.router.url !== '/dashboard') {
+        this.router.navigate(['/dashboard']);
+      }
+    } catch (error) {
+      console.error('Space switch failed', error);
+      this.toastService.showError('Failed to switch space.');
+    }
+  }
+
+  getDisplaySpaceName(space: Pick<UserSpaceSummary, 'type' | 'name'>): string {
+    const isPersonal =
+      space.type === 'personal' ||
+      space.name === 'My Personal';
+
+    if (isPersonal) {
+      return this.translate.instant('SPACE_MY_PERSONAL');
+    }
+
+    return space.name;
   }
 
   closeNavbarMenu(): void {

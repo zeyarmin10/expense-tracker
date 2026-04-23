@@ -124,6 +124,75 @@ body.light-mode {
   padding: 0;
 }
 
+.space-switcher-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 150px;
+  max-width: 220px;
+  padding: 0.35rem 0.65rem;
+  border-radius: 9px;
+  border: 1px solid var(--nav-border);
+  background: var(--nav-surface);
+  color: var(--nav-text);
+  text-decoration: none;
+}
+
+.space-switcher-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.dropdown-space-title {
+  padding: 0.4rem 0.85rem 0.2rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+
+.dropdown-space-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.dropdown-space-main {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+}
+
+.dropdown-space-item-active {
+  background: rgba(0, 229, 180, 0.12) !important;
+  color: #00e5b4 !important;
+}
+
+.dropdown-space-badge,
+.mob-drawer-space-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(0, 229, 180, 0.14);
+  border: 1px solid rgba(0, 229, 180, 0.25);
+  color: #00e5b4;
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 /* Group Members Dropdown trigger */
 .app-navbar .nav-icon-btn {
   display: flex;
@@ -686,6 +755,18 @@ body.light-mode {
   padding: 0.5rem 0 0.25rem 0.5rem;
 }
 
+.mob-drawer-current-space {
+  margin: 0.1rem 0 0.45rem;
+  padding: 0 0.5rem;
+  font-size: 0.74rem;
+  color: #9ca3af;
+}
+
+.mob-drawer-current-space span {
+  color: #00e5b4;
+  font-weight: 700;
+}
+
 /* Drawer links */
 .mob-drawer-links,
 .mob-drawer-actions {
@@ -712,6 +793,28 @@ body.light-mode {
   text-align: left;
   transition: background 0.12s, color 0.12s;
   -webkit-tap-highlight-color: transparent;
+}
+
+.mob-drawer-space-link {
+  justify-content: space-between;
+}
+
+.mob-drawer-space-link-active {
+  background: rgba(0, 229, 180, 0.08);
+  color: #00e5b4;
+}
+
+.mob-drawer-space-link-active .mob-drawer-link-icon {
+  color: #00e5b4;
+}
+
+.mob-drawer-space-main {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  flex: 1;
+  min-width: 0;
+  text-align: left;
 }
 
 .mob-drawer-link:active {

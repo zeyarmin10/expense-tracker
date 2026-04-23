@@ -32,6 +32,27 @@
 
     <!-- Right: Desktop only -->
     <ul class="nav-right" *ngIf="currentUser$ | async as user">
+      <li class="dropdown" *ngIf="userSpaces$ | async as spaces">
+        <a class="space-switcher-btn" href="#" id="spaceDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+          <span class="space-switcher-label">{{ (currentSpaceLabel$ | async) || ('SPACE_MY_PERSONAL' | translate) }}</span>
+          <fa-icon [icon]="faChevronDown" style="font-size: 0.65rem; opacity: 0.6"></fa-icon>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="spaceDropdown">
+          <li class="dropdown-space-title">{{ 'SPACE_SECTION_TITLE' | translate }}</li>
+          <li *ngFor="let space of spaces">
+            <button class="dropdown-item dropdown-space-item" type="button" (click)="switchSpace(space.id!)"
+              [class.dropdown-space-item-active]="(currentSpaceId$ | async) === space.id">
+              <span class="dropdown-space-main">
+                <span>{{ getDisplaySpaceName(space) }}</span>
+              </span>
+              <span class="dropdown-space-badge" *ngIf="(currentSpaceId$ | async) === space.id">{{ 'SPACE_ACTIVE_BADGE' | translate }}</span>
+            </button>
+          </li>
+          <li><hr class="dropdown-divider" /></li>
+          <li><a class="dropdown-item" routerLink="/onboarding" (click)="closeNavbarMenu()">{{ 'SPACE_CREATE_OR_JOIN' | translate }}</a></li>
+        </ul>
+      </li>
+
       <!-- Group Members Dropdown -->
       <li class="dropdown" *ngIf="isGroupAccount$ | async">
         <a class="nav-icon-btn" href="#" id="groupMemberDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -204,6 +225,32 @@
 
   </ng-container>
   
+  <div class="mob-drawer-divider"></div>
+
+  <div class="mob-drawer-section-label">{{ 'SPACE_SECTION_TITLE' | translate }}</div>
+  <div class="mob-drawer-current-space" *ngIf="currentSpaceLabel$ | async as currentSpaceName">
+    {{ 'SPACE_ACTIVE_LABEL' | translate }}: <span>{{ currentSpaceName }}</span>
+  </div>
+  <div class="mob-drawer-links">
+    <button class="mob-drawer-link mob-drawer-space-link" type="button" *ngFor="let space of userSpaces$ | async" (click)="switchSpace(space.id!)"
+      [class.mob-drawer-space-link-active]="(currentSpaceId$ | async) === space.id">
+      <span class="mob-drawer-space-main">
+        <span class="mob-drawer-link-icon">
+          <fa-icon [icon]="faUsers" *ngIf="space.type === 'group'"></fa-icon>
+          <fa-icon [icon]="faPiggyBank" *ngIf="space.type === 'personal'"></fa-icon>
+        </span>
+        <span>{{ getDisplaySpaceName(space) }}</span>
+      </span>
+      <span class="mob-drawer-space-badge" *ngIf="(currentSpaceId$ | async) === space.id">{{ 'SPACE_ACTIVE_BADGE' | translate }}</span>
+    </button>
+    <a class="mob-drawer-link" routerLink="/onboarding" (click)="closeNavbarMenu()">
+      <span class="mob-drawer-link-icon">
+        <fa-icon [icon]="faUsers"></fa-icon>
+      </span>
+      <span>{{ 'SPACE_CREATE_OR_JOIN' | translate }}</span>
+    </a>
+  </div>
+
   <div class="mob-drawer-divider"></div>
   
   <!-- Nav links in drawer -->

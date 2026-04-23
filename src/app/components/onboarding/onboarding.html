@@ -4,8 +4,6 @@
 
   <div class="ob-scroll">
     <div class="ob-wrap">
-
-      <!-- Brand -->
       <div class="ob-brand">
         <div class="ob-brand-logo">
           <fa-icon [icon]="faCreditCard"></fa-icon>
@@ -16,19 +14,52 @@
         </div>
       </div>
 
-      <!-- Hero -->
       <div class="ob-hero" *ngIf="userProfile$ | async as profile">
         <h1 class="ob-hero-title">
           {{ 'ONBOARDING.WELCOME' | translate: { name: profile.displayName || profile.email } }}
         </h1>
         <p class="ob-hero-sub">{{ 'ONBOARDING.LETS_GET_YOU_SET_UP' | translate }}</p>
-        <p class="ob-hero-hint">{{ 'ONBOARDING.HOW_WOULD_YOU_LIKE_TO_USE_THIS_APP' | translate }}</p>
+        <p class="ob-hero-hint">{{ 'ONBOARDING.SPACE_HUB_HINT' | translate }}</p>
       </div>
 
-      <!-- Cards -->
       <div class="ob-cards">
+        <div class="ob-card ob-card-spaces" *ngIf="userProfile$ | async as profile">
+          <div class="ob-card-inner">
+            <div class="ob-card-head">
+              <div class="ob-card-icon ob-icon-space">
+                <fa-icon [icon]="faCheckCircle"></fa-icon>
+              </div>
+              <div>
+                <h3 class="ob-card-title">{{ 'SPACE_SECTION_TITLE' | translate }}</h3>
+                <p class="ob-card-desc">
+                  {{ 'ONBOARDING.CURRENT_SPACE' | translate }}:
+                  <span class="ob-inline-accent">
+                    {{ profile.currentSpaceName ? getDisplaySpaceName({ type: profile.currentSpaceType || 'personal', name: profile.currentSpaceName }) : ('SPACE_MY_PERSONAL' | translate) }}
+                  </span>
+                </p>
+              </div>
+            </div>
 
-        <!-- Personal -->
+            <div class="ob-space-list" *ngIf="userSpaces$ | async as spaces">
+              <button
+                class="ob-space-item"
+                type="button"
+                *ngFor="let space of spaces"
+                (click)="switchSpace(space.id!)"
+                [class.ob-space-item-active]="profile.currentSpaceId === space.id">
+                <span class="ob-space-item-main">
+                  <fa-icon [icon]="faUser" *ngIf="space.type === 'personal'"></fa-icon>
+                  <fa-icon [icon]="faUsers" *ngIf="space.type === 'group'"></fa-icon>
+                  <span>{{ getDisplaySpaceName(space) }}</span>
+                </span>
+                <span class="ob-space-badge" *ngIf="profile.currentSpaceId === space.id">
+                  {{ 'SPACE_ACTIVE_BADGE' | translate }}
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div class="ob-card ob-card-personal">
           <div class="ob-card-inner">
             <div class="ob-card-head">
@@ -36,23 +67,17 @@
                 <fa-icon [icon]="faUser"></fa-icon>
               </div>
               <div>
-                <h3 class="ob-card-title">{{ 'ONBOARDING.USE_AS_PERSONAL_ACCOUNT' | translate }}</h3>
-                <p class="ob-card-desc">{{ 'ONBOARDING.TRACK_YOUR_OWN' | translate }}</p>
+                <h3 class="ob-card-title">{{ 'ONBOARDING.GO_TO_PERSONAL_SPACE' | translate }}</h3>
+                <p class="ob-card-desc">{{ 'ONBOARDING.PERSONAL_SPACE_DESC' | translate }}</p>
               </div>
             </div>
-            <button class="ob-btn ob-btn-primary" (click)="setupPersonalAccount()">
-              {{ 'ONBOARDING.CONTINUE_WITH_PERSONAL_ACCOUNT' | translate }}
-              <span class="ob-btn-arrow">→</span>
+            <button class="ob-btn ob-btn-primary" (click)="switchToPersonalSpace()">
+              {{ 'ONBOARDING.SWITCH_TO_PERSONAL_SPACE' | translate }}
+              <span class="ob-btn-arrow">-></span>
             </button>
           </div>
         </div>
 
-        <!-- Divider -->
-        <div class="ob-divider">
-          <span>{{ 'ONBOARDING.OR' | translate }}</span>
-        </div>
-
-        <!-- Create Group -->
         <div class="ob-card ob-card-group">
           <div class="ob-card-inner">
             <div class="ob-card-head">
@@ -66,7 +91,12 @@
             </div>
             <div class="ob-input-row">
               <div class="ob-fl-wrap">
-                <input type="text" class="ob-fl-input" id="ob-group-name" [(ngModel)]="newGroupName" placeholder=" "
+                <input
+                  type="text"
+                  class="ob-fl-input"
+                  id="ob-group-name"
+                  [(ngModel)]="newGroupName"
+                  placeholder=" "
                   autocomplete="off" />
                 <label class="ob-fl-label" for="ob-group-name">
                   {{ 'ONBOARDING.ENTER_GROUP_NAME' | translate }}
@@ -79,7 +109,6 @@
           </div>
         </div>
 
-        <!-- Join Group -->
         <div class="ob-card ob-card-join">
           <div class="ob-card-inner">
             <div class="ob-card-head">
@@ -93,8 +122,13 @@
             </div>
             <div class="ob-input-row">
               <div class="ob-fl-wrap">
-                <input type="text" class="ob-fl-input ob-fl-mono" id="ob-invite-code" [(ngModel)]="inviteCode"
-                  placeholder=" " autocomplete="off" />
+                <input
+                  type="text"
+                  class="ob-fl-input ob-fl-mono"
+                  id="ob-invite-code"
+                  [(ngModel)]="inviteCode"
+                  placeholder=" "
+                  autocomplete="off" />
                 <label class="ob-fl-label" for="ob-invite-code">
                   {{ 'ONBOARDING.ENTER_INVITE_CODE' | translate }}
                 </label>
@@ -105,7 +139,6 @@
             </div>
           </div>
         </div>
-
       </div>
     </div>
   </div>

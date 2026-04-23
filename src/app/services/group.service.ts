@@ -65,17 +65,49 @@ export class GroupService {
       ownerId: userId,
       currency: userProfile?.currency || 'MMK',
       budgetPeriod: userProfile?.budgetPeriod || null,
-      selectedBudgetPeriodId: userProfile?.selectedBudgetPeriodId || null
+      selectedBudgetPeriodId: userProfile?.selectedBudgetPeriodId || null,
+      createdAt: Date.now(),
     };
 
-    const updates: { [key: string]: any } = {};
-    updates[`/groups/${newGroupId}`] = newGroup;
-    updates[`/group_members/${newGroupId}/${userId}`] = { role: role };
-    updates[`/users/${userId}/groupId`] = newGroupId;
-    updates[`/users/${userId}/accountType`] = 'group';
-    updates[`/users/${userId}/roles/${newGroupId}`] = role;
+    const legacyUpdates: { [key: string]: any } = {};
+    legacyUpdates[`/groups/${newGroupId}`] = newGroup;
+    legacyUpdates[`/group_members/${newGroupId}/${userId}`] = { role: role };
+    legacyUpdates[`/users/${userId}/groupId`] = newGroupId;
+    legacyUpdates[`/users/${userId}/accountType`] = 'group';
+    legacyUpdates[`/users/${userId}/currentSpaceId`] = newGroupId;
+    legacyUpdates[`/users/${userId}/currentSpaceType`] = 'group';
+    legacyUpdates[`/users/${userId}/currentSpaceName`] = groupName;
+    legacyUpdates[`/users/${userId}/currentSpaceRole`] = 'owner';
+    legacyUpdates[`/users/${userId}/roles/${newGroupId}`] = role;
+    legacyUpdates[`/users/${userId}/spaceMemberships/${newGroupId}`] = 'owner';
 
-    await update(ref(this.db), updates);
+    await update(ref(this.db), legacyUpdates);
+
+    const spaceUpdates: { [key: string]: any } = {};
+    spaceUpdates[`/spaces/${newGroupId}`] = {
+      type: 'group',
+      name: groupName,
+      ownerId: userId,
+      currency: userProfile?.currency || 'MMK',
+      budgetPeriod: userProfile?.budgetPeriod || null,
+      budgetStartDate: userProfile?.budgetStartDate || null,
+      budgetEndDate: userProfile?.budgetEndDate || null,
+      selectedBudgetPeriodId: userProfile?.selectedBudgetPeriodId || null,
+      createdAt: Date.now(),
+    };
+    spaceUpdates[`/space_members/${newGroupId}/${userId}`] = { role: 'owner' };
+
+    try {
+      await update(ref(this.db), spaceUpdates);
+    } catch (error: any) {
+      const isPermissionDenied =
+        error?.code === 'PERMISSION_DENIED' ||
+        error?.message === 'permission_denied';
+
+      if (!isPermissionDenied) {
+        throw error;
+      }
+    }
 
     // Lazily get CategoryService ONLY when it's needed
     const categoryService = this.getCategoryService();
@@ -156,11 +188,20 @@ export class GroupService {
 
   async removeMember(groupId: string, memberId: string): Promise<void> {
     const updates: { [key: string]: any } = {};
+    const userProfile = await firstValueFrom(this.getUserDataService().getUserProfile(memberId));
+    const fallbackSpaceId = userProfile?.personalSpaceId || null;
 
     updates[`/group_members/${groupId}/${memberId}`] = null;
-    updates[`/users/${memberId}/groupId`] = null;
-    updates[`/users/${memberId}/accountType`] = 'personal';
+    updates[`/space_members/${groupId}/${memberId}`] = null;
+    updates[`/users/${memberId}/spaceMemberships/${groupId}`] = null;
     updates[`/users/${memberId}/roles/${groupId}`] = null;
+
+    if (userProfile?.currentSpaceId === groupId) {
+      updates[`/users/${memberId}/currentSpaceId`] = fallbackSpaceId;
+      updates[`/users/${memberId}/currentSpaceType`] = 'personal';
+      updates[`/users/${memberId}/groupId`] = null;
+      updates[`/users/${memberId}/accountType`] = 'personal';
+    }
 
     await update(ref(this.db), updates);
   }

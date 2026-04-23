@@ -9,9 +9,10 @@ import { GroupService } from '../../services/group.service';
 import { DataManagerService } from '../../services/data-manager';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { InvitationService } from '../../services/invitation.service';
-import { CategoryService } from '../../services/category';
+import { SpaceContextService } from '../../services/space-context.service';
+import { UserSpaceSummary } from '../../services/space.model';
 import Swal from 'sweetalert2';
-import { faCreditCard, faUser, faUsers, faLink } from '@fortawesome/free-solid-svg-icons';
+import { faCreditCard, faUser, faUsers, faLink, faCheckCircle } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 
 @Component({
@@ -29,14 +30,16 @@ export class OnboardingComponent implements OnInit {
   private router = inject(Router);
   private translate = inject(TranslateService);
   private invitationService = inject(InvitationService);
-  private categoryService = inject(CategoryService);
+  private spaceContextService = inject(SpaceContextService);
 
   faCreditCard = faCreditCard;
   faUser = faUser;
   faUsers = faUsers;
   faLink = faLink;
+  faCheckCircle = faCheckCircle;
 
   userProfile$: Observable<UserProfile | null>;
+  userSpaces$!: Observable<UserSpaceSummary[]>;
   newGroupName = '';
   inviteCode = '';
 
@@ -53,27 +56,67 @@ export class OnboardingComponent implements OnInit {
       const langToUse = browserLang && ['en', 'my'].includes(browserLang) ? browserLang : 'my';
       this.translate.use(langToUse);
     }
+
+    this.authService.currentUser$.subscribe((user) => {
+      if (!user) {
+        return;
+      }
+      this.userSpaces$ = this.spaceContextService.getUserSpaces(user.uid);
+    });
   }
 
-  async setupPersonalAccount(): Promise<void> {
+  getDisplaySpaceName(space: Pick<UserSpaceSummary, 'type' | 'name'>): string {
+    const isPersonal =
+      space.type === 'personal' ||
+      space.name === 'My Personal';
+
+    if (isPersonal) {
+      return this.translate.instant('SPACE_MY_PERSONAL');
+    }
+
+    return space.name;
+  }
+
+  async switchToPersonalSpace(): Promise<void> {
     const user = await firstValueFrom(this.authService.currentUser$);
     if (!user) {
       console.error('User not logged in');
       return;
     }
     try {
-      await this.userDataService.updateUserProfile(user.uid, {
-        accountType: 'personal',
-      });
-      // Now that the account type is set, setup the default categories
-      await this.categoryService.setupPersonalAccountCategories();
+      await this.spaceContextService.migrateLegacyUserToSpaces(user.uid);
+      const refreshedProfile = await this.userDataService.fetchUserProfile(user.uid);
+      const personalSpaceId = refreshedProfile?.personalSpaceId;
+      if (!personalSpaceId) {
+        throw new Error('Personal space not found');
+      }
+      await this.spaceContextService.switchSpace(user.uid, personalSpaceId);
       this.router.navigate(['/dashboard']);
     } catch (error) {
-      console.error('Error setting up personal account:', error);
+      console.error('Error switching to personal space:', error);
       Swal.fire({
         icon: 'error',
         title: this.translate.instant('ERROR_TITLE'),
         text: this.translate.instant('ONBOARDING_PERSONAL_ACCOUNT_SETUP_ERROR')
+      });
+    }
+  }
+
+  async switchSpace(spaceId: string): Promise<void> {
+    const user = await firstValueFrom(this.authService.currentUser$);
+    if (!user) {
+      return;
+    }
+
+    try {
+      await this.spaceContextService.switchSpace(user.uid, spaceId);
+      this.router.navigate(['/dashboard']);
+    } catch (error) {
+      console.error('Error switching space:', error);
+      Swal.fire({
+        icon: 'error',
+        title: this.translate.instant('ERROR_TITLE'),
+        text: this.translate.instant('SPACE_SWITCH_ERROR')
       });
     }
   }

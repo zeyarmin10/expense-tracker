@@ -26,6 +26,7 @@ import { faEye, faEyeSlash, faSun, faMoon } from '@fortawesome/free-solid-svg-ic
 import { User } from '@angular/fire/auth';
 import { ToastService } from '../../services/toast'; // Import ToastService
 import { InvitationService } from '../../services/invitation.service';
+import { SpaceContextService } from '../../services/space-context.service';
 import Swal from 'sweetalert2';
 import { getRedirectResult } from '@angular/fire/auth';
 import { Auth } from '@angular/fire/auth';
@@ -63,6 +64,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   dataManager = inject(DataManagerService); // Inject DataManagerService
   categoryService = inject(CategoryService);
   invitationService = inject(InvitationService);
+  spaceContextService = inject(SpaceContextService);
   router = inject(Router);
   route = inject(ActivatedRoute); // Inject ActivatedRoute
   sessionService = inject(SessionManagementService);
@@ -180,6 +182,8 @@ export class LoginComponent implements OnInit, OnDestroy {
       profile = newUserProfile; // use the new profile
     }
 
+    await this.spaceContextService.migrateLegacyUserToSpaces(user.uid);
+
     // If an invite code is present in the URL
     if (this.inviteCode) {
       const code = this.inviteCode;
@@ -205,13 +209,8 @@ export class LoginComponent implements OnInit, OnDestroy {
         this.router.navigate(['/login'], { queryParams: { error: 'invite_used' } });
       }
     } else {
-      // No invite code, normal login flow
-      if (profile && profile.accountType) {
-        this.sessionService.recordActivity();
-        this.router.navigate(['/dashboard']);
-      } else {
-        this.router.navigate(['/onboarding']);
-      }
+      this.sessionService.recordActivity();
+      this.router.navigate(['/dashboard']);
     }
   }
 

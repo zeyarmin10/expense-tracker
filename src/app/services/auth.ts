@@ -16,11 +16,12 @@ import {
 } from '@angular/fire/auth';
 import { AngularFireDatabase } from '@angular/fire/compat/database';
 import { TranslateService } from '@ngx-translate/core';
-import { Observable, Subject, of, from } from 'rxjs';
+import { Observable, Subject, of, from, firstValueFrom } from 'rxjs';
 import { switchMap, map } from 'rxjs/operators';
 import { UserDataService, UserProfile } from './user-data';
 import { GroupService } from './group.service';
 import { SessionManagementService } from './session-management';
+import { SpaceContextService } from './space-context.service';
 import Swal from 'sweetalert2';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 
@@ -61,35 +62,67 @@ export class AuthService {
         }
         const userDataService = this.injector.get(UserDataService);
         const groupService = this.injector.get(GroupService);
+        const spaceContextService = this.injector.get(SpaceContextService);
 
         return userDataService.getUserProfile(user.uid).pipe(
           switchMap((profile) => {
             if (!profile) {
               return of(null);
             }
-            if (profile.groupId) {
-              return groupService.getGroupSettings(profile.groupId).pipe(
-                map((groupSettings) => {
-                  if (groupSettings) {
-                    const groupProfile: UserProfile = {
-                      ...profile,
-                      currency: groupSettings.currency,
-                      budgetPeriod: (groupSettings.budgetPeriod ||
-                        null) as UserProfile['budgetPeriod'],
-                      budgetStartDate: groupSettings.budgetStartDate || null,
-                      budgetEndDate: groupSettings.budgetEndDate || null,
-                      selectedBudgetPeriodId:
-                        groupSettings.selectedBudgetPeriodId || null,
-                    };
-                    return groupProfile;
-                  } else {
-                    return profile;
-                  }
-                }),
-              );
-            } else {
-              return of(profile);
+            const activeSpaceId = profile.currentSpaceId || profile.groupId || profile.personalSpaceId || null;
+
+            if (!activeSpaceId) {
+              return of({
+                ...profile,
+                accountType: profile.accountType || 'personal',
+                groupId: profile.groupId || null,
+              } as UserProfile);
             }
+
+            return spaceContextService.getSpace(activeSpaceId).pipe(
+              switchMap((space) => {
+                if (!space) {
+                  return of(profile);
+                }
+
+                if (space.type === 'group') {
+                  return groupService.getGroupSettings(activeSpaceId).pipe(
+                    map((groupSettings) =>
+                      ({
+                        ...profile,
+                        currentSpaceId: activeSpaceId,
+                        currentSpaceType: 'group',
+                        currentSpaceName: space.name,
+                        currentSpaceRole:
+                          profile.spaceMemberships?.[activeSpaceId] ||
+                          (profile.roles?.[activeSpaceId] as UserProfile['currentSpaceRole']) ||
+                          'member',
+                        accountType: 'group',
+                        groupId: activeSpaceId,
+                        currency: groupSettings?.currency || profile.currency,
+                        budgetPeriod: (groupSettings?.budgetPeriod ||
+                          null) as UserProfile['budgetPeriod'],
+                        budgetStartDate: groupSettings?.budgetStartDate || null,
+                        budgetEndDate: groupSettings?.budgetEndDate || null,
+                        selectedBudgetPeriodId:
+                          groupSettings?.selectedBudgetPeriodId || null,
+                      }) as UserProfile,
+                    ),
+                  );
+                }
+
+                return of({
+                  ...profile,
+                  currentSpaceId: activeSpaceId,
+                  currentSpaceType: 'personal',
+                  currentSpaceName: space.name,
+                  currentSpaceRole:
+                    profile.spaceMemberships?.[activeSpaceId] || 'owner',
+                  accountType: 'personal',
+                  groupId: null,
+                } as UserProfile);
+              }),
+            );
           }),
         );
       }),
@@ -220,14 +253,29 @@ export class AuthService {
         if (inviteData.status === 'pending') {
           const userDataService = this.injector.get(UserDataService);
           const role = 'member';
+          const existingProfile = await firstValueFrom(
+            userDataService.getUserProfile(user.uid),
+          );
           await this.db
             .object(`group_members/${inviteData.groupId}/${user.uid}`)
+            .set({ role: role });
+          await this.db
+            .object(`space_members/${inviteData.groupId}/${user.uid}`)
             .set({ role: role });
 
           await userDataService.updateUserProfile(user.uid, {
             groupId: inviteData.groupId,
             accountType: 'group',
-            roles: { [inviteData.groupId]: role },
+            currentSpaceId: inviteData.groupId,
+            currentSpaceType: 'group',
+            roles: {
+              ...(existingProfile?.roles || {}),
+              [inviteData.groupId]: role,
+            },
+            spaceMemberships: {
+              ...(existingProfile?.spaceMemberships || {}),
+              [inviteData.groupId]: role,
+            },
           });
 
           try {

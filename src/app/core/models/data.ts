@@ -17,6 +17,12 @@ export interface IUserProfile {
   defaultBudgetPeriod?: 'monthly' | 'quarterly' | 'yearly' | 'custom';
   groupId?: string | null;
   roles?: { [key: string]: Role };
+  personalSpaceId?: string | null;
+  currentSpaceId?: string | null;
+  currentSpaceType?: 'personal' | 'group';
+  currentSpaceName?: string | null;
+  currentSpaceRole?: 'owner' | 'admin' | 'member' | null;
+  spaceMemberships?: { [key: string]: 'owner' | 'admin' | 'member' };
   createdAt?: any;
 }
 
