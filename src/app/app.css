@@ -128,8 +128,10 @@ body.light-mode {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  min-width: 150px;
-  max-width: 220px;
+  flex: 0 1 auto;
+  width: fit-content;
+  min-width: 0;
+  max-width: min(32vw, 420px);
   padding: 0.35rem 0.65rem;
   border-radius: 9px;
   border: 1px solid var(--nav-border);
@@ -139,11 +141,26 @@ body.light-mode {
 }
 
 .space-switcher-label {
+  display: block;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: min(28vw, 360px);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 0.8rem;
   font-weight: 600;
+}
+
+@media (min-width: 992px) {
+  .app-navbar .nav-right > li:first-child {
+    max-width: min(32vw, 420px);
+  }
+
+  .app-navbar .dropdown-menu[aria-labelledby="spaceDropdown"] {
+    min-width: 260px;
+    max-width: min(32vw, 420px);
+  }
 }
 
 .dropdown-space-title {
@@ -169,6 +186,14 @@ body.light-mode {
   flex: 1;
   min-width: 0;
   text-align: left;
+}
+
+.dropdown-space-main > span {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .dropdown-space-item-active {

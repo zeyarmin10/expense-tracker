@@ -41,21 +41,55 @@
             </div>
 
             <div class="ob-space-list" *ngIf="userSpaces$ | async as spaces">
-              <button
-                class="ob-space-item"
-                type="button"
-                *ngFor="let space of spaces"
-                (click)="switchSpace(space.id!)"
-                [class.ob-space-item-active]="profile.currentSpaceId === space.id">
-                <span class="ob-space-item-main">
-                  <fa-icon [icon]="faUser" *ngIf="space.type === 'personal'"></fa-icon>
-                  <fa-icon [icon]="faUsers" *ngIf="space.type === 'group'"></fa-icon>
-                  <span>{{ getDisplaySpaceName(space) }}</span>
-                </span>
-                <span class="ob-space-badge" *ngIf="profile.currentSpaceId === space.id">
-                  {{ 'SPACE_ACTIVE_BADGE' | translate }}
-                </span>
-              </button>
+              <div class="ob-space-row" *ngFor="let space of spaces">
+                <button
+                  class="ob-space-item"
+                  [class.ob-space-item-has-actions]="hasSpaceActions(space)"
+                  [class.ob-space-item-actions-open]="openActionMenuSpaceId === space.id"
+                  type="button"
+                  (click)="switchSpace(space.id!)"
+                  [class.ob-space-item-active]="profile.currentSpaceId === space.id">
+                  <span class="ob-space-item-main">
+                    <fa-icon [icon]="faUser" *ngIf="space.type === 'personal'"></fa-icon>
+                    <fa-icon [icon]="faUsers" *ngIf="space.type === 'group'"></fa-icon>
+                    <span>{{ getDisplaySpaceName(space) }}</span>
+                  </span>
+                  <span class="ob-space-badge" *ngIf="profile.currentSpaceId === space.id">
+                    {{ 'SPACE_ACTIVE_BADGE' | translate }}
+                  </span>
+                </button>
+
+                <div class="ob-space-actions" *ngIf="hasSpaceActions(space)">
+                  <div
+                    class="ob-space-action-panel"
+                    [class.ob-space-action-panel-open]="openActionMenuSpaceId === space.id"
+                    (click)="$event.stopPropagation()">
+                    <button
+                      class="ob-space-action-btn"
+                      type="button"
+                      *ngIf="canRenameSpace(space)"
+                      (click)="renameSpace(space, $event)">
+                      <fa-icon [icon]="faPen"></fa-icon>
+                    </button>
+
+                    <button
+                      class="ob-space-action-btn ob-space-action-btn-danger"
+                      type="button"
+                      *ngIf="canDeleteSpace(space)"
+                      (click)="deleteSpace(space, $event)">
+                      <fa-icon [icon]="faTrash"></fa-icon>
+                    </button>
+                  </div>
+
+                  <button
+                    class="ob-space-action-trigger"
+                    type="button"
+                    (click)="toggleSpaceActions(space.id!, $event)"
+                    [attr.aria-expanded]="openActionMenuSpaceId === space.id">
+                    <fa-icon [icon]="faEllipsisVertical"></fa-icon>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -96,13 +130,17 @@
                   class="ob-fl-input"
                   id="ob-group-name"
                   [(ngModel)]="newGroupName"
+                  [attr.maxlength]="maxSpaceNameLength"
                   placeholder=" "
                   autocomplete="off" />
                 <label class="ob-fl-label" for="ob-group-name">
                   {{ 'ONBOARDING.ENTER_GROUP_NAME' | translate }}
                 </label>
               </div>
-              <button class="ob-btn ob-btn-accent" (click)="createGroup()" [disabled]="!newGroupName.trim()">
+              <div class="ob-input-meta">
+                {{ 'SPACE_NAME_LIMIT_HINT' | translate:{ max: maxSpaceNameLength } }}
+              </div>
+              <button class="ob-btn ob-btn-accent" (click)="createGroup()" [disabled]="!isNewGroupNameValid()">
                 {{ 'ONBOARDING.CREATE_GROUP_BUTTON' | translate }}
               </button>
             </div>
@@ -127,13 +165,17 @@
                   class="ob-fl-input ob-fl-mono"
                   id="ob-invite-code"
                   [(ngModel)]="inviteCode"
+                  [attr.maxlength]="inviteCodeLength"
                   placeholder=" "
                   autocomplete="off" />
                 <label class="ob-fl-label" for="ob-invite-code">
                   {{ 'ONBOARDING.ENTER_INVITE_CODE' | translate }}
                 </label>
               </div>
-              <button class="ob-btn ob-btn-outline" (click)="joinGroup()" [disabled]="!inviteCode.trim()">
+              <div class="ob-input-meta">
+                {{ 'INVITE_CODE_LENGTH_HINT' | translate:{ length: inviteCodeLength } }}
+              </div>
+              <button class="ob-btn ob-btn-outline" (click)="joinGroup()" [disabled]="!isInviteCodeValid()">
                 {{ 'ONBOARDING.JOIN_GROUP_BUTTON' | translate }}
               </button>
             </div>

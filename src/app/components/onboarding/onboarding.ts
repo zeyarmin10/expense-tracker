@@ -6,13 +6,23 @@ import { Observable, firstValueFrom } from 'rxjs';
 import { AuthService } from '../../services/auth';
 import { UserDataService, UserProfile } from '../../services/user-data';
 import { GroupService } from '../../services/group.service';
+import { MAX_SPACE_NAME_LENGTH } from '../../services/group.service';
 import { DataManagerService } from '../../services/data-manager';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { InvitationService } from '../../services/invitation.service';
 import { SpaceContextService } from '../../services/space-context.service';
 import { UserSpaceSummary } from '../../services/space.model';
 import Swal from 'sweetalert2';
-import { faCreditCard, faUser, faUsers, faLink, faCheckCircle } from '@fortawesome/free-solid-svg-icons';
+import {
+  faCheckCircle,
+  faCreditCard,
+  faEllipsisVertical,
+  faLink,
+  faPen,
+  faTrash,
+  faUser,
+  faUsers,
+} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 
 @Component({
@@ -37,11 +47,17 @@ export class OnboardingComponent implements OnInit {
   faUsers = faUsers;
   faLink = faLink;
   faCheckCircle = faCheckCircle;
+  faEllipsisVertical = faEllipsisVertical;
+  faPen = faPen;
+  faTrash = faTrash;
 
   userProfile$: Observable<UserProfile | null>;
   userSpaces$!: Observable<UserSpaceSummary[]>;
   newGroupName = '';
   inviteCode = '';
+  openActionMenuSpaceId: string | null = null;
+  readonly maxSpaceNameLength = MAX_SPACE_NAME_LENGTH;
+  readonly inviteCodeLength = 8;
 
   constructor() {
     this.userProfile$ = this.authService.userProfile$;
@@ -77,6 +93,43 @@ export class OnboardingComponent implements OnInit {
     return space.name;
   }
 
+  canRenameSpace(space: UserSpaceSummary): boolean {
+    return (
+      space.type === 'group' &&
+      (space.role === 'owner' || space.role === 'admin')
+    );
+  }
+
+  canDeleteSpace(space: UserSpaceSummary): boolean {
+    return space.type === 'group' && space.role === 'owner';
+  }
+
+  hasSpaceActions(space: UserSpaceSummary): boolean {
+    return this.canRenameSpace(space) || this.canDeleteSpace(space);
+  }
+
+  toggleSpaceActions(spaceId: string, event: Event): void {
+    event.stopPropagation();
+    this.openActionMenuSpaceId =
+      this.openActionMenuSpaceId === spaceId ? null : spaceId;
+  }
+
+  closeSpaceActions(): void {
+    this.openActionMenuSpaceId = null;
+  }
+
+  isNewGroupNameValid(): boolean {
+    const trimmedName = this.newGroupName.trim();
+    return (
+      trimmedName.length > 0 &&
+      trimmedName.length <= this.maxSpaceNameLength
+    );
+  }
+
+  isInviteCodeValid(): boolean {
+    return this.inviteCode.trim().length === this.inviteCodeLength;
+  }
+
   async switchToPersonalSpace(): Promise<void> {
     const user = await firstValueFrom(this.authService.currentUser$);
     if (!user) {
@@ -103,6 +156,7 @@ export class OnboardingComponent implements OnInit {
   }
 
   async switchSpace(spaceId: string): Promise<void> {
+    this.closeSpaceActions();
     const user = await firstValueFrom(this.authService.currentUser$);
     if (!user) {
       return;
@@ -121,8 +175,149 @@ export class OnboardingComponent implements OnInit {
     }
   }
 
+  async renameSpace(space: UserSpaceSummary, event: Event): Promise<void> {
+    event.stopPropagation();
+    this.closeSpaceActions();
+
+    if (!this.canRenameSpace(space) || !space.id) {
+      return;
+    }
+
+    const translations = await firstValueFrom(
+      this.translate.get([
+        'CANCEL_BUTTON',
+        'ERROR_TITLE',
+        'SAVE_BUTTON',
+        'SPACE_RENAME_EMPTY_ERROR',
+        'SPACE_RENAME_INPUT_LABEL',
+        'SPACE_RENAME_NO_CHANGES',
+        'SPACE_RENAME_PLACEHOLDER',
+        'SPACE_RENAME_SUCCESS',
+        'SPACE_RENAME_TITLE',
+      ]),
+    );
+
+    const result = await Swal.fire({
+      title: translations['SPACE_RENAME_TITLE'],
+      input: 'text',
+      inputLabel: translations['SPACE_RENAME_INPUT_LABEL'],
+      inputValue: space.name,
+      inputPlaceholder: translations['SPACE_RENAME_PLACEHOLDER'],
+      inputAttributes: {
+        maxlength: `${this.maxSpaceNameLength}`,
+      },
+      showCancelButton: true,
+      confirmButtonText: translations['SAVE_BUTTON'],
+      cancelButtonText: translations['CANCEL_BUTTON'],
+      inputValidator: (value) => {
+        const trimmed = value?.trim() || '';
+        if (!trimmed) {
+          return translations['SPACE_RENAME_EMPTY_ERROR'];
+        }
+
+        if (trimmed === space.name.trim()) {
+          return translations['SPACE_RENAME_NO_CHANGES'];
+        }
+
+        if (trimmed.length > this.maxSpaceNameLength) {
+          return this.translate.instant('SPACE_NAME_MAX_LENGTH_ERROR', {
+            max: this.maxSpaceNameLength,
+          });
+        }
+
+        return null;
+      },
+    });
+
+    if (!result.isConfirmed || !result.value?.trim()) {
+      return;
+    }
+
+    try {
+      await this.groupService.renameGroup(space.id, result.value.trim());
+      await Swal.fire({
+        icon: 'success',
+        title: this.translate.instant('SUCCESS_TITLE'),
+        text: translations['SPACE_RENAME_SUCCESS'],
+      });
+    } catch (error) {
+      console.error('Error renaming space:', error);
+      Swal.fire({
+        icon: 'error',
+        title: translations['ERROR_TITLE'],
+        text: this.getRenameSpaceErrorMessage(error),
+      });
+    }
+  }
+
+  async deleteSpace(space: UserSpaceSummary, event: Event): Promise<void> {
+    event.stopPropagation();
+    this.closeSpaceActions();
+
+    if (!this.canDeleteSpace(space) || !space.id) {
+      return;
+    }
+
+    const user = await firstValueFrom(this.authService.currentUser$);
+    if (!user) {
+      return;
+    }
+
+    const translations = await firstValueFrom(
+      this.translate.get([
+        'CANCEL_BUTTON',
+        'CONFIRM_DELETE_TITLE',
+        'DELETE_BUTTON',
+        'ERROR_TITLE',
+        'SPACE_DELETE_CONFIRM',
+        'SPACE_DELETE_SUCCESS',
+      ]),
+    );
+
+    const result = await Swal.fire({
+      title: translations['CONFIRM_DELETE_TITLE'],
+      text: this.translate.instant('SPACE_DELETE_CONFIRM', {
+        name: space.name,
+      }),
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: translations['DELETE_BUTTON'],
+      cancelButtonText: translations['CANCEL_BUTTON'],
+      reverseButtons: true,
+    });
+
+    if (!result.isConfirmed) {
+      return;
+    }
+
+    try {
+      await this.groupService.deleteGroup(space.id, user.uid);
+      await Swal.fire({
+        icon: 'success',
+        title: this.translate.instant('SUCCESS_TITLE'),
+        text: translations['SPACE_DELETE_SUCCESS'],
+      });
+    } catch (error: any) {
+      console.error('Error deleting space:', error);
+      Swal.fire({
+        icon: 'error',
+        title: translations['ERROR_TITLE'],
+        text: this.getDeleteSpaceErrorMessage(error),
+      });
+    }
+  }
+
   async createGroup(): Promise<void> {
-    if (!this.newGroupName.trim()) return;
+    if (!this.isNewGroupNameValid()) {
+      Swal.fire({
+        icon: 'error',
+        title: this.translate.instant('ERROR_TITLE'),
+        text: this.translate.instant('SPACE_NAME_MAX_LENGTH_ERROR', {
+          max: this.maxSpaceNameLength,
+        }),
+      });
+      return;
+    }
     try {
       const lang = this.translate.currentLang || 'my';
       await this.groupService.createGroup(this.newGroupName.trim(), lang);
@@ -132,14 +327,14 @@ export class OnboardingComponent implements OnInit {
       Swal.fire({
         icon: 'error',
         title: this.translate.instant('ERROR_TITLE'),
-        text: this.translate.instant('ONBOARDING_GROUP_CREATION_FAILED')
+        text: this.getCreateGroupErrorMessage(error),
       });
     }
   }
 
   async joinGroup(): Promise<void> {
     const code = this.inviteCode.trim();
-    if (!code) return;
+    if (code.length !== this.inviteCodeLength) return;
 
     const user = await firstValueFrom(this.authService.currentUser$);
     if (!user) {
@@ -172,6 +367,43 @@ export class OnboardingComponent implements OnInit {
         title: this.translate.instant('ERROR_TITLE'),
         text: this.translate.instant('ONBOARDING_INVITATION_PROCESS_FAILED')
       });
+    }
+  }
+
+  private getDeleteSpaceErrorMessage(error: any): string {
+    switch (error?.message) {
+      case 'Remove all other members before deleting this space.':
+        return this.translate.instant('SPACE_DELETE_MEMBERS_EXISTS');
+      case 'Revoke all pending invitations before deleting this space.':
+        return this.translate.instant('SPACE_DELETE_PENDING_INVITES');
+      case 'Only the group owner can delete this space.':
+        return this.translate.instant('SPACE_DELETE_OWNER_ONLY');
+      default:
+        return this.translate.instant('SPACE_DELETE_ERROR');
+    }
+  }
+
+  private getRenameSpaceErrorMessage(error: any): string {
+    switch (error?.message) {
+      case 'Group name is too long.':
+        return this.translate.instant('SPACE_NAME_MAX_LENGTH_ERROR', {
+          max: this.maxSpaceNameLength,
+        });
+      default:
+        return this.translate.instant('SPACE_RENAME_ERROR');
+    }
+  }
+
+  private getCreateGroupErrorMessage(error: any): string {
+    switch (error?.message) {
+      case 'Group name is too long.':
+        return this.translate.instant('SPACE_NAME_MAX_LENGTH_ERROR', {
+          max: this.maxSpaceNameLength,
+        });
+      case 'Group name is required.':
+        return this.translate.instant('SPACE_RENAME_EMPTY_ERROR');
+      default:
+        return this.translate.instant('ONBOARDING_GROUP_CREATION_FAILED');
     }
   }
 }

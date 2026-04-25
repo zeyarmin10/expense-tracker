@@ -1,10 +1,23 @@
 import { Injectable, inject, Injector } from '@angular/core';
-import { Database, ref, push, update, onValue } from '@angular/fire/database';
+import {
+  Database,
+  ref,
+  push,
+  update,
+  onValue,
+  get,
+  query,
+  orderByChild,
+  equalTo,
+} from '@angular/fire/database';
 import { AuthService } from './auth';
 import { CategoryService } from './category';
 import { combineLatest, firstValueFrom, map, Observable, of, switchMap } from 'rxjs';
 import { UserDataService, UserProfile } from './user-data';
 import { Group } from './group.model'; // Import Group from the new model file
+import { SpaceContextService } from './space-context.service';
+
+export const MAX_SPACE_NAME_LENGTH = 50;
 
 @Injectable({
   providedIn: 'root',
@@ -16,6 +29,7 @@ export class GroupService {
   private authService!: AuthService;
   private categoryService!: CategoryService;
   private userDataService!: UserDataService;
+  private spaceContextService!: SpaceContextService;
 
   // Lazy load services to break circular dependencies
   private getAuthService(): AuthService {
@@ -39,6 +53,13 @@ export class GroupService {
     return this.userDataService;
   }
 
+  private getSpaceContextService(): SpaceContextService {
+    if (!this.spaceContextService) {
+      this.spaceContextService = this.injector.get(SpaceContextService);
+    }
+    return this.spaceContextService;
+  }
+
   async createGroup(groupName: string, language: string): Promise<string> {
     const authService = this.getAuthService();
     const userDataService = this.getUserDataService();
@@ -48,6 +69,14 @@ export class GroupService {
     ))!;
     if (!userId) {
       throw new Error('User not authenticated.');
+    }
+
+    const trimmedName = groupName.trim();
+    if (!trimmedName) {
+      throw new Error('Group name is required.');
+    }
+    if (trimmedName.length > MAX_SPACE_NAME_LENGTH) {
+      throw new Error('Group name is too long.');
     }
 
     const userProfile = await firstValueFrom(userDataService.getUserProfile(userId));
@@ -61,7 +90,7 @@ export class GroupService {
     const role = 'admin';
     
     const newGroup: Group = {
-      groupName: groupName,
+      groupName: trimmedName,
       ownerId: userId,
       currency: userProfile?.currency || 'MMK',
       budgetPeriod: userProfile?.budgetPeriod || null,
@@ -76,7 +105,7 @@ export class GroupService {
     legacyUpdates[`/users/${userId}/accountType`] = 'group';
     legacyUpdates[`/users/${userId}/currentSpaceId`] = newGroupId;
     legacyUpdates[`/users/${userId}/currentSpaceType`] = 'group';
-    legacyUpdates[`/users/${userId}/currentSpaceName`] = groupName;
+    legacyUpdates[`/users/${userId}/currentSpaceName`] = trimmedName;
     legacyUpdates[`/users/${userId}/currentSpaceRole`] = 'owner';
     legacyUpdates[`/users/${userId}/roles/${newGroupId}`] = role;
     legacyUpdates[`/users/${userId}/spaceMemberships/${newGroupId}`] = 'owner';
@@ -86,7 +115,7 @@ export class GroupService {
     const spaceUpdates: { [key: string]: any } = {};
     spaceUpdates[`/spaces/${newGroupId}`] = {
       type: 'group',
-      name: groupName,
+      name: trimmedName,
       ownerId: userId,
       currency: userProfile?.currency || 'MMK',
       budgetPeriod: userProfile?.budgetPeriod || null,
@@ -119,6 +148,36 @@ export class GroupService {
   async updateGroupSettings(groupId: string, settings: Partial<Group>): Promise<void> {
     const groupSettingsRef = ref(this.db, `groups/${groupId}`);
     return update(groupSettingsRef, settings);
+  }
+
+  async renameGroup(groupId: string, nextName: string): Promise<void> {
+    const trimmedName = nextName.trim();
+    if (!trimmedName) {
+      throw new Error('Group name is required.');
+    }
+    if (trimmedName.length > MAX_SPACE_NAME_LENGTH) {
+      throw new Error('Group name is too long.');
+    }
+
+    const updates: Record<string, unknown> = {
+      [`/groups/${groupId}/groupName`]: trimmedName,
+      [`/spaces/${groupId}/name`]: trimmedName,
+    };
+
+    const memberSnapshot = await get(ref(this.db, `group_members/${groupId}`));
+    if (memberSnapshot.exists()) {
+      const memberIds = Object.keys(memberSnapshot.val() || {});
+      await Promise.all(
+        memberIds.map(async (memberId) => {
+          const profile = await this.getUserDataService().fetchUserProfile(memberId);
+          if (profile?.currentSpaceId === groupId) {
+            updates[`/users/${memberId}/currentSpaceName`] = trimmedName;
+          }
+        }),
+      );
+    }
+
+    await update(ref(this.db), updates);
   }
 
   getGroupName(groupId: string): Observable<string | null> {
@@ -201,6 +260,71 @@ export class GroupService {
       updates[`/users/${memberId}/currentSpaceType`] = 'personal';
       updates[`/users/${memberId}/groupId`] = null;
       updates[`/users/${memberId}/accountType`] = 'personal';
+    }
+
+    await update(ref(this.db), updates);
+  }
+
+  async deleteGroup(groupId: string, actorId: string): Promise<void> {
+    const groupSnapshot = await get(ref(this.db, `groups/${groupId}`));
+    if (!groupSnapshot.exists()) {
+      throw new Error('Group not found.');
+    }
+
+    const group = groupSnapshot.val() as Group;
+    if (group.ownerId !== actorId) {
+      throw new Error('Only the group owner can delete this space.');
+    }
+
+    const memberSnapshot = await get(ref(this.db, `group_members/${groupId}`));
+    const members = memberSnapshot.exists() ? (memberSnapshot.val() as Record<string, { role: string }>) : {};
+    const otherMemberIds = Object.keys(members).filter((memberId) => memberId !== actorId);
+
+    if (otherMemberIds.length > 0) {
+      throw new Error('Remove all other members before deleting this space.');
+    }
+
+    const invitationSnapshot = await get(
+      query(ref(this.db, 'invitations'), orderByChild('groupId'), equalTo(groupId)),
+    );
+    const invitations = invitationSnapshot.exists()
+      ? (invitationSnapshot.val() as Record<string, { status?: string }>)
+      : {};
+    const pendingInvitationIds = Object.entries(invitations)
+      .filter(([, invitation]) => invitation?.status === 'pending')
+      .map(([inviteId]) => inviteId);
+
+    if (pendingInvitationIds.length > 0) {
+      throw new Error('Revoke all pending invitations before deleting this space.');
+    }
+
+    const actorProfile = await this.getUserDataService().fetchUserProfile(actorId);
+    if (!actorProfile) {
+      throw new Error('User profile not found.');
+    }
+
+    const personalSpaceId =
+      actorProfile.personalSpaceId ||
+      (await this.getSpaceContextService().ensurePersonalSpace(actorId));
+
+    const updates: Record<string, unknown> = {
+      [`/groups/${groupId}`]: null,
+      [`/group_members/${groupId}`]: null,
+      [`/spaces/${groupId}`]: null,
+      [`/space_members/${groupId}`]: null,
+      [`/group_data/${groupId}`]: null,
+      [`/users/${actorId}/groupId`]: null,
+      [`/users/${actorId}/accountType`]: 'personal',
+      [`/users/${actorId}/currentSpaceId`]: personalSpaceId,
+      [`/users/${actorId}/currentSpaceType`]: 'personal',
+      [`/users/${actorId}/currentSpaceRole`]: 'owner',
+      [`/users/${actorId}/currentSpaceName`]: 'My Personal',
+      [`/users/${actorId}/roles/${groupId}`]: null,
+      [`/users/${actorId}/spaceMemberships/${groupId}`]: null,
+    };
+
+    for (const inviteId of Object.keys(invitations)) {
+      updates[`/invitations/${inviteId}`] = null;
     }
 
     await update(ref(this.db), updates);

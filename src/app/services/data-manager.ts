@@ -15,6 +15,7 @@ import { AuthService } from './auth';
 import { IGroupMember, IUserProfile, IInvitation } from '../core/models/data';
 import { UserDataService } from './user-data';
 import { Invitation } from './invitation.service';
+import { SpaceContextService } from './space-context.service';
 
 export interface IGroupDetails {
   groupName: string;
@@ -33,6 +34,7 @@ export class DataManagerService {
   private db: Database = inject(Database);
   private authService: AuthService = inject(AuthService);
   private userDataService: UserDataService = inject(UserDataService);
+  private spaceContextService: SpaceContextService = inject(SpaceContextService);
 
   async acceptGroupInvitation(inviteCode: string, userId: string): Promise<void> {
     const inviteRef = ref(this.db, `invitations/${inviteCode}`);
@@ -107,17 +109,23 @@ export class DataManagerService {
 
   async removeGroupMember(groupId: string, memberId: string): Promise<void> {
     const updates: { [key:string]: any } = {};
+    const userProfile = await firstValueFrom(this.userDataService.getUserProfile(memberId));
+    const fallbackSpaceId =
+      userProfile?.personalSpaceId ||
+      (await this.spaceContextService.ensurePersonalSpace(memberId));
+
     updates[`/group_members/${groupId}/${memberId}`] = null;
     updates[`/space_members/${groupId}/${memberId}`] = null;
     updates[`/users/${memberId}/spaceMemberships/${groupId}`] = null;
+    updates[`/users/${memberId}/roles/${groupId}`] = null;
 
-    const userProfile = await firstValueFrom(this.userDataService.getUserProfile(memberId));
     if (userProfile?.currentSpaceId === groupId || userProfile?.groupId === groupId) {
-      updates[`/users/${memberId}/currentSpaceId`] = userProfile?.personalSpaceId || null;
+      updates[`/users/${memberId}/currentSpaceId`] = fallbackSpaceId;
       updates[`/users/${memberId}/currentSpaceType`] = 'personal';
+      updates[`/users/${memberId}/currentSpaceName`] = 'My Personal';
+      updates[`/users/${memberId}/currentSpaceRole`] = 'owner';
       updates[`/users/${memberId}/groupId`] = null;
       updates[`/users/${memberId}/accountType`] = 'personal';
-      updates[`/users/${memberId}/roles/${groupId}`] = null;
     }
 
     return update(ref(this.db), updates);
