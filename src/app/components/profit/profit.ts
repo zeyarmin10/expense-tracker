@@ -782,9 +782,13 @@ export class Profit implements OnInit, OnDestroy {
     return latestFlows.map((flow) => ({
       ...flow,
       cashInPercent:
-        flow.cashIn > 0 ? Math.max((flow.cashIn / maxAmount) * 100, 8) : 0,
+        flow.cashIn > 0
+          ? Math.min(Math.max((flow.cashIn / maxAmount) * 100, 8), 100)
+          : 0,
       cashOutPercent:
-        flow.cashOut > 0 ? Math.max((flow.cashOut / maxAmount) * 100, 8) : 0,
+        flow.cashOut > 0
+          ? Math.min(Math.max((flow.cashOut / maxAmount) * 100, 8), 100)
+          : 0,
     }));
   }
 
