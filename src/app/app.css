@@ -15,6 +15,78 @@ body {
   background: rgba(0, 229, 180, 0.12) !important;
 }
 
+/* Mobile pull-to-refresh */
+.pull-refresh-indicator {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) - 62px);
+  left: 50%;
+  z-index: 1200;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.16s ease, transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.pull-refresh-indicator.visible {
+  opacity: 1;
+}
+
+.pull-refresh-orb {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 229, 180, 0.28);
+  background: rgba(18, 21, 28, 0.88);
+  color: #00e5b4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.38), 0 0 24px rgba(0, 229, 180, 0.14);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.pull-refresh-arrow,
+.pull-refresh-spinner {
+  position: absolute;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.pull-refresh-arrow {
+  transform: rotate(0deg);
+  transition: transform 0.18s ease, opacity 0.12s ease;
+}
+
+.pull-refresh-indicator.ready .pull-refresh-arrow {
+  transform: rotate(180deg);
+}
+
+.pull-refresh-spinner {
+  opacity: 0;
+}
+
+.pull-refresh-indicator.refreshing .pull-refresh-arrow {
+  opacity: 0;
+}
+
+.pull-refresh-indicator.refreshing .pull-refresh-spinner {
+  opacity: 1;
+  animation: pull-refresh-spin 0.78s linear infinite;
+}
+
+@keyframes pull-refresh-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+body.light-mode .pull-refresh-orb {
+  background: rgba(255, 255, 255, 0.9);
+  color: #00b894;
+  border-color: rgba(0, 184, 148, 0.26);
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.18), 0 0 20px rgba(0, 184, 148, 0.12);
+}
+
 /* =====================
    CSS Variables
    ===================== */

@@ -159,6 +159,22 @@
             </select>
           </div>
 
+          <div class="prof-section-label mt-3">{{ 'APP_THEME_LABEL' | translate }}</div>
+          <div class="prof-theme-row">
+            <button type="button" class="prof-theme-btn" [class.active]="appTheme === 'light'"
+              (click)="onThemeChange('light')">
+              ☀️ {{ 'THEME_LIGHT' | translate }}
+            </button>
+            <button type="button" class="prof-theme-btn" [class.active]="appTheme === 'dark'"
+              (click)="onThemeChange('dark')">
+              🌙 {{ 'THEME_DARK' | translate }}
+            </button>
+            <button type="button" class="prof-theme-btn" [class.active]="appTheme === 'system'"
+              (click)="onThemeChange('system')">
+              📱 {{ 'THEME_SYSTEM' | translate }}
+            </button>
+          </div>
+
           <div class="prof-section-label mt-3">{{ 'SYSTEM_LANGUAGE_LABEL' | translate }}</div>
           <div class="prof-lang-row">
             <button type="button" class="prof-lang-btn" [class.active]="selectedLanguage === 'en'"

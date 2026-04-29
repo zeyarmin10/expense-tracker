@@ -555,6 +555,12 @@
   "PNL_EMPTY_TITLE": "No income recorded yet",
   "PNL_EMPTY_SUB": "Record your income to calculate profit and loss",
   "NO_PNL_CHART_DATA": "No data available to display the chart",
+  "DAILY_CASH_FLOW": "Daily Cash Flow",
+  "CASH_IN": "Cash In",
+  "CASH_OUT": "Cash Out",
+  "NET_CASH_FLOW": "Net Cash Flow",
+  "SPENDING_RATIO": "Spending Ratio",
+  "NO_DAILY_CASH_FLOW": "No daily cash flow found for the selected period.",
   "QUICK": "Quick",
   "FULL": "Full",
   "OPTIONAL": "optional",
@@ -596,5 +602,9 @@
   "SPACE_DELETE_ERROR": "Failed to delete the space. Please try again.",
   "SPACE_DELETE_MEMBERS_EXISTS": "Remove all other members before deleting this space.",
   "SPACE_DELETE_PENDING_INVITES": "Revoke all pending invitations before deleting this space.",
-  "SPACE_DELETE_OWNER_ONLY": "Only the space owner can delete this space."
+  "SPACE_DELETE_OWNER_ONLY": "Only the space owner can delete this space.",
+  "APP_THEME_LABEL": "App Theme",
+  "THEME_LIGHT": "Light",
+  "THEME_DARK": "Dark",
+  "THEME_SYSTEM": "System"
 }

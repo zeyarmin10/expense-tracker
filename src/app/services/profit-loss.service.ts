@@ -13,17 +13,25 @@ interface DateRange {
 // Interface for the calculated currency maps
 type CurrencyMap = { [currency: string]: number };
 
+export interface DailyCashFlowData {
+  date: string;
+  currency: string;
+  cashIn: number;
+  cashOut: number;
+  netCashFlow: number;
+}
+
 // Interface for the complex data structure the service returns
 export interface ProfitLossData {
   expenses: ServiceIExpense[];
   incomes: ServiceIIncome[];
   budgets: ServiceIBudget[];
+  dailyCashFlow: DailyCashFlowData[];
   totalExpenses: CurrencyMap;
   totalIncomes: CurrencyMap;
   totalBudgets: CurrencyMap;
   profitLoss: CurrencyMap;
   remainingBalance: CurrencyMap;
-  netProfit: CurrencyMap;
 }
 
 @Injectable({
@@ -111,6 +119,10 @@ export class ProfitLossService {
         const totalExpenses = this.calculateTotal(filteredExpenses, 'totalCost');
         const totalIncomes = this.calculateTotal(filteredIncomes, 'amount');
         const totalBudgets = this.calculateTotal(filteredBudgets, 'amount');
+        const dailyCashFlow = this.calculateDailyCashFlow(
+          filteredExpenses,
+          filteredIncomes
+        );
 
         // --- 3. Profit/Loss and Balance Calculations ---
         const profitLoss = this.calculateProfitLoss(totalIncomes, totalExpenses);
@@ -118,22 +130,89 @@ export class ProfitLossService {
           totalBudgets,
           totalExpenses
         );
-        const netProfit = this.calculateNetProfit(profitLoss, remainingBalance);
 
         // --- 4. Return Combined Data ---
         return {
           expenses: filteredExpenses,
           incomes: filteredIncomes,
           budgets: filteredBudgets,
+          dailyCashFlow,
           totalExpenses,
           totalIncomes,
           totalBudgets,
           profitLoss,
           remainingBalance,
-          netProfit,
         };
       })
     );
+  }
+
+  calculateDailyCashFlow(
+    expenses: ServiceIExpense[],
+    incomes: ServiceIIncome[]
+  ): DailyCashFlowData[] {
+    const dailyMap = new Map<string, DailyCashFlowData>();
+
+    const getDailyRow = (date: string, currency: string): DailyCashFlowData => {
+      const key = `${date}_${currency}`;
+      const existing = dailyMap.get(key);
+
+      if (existing) {
+        return existing;
+      }
+
+      const row: DailyCashFlowData = {
+        date,
+        currency,
+        cashIn: 0,
+        cashOut: 0,
+        netCashFlow: 0,
+      };
+      dailyMap.set(key, row);
+      return row;
+    };
+
+    incomes.forEach((income) => {
+      const date = this.normalizeDateKey(income.date);
+      if (!date || !income.currency) return;
+
+      const row = getDailyRow(date, income.currency);
+      row.cashIn += Number(income.amount || 0);
+    });
+
+    expenses.forEach((expense) => {
+      const date = this.normalizeDateKey(expense.date);
+      if (!date || !expense.currency) return;
+
+      const row = getDailyRow(date, expense.currency);
+      row.cashOut += Number(expense.totalCost || 0);
+    });
+
+    return Array.from(dailyMap.values())
+      .map((row) => ({
+        ...row,
+        netCashFlow: row.cashIn - row.cashOut,
+      }))
+      .sort(
+        (a, b) =>
+          b.date.localeCompare(a.date) || a.currency.localeCompare(b.currency)
+      );
+  }
+
+  private normalizeDateKey(date: string | undefined): string {
+    if (!date) return '';
+
+    const datePart = date.split('T')[0];
+    if (/^\d{4}-\d{2}-\d{2}$/.test(datePart)) {
+      return datePart;
+    }
+
+    const parsedDate = new Date(date);
+    if (Number.isNaN(parsedDate.getTime())) {
+      return '';
+    }
+
+    return parsedDate.toISOString().split('T')[0];
   }
 
   /**
@@ -171,29 +250,5 @@ export class ProfitLossService {
     });
 
     return profitLoss;
-  }
-
-  /**
-   * Helper function to calculate Net Profit (Profit/Loss - |Remaining Balance|).
-   */
-  private calculateNetProfit(
-    profitLoss: CurrencyMap,
-    remainingBalance: CurrencyMap
-  ): CurrencyMap {
-    const netProfit: CurrencyMap = {};
-    const allCurrencies = new Set([
-      ...Object.keys(profitLoss),
-      ...Object.keys(remainingBalance),
-    ]);
-
-    allCurrencies.forEach((currency) => {
-      const totalProfitLoss = profitLoss[currency] || 0;
-      const totalRemainingBalance = remainingBalance[currency] || 0;
-      // Net Profit = (Total Income - Total Expense) - |Budget Remaining|
-      // Note: The original component's logic was totalProfitLoss - Math.abs(totalRemainingBalance)
-      netProfit[currency] = totalProfitLoss - Math.abs(totalRemainingBalance);
-    });
-
-    return netProfit;
   }
 }

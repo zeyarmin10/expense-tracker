@@ -78,6 +78,9 @@ export class UserProfileComponent implements OnInit {
   selectedLanguage: string = 'my';
   selectedCurrency: string = 'MMK';
   selectedBudgetPeriod: string | null = null;
+  appTheme: 'light' | 'dark' | 'system' = 'system';
+  private systemDarkQuery: MediaQueryList | null = null;
+  private systemThemeListener: (() => void) | null = null;
   availableBudgetPeriods = AVAILABLE_BUDGET_PERIODS;
   translatedBudgetPeriods: any[] = [];
   availableCurrencies = AVAILABLE_CURRENCIES;
@@ -231,6 +234,11 @@ export class UserProfileComponent implements OnInit {
       this.translate.use(this.selectedLanguage);
     }
 
+    // Load saved theme
+    const savedTheme = localStorage.getItem('appTheme') as 'light' | 'dark' | 'system' | null;
+    this.appTheme = savedTheme || 'system';
+    this.applyTheme(this.appTheme);
+
     this.translate.onLangChange.subscribe(() => {
       this.translateCurrencyNames();
       this.translateBudgetPeriodNames();
@@ -351,6 +359,34 @@ export class UserProfileComponent implements OnInit {
       Toast.fire({ icon: 'success', title: this.translate.instant('PROFILE_UPDATE_SUCCESS') });
     } catch (error: any) {
       console.error('Name save error:', error);
+    }
+  }
+
+  onThemeChange(theme: 'light' | 'dark' | 'system'): void {
+    this.appTheme = theme;
+    localStorage.setItem('appTheme', theme);
+    this.applyTheme(theme);
+  }
+
+  applyTheme(theme: 'light' | 'dark' | 'system'): void {
+    // Remove old system listener if any
+    if (this.systemDarkQuery && this.systemThemeListener) {
+      this.systemDarkQuery.removeEventListener('change', this.systemThemeListener);
+      this.systemThemeListener = null;
+    }
+
+    if (theme === 'system') {
+      this.systemDarkQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      const applySystemTheme = (dark: boolean) => {
+        document.body.classList.toggle('light-mode', !dark);
+      };
+      applySystemTheme(this.systemDarkQuery.matches);
+      this.systemThemeListener = () => applySystemTheme(this.systemDarkQuery!.matches);
+      this.systemDarkQuery.addEventListener('change', this.systemThemeListener);
+    } else if (theme === 'light') {
+      document.body.classList.add('light-mode');
+    } else {
+      document.body.classList.remove('light-mode');
     }
   }
 

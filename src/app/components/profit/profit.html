@@ -123,24 +123,6 @@
         </ng-container>
       </div>
 
-      <!-- Net Profit -->
-      <div class="pnl-card pnl-card-net">
-        <div class="pnl-card-left">
-          <span class="pnl-card-label">{{ 'NET_PROFIT' | translate }}</span>
-          <ng-container *ngIf="netProfitByCurrency$ | async as totals; else cardLoading">
-            <ng-container *ngIf="(totals | keyvalue).length > 0; else cardNoData">
-              <span *ngFor="let t of totals | keyvalue" class="pnl-card-amount" [class.pnl-amount-profit]="t.value >= 0"
-                [class.pnl-amount-loss]="t.value < 0">
-                {{ formatService.formatAmountShort(t.value, t.key) }}
-              </span>
-            </ng-container>
-          </ng-container>
-          </div>
-        <div class="pnl-card-right">
-          <span class="pnl-card-icon pnl-icon-net"><fa-icon [icon]="faChartLine"></fa-icon></span>
-        </div>
-        </div>
-
       <!-- Remaining Balance -->
       <div class="pnl-card pnl-card-balance">
         <div class="pnl-card-left">
@@ -200,6 +182,120 @@
             <button type="button" class="pnl-no-chart-cta" (click)="openIncomeFormAndFocus()">
               + {{ 'ADD_INCOME' | translate }}
             </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Daily Cash Flow -->
+    <div class="pnl-panel">
+      <button class="pnl-panel-toggle" type="button" (click)="toggleVisibility('dailyCashFlow')">
+        <span class="pnl-panel-toggle-left">
+          <fa-icon [icon]="faChartColumn" class="pnl-icon-accent"></fa-icon>
+          {{ 'DAILY_CASH_FLOW' | translate }}
+        </span>
+        <fa-icon [icon]="isDailyCashFlowCollapsed ? faChevronDown : faChevronUp" class="pnl-chevron"></fa-icon>
+      </button>
+      <div class="pnl-panel-body" [class.open]="!isDailyCashFlowCollapsed">
+        <div class="pnl-cash-flow-shell pnl-cash-flow-shell-padded">
+          <ng-container *ngIf="dailyCashFlowSummary$ | async as cashSummary">
+            <div class="pnl-cash-flow-summary-grid">
+              <div class="pnl-cash-flow-summary-card pnl-cash-flow-summary-income">
+                <span class="pnl-cash-flow-summary-label">{{ 'CASH_IN' | translate }}</span>
+                <ng-container *ngIf="(cashSummary.cashIn | keyvalue).length > 0; else cardNoData">
+                  <span *ngFor="let item of cashSummary.cashIn | keyvalue" class="pnl-cash-flow-summary-amount pnl-amount-income">
+                    {{ formatService.formatAmountShort(item.value, item.key) }}
+                  </span>
+                </ng-container>
+              </div>
+
+              <div class="pnl-cash-flow-summary-card pnl-cash-flow-summary-expense">
+                <span class="pnl-cash-flow-summary-label">{{ 'CASH_OUT' | translate }}</span>
+                <ng-container *ngIf="(cashSummary.cashOut | keyvalue).length > 0; else cardNoData">
+                  <span *ngFor="let item of cashSummary.cashOut | keyvalue" class="pnl-cash-flow-summary-amount pnl-amount-expense">
+                    {{ formatService.formatAmountShort(item.value, item.key) }}
+                  </span>
+                </ng-container>
+              </div>
+
+              <div class="pnl-cash-flow-summary-card pnl-cash-flow-summary-net">
+                <span class="pnl-cash-flow-summary-label">{{ 'NET_CASH_FLOW' | translate }}</span>
+                <ng-container *ngIf="(cashSummary.netCashFlow | keyvalue).length > 0; else cardNoData">
+                  <span *ngFor="let item of cashSummary.netCashFlow | keyvalue" class="pnl-cash-flow-summary-amount"
+                    [class.pnl-amount-profit]="item.value >= 0"
+                    [class.pnl-amount-loss]="item.value < 0">
+                    {{ formatService.formatAmountShort(item.value, item.key) }}
+                  </span>
+                </ng-container>
+              </div>
+            </div>
+          </ng-container>
+
+          <ng-container *ngIf="dailyCashFlowChart$ | async as chartFlows">
+            <div class="pnl-cash-flow-chart" *ngIf="chartFlows.length > 0">
+              <div class="pnl-cash-flow-bars">
+                <div *ngFor="let flow of chartFlows; trackBy: trackByDailyCashFlow" class="pnl-cash-flow-bar-group">
+                  <div class="pnl-cash-flow-bar-pair">
+                    <span class="pnl-cash-flow-bar pnl-cash-flow-bar-in" [style.height.%]="flow.cashInPercent"></span>
+                    <span class="pnl-cash-flow-bar pnl-cash-flow-bar-out" [style.height.%]="flow.cashOutPercent"></span>
+                  </div>
+                  <span class="pnl-cash-flow-chart-label">{{ formatService.formatMobileDate(flow.date) }}</span>
+                </div>
+              </div>
+              <div class="pnl-cash-flow-legend">
+                <span><i class="pnl-cash-flow-dot pnl-cash-flow-dot-in"></i>{{ 'CASH_IN' | translate }}</span>
+                <span><i class="pnl-cash-flow-dot pnl-cash-flow-dot-out"></i>{{ 'CASH_OUT' | translate }}</span>
+              </div>
+            </div>
+          </ng-container>
+
+          <div class="pnl-cash-flow-list">
+          <ng-container *ngIf="dailyCashFlow$ | async as cashFlows; else cashFlowLoading">
+            <ng-container *ngIf="cashFlows.length > 0; else cashFlowEmpty">
+              <div *ngFor="let flow of cashFlows; trackBy: trackByDailyCashFlow" class="pnl-cash-flow-card"
+                [class.pnl-cash-flow-card-negative]="flow.netCashFlow < 0">
+                <div class="pnl-cash-flow-card-head">
+                  <div class="pnl-cash-flow-date">
+                    <span>{{ formatService.formatLocalizedDate(flow.date) }}</span>
+                    <span class="pnl-cash-flow-currency">{{ flow.currency }}</span>
+                  </div>
+                  <span class="pnl-cash-flow-net-badge" [class.pnl-cash-flow-net-badge-negative]="flow.netCashFlow < 0">
+                    {{ formatService.formatAmountShort(flow.netCashFlow, flow.currency) }}
+                  </span>
+                </div>
+                <div class="pnl-cash-flow-metrics">
+                  <div class="pnl-cash-flow-metric">
+                    <span class="pnl-cash-flow-label">{{ 'CASH_IN' | translate }}</span>
+                    <span class="pnl-cash-flow-amount pnl-amount-income">
+                      {{ formatService.formatAmountWithSymbol(flow.cashIn, flow.currency) }}
+                    </span>
+                  </div>
+                  <div class="pnl-cash-flow-metric">
+                    <span class="pnl-cash-flow-label">{{ 'CASH_OUT' | translate }}</span>
+                    <span class="pnl-cash-flow-amount pnl-amount-expense">
+                      {{ formatService.formatAmountWithSymbol(flow.cashOut, flow.currency) }}
+                    </span>
+                  </div>
+                  <div class="pnl-cash-flow-metric">
+                    <span class="pnl-cash-flow-label">{{ 'SPENDING_RATIO' | translate }}</span>
+                    <span class="pnl-cash-flow-amount pnl-cash-flow-ratio">
+                      {{ getSpendingRatio(flow) }}%
+                    </span>
+                  </div>
+                </div>
+                <div class="pnl-cash-flow-progress">
+                  <span [style.width.%]="getCashFlowProgressWidth(flow)"
+                    [class.pnl-cash-flow-progress-negative]="flow.netCashFlow < 0"></span>
+                </div>
+              </div>
+            </ng-container>
+          </ng-container>
+          <ng-template #cashFlowEmpty>
+            <p class="pnl-empty">{{ 'NO_DAILY_CASH_FLOW' | translate }}</p>
+          </ng-template>
+          <ng-template #cashFlowLoading>
+            <p class="pnl-empty">{{ 'LOADING_DATA' | translate }}</p>
+          </ng-template>
           </div>
         </div>
       </div>

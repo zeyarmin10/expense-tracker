@@ -1,3 +1,15 @@
+<div class="pull-refresh-indicator"
+  [class.visible]="pullDistance > 0 || isPullRefreshing"
+  [class.ready]="pullReadyToRefresh"
+  [class.refreshing]="isPullRefreshing"
+  [style.transform]="'translate3d(-50%, ' + pullRefreshOffset + 'px, 0)'"
+  aria-hidden="true">
+  <div class="pull-refresh-orb">
+    <fa-icon [icon]="faArrowDown" class="pull-refresh-arrow"></fa-icon>
+    <fa-icon [icon]="faRotateRight" class="pull-refresh-spinner"></fa-icon>
+  </div>
+</div>
+
 <nav class="app-navbar" *ngIf="showNavbar$ | async">
   <link
     href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap"

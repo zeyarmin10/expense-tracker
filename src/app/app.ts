@@ -13,7 +13,18 @@ import { DataManagerService } from './services/data-manager';
 import { ToastService } from './services/toast';
 import { GroupService } from './services/group.service';
 import { NetworkService } from './services/network.service';
-import { faRightFromBracket, faUsers, faChevronDown, faSun, faMoon, faPiggyBank, faShoppingCart, faTags } from '@fortawesome/free-solid-svg-icons';
+import {
+  faRightFromBracket,
+  faUsers,
+  faChevronDown,
+  faSun,
+  faMoon,
+  faPiggyBank,
+  faShoppingCart,
+  faTags,
+  faArrowDown,
+  faRotateRight,
+} from '@fortawesome/free-solid-svg-icons';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { Capacitor } from '@capacitor/core';
@@ -65,6 +76,17 @@ export class App implements OnInit {
   faPiggyBank = faPiggyBank;
   faShoppingCart = faShoppingCart;
   faTags = faTags;
+  faArrowDown = faArrowDown;
+  faRotateRight = faRotateRight;
+  pullDistance = 0;
+  pullReadyToRefresh = false;
+  isPullRefreshing = false;
+
+  private readonly pullRefreshThreshold = 78;
+  private readonly pullRefreshMaxDistance = 118;
+  private pullStartY = 0;
+  private pullStartX = 0;
+  private pullTracking = false;
 
   private authService = inject(AuthService);
   private router = inject(Router);
@@ -186,6 +208,110 @@ export class App implements OnInit {
     this.translate.onLangChange.subscribe(event => {
       this.currentLang = event.lang;
     });
+  }
+
+  get pullRefreshOffset(): number {
+    return Math.min(this.pullDistance, 82);
+  }
+
+  @HostListener('window:touchstart', ['$event'])
+  onPullTouchStart(event: TouchEvent): void {
+    if (!this.canStartPullRefresh(event.target)) {
+      return;
+    }
+
+    const touch = event.touches[0];
+    this.pullStartY = touch.clientY;
+    this.pullStartX = touch.clientX;
+    this.pullTracking = true;
+    this.pullReadyToRefresh = false;
+    this.pullDistance = 0;
+  }
+
+  @HostListener('window:touchmove', ['$event'])
+  onPullTouchMove(event: TouchEvent): void {
+    if (
+      !this.pullTracking ||
+      this.isPullRefreshing ||
+      event.touches.length !== 1
+    ) {
+      return;
+    }
+
+    const touch = event.touches[0];
+    const deltaY = touch.clientY - this.pullStartY;
+    const deltaX = Math.abs(touch.clientX - this.pullStartX);
+
+    if (deltaY <= 0 || deltaX > deltaY || this.getPageScrollTop() > 2) {
+      this.resetPullRefresh();
+      return;
+    }
+
+    event.preventDefault();
+    this.pullDistance = Math.min(
+      this.pullRefreshMaxDistance,
+      Math.round(deltaY * 0.58)
+    );
+    this.pullReadyToRefresh = this.pullDistance >= this.pullRefreshThreshold;
+  }
+
+  @HostListener('window:touchend')
+  @HostListener('window:touchcancel')
+  onPullTouchEnd(): void {
+    if (!this.pullTracking) {
+      return;
+    }
+
+    if (this.pullReadyToRefresh) {
+      this.triggerPullRefresh();
+      return;
+    }
+
+    this.resetPullRefresh();
+  }
+
+  private triggerPullRefresh(): void {
+    this.pullTracking = false;
+    this.pullReadyToRefresh = false;
+    this.isPullRefreshing = true;
+    this.pullDistance = this.pullRefreshThreshold;
+
+    setTimeout(() => {
+      window.location.reload();
+    }, 420);
+  }
+
+  private resetPullRefresh(): void {
+    this.pullTracking = false;
+    this.pullReadyToRefresh = false;
+    this.pullDistance = 0;
+  }
+
+  private canStartPullRefresh(target: EventTarget | null): boolean {
+    const isMobileViewport = window.matchMedia('(max-width: 991px)').matches;
+    if (
+      (!isMobileViewport && !Capacitor.isNativePlatform()) ||
+      this.mobileMenuOpen ||
+      this.drawerSwiping ||
+      this.isPullRefreshing ||
+      this.getPageScrollTop() > 2
+    ) {
+      return false;
+    }
+
+    const element = target as Element | null;
+    return !element?.closest(
+      'input, textarea, select, button, a, .mob-bottom-nav, .mob-drawer, .swal2-container'
+    );
+  }
+
+  private getPageScrollTop(): number {
+    return (
+      window.scrollY ||
+      document.documentElement.scrollTop ||
+      document.body.scrollTop ||
+      0
+    );
   }
 
   async ngOnInit(): Promise<void> {
