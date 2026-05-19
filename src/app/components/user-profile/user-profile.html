@@ -191,6 +191,24 @@
         <!-- Save button removed: all fields auto-save or use inline edit -->
 
       </form>
+
+      <!-- ── Danger Zone ── -->
+      <div class="prof-section prof-danger-section">
+        <span class="prof-section-label prof-danger-label">{{ 'DANGER_ZONE_LABEL' | translate }}</span>
+        <div class="prof-danger-row">
+          <div class="prof-danger-info">
+            <p class="prof-danger-title">{{ 'DELETE_ACCOUNT_BUTTON' | translate }}</p>
+            <p class="prof-danger-desc">{{ 'DELETE_ACCOUNT_INFO' | translate }}</p>
+          </div>
+          <button type="button" class="prof-delete-account-btn"
+            (click)="deleteAccount()" [disabled]="isDeletingAccount">
+            <fa-icon [icon]="faTrash" *ngIf="!isDeletingAccount"></fa-icon>
+            <span *ngIf="!isDeletingAccount">{{ 'DELETE_ACCOUNT_BUTTON' | translate }}</span>
+            <span *ngIf="isDeletingAccount">{{ 'DELETING_LABEL' | translate }}…</span>
+          </button>
+        </div>
+      </div>
+
     </ng-container>
   </div>
 </div>

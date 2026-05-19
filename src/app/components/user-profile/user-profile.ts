@@ -118,6 +118,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   imageLoadError: boolean = false;
   isEditingName: boolean = false;
   isFormReady: boolean = false;
+  isDeletingAccount: boolean = false;
   faListUl = faListUl;
   faTrashCan = faTrashCan;
 
@@ -498,5 +499,82 @@ export class UserProfileComponent implements OnInit, OnDestroy {
 
   toggleCustomBudgetList(): void {
     this.isCustomBudgetListCollapsed = !this.isCustomBudgetListCollapsed;
+  }
+
+  async deleteAccount(): Promise<void> {
+    const currentUser = await firstValueFrom(this.authService.currentUser$);
+    if (!currentUser) return;
+
+    const providerId = currentUser.providerData[0]?.providerId;
+
+    // Step 1: Require typing DELETE to confirm
+    const confirmResult = await Swal.fire({
+      title: this.translate.instant('DELETE_ACCOUNT_CONFIRM_TITLE'),
+      html: `<p style="font-size:0.9rem;color:var(--text-sub)">${this.translate.instant('DELETE_ACCOUNT_CONFIRM_TEXT')}</p>
+             <p style="font-size:0.8rem;margin-top:0.75rem;opacity:0.65">${this.translate.instant('DELETE_ACCOUNT_TYPE_TO_CONFIRM')}</p>`,
+      input: 'text',
+      inputPlaceholder: 'DELETE',
+      inputAttributes: { autocomplete: 'off', style: 'text-align:center' },
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: this.translate.instant('DELETE_ACCOUNT_BUTTON'),
+      cancelButtonText: this.translate.instant('CANCEL_BUTTON'),
+      confirmButtonColor: '#f87171',
+      preConfirm: (value: string) => {
+        if (value !== 'DELETE') {
+          Swal.showValidationMessage(this.translate.instant('DELETE_ACCOUNT_TYPE_MISMATCH'));
+          return false;
+        }
+        return true;
+      },
+    });
+
+    if (!confirmResult.isConfirmed) return;
+
+    // Step 2: If email/password user, ask for password
+    let password: string | undefined;
+    if (providerId === 'password') {
+      const passResult = await Swal.fire({
+        title: this.translate.instant('DELETE_ACCOUNT_PASSWORD_TITLE'),
+        input: 'password',
+        inputPlaceholder: this.translate.instant('DELETE_ACCOUNT_PASSWORD_PLACEHOLDER'),
+        showCancelButton: true,
+        confirmButtonText: this.translate.instant('DELETE_ACCOUNT_BUTTON'),
+        cancelButtonText: this.translate.instant('CANCEL_BUTTON'),
+        confirmButtonColor: '#f87171',
+        preConfirm: (value: string) => {
+          if (!value) {
+            Swal.showValidationMessage(this.translate.instant('ERROR_PASSWORD_REQUIRED'));
+            return false;
+          }
+          return value;
+        },
+      });
+      if (!passResult.isConfirmed) return;
+      password = passResult.value;
+    }
+
+    // Step 3: Execute deletion
+    this.isDeletingAccount = true;
+    try {
+      await this.authService.deleteAccount(password);
+    } catch (error: any) {
+      this.isDeletingAccount = false;
+      const msg: string = error?.message || '';
+      if (msg.startsWith('HAS_MEMBERS:')) {
+        const groupName = msg.replace('HAS_MEMBERS:', '');
+        Swal.fire({
+          icon: 'error',
+          title: this.translate.instant('ERROR_TITLE'),
+          text: this.translate.instant('DELETE_ACCOUNT_HAS_MEMBERS_ERROR', { groupName }),
+        });
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: this.translate.instant('ERROR_TITLE'),
+          text: this.translate.instant('DELETE_ACCOUNT_ERROR'),
+        });
+      }
+    }
   }
 }

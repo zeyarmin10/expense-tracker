@@ -13,6 +13,10 @@ import {
   AuthErrorCodes,
   getAdditionalUserInfo,
   getRedirectResult,
+  deleteUser,
+  reauthenticateWithPopup,
+  reauthenticateWithCredential,
+  EmailAuthProvider,
 } from '@angular/fire/auth';
 import { AngularFireDatabase } from '@angular/fire/compat/database';
 import { TranslateService } from '@ngx-translate/core';
@@ -322,6 +326,106 @@ export class AuthService {
       console.error('Logout failed in AuthService:', error);
       throw new Error(this.getFirebaseErrorMessage(error.code));
     }
+  }
+
+  async deleteAccount(password?: string): Promise<void> {
+    const currentUser = this.auth.currentUser;
+    if (!currentUser) throw new Error('No authenticated user');
+
+    const uid = currentUser.uid;
+    const userDataService = this.injector.get(UserDataService);
+    const groupService = this.injector.get(GroupService);
+
+    const profile = await firstValueFrom(userDataService.getUserProfile(uid));
+    if (!profile) throw new Error('User profile not found');
+
+    const personalSpaceId = profile.personalSpaceId;
+    const allMemberships = { ...(profile.spaceMemberships || {}), ...(profile.roles || {}) };
+    const groupIds = Object.keys(allMemberships).filter(id => id !== personalSpaceId);
+
+    // Block deletion if user owns a group that still has other members
+    for (const groupId of groupIds) {
+      const role = allMemberships[groupId];
+      if (role === 'owner' || role === 'admin') {
+        const memberSnap = await this.db.database.ref(`group_members/${groupId}`).get();
+        if (memberSnap.exists()) {
+          const otherMembers = Object.keys(memberSnap.val() || {}).filter(id => id !== uid);
+          if (otherMembers.length > 0) {
+            const groupSnap = await this.db.database.ref(`groups/${groupId}/groupName`).get();
+            const groupName = groupSnap.exists() ? groupSnap.val() : '';
+            throw new Error(`HAS_MEMBERS:${groupName}`);
+          }
+        }
+      }
+    }
+
+    // Re-authenticate before any deletion
+    const providerId = currentUser.providerData[0]?.providerId;
+
+    if (providerId === 'google.com') {
+      if (Capacitor.isNativePlatform()) {
+        if (!this.isGoogleAuthInitialized) {
+          await GoogleAuth.initialize({
+            clientId: '114245767214-70122qvh2g7qor3cc4udhghkk4h2s179.apps.googleusercontent.com',
+            scopes: ['profile', 'email'],
+            grantOfflineAccess: true,
+          });
+          this.isGoogleAuthInitialized = true;
+        }
+        try { await GoogleAuth.signOut(); } catch {}
+        const googleUser = await GoogleAuth.signIn();
+        const credential = GoogleAuthProvider.credential(googleUser.authentication.idToken);
+        await reauthenticateWithCredential(currentUser, credential);
+      } else {
+        const provider = new GoogleAuthProvider();
+        provider.setCustomParameters({ prompt: 'select_account' });
+        await reauthenticateWithPopup(currentUser, provider);
+      }
+    } else if (providerId === 'password') {
+      if (!password) throw new Error('Password required for re-authentication');
+      const credential = EmailAuthProvider.credential(currentUser.email!, password);
+      await reauthenticateWithCredential(currentUser, credential);
+    }
+
+    // Remove from all groups / delete owned groups
+    for (const groupId of groupIds) {
+      const role = allMemberships[groupId];
+      if (role === 'owner' || role === 'admin') {
+        // Auto-revoke pending invitations so deleteGroup won't block
+        const inviteSnap = await this.db.database.ref('invitations')
+          .orderByChild('groupId').equalTo(groupId).get();
+        if (inviteSnap.exists()) {
+          const invitations = inviteSnap.val() as Record<string, any>;
+          await Promise.all(
+            Object.entries(invitations)
+              .filter(([, inv]) => (inv as any)?.status === 'pending')
+              .map(([inviteId]) => this.db.database.ref(`invitations/${inviteId}`).remove()),
+          );
+        }
+        await groupService.deleteGroup(groupId, uid);
+      } else {
+        await groupService.removeMember(groupId, uid);
+      }
+    }
+
+    // Clean up personal space data
+    if (personalSpaceId) {
+      await Promise.all([
+        this.db.database.ref(`group_data/${personalSpaceId}`).remove(),
+        this.db.database.ref(`spaces/${personalSpaceId}`).remove(),
+        this.db.database.ref(`space_members/${personalSpaceId}`).remove(),
+      ]);
+    }
+
+    // Delete user profile node
+    await userDataService.deleteUserData(uid);
+
+    // Delete Firebase Auth account
+    await deleteUser(currentUser);
+
+    localStorage.removeItem('loginTime');
+    localStorage.removeItem('lastActivityTime');
+    this._logoutSuccess.next(true);
   }
 
   public getFirebaseErrorMessage(error: any): string {

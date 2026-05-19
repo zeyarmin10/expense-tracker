@@ -209,6 +209,30 @@ body {
   background: #0b74ff !important;
 }
 
+/* Input field in confirmation dialogs */
+.swal2-input {
+  background: #0f2348 !important;
+  border: 1px solid var(--border) !important;
+  color: #f0f2f7 !important;
+  border-radius: 10px !important;
+}
+
+.swal2-input::placeholder {
+  color: #7183a5 !important;
+  opacity: 1 !important;
+  font-weight: 400 !important;
+  letter-spacing: normal !important;
+}
+
+.swal2-validation-message {
+  background: rgba(248, 113, 113, 0.1) !important;
+  color: #f87171 !important;
+  border: none !important;
+  border-radius: 8px !important;
+  font-size: 0.82rem !important;
+}
+
+
 /* ── Light Mode ── */
 body.light-mode {
   --bg: #f4f8ff;
