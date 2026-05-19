@@ -1,9 +1,6 @@
-<div class="pull-refresh-indicator"
-  [class.visible]="pullDistance > 0 || isPullRefreshing"
-  [class.ready]="pullReadyToRefresh"
-  [class.refreshing]="isPullRefreshing"
-  [style.transform]="'translate3d(-50%, ' + pullRefreshOffset + 'px, 0)'"
-  aria-hidden="true">
+<div class="pull-refresh-indicator" [class.visible]="pullDistance > 0 || isPullRefreshing"
+  [class.ready]="pullReadyToRefresh" [class.refreshing]="isPullRefreshing"
+  [style.transform]="'translate3d(-50%, ' + pullRefreshOffset + 'px, 0)'" aria-hidden="true">
   <div class="pull-refresh-orb">
     <fa-icon [icon]="faArrowDown" class="pull-refresh-arrow"></fa-icon>
     <fa-icon [icon]="faRotateRight" class="pull-refresh-spinner"></fa-icon>
@@ -24,9 +21,11 @@
 
     <!-- Desktop Nav Links -->
     <ul class="nav-links">
-      <li><a routerLink="/dashboard" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_DASHBOARD' | translate
+      <li><a routerLink="/dashboard" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_DASHBOARD' |
+          translate
           }}</a></li>
-      <li><a routerLink="/expense" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_EXPENSE' | translate
+      <li><a routerLink="/expense" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_EXPENSE' |
+          translate
           }}</a></li>
       <li><a routerLink="/expense-overview" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{
           'NAV_EXPENSE_OVERVIEW' | translate }}</a></li>
@@ -34,10 +33,12 @@
           }}</a></li>
       <li><a routerLink="/profit" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_PROFIT' | translate
           }}</a></li>
-      <li><a routerLink="/category" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_CATEGORY' | translate
+      <li><a routerLink="/category" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_CATEGORY' |
+          translate
           }}</a></li>
       <li *ngIf="isGroupAdmin$ | async">
-        <a routerLink="/member-management" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_MEMBER_MANAGEMENT'
+        <a routerLink="/member-management" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{
+          'NAV_MEMBER_MANAGEMENT'
           | translate }}</a>
       </li>
     </ul>
@@ -45,8 +46,10 @@
     <!-- Right: Desktop only -->
     <ul class="nav-right" *ngIf="currentUser$ | async as user">
       <li class="dropdown" *ngIf="userSpaces$ | async as spaces">
-        <a class="space-switcher-btn" href="#" id="spaceDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-          <span class="space-switcher-label">{{ (currentSpaceLabel$ | async) || ('SPACE_MY_PERSONAL' | translate) }}</span>
+        <a class="space-switcher-btn" href="#" id="spaceDropdown" role="button" data-bs-toggle="dropdown"
+          aria-expanded="false">
+          <span class="space-switcher-label">{{ (currentSpaceLabel$ | async) || ('SPACE_MY_PERSONAL' | translate)
+            }}</span>
           <fa-icon [icon]="faChevronDown" style="font-size: 0.65rem; opacity: 0.6"></fa-icon>
         </a>
         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="spaceDropdown">
@@ -57,17 +60,22 @@
               <span class="dropdown-space-main">
                 <span>{{ getDisplaySpaceName(space) }}</span>
               </span>
-              <span class="dropdown-space-badge" *ngIf="(currentSpaceId$ | async) === space.id">{{ 'SPACE_ACTIVE_BADGE' | translate }}</span>
+              <span class="dropdown-space-badge" *ngIf="(currentSpaceId$ | async) === space.id">{{ 'SPACE_ACTIVE_BADGE'
+                | translate }}</span>
             </button>
           </li>
-          <li><hr class="dropdown-divider" /></li>
-          <li><a class="dropdown-item" routerLink="/onboarding" (click)="closeNavbarMenu()">{{ 'SPACE_CREATE_OR_JOIN' | translate }}</a></li>
+          <li>
+            <hr class="dropdown-divider" />
+          </li>
+          <li><a class="dropdown-item" routerLink="/onboarding" (click)="closeNavbarMenu()">{{ 'SPACE_CREATE_OR_JOIN' |
+              translate }}</a></li>
         </ul>
       </li>
 
       <!-- Group Members Dropdown -->
       <li class="dropdown" *ngIf="isGroupAccount$ | async">
-        <a class="nav-icon-btn" href="#" id="groupMemberDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <a class="nav-icon-btn" href="#" id="groupMemberDropdown" role="button" data-bs-toggle="dropdown"
+          aria-expanded="false">
           <fa-icon [icon]="faUsers"></fa-icon>
         </a>
         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="groupMemberDropdown">
@@ -84,10 +92,13 @@
               {{ gName }}
             </div>
           </li>
-          <li><hr class="dropdown-divider my-1"></li>
+          <li>
+            <hr class="dropdown-divider my-1">
+          </li>
           <li *ngFor="let member of groupMembers$ | async">
             <span class="dropdown-item" [class.text-info]="member.uid === user.uid">
-              {{ member.displayName }} ({{ member.role === 'admin' ? ('NAV_ADMIN' | translate) : ('NAV_MEMBER' | translate) }})
+              {{ member.displayName }} ({{ member.role === 'admin' ? ('NAV_ADMIN' | translate) : ('NAV_MEMBER' |
+              translate) }})
               <span *ngIf="member.uid === user.uid">({{ 'NAV_YOU' | translate }})</span>
             </span>
           </li>
@@ -102,13 +113,16 @@
           <fa-icon [icon]="faChevronDown" style="font-size: 0.65rem; opacity: 0.6"></fa-icon>
         </a>
         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-          <li><a class="dropdown-item" routerLink="/profile" (click)="closeNavbarMenu()">{{ 'NAV_PROFILE_AND_SETTING' | translate
+          <li><a class="dropdown-item" routerLink="/profile" (click)="closeNavbarMenu()">{{ 'NAV_PROFILE_AND_SETTING' |
+              translate
               }}</a></li>
-          <li><a class="dropdown-item" routerLink="/privacy-policy" (click)="closeNavbarMenu()">{{ 'NAV_PRIVACY_POLICY' | translate }}</a></li>
+          <li><a class="dropdown-item" routerLink="/privacy-policy" (click)="closeNavbarMenu()">{{ 'NAV_PRIVACY_POLICY'
+              | translate }}</a></li>
           <li>
             <hr class="dropdown-divider" />
           </li>
-          <li><button class="dropdown-item text-danger-logout" (click)="logout()">{{ 'NAV_LOGOUT' | translate }}</button></li>
+          <li><button class="dropdown-item text-danger-logout" (click)="logout()">{{ 'NAV_LOGOUT' | translate
+              }}</button></li>
         </ul>
       </li>
 
@@ -121,8 +135,8 @@
         </button>
       </li>
     </ul>
-    </div>
-    </nav>
+  </div>
+</nav>
 
 <!-- ═══════════════════════════════════════════
      MOBILE BOTTOM NAVIGATION BAR
@@ -237,7 +251,7 @@
     </div>
 
   </ng-container>
-  
+
   <div class="mob-drawer-divider"></div>
 
   <div class="mob-drawer-section-label">{{ 'SPACE_SECTION_TITLE' | translate }}</div>
@@ -245,8 +259,8 @@
     {{ 'SPACE_ACTIVE_LABEL' | translate }}: <span>{{ currentSpaceName }}</span>
   </div>
   <div class="mob-drawer-links">
-    <button class="mob-drawer-link mob-drawer-space-link" type="button" *ngFor="let space of userSpaces$ | async" (click)="switchSpace(space.id!)"
-      [class.mob-drawer-space-link-active]="(currentSpaceId$ | async) === space.id">
+    <button class="mob-drawer-link mob-drawer-space-link" type="button" *ngFor="let space of userSpaces$ | async"
+      (click)="switchSpace(space.id!)" [class.mob-drawer-space-link-active]="(currentSpaceId$ | async) === space.id">
       <span class="mob-drawer-space-main">
         <span class="mob-drawer-link-icon">
           <fa-icon [icon]="faUsers" *ngIf="space.type === 'group'"></fa-icon>
@@ -254,7 +268,8 @@
         </span>
         <span>{{ getDisplaySpaceName(space) }}</span>
       </span>
-      <span class="mob-drawer-space-badge" *ngIf="(currentSpaceId$ | async) === space.id">{{ 'SPACE_ACTIVE_BADGE' | translate }}</span>
+      <span class="mob-drawer-space-badge" *ngIf="(currentSpaceId$ | async) === space.id">{{ 'SPACE_ACTIVE_BADGE' |
+        translate }}</span>
     </button>
     <a class="mob-drawer-link" routerLink="/onboarding" (click)="closeNavbarMenu()">
       <span class="mob-drawer-link-icon">
@@ -264,8 +279,39 @@
     </a>
   </div>
 
+  <!-- Group members -->
+  <ng-container *ngIf="isGroupAccount$ | async">
+    <div class="mob-drawer-divider"></div>
+    <ng-container *ngIf="groupName$ | async as gName">
+      <div class="mob-drawer-group-name-title">
+        <!-- <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;flex-shrink:0;">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg> -->
+        <fa-icon [icon]="faUsers"></fa-icon>
+        {{ gName }}
+      </div>
+    </ng-container>
+    <div class="mob-drawer-section-label">{{ 'NAV_GROUP_MEMBERS' | translate }}</div>
+    <div class="mob-drawer-members">
+      <ng-container *ngIf="currentUser$ | async as user">
+        <span class="mob-drawer-member" *ngFor="let member of groupMembers$ | async"
+          [class.mob-drawer-member-me]="member.uid === user.uid">
+          <span class="mob-drawer-member-dot"></span>
+          {{ member.displayName }}
+          <span class="mob-drawer-member-role">{{ (member.role == 'admin' ? 'NAV_ADMIN' : 'NAV_MEMBER') | translate
+            }}</span>
+          <span *ngIf="member.uid === user.uid" class="mob-drawer-member-you">({{ 'NAV_YOU' | translate }})</span>
+        </span>
+      </ng-container>
+    </div>
+  </ng-container>
+
   <div class="mob-drawer-divider"></div>
-  
+
+
   <!-- Nav links in drawer -->
   <div class="mob-drawer-links">
     <a class="mob-drawer-link" routerLink="/profit" routerLinkActive="mob-drawer-active" (click)="closeNavbarMenu()">
@@ -278,7 +324,7 @@
       </span>
       <span>{{ 'NAV_PROFIT' | translate }}</span>
     </a>
-  
+
     <a class="mob-drawer-link" routerLink="/category" routerLinkActive="mob-drawer-active" (click)="closeNavbarMenu()">
       <span class="mob-drawer-link-icon">
         <!-- <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -288,7 +334,7 @@
       </span>
       <span>{{ 'NAV_CATEGORY' | translate }}</span>
     </a>
-  
+
     <a class="mob-drawer-link" *ngIf="isGroupAdmin$ | async" routerLink="/member-management"
       routerLinkActive="mob-drawer-active" (click)="closeNavbarMenu()">
       <span class="mob-drawer-link-icon">
@@ -304,36 +350,8 @@
       <span>{{ 'NAV_MEMBER_MANAGEMENT' | translate }}</span>
     </a>
 
-    <!-- Group members -->
-    <ng-container *ngIf="isGroupAccount$ | async">
-      <div class="mob-drawer-divider"></div>
-      <ng-container *ngIf="groupName$ | async as gName">
-        <div class="mob-drawer-group-name-title">
-          <!-- <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;flex-shrink:0;">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-            <circle cx="9" cy="7" r="4"/>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-          </svg> -->
-          <fa-icon [icon]="faUsers"></fa-icon>
-          {{ gName }}
-        </div>
-      </ng-container>
-      <div class="mob-drawer-section-label">{{ 'NAV_GROUP_MEMBERS' | translate }}</div>
-      <div class="mob-drawer-members">
-        <ng-container *ngIf="currentUser$ | async as user">
-          <span class="mob-drawer-member" *ngFor="let member of groupMembers$ | async"
-            [class.mob-drawer-member-me]="member.uid === user.uid">
-            <span class="mob-drawer-member-dot"></span>
-            {{ member.displayName }}
-            <span class="mob-drawer-member-role">{{ (member.role == 'admin' ? 'NAV_ADMIN' : 'NAV_MEMBER')  | translate }}</span>
-            <span *ngIf="member.uid === user.uid" class="mob-drawer-member-you">({{ 'NAV_YOU' | translate }})</span>
-          </span>
-        </ng-container>
-      </div>
-    </ng-container>
   </div>
-  
+
   <div class="mob-drawer-divider"></div>
 
   <!-- Profile & Logout -->

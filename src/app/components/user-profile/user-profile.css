@@ -466,9 +466,10 @@
 }
 
 .prof-lang-btn.active {
-  background: var(--accent-dim);
-  border-color: rgba(11, 116, 255, 0.35);
-  color: var(--accent);
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  box-shadow: 0 0 0 3px var(--accent-glow);
 }
 
 /* ── Theme Toggle ── */
@@ -498,9 +499,10 @@
 }
 
 .prof-theme-btn.active {
-  background: var(--accent-dim);
-  border-color: rgba(11, 116, 255, 0.35);
-  color: var(--accent);
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  box-shadow: 0 0 0 3px var(--accent-glow);
 }
 
 /* ── Save Button ── */

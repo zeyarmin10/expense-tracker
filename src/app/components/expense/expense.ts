@@ -148,7 +148,8 @@ export class Expense implements OnInit {
     const parts = raw.split('.');
     if (parts.length > 2) raw = parts[0] + '.' + parts.slice(1).join('');
 
-    const numericValue = parseFloat(raw.replace(/,/g, '')) || 0;
+    const parsed = parseFloat(raw.replace(/,/g, ''));
+    const numericValue = raw && !isNaN(parsed) ? parsed : '';
     formGroup.get(controlName)?.setValue(numericValue, { emitEvent: true });
 
     const intPart = raw.split('.')[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
@@ -198,7 +199,7 @@ export class Expense implements OnInit {
       itemName: ['', Validators.required],
       quantity: [1, [Validators.required, Validators.min(0.01)]],
       unit: [''],
-      price: ['', [Validators.required, Validators.min(0)]],
+      price: ['', [Validators.required, Validators.min(0.01)]],
     });
 
     this.categories$ = this.categoryService.getCategories();
