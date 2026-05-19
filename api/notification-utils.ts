@@ -134,8 +134,10 @@ export async function readNotificationTokens(
   options: { targetUid?: string; dailyOnly?: boolean } = {},
 ): Promise<NotificationTokenRecord[]> {
   const baseUrl = FIREBASE_DATABASE_URL.replace(/\/$/, '');
-  const path = options.targetUid
-    ? `/notification_tokens/${encodeURIComponent(options.targetUid)}.json`
+  const target = options.targetUid?.trim();
+  const canReadTargetPath = !!target && isValidFirebaseDatabaseKey(target);
+  const path = canReadTargetPath
+    ? `/notification_tokens/${encodeURIComponent(target)}.json`
     : '/notification_tokens.json';
   const headers = {
     Authorization: `Bearer ${accessToken}`,
@@ -147,8 +149,8 @@ export async function readNotificationTokens(
     throw new Error(`Unable to read notification tokens: ${text}`);
   }
 
-  const settingsPath = options.targetUid
-    ? `/notification_settings/${encodeURIComponent(options.targetUid)}.json`
+  const settingsPath = canReadTargetPath
+    ? `/notification_settings/${encodeURIComponent(target)}.json`
     : '/notification_settings.json';
   const settingsResponse = await fetch(`${baseUrl}${settingsPath}`, { headers });
   let settingsData: Record<string, NotificationSettingRecord> | NotificationSettingRecord = {};
@@ -163,10 +165,10 @@ export async function readNotificationTokens(
   }
 
   const records: NotificationTokenRecord[] = [];
-  if (options.targetUid) {
+  if (canReadTargetPath && target) {
     Object.values(data).forEach((value: any) => {
       if (value?.token) {
-        records.push({ ...value, uid: options.targetUid });
+        records.push({ ...value, uid: target });
       }
     });
   } else {
@@ -180,7 +182,11 @@ export async function readNotificationTokens(
   }
 
   return records.filter((record) => {
-    const settings = options.targetUid
+    if (target && !matchesNotificationTarget(record, target)) {
+      return false;
+    }
+
+    const settings = canReadTargetPath
       ? settingsData as NotificationSettingRecord
       : (settingsData as Record<string, NotificationSettingRecord>)[record.uid] || {};
 
@@ -198,6 +204,22 @@ export async function readNotificationTokens(
     }
     return true;
   });
+}
+
+function isValidFirebaseDatabaseKey(value: string): boolean {
+  return value.length > 0 && !/[.#$/[\]]/.test(value);
+}
+
+function matchesNotificationTarget(
+  record: NotificationTokenRecord,
+  target: string,
+): boolean {
+  const normalizedTarget = target.toLowerCase();
+  return (
+    record.uid === target ||
+    record.email?.toLowerCase() === normalizedTarget ||
+    record.displayName?.toLowerCase() === normalizedTarget
+  );
 }
 
 export async function sendFcmMessage(
