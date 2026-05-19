@@ -94,9 +94,11 @@ export function requireSecret(
 }
 
 export async function getFirebaseAccessToken(): Promise<string> {
-  const clientEmail =
+  const clientEmail = (
     process.env.FIREBASE_SERVICE_ACCOUNT_EMAIL ||
-    process.env.FIREBASE_CLIENT_EMAIL;
+    process.env.FIREBASE_CLIENT_EMAIL ||
+    ''
+  ).trim();
   const privateKey = (
     process.env.FIREBASE_PRIVATE_KEY ||
     process.env.FIREBASE_SERVICE_ACCOUNT_PRIVATE_KEY ||
@@ -109,15 +111,14 @@ export async function getFirebaseAccessToken(): Promise<string> {
     );
   }
 
-  const authClient = new google.auth.JWT(
-    clientEmail,
-    undefined,
-    privateKey,
-    [
+  const authClient = new google.auth.JWT({
+    email: clientEmail,
+    key: privateKey,
+    scopes: [
       'https://www.googleapis.com/auth/firebase.messaging',
       'https://www.googleapis.com/auth/firebase.database',
     ],
-  );
+  });
 
   const tokenResponse = await authClient.authorize();
   if (!tokenResponse.access_token) {
