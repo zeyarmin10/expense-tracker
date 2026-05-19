@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import type { NotificationTokenRecord } from './notification-utils';
+import type { NotificationTokenRecord } from './notification-utils.js';
 import {
   applyCors,
   getFirebaseAccessToken,
@@ -7,7 +7,7 @@ import {
   readNotificationTokens,
   requireSecret,
   sendToTokens,
-} from './notification-utils';
+} from './notification-utils.js';
 
 interface ReminderSendResult {
   sent: number;
@@ -36,7 +36,7 @@ function splitTokensByLanguage(tokens: NotificationTokenRecord[]): {
   );
 }
 
-module.exports = async function handler(
+export default async function handler(
   request: VercelRequest,
   response: VercelResponse,
 ) {
@@ -131,4 +131,4 @@ module.exports = async function handler(
       details: error?.message || 'Unknown error',
     });
   }
-};
+}

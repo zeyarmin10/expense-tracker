@@ -1,6 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-
-const { google } = require('googleapis');
+import { google } from 'googleapis';
 
 export interface NotificationTokenRecord {
   token: string;

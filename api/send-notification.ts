@@ -6,9 +6,9 @@ import {
   readNotificationTokens,
   requireSecret,
   sendToTokens,
-} from './notification-utils';
+} from './notification-utils.js';
 
-module.exports = async function handler(
+export default async function handler(
   request: VercelRequest,
   response: VercelResponse,
 ) {
@@ -75,4 +75,4 @@ module.exports = async function handler(
       details: error?.message || 'Unknown error',
     });
   }
-};
+}
