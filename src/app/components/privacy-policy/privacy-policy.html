@@ -1,0 +1,115 @@
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap"
+  rel="stylesheet">
+
+<div class="pp-wrapper">
+  <div class="pp-container mb-5">
+
+    <!-- ── Page Header ── -->
+    <div class="pp-page-header">
+      <button class="pp-back-btn" (click)="goBack()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+          stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6" />
+        </svg>
+      </button>
+      <div>
+        <h2 class="pp-page-title">{{ 'PRIVACY_POLICY_TITLE' | translate }}</h2>
+        <p class="pp-last-updated">{{ 'PRIVACY_LAST_UPDATED' | translate }}</p>
+      </div>
+    </div>
+
+    <!-- ── Intro ── -->
+    <div class="pp-section">
+      <p class="pp-intro-text">{{ 'PRIVACY_INTRO' | translate }}</p>
+    </div>
+
+    <!-- ── Section 1: Information We Collect ── -->
+    <div class="pp-section">
+      <div class="pp-section-header">
+        <span class="pp-section-number">01</span>
+        <h3 class="pp-section-title">{{ 'PRIVACY_S1_TITLE' | translate }}</h3>
+      </div>
+      <p class="pp-section-body">{{ 'PRIVACY_S1_BODY' | translate }}</p>
+      <ul class="pp-list">
+        <li>{{ 'PRIVACY_S1_ITEM1' | translate }}</li>
+        <li>{{ 'PRIVACY_S1_ITEM2' | translate }}</li>
+        <li>{{ 'PRIVACY_S1_ITEM3' | translate }}</li>
+      </ul>
+    </div>
+
+    <!-- ── Section 2: How We Use Your Information ── -->
+    <div class="pp-section">
+      <div class="pp-section-header">
+        <span class="pp-section-number">02</span>
+        <h3 class="pp-section-title">{{ 'PRIVACY_S2_TITLE' | translate }}</h3>
+      </div>
+      <p class="pp-section-body">{{ 'PRIVACY_S2_BODY' | translate }}</p>
+      <ul class="pp-list">
+        <li>{{ 'PRIVACY_S2_ITEM1' | translate }}</li>
+        <li>{{ 'PRIVACY_S2_ITEM2' | translate }}</li>
+        <li>{{ 'PRIVACY_S2_ITEM3' | translate }}</li>
+      </ul>
+    </div>
+
+    <!-- ── Section 3: Data Storage & Security ── -->
+    <div class="pp-section">
+      <div class="pp-section-header">
+        <span class="pp-section-number">03</span>
+        <h3 class="pp-section-title">{{ 'PRIVACY_S3_TITLE' | translate }}</h3>
+      </div>
+      <p class="pp-section-body">{{ 'PRIVACY_S3_BODY' | translate }}</p>
+      <div class="pp-highlight-box">
+        <svg class="pp-highlight-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+        </svg>
+        <p>{{ 'PRIVACY_S3_HIGHLIGHT' | translate }}</p>
+      </div>
+    </div>
+
+    <!-- ── Section 4: Data Sharing ── -->
+    <div class="pp-section">
+      <div class="pp-section-header">
+        <span class="pp-section-number">04</span>
+        <h3 class="pp-section-title">{{ 'PRIVACY_S4_TITLE' | translate }}</h3>
+      </div>
+      <p class="pp-section-body">{{ 'PRIVACY_S4_BODY' | translate }}</p>
+      <ul class="pp-list">
+        <li>{{ 'PRIVACY_S4_ITEM1' | translate }}</li>
+        <li>{{ 'PRIVACY_S4_ITEM2' | translate }}</li>
+      </ul>
+    </div>
+
+    <!-- ── Section 5: Your Rights ── -->
+    <div class="pp-section">
+      <div class="pp-section-header">
+        <span class="pp-section-number">05</span>
+        <h3 class="pp-section-title">{{ 'PRIVACY_S5_TITLE' | translate }}</h3>
+      </div>
+      <p class="pp-section-body">{{ 'PRIVACY_S5_BODY' | translate }}</p>
+      <ul class="pp-list">
+        <li>{{ 'PRIVACY_S5_ITEM1' | translate }}</li>
+        <li>{{ 'PRIVACY_S5_ITEM2' | translate }}</li>
+        <li>{{ 'PRIVACY_S5_ITEM3' | translate }}</li>
+      </ul>
+    </div>
+
+    <!-- ── Section 6: Contact ── -->
+    <div class="pp-section pp-contact-section">
+      <div class="pp-section-header">
+        <span class="pp-section-number">06</span>
+        <h3 class="pp-section-title">{{ 'PRIVACY_S6_TITLE' | translate }}</h3>
+      </div>
+      <p class="pp-section-body">{{ 'PRIVACY_S6_BODY' | translate }}</p>
+      <a href="https://github.com/zeyarpaing/expense-tracker/issues" target="_blank" rel="noopener noreferrer"
+        class="pp-contact-link">
+        <svg viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px;flex-shrink:0;">
+          <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
+        </svg>
+        {{ 'PRIVACY_S6_LINK' | translate }}
+      </a>
+    </div>
+
+  </div>
+</div>

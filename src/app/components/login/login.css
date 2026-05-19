@@ -568,6 +568,16 @@
   text-decoration: underline;
 }
 
+.lgn-privacy-link {
+  margin-top: 0.5rem;
+  opacity: 0.6;
+}
+
+.lgn-privacy-anchor {
+  font-weight: 400;
+  font-size: 0.75rem;
+}
+
 /* ── Responsive ── */
 @media (min-width: 480px) {
   .lgn-card {

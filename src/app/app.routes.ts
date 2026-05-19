@@ -10,9 +10,11 @@ import { ExpenseOverview } from './components/expense-overview/expense-overview'
 import { BudgetComponent } from './components/budget/budget';
 import { OnboardingComponent } from './components/onboarding/onboarding';
 import { MemberManagementComponent } from './components/member-management/member-management';
+import { PrivacyPolicyComponent } from './components/privacy-policy/privacy-policy';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
+  { path: 'privacy-policy', component: PrivacyPolicyComponent },
   {
     path: '',
     canActivate: [AuthGuard],

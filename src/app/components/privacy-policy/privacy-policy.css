@@ -1,0 +1,195 @@
+:host {
+  display: block;
+}
+
+.pp-wrapper {
+  background: var(--bg);
+  min-height: 100vh;
+  padding: 2rem 1rem 6rem;
+  color: var(--text);
+}
+
+.pp-container {
+  max-width: 660px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+/* ── Page Header ── */
+.pp-page-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+  margin-bottom: 0.25rem;
+}
+
+.pp-back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  margin-top: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.pp-back-btn:hover {
+  background: var(--surface-2);
+}
+
+.pp-back-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.pp-page-title {
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin: 0 0 0.2rem;
+  line-height: 1.15;
+}
+
+.pp-last-updated {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* ── Section Base ── */
+.pp-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.3rem 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+/* ── Section Header ── */
+.pp-section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.pp-section-number {
+  font-size: 0.65rem;
+  font-weight: 700;
+  font-family: 'DM Mono', monospace;
+  color: var(--accent);
+  background: var(--accent-dim);
+  border: 1px solid var(--accent-glow);
+  border-radius: 6px;
+  padding: 2px 7px;
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+}
+
+.pp-section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+
+/* ── Body Text ── */
+.pp-intro-text,
+.pp-section-body {
+  font-size: 0.875rem;
+  line-height: 1.65;
+  color: var(--text-sub);
+  margin: 0;
+}
+
+/* ── List ── */
+.pp-list {
+  margin: 0;
+  padding-left: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.pp-list li {
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--text-sub);
+}
+
+.pp-list li::marker {
+  color: var(--accent);
+}
+
+/* ── Highlight Box ── */
+.pp-highlight-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  background: var(--accent-dim);
+  border: 1px solid var(--accent-glow);
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+}
+
+.pp-highlight-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: var(--accent);
+  margin-top: 1px;
+}
+
+.pp-highlight-box p {
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: var(--text-sub);
+  margin: 0;
+}
+
+/* ── Contact Section ── */
+.pp-contact-section {
+  border-color: var(--border);
+}
+
+.pp-contact-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+  padding: 0.6rem 1rem;
+  background: var(--accent-dim);
+  border: 1px solid var(--accent-glow);
+  border-radius: 10px;
+  align-self: flex-start;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.pp-contact-link:hover {
+  background: rgba(11, 116, 255, 0.22);
+  border-color: rgba(11, 116, 255, 0.5);
+  color: var(--accent);
+}
+
+@media (max-width: 480px) {
+  .pp-wrapper {
+    padding: 1.5rem 0.75rem 6rem;
+  }
+
+  .pp-section {
+    padding: 1.1rem 1.1rem;
+  }
+}

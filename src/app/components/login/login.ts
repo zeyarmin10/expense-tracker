@@ -13,7 +13,7 @@ import {
   Validators,
   ReactiveFormsModule,
 } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router'; // Import ActivatedRoute
+import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth';
 import { UserDataService, UserProfile } from '../../services/user-data';
 import { DataManagerService } from '../../services/data-manager'; // Import DataManagerService
@@ -41,6 +41,7 @@ import { Capacitor } from '@capacitor/core';
     ReactiveFormsModule,
     TranslateModule,
     FontAwesomeModule,
+    RouterModule,
   ],
   templateUrl: './login.html',
   styleUrls: ['./login.css'],
