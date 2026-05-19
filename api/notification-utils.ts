@@ -117,6 +117,7 @@ export async function getFirebaseAccessToken(): Promise<string> {
     scopes: [
       'https://www.googleapis.com/auth/firebase.messaging',
       'https://www.googleapis.com/auth/firebase.database',
+      'https://www.googleapis.com/auth/userinfo.email',
     ],
   });
 
