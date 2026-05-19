@@ -103,13 +103,13 @@
 }
 
 .mm-badge-warning {
-  border-color: rgba(251, 191, 36, 0.3);
+  border-color: rgba(244, 177, 26, 0.3);
   color: var(--warning);
   background: var(--warning-dim);
 }
 
 .mm-badge-success {
-  border-color: rgba(52, 211, 153, 0.3);
+  border-color: rgba(47, 140, 255, 0.3);
   color: var(--success);
   background: var(--success-dim);
 }
@@ -214,11 +214,11 @@
 
   0%,
   100% {
-    box-shadow: 0 0 6px rgba(0, 229, 180, 0.25);
+    box-shadow: 0 0 6px rgba(11, 116, 255, 0.25);
   }
 
   50% {
-    box-shadow: 0 0 20px rgba(0, 229, 180, 0.5);
+    box-shadow: 0 0 20px rgba(11, 116, 255, 0.5);
   }
 }
 
@@ -303,7 +303,7 @@
 
 .mm-avatar-pending {
   background: var(--warning-dim);
-  border-color: rgba(251, 191, 36, 0.35);
+  border-color: rgba(244, 177, 26, 0.35);
   color: var(--warning);
   font-size: 0.85rem;
 }
@@ -369,7 +369,7 @@
 }
 
 .mm-action-warn {
-  border-color: rgba(251, 191, 36, 0.3);
+  border-color: rgba(244, 177, 26, 0.3);
   background: var(--warning-dim);
   color: var(--warning);
 }

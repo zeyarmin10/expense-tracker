@@ -442,7 +442,7 @@ export class Expense implements OnInit {
     const inputClr = isDark ? '#f0f2f7' : '#1a202c';
     const borderClr = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.12)';
     const labelClr = isDark ? '#9ca3af' : '#6b7280';
-    const accentClr = '#00e5b4';
+    const accentClr = '#0b74ff';
 
     const inputStyle = `
       width:100%; box-sizing:border-box;
@@ -624,7 +624,7 @@ export class Expense implements OnInit {
     const subColor = isDark ? '#9ca3af' : '#6b7280';
     const border = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.08)';
     const surfaceAlt = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)';
-    const accent = '#00e5b4';
+    const accent = '#0b74ff';
     const isPersonal = this.userProfile?.accountType === 'personal';
     const iconFilter = isDark ? 'invert(1) brightness(2)' : 'none';
 

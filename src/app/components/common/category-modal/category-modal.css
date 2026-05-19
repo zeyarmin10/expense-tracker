@@ -15,7 +15,7 @@
   border: 1px solid var(--accent) !important;
   border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(0, 229, 180, 0.06);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(11, 116, 255, 0.06);
 }
 
 /* ── Top accent line ── */
@@ -23,7 +23,7 @@
   content: '';
   display: block;
   height: 2px;
-  background: linear-gradient(90deg, var(--accent, #00e5b4), rgba(0, 229, 180, 0.2), transparent);
+  background: linear-gradient(90deg, var(--accent, #0b74ff), rgba(11, 116, 255, 0.2), transparent);
 }
 
 /* ── Header ── */
@@ -44,7 +44,7 @@
 .cat-modal-icon {
   font-size: 1.1rem;
   line-height: 1;
-    color: var(--accent, #00e5b4);
+    color: var(--accent, #0b74ff);
 }
 
 .cat-modal-title {
@@ -114,8 +114,8 @@
 }
 
 .cat-fl-input:focus {
-  border-color: var(--accent, #00e5b4);
-  box-shadow: 0 0 0 3px rgba(0, 229, 180, 0.1);
+  border-color: var(--accent, #0b74ff);
+  box-shadow: 0 0 0 3px rgba(11, 116, 255, 0.1);
 }
 
 .cat-fl-label {
@@ -140,7 +140,7 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--accent, #00e5b4);
+  color: var(--accent, #0b74ff);
 }
 
 /* Save / Add button */
@@ -150,7 +150,7 @@
   gap: 0.4rem;
   height: 52px;
   padding: 0 1.1rem;
-  background: var(--accent, #00e5b4);
+  background: var(--accent, #0b74ff);
   color: var(--text);
   border: none;
   border-radius: 12px;
@@ -177,11 +177,11 @@
 
   0%,
   100% {
-    box-shadow: 0 0 6px rgba(0, 229, 180, 0.2);
+    box-shadow: 0 0 6px rgba(11, 116, 255, 0.2);
   }
 
   50% {
-    box-shadow: 0 0 18px rgba(0, 229, 180, 0.45);
+    box-shadow: 0 0 18px rgba(11, 116, 255, 0.45);
   }
 }
 
@@ -204,15 +204,15 @@
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #34d399;
+  color: #2f8cff;
 }
 
 .cat-list-count {
   font-size: 0.68rem;
   font-weight: 500;
-  background: rgba(52, 211, 153, 0.12);
-  color: #34d399;
-  border: 1px solid rgba(52, 211, 153, 0.2);
+  background: rgba(47, 140, 255, 0.12);
+  color: #2f8cff;
+  border: 1px solid rgba(47, 140, 255, 0.2);
   padding: 0.1rem 0.55rem;
   border-radius: 100px;
 }
@@ -270,7 +270,7 @@
 }
 
 .cat-item-editing {
-  border-color: rgba(0, 229, 180, 0.3) !important;
+  border-color: rgba(11, 116, 255, 0.3) !important;
   background: var(--bg) !important;
 }
 
@@ -279,9 +279,9 @@
   width: 32px;
   height: 32px;
   border-radius: 8px;
-  background: rgba(0, 229, 180, 0.1);
-  border: 1px solid rgba(0, 229, 180, 0.2);
-  color: var(--accent, #00e5b4);
+  background: rgba(11, 116, 255, 0.1);
+  border: 1px solid rgba(11, 116, 255, 0.2);
+  color: var(--accent, #0b74ff);
   font-size: 0.78rem;
   font-weight: 700;
   display: flex;

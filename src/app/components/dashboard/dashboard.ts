@@ -513,8 +513,8 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
           {
             data: data,
             backgroundColor: [
-              '#00e5b4', '#60a5fa', '#fbbf24', '#f87171', '#a78bfa',
-              '#34d399', '#38bdf8', '#fb923c', '#e879f9', '#facc15'
+              '#0b74ff', '#60a5fa', '#f4b11a', '#f87171', '#a78bfa',
+              '#2f8cff', '#38bdf8', '#fb923c', '#e879f9', '#facc15'
             ],
           },
         ],
@@ -658,7 +658,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     const expenseData = labels.map((label) => monthlyExpensesMap[label] || 0);
     return {
       labels,
-      datasets: [{ label: this.translate.instant('EXPENSE_AMOUNT'), data: expenseData, backgroundColor: 'rgba(0,229,180,0.25)', borderColor: '#00e5b4', borderWidth: 1, },],
+      datasets: [{ label: this.translate.instant('EXPENSE_AMOUNT'), data: expenseData, backgroundColor: 'rgba(11,116,255,0.25)', borderColor: '#0b74ff', borderWidth: 1, },],
     };
   }
 

@@ -5,14 +5,14 @@
 /* Remove default body margin/padding and set dark base */
 body {
   margin: 0;
-  background-color: #0a0c10;
+  background-color: #020817;
   color: #f0f2f7;
 }
 
 /* Active nav link */
 .active-link {
-  color: #00e5b4 !important;
-  background: rgba(0, 229, 180, 0.12) !important;
+  color: #0b74ff !important;
+  background: rgba(11, 116, 255, 0.12) !important;
 }
 
 /* Mobile pull-to-refresh */
@@ -34,13 +34,13 @@ body {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  border: 1px solid rgba(0, 229, 180, 0.28);
+  border: 1px solid rgba(11, 116, 255, 0.28);
   background: rgba(18, 21, 28, 0.88);
-  color: #00e5b4;
+  color: #0b74ff;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.38), 0 0 24px rgba(0, 229, 180, 0.14);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.38), 0 0 24px rgba(11, 116, 255, 0.14);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
 }
@@ -82,23 +82,23 @@ body {
 
 body.light-mode .pull-refresh-orb {
   background: rgba(255, 255, 255, 0.9);
-  color: #00b894;
-  border-color: rgba(0, 184, 148, 0.26);
-  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.18), 0 0 20px rgba(0, 184, 148, 0.12);
+  color: #005eea;
+  border-color: rgba(0, 94, 234, 0.26);
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.18), 0 0 20px rgba(0, 94, 234, 0.12);
 }
 
 /* =====================
    CSS Variables
    ===================== */
 :root {
-  --color-primary-accent: #00e5b4;
-  --color-bg-primary: #0a0c10;
-  --color-bg-secondary: #12151c;
+  --color-primary-accent: #0b74ff;
+  --color-bg-primary: #020817;
+  --color-bg-secondary: #07162f;
   --color-text-primary: #f0f2f7;
-  --color-border: rgba(255, 255, 255, 0.07);
+  --color-border: rgba(148, 190, 255, 0.15);
 
   --color-success: #34d399;
-  --color-warning: #fbbf24;
+  --color-warning: #f4b11a;
   --color-danger: #f87171;
   --color-info: #60a5fa;
 }
@@ -269,8 +269,8 @@ body.light-mode {
 }
 
 .dropdown-space-item-active {
-  background: rgba(0, 229, 180, 0.12) !important;
-  color: #00e5b4 !important;
+  background: rgba(11, 116, 255, 0.12) !important;
+  color: #0b74ff !important;
 }
 
 .dropdown-space-badge,
@@ -281,9 +281,9 @@ body.light-mode {
   min-width: 48px;
   padding: 0.1rem 0.45rem;
   border-radius: 999px;
-  background: rgba(0, 229, 180, 0.14);
-  border: 1px solid rgba(0, 229, 180, 0.25);
-  color: #00e5b4;
+  background: rgba(11, 116, 255, 0.14);
+  border: 1px solid rgba(11, 116, 255, 0.25);
+  color: #0b74ff;
   font-size: 0.64rem;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -307,7 +307,7 @@ body.light-mode {
 }
 
 .app-navbar .nav-icon-btn:hover {
-  border-color: rgba(0, 229, 180, 0.3);
+  border-color: rgba(11, 116, 255, 0.3);
   color: var(--nav-active);
   background: var(--nav-accent-dim);
 }
@@ -340,7 +340,7 @@ body.light-mode {
   height: 24px;
   border-radius: 6px;
   background: var(--nav-accent-dim);
-  border: 1px solid rgba(0, 229, 180, 0.25);
+  border: 1px solid rgba(11, 116, 255, 0.25);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -526,7 +526,7 @@ body.light-mode {
 }
 
 .theme-toggle-btn:hover {
-  border-color: rgba(0, 229, 180, 0.3);
+  border-color: rgba(11, 116, 255, 0.3);
   color: var(--nav-active);
   background: var(--nav-accent-dim);
 }
@@ -572,7 +572,7 @@ body.light-mode {
   padding: 0 0.5rem;
   align-items: center;
   justify-content: space-around;
-  box-shadow: 0 -1px 3px rgba(0, 184, 148, 0.35);
+  box-shadow: 0 -1px 3px rgba(0, 94, 234, 0.35);
 }
 
 .mob-bottom-nav.nav-hidden-keyboard {
@@ -642,17 +642,17 @@ body.light-mode {
 /* Active state */
 .mob-nav-active,
 .mob-nav-item.mob-nav-active {
-  color: var(--nav-active, #00e5b4) !important;
+  color: var(--nav-active, #0b74ff) !important;
 }
 
 .mob-nav-active .mob-nav-icon svg,
 .mob-nav-item.mob-nav-active .mob-nav-icon svg {
-  stroke: var(--nav-active, #00e5b4);
+  stroke: var(--nav-active, #0b74ff);
 }
 
 /* More button active */
 .mob-nav-more-btn.mob-nav-active {
-  color: var(--nav-active, #00e5b4);
+  color: var(--nav-active, #0b74ff);
 }
 
 /* ── FAB (Floating Action Button) Center Item ── */
@@ -669,11 +669,11 @@ body.light-mode {
   min-width: 45px;
   min-height: 45px;
   border-radius: 50%;
-  background: var(--nav-active, #00e5b4);
+  background: var(--nav-active, #0b74ff);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 16px rgba(0, 229, 180, 0.35);
+  box-shadow: 0 4px 16px rgba(11, 116, 255, 0.35);
   /* margin-bottom: 2px; */
   flex-shrink: 0;
   transition: transform 0.15s, box-shadow 0.15s;
@@ -689,12 +689,12 @@ body.light-mode {
 
 .mob-nav-fab:active .mob-fab-circle {
   transform: scale(0.9);
-  box-shadow: 0 2px 8px rgba(0, 229, 180, 0.2);
+  box-shadow: 0 2px 8px rgba(11, 116, 255, 0.2);
 }
 
 .mob-nav-fab-active .mob-fab-circle {
-  background: #00c49e;
-  box-shadow: 0 4px 20px rgba(0, 229, 180, 0.5);
+  background: #005bd1;
+  box-shadow: 0 4px 20px rgba(11, 116, 255, 0.5);
 }
 
 .mob-nav-fab .mob-nav-label {
@@ -769,7 +769,7 @@ body.light-mode {
 
 .mob-drawer-handle:active {
   cursor: grabbing;
-  background: var(--accent, #00e5b4);
+  background: var(--accent, #0b74ff);
   opacity: 0.7;
 }
 
@@ -785,14 +785,14 @@ body.light-mode {
   width: 40px;
   height: 40px;
   border-radius: 12px;
-  background: rgba(0, 229, 180, 0.12);
-  border: 1px solid rgba(0, 229, 180, 0.25);
+  background: rgba(11, 116, 255, 0.12);
+  border: 1px solid rgba(11, 116, 255, 0.25);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1rem;
   font-weight: 700;
-  color: #00e5b4;
+  color: #0b74ff;
   flex-shrink: 0;
 }
 
@@ -860,7 +860,7 @@ body.light-mode {
 }
 
 .mob-drawer-current-space span {
-  color: #00e5b4;
+  color: #0b74ff;
   font-weight: 700;
 }
 
@@ -897,12 +897,12 @@ body.light-mode {
 }
 
 .mob-drawer-space-link-active {
-  background: rgba(0, 229, 180, 0.08);
-  color: #00e5b4;
+  background: rgba(11, 116, 255, 0.08);
+  color: #0b74ff;
 }
 
 .mob-drawer-space-link-active .mob-drawer-link-icon {
-  color: #00e5b4;
+  color: #0b74ff;
 }
 
 .mob-drawer-space-main {
@@ -934,12 +934,12 @@ body.light-mode {
 }
 
 .mob-drawer-active {
-  color: var(--nav-active, #00e5b4) !important;
-  background: var(--nav-accent-dim, rgba(0,229,180,0.08)) !important;
+  color: var(--nav-active, #0b74ff) !important;
+  background: var(--nav-accent-dim, rgba(11,116,255,0.08)) !important;
 }
 
 .mob-drawer-active .mob-drawer-link-icon {
-  color: var(--nav-active, #00e5b4);
+  color: var(--nav-active, #0b74ff);
 }
 
 /* Group members */
@@ -967,7 +967,7 @@ body.light-mode {
 }
 
 .mob-drawer-member-me .mob-drawer-member-dot {
-  background: #00e5b4;
+  background: #0b74ff;
 }
 
 .mob-drawer-member-role {
@@ -980,7 +980,7 @@ body.light-mode {
 
 .mob-drawer-member-you {
   font-size: 0.7rem;
-  color: #00e5b4;
+  color: #0b74ff;
 }
 
 /* Logout */
@@ -1015,31 +1015,31 @@ body.light-mode .mob-drawer-backdrop {
 
 /* ✅ Fix 1: Bottom nav active - color highlight (no dot) */
 .mob-nav-item.mob-nav-active {
-  color: var(--nav-active, #00e5b4) !important;
+  color: var(--nav-active, #0b74ff) !important;
 }
 
 .mob-nav-item.mob-nav-active .mob-nav-icon svg {
-  stroke: var(--nav-active, #00e5b4) !important;
+  stroke: var(--nav-active, #0b74ff) !important;
 }
 
 .mob-nav-item.mob-nav-active .mob-nav-label {
-  color: var(--nav-active, #00e5b4) !important;
+  color: var(--nav-active, #0b74ff) !important;
 }
 
 /* FAB circle defined above */
 
 /* ✅ Fix 3: FAB active state */
 .mob-nav-fab.mob-nav-fab-active .mob-nav-icon svg {
-  stroke: var(--nav-active, #00e5b4) !important;
+  stroke: var(--nav-active, #0b74ff) !important;
 }
 
 .mob-nav-fab.mob-nav-fab-active .mob-nav-icon .ng-fa-icon {
-  stroke: var(--nav-active, #00e5b4) !important;
-  color: var(--nav-active, #00e5b4) !important;
+  stroke: var(--nav-active, #0b74ff) !important;
+  color: var(--nav-active, #0b74ff) !important;
 }
 
 .mob-nav-fab.mob-nav-fab-active .mob-nav-label {
-  color: var(--nav-active, #00e5b4) !important;
+  color: var(--nav-active, #0b74ff) !important;
 }
 
 /* ✅ Fix 4: FAB label - same size as other nav labels */
@@ -1057,24 +1057,24 @@ body.light-mode .mob-drawer-backdrop {
 
 /* ✅ Fix 5: More button active */
 .mob-nav-more-btn.mob-nav-active {
-  color: var(--nav-active, #00e5b4) !important;
+  color: var(--nav-active, #0b74ff) !important;
 }
 
 .mob-nav-more-btn.mob-nav-active .mob-nav-icon svg {
-  stroke: var(--nav-active, #00e5b4) !important;
+  stroke: var(--nav-active, #0b74ff) !important;
 }
 
 .mob-nav-more-btn.mob-nav-active .mob-nav-label {
-  color: var(--nav-active, #00e5b4) !important;
+  color: var(--nav-active, #0b74ff) !important;
 }
 
 /* ✅ Fix 6: Drawer active link icon color */
 .mob-drawer-link.mob-drawer-active .mob-drawer-link-icon svg {
-  stroke: var(--nav-active, #00e5b4) !important;
+  stroke: var(--nav-active, #0b74ff) !important;
 }
 
 .mob-drawer-link.mob-drawer-active .mob-drawer-link-icon {
-  color: var(--nav-active, #00e5b4) !important;
+  color: var(--nav-active, #0b74ff) !important;
 }
 
 
@@ -1090,7 +1090,7 @@ body.light-mode .mob-drawer-backdrop {
   padding: 0.55rem 1rem 0.4rem;
   font-size: 0.78rem;
   font-weight: 700;
-  color: var(--accent, #00e5b4);
+  color: var(--accent, #0b74ff);
   letter-spacing: 0.02em;
   white-space: nowrap;
   overflow: hidden;
@@ -1108,11 +1108,11 @@ body.light-mode .mob-drawer-backdrop {
   padding: 0.65rem 1.2rem 0.3rem;
   font-size: 0.92rem;
   font-weight: 800;
-  color: var(--accent, #00e5b4);
+  color: var(--accent, #0b74ff);
   letter-spacing: -0.01em;
 }
 
 body.light-mode .dropdown-group-name,
 body.light-mode .mob-drawer-group-name-title {
-  color: #009e7a;
+  color: #004fc7;
 }

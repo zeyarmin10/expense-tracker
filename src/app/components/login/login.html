@@ -12,16 +12,16 @@
       <img *ngIf="isDarkMode" src="assets/icons/sun-light.svg" class="theme-icon-img" alt="Light mode" />
     
       <fa-icon *ngIf="!isDarkMode" [icon]="faMoon" class="theme-icon"></fa-icon>
-      <span [class]="isDarkMode ? 'light-text' : 'dark-text'">
+      <!-- <span [class]="isDarkMode ? 'light-text' : 'dark-text'">
         {{ (isDarkMode ? 'LOGIN_LIGHT' : 'LOGIN_DARK') | translate }}
-      </span>
+      </span> -->
     </button>
 
     <!-- Language toggle -->
     <button class="lgn-lang-btn" (click)="toggleLanguage()" [attr.aria-label]="'Toggle language'">
       <img [src]="'assets/flags/' + (currentLang === 'my' ? 'en' : 'mm') + '.png'"
         alt="{{ currentLang === 'my' ? 'English' : 'Myanmar' }}" class="lgn-lang-flag" />
-      <span class="lgn-lang-label">{{ currentLang === 'my' ? 'EN' : 'MM' }}</span>
+      <!-- <span class="lgn-lang-label">{{ currentLang === 'my' ? 'EN' : 'MM' }}</span> -->
     </button>
   </div>
 

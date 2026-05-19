@@ -108,7 +108,7 @@
 
 .pnl-fl-input:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(0, 229, 180, 0.12);
+  box-shadow: 0 0 0 3px rgba(11, 116, 255, 0.12);
 }
 
 .pnl-fl-select {
@@ -642,11 +642,11 @@
 
   0%,
   100% {
-    box-shadow: 0 0 6px rgba(0, 229, 180, 0.25);
+    box-shadow: 0 0 6px rgba(11, 116, 255, 0.25);
   }
 
   50% {
-    box-shadow: 0 0 18px rgba(0, 229, 180, 0.5);
+    box-shadow: 0 0 18px rgba(11, 116, 255, 0.5);
   }
 }
 
@@ -786,15 +786,16 @@
 }
 
 .pnl-cash-flow-summary-income {
-  border-color: rgba(0, 229, 180, 0.18);
+  border-color: var(--income-border);
 }
 
 .pnl-cash-flow-summary-expense {
-  border-color: rgba(251, 191, 36, 0.18);
+  border-color: rgba(244, 177, 26, 0.18);
 }
 
 .pnl-cash-flow-summary-net {
-  border-color: rgba(255, 255, 255, 0.12);
+  border-color: var(--income-border);
+  background: linear-gradient(145deg, var(--surface), var(--income-dim));
 }
 
 .pnl-cash-flow-summary-label {
@@ -858,7 +859,7 @@
 }
 
 .pnl-cash-flow-bar-in {
-  background: rgba(0, 229, 180, 0.65);
+  background: rgba(52, 211, 153, 0.75);
 }
 
 .pnl-cash-flow-bar-out {
@@ -952,9 +953,9 @@
 
 .pnl-cash-flow-currency {
   flex-shrink: 0;
-  border: 1px solid rgba(0, 229, 180, 0.2);
+  border: 1px solid rgba(11, 116, 255, 0.2);
   border-radius: 6px;
-  background: rgba(0, 229, 180, 0.08);
+  background: rgba(11, 116, 255, 0.08);
   color: var(--accent);
   font-size: 0.65rem;
   font-weight: 700;
@@ -966,7 +967,7 @@
 .pnl-cash-flow-net-badge {
   flex-shrink: 0;
   border-radius: 4px;
-  background: rgba(0, 229, 180, 0.14);
+  background: var(--income-dim);
   color: var(--income-color);
   font-size: 0.72rem;
   font-weight: 800;
@@ -1031,7 +1032,7 @@
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--accent), rgba(0, 229, 180, 0.65));
+  background: linear-gradient(90deg, var(--income-color), rgba(52, 211, 153, 0.65));
 }
 
 .pnl-cash-flow-progress span.pnl-cash-flow-progress-negative {
@@ -1084,10 +1085,10 @@
 
 .pnl-empty-banner {
   background: linear-gradient(135deg,
-    rgba(0, 229, 180, 0.06) 0%,
+    rgba(11, 116, 255, 0.06) 0%,
     var(--surface) 50%,
-    rgba(0, 229, 180, 0.03) 100%);
-  border: 1px solid rgba(0, 229, 180, 0.2);
+    rgba(11, 116, 255, 0.03) 100%);
+  border: 1px solid rgba(11, 116, 255, 0.2);
   border-radius: 16px;
   padding: 1.5rem;
   display: flex;
@@ -1166,12 +1167,12 @@
 .pnl-empty-btn-primary {
   background: var(--accent);
   color: #070a0e;
-  box-shadow: 0 4px 14px rgba(0, 229, 180, 0.25);
+  box-shadow: 0 4px 14px rgba(11, 116, 255, 0.25);
 }
 
 .pnl-empty-btn-primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(0, 229, 180, 0.35);
+  box-shadow: 0 6px 20px rgba(11, 116, 255, 0.35);
 }
 
 /* ── Chart Empty State ── */
@@ -1211,16 +1212,16 @@
   border-radius: 8px;
   font-size: 0.78rem;
   font-weight: 700;
-  background: rgba(0, 229, 180, 0.1);
+  background: rgba(11, 116, 255, 0.1);
   color: var(--accent);
-  border: 1px solid rgba(0, 229, 180, 0.2);
+  border: 1px solid rgba(11, 116, 255, 0.2);
   cursor: pointer;
   transition: all 0.15s;
   margin-top: 0.2rem;
 }
 
 .pnl-no-chart-cta:hover {
-  background: rgba(0, 229, 180, 0.18);
+  background: rgba(11, 116, 255, 0.18);
   transform: translateY(-1px);
 }
 
@@ -1236,7 +1237,7 @@
   border-radius: 6px;
   background: linear-gradient(90deg,
     var(--surface-2) 25%,
-    rgba(0, 229, 180, 0.08) 50%,
+    rgba(11, 116, 255, 0.08) 50%,
     var(--surface-2) 75%);
   background-size: 200% 100%;
   animation: pnl-shimmer 1.5s infinite;

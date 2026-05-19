@@ -320,9 +320,9 @@ export class Profit implements OnInit, OnDestroy {
             ? this.translate.instant('PROFIT')
             : this.translate.instant('LOSS');
         const profitLossColor =
-          profit >= 0 ? 'rgba(0,229,180,0.35)' : 'rgba(248,113,113,0.35)';
+          profit >= 0 ? 'rgba(52,211,153,0.35)' : 'rgba(248,113,113,0.35)';
         const profitLossBorderColor =
-          profit >= 0 ? 'rgba(0,229,180,1)' : 'rgba(248,113,113,1)';
+          profit >= 0 ? 'rgba(52,211,153,1)' : 'rgba(248,113,113,1)';
 
         return {
           labels: [
@@ -336,12 +336,12 @@ export class Profit implements OnInit, OnDestroy {
               data: [totalIncome, totalExpense, profit],
               backgroundColor: [
                 'rgba(52,211,153,0.35)', // Income
-                'rgba(251,191,36,0.35)', // Expense
+                'rgba(244,177,26,0.35)', // Expense
                 profitLossColor, // Profit/Loss
               ],
               borderColor: [
                 'rgba(52,211,153,1)',
-                'rgba(251,191,36,1)',
+                'rgba(244,177,26,1)',
                 profitLossBorderColor,
               ],
               borderWidth: 1,

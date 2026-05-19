@@ -189,11 +189,11 @@
 
   0%,
   100% {
-    box-shadow: 0 0 6px rgba(0, 229, 180, 0.25);
+    box-shadow: 0 0 6px rgba(11, 116, 255, 0.25);
   }
 
   50% {
-    box-shadow: 0 0 18px rgba(0, 229, 180, 0.5);
+    box-shadow: 0 0 18px rgba(11, 116, 255, 0.5);
   }
 }
 

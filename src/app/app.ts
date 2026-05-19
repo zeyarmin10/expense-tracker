@@ -429,7 +429,7 @@ export class App implements OnInit {
     const isDark = document.body.classList.contains('light-mode') === false;
 
     // Theme colors
-    const bgColor = isDark ? '#12151c' : '#ffffff';
+    const bgColor = isDark ? '#07162f' : '#ffffff';
     const titleColor = isDark ? '#ffffff' : '#111827';
     const textColor = isDark ? '#9ca3af' : '#4b5563';
     const borderColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
@@ -459,7 +459,7 @@ export class App implements OnInit {
           <div style="font-size:0.82rem;color:${textColor};white-space:pre-line;text-align:center;">${text}</div>
         </div>`,
       confirmButtonText: btnText,
-      confirmButtonColor: '#00e5b4',
+      confirmButtonColor: '#0b74ff',
       background: bgColor,
       color: titleColor,
       allowOutsideClick: false,
@@ -483,9 +483,9 @@ export class App implements OnInit {
       showConfirmButton: false,
       timer: 3000,
       timerProgressBar: true,
-      background: '#12151c',
+      background: '#07162f',
       color: '#ffffff',
-      iconColor: '#00e5b4',
+      iconColor: '#0b74ff',
     });
     Toast.fire({ icon: 'success', title: msg });
   }
