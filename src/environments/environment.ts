@@ -1,5 +1,7 @@
 export const environment = {
     production: true,
+  apiBaseUrl: "",
+  firebaseVapidKey: "BIKVaPoRrIS7Jnz6mWcT7p6KTSTVdImDfvhFIS-DblGuKZ0X-tCC9Q9XJcWm0HUscqIS1kLUSwnMFuBsuPRUBrA",
     firebaseConfig: {
         apiKey: "AIzaSyDJJXDNDCIweU0FzYIZJCMErKHcSLbzvS8",
         authDomain: "expense-tracker-c94e8.firebaseapp.com",

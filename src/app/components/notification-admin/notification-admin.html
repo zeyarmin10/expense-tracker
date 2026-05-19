@@ -1,0 +1,80 @@
+<div class="noti-admin-wrapper">
+  <div class="noti-admin-container">
+    <div class="noti-admin-header">
+      <div class="noti-admin-title-row">
+        <span class="noti-admin-icon">
+          <fa-icon [icon]="faBell"></fa-icon>
+        </span>
+        <div>
+          <h2>{{ 'NOTI_ADMIN_TITLE' | translate }}</h2>
+          <p>{{ 'NOTI_ADMIN_SUBTITLE' | translate }}</p>
+        </div>
+      </div>
+    </div>
+
+    <form class="noti-admin-panel" (ngSubmit)="sendNotification()">
+      <div class="noti-admin-security">
+        <fa-icon [icon]="faShieldHalved"></fa-icon>
+        <span>{{ 'NOTI_ADMIN_SECRET_HELP' | translate }}</span>
+      </div>
+
+      <label class="noti-admin-field">
+        <span>{{ 'NOTI_ADMIN_SECRET_LABEL' | translate }}</span>
+        <input
+          type="password"
+          name="adminSecret"
+          [(ngModel)]="adminSecret"
+          autocomplete="off"
+          [placeholder]="'NOTI_ADMIN_SECRET_PLACEHOLDER' | translate"
+        />
+      </label>
+
+      <label class="noti-admin-field">
+        <span>{{ 'NOTI_ADMIN_TITLE_LABEL' | translate }}</span>
+        <input
+          type="text"
+          name="title"
+          [(ngModel)]="title"
+          maxlength="80"
+          [placeholder]="'NOTI_ADMIN_TITLE_PLACEHOLDER' | translate"
+        />
+      </label>
+
+      <label class="noti-admin-field">
+        <span>{{ 'NOTI_ADMIN_BODY_LABEL' | translate }}</span>
+        <textarea
+          name="body"
+          [(ngModel)]="body"
+          rows="4"
+          maxlength="220"
+          [placeholder]="'NOTI_ADMIN_BODY_PLACEHOLDER' | translate"
+        ></textarea>
+      </label>
+
+      <div class="noti-admin-grid">
+        <label class="noti-admin-field">
+          <span>{{ 'NOTI_ADMIN_OPEN_LINK_LABEL' | translate }}</span>
+          <input type="text" name="link" [(ngModel)]="link" placeholder="/expense" />
+        </label>
+
+        <label class="noti-admin-field">
+          <span>{{ 'NOTI_ADMIN_TARGET_LABEL' | translate }}</span>
+          <input
+            type="text"
+            name="targetUid"
+            [(ngModel)]="targetUid"
+            [placeholder]="'NOTI_ADMIN_TARGET_PLACEHOLDER' | translate"
+          />
+        </label>
+      </div>
+
+      <button type="submit" class="noti-admin-send-btn" [disabled]="isSending">
+        <fa-icon [icon]="faPaperPlane" *ngIf="!isSending"></fa-icon>
+        <span>{{ (isSending ? 'NOTI_ADMIN_SENDING' : 'NOTI_ADMIN_SEND') | translate }}</span>
+      </button>
+
+      <p class="noti-admin-result" *ngIf="resultMessage">{{ resultMessage }}</p>
+      <p class="noti-admin-error" *ngIf="errorMessage">{{ errorMessage }}</p>
+    </form>
+  </div>
+</div>

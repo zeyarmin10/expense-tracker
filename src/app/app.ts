@@ -14,6 +14,7 @@ import { ToastService } from './services/toast';
 import { GroupService } from './services/group.service';
 import { NetworkService } from './services/network.service';
 import { ThemeService } from './services/theme.service';
+import { NotificationService } from './services/notification.service';
 import {
   faRightFromBracket,
   faUsers,
@@ -99,6 +100,7 @@ export class App implements OnInit {
   private networkService = inject(NetworkService);
   private spaceContextService = inject(SpaceContextService);
   private themeService = inject(ThemeService);
+  private notificationService = inject(NotificationService);
 
   constructor(private translate: TranslateService) {
     this.translate.setDefaultLang('en');
@@ -338,6 +340,8 @@ export class App implements OnInit {
     this.initKeyboardDetection();
 
     this.initBackButton();
+    void this.notificationService.startForegroundListener();
+    this.notificationService.initAutoRegistration();
 
     // ── Network monitoring ──────────────────────
     await this.networkService.init();
@@ -350,6 +354,7 @@ export class App implements OnInit {
         if (isActive) {
           // foreground ပြန်ရောက်မှ current status စစ်
           await this.networkService.checkOnResume();
+          await this.notificationService.refreshCurrentRegistration();
         }
       });
     }
@@ -388,6 +393,7 @@ export class App implements OnInit {
           Swal.close();
           this.showNetworkRestoredToast();
         }
+        void this.notificationService.refreshCurrentRegistration();
       });
       return;
     }
@@ -413,6 +419,7 @@ export class App implements OnInit {
           Swal.close();
           this.showNetworkRestoredToast();
         }
+        void this.notificationService.refreshCurrentRegistration();
         // wasOffline = false ဆိုရင် (online ဖြစ်နေဆဲ foreground ပြန်လာ)
         // → ဘာမှမပြဘူး ✓
       }

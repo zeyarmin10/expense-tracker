@@ -19,6 +19,9 @@ const config: CapacitorConfig = {
       backgroundColor: '#0F2340',
       showSpinner: false
     },
+    PushNotifications: {
+      presentationOptions: ['alert', 'sound']
+    },
     
     GoogleAuth: {
       scopes: ['profile', 'email'],

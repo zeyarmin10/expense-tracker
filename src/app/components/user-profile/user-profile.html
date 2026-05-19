@@ -188,6 +188,72 @@
           </div>
         </div>
 
+        <!-- Notifications -->
+        <div class="prof-section prof-notification-section" [class.prof-noti-section-loading]="isNotificationBusy">
+          <div class="prof-noti-header">
+            <div class="prof-noti-title">
+              <span class="prof-noti-icon">
+                <fa-icon [icon]="isNotificationReady ? faBell : faBellSlash"></fa-icon>
+              </span>
+              <div>
+                <span class="prof-section-label">{{ 'NOTI_SECTION_LABEL' | translate }}</span>
+                <p>{{ 'NOTI_SECTION_DESC' | translate }}</p>
+              </div>
+            </div>
+            <span class="prof-noti-status"
+              [class.prof-noti-status-on]="isNotificationReady">
+              {{ getNotificationPermissionLabel() }}
+            </span>
+          </div>
+
+          <label class="prof-noti-switch-row" [class.prof-noti-disabled]="!canChangeNotificationEnabled">
+            <span class="prof-noti-toggle-copy">
+              <span class="prof-noti-toggle-title">
+                <fa-icon [icon]="isNotificationReady ? faBell : faBellSlash"></fa-icon>
+                {{ 'NOTI_MASTER_TITLE' | translate }}
+                <span class="prof-noti-loading-text" *ngIf="notificationBusyTarget === 'master'">
+                  <span class="prof-noti-mini-spinner"></span>
+                  {{ 'NOTI_PROCESSING_LABEL' | translate }}
+                </span>
+              </span>
+              <span>{{ 'NOTI_MASTER_DESC' | translate }}</span>
+            </span>
+            <span class="prof-switch-control" [class.prof-switch-loading]="notificationBusyTarget === 'master'">
+              <input type="checkbox" [checked]="notificationState.enabled"
+                [disabled]="!canChangeNotificationEnabled"
+                (change)="onNotificationToggleChange($event)" />
+              <span class="prof-switch-track">
+                <span class="prof-switch-thumb"></span>
+                <span class="prof-switch-spinner" *ngIf="notificationBusyTarget === 'master'"></span>
+              </span>
+            </span>
+          </label>
+
+          <label class="prof-noti-toggle-row" [class.prof-noti-disabled]="!canToggleDailyReminder">
+            <span class="prof-noti-toggle-copy">
+              <span class="prof-noti-toggle-title">
+                <fa-icon [icon]="faClock"></fa-icon>
+                {{ 'NOTI_DAILY_REMINDER_TITLE' | translate }}
+                <span class="prof-noti-loading-text" *ngIf="notificationBusyTarget === 'daily'">
+                  <span class="prof-noti-mini-spinner"></span>
+                  {{ 'NOTI_PROCESSING_LABEL' | translate }}
+                </span>
+              </span>
+              <span>{{ 'NOTI_DAILY_REMINDER_DESC' | translate }}</span>
+            </span>
+            <span class="prof-switch-control" [class.prof-switch-loading]="notificationBusyTarget === 'daily'">
+              <input type="checkbox" [checked]="notificationState.dailyReminderEnabled"
+                [disabled]="!canToggleDailyReminder"
+                (change)="onDailyReminderToggleChange($event)" />
+              <span class="prof-switch-track">
+                <span class="prof-switch-thumb"></span>
+                <span class="prof-switch-spinner" *ngIf="notificationBusyTarget === 'daily'"></span>
+              </span>
+            </span>
+          </label>
+
+        </div>
+
         <!-- Save button removed: all fields auto-save or use inline edit -->
 
       </form>

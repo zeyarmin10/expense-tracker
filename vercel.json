@@ -1,5 +1,11 @@
 {
   "installCommand": "npm install --legacy-peer-deps",
   "buildCommand": "ng build --configuration production",
-  "outputDirectory": "dist/expense-tracker/browser"
+  "outputDirectory": "dist/expense-tracker/browser",
+  "crons": [
+    {
+      "path": "/api/send-daily-reminders",
+      "schedule": "0 13 * * *"
+    }
+  ]
 }

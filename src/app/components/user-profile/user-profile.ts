@@ -12,7 +12,7 @@ import { AuthService } from '../../services/auth';
 import { UserDataService, UserProfile } from '../../services/user-data';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faSave, faUserCircle, faTrash, faPlus, faChevronDown, faChevronUp, faListUl, faEdit, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faSave, faUserCircle, faTrash, faPlus, faChevronDown, faChevronUp, faListUl, faEdit, faTimes, faBell, faBellSlash, faClock } from '@fortawesome/free-solid-svg-icons';
 import { faTrashCan } from '@fortawesome/free-regular-svg-icons';
 import { updateProfile } from '@angular/fire/auth';
 import { FormsModule } from '@angular/forms';
@@ -22,6 +22,7 @@ import { CustomBudgetPeriod, CustomBudgetPeriodService } from '../../services/cu
 import { GroupService } from '../../services/group.service';
 import { FormatService } from '../../services/format.service';
 import { AppTheme, ThemeService } from '../../services/theme.service';
+import { NotificationService, NotificationSettingsState } from '../../services/notification.service';
 import Swal from 'sweetalert2';
 
 export const AVAILABLE_BUDGET_PERIODS = [
@@ -68,6 +69,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   private customBudgetPeriodService = inject(CustomBudgetPeriodService);
   private groupService = inject(GroupService);
   private themeService = inject(ThemeService);
+  private notificationService = inject(NotificationService);
   public formatService = inject(FormatService);
 
   userProfileForm: FormGroup;
@@ -89,6 +91,16 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   customBudgetPeriods: CustomBudgetPeriod[] = [];
   showCustomDateRange = false;
   isCustomBudgetListCollapsed = true;
+  notificationState: NotificationSettingsState = {
+    supported: false,
+    permission: 'unsupported',
+    enabled: false,
+    dailyReminderEnabled: false,
+    tokenCount: 0,
+  };
+  isNotificationBusy = false;
+  notificationError = '';
+  notificationBusyTarget: 'master' | 'daily' | null = null;
 
   get isCustomPeriodSelected(): boolean {
     const selectedPeriodId = this.userProfileForm.get('budgetPeriod')?.value;
@@ -103,6 +115,36 @@ export class UserProfileComponent implements OnInit, OnDestroy {
       return true; // Personal account users can always edit
     }
     return this.userRole === 'admin' || this.userRole === 'owner';
+  }
+
+  get isNotificationReady(): boolean {
+    return (
+      this.notificationState.enabled &&
+      this.notificationState.permission === 'granted' &&
+      this.notificationState.tokenCount > 0
+    );
+  }
+
+  get canEnableNotifications(): boolean {
+    return (
+      !this.isNotificationBusy &&
+      this.notificationState.supported &&
+      !this.isNotificationReady
+    );
+  }
+
+  get canDisableNotifications(): boolean {
+    return !this.isNotificationBusy && this.notificationState.enabled;
+  }
+
+  get canToggleDailyReminder(): boolean {
+    return !this.isNotificationBusy && this.notificationState.enabled;
+  }
+
+  get canChangeNotificationEnabled(): boolean {
+    return this.notificationState.enabled
+      ? this.canDisableNotifications
+      : this.canEnableNotifications;
   }
 
   @ViewChild(CustomBudgetPeriodModalComponent) private modalComponent!: CustomBudgetPeriodModalComponent;
@@ -121,6 +163,9 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   isDeletingAccount: boolean = false;
   faListUl = faListUl;
   faTrashCan = faTrashCan;
+  faBell = faBell;
+  faBellSlash = faBellSlash;
+  faClock = faClock;
 
   constructor() {
     this.userProfileForm = this.fb.group({
@@ -249,6 +294,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
 
     this.translateCurrencyNames();
     this.translateBudgetPeriodNames();
+    void this.refreshNotificationState();
 
     this.authService.currentUser$.pipe(
       switchMap(user => user ? this.customBudgetPeriodService.getCustomBudgetPeriods(user.uid) : of([]))
@@ -377,6 +423,163 @@ export class UserProfileComponent implements OnInit, OnDestroy {
     this.selectedLanguage = language;
     this.translate.use(this.selectedLanguage);
     localStorage.setItem('selectedLanguage', this.selectedLanguage);
+  }
+
+  async refreshNotificationState(): Promise<void> {
+    try {
+      this.notificationState = await this.notificationService.getState();
+      this.notificationError = '';
+    } catch (error: any) {
+      console.error('Notification state error:', error);
+      await this.showNotificationError(this.translate.instant('NOTI_STATE_ERROR'));
+    }
+  }
+
+  async enablePushNotifications(previousState = this.notificationState): Promise<void> {
+    this.isNotificationBusy = true;
+    this.notificationBusyTarget = 'master';
+    this.notificationError = '';
+
+    try {
+      this.notificationState = await this.notificationService.enableNotifications();
+      Toast.fire({ icon: 'success', title: this.translate.instant('NOTI_ENABLE_SUCCESS') });
+    } catch (error: any) {
+      console.error('Notification enable error:', error);
+      this.notificationState = { ...previousState };
+      await this.showNotificationError(this.translateNotificationError(error, 'NOTI_ENABLE_ERROR'));
+    } finally {
+      this.isNotificationBusy = false;
+      this.notificationBusyTarget = null;
+    }
+  }
+
+  async disablePushNotifications(previousState = this.notificationState): Promise<void> {
+    this.isNotificationBusy = true;
+    this.notificationBusyTarget = 'master';
+    this.notificationError = '';
+
+    try {
+      this.notificationState = await this.notificationService.disableNotifications();
+      Toast.fire({ icon: 'success', title: this.translate.instant('NOTI_DISABLE_SUCCESS') });
+    } catch (error: any) {
+      console.error('Notification disable error:', error);
+      this.notificationState = { ...previousState };
+      await this.showNotificationError(this.translateNotificationError(error, 'NOTI_DISABLE_ERROR'));
+    } finally {
+      this.isNotificationBusy = false;
+      this.notificationBusyTarget = null;
+    }
+  }
+
+  async onNotificationToggleChange(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const previousState = { ...this.notificationState };
+    const enabled = input.checked;
+
+    input.checked = previousState.enabled;
+
+    if (!this.canChangeNotificationEnabled) {
+      return;
+    }
+
+    await this.togglePushNotifications(enabled, previousState);
+    input.checked = this.notificationState.enabled;
+  }
+
+  async togglePushNotifications(
+    enabled: boolean,
+    previousState = this.notificationState,
+  ): Promise<void> {
+    if (enabled) {
+      await this.enablePushNotifications(previousState);
+      return;
+    }
+
+    await this.disablePushNotifications(previousState);
+  }
+
+  async onDailyReminderToggleChange(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const previousState = { ...this.notificationState };
+    const enabled = input.checked;
+
+    input.checked = previousState.dailyReminderEnabled;
+
+    if (!this.canToggleDailyReminder) {
+      return;
+    }
+
+    await this.setDailyReminder(enabled, previousState);
+    input.checked = this.notificationState.dailyReminderEnabled;
+  }
+
+  async setDailyReminder(
+    enabled: boolean,
+    previousState = this.notificationState,
+  ): Promise<void> {
+    this.isNotificationBusy = true;
+    this.notificationBusyTarget = 'daily';
+    this.notificationError = '';
+
+    try {
+      this.notificationState = await this.notificationService.setDailyReminderEnabled(enabled);
+      Toast.fire({ icon: 'success', title: this.translate.instant('NOTI_SETTINGS_SAVED') });
+    } catch (error: any) {
+      console.error('Daily reminder setting error:', error);
+      this.notificationState = { ...previousState };
+      await this.showNotificationError(this.translateNotificationError(error, 'NOTI_SETTINGS_ERROR'));
+    } finally {
+      this.isNotificationBusy = false;
+      this.notificationBusyTarget = null;
+    }
+  }
+
+  getNotificationPermissionLabel(): string {
+    if (!this.notificationState.supported) {
+      return this.translate.instant('NOTI_PERMISSION_UNSUPPORTED');
+    }
+    if (!this.notificationState.enabled) {
+      return this.translate.instant('NOTI_STATUS_DISABLED');
+    }
+
+    const permission = this.notificationState.permission;
+    if (permission === 'granted') {
+      return this.translate.instant(this.isNotificationReady ? 'NOTI_STATUS_ENABLED' : 'NOTI_PERMISSION_GRANTED');
+    }
+    if (permission === 'denied') {
+      return this.translate.instant('NOTI_PERMISSION_DENIED');
+    }
+    if (permission === 'unsupported') {
+      return this.translate.instant('NOTI_PERMISSION_UNSUPPORTED');
+    }
+    return this.translate.instant('NOTI_PERMISSION_DEFAULT');
+  }
+
+  private translateNotificationError(error: any, fallbackKey: string): string {
+    const code = String(error?.code || '');
+    const message = String(error?.message || '');
+    if (message.startsWith('NOTIFICATION_')) {
+      return this.translate.instant(message);
+    }
+    if (/invalid-vapid-key/i.test(code) || /invalid-vapid-key/i.test(message)) {
+      return this.translate.instant('NOTIFICATION_VAPID_KEY_INVALID');
+    }
+    if (/permission[_ -]?denied/i.test(message)) {
+      return this.translate.instant('NOTIFICATION_SETTINGS_PERMISSION_DENIED');
+    }
+    if (/token/i.test(code) || /token/i.test(message)) {
+      return this.translate.instant('NOTIFICATION_TOKEN_FAILED');
+    }
+    return this.translate.instant(fallbackKey);
+  }
+
+  private async showNotificationError(message: string): Promise<void> {
+    this.notificationError = message;
+    await Swal.fire({
+      icon: 'error',
+      title: this.translate.instant('ERROR_TITLE'),
+      text: message,
+    });
   }
 
   onImageError(): void {

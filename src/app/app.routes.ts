@@ -11,6 +11,7 @@ import { BudgetComponent } from './components/budget/budget';
 import { OnboardingComponent } from './components/onboarding/onboarding';
 import { MemberManagementComponent } from './components/member-management/member-management';
 import { PrivacyPolicyComponent } from './components/privacy-policy/privacy-policy';
+import { NotificationAdminComponent } from './components/notification-admin/notification-admin';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -30,6 +31,7 @@ export const routes: Routes = [
       { path: 'category', component: Category },
       { path: 'onboarding', component: OnboardingComponent },
       { path: 'member-management', component: MemberManagementComponent },
+      { path: 'notification-admin', component: NotificationAdminComponent },
     ]
   },
   { path: '**', redirectTo: '/dashboard' },
