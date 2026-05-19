@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, ViewChild } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, ViewChild } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import {
   FormBuilder,
@@ -6,7 +6,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { Observable, of, map, firstValueFrom, combineLatest } from 'rxjs';
+import { Observable, of, map, firstValueFrom, combineLatest, Subscription } from 'rxjs';
 import { switchMap, tap, catchError } from 'rxjs/operators';
 import { AuthService } from '../../services/auth';
 import { UserDataService, UserProfile } from '../../services/user-data';
@@ -21,6 +21,7 @@ import { CustomBudgetPeriodModalComponent } from '../common/custom-budget-period
 import { CustomBudgetPeriod, CustomBudgetPeriodService } from '../../services/custom-budget-period.service';
 import { GroupService } from '../../services/group.service';
 import { FormatService } from '../../services/format.service';
+import { AppTheme, ThemeService } from '../../services/theme.service';
 import Swal from 'sweetalert2';
 
 export const AVAILABLE_BUDGET_PERIODS = [
@@ -58,7 +59,7 @@ const Toast = Swal.mixin({
   templateUrl: './user-profile.html',
   styleUrls: ['./user-profile.css'],
 })
-export class UserProfileComponent implements OnInit {
+export class UserProfileComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private userDataService = inject(UserDataService);
   private fb = inject(FormBuilder);
@@ -66,6 +67,7 @@ export class UserProfileComponent implements OnInit {
   private datePipe = inject(DatePipe);
   private customBudgetPeriodService = inject(CustomBudgetPeriodService);
   private groupService = inject(GroupService);
+  private themeService = inject(ThemeService);
   public formatService = inject(FormatService);
 
   userProfileForm: FormGroup;
@@ -78,9 +80,8 @@ export class UserProfileComponent implements OnInit {
   selectedLanguage: string = 'my';
   selectedCurrency: string = 'MMK';
   selectedBudgetPeriod: string | null = null;
-  appTheme: 'light' | 'dark' | 'system' = 'system';
-  private systemDarkQuery: MediaQueryList | null = null;
-  private systemThemeListener: (() => void) | null = null;
+  appTheme: AppTheme = 'system';
+  private readonly themeSubscription = new Subscription();
   availableBudgetPeriods = AVAILABLE_BUDGET_PERIODS;
   translatedBudgetPeriods: any[] = [];
   availableCurrencies = AVAILABLE_CURRENCIES;
@@ -234,10 +235,11 @@ export class UserProfileComponent implements OnInit {
       this.translate.use(this.selectedLanguage);
     }
 
-    // Load saved theme
-    const savedTheme = localStorage.getItem('appTheme') as 'light' | 'dark' | 'system' | null;
-    this.appTheme = savedTheme || 'system';
-    this.applyTheme(this.appTheme);
+    this.themeSubscription.add(
+      this.themeService.theme$.subscribe((theme) => {
+        this.appTheme = theme;
+      })
+    );
 
     this.translate.onLangChange.subscribe(() => {
       this.translateCurrencyNames();
@@ -253,6 +255,10 @@ export class UserProfileComponent implements OnInit {
       this.customBudgetPeriods = periods.sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
       this.handleBudgetPeriodChange(this.userProfileForm.get('budgetPeriod')?.value, true);
     });
+  }
+
+  ngOnDestroy(): void {
+    this.themeSubscription.unsubscribe();
   }
 
   translateCurrencyNames() {
@@ -362,32 +368,8 @@ export class UserProfileComponent implements OnInit {
     }
   }
 
-  onThemeChange(theme: 'light' | 'dark' | 'system'): void {
-    this.appTheme = theme;
-    localStorage.setItem('appTheme', theme);
-    this.applyTheme(theme);
-  }
-
-  applyTheme(theme: 'light' | 'dark' | 'system'): void {
-    // Remove old system listener if any
-    if (this.systemDarkQuery && this.systemThemeListener) {
-      this.systemDarkQuery.removeEventListener('change', this.systemThemeListener);
-      this.systemThemeListener = null;
-    }
-
-    if (theme === 'system') {
-      this.systemDarkQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      const applySystemTheme = (dark: boolean) => {
-        document.body.classList.toggle('light-mode', !dark);
-      };
-      applySystemTheme(this.systemDarkQuery.matches);
-      this.systemThemeListener = () => applySystemTheme(this.systemDarkQuery!.matches);
-      this.systemDarkQuery.addEventListener('change', this.systemThemeListener);
-    } else if (theme === 'light') {
-      document.body.classList.add('light-mode');
-    } else {
-      document.body.classList.remove('light-mode');
-    }
+  onThemeChange(theme: AppTheme): void {
+    this.themeService.setTheme(theme);
   }
 
   onLanguageChange(language: string): void {

@@ -27,6 +27,7 @@ import { User } from '@angular/fire/auth';
 import { ToastService } from '../../services/toast'; // Import ToastService
 import { InvitationService } from '../../services/invitation.service';
 import { SpaceContextService } from '../../services/space-context.service';
+import { ThemeService } from '../../services/theme.service';
 import Swal from 'sweetalert2';
 import { getRedirectResult } from '@angular/fire/auth';
 import { Auth } from '@angular/fire/auth';
@@ -65,6 +66,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   categoryService = inject(CategoryService);
   invitationService = inject(InvitationService);
   spaceContextService = inject(SpaceContextService);
+  themeService = inject(ThemeService);
   router = inject(Router);
   route = inject(ActivatedRoute); // Inject ActivatedRoute
   sessionService = inject(SessionManagementService);
@@ -107,10 +109,11 @@ export class LoginComponent implements OnInit, OnDestroy {
       }
     });
 
-    // theme init
-    const savedTheme = localStorage.getItem('theme') || 'dark';
-    this.isDarkMode = savedTheme === 'dark';
-    if (!this.isDarkMode) document.body.classList.add('light-mode');
+    this.themeService.isDarkMode$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((isDarkMode) => {
+        this.isDarkMode = isDarkMode;
+      });
 
     this.authService.currentUser$.pipe(takeUntil(this.destroy$)).subscribe(async (user) => {
       if (user) {
@@ -283,13 +286,6 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   toggleTheme(): void {
-    this.isDarkMode = !this.isDarkMode;
-    if (this.isDarkMode) {
-      document.body.classList.remove('light-mode');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.body.classList.add('light-mode');
-      localStorage.setItem('theme', 'light');
-    }
+    this.themeService.toggleTheme();
   }
 }

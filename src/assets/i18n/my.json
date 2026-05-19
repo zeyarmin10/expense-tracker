@@ -603,7 +603,7 @@
   "SPACE_DELETE_MEMBERS_EXISTS": "ဒီနေရာကို မဖျက်ခင် အခြားအဖွဲ့ဝင်အားလုံးကို အရင်ဖယ်ရှားပေးပါ။",
   "SPACE_DELETE_PENDING_INVITES": "ဒီနေရာကို မဖျက်ခင် စောင့်ဆိုင်းနေသော ဖိတ်ကြားချက်အားလုံးကို အရင်ရုပ်သိမ်းပေးပါ။",
   "SPACE_DELETE_OWNER_ONLY": "ဒီနေရာကို owner ပဲ ဖျက်နိုင်ပါတယ်။",
-  "APP_THEME_LABEL": "အလင်းအမှောင် အပြင်အဆင်",
+  "APP_THEME_LABEL": "အပြင်အဆင်",
   "THEME_LIGHT": "အလင်း",
   "THEME_DARK": "အမှောင်",
   "THEME_SYSTEM": "ဖုန်းပေါ်မူတည်"

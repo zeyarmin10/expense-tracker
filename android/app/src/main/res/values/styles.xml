@@ -34,10 +34,9 @@
     </style>
 
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
-        <item name="windowSplashScreenBackground">#0F2340</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/splash</item>
-        <item name="windowSplashScreenAnimationDuration">1000</item>
-        <!-- Splash ပြီးရင် NoActionBar theme ကို ပြောင်းမယ် (Status bar settings တွေ ပါဖို့) -->
-        <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
+      <item name="windowSplashScreenBackground">#0066FD</item>
+      <item name="windowSplashScreenAnimatedIcon">@drawable/splash</item>
+      <item name="windowSplashScreenAnimationDuration">1000</item>
+      <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
     </style>
 </resources>

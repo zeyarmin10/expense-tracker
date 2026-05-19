@@ -442,6 +442,55 @@
   transform: scale(0.98);
 }
 
+:host-context(body.light-mode) .ob-space-item {
+  border-color: rgba(15, 23, 42, 0.08);
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--text, #101828);
+}
+
+:host-context(body.light-mode) .ob-space-item:hover {
+  border-color: rgba(0, 171, 136, 0.26);
+  background: rgba(0, 229, 180, 0.08);
+}
+
+:host-context(body.light-mode) .ob-space-item-active {
+  background: rgba(0, 229, 180, 0.12);
+  border-color: rgba(0, 171, 136, 0.28);
+}
+
+:host-context(body.light-mode) .ob-space-action-btn {
+  background: rgba(255, 255, 255, 0.94);
+  border-color: rgba(15, 23, 42, 0.1);
+  color: #344054;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
+}
+
+:host-context(body.light-mode) .ob-space-action-btn:hover {
+  background: #f8fafc;
+  border-color: rgba(0, 171, 136, 0.28);
+  color: #0f172a;
+}
+
+:host-context(body.light-mode) .ob-space-action-btn-danger {
+  color: #dc2626;
+  border-color: rgba(220, 38, 38, 0.16);
+}
+
+:host-context(body.light-mode) .ob-space-action-btn-danger:hover {
+  background: #fff1f2;
+  border-color: rgba(220, 38, 38, 0.3);
+  color: #b91c1c;
+}
+
+:host-context(body.light-mode) .ob-space-action-trigger {
+  color: rgba(15, 23, 42, 0.62);
+}
+
+:host-context(body.light-mode) .ob-space-action-trigger:hover {
+  color: #0f172a;
+  background: rgba(15, 23, 42, 0.06);
+}
+
 /* ── Input row ── */
 .ob-input-row {
   display: flex;

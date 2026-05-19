@@ -13,6 +13,7 @@ import { DataManagerService } from './services/data-manager';
 import { ToastService } from './services/toast';
 import { GroupService } from './services/group.service';
 import { NetworkService } from './services/network.service';
+import { ThemeService } from './services/theme.service';
 import {
   faRightFromBracket,
   faUsers,
@@ -97,6 +98,7 @@ export class App implements OnInit {
   private groupService = inject(GroupService);
   private networkService = inject(NetworkService);
   private spaceContextService = inject(SpaceContextService);
+  private themeService = inject(ThemeService);
 
   constructor(private translate: TranslateService) {
     this.translate.setDefaultLang('en');
@@ -207,6 +209,10 @@ export class App implements OnInit {
 
     this.translate.onLangChange.subscribe(event => {
       this.currentLang = event.lang;
+    });
+
+    this.themeService.isDarkMode$.subscribe((isDarkMode) => {
+      this.isDarkMode = isDarkMode;
     });
   }
 
@@ -599,14 +605,7 @@ export class App implements OnInit {
   }
 
   toggleTheme(): void {
-    this.isDarkMode = !this.isDarkMode;
-    if (this.isDarkMode) {
-      document.body.classList.remove('light-mode');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.body.classList.add('light-mode');
-      localStorage.setItem('theme', 'light');
-    }
+    this.themeService.toggleTheme();
   }
 
   private initKeyboardDetection(): void {
@@ -666,11 +665,7 @@ export class App implements OnInit {
   }
 
   private initTheme(): void {
-    const savedTheme = localStorage.getItem('theme') || 'dark';
-    this.isDarkMode = savedTheme === 'dark';
-    if (!this.isDarkMode) {
-      document.body.classList.add('light-mode');
-    }
+    this.isDarkMode = this.themeService.isDarkMode;
   }
 
   private initBackButton(): void {
