@@ -1,6 +1,6 @@
 export const environment = {
     production: false,
-    apiBaseUrl: "https://expense-tracker-mocha-omega.vercel.app",
+    apiBaseUrl: "",
     firebaseVapidKey: "BIKVaPoRrIS7Jnz6mWcT7p6KTSTVdImDfvhFIS-DblGuKZ0X-tCC9Q9XJcWm0HUscqIS1kLUSwnMFuBsuPRUBrA",
     firebaseConfig: {
         apiKey: "AIzaSyDJJXDNDCIweU0FzYIZJCMErKHcSLbzvS8",

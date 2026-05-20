@@ -143,7 +143,7 @@ export class NotificationService {
       throw new Error('NOTIFICATION_PERMISSION_DENIED');
     }
 
-    const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+    const registration = await this.registerMessagingServiceWorker();
     const messaging = getMessaging(getApp());
     const tokenOptions: {
       serviceWorkerRegistration: ServiceWorkerRegistration;
@@ -538,6 +538,59 @@ export class NotificationService {
 
   private isLikelyValidVapidKey(vapidKey: string): boolean {
     return /^[A-Za-z0-9_-]{80,120}$/.test(vapidKey);
+  }
+
+  private async registerMessagingServiceWorker(): Promise<ServiceWorkerRegistration> {
+    const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
+      updateViaCache: 'none',
+    });
+
+    if (registration.active) {
+      return registration;
+    }
+
+    const pendingWorker = registration.installing || registration.waiting;
+    if (!pendingWorker) {
+      return this.waitForReadyServiceWorker();
+    }
+    const worker = pendingWorker;
+
+    await new Promise<void>((resolve, reject) => {
+      let timeout = 0;
+
+      function cleanup() {
+        window.clearTimeout(timeout);
+        worker.removeEventListener('statechange', handleStateChange);
+      }
+
+      function handleStateChange() {
+        if (worker.state === 'activated') {
+          cleanup();
+          resolve();
+        }
+      }
+
+      timeout = window.setTimeout(() => {
+        cleanup();
+        reject(new Error('NOTIFICATION_SERVICE_WORKER_INACTIVE'));
+      }, 10000);
+
+      worker.addEventListener('statechange', handleStateChange);
+      handleStateChange();
+    });
+
+    return registration;
+  }
+
+  private async waitForReadyServiceWorker(): Promise<ServiceWorkerRegistration> {
+    return Promise.race([
+      navigator.serviceWorker.ready,
+      new Promise<ServiceWorkerRegistration>((_, reject) => {
+        window.setTimeout(() => {
+          reject(new Error('NOTIFICATION_SERVICE_WORKER_INACTIVE'));
+        }, 10000);
+      }),
+    ]);
   }
 
   private async getPermissionState(): Promise<NotificationPermissionState> {

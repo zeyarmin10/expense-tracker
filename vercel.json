@@ -2,6 +2,17 @@
   "installCommand": "npm install --legacy-peer-deps",
   "buildCommand": "ng build --configuration production",
   "outputDirectory": "dist/expense-tracker/browser",
+  "headers": [
+    {
+      "source": "/firebase-messaging-sw.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
+    }
+  ],
   "crons": [
     {
       "path": "/api/send-daily-reminders",
