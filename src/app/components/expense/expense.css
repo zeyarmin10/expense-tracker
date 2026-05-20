@@ -259,7 +259,7 @@
 
 .exp-input-group .exp-addon-btn:last-child:hover {
   background: var(--info);
-  color: #0a0c10;
+  color: #fff;
 }
 
 .exp-form-footer {
@@ -297,7 +297,7 @@
 
 .exp-btn-primary {
   background: var(--accent);
-  color: #0a0c10;
+  color: #fff;
   border-color: var(--accent);
 }
 
@@ -779,7 +779,7 @@
 
 .exp-float-group .exp-addon-btn:hover {
   background: var(--info);
-  color: #0a0c10;
+  color: #fff;
 }
 
 /* Left part of float group (select wrapper) */

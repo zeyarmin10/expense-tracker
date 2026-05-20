@@ -1,5 +1,5 @@
 /* ============================================================
-   User Profile — Dark Theme (matches navbar + expense design)
+   User Profile — Modern Mobile UI
    ============================================================ */
 
 :host {
@@ -7,7 +7,6 @@
 }
 
 .prof-wrapper {
-  /* font-family: 'Syne', sans-serif; */
   background: var(--bg);
   min-height: 100vh;
   padding: 2rem 1rem 6rem;
@@ -19,99 +18,217 @@
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1rem;
 }
 
 /* ── Page Header ── */
 .prof-page-header {
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
 }
 
 .prof-page-title {
-  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-size: clamp(1.4rem, 4vw, 1.9rem);
   font-weight: 800;
   letter-spacing: -0.03em;
   margin: 0;
 }
 
-/* ── Section Base ── */
-.prof-section {
+/* ── Hero Card ── */
+.prof-hero {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 1.3rem 1.4rem;
+  border-radius: 20px;
+  padding: 2rem 1.5rem 1.4rem;
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
-  margin-bottom: 0.5rem !important;
+  align-items: center;
+  gap: 0.45rem;
+  text-align: center;
+  margin-bottom: 1rem;
 }
 
-.prof-section-label {
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text-muted);
+.prof-hero .prof-avatar-wrap {
+  margin-bottom: 0.3rem;
 }
 
-/* ── Identity / Avatar ── */
-.prof-identity {
-  flex-direction: row;
-  align-items: flex-start;
-  gap: 1.2rem;
-  padding: 1.4rem;
-}
-
-.prof-avatar-wrap {
-  flex-shrink: 0;
-}
-
-.prof-avatar-img {
-  width: 72px;
-  height: 72px;
-  border-radius: 16px;
+.prof-hero .prof-avatar-img {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
   object-fit: cover;
-  border: 2px solid rgba(11, 116, 255, 0.3);
+  border: 3px solid rgba(11, 116, 255, 0.4);
 }
 
-.prof-avatar-fallback {
-  width: 72px;
-  height: 72px;
-  border-radius: 16px;
+.prof-hero .prof-avatar-fallback {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
   background: var(--accent-dim);
-  border: 1px solid rgba(11, 116, 255, 0.2);
+  border: 2px solid rgba(11, 116, 255, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2.2rem;
+  font-size: 2.8rem;
   color: var(--accent);
 }
 
-.prof-identity-info {
+.prof-hero-name-row {
   display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  min-width: 0;
-  flex: 1;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: center;
 }
 
-.prof-email {
-  /* font-family: 'DM Mono', monospace; */
-  font-size: 0.82rem;
+.prof-hero-name {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+
+/* Bigger touch target for mobile friendliness */
+.prof-hero-edit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  min-height: 36px;
+  border-radius: 10px;
+  border: none;
+  background: var(--accent-dim);
+  color: var(--accent);
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.prof-hero-edit-btn:hover {
+  background: rgba(11, 116, 255, 0.2);
+}
+
+.edit-pencil-icon {
+  width: 1rem;
+  filter: brightness(0) saturate(100%) invert(30%) sepia(100%) saturate(2500%) hue-rotate(208deg);
+}
+
+.prof-hero-name-input {
+  background: transparent;
+  border: none;
+  border-bottom: 1.5px solid var(--accent);
+  border-radius: 0;
+  color: var(--text);
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 0.4rem 0.25rem;
+  outline: none;
+  text-align: center;
+  width: 190px;
+  max-width: 55vw;
+}
+
+.prof-hero-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  min-height: 40px;
+  border-radius: 10px;
+  border: none;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.prof-hero-action-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.prof-hero-save-btn {
+  background: transparent;
+  color: var(--accent);
+}
+
+.prof-hero-save-btn:hover:not(:disabled) {
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+
+.prof-hero-cancel-btn {
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.prof-hero-cancel-btn:hover {
+  color: var(--danger);
+}
+
+.prof-hero-edit-actions {
+  display: flex;
+  gap: 0;
+}
+
+.prof-hero-edit-actions .prof-hero-action-btn {
+  min-width: 30px;
+  min-height: 30px;
+  border-radius: 8px;
+}
+
+.prof-hero-email {
+  font-size: 0.8rem;
   color: var(--text-sub);
-  word-break: break-all;
 }
 
-.prof-meta-row {
+.prof-hero-badges {
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem;
+  justify-content: center;
 }
 
+.prof-hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem 0.7rem;
+  margin-top: 0.2rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+  width: 100%;
+}
+
+.prof-hero-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.prof-hero-meta-label {
+  font-size: 0.63rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--text-muted);
+}
+
+.prof-hero-meta-value {
+  font-size: 0.75rem;
+  color: var(--text-sub);
+}
+
+.prof-hero-meta-sep {
+  color: var(--border);
+  font-size: 1rem;
+  line-height: 1;
+}
+
+/* ── Badge ── */
 .prof-badge {
   display: inline-block;
   font-size: 0.68rem;
-  /* font-family: 'DM Mono', monospace; */
   font-weight: 500;
   padding: 0.2rem 0.65rem;
   border-radius: 100px;
@@ -136,35 +253,214 @@
   color: var(--text-sub);
 }
 
-.prof-since {
+/* ── Section Base (notifications, danger) ── */
+.prof-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.2rem 1.3rem;
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 0.85rem;
 }
 
-.prof-group-name {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.prof-since-label {
+.prof-section-label {
   font-size: 0.7rem;
-  font-weight: 500;
+  font-weight: 700;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
   color: var(--text-muted);
 }
 
-.prof-since-value {
-  /* font-family: 'DM Mono', monospace; */
-  font-size: 0.78rem;
-  color: var(--text-sub);
+/* ── List Card ── */
+.prof-list-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 1rem;
 }
 
-/* ── Floating Label Input ── */
+/* Card header row: label on left, icon btn on right */
+.prof-card-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.prof-card-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+/* Icon-only button (+ add, etc.) */
+.prof-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  min-height: 32px;
+  border-radius: 8px;
+  border: 1px solid rgba(11, 116, 255, 0.25);
+  background: var(--accent-dim);
+  color: var(--accent);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.prof-icon-btn:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* Full-width native select row (budget period) */
+.prof-select-row {
+  padding: 0.75rem 1rem;
+}
+
+/* Custom-styled native select with chevron arrow */
+.prof-native-select {
+  width: 100%;
+  background-color: var(--surface-2);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888888' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 0.88rem;
+  padding: 0.72rem 2.4rem 0.72rem 0.9rem;
+  outline: none;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: border-color 0.15s;
+}
+
+.prof-native-select:focus {
+  border-color: var(--accent);
+}
+
+.prof-native-select option,
+.prof-native-select optgroup {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+/* Custom date range pad — does NOT override float-label input sizing */
+.prof-date-pad {
+  padding: 0.9rem 1rem;
+  border-top: 1px solid var(--border);
+}
+
+/* ── List Items (preferences card) ── */
+.prof-list-item {
+  display: flex;
+  align-items: center;
+  padding: 0.9rem 1.1rem;
+  gap: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.prof-list-item:last-child {
+  border-bottom: none;
+}
+
+.prof-list-item-col {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.65rem;
+}
+
+.prof-list-title {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--text);
+  flex: 1;
+}
+
+/* Currency pill-shaped select */
+.prof-select-pill {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.prof-pill-select {
+  background-color: var(--surface-2);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888888' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.45rem center;
+  background-size: 13px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-sub);
+  font-size: 0.78rem;
+  padding: 0.32rem 1.6rem 0.32rem 0.6rem;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  outline: none;
+  max-width: 165px;
+  transition: border-color 0.15s;
+}
+
+.prof-pill-select:focus {
+  border-color: var(--accent);
+}
+
+.prof-pill-select option {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.prof-pill-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Segmented Control ── */
+.prof-segment {
+  display: flex;
+  background: var(--surface-2);
+  border-radius: 10px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.prof-segment-btn {
+  flex: 1;
+  padding: 0.48rem 0.4rem;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+  line-height: 1.3;
+}
+
+.prof-segment-btn:hover {
+  color: var(--text);
+}
+
+.prof-segment-btn.active {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 1px 6px rgba(11, 116, 255, 0.3);
+}
+
+/* ── Floating Label Input (used in date pad) ── */
 .prof-float-field {
   position: relative;
 }
@@ -175,7 +471,6 @@
   border: 1px solid var(--border);
   border-radius: 10px;
   color: var(--text);
-  /* font-family: 'Syne', sans-serif; */
   font-size: 0.9rem;
   padding: 1.35rem 0.9rem 0.45rem;
   height: 56px;
@@ -194,18 +489,6 @@
   cursor: pointer;
 }
 
-.prof-select {
-  background-repeat: no-repeat;
-  background-position: right 0.9rem center;
-  padding-right: 2.2rem;
-  cursor: pointer;
-}
-
-.prof-select option {
-  background: var(--surface-2);
-  color: var(--text);
-}
-
 .prof-float-label {
   position: absolute;
   left: 0.9rem;
@@ -214,7 +497,6 @@
   font-size: 0.82rem;
   font-weight: 500;
   letter-spacing: 0.02em;
-  text-transform: none;
   color: var(--text-muted);
   pointer-events: none;
   line-height: 1;
@@ -222,10 +504,9 @@
     font-size 0.15s ease, color 0.15s ease;
 }
 
-/* Floated: focus or has value */
-.prof-input:focus~.prof-float-label,
-.prof-input:not(:placeholder-shown)~.prof-float-label,
-.prof-input.prof-has-val~.prof-float-label {
+.prof-input:focus ~ .prof-float-label,
+.prof-input:not(:placeholder-shown) ~ .prof-float-label,
+.prof-input.prof-has-val ~ .prof-float-label {
   top: 0.55rem;
   transform: translateY(0);
   font-size: 0.63rem;
@@ -235,84 +516,12 @@
   color: var(--accent);
 }
 
-/* Budget period: label sits above the input-group (not inside input) */
-.prof-label-above {
-  position: relative;
-  top: auto;
-  transform: none;
-  display: block;
-  margin-top: 0.4rem;
-  font-size: 0.63rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--accent);
-  left: 0.2rem;
-}
-
-/* ── Period / Currency label-above wrap ── */
-.prof-period-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-
-/* Inside period-wrap: normal height input (no float padding needed) */
-.prof-period-wrap .prof-input,
-.prof-period-wrap .prof-input-group .prof-input {
-  padding: 0 0.9rem;
-  height: 48px;
-}
-
-.prof-period-label {
-  font-size: 0.63rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--accent);
-  line-height: 1;
-  padding-left: 0.2rem;
-}
-
-/* ── Input Group (select + addon btn) ── */
-.prof-input-group {
-  display: flex;
-  align-items: stretch;
-}
-
-.prof-input-group .prof-input {
-  border-radius: 10px 0 0 10px;
-  border-right: none;
-  flex: 1;
-}
-
-.prof-addon-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--info-dim);
-  border: 1px solid var(--border);
-  border-radius: 0 10px 10px 0;
-  padding: 0 1rem;
-  font-size: 0.85rem;
-  color: var(--info);
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-  flex-shrink: 0;
-}
-
-.prof-addon-btn:hover {
-  background: var(--info);
-  color: #0a0c10;
-}
-
-/* ── Date Row: always side by side, no overflow ── */
+/* ── Date Row (two side-by-side date fields) ── */
 .prof-date-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.6rem;
   min-width: 0;
-  overflow: hidden;
 }
 
 .prof-date-row .prof-float-field {
@@ -327,13 +536,19 @@
   padding-right: 2rem;
 }
 
-/* Calendar icon tight on mobile */
 .prof-date-row .prof-input[type="date"]::-webkit-calendar-picker-indicator {
   margin-left: 0;
   padding-left: 0;
 }
 
-/* ── Custom Period Panel ── */
+/* ── Custom Period Panel (inside list-card: no own border/radius) ── */
+.prof-list-card .prof-custom-list-panel {
+  background: none;
+  border: none;
+  border-radius: 0;
+  border-top: 1px solid var(--border);
+}
+
 .prof-custom-list-panel {
   background: var(--surface-2);
   border: 1px solid var(--border);
@@ -350,7 +565,6 @@
   background: none;
   border: none;
   color: var(--text-sub);
-  /* font-family: 'Syne', sans-serif; */
   font-size: 0.82rem;
   font-weight: 700;
   cursor: pointer;
@@ -369,14 +583,12 @@
 .calendar-range-icon {
   width: 1.75rem;
   height: 1.75rem;
-  /* filter: invert(1); */
 }
 
 .prof-custom-list-body {
   max-height: 0;
   overflow: hidden;
   transition: max-height 0.25s ease;
-  border-top: 0px solid var(--border);
 }
 
 .prof-custom-list-body.open {
@@ -413,7 +625,6 @@
 }
 
 .prof-custom-period-range {
-  /* font-family: 'DM Mono', monospace; */
   font-size: 0.72rem;
   color: var(--text-muted);
 }
@@ -422,8 +633,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  min-width: 36px;
+  min-height: 36px;
   border-radius: 8px;
   border: 1px solid rgba(248, 113, 113, 0.25);
   background: rgba(248, 113, 113, 0.08);
@@ -439,248 +650,17 @@
   color: #0a0c10;
 }
 
-/* ── Language Toggle ── */
-.prof-lang-row {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.prof-lang-btn {
-  flex: 1;
-  /* font-family: 'Syne', sans-serif; */
-  font-size: 0.82rem;
-  font-weight: 700;
-  padding: 0.55rem 1rem;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: var(--surface-2);
-  color: var(--text-sub);
-  cursor: pointer;
-  transition: all 0.15s;
-  text-align: center;
-}
-
-.prof-lang-btn:hover {
-  border-color: rgba(255, 255, 255, 0.15);
-  color: var(--text);
-}
-
-.prof-lang-btn.active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
-  box-shadow: 0 0 0 3px var(--accent-glow);
-}
-
-/* ── Theme Toggle ── */
-.prof-theme-row {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.prof-theme-btn {
-  flex: 1;
-  font-size: 0.82rem;
-  font-weight: 700;
-  padding: 0.6rem 0.5rem;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: var(--surface-2);
-  color: var(--text-sub);
-  cursor: pointer;
-  transition: all 0.15s;
-  text-align: center;
-  line-height: 1.3;
-}
-
-.prof-theme-btn:hover {
-  border-color: rgba(255, 255, 255, 0.15);
-  color: var(--text);
-}
-
-.prof-theme-btn.active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
-  box-shadow: 0 0 0 3px var(--accent-glow);
-}
-
-/* ── Save Button ── */
-.prof-save-wrap {
-  position: sticky;
-  bottom: 1.5rem;
-  display: flex;
-  justify-content: flex-end;
-  z-index: 100;
-}
-
-.prof-save-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  /* font-family: 'Syne', sans-serif; */
-  font-size: 0.85rem;
-  font-weight: 700;
-  padding: 0.65rem 1.4rem;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: var(--surface-2);
-  color: var(--text-muted);
-  cursor: not-allowed;
-  opacity: 0.5;
-  transition: all 0.15s;
-}
-
-.prof-save-btn.active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #0a0c10;
-  cursor: pointer;
-  opacity: 1;
-  animation: prof-shine 2s infinite ease-in-out;
-}
-
-.prof-save-btn:disabled {
-  pointer-events: none;
-}
-
-@keyframes prof-shine {
-
-  0%,
-  100% {
-    box-shadow: 0 0 6px rgba(11, 116, 255, 0.25);
-  }
-
-  50% {
-    box-shadow: 0 0 20px rgba(11, 116, 255, 0.5);
-  }
-}
-
-/* Readonly state for members */
-.prof-input:disabled,
-.prof-select:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-  pointer-events: none;
-}
-
-.prof-addon-btn:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-  pointer-events: none;
-}
-
 .prof-delete-btn:disabled {
   opacity: 0.25;
   cursor: not-allowed;
   pointer-events: none;
 }
 
-/* ══════════════════════════════════════════════
-   DISPLAY NAME INLINE EDIT
-   ══════════════════════════════════════════════ */
-
-.prof-name-section {
-  padding: 1rem 1.4rem;
-}
-
-/* View mode: label + name on left, edit btn on right */
-.prof-name-row {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  min-width: 0;
-}
-
-.prof-name-left {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-  flex: 1;
-  min-width: 0;
-}
-
-.prof-name-display {
-  font-size: 1rem;
-  font-weight: 500;
-  color: var(--text);
-  letter-spacing: -0.01em;
-  line-height: 1.4;
-}
-
-/* Edit mode: input fills row width */
-.prof-name-input-wrap {
-  flex: 1;
-  min-width: 0;
-}
-
-.prof-name-input {
-  height: 44px !important;
-  font-size: 0.92rem !important;
-  padding: 0 0.9rem !important;
-  border-radius: 10px !important;
-}
-
-/* Action buttons — center-aligned with input/text */
-.prof-name-actions {
-  display: flex;
-  gap: 0.35rem;
-  flex-shrink: 0;
-  align-items: center;
-}
-
-.prof-name-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  font-size: 0.8rem;
-  cursor: pointer;
-  transition: all 0.15s;
-  background: var(--surface-2);
-}
-
-.prof-name-btn:disabled {
-  opacity: 0.35;
+/* ── Readonly state ── */
+.prof-input:disabled {
+  opacity: 0.55;
   cursor: not-allowed;
-}
-
-/* Edit btn — subtle */
-.prof-name-btn-edit {
-  color: var(--text-muted);
-}
-
-.prof-name-btn-edit:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-  background: var(--accent-dim);
-}
-
-/* Save btn — accent */
-.prof-name-btn-save {
-  color: var(--accent);
-  border-color: rgba(11, 116, 255, 0.3);
-  background: rgba(11, 116, 255, 0.08);
-}
-
-.prof-name-btn-save:hover:not(:disabled) {
-  background: var(--accent);
-  color: #0a0c10;
-  border-color: var(--accent);
-}
-
-/* Cancel btn — danger subtle */
-.prof-name-btn-cancel {
-  color: var(--text-muted);
-}
-
-.prof-name-btn-cancel:hover {
-  border-color: rgba(248, 113, 113, 0.3);
-  color: var(--loss-color);
-  background: rgba(248, 113, 113, 0.08);
+  pointer-events: none;
 }
 
 /* ── Danger Zone ── */
@@ -750,7 +730,7 @@
   cursor: not-allowed;
 }
 
-/* Notifications */
+/* ── Notifications ── */
 .prof-notification-section {
   border-color: rgba(11, 116, 255, 0.22);
   background: linear-gradient(145deg, var(--surface), var(--accent-dim));

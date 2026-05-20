@@ -792,7 +792,7 @@ export class Profit implements OnInit, OnDestroy {
     }));
   }
 
-  getBalanceIcon(balances: { [key: string]: number } | null): any {
+  getBalanceIcon(balances: { [key: string]: number } | null | undefined): any {
     if (!balances) {
       return this.faChartLine; // Default icon
     }
@@ -801,5 +801,17 @@ export class Profit implements OnInit, OnDestroy {
       0
     );
     return totalBalance >= 0 ? this.faChartLine : this.faArrowTrendDown;
+  }
+
+  isBalanceNegative(balances: { [key: string]: number } | null | undefined): boolean {
+    if (!balances) {
+      return false;
+    }
+
+    const totalBalance = Object.values(balances).reduce(
+      (sum, value) => sum + value,
+      0
+    );
+    return totalBalance < 0;
   }
 }

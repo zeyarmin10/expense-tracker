@@ -254,7 +254,7 @@
 .search-btn {
   background: var(--accent);
   border: none;
-  color: #0a0c10;
+  color: #fff;
   font-size: 0.9rem;
   padding: 0 1.1rem;
   border-radius: 0 12px 12px 0;
@@ -434,7 +434,7 @@
   border-radius: 100px;
   border: 1px solid var(--border);
   background: var(--surface);
-  color: var(--text-sub);
+  color: var(--text);
   cursor: pointer;
   transition: all 0.15s;
   white-space: nowrap;
@@ -442,14 +442,14 @@
 
 .chip:hover {
   border-color: rgba(11, 116, 255, 0.3);
-  color: var(--accent);
+  color: #fff;
   background: var(--accent-dim);
 }
 
 .chip.active {
   background: var(--accent);
   border-color: var(--accent);
-  color: #0a0c10;
+  color: #fff;
   font-weight: 500;
 }
 
@@ -460,7 +460,8 @@
 }
 
 .chip.active .chip-amount {
-  color: #00332D;
+  color: #fff;
+  opacity: 0.92;
   font-weight: bold;
 }
 
@@ -591,7 +592,7 @@
   border-radius: 6px;
   background: var(--surface-2);
   border: 1px solid var(--border);
-  color: var(--text-sub);
+  color: var(--text);
 }
 
 .td-name {

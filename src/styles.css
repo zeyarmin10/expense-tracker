@@ -107,12 +107,15 @@ body {
 
 /* ── SweetAlert2 Dark Theme Override ── */
 .swal2-popup {
+  --swal-alert-color: var(--accent);
+  --swal-alert-dim: var(--accent-dim);
+  --swal-alert-glow: rgba(11, 116, 255, 0.18);
   background: #07162f !important;
-  border: 1px solid var(--accent) !important;
+  border: 1px solid var(--swal-alert-color) !important;
   border-radius: 20px !important;
   color: #f0f2f7 !important;
-  box-shadow: 0 0 0 1px rgba(11, 116, 255, 0.15), 0 24px 64px rgba(0, 0, 0, 0.8), 0 0 40px rgba(11, 116, 255, 0.08) !important;
-  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--swal-alert-glow), 0 24px 64px rgba(0, 0, 0, 0.8), 0 0 40px var(--swal-alert-dim) !important;
+  border-color: var(--swal-alert-color);
   overflow: hidden;
 }
 
@@ -125,8 +128,38 @@ body {
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(90deg, #0b74ff, rgba(11, 116, 255, 0.2), transparent);
+  background: linear-gradient(90deg, var(--swal-alert-color), var(--swal-alert-dim), transparent);
   border-radius: 20px 20px 0 0;
+}
+
+.swal2-popup.swal2-icon-error {
+  --swal-alert-color: var(--danger);
+  --swal-alert-dim: var(--danger-dim);
+  --swal-alert-glow: rgba(248, 113, 113, 0.24);
+}
+
+.swal2-popup.swal2-icon-warning {
+  --swal-alert-color: var(--warning);
+  --swal-alert-dim: var(--warning-dim);
+  --swal-alert-glow: rgba(244, 177, 26, 0.24);
+}
+
+.swal2-popup.swal2-icon-success {
+  --swal-alert-color: var(--success);
+  --swal-alert-dim: var(--success-dim);
+  --swal-alert-glow: rgba(52, 211, 153, 0.22);
+}
+
+.swal2-popup.swal2-icon-info {
+  --swal-alert-color: var(--info);
+  --swal-alert-dim: var(--info-dim);
+  --swal-alert-glow: rgba(96, 165, 250, 0.22);
+}
+
+.swal2-popup.swal2-icon-question {
+  --swal-alert-color: #a78bfa;
+  --swal-alert-dim: rgba(167, 139, 250, 0.12);
+  --swal-alert-glow: rgba(167, 139, 250, 0.22);
 }
 
 .swal2-title {
@@ -162,6 +195,11 @@ body {
   color: #60a5fa !important;
 }
 
+.swal2-icon.swal2-question {
+  border-color: #a78bfa !important;
+  color: #a78bfa !important;
+}
+
 .swal2-success-ring {
   border-color: rgba(52, 211, 153, 0.3) !important;
 }
@@ -195,9 +233,9 @@ body {
 /* Toast (top-end notification) */
 .swal2-toast {
   background: #0f2348 !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid var(--swal-alert-color) !important;
   border-radius: 12px !important;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4) !important;
+  box-shadow: 0 0 0 1px var(--swal-alert-glow), 0 8px 24px rgba(0, 0, 0, 0.4) !important;
 }
 
 .swal2-toast .swal2-title {
@@ -206,7 +244,7 @@ body {
 }
 
 .swal2-timer-progress-bar {
-  background: #0b74ff !important;
+  background: var(--swal-alert-color) !important;
 }
 
 /* Input field in confirmation dialogs */
@@ -301,8 +339,8 @@ body.light-mode {
 body.light-mode .swal2-popup {
   background: #ffffff !important;
   color: #1a202c !important;
-  border: 1px solid rgba(0, 0, 0, 0.08) !important;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.15) !important;
+  border: 1px solid var(--swal-alert-color) !important;
+  box-shadow: 0 0 0 1px var(--swal-alert-glow), 0 24px 64px rgba(0, 0, 0, 0.15), 0 0 28px var(--swal-alert-dim) !important;
 }
 
 body.light-mode .swal2-title {
@@ -326,8 +364,8 @@ body.light-mode .swal2-cancel {
 
 body.light-mode .swal2-toast {
   background: #ffffff !important;
-  border: 1px solid rgba(0, 0, 0, 0.08) !important;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
+  border: 1px solid var(--swal-alert-color) !important;
+  box-shadow: 0 0 0 1px var(--swal-alert-glow), 0 8px 24px rgba(0, 0, 0, 0.12) !important;
 }
 
 body.light-mode .swal2-toast .swal2-title {
@@ -335,7 +373,7 @@ body.light-mode .swal2-toast .swal2-title {
 }
 
 body.light-mode .swal2-timer-progress-bar {
-  background: #005eea !important;
+  background: var(--swal-alert-color) !important;
 }
 
 /* ── Light mode select/option fix ── */

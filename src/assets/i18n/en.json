@@ -628,7 +628,7 @@
   "PRIVACY_S1_ITEM1": "Account information — your name and email address provided via Google Sign-In",
   "PRIVACY_S1_ITEM2": "Financial data — expense records, categories, budgets, and income that you enter",
   "PRIVACY_S1_ITEM3": "Device information — device type and browser used to access the app",
-  "PRIVACY_S1_ITEM4": "Reminder notification data — notification tokens and reminder preferences when you enable reminders",
+  "PRIVACY_S1_ITEM4": "Reminder notification data — notification and reminder preferences when you enable reminders",
   "PRIVACY_S2_TITLE": "How We Use Your Information",
   "PRIVACY_S2_BODY": "Your information is used solely to provide and improve the Expense Tracker service:",
   "PRIVACY_S2_ITEM1": "To display and manage your expense and budget records",
@@ -697,5 +697,6 @@
   "NOTI_ADMIN_SENDING": "Sending...",
   "NOTI_ADMIN_REQUIRED_ERROR": "Admin secret, title, and message are required.",
   "NOTI_ADMIN_SEND_ERROR": "Could not send notification.",
-  "NOTI_ADMIN_SENT_RESULT": "Sent: {{sent}}, Failed: {{failed}}"
+  "NOTI_ADMIN_SENT_RESULT": "Sent: {{sent}}, Failed: {{failed}}",
+  "PREFERENCES_LABEL": "Preferences"
 }

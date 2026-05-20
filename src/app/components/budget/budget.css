@@ -403,7 +403,7 @@
 
 .bgt-btn-primary {
   background: var(--accent);
-  color: #0a0c10;
+  color: #fff;
   border-color: var(--accent);
 }
 
@@ -976,7 +976,7 @@
 
 .bgt-empty-btn-primary {
   background: var(--accent);
-  color: #070a0e;
+  color: #fff;
   box-shadow: 0 4px 14px rgba(11, 116, 255, 0.25);
 }
 

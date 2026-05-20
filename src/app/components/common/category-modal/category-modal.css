@@ -151,7 +151,7 @@
   height: 52px;
   padding: 0 1.1rem;
   background: var(--accent, #0b74ff);
-  color: var(--text);
+  color: #fff;
   border: none;
   border-radius: 12px;
   font-size: 0.82rem;

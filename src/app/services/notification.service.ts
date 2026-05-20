@@ -114,11 +114,18 @@ export class NotificationService {
     const activeTokenCount = Object.values(tokens || {}).filter((token: any) => {
       return token && token.enabled !== false;
     }).length;
+    const hasEnabledSetting = typeof settings.enabled !== 'undefined';
+    const enabled = hasEnabledSetting ? settings.enabled === true : activeTokenCount > 0;
+    const dailyReminderEnabled =
+      enabled &&
+      (typeof settings.dailyReminderEnabled === 'undefined'
+        ? true
+        : settings.dailyReminderEnabled !== false);
 
     return {
       ...baseState,
-      enabled: settings.enabled !== false,
-      dailyReminderEnabled: settings.dailyReminderEnabled !== false,
+      enabled,
+      dailyReminderEnabled,
       tokenCount: activeTokenCount,
     };
   }
@@ -493,8 +500,8 @@ export class NotificationService {
     const snapshot = await get(settingsRef);
     const settings = snapshot.exists() ? snapshot.val() : {};
     const defaults = {
-      enabled: settings.enabled !== false,
-      dailyReminderEnabled: settings.dailyReminderEnabled !== false,
+      enabled: settings.enabled === true,
+      dailyReminderEnabled: settings.dailyReminderEnabled === true,
     };
 
     if (

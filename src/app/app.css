@@ -684,7 +684,7 @@ body.light-mode {
   height: 22px;
   min-width: 22px;
   min-height: 22px;
-  stroke: #0a0c10;
+  /* stroke: #0a0c10; */
 }
 
 .mob-nav-fab:active .mob-fab-circle {

@@ -628,7 +628,7 @@
   "PRIVACY_S1_ITEM1": "အကောင့် အချက်အလက် — Google Sign-In မှ ရရှိသော သင်၏ နာမည်နှင့် email လိပ်စာ",
   "PRIVACY_S1_ITEM2": "ငွေကြေးဆိုင်ရာ ဒေတာ — သင်ထည့်သွင်းသော ကုန်ကျမှတ်တမ်း၊ category၊ budget နှင့် ဝင်ငွေများ",
   "PRIVACY_S1_ITEM3": "စက်ပစ္စည်း အချက်အလက် — application ကိုဝင်ရောက်ရာတွင် အသုံးပြုသော စက်ပစ္စည်းအမျိုးအစားနှင့် browser",
-  "PRIVACY_S1_ITEM4": "သတိပေးချက် အချက်အလက် — သတိပေးချက်များ ဖွင့်ထားသောအခါ notification token နှင့် reminder setting များ",
+  "PRIVACY_S1_ITEM4": "သတိပေးချက် အချက်အလက် — သတိပေးချက်များ ဖွင့်ထားသောအခါ notification နှင့် reminder setting များ",
   "PRIVACY_S2_TITLE": "သင်၏ အချက်အလက်ကို မည်ကဲ့သို့ အသုံးပြုသည်",
   "PRIVACY_S2_BODY": "သင်၏ အချက်အလက်ကို Expense Tracker ဝန်ဆောင်မှု ပေးစွမ်းရန်နှင့် တိုးတက်ကောင်းမွန်စေရန် သာ အသုံးပြုပါသည်",
   "PRIVACY_S2_ITEM1": "သင်၏ ကုန်ကျမှတ်တမ်းနှင့် budget များကို ဖော်ပြနှင့် စီမံခန့်ခွဲရန်",
@@ -697,5 +697,6 @@
   "NOTI_ADMIN_SENDING": "ပို့နေသည်...",
   "NOTI_ADMIN_REQUIRED_ERROR": "Admin secret၊ ခေါင်းစဉ်နှင့် မက်ဆေ့ လိုအပ်ပါသည်။",
   "NOTI_ADMIN_SEND_ERROR": "Notification မပို့နိုင်ပါ။",
-  "NOTI_ADMIN_SENT_RESULT": "ပို့ပြီး: {{sent}}, မအောင်မြင်: {{failed}}"
+  "NOTI_ADMIN_SENT_RESULT": "ပို့ပြီး: {{sent}}, မအောင်မြင်: {{failed}}",
+  "PREFERENCES_LABEL": "ဦးစားပေးချက်များ"
 }

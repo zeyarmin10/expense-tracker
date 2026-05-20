@@ -125,11 +125,15 @@ export class UserProfileComponent implements OnInit, OnDestroy {
     );
   }
 
+  get isNotificationEnabled(): boolean {
+    return this.notificationState.enabled;
+  }
+
   get canEnableNotifications(): boolean {
     return (
       !this.isNotificationBusy &&
       this.notificationState.supported &&
-      !this.isNotificationReady
+      !this.notificationState.enabled
     );
   }
 
@@ -535,24 +539,21 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   }
 
   getNotificationPermissionLabel(): string {
+    if (this.notificationState.enabled) {
+      return this.translate.instant('NOTI_STATUS_ENABLED');
+    }
     if (!this.notificationState.supported) {
       return this.translate.instant('NOTI_PERMISSION_UNSUPPORTED');
     }
-    if (!this.notificationState.enabled) {
-      return this.translate.instant('NOTI_STATUS_DISABLED');
-    }
 
     const permission = this.notificationState.permission;
-    if (permission === 'granted') {
-      return this.translate.instant(this.isNotificationReady ? 'NOTI_STATUS_ENABLED' : 'NOTI_PERMISSION_GRANTED');
-    }
     if (permission === 'denied') {
       return this.translate.instant('NOTI_PERMISSION_DENIED');
     }
     if (permission === 'unsupported') {
       return this.translate.instant('NOTI_PERMISSION_UNSUPPORTED');
     }
-    return this.translate.instant('NOTI_PERMISSION_DEFAULT');
+    return this.translate.instant('NOTI_STATUS_DISABLED');
   }
 
   private translateNotificationError(error: any, fallbackKey: string): string {

@@ -124,7 +124,8 @@
       </div>
 
       <!-- Remaining Balance -->
-      <div class="pnl-card pnl-card-balance">
+      <div class="pnl-card pnl-card-balance"
+        [class.pnl-card-balance-negative]="isBalanceNegative(remainingBalanceByCurrency$ | async)">
         <div class="pnl-card-left">
           <span class="pnl-card-label">{{ 'REMAINING_BALANCE' | translate }}</span>
           <ng-container *ngIf="remainingBalanceByCurrency$ | async as totals; else cardLoading">

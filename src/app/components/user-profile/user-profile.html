@@ -6,13 +6,13 @@
     <ng-container *ngIf="userDisplayData$ | async as userData">
       <form [formGroup]="userProfileForm" (ngSubmit)="onSubmit()">
 
-        <!-- ── Page Header ── -->
+        <!-- Page Header -->
         <div class="prof-page-header">
           <h2 class="prof-page-title">{{ 'USER_PROFILE_TITLE' | translate }}</h2>
         </div>
 
-        <!-- ── Avatar + Identity ── -->
-        <div class="prof-section prof-identity">
+        <!-- ── Hero Card ── -->
+        <div class="prof-hero">
           <div class="prof-avatar-wrap">
             <ng-container *ngIf="userPhotoUrl$ | async as photoUrl; else defaultIcon">
               <img [src]="photoUrl" alt="User Photo" class="prof-avatar-img" (error)="onImageError()"
@@ -28,99 +28,90 @@
             </ng-template>
           </div>
 
-          <div class="prof-identity-info">
-            <div class="prof-email">{{ userData.email }}</div>
-            <div class="prof-meta-row">
-              <span class="prof-badge"
-                [ngClass]="userData.accountType === 'group' ? 'prof-badge-info' : 'prof-badge-success'">
-                {{ (userData.accountType === 'group' ? 'ACCOUNT_TYPE_GROUP' : 'ACCOUNT_TYPE_PERSONAL') | translate }}
-              </span>
-              <span class="prof-badge prof-badge-neutral" *ngIf="userData.accountType === 'group'">
-                {{ userData.roles }}
-              </span>
-            </div>
-            <div class="prof-since">
-              <span class="prof-since-label">{{ 'MEMBER_SINCE_LABEL' | translate }}</span>
-              <span class="prof-since-value">{{ this.formatService.formatLocalizedDate(userData.createdAt, 'MMM d, yyyy') }}</span>
-            </div>
-            <div class="prof-group-name" *ngIf="userData.accountType === 'group' && userData.groupName">
-              <span class="prof-since-label">{{ 'GROUP_NAME' | translate }}</span>
-              <span class="prof-since-value">{{ userData.groupName }}</span>
-            </div>
+          <!-- Name view mode -->
+          <div class="prof-hero-name-row" *ngIf="!isEditingName">
+            <span class="prof-hero-name">{{ userProfileForm.get('displayName')?.value || '—' }}</span>
+            <button type="button" class="prof-hero-edit-btn" (click)="startEditName()">
+              <!-- <fa-icon [icon]="faEdit"></fa-icon> -->
+              <img src="../../../assets/icons/pencil-crayon.svg" alt="Edit Pencil" class="edit-pencil-icon" />
+            </button>
           </div>
-        </div>
-
-        <!-- ── Display Name — Inline Edit ── -->
-        <div class="prof-section prof-name-section">
-          <span class="prof-section-label">{{ 'DISPLAY_NAME_LABEL' | translate }}</span>
-
-          <!-- ── View mode ── -->
-          <div class="prof-name-row" *ngIf="!isEditingName">
-            <span class="prof-name-display">
-              {{ userProfileForm.get('displayName')?.value || '—' }}
-            </span>
-            <div class="prof-name-actions">
-              <button type="button" class="prof-name-btn prof-name-btn-edit"
-                (click)="startEditName()">
-                <fa-icon [icon]="faEdit"></fa-icon>
-              </button>
-            </div>
-          </div>
-
-          <!-- ── Edit mode ── -->
-          <div class="prof-name-row" *ngIf="isEditingName">
-            <input type="text" id="displayName" class="prof-input prof-name-input"
-              formControlName="displayName" placeholder=" "
-              (keyup.enter)="saveDisplayName()"
-              (keyup.escape)="cancelEditName()">
-            <div class="prof-name-actions">
-              <button type="button" class="prof-name-btn prof-name-btn-save"
-                (click)="saveDisplayName()"
-                [disabled]="userProfileForm.get('displayName')?.invalid">
+          
+          <!-- Name edit mode -->
+          <div class="prof-hero-name-row" *ngIf="isEditingName">
+            <input type="text" id="displayName" class="prof-hero-name-input" formControlName="displayName" placeholder=" "
+              (keyup.enter)="saveDisplayName()" (keyup.escape)="cancelEditName()">
+            <div class="prof-hero-edit-actions">
+              <button type="button" class="prof-hero-action-btn prof-hero-save-btn" (click)="saveDisplayName()"
+                [disabled]="userProfileForm.get('displayName')?.invalid"
+                title="{{ 'SAVE_BUTTON_LABEL' | translate }}">
                 <fa-icon [icon]="faSave"></fa-icon>
               </button>
-              <button type="button" class="prof-name-btn prof-name-btn-cancel"
-                (click)="cancelEditName()">
+              <button type="button" class="prof-hero-action-btn prof-hero-cancel-btn" (click)="cancelEditName()"
+                title="{{ 'CANCEL_BUTTON' | translate }}">
                 <fa-icon [icon]="faTimes"></fa-icon>
               </button>
+            </div>
+          </div>
+          
+          <div class="prof-hero-email">{{ userData.email }}</div>
+          
+          <div class="prof-hero-badges">
+            <span class="prof-badge" [ngClass]="userData.accountType === 'group' ? 'prof-badge-info' : 'prof-badge-success'">
+              {{ (userData.accountType === 'group' ? 'ACCOUNT_TYPE_GROUP' : 'ACCOUNT_TYPE_PERSONAL') | translate }}
+            </span>
+            <span class="prof-badge prof-badge-neutral" *ngIf="userData.accountType === 'group'">
+              {{ userData.roles }}
+            </span>
+          </div>
+<div class="prof-hero-meta">
+  <div class="prof-hero-meta-item">
+    <span class="prof-hero-meta-label">{{ 'MEMBER_SINCE_LABEL' | translate }}</span>
+    <span class="prof-hero-meta-value">{{ this.formatService.formatLocalizedDate(userData.createdAt, 'MMM d, yyyy')
+      }}</span>
+            </div>
+            <span class="prof-hero-meta-sep" *ngIf="userData.accountType === 'group' && userData.groupName">·</span>
+            <div class="prof-hero-meta-item" *ngIf="userData.accountType === 'group' && userData.groupName">
+              <span class="prof-hero-meta-label">{{ 'GROUP_NAME' | translate }}</span>
+              <span class="prof-hero-meta-value">{{ userData.groupName }}</span>
             </div>
           </div>
         </div>
 
         <!-- ── Budget Period ── -->
-        <div class="prof-section" *ngIf="canEditSettings">
+        <div class="prof-list-card" *ngIf="canEditSettings">
+          <div class="prof-card-header-row">
+            <span class="prof-card-label">{{ 'BUDGET_PERIOD_LABEL' | translate }}</span>
+            <button class="prof-icon-btn" type="button" (click)="openBudgetPeriodModal()"
+              title="{{ 'CREATE_CUSTOM_BUDGET_PERIOD' | translate }}">
+              <fa-icon [icon]="faPlus"></fa-icon>
+            </button>
+          </div>
 
-          <div class="prof-period-wrap">
-            <label class="prof-period-label">{{ 'BUDGET_PERIOD_LABEL' | translate }}</label>
-            <div class="prof-input-group">
-              <select id="budgetPeriod" class="prof-input prof-select prof-has-val" formControlName="budgetPeriod"
-                (change)="autoSaveField('budgetPeriod')">
-                <option *ngFor="let period of translatedBudgetPeriods" [value]="period.code">{{ period.name }}</option>
-                <optgroup label="{{ 'BUDGET_PERIOD.CUSTOM' | translate }}" *ngIf="customBudgetPeriods.length > 0">
-                  <option *ngFor="let period of customBudgetPeriods" [value]="period.id">{{ period.name }}</option>
-                </optgroup>
-              </select>
-              <button class="prof-addon-btn" type="button" (click)="openBudgetPeriodModal()" title="Add custom period">
-                <fa-icon [icon]="faPlus"></fa-icon>
-              </button>
+          <div class="prof-select-row">
+            <select id="budgetPeriod" class="prof-native-select" formControlName="budgetPeriod"
+              (change)="autoSaveField('budgetPeriod')" title="{{ 'BUDGET_PERIOD_LABEL' | translate }}">
+              <option *ngFor="let period of translatedBudgetPeriods" [value]="period.code">{{ period.name }}</option>
+              <optgroup label="{{ 'BUDGET_PERIOD.CUSTOM' | translate }}" *ngIf="customBudgetPeriods.length > 0">
+                <option *ngFor="let period of customBudgetPeriods" [value]="period.id">{{ period.name }}</option>
+              </optgroup>
+            </select>
+          </div>
+
+          <div class="prof-date-pad" *ngIf="showCustomDateRange">
+            <div class="prof-date-row">
+              <div class="prof-float-field">
+                <input type="date" id="budgetStartDate" class="prof-input prof-has-val" formControlName="budgetStartDate"
+                  placeholder=" ">
+                <label class="prof-float-label" for="budgetStartDate">{{ 'START_DATE_LABEL' | translate }}</label>
+                </div>
+                <div class="prof-float-field">
+                <input type="date" id="budgetEndDate" class="prof-input prof-has-val" formControlName="budgetEndDate" placeholder=" ">
+                <label class="prof-float-label" for="budgetEndDate">{{ 'END_DATE_LABEL' | translate }}</label>
+              </div>
             </div>
           </div>
 
-          <!-- Custom Date Range -->
-          <div *ngIf="showCustomDateRange" class="prof-date-row">
-            <div class="prof-float-field">
-              <input type="date" id="budgetStartDate" class="prof-input prof-has-val" formControlName="budgetStartDate"
-                placeholder=" ">
-              <label class="prof-float-label" for="budgetStartDate">{{ 'START_DATE_LABEL' | translate }}</label>
-            </div>
-            <div class="prof-float-field">
-              <input type="date" id="budgetEndDate" class="prof-input prof-has-val" formControlName="budgetEndDate"
-                placeholder=" ">
-              <label class="prof-float-label" for="budgetEndDate">{{ 'END_DATE_LABEL' | translate }}</label>
-            </div>
-          </div>
-
-          <!-- Custom Periods List -->
           <div class="prof-custom-list-panel" *ngIf="customBudgetPeriods.length > 0">
             <button class="prof-custom-list-toggle" type="button" (click)="toggleCustomBudgetList()">
               <span>
@@ -138,7 +129,8 @@
                     {{ this.formatService.formatLocalizedDate(period.startDate, 'shortDate') }} — {{ this.formatService.formatLocalizedDate(period.endDate, 'shortDate') }}
                   </span>
                 </div>
-                <button class="prof-delete-btn" type="button" (click)="deleteCustomPeriod(period.id, $event)">
+                <button class="prof-delete-btn" type="button" (click)="deleteCustomPeriod(period.id, $event)"
+                  title="{{ 'CONFIRM_DELETE_BUDGET_PERIOD_TITLE' | translate }}">
                   <fa-icon [icon]="faTrashCan" class="fa-delete-btn"></fa-icon>
                 </button>
               </div>
@@ -146,62 +138,64 @@
           </div>
         </div>
 
-        <!-- ── Currency & Language ── -->
-        <div class="prof-section">
-          <div class="prof-period-wrap">
-            <label class="prof-period-label">{{ 'CURRENCY' | translate }}</label>
-            <select id="currency" class="prof-input prof-select" formControlName="currency"
-              [attr.disabled]="!canEditSettings ? true : null"
-              (change)="autoSaveField('currency')">
-              <option *ngFor="let currency of translatedCurrencies" [value]="currency.code">
-                {{ currency.name }} ({{ currency.symbol }})
-              </option>
-            </select>
+        <!-- ── Preferences ── -->
+        <div class="prof-list-card">
+          <div class="prof-list-item">
+            <span class="prof-list-title">{{ 'CURRENCY' | translate }}</span>
+            <div class="prof-select-pill">
+              <select id="currency" class="prof-pill-select" formControlName="currency"
+                [attr.disabled]="!canEditSettings ? true : null" (change)="autoSaveField('currency')">
+                <option *ngFor="let currency of translatedCurrencies" [value]="currency.code">
+                  {{ currency.name }} ({{ currency.symbol }})
+                </option>
+              </select>
+            </div>
           </div>
 
-          <div class="prof-section-label mt-3">{{ 'APP_THEME_LABEL' | translate }}</div>
-          <div class="prof-theme-row">
-            <button type="button" class="prof-theme-btn" [class.active]="appTheme === 'light'"
-              (click)="onThemeChange('light')">
-              ☀️ {{ 'THEME_LIGHT' | translate }}
-            </button>
-            <button type="button" class="prof-theme-btn" [class.active]="appTheme === 'dark'"
-              (click)="onThemeChange('dark')">
-              🌙 {{ 'THEME_DARK' | translate }}
-            </button>
-            <button type="button" class="prof-theme-btn" [class.active]="appTheme === 'system'"
-              (click)="onThemeChange('system')">
-              📱 {{ 'THEME_SYSTEM' | translate }}
-            </button>
+          <div class="prof-list-item prof-list-item-col">
+            <span class="prof-list-title">{{ 'APP_THEME_LABEL' | translate }}</span>
+            <div class="prof-segment">
+              <button type="button" class="prof-segment-btn" [class.active]="appTheme === 'light'"
+                (click)="onThemeChange('light')">
+                ☀️ {{ 'THEME_LIGHT' | translate }}
+              </button>
+              <button type="button" class="prof-segment-btn" [class.active]="appTheme === 'dark'" (click)="onThemeChange('dark')">
+                🌙 {{ 'THEME_DARK' | translate }}
+              </button>
+              <button type="button" class="prof-segment-btn" [class.active]="appTheme === 'system'" (click)="onThemeChange('system')">
+                📱 {{ 'THEME_SYSTEM' | translate }}
+              </button>
+            </div>
           </div>
 
-          <div class="prof-section-label mt-3">{{ 'SYSTEM_LANGUAGE_LABEL' | translate }}</div>
-          <div class="prof-lang-row">
-            <button type="button" class="prof-lang-btn" [class.active]="selectedLanguage === 'en'"
-              (click)="onLanguageChange('en')">
-              English
-            </button>
-            <button type="button" class="prof-lang-btn" [class.active]="selectedLanguage === 'my'"
-              (click)="onLanguageChange('my')">
-              မြန်မာ
-            </button>
+          <div class="prof-list-item prof-list-item-col">
+            <span class="prof-list-title">{{ 'SYSTEM_LANGUAGE_LABEL' | translate }}</span>
+            <div class="prof-segment">
+              <button type="button" class="prof-segment-btn" [class.active]="selectedLanguage === 'en'"
+                (click)="onLanguageChange('en')">
+                English
+              </button>
+              <button type="button" class="prof-segment-btn" [class.active]="selectedLanguage === 'my'"
+                (click)="onLanguageChange('my')">
+                မြန်မာ
+              </button>
+            </div>
           </div>
         </div>
 
-        <!-- Notifications -->
+        <!-- ── Notifications ── -->
         <div class="prof-section prof-notification-section" [class.prof-noti-section-loading]="isNotificationBusy">
           <div class="prof-noti-header">
             <div class="prof-noti-title">
               <span class="prof-noti-icon">
-                <fa-icon [icon]="isNotificationReady ? faBell : faBellSlash"></fa-icon>
+                <fa-icon [icon]="isNotificationEnabled ? faBell : faBellSlash"></fa-icon>
               </span>
               <div>
                 <span class="prof-section-label">{{ 'NOTI_SECTION_LABEL' | translate }}</span>
                 <p>{{ 'NOTI_SECTION_DESC' | translate }}</p>
               </div>
             </div>
-            <span class="prof-noti-status"
-              [class.prof-noti-status-on]="isNotificationReady">
+            <span class="prof-noti-status" [class.prof-noti-status-on]="isNotificationEnabled">
               {{ getNotificationPermissionLabel() }}
             </span>
           </div>
@@ -209,7 +203,7 @@
           <label class="prof-noti-switch-row" [class.prof-noti-disabled]="!canChangeNotificationEnabled">
             <span class="prof-noti-toggle-copy">
               <span class="prof-noti-toggle-title">
-                <fa-icon [icon]="isNotificationReady ? faBell : faBellSlash"></fa-icon>
+                <fa-icon [icon]="isNotificationEnabled ? faBell : faBellSlash"></fa-icon>
                 {{ 'NOTI_MASTER_TITLE' | translate }}
                 <span class="prof-noti-loading-text" *ngIf="notificationBusyTarget === 'master'">
                   <span class="prof-noti-mini-spinner"></span>
@@ -251,10 +245,7 @@
               </span>
             </span>
           </label>
-
         </div>
-
-        <!-- Save button removed: all fields auto-save or use inline edit -->
 
       </form>
 
