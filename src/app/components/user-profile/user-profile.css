@@ -86,30 +86,29 @@
   letter-spacing: -0.02em;
 }
 
-/* Bigger touch target for mobile friendliness */
+/* Borderless pencil button — icon only, no background */
 .prof-hero-edit-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 36px;
-  min-height: 36px;
-  border-radius: 10px;
+  min-width: 46px;
+  min-height: 46px;
   border: none;
-  background: var(--accent-dim);
-  color: var(--accent);
-  font-size: 0.88rem;
+  background: transparent;
   cursor: pointer;
-  transition: all 0.15s;
   flex-shrink: 0;
+  padding: 4px;
 }
 
-.prof-hero-edit-btn:hover {
-  background: rgba(11, 116, 255, 0.2);
-}
-
+/* Dark mode: white pencil */
 .edit-pencil-icon {
-  width: 1rem;
-  filter: brightness(0) saturate(100%) invert(30%) sepia(100%) saturate(2500%) hue-rotate(208deg);
+  width: 1.5rem;
+  filter: brightness(0) invert(1);
+}
+
+/* Light mode: dark/black pencil */
+:host-context(body.light-mode) .edit-pencil-icon {
+  filter: brightness(0);
 }
 
 .prof-hero-name-input {
@@ -156,6 +155,10 @@
   color: var(--accent);
 }
 
+.prof-save-icon {
+  font-size: 1.5rem;
+}
+
 .prof-hero-cancel-btn {
   background: transparent;
   color: var(--text-muted);
@@ -165,15 +168,20 @@
   color: var(--danger);
 }
 
+.prof-cancel-icon {
+  font-size: 1.5rem;
+}
+
 .prof-hero-edit-actions {
   display: flex;
   gap: 0;
 }
 
 .prof-hero-edit-actions .prof-hero-action-btn {
-  min-width: 30px;
-  min-height: 30px;
-  border-radius: 8px;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 10px;
+  font-size: 1rem;
 }
 
 .prof-hero-email {

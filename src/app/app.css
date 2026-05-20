@@ -670,11 +670,11 @@ body.light-mode {
   min-height: 45px;
   border-radius: 50%;
   background: var(--nav-active, #0b74ff);
+  color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow: 0 4px 16px rgba(11, 116, 255, 0.35);
-  /* margin-bottom: 2px; */
   flex-shrink: 0;
   transition: transform 0.15s, box-shadow 0.15s;
 }
@@ -684,7 +684,6 @@ body.light-mode {
   height: 22px;
   min-width: 22px;
   min-height: 22px;
-  /* stroke: #0a0c10; */
 }
 
 .mob-nav-fab:active .mob-fab-circle {

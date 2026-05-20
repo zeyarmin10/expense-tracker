@@ -45,11 +45,11 @@
               <button type="button" class="prof-hero-action-btn prof-hero-save-btn" (click)="saveDisplayName()"
                 [disabled]="userProfileForm.get('displayName')?.invalid"
                 title="{{ 'SAVE_BUTTON_LABEL' | translate }}">
-                <fa-icon [icon]="faSave"></fa-icon>
+                <fa-icon [icon]="faSave" class="prof-save-icon"></fa-icon>
               </button>
               <button type="button" class="prof-hero-action-btn prof-hero-cancel-btn" (click)="cancelEditName()"
                 title="{{ 'CANCEL_BUTTON' | translate }}">
-                <fa-icon [icon]="faTimes"></fa-icon>
+                <fa-icon [icon]="faTimes" class="prof-cancel-icon"></fa-icon>
               </button>
             </div>
           </div>

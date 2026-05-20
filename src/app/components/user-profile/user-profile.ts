@@ -173,7 +173,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
 
   constructor() {
     this.userProfileForm = this.fb.group({
-      displayName: ['', Validators.maxLength(50)],
+      displayName: ['', [Validators.required, Validators.maxLength(50)]],
       currency: ['MMK', Validators.required],
       budgetPeriod: [null],
       budgetStartDate: [{ value: null, disabled: true }],
