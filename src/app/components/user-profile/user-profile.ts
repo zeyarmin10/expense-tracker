@@ -567,6 +567,9 @@ export class UserProfileComponent implements OnInit, OnDestroy {
     if (/permission[_ -]?denied/i.test(message)) {
       return this.translate.instant('NOTIFICATION_SETTINGS_PERMISSION_DENIED');
     }
+    if (/push service/i.test(message)) {
+      return this.translate.instant('NOTIFICATION_PUSH_SERVICE_UNAVAILABLE');
+    }
     if (/token/i.test(code) || /token/i.test(message)) {
       return this.translate.instant('NOTIFICATION_TOKEN_FAILED');
     }

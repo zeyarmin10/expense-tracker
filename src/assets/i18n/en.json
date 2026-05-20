@@ -680,6 +680,7 @@
   "NOTIFICATION_VAPID_KEY_INVALID": "Web notification setup is incomplete. Please replace firebaseVapidKey with the full Web Push certificate public key from Firebase Cloud Messaging settings.",
   "NOTIFICATION_TOKEN_FAILED": "Could not create a reminder token. Please try again.",
   "NOTIFICATION_SERVICE_WORKER_INACTIVE": "Reminder notification service is still starting. Please refresh the page and try again.",
+  "NOTIFICATION_PUSH_SERVICE_UNAVAILABLE": "The browser push service is unavailable. In Brave, enable Google services for push messaging or try Chrome, then refresh and enable notifications again.",
   "NOTI_ADMIN_TITLE": "Notification Sender",
   "NOTI_ADMIN_SUBTITLE": "Send a custom notification to users who have enabled reminders.",
   "NOTI_ADMIN_SECRET_HELP": "This page requires the NOTIFICATION_ADMIN_SECRET value from your deployment environment.",

@@ -680,6 +680,7 @@
   "NOTIFICATION_VAPID_KEY_INVALID": "Web notification setup မပြည့်စုံသေးပါ။ Firebase Cloud Messaging settings ထဲက Web Push certificate public key အပြည့်အစုံကို firebaseVapidKey နေရာမှာ ပြန်ထည့်ပေးပါ။",
   "NOTIFICATION_TOKEN_FAILED": "သတိပေးချက် token မဖန်တီးနိုင်ပါ။ ထပ်ကြိုးစားပါ။",
   "NOTIFICATION_SERVICE_WORKER_INACTIVE": "သတိပေးချက် service worker မစတင်နိုင်သေးပါ။ စာမျက်နှာကို refresh လုပ်ပြီး ထပ်ကြိုးစားပါ။",
+  "NOTIFICATION_PUSH_SERVICE_UNAVAILABLE": "Browser push service မရနိုင်ပါ။ Brave သုံးနေပါက Google services for push messaging ကိုဖွင့်ပါ၊ သို့မဟုတ် Chrome ဖြင့်စမ်းပြီး refresh လုပ်ကာ notification ပြန်ဖွင့်ပါ။",
   "NOTI_ADMIN_TITLE": "Notification ပို့ရန်",
   "NOTI_ADMIN_SUBTITLE": "သတိပေးချက် ဖွင့်ထားသော users များထံ custom notification ပို့နိုင်ပါသည်။",
   "NOTI_ADMIN_SECRET_HELP": "ဤစာမျက်နှာသည် deployment environment ထဲရှိ NOTIFICATION_ADMIN_SECRET တန်ဖိုးလိုအပ်ပါသည်။",
