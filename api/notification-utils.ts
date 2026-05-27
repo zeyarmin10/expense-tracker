@@ -255,7 +255,7 @@ export async function sendFcmMessage(
               link: absoluteLink,
             },
             notification: {
-              icon: '/assets/images/Expense-Tracker-Logo.png',
+              icon: '/images/SpendWise-Logo.png',
               badge: '/favicon.ico',
             },
           },

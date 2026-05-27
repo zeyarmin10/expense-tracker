@@ -1,5 +1,5 @@
 {
-  "name": "expense-tracker-api",
+  "name": "spendwise-api",
   "version": "1.0.0",
   "dependencies": {
     "googleapis": "^171.4.0",

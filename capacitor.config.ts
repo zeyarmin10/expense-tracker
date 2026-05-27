@@ -2,8 +2,8 @@ import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.ethan.expensetracker',
-  appName: 'Expense Tracker',
-  webDir: 'dist/expense-tracker/browser', // Angular 17+ output path
+  appName: 'SpendWise',
+  webDir: 'dist/spendwise/browser', // Angular 17+ output path
   server: {
     androidScheme: 'https',
     cleartext: false

@@ -23,7 +23,7 @@ export class NotificationAdminComponent {
   faShieldHalved = faShieldHalved;
 
   adminSecret = '';
-  title = 'Expense Tracker';
+  title = 'SpendWise';
   body = '';
   link = '/expense';
   targetUid = '';

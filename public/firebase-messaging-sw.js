@@ -16,10 +16,10 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
-  const title = payload.notification?.title || payload.data?.title || 'Expense Tracker';
+  const title = payload.notification?.title || payload.data?.title || 'SpendWise';
   const options = {
     body: payload.notification?.body || payload.data?.body || '',
-    icon: '/assets/images/Expense-Tracker-Logo.png',
+    icon: '/images/SpendWise-Logo.png',
     badge: '/favicon.ico',
     data: {
       link: payload.fcmOptions?.link || payload.data?.link || '/expense',

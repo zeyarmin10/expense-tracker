@@ -52,7 +52,7 @@ import { getActiveGroupId } from './services/user-data';
   styleUrls: ['./app.css'],
 })
 export class App implements OnInit {
-  title = 'expense-tracker';
+  title = 'SpendWise';
   showNavbar$: Observable<boolean>;
   currentUser$: Observable<User | null>;
   userDisplayName$: Observable<string | null>;

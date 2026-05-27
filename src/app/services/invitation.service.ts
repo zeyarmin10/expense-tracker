@@ -59,15 +59,15 @@ export class InvitationService {
     const isMyanmar = language === 'my';
 
     const subject = isMyanmar
-      ? `${groupName} သို့ Expense Tracker တွင် ပါဝင်ရန် သင့်အား ဖိတ်ခေါ်ပါသည်။`
-      : `You're invited to join ${groupName} on Expense Tracker`;
+      ? `${groupName} သို့ SpendWise တွင် ပါဝင်ရန် သင့်အား ဖိတ်ခေါ်ပါသည်။`
+      : `You're invited to join ${groupName} on SpendWise`;
 
     const texts = {
       title:    isMyanmar ? 'သင့်ကို ဖိတ်ခေါ်ထားပါတယ်' : "You're Invited!",
       greeting: isMyanmar ? 'မင်္ဂလာပါ,' : 'Hi,',
       body1: isMyanmar
-        ? `${inviterName} မှ သင့်အား Expense Tracker ရှိ သူတို့၏အဖွဲ့ <strong>"${groupName}"</strong> သို့ ဖိတ်ခေါ်ထားပါသည်။`
-        : `${inviterName} has invited you to join their group, <strong>"${groupName}"</strong>, on Expense Tracker.`,
+        ? `${inviterName} မှ သင့်အား SpendWise ရှိ သူတို့၏အဖွဲ့ <strong>"${groupName}"</strong> သို့ ဖိတ်ခေါ်ထားပါသည်။`
+        : `${inviterName} has invited you to join their group, <strong>"${groupName}"</strong>, on SpendWise.`,
       body2: isMyanmar
         ? 'ဖိတ်ခေါ်ချက်ကို လက်ခံပြီး အသုံးစရိတ်များကို အတူတကွ ခြေရာခံရန် အောက်ပါခလုတ်ကို နှိပ်ပါ။'
         : 'To accept the invitation and start tracking expenses together, click the button below:',
@@ -89,7 +89,7 @@ export class InvitationService {
     const htmlBody = `
     <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; line-height: 1.6; max-width: 600px; margin: 20px auto; border: 1px solid #ddd; border-radius: 12px; overflow: hidden;">
       <div style="background-color: ${PrimaryBgColor}; color: ${PrimaryTxtColor}; padding: 20px; text-align: center;">
-        <h1 style="margin: 0; font-size: 28px;">Expense Tracker</h1>
+        <h1 style="margin: 0; font-size: 28px;">SpendWise</h1>
       </div>
       <div style="padding: 25px 30px;">
         <h2 style="font-size: 22px; color: #333;">${texts.title}</h2>
@@ -108,7 +108,7 @@ export class InvitationService {
         <p style="font-size: 12px; color: #999;">${texts.footer}</p>
       </div>
       <div style="background-color: #f7f7f7; color: #888; padding: 15px; text-align: center; font-size: 12px;">
-        &copy; ${new Date().getFullYear()} Expense Tracker. All Rights Reserved.
+        &copy; ${new Date().getFullYear()} SpendWise. All Rights Reserved.
       </div>
     </div>
     `;

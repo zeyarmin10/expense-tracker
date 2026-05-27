@@ -422,8 +422,8 @@ export class NotificationService {
     try {
       await PushNotifications.createChannel({
         id: 'expense_reminders',
-        name: 'Expense Tracker',
-        description: 'Expense reminders and app announcements',
+        name: 'SpendWise',
+        description: 'SpendWise reminders and app announcements',
         importance: 4,
         visibility: 1,
         lights: true,
@@ -621,7 +621,7 @@ export class NotificationService {
     const title =
       payload.notification?.title ||
       payload.data?.['title'] ||
-      'Expense Tracker';
+      'SpendWise';
     const body =
       payload.notification?.body ||
       payload.data?.['body'] ||
@@ -631,7 +631,7 @@ export class NotificationService {
     const registration = await navigator.serviceWorker.ready;
     await registration.showNotification(title, {
       body,
-      icon: '/assets/images/Expense-Tracker-Logo.png',
+      icon: '/images/SpendWise-Logo.png',
       badge: '/favicon.ico',
       data: { link },
     });
