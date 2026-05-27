@@ -37,6 +37,28 @@ export interface UserProfile {
   selectedBudgetPeriodId?: string | null;
 }
 
+type SpaceContextLike = {
+  currentSpaceId?: string | null;
+  currentSpaceType?: SpaceType | null;
+  groupId?: string | null;
+};
+
+export function getActiveGroupId(profile: SpaceContextLike | null | undefined): string | null {
+  if (!profile) {
+    return null;
+  }
+
+  if (profile.currentSpaceType === 'group' && profile.currentSpaceId) {
+    return profile.currentSpaceId;
+  }
+
+  return profile.groupId || null;
+}
+
+export function isPersonalContext(profile: SpaceContextLike | null | undefined): boolean {
+  return !getActiveGroupId(profile) && profile?.currentSpaceType !== 'group';
+}
+
 @Injectable({
   providedIn: 'root',
 })

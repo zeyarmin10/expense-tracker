@@ -17,7 +17,8 @@ import {
   get,
 } from '@angular/fire/database';
 import { AuthService } from './auth';
-import { UserProfile } from './user-data';
+import { getActiveGroupId, UserProfile } from './user-data';
+import { SpaceDataService } from './space-data.service';
 
 export interface ServiceIIncome {
   id?: string; 
@@ -38,6 +39,7 @@ export interface ServiceIIncome {
 export class IncomeService {
   private db: Database = inject(Database);
   private authService = inject(AuthService);
+  private spaceDataService = inject(SpaceDataService);
 
   constructor() {
   }
@@ -66,11 +68,13 @@ export class IncomeService {
     };
 
     let incomesRef: DatabaseReference;
-    if (profile.groupId) {
-        newIncomeToSave.groupId = profile.groupId;
-        incomesRef = this.getGroupIncomesRef(profile.groupId);
+    const activeGroupId = getActiveGroupId(profile);
+    const { canonicalRef, legacyRef } = await this.spaceDataService.getActiveCollectionContext(profile, 'incomes');
+    if (activeGroupId) {
+        newIncomeToSave.groupId = activeGroupId;
+        incomesRef = canonicalRef || legacyRef;
     } else {
-        incomesRef = this.getIncomesRef(profile.uid);
+        incomesRef = canonicalRef || legacyRef;
     }
 
     await push(incomesRef, newIncomeToSave);
@@ -80,20 +84,19 @@ export class IncomeService {
     return this.authService.userProfile$.pipe(
       filter((profile): profile is UserProfile => profile !== null),
       take(1),
-      switchMap((profile) => {
-        const baseRef = profile.groupId
-          ? this.getGroupIncomesRef(profile.groupId)
-          : this.getIncomesRef(profile.uid);
+      switchMap((profile) =>
+        from(this.spaceDataService.getActiveCollectionContext(profile, 'incomes')).pipe(
+          switchMap(({ canonicalRef, legacyRef }) => {
+            const baseRef = canonicalRef || legacyRef;
+            let incomesQuery: Query = baseRef;
 
-        let incomesQuery: Query = baseRef;
+            if (startDate && endDate) {
+              const start = startDate.toISOString().split('T')[0];
+              const end = endDate.toISOString().split('T')[0];
+              incomesQuery = query(baseRef, orderByChild('date'), startAt(start), endAt(end));
+            }
 
-        if (startDate && endDate) {
-          const start = startDate.toISOString().split('T')[0];
-          const end = endDate.toISOString().split('T')[0];
-          incomesQuery = query(baseRef, orderByChild('date'), startAt(start), endAt(end));
-        }
-
-        return from(get(incomesQuery)).pipe(
+            return from(get(incomesQuery)).pipe(
           map(snapshot => {
             const incomesData = snapshot.val();
             if (!incomesData) {
@@ -108,8 +111,10 @@ export class IncomeService {
             console.error('Error fetching incomes:', error);
             return of([]);
           })
-        );
-      })
+            );
+          })
+        )
+      )
     );
   }
 
@@ -127,8 +132,13 @@ export class IncomeService {
     }
 
     let incomeRef: DatabaseReference;
-    if (profile.groupId) {
-        incomeRef = ref(this.db, `group_data/${profile.groupId}/incomes/${incomeId}`);
+    const activeGroupId = getActiveGroupId(profile);
+    const currentSpaceId = this.spaceDataService.getCurrentSpaceId(profile);
+    const { canonicalRef } = await this.spaceDataService.getActiveCollectionContext(profile, 'incomes');
+    if (canonicalRef && currentSpaceId) {
+        incomeRef = ref(this.db, `space_data/${currentSpaceId}/incomes/${incomeId}`);
+    } else if (activeGroupId) {
+        incomeRef = ref(this.db, `group_data/${activeGroupId}/incomes/${incomeId}`);
     } else {
         incomeRef = ref(this.db, `users/${profile.uid}/incomes/${incomeId}`);
     }
@@ -147,8 +157,13 @@ export class IncomeService {
     }
 
     let incomeRef: DatabaseReference;
-    if (profile.groupId) {
-        incomeRef = ref(this.db, `group_data/${profile.groupId}/incomes/${id}`);
+    const activeGroupId = getActiveGroupId(profile);
+    const currentSpaceId = this.spaceDataService.getCurrentSpaceId(profile);
+    const { canonicalRef } = await this.spaceDataService.getActiveCollectionContext(profile, 'incomes');
+    if (canonicalRef && currentSpaceId) {
+        incomeRef = ref(this.db, `space_data/${currentSpaceId}/incomes/${id}`);
+    } else if (activeGroupId) {
+        incomeRef = ref(this.db, `group_data/${activeGroupId}/incomes/${id}`);
     } else {
         incomeRef = ref(this.db, `users/${profile.uid}/incomes/${id}`);
     }

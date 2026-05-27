@@ -27,6 +27,7 @@ import { User } from '@angular/fire/auth';
 import { ToastService } from '../../services/toast'; // Import ToastService
 import { InvitationService } from '../../services/invitation.service';
 import { SpaceContextService } from '../../services/space-context.service';
+import { SpaceDataService } from '../../services/space-data.service';
 import { ThemeService } from '../../services/theme.service';
 import Swal from 'sweetalert2';
 import { getRedirectResult } from '@angular/fire/auth';
@@ -67,6 +68,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   categoryService = inject(CategoryService);
   invitationService = inject(InvitationService);
   spaceContextService = inject(SpaceContextService);
+  spaceDataService = inject(SpaceDataService);
   themeService = inject(ThemeService);
   router = inject(Router);
   route = inject(ActivatedRoute); // Inject ActivatedRoute
@@ -187,6 +189,10 @@ export class LoginComponent implements OnInit, OnDestroy {
     }
 
     await this.spaceContextService.migrateLegacyUserToSpaces(user.uid);
+    const migratedProfile = await this.userDataService.fetchUserProfile(user.uid);
+    if (migratedProfile) {
+      await this.spaceDataService.migrateAllUserSpaces(migratedProfile);
+    }
 
     // If an invite code is present in the URL
     if (this.inviteCode) {

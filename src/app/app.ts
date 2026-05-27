@@ -35,6 +35,7 @@ import { Keyboard } from '@capacitor/keyboard';
 import Swal from 'sweetalert2';
 import { SpaceContextService } from './services/space-context.service';
 import { UserSpaceSummary } from './services/space.model';
+import { getActiveGroupId } from './services/user-data';
 
 @Component({
   selector: 'app-root',
@@ -139,13 +140,14 @@ export class App implements OnInit {
     );
 
     this.isGroupAccount$ = this.authService.userProfile$.pipe(
-      map(profile => profile?.accountType === 'group')
+      map(profile => profile?.currentSpaceType === 'group' || profile?.accountType === 'group')
     );
 
     this.groupMembers$ = this.authService.userProfile$.pipe(
       switchMap(profile => {
-        if (profile && profile.accountType === 'group' && profile.groupId) {
-          return this.groupService.getGroupMembers(profile.groupId);
+        const activeGroupId = getActiveGroupId(profile);
+        if (profile && activeGroupId) {
+          return this.groupService.getGroupMembers(activeGroupId);
         }
         return of([]);
       })
@@ -153,8 +155,9 @@ export class App implements OnInit {
 
     this.groupName$ = this.authService.userProfile$.pipe(
       switchMap(profile => {
-        if (profile?.accountType === 'group' && profile.groupId) {
-          return from(this.dataManager.getGroupDetails(profile.groupId)).pipe(
+        const activeGroupId = getActiveGroupId(profile);
+        if (activeGroupId) {
+          return from(this.dataManager.getGroupDetails(activeGroupId)).pipe(
             map(details => details?.groupName || null)
           );
         }

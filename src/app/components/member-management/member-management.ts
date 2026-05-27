@@ -12,6 +12,7 @@ import { AuthService } from '../../services/auth';
 import { DataManagerService, IGroupDetails, IGroupMemberDetails } from '../../services/data-manager';
 import { InvitationService } from '../../services/invitation.service';
 import Swal from 'sweetalert2';
+import { getActiveGroupId } from '../../services/user-data';
 
 const Toast = Swal.mixin({
   toast: true,
@@ -63,29 +64,32 @@ export class MemberManagementComponent implements OnInit {
     this.userProfile$ = this.authService.userProfile$.pipe(shareReplay(1));
 
     this.members$ = this.userProfile$.pipe(
-      switchMap(profile =>
-        profile && profile.groupId
-          ? this.dataManager.getGroupMembersWithProfile(profile.groupId)
+      switchMap(profile => {
+        const activeGroupId = getActiveGroupId(profile);
+        return profile && activeGroupId
+          ? this.dataManager.getGroupMembersWithProfile(activeGroupId)
           : of([])
-      )
+      })
     );
 
     this.pendingInvites$ = this.userProfile$.pipe(
-      switchMap(profile =>
-        profile && profile.groupId
-          ? this.dataManager.getPendingInvitations(profile.groupId)
+      switchMap(profile => {
+        const activeGroupId = getActiveGroupId(profile);
+        return profile && activeGroupId
+          ? this.dataManager.getPendingInvitations(activeGroupId)
           : of([])
-      )
+      })
     );
 
     this.groupOwnerId$ = this.userProfile$.pipe(
-      switchMap(profile =>
-        profile && profile.groupId
-          ? from(this.dataManager.getGroupDetails(profile.groupId)).pipe(
+      switchMap(profile => {
+        const activeGroupId = getActiveGroupId(profile);
+        return profile && activeGroupId
+          ? from(this.dataManager.getGroupDetails(activeGroupId)).pipe(
             map((details: IGroupDetails | null) => details ? details.ownerId : null)
           )
-          : of(null)
-      )
+          : of(null);
+      })
     );
   }
 
@@ -117,7 +121,8 @@ export class MemberManagementComponent implements OnInit {
     this.invitationSent = false;
     const profile = await firstValueFrom(this.userProfile$);
 
-    if (profile && profile.groupId) {
+    const activeGroupId = getActiveGroupId(profile);
+    if (profile && activeGroupId) {
       try {
         const members = await firstValueFrom(this.members$);
         const isAlreadyMember = members.some(member => member.email === this.newMemberEmail);
@@ -137,7 +142,7 @@ export class MemberManagementComponent implements OnInit {
           return;
         }
 
-        const groupDetails = await this.dataManager.getGroupDetails(profile.groupId);
+        const groupDetails = await this.dataManager.getGroupDetails(activeGroupId);
         if (!groupDetails) {
           throw new Error('Group details not found');
         }
@@ -150,7 +155,7 @@ export class MemberManagementComponent implements OnInit {
           inviterName,
           groupDetails.groupName,
           userLanguage,
-          profile.groupId
+          activeGroupId
         ).subscribe({
           next: () => {
             Toast.fire({ icon: 'success', title: this.translate.instant('MEMBER_MANAGEMENT.INVITE_SENT_SUCCESS') });
@@ -190,10 +195,11 @@ export class MemberManagementComponent implements OnInit {
     }).then(async (result) => {
       if (result.isConfirmed) {
         const profile = await firstValueFrom(this.userProfile$);
-        if (profile && profile.groupId) {
+        const activeGroupId = getActiveGroupId(profile);
+        if (profile && activeGroupId) {
           try {
-            await this.dataManager.removeGroupMember(profile.groupId, memberId);
-            Toast.fire({ icon: 'error', title: this.translate.instant('TOAST_ERROR_USER_INFO') });
+            await this.dataManager.removeGroupMember(activeGroupId, memberId);
+            Toast.fire({ icon: 'success', title: this.translate.instant('TOAST_MEMBER_REMOVED') });
           } catch (err) {
             console.error('Error removing member:', err);
             Toast.fire({ icon: 'error', title: this.translate.instant('TOAST_ERROR_REMOVING_MEMBER') });

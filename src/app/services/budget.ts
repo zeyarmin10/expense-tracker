@@ -11,7 +11,8 @@ import {
   get,
 } from '@angular/fire/database';
 import { AuthService } from './auth';
-import { UserProfile } from './user-data';
+import { getActiveGroupId, UserProfile } from './user-data';
+import { SpaceDataService } from './space-data.service';
 
 export interface ServiceIBudget {
   id?: string;
@@ -35,6 +36,7 @@ export interface ServiceIBudget {
 export class BudgetService {
   private db: Database = inject(Database);
   private authService = inject(AuthService);
+  private spaceDataService = inject(SpaceDataService);
 
   constructor() {}
 
@@ -62,11 +64,13 @@ export class BudgetService {
     };
 
     let budgetsRef: DatabaseReference;
-    if (profile.groupId) {
-      newBudget.groupId = profile.groupId;
-      budgetsRef = this.getGroupBudgetsRef(profile.groupId);
+    const activeGroupId = getActiveGroupId(profile);
+    const { canonicalRef, legacyRef } = await this.spaceDataService.getActiveCollectionContext(profile, 'budgets');
+    if (activeGroupId) {
+      newBudget.groupId = activeGroupId;
+      budgetsRef = canonicalRef || legacyRef;
     } else {
-      budgetsRef = this.getBudgetsRef(profile.uid);
+      budgetsRef = canonicalRef || legacyRef;
     }
 
     await push(budgetsRef, newBudget);
@@ -76,12 +80,10 @@ export class BudgetService {
     return this.authService.userProfile$.pipe(
       filter((profile): profile is UserProfile => profile !== null),
       take(1),
-      switchMap(profile => {
-        const baseRef = profile.groupId
-          ? this.getGroupBudgetsRef(profile.groupId)
-          : this.getBudgetsRef(profile.uid);
-
-        return from(get(baseRef)).pipe(
+      switchMap(profile =>
+        from(this.spaceDataService.getActiveCollectionContext(profile, 'budgets')).pipe(
+          switchMap(({ canonicalRef, legacyRef }) =>
+            from(get(canonicalRef || legacyRef)).pipe(
           map(snapshot => {
             const budgetsData = snapshot.val();
             if (!budgetsData) {
@@ -126,8 +128,10 @@ export class BudgetService {
             console.error('Error fetching budgets:', error);
             return of([]);
           })
-        );
-      })
+            )
+          )
+        )
+      )
     );
   }
 
@@ -144,8 +148,13 @@ export class BudgetService {
     }
 
     let budgetRef: DatabaseReference;
-    if (profile.groupId) {
-        budgetRef = ref(this.db, `group_data/${profile.groupId}/budgets/${budgetId}`);
+    const activeGroupId = getActiveGroupId(profile);
+    const currentSpaceId = this.spaceDataService.getCurrentSpaceId(profile);
+    const { canonicalRef } = await this.spaceDataService.getActiveCollectionContext(profile, 'budgets');
+    if (canonicalRef && currentSpaceId) {
+        budgetRef = ref(this.db, `space_data/${currentSpaceId}/budgets/${budgetId}`);
+    } else if (activeGroupId) {
+        budgetRef = ref(this.db, `group_data/${activeGroupId}/budgets/${budgetId}`);
     } else {
         budgetRef = ref(this.db, `users/${profile.uid}/budgets/${budgetId}`);
     }
@@ -163,8 +172,13 @@ export class BudgetService {
     }
 
     let budgetRef: DatabaseReference;
-    if (profile.groupId) {
-        budgetRef = ref(this.db, `group_data/${profile.groupId}/budgets/${id}`);
+    const activeGroupId = getActiveGroupId(profile);
+    const currentSpaceId = this.spaceDataService.getCurrentSpaceId(profile);
+    const { canonicalRef } = await this.spaceDataService.getActiveCollectionContext(profile, 'budgets');
+    if (canonicalRef && currentSpaceId) {
+        budgetRef = ref(this.db, `space_data/${currentSpaceId}/budgets/${id}`);
+    } else if (activeGroupId) {
+        budgetRef = ref(this.db, `group_data/${activeGroupId}/budgets/${id}`);
     } else {
         budgetRef = ref(this.db, `users/${profile.uid}/budgets/${id}`);
     }

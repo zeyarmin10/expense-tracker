@@ -267,8 +267,7 @@ export class AuthService {
             .object(`space_members/${inviteData.groupId}/${user.uid}`)
             .set({ role: role });
 
-          await userDataService.updateUserProfile(user.uid, {
-            groupId: inviteData.groupId,
+          const nextProfile: Partial<UserProfile> = {
             accountType: 'group',
             currentSpaceId: inviteData.groupId,
             currentSpaceType: 'group',
@@ -280,6 +279,14 @@ export class AuthService {
               ...(existingProfile?.spaceMemberships || {}),
               [inviteData.groupId]: role,
             },
+          };
+
+          if (!existingProfile?.groupId) {
+            nextProfile.groupId = inviteData.groupId;
+          }
+
+          await userDataService.updateUserProfile(user.uid, {
+            ...nextProfile,
           });
 
           try {

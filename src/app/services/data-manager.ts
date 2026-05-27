@@ -13,7 +13,7 @@ import {
 import { Observable, switchMap, firstValueFrom, of, from, combineLatest, map as rxMap } from 'rxjs';
 import { AuthService } from './auth';
 import { IGroupMember, IUserProfile, IInvitation } from '../core/models/data';
-import { UserDataService } from './user-data';
+import { getActiveGroupId, UserDataService } from './user-data';
 import { Invitation } from './invitation.service';
 import { SpaceContextService } from './space-context.service';
 
@@ -25,6 +25,10 @@ export interface IGroupDetails {
 // New interface for the combined member data
 export interface IGroupMemberDetails extends IUserProfile {
   role: string; // Add role to the user profile data
+}
+
+function isPermissionDenied(error: any): boolean {
+  return error?.code === 'PERMISSION_DENIED' || error?.message === 'permission_denied';
 }
 
 @Injectable({
@@ -54,17 +58,21 @@ export class DataManagerService {
     const role = 'member'; // Default role for new members
 
     const groupDetails = await this.getGroupDetails(groupId);
+    const existingProfile = await firstValueFrom(this.userDataService.getUserProfile(userId));
     const legacyUpdates: { [key: string]: any } = {};
 
     legacyUpdates[`/group_members/${groupId}/${userId}`] = { role };
     legacyUpdates[`/users/${userId}/accountType`] = 'group';
-    legacyUpdates[`/users/${userId}/groupId`] = groupId;
     legacyUpdates[`/users/${userId}/currentSpaceId`] = groupId;
     legacyUpdates[`/users/${userId}/currentSpaceType`] = 'group';
     legacyUpdates[`/users/${userId}/currentSpaceName`] = groupDetails?.groupName || 'Group';
     legacyUpdates[`/users/${userId}/currentSpaceRole`] = role;
     legacyUpdates[`/users/${userId}/roles/${groupId}`] = role;
     legacyUpdates[`/users/${userId}/spaceMemberships/${groupId}`] = role;
+
+    if (!existingProfile?.groupId) {
+      legacyUpdates[`/users/${userId}/groupId`] = groupId;
+    }
     legacyUpdates[`/invitations/${inviteCode}/status`] = 'accepted';
     legacyUpdates[`/invitations/${inviteCode}/acceptedBy`] = userId;
     legacyUpdates[`/invitations/${inviteCode}/acceptedAt`] = new Date().toISOString();
@@ -76,11 +84,7 @@ export class DataManagerService {
         [`/space_members/${groupId}/${userId}`]: { role },
       });
     } catch (error: any) {
-      const isPermissionDenied =
-        error?.code === 'PERMISSION_DENIED' ||
-        error?.message === 'permission_denied';
-
-      if (!isPermissionDenied) {
+      if (!isPermissionDenied(error)) {
         throw error;
       }
     }
@@ -108,27 +112,37 @@ export class DataManagerService {
   }
 
   async removeGroupMember(groupId: string, memberId: string): Promise<void> {
-    const updates: { [key:string]: any } = {};
     const userProfile = await firstValueFrom(this.userDataService.getUserProfile(memberId));
     const fallbackSpaceId =
       userProfile?.personalSpaceId ||
-      (await this.spaceContextService.ensurePersonalSpace(memberId));
+      `personal:${memberId}`;
 
-    updates[`/group_members/${groupId}/${memberId}`] = null;
-    updates[`/space_members/${groupId}/${memberId}`] = null;
-    updates[`/users/${memberId}/spaceMemberships/${groupId}`] = null;
-    updates[`/users/${memberId}/roles/${groupId}`] = null;
+    const legacyUpdates: { [key:string]: any } = {};
+
+    legacyUpdates[`/group_members/${groupId}/${memberId}`] = null;
+    legacyUpdates[`/users/${memberId}/spaceMemberships/${groupId}`] = null;
+    legacyUpdates[`/users/${memberId}/roles/${groupId}`] = null;
 
     if (userProfile?.currentSpaceId === groupId || userProfile?.groupId === groupId) {
-      updates[`/users/${memberId}/currentSpaceId`] = fallbackSpaceId;
-      updates[`/users/${memberId}/currentSpaceType`] = 'personal';
-      updates[`/users/${memberId}/currentSpaceName`] = 'My Personal';
-      updates[`/users/${memberId}/currentSpaceRole`] = 'owner';
-      updates[`/users/${memberId}/groupId`] = null;
-      updates[`/users/${memberId}/accountType`] = 'personal';
+      legacyUpdates[`/users/${memberId}/currentSpaceId`] = fallbackSpaceId;
+      legacyUpdates[`/users/${memberId}/currentSpaceType`] = 'personal';
+      legacyUpdates[`/users/${memberId}/currentSpaceName`] = 'My Personal';
+      legacyUpdates[`/users/${memberId}/currentSpaceRole`] = 'owner';
+      legacyUpdates[`/users/${memberId}/groupId`] = null;
+      legacyUpdates[`/users/${memberId}/accountType`] = 'personal';
     }
 
-    return update(ref(this.db), updates);
+    await update(ref(this.db), legacyUpdates);
+
+    try {
+      await update(ref(this.db), {
+        [`/space_members/${groupId}/${memberId}`]: null,
+      });
+    } catch (error: any) {
+      if (!isPermissionDenied(error)) {
+        throw error;
+      }
+    }
   }
 
   getUserRoleInGroup(groupId: string, userId: string): Observable<string | null> {
@@ -179,9 +193,10 @@ export class DataManagerService {
         if (!user) return of(null);
         return this.userDataService.getUserProfile(user.uid).pipe(
           switchMap(userProfile => {
-            if (userProfile?.accountType === 'group' && userProfile.groupId) {
-              return of(`group_data/${userProfile.groupId}/${dataType}`);
-            } else if (userProfile?.accountType === 'personal') {
+            const activeGroupId = getActiveGroupId(userProfile);
+            if (activeGroupId) {
+              return of(`group_data/${activeGroupId}/${dataType}`);
+            } else if (userProfile?.uid) {
               return of(`users/${user.uid}/${dataType}`);
             }
             return of(null);

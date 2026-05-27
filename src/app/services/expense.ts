@@ -20,8 +20,9 @@ import { map, switchMap, catchError, filter, take } from 'rxjs/operators';
 import { DataIExpense as IExpense } from '../core/models/data';
 import { AuthService } from './auth';
 import { UAParser } from 'ua-parser-js';
-import { UserDataService, UserProfile } from './user-data';
+import { getActiveGroupId, UserDataService, UserProfile } from './user-data';
 import { GroupService } from './group.service';
+import { SpaceDataService } from './space-data.service';
 
 export type ServiceIExpense = IExpense & { 
   id: string; 
@@ -40,6 +41,7 @@ export class ExpenseService {
   private authService: AuthService = inject(AuthService);
   private userDataService: UserDataService = inject(UserDataService);
   private groupService: GroupService = inject(GroupService);
+  private spaceDataService: SpaceDataService = inject(SpaceDataService);
 
   constructor() {}
 
@@ -63,20 +65,19 @@ export class ExpenseService {
     return this.authService.userProfile$.pipe(
       filter((profile): profile is UserProfile => profile !== null),
       take(1),
-      switchMap(profile => {
-        const baseRef = profile.groupId
-          ? this.getGroupExpensesRef(profile.groupId)
-          : this.getExpensesRef(profile.uid);
+      switchMap(profile =>
+        from(this.spaceDataService.getActiveCollectionContext(profile, 'expenses')).pipe(
+          switchMap(({ canonicalRef, legacyRef }) => {
+            const baseRef = canonicalRef || legacyRef;
+            let expensesQuery: Query = baseRef;
 
-        let expensesQuery: Query = baseRef;
+            if (startDate && endDate) {
+              const start = startDate.toISOString().split('T')[0];
+              const end = endDate.toISOString().split('T')[0];
+              expensesQuery = query(baseRef, orderByChild('date'), startAt(start), endAt(end));
+            }
 
-        if (startDate && endDate) {
-          const start = startDate.toISOString().split('T')[0];
-          const end = endDate.toISOString().split('T')[0];
-          expensesQuery = query(baseRef, orderByChild('date'), startAt(start), endAt(end));
-        }
-
-        return from(get(expensesQuery)).pipe(
+            return from(get(expensesQuery)).pipe(
           switchMap(async (snapshot) => {
             const expensesData = snapshot.val();
             if (!expensesData) {
@@ -125,8 +126,10 @@ export class ExpenseService {
             console.error('Error fetching expenses:', error);
             return of([]);
           })
-        );
-      })
+            );
+          }),
+        ),
+      ),
     );
   }
 
@@ -149,13 +152,16 @@ export class ExpenseService {
     let currency: string;
     let expensesRef: DatabaseReference;
 
-    if (profile.groupId) {
-      const groupSettings = await firstValueFrom(this.groupService.getGroupSettings(profile.groupId));
+    const activeGroupId = getActiveGroupId(profile);
+    const { canonicalRef, legacyRef } = await this.spaceDataService.getActiveCollectionContext(profile, 'expenses');
+
+    if (activeGroupId) {
+      const groupSettings = await firstValueFrom(this.groupService.getGroupSettings(activeGroupId));
       currency = groupSettings?.currency || profile.currency;
-      expensesRef = this.getGroupExpensesRef(profile.groupId);
+      expensesRef = canonicalRef || legacyRef;
     } else {
       currency = profile.currency;
-      expensesRef = this.getExpensesRef(profile.uid);
+      expensesRef = canonicalRef || legacyRef;
     }
 
     const newExpense: Omit<IExpense, 'id' | 'updatedAt' | 'editedDevice' | 'updatedBy'> = {
@@ -168,8 +174,8 @@ export class ExpenseService {
       device: device,
     };
 
-    if (profile.groupId) {
-      (newExpense as any).groupId = profile.groupId;
+    if (activeGroupId) {
+      (newExpense as any).groupId = activeGroupId;
     }
 
     await push(expensesRef, newExpense);
@@ -188,8 +194,13 @@ export class ExpenseService {
     const result = parser.getResult();
     const editedDevice = `${result.browser.name} on ${result.os.name}, Model: ${result.device.model || 'Unknown'} (${result.device.vendor || 'Unknown'})`;
 
-    const expenseRef = profile.groupId
-        ? this.getGroupExpenseRef(profile.groupId, expenseId)
+    const activeGroupId = getActiveGroupId(profile);
+    const currentSpaceId = this.spaceDataService.getCurrentSpaceId(profile);
+    const { canonicalRef, spaceId } = await this.spaceDataService.getActiveCollectionContext(profile, 'expenses');
+    const expenseRef = canonicalRef && currentSpaceId
+      ? ref(this.db, `space_data/${currentSpaceId}/expenses/${expenseId}`)
+      : activeGroupId
+        ? this.getGroupExpenseRef(activeGroupId, expenseId)
         : this.getExpenseRef(profile.uid, expenseId);
 
     // ── ပြောင်းလဲမှုမတိုင်မှီ current data ယူပြီး diff စစ်မည် ──
@@ -231,12 +242,14 @@ export class ExpenseService {
     // Firebase update() မှာ nested path (editHistory/key) မသုံးနိုင်
     // push() သုံးမှသာ auto-key နဲ့ array-like node ဖြစ်မယ်
     if (Object.keys(changes).length > 0) {
-      const historyRef = ref(
-        this.db,
-        profile.groupId
-          ? `group_data/${profile.groupId}/expenses/${expenseId}/editHistory`
-          : `users/${profile.uid}/expenses/${expenseId}/editHistory`
-      );
+      const historyRef = canonicalRef && spaceId
+        ? ref(this.db, `space_data/${spaceId}/expenses/${expenseId}/editHistory`)
+        : ref(
+            this.db,
+            activeGroupId
+              ? `group_data/${activeGroupId}/expenses/${expenseId}/editHistory`
+              : `users/${profile.uid}/expenses/${expenseId}/editHistory`
+          );
       await push(historyRef, {
         editedAt: now,
         editedBy: profile.uid,
@@ -252,8 +265,13 @@ export class ExpenseService {
     if (!profile?.uid) {
       throw new Error('User not authenticated.');
     }
-    const expenseRef = profile.groupId
-        ? this.getGroupExpenseRef(profile.groupId, expenseId)
+    const activeGroupId = getActiveGroupId(profile);
+    const currentSpaceId = this.spaceDataService.getCurrentSpaceId(profile);
+    const { canonicalRef } = await this.spaceDataService.getActiveCollectionContext(profile, 'expenses');
+    const expenseRef = canonicalRef && currentSpaceId
+      ? ref(this.db, `space_data/${currentSpaceId}/expenses/${expenseId}`)
+      : activeGroupId
+        ? this.getGroupExpenseRef(activeGroupId, expenseId)
         : this.getExpenseRef(profile.uid, expenseId);
     await remove(expenseRef);
   }
@@ -265,13 +283,19 @@ export class ExpenseService {
           if (!profile) {
             throw new Error('User not authenticated.');
           }
-          const expenseRef = profile.groupId
-            ? this.getGroupExpenseRef(profile.groupId, expenseId)
-            : this.getExpenseRef(profile.uid, expenseId);
+          return from(this.spaceDataService.getActiveCollectionContext(profile, 'expenses')).pipe(
+            switchMap(({ canonicalRef }) => {
+              const activeGroupId = getActiveGroupId(profile);
+              const currentSpaceId = this.spaceDataService.getCurrentSpaceId(profile);
+              const expenseRef = canonicalRef && currentSpaceId
+                ? ref(this.db, `space_data/${currentSpaceId}/expenses/${expenseId}`)
+                : activeGroupId
+                  ? this.getGroupExpenseRef(activeGroupId, expenseId)
+                  : this.getExpenseRef(profile.uid, expenseId);
 
-          return new Promise<ServiceIExpense>((resolve, reject) => {
-            onValue(
-              expenseRef,
+              return new Promise<ServiceIExpense>((resolve, reject) => {
+                onValue(
+                  expenseRef,
               async (snapshot) => {
                 if (snapshot.exists()) {
                   const expense = snapshot.val() as IExpense;
@@ -301,8 +325,10 @@ export class ExpenseService {
                 }
               },
               (error) => reject(error)
-            );
-          });
+                );
+              });
+            }),
+          );
         })
       )
     );
@@ -314,9 +340,8 @@ export class ExpenseService {
       return false;
     }
 
-    const expensesRef = profile.groupId
-      ? this.getGroupExpensesRef(profile.groupId)
-      : this.getExpensesRef(profile.uid);
+    const { canonicalRef, legacyRef } = await this.spaceDataService.getActiveCollectionContext(profile, 'expenses');
+    const expensesRef = canonicalRef || legacyRef;
 
     const categoryQuery = query(
       expensesRef,

@@ -16,7 +16,8 @@ import {
 import { Observable, switchMap, firstValueFrom, map, of, Subject, take } from 'rxjs';
 import { AuthService } from './auth';
 import { TranslateService } from '@ngx-translate/core';
-import { UserProfile } from './user-data'; // Import UserProfile
+import { getActiveGroupId, UserProfile } from './user-data'; // Import UserProfile
+import { SpaceDataService } from './space-data.service';
 
 export interface ServiceICategory {
   id?: string; 
@@ -38,6 +39,7 @@ export class CategoryService {
   private db: Database = inject(Database);
   private translateService = inject(TranslateService);
   private authService = inject(forwardRef(() => AuthService));
+  private spaceDataService = inject(SpaceDataService);
 
   private categoryUpdatedSource = new Subject<{
     oldName: string;
@@ -67,10 +69,29 @@ export class CategoryService {
   getCategories(): Observable<ServiceICategory[]> {
     return this.authService.userProfile$.pipe(
       switchMap((profile: UserProfile | null) => { // Explicitly type the profile
-        if (profile?.groupId) {
-          return listVal<ServiceICategory>(this.getGroupCategoriesRef(profile.groupId), { keyField: 'id' });
+        const activeGroupId = getActiveGroupId(profile);
+        if (activeGroupId) {
+          return of(profile).pipe(
+            switchMap(async (currentProfile) => {
+              if (!currentProfile) {
+                return of([] as ServiceICategory[]);
+              }
+              const { canonicalRef, legacyRef } = await this.spaceDataService.getActiveCollectionContext(currentProfile, 'categories');
+              return listVal<ServiceICategory>(canonicalRef || legacyRef, { keyField: 'id' });
+            }),
+            switchMap(stream => stream),
+          );
         } else if (profile?.uid) {
-          return listVal<ServiceICategory>(this.getCategoriesRef(profile.uid), { keyField: 'id' });
+          return of(profile).pipe(
+            switchMap(async (currentProfile) => {
+              if (!currentProfile) {
+                return of([] as ServiceICategory[]);
+              }
+              const { canonicalRef, legacyRef } = await this.spaceDataService.getActiveCollectionContext(currentProfile, 'categories');
+              return listVal<ServiceICategory>(canonicalRef || legacyRef, { keyField: 'id' });
+            }),
+            switchMap(stream => stream),
+          );
         } else {
           return of([]);
         }
@@ -80,7 +101,7 @@ export class CategoryService {
 
   async setupPersonalAccountCategories(): Promise<void> {
     const profile = await firstValueFrom(this.authService.userProfile$.pipe(take(1))) as UserProfile | null;
-    if (!profile || profile.groupId) {
+    if (!profile || getActiveGroupId(profile)) {
       return;
     }
 
@@ -105,13 +126,15 @@ export class CategoryService {
     };
 
     let categoriesRef: DatabaseReference;
-    if (profile.groupId) {
-      newCategory.groupId = profile.groupId;
+    const activeGroupId = getActiveGroupId(profile);
+    const { canonicalRef, legacyRef } = await this.spaceDataService.getActiveCollectionContext(profile, 'categories');
+    if (activeGroupId) {
+      newCategory.groupId = activeGroupId;
       newCategory.userId = profile.uid;
-      categoriesRef = this.getGroupCategoriesRef(profile.groupId);
+      categoriesRef = canonicalRef || legacyRef;
     } else {
       newCategory.userId = profile.uid;
-      categoriesRef = this.getCategoriesRef(profile.uid);
+      categoriesRef = canonicalRef || legacyRef;
     }
 
     await push(categoriesRef, newCategory);
@@ -127,8 +150,13 @@ export class CategoryService {
     }
 
     let categoryRef: DatabaseReference;
-    if (profile.groupId) {
-      categoryRef = ref(this.db, `group_data/${profile.groupId}/categories/${categoryId}`);
+    const activeGroupId = getActiveGroupId(profile);
+    const currentSpaceId = this.spaceDataService.getCurrentSpaceId(profile);
+    const { canonicalRef } = await this.spaceDataService.getActiveCollectionContext(profile, 'categories');
+    if (canonicalRef && currentSpaceId) {
+      categoryRef = ref(this.db, `space_data/${currentSpaceId}/categories/${categoryId}`);
+    } else if (activeGroupId) {
+      categoryRef = ref(this.db, `group_data/${activeGroupId}/categories/${categoryId}`);
     } else {
       categoryRef = ref(this.db, `users/${profile.uid}/categories/${categoryId}`);
     }
@@ -164,9 +192,10 @@ export class CategoryService {
     newName: string,
     profile: UserProfile
   ): Promise<void> {
-    const expensesRef = profile.groupId
-      ? this.getGroupExpensesRef(profile.groupId)
-      : this.getExpensesRef(profile.uid);
+    const activeGroupId = getActiveGroupId(profile);
+    const currentSpaceId = this.spaceDataService.getCurrentSpaceId(profile);
+    const expenseContext = await this.spaceDataService.getActiveCollectionContext(profile, 'expenses');
+    const expensesRef = expenseContext.canonicalRef || expenseContext.legacyRef;
 
     // category name ဖြင့် filter ဆွဲ
     const expensesQuery = query(
@@ -181,8 +210,10 @@ export class CategoryService {
     // batch update — Promise.all ဖြင့် တပြိုင်နက် update
     const updates: Promise<void>[] = [];
     snapshot.forEach((childSnap) => {
-      const directRef = profile.groupId
-        ? ref(this.db, `group_data/${profile.groupId}/expenses/${childSnap.key}`)
+      const directRef = currentSpaceId && expenseContext.canonicalRef
+        ? ref(this.db, `space_data/${currentSpaceId}/expenses/${childSnap.key}`)
+        : activeGroupId
+        ? ref(this.db, `group_data/${activeGroupId}/expenses/${childSnap.key}`)
         : ref(this.db, `users/${profile.uid}/expenses/${childSnap.key}`);
       updates.push(update(directRef, { category: newName }));
     });
@@ -201,8 +232,13 @@ export class CategoryService {
     }
 
     let categoryRef: DatabaseReference;
-    if (profile.groupId) {
-      categoryRef = ref(this.db, `group_data/${profile.groupId}/categories/${categoryId}`);
+    const activeGroupId = getActiveGroupId(profile);
+    const currentSpaceId = this.spaceDataService.getCurrentSpaceId(profile);
+    const { canonicalRef } = await this.spaceDataService.getActiveCollectionContext(profile, 'categories');
+    if (canonicalRef && currentSpaceId) {
+      categoryRef = ref(this.db, `space_data/${currentSpaceId}/categories/${categoryId}`);
+    } else if (activeGroupId) {
+      categoryRef = ref(this.db, `group_data/${activeGroupId}/categories/${categoryId}`);
     } else {
       categoryRef = ref(this.db, `users/${profile.uid}/categories/${categoryId}`);
     }
@@ -219,9 +255,16 @@ export class CategoryService {
     let categoryRef: DatabaseReference;
     let expensesRef: DatabaseReference;
 
-    if (profile.groupId) {
-      categoryRef = ref(this.db, `group_data/${profile.groupId}/categories/${categoryId}`);
-      expensesRef = this.getGroupExpensesRef(profile.groupId);
+    const activeGroupId = getActiveGroupId(profile);
+    const currentSpaceId = this.spaceDataService.getCurrentSpaceId(profile);
+    const categoryContext = await this.spaceDataService.getActiveCollectionContext(profile, 'categories');
+    const expenseContext = await this.spaceDataService.getActiveCollectionContext(profile, 'expenses');
+    if (categoryContext.canonicalRef && expenseContext.canonicalRef && currentSpaceId) {
+      categoryRef = ref(this.db, `space_data/${currentSpaceId}/categories/${categoryId}`);
+      expensesRef = expenseContext.canonicalRef;
+    } else if (activeGroupId) {
+      categoryRef = ref(this.db, `group_data/${activeGroupId}/categories/${categoryId}`);
+      expensesRef = this.getGroupExpensesRef(activeGroupId);
     } else {
       categoryRef = ref(this.db, `users/${profile.uid}/categories/${categoryId}`);
       expensesRef = this.getExpensesRef(profile.uid);

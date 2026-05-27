@@ -19,6 +19,10 @@ import { SpaceContextService } from './space-context.service';
 
 export const MAX_SPACE_NAME_LENGTH = 50;
 
+function isPermissionDenied(error: any): boolean {
+  return error?.code === 'PERMISSION_DENIED' || error?.message === 'permission_denied';
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -101,7 +105,9 @@ export class GroupService {
     const legacyUpdates: { [key: string]: any } = {};
     legacyUpdates[`/groups/${newGroupId}`] = newGroup;
     legacyUpdates[`/group_members/${newGroupId}/${userId}`] = { role: role };
-    legacyUpdates[`/users/${userId}/groupId`] = newGroupId;
+    if (!userProfile?.groupId) {
+      legacyUpdates[`/users/${userId}/groupId`] = newGroupId;
+    }
     legacyUpdates[`/users/${userId}/accountType`] = 'group';
     legacyUpdates[`/users/${userId}/currentSpaceId`] = newGroupId;
     legacyUpdates[`/users/${userId}/currentSpaceType`] = 'group';
@@ -129,11 +135,7 @@ export class GroupService {
     try {
       await update(ref(this.db), spaceUpdates);
     } catch (error: any) {
-      const isPermissionDenied =
-        error?.code === 'PERMISSION_DENIED' ||
-        error?.message === 'permission_denied';
-
-      if (!isPermissionDenied) {
+      if (!isPermissionDenied(error)) {
         throw error;
       }
     }
@@ -246,23 +248,32 @@ export class GroupService {
   }
 
   async removeMember(groupId: string, memberId: string): Promise<void> {
-    const updates: { [key: string]: any } = {};
     const userProfile = await firstValueFrom(this.getUserDataService().getUserProfile(memberId));
-    const fallbackSpaceId = userProfile?.personalSpaceId || null;
+    const fallbackSpaceId = userProfile?.personalSpaceId || `personal:${memberId}`;
+    const legacyUpdates: { [key: string]: any } = {};
 
-    updates[`/group_members/${groupId}/${memberId}`] = null;
-    updates[`/space_members/${groupId}/${memberId}`] = null;
-    updates[`/users/${memberId}/spaceMemberships/${groupId}`] = null;
-    updates[`/users/${memberId}/roles/${groupId}`] = null;
+    legacyUpdates[`/group_members/${groupId}/${memberId}`] = null;
+    legacyUpdates[`/users/${memberId}/spaceMemberships/${groupId}`] = null;
+    legacyUpdates[`/users/${memberId}/roles/${groupId}`] = null;
 
     if (userProfile?.currentSpaceId === groupId) {
-      updates[`/users/${memberId}/currentSpaceId`] = fallbackSpaceId;
-      updates[`/users/${memberId}/currentSpaceType`] = 'personal';
-      updates[`/users/${memberId}/groupId`] = null;
-      updates[`/users/${memberId}/accountType`] = 'personal';
+      legacyUpdates[`/users/${memberId}/currentSpaceId`] = fallbackSpaceId;
+      legacyUpdates[`/users/${memberId}/currentSpaceType`] = 'personal';
+      legacyUpdates[`/users/${memberId}/groupId`] = null;
+      legacyUpdates[`/users/${memberId}/accountType`] = 'personal';
     }
 
-    await update(ref(this.db), updates);
+    await update(ref(this.db), legacyUpdates);
+
+    try {
+      await update(ref(this.db), {
+        [`/space_members/${groupId}/${memberId}`]: null,
+      });
+    } catch (error: any) {
+      if (!isPermissionDenied(error)) {
+        throw error;
+      }
+    }
   }
 
   async deleteGroup(groupId: string, actorId: string): Promise<void> {
