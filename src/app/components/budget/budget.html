@@ -48,7 +48,7 @@
     </div>
 
     <!-- ── Add Budget Panel ── -->
-    <div class="bgt-panel" *ngIf="userProfile?.accountType === 'personal' || userRole === 'admin'">
+    <div class="bgt-panel" *ngIf="canManageBudgets">
       <button class="bgt-panel-toggle" type="button" (click)="toggleAddForm()" [attr.aria-expanded]="isAddFormOpen">
         <span class="bgt-panel-toggle-left">
           <fa-icon [icon]="faPiggyBank" class="bgt-icon-accent"></fa-icon>
@@ -157,7 +157,7 @@
                   </span>
                   <span class="bgt-row-desc" *ngIf="budget.description">· {{ budget.description }}</span>
                 </div>
-                <button *ngIf="userProfile?.accountType === 'personal' || userRole === 'admin'"
+                <button *ngIf="canManageBudgets"
                   class="bgt-delete-btn" type="button" (click)="confirmDeleteBudget(budget.id)">
                   <fa-icon [icon]="faTrashCan" class="fa-delete-btn"></fa-icon>
                 </button>
@@ -182,7 +182,7 @@
           <p class="bgt-empty-title">{{ 'BUDGET_EMPTY_TITLE' | translate }}</p>
           <p class="bgt-empty-sub">{{ 'BUDGET_EMPTY_SUB' | translate }}</p>
         </div>
-        <div class="bgt-empty-actions">
+        <div class="bgt-empty-actions" *ngIf="canManageBudgets">
           <button type="button" class="bgt-empty-btn bgt-empty-btn-primary" (click)="openBudgetFormAndFocus()">
             + {{ 'SET_BUDGET' | translate }}
           </button>

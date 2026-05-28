@@ -39,7 +39,12 @@ import {
 import { faTrashCan } from '@fortawesome/free-regular-svg-icons';
 import { Chart, registerables } from 'chart.js';
 import { AuthService } from '../../services/auth';
-import { UserDataService, UserProfile } from '../../services/user-data';
+import {
+  UserDataService,
+  UserProfile,
+  canManageSharedSpace,
+  getCurrentSpaceRole,
+} from '../../services/user-data';
 import {
   AVAILABLE_CURRENCIES,
   BURMESE_MONTH_ABBREVIATIONS,
@@ -168,11 +173,15 @@ export class BudgetComponent implements OnInit, OnDestroy {
   // UI state for dark-theme panels
   get isAddFormOpen(): boolean { return !this.isBudgetFormCollapsed; }
   get isRecordedOpen(): boolean { return !this.isRecordedBudgetsCollapsed; }
+  get canManageBudgets(): boolean { return canManageSharedSpace(this.userProfile); }
   toggleAddForm(): void { this.isBudgetFormCollapsed = !this.isBudgetFormCollapsed; }
   toggleRecordedList(): void { this.isRecordedBudgetsCollapsed = !this.isRecordedBudgetsCollapsed; }
 
   // ✅ Empty state button: form ဖွင့်ပြီး amount field focus ကျအောင်
   openBudgetFormAndFocus(): void {
+    if (!this.canManageBudgets) {
+      return;
+    }
     this.isBudgetFormCollapsed = false;
     setTimeout(() => {
       const input = document.getElementById('amount') as HTMLInputElement;
@@ -739,11 +748,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
         this.budgetForm.get('currency')?.setValue(defaultCurrency);
         this.budgetForm.controls['currency'].disable();
 
-        if (profile.accountType === 'group' && profile.roles && typeof profile.roles === 'object' && Object.keys(profile.roles).length > 0) {
-          this.userRole = Object.values(profile.roles)[0];
-        } else {
-          this.userRole = null;
-        }
+        this.userRole = getCurrentSpaceRole(profile);
       }
     });
     this.subscriptions.add(profileSubscription);
@@ -799,6 +804,9 @@ export class BudgetComponent implements OnInit, OnDestroy {
   }
 
   onSubmitBudget(): void {
+    if (!this.canManageBudgets) {
+      return;
+    }
     const defaultCurrency = this.userProfile?.currency || 'MMK';
     if (this.budgetForm.valid) {
       const formValue = this.budgetForm.value;
@@ -945,6 +953,9 @@ export class BudgetComponent implements OnInit, OnDestroy {
   }
 
   confirmDeleteBudget(budgetId: string | undefined): void {
+    if (!this.canManageBudgets) {
+      return;
+    }
     if (budgetId) {
         Swal.fire({
             title: this.translate.instant('CONFIRM_DELETE_TITLE'),

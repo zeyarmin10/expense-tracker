@@ -411,7 +411,7 @@
                     {{ "EDIT_BUTTON_LABEL" | translate }}
                   </button>
                   <button
-                    *ngIf="userProfile?.accountType === 'personal' || userRole === 'admin'"
+                    *ngIf="canManageExpenseRecords"
                     class="exp-btn exp-btn-sm exp-btn-outline-danger"
                     (click)="onDelete(expense.id!)"
                   >

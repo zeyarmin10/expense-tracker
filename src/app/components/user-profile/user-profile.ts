@@ -9,7 +9,7 @@ import {
 import { Observable, of, map, firstValueFrom, combineLatest, Subscription } from 'rxjs';
 import { switchMap, tap, catchError } from 'rxjs/operators';
 import { AuthService } from '../../services/auth';
-import { UserDataService, UserProfile } from '../../services/user-data';
+import { getActiveGroupId, UserDataService, UserProfile } from '../../services/user-data';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faSave, faUserCircle, faTrash, faPlus, faChevronDown, faChevronUp, faListUl, faEdit, faTimes, faBell, faBellSlash, faClock } from '@fortawesome/free-solid-svg-icons';
@@ -180,11 +180,21 @@ export class UserProfileComponent implements OnInit, OnDestroy {
       budgetEndDate: [{ value: null, disabled: true }],
     });
 
-    const getRole = (roles: { [key: string]: string } | null | undefined): string => {
-      if (!roles || typeof roles !== 'object' || Object.keys(roles).length === 0) {
+    const getRole = (profile: UserProfile | null | undefined): string => {
+      if (!profile) {
         return 'N/A';
       }
-      return Object.values(roles)[0];
+
+      if (profile.currentSpaceRole) {
+        return profile.currentSpaceRole;
+      }
+
+      const activeGroupId = getActiveGroupId(profile);
+      if (activeGroupId) {
+        return profile.spaceMemberships?.[activeGroupId] || profile.roles?.[activeGroupId] || 'member';
+      }
+
+      return 'owner';
     };
 
     this.userDisplayData$ = this.authService.currentUser$.pipe(
@@ -195,14 +205,10 @@ export class UserProfileComponent implements OnInit, OnDestroy {
               if (!profile) return of(null);
 
               this.accountType = profile.accountType || 'personal';
-              this.userRole = getRole(profile.roles);
-              this.groupId = profile.groupId || null;
+              this.userRole = getRole(profile);
+              this.groupId = getActiveGroupId(profile);
 
-              if (!this.canEditSettings) {
-                this.userProfileForm.get('currency')?.disable();
-              } else {
-                this.userProfileForm.get('currency')?.enable();
-              }
+              this.syncSettingsControlState();
 
               // Patch form values
               this.userProfileForm.patchValue({
@@ -216,12 +222,18 @@ export class UserProfileComponent implements OnInit, OnDestroy {
               this.handleBudgetPeriodChange(this.userProfileForm.get('budgetPeriod')?.value, true);
 
               // Fetch group name if accountType is 'group'
-              const groupName$ = profile.accountType === 'group' && profile.groupId
-                ? this.groupService.getGroupName(profile.groupId)
+              const activeGroupId = getActiveGroupId(profile);
+              const groupName$ = (profile.currentSpaceType === 'group' || profile.accountType === 'group') && activeGroupId
+                ? this.groupService.getGroupName(activeGroupId)
                 : of(null);
 
               return combineLatest([groupName$, this.authService.userProfile$]).pipe(
                 map(([groupName, mergedProfile]) => {
+                  const effectiveRole = getRole(mergedProfile || profile);
+                  this.userRole = effectiveRole;
+                  this.accountType = mergedProfile?.accountType || this.accountType;
+                  this.groupId = getActiveGroupId(mergedProfile || profile);
+                  this.syncSettingsControlState();
                   // group member ဆို mergedProfile မှာ group currency ရှိပြီးသား
                   const effectiveCurrency = mergedProfile?.currency || profile.currency || 'MMK';
 
@@ -237,8 +249,8 @@ export class UserProfileComponent implements OnInit, OnDestroy {
                     budgetPeriod: mergedProfile?.budgetPeriod || profile.budgetPeriod || null,
                     budgetStartDate: mergedProfile?.budgetStartDate || profile.budgetStartDate || null,
                     budgetEndDate: mergedProfile?.budgetEndDate || profile.budgetEndDate || null,
-                    roles: this.userRole,
-                    accountType: this.accountType,
+                    roles: effectiveRole,
+                    accountType: mergedProfile?.accountType || this.accountType,
                     groupName: groupName
                   });
                 })
@@ -332,6 +344,32 @@ export class UserProfileComponent implements OnInit, OnDestroy {
     }));
   }
 
+  private syncSettingsControlState(): void {
+    const currencyControl = this.userProfileForm.get('currency');
+    const budgetPeriodControl = this.userProfileForm.get('budgetPeriod');
+    const startDateControl = this.userProfileForm.get('budgetStartDate');
+    const endDateControl = this.userProfileForm.get('budgetEndDate');
+
+    if (this.canEditSettings) {
+      currencyControl?.enable({ emitEvent: false });
+      budgetPeriodControl?.enable({ emitEvent: false });
+    } else {
+      currencyControl?.disable({ emitEvent: false });
+      budgetPeriodControl?.disable({ emitEvent: false });
+      startDateControl?.disable({ emitEvent: false });
+      endDateControl?.disable({ emitEvent: false });
+      return;
+    }
+
+    if (this.showCustomDateRange) {
+      startDateControl?.enable({ emitEvent: false });
+      endDateControl?.enable({ emitEvent: false });
+    } else {
+      startDateControl?.disable({ emitEvent: false });
+      endDateControl?.disable({ emitEvent: false });
+    }
+  }
+
   handleBudgetPeriodChange(periodId: string | null, isInitialLoad = false): void {
     const startDateControl = this.userProfileForm.get('budgetStartDate');
     const endDateControl = this.userProfileForm.get('budgetEndDate');
@@ -345,10 +383,14 @@ export class UserProfileComponent implements OnInit, OnDestroy {
     } else {
       this.showCustomDateRange = periodId === 'custom';
     }
+
+    this.syncSettingsControlState();
   }
 
   // ✅ Auto-save: budget period / currency ပြောင်းလဲတာနဲ့ ချက်ချင်း သိမ်းမယ်
   async autoSaveField(field: 'budgetPeriod' | 'currency'): Promise<void> {
+    if (!this.canEditSettings) return;
+
     const currentUser = await firstValueFrom(this.authService.currentUser$);
     if (!currentUser) return;
 
@@ -642,6 +684,9 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   }
 
   openBudgetPeriodModal(): void {
+    if (!this.canEditSettings) {
+      return;
+    }
     if (this.customBudgetPeriods.length >= 10) {
       Swal.fire({ icon: 'error', title: this.translate.instant('ERROR_TITLE'), text: this.translate.instant('CUSTOM_BUDGET_PERIOD_LIMIT_REACHED') });
       return;
@@ -650,6 +695,9 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   }
 
   async onPeriodSaved(period: { name: string, startDate: string, endDate: string }): Promise<void> {
+    if (!this.canEditSettings) {
+      return;
+    }
     const currentUser = await firstValueFrom(this.authService.currentUser$);
     if (currentUser) {
       try {
@@ -665,6 +713,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
 
   async deleteCustomPeriod(periodId: string | undefined, event: Event): Promise<void> {
     event.stopPropagation();
+    if (!this.canEditSettings) return;
     if (!periodId) return;
 
     const currentUser = await firstValueFrom(this.authService.currentUser$);

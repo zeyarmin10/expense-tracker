@@ -111,7 +111,7 @@
           <a routerLink="/expense" class="dash-empty-btn dash-empty-btn-primary">
             + {{ 'ADD_EXPENSE' | translate }}
           </a>
-          <a routerLink="/budget" class="dash-empty-btn dash-empty-btn-secondary">
+          <a *ngIf="canManageBudgetActions" routerLink="/budget" class="dash-empty-btn dash-empty-btn-secondary">
             {{ 'SET_BUDGET' | translate }}
           </a>
         </div>

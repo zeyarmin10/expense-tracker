@@ -45,7 +45,11 @@ import {
 import { Router, RouterModule } from '@angular/router';
 import { AVAILABLE_CURRENCIES } from '../../core/constants/app.constants';
 import { CategoryService, ServiceICategory } from '../../services/category';
-import { UserProfile, UserDataService } from '../../services/user-data';
+import {
+  UserProfile,
+  UserDataService,
+  canManageSharedSpace,
+} from '../../services/user-data';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import {
   faSync,
@@ -137,6 +141,8 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   hasExpenseDataForChart: boolean = false;
   hasCategoryDataForChart: boolean = false;
   currentSummaryDateRange$: Observable<string> | undefined;
+  userProfile: UserProfile | null = null;
+  get canManageBudgetActions(): boolean { return canManageSharedSpace(this.userProfile); }
 
   constructor(private cdr: ChangeDetectorRef, private datePipe: DatePipe) {
     this._startDate$ = new BehaviorSubject<string | null>(null);
@@ -189,6 +195,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         takeUntil(this.destroy$)
       )
       .subscribe((userProfile) => {
+        this.userProfile = userProfile;
         this.setDashboardDateRange(userProfile);
         this.expenseFilterForm.patchValue({
           startDate: this._startDate$.getValue(),

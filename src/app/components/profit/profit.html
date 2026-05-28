@@ -160,7 +160,7 @@
         <p class="pnl-empty-title">{{ 'PNL_EMPTY_TITLE' | translate }}</p>
         <p class="pnl-empty-sub">{{ 'PNL_EMPTY_SUB' | translate }}</p>
       </div>
-      <div class="pnl-empty-actions">
+      <div class="pnl-empty-actions" *ngIf="canManageProfitActions">
         <button type="button" class="pnl-empty-btn pnl-empty-btn-primary"
           (click)="openIncomeFormAndFocus()">
           + {{ 'ADD_INCOME' | translate }}
@@ -180,7 +180,7 @@
           <div class="pnl-no-chart-inner">
             <fa-icon [icon]="faChartColumn" class="pnl-no-chart-icon-fa"></fa-icon>
             <p class="pnl-no-chart-msg">{{ 'NO_PNL_CHART_DATA' | translate }}</p>
-            <button type="button" class="pnl-no-chart-cta" (click)="openIncomeFormAndFocus()">
+            <button *ngIf="canManageProfitActions" type="button" class="pnl-no-chart-cta" (click)="openIncomeFormAndFocus()">
               + {{ 'ADD_INCOME' | translate }}
             </button>
           </div>
@@ -303,7 +303,7 @@
     </div>
 
     <!-- Add Income Panel -->
-    <div class="pnl-panel" *ngIf="userProfile?.accountType === 'personal' || userRole === 'admin'">
+    <div class="pnl-panel" *ngIf="canManageProfitActions">
       <button class="pnl-panel-toggle" type="button" (click)="toggleVisibility('incomeForm')">
         <span class="pnl-panel-toggle-left">
           <fa-icon [icon]="faMoneyBillWave" class="pnl-icon-income"></fa-icon>
@@ -371,7 +371,7 @@
                   </span>
                   <span class="pnl-record-desc" *ngIf="income.description">{{ income.description }}</span>
                 </div>
-                <button *ngIf="userProfile?.accountType === 'personal' || userRole === 'admin'" class="pnl-delete-btn"
+                <button *ngIf="canManageProfitActions" class="pnl-delete-btn"
                   type="button" (click)="confirmDeleteIncome(income.id)">
                   <fa-icon [icon]="faTrashCan" class="fa-delete-btn"></fa-icon>
                 </button>
@@ -416,7 +416,7 @@
                     {{ budget.category === 'all' ? ('ALL_CATEGORY' | translate) : budget.category }}
                   </span>
                 </div>
-                <button *ngIf="userProfile?.accountType === 'personal' || userRole === 'admin'" class="pnl-delete-btn"
+                <button *ngIf="canManageProfitActions" class="pnl-delete-btn"
                   type="button" (click)="confirmDeleteBudget(budget.id)">
                   <fa-icon [icon]="faTrashCan" class="fa-delete-btn"></fa-icon>
                 </button>

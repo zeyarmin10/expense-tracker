@@ -1,5 +1,5 @@
 
-export type Role = 'admin' | 'member';
+export type Role = 'admin' | 'member' | 'owner';
 
 export interface IGroupMember {
   uid: string;

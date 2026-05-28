@@ -54,7 +54,11 @@ import { faTrashCan, faPenToSquare } from '@fortawesome/free-regular-svg-icons';
 import { CategoryModalComponent } from '../common/category-modal/category-modal';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../services/auth';
-import { UserProfile } from '../../services/user-data';
+import {
+  UserProfile,
+  canManageSharedSpace,
+  getCurrentSpaceRole,
+} from '../../services/user-data';
 import { BURMESE_MONTH_ABBREVIATIONS } from '../../core/constants/app.constants';
 import { FormatService } from '../../services/format.service';
 
@@ -114,6 +118,7 @@ export class Expense implements OnInit {
   isSaving = false;
   isFormOpen = true;
   isQuickMode = true;
+  get canManageExpenseRecords(): boolean { return canManageSharedSpace(this.userProfile); }
 
   // ── Date filter mode ──────────────────────────────
   public dateFilterMode: 'today' | 'week' | 'month' | 'custom' = 'today';
@@ -239,9 +244,7 @@ export class Expense implements OnInit {
 
     this.authService.userProfile$.subscribe(profile => {
       this.userProfile = profile;
-      if (profile?.roles && typeof profile.roles === 'object') {
-        this.userRole = Object.values(profile.roles)[0];
-      }
+      this.userRole = getCurrentSpaceRole(profile);
     });
     this.loadCategories();
   }
@@ -594,6 +597,9 @@ export class Expense implements OnInit {
   // ─────────────────────────────────────────────────────────────────────────
 
   onDelete(expenseId: string): void {
+    if (!this.canManageExpenseRecords) {
+      return;
+    }
     Swal.fire({
       title: this.translate.instant('CONFIRM_DELETE_TITLE'),
       text: this.translate.instant('CONFIRM_DELETE_EXPENSE'),

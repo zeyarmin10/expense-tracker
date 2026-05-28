@@ -13,7 +13,7 @@ import { GroupService } from './group.service';
 import { Group } from './group.model'; // Import Group from the new model file
 import { SpaceRole, SpaceType } from './space.model';
 
-export type Role = 'admin' | 'member';
+export type Role = 'admin' | 'member' | 'owner';
 
 export interface UserProfile {
   uid: string;
@@ -57,6 +57,46 @@ export function getActiveGroupId(profile: SpaceContextLike | null | undefined): 
 
 export function isPersonalContext(profile: SpaceContextLike | null | undefined): boolean {
   return !getActiveGroupId(profile) && profile?.currentSpaceType !== 'group';
+}
+
+export function getCurrentSpaceRole(profile: UserProfile | null | undefined): SpaceRole | null {
+  if (!profile) {
+    return null;
+  }
+
+  if (profile.currentSpaceType === 'group' && profile.currentSpaceId) {
+    return (
+      profile.currentSpaceRole ||
+      profile.spaceMemberships?.[profile.currentSpaceId] ||
+      (profile.roles?.[profile.currentSpaceId] as SpaceRole | undefined) ||
+      null
+    );
+  }
+
+  const activeGroupId = getActiveGroupId(profile);
+  if (!activeGroupId) {
+    return profile.currentSpaceRole || null;
+  }
+
+  return (
+    profile.spaceMemberships?.[activeGroupId] ||
+    (profile.roles?.[activeGroupId] as SpaceRole | undefined) ||
+    profile.currentSpaceRole ||
+    null
+  );
+}
+
+export function canManageSharedSpace(profile: UserProfile | null | undefined): boolean {
+  if (!profile) {
+    return false;
+  }
+
+  if (profile.accountType === 'personal') {
+    return true;
+  }
+
+  const role = getCurrentSpaceRole(profile);
+  return role === 'admin' || role === 'owner';
 }
 
 @Injectable({

@@ -52,7 +52,11 @@ import {
 import { faTrashCan } from '@fortawesome/free-regular-svg-icons';
 import { AuthService } from '../../services/auth';
 import { Chart, registerables } from 'chart.js';
-import { UserProfile } from '../../services/user-data';
+import {
+  UserProfile,
+  canManageSharedSpace,
+  getCurrentSpaceRole,
+} from '../../services/user-data';
 import {
   AVAILABLE_CURRENCIES,
   BURMESE_MONTH_ABBREVIATIONS,
@@ -174,6 +178,7 @@ export class Profit implements OnInit, OnDestroy {
   isDailyCashFlowCollapsed: boolean = true;
   isRecordedIncomesCollapsed: boolean = true;
   isRecordedBudgetsCollapsed: boolean = true;
+  get canManageProfitActions(): boolean { return canManageSharedSpace(this.userProfile); }
 
   // --- Font Awesome Icons ---
   faTrash = faTrash;
@@ -445,11 +450,7 @@ export class Profit implements OnInit, OnDestroy {
 
           this.setDateFilter(dateFilter, true);
 
-          if (profile.accountType === 'group' && profile.roles && typeof profile.roles === 'object' && Object.keys(profile.roles).length > 0) {
-            this.userRole = Object.values(profile.roles)[0];
-          } else {
-            this.userRole = null;
-          }
+          this.userRole = getCurrentSpaceRole(profile);
       }
     });
     this.subscriptions.add(profileSubscription);
@@ -510,6 +511,9 @@ export class Profit implements OnInit, OnDestroy {
   // --- Income Management ---
 
   onSubmitIncome(): void {
+    if (!this.canManageProfitActions) {
+      return;
+    }
     const defaultCurrency = this.userProfile?.currency || 'MMK';
 
     if (this.incomeForm.valid) {
@@ -538,6 +542,9 @@ export class Profit implements OnInit, OnDestroy {
   }
 
   confirmDeleteIncome(incomeId: string | undefined): void {
+    if (!this.canManageProfitActions) {
+      return;
+    }
     if (incomeId) {
         Swal.fire({
             title: this.translate.instant('CONFIRM_DELETE_TITLE'),
@@ -570,6 +577,9 @@ export class Profit implements OnInit, OnDestroy {
   // --- Budget Management ---
 
   confirmDeleteBudget(budgetId: string | undefined): void {
+    if (!this.canManageProfitActions) {
+      return;
+    }
     if (budgetId) {
         Swal.fire({
             title: this.translate.instant('CONFIRM_DELETE_TITLE'),
@@ -632,6 +642,9 @@ export class Profit implements OnInit, OnDestroy {
 
   // ✅ Empty state button — form ဖွင့်ပြီး amount field focus
   openIncomeFormAndFocus(): void {
+    if (!this.canManageProfitActions) {
+      return;
+    }
     this.isIncomeFormCollapsed = false;
     setTimeout(() => {
       const input = document.getElementById('incomeAmount') as HTMLInputElement;
