@@ -22,12 +22,14 @@ import {
   faTrash,
   faSave,
   faTimes,
-  faTags
+  faTags,
+  faPen
 } from '@fortawesome/free-solid-svg-icons';
-import { faTrashCan, faPenToSquare } from '@fortawesome/free-regular-svg-icons';
+import { faTrashCan } from '@fortawesome/free-regular-svg-icons';
 
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import Swal from 'sweetalert2';
+import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
 
 const Toast = Swal.mixin({
   toast: true,
@@ -50,6 +52,7 @@ const Toast = Swal.mixin({
     ReactiveFormsModule,
     FontAwesomeModule,
     TranslateModule,
+    CurrentSpaceTitleComponent,
   ],
   templateUrl: './category.html',
   styleUrls: ['./category.css'],
@@ -75,7 +78,7 @@ export class Category implements OnInit {
   faTimes = faTimes;
   faTags = faTags;
   faTrashCan = faTrashCan;
-  faPenToSquare = faPenToSquare;
+  faPen = faPen;
 
   constructor(private fb: FormBuilder) {
     this.addCategoryForm = this.fb.group({

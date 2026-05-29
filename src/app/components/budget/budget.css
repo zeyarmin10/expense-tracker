@@ -680,6 +680,20 @@
   color: var(--text-muted);
 }
 
+.bgt-card-spinner {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.8rem;
+}
+
+.bgt-card-spinner .exp-spinner-sm {
+  display: block;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  border-width: 2px;
+}
+
 /* ── Chart Panel ── */
 .bgt-chart-panel {
   background: var(--surface);

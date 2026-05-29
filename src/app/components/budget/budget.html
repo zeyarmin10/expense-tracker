@@ -253,7 +253,11 @@
     </ng-container>
 
     <!-- Shared templates -->
-    <ng-template #cardLoading><span class="bgt-card-muted">{{ 'LOADING_DATA' | translate }}</span></ng-template>
+    <ng-template #cardLoading>
+      <div class="bgt-card-spinner" aria-hidden="true">
+        <div class="exp-spinner-sm"></div>
+      </div>
+    </ng-template>
     <ng-template #cardNoData><span class="bgt-card-muted">—</span></ng-template>
 
     <!-- ── Budget Comparison Chart ── -->

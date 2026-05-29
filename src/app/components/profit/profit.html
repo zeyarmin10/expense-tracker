@@ -147,7 +147,9 @@
     </ng-container>
 
     <ng-template #cardLoading>
-      <div class="pnl-card-skeleton"><div class="pnl-skeleton-line pnl-skeleton-short"></div></div>
+      <div class="pnl-card-spinner" aria-hidden="true">
+        <div class="exp-spinner-sm"></div>
+      </div>
     </ng-template>
     <ng-template #cardNoData>
       <span class="pnl-card-empty-hint">{{ 'NO_DATA_YET' | translate }}</span>

@@ -14,24 +14,24 @@ import { PrivacyPolicyComponent } from './components/privacy-policy/privacy-poli
 import { NotificationAdminComponent } from './components/notification-admin/notification-admin';
 
 export const routes: Routes = [
-  { path: 'login', component: LoginComponent },
-  { path: 'privacy-policy', component: PrivacyPolicyComponent },
+  { path: 'login', component: LoginComponent, data: { titleKey: 'LOGIN_TITLE' } },
+  { path: 'privacy-policy', component: PrivacyPolicyComponent, data: { titleKey: 'PRIVACY_POLICY_TITLE' } },
   {
     path: '',
     canActivate: [AuthGuard],
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-      { path: 'dashboard', component: DashboardComponent },
-      { path: 'profit', component: Profit },
-      { path: 'expense/:date', component: Expense },
-      { path: 'expense', component: Expense },
-      { path: 'expense-overview', component: ExpenseOverview },
-      { path: 'budget', component: BudgetComponent },
-      { path: 'profile', component: UserProfileComponent },
-      { path: 'category', component: Category },
-      { path: 'onboarding', component: OnboardingComponent },
-      { path: 'member-management', component: MemberManagementComponent },
-      { path: 'notification-admin', component: NotificationAdminComponent },
+      { path: 'dashboard', component: DashboardComponent, data: { titleKey: 'DASHBOARD_WELCOME' } },
+      { path: 'profit', component: Profit, data: { titleKey: 'PROFIT_LOSS_TITLE' } },
+      { path: 'expense/:date', component: Expense, data: { titleKey: 'EXPENSE_ADD_TITLE' } },
+      { path: 'expense', component: Expense, data: { titleKey: 'EXPENSE_ADD_TITLE' } },
+      { path: 'expense-overview', component: ExpenseOverview, data: { titleKey: 'EXPENSE_OVERVIEW_TITLE' } },
+      { path: 'budget', component: BudgetComponent, data: { titleKey: 'BUDGET_TITLE' } },
+      { path: 'profile', component: UserProfileComponent, data: { titleKey: 'USER_PROFILE_TITLE' } },
+      { path: 'category', component: Category, data: { titleKey: 'CREATE_CATEGORY_TITLE' } },
+      { path: 'onboarding', component: OnboardingComponent, data: { titleKey: 'SPACE_SECTION_TITLE' } },
+      { path: 'member-management', component: MemberManagementComponent, data: { titleKey: 'MEMBER_MANAGEMENT_TITLE' } },
+      { path: 'notification-admin', component: NotificationAdminComponent, data: { titleKey: 'NOTI_ADMIN_TITLE' } },
     ]
   },
   { path: '**', redirectTo: '/dashboard' },

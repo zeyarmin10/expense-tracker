@@ -27,10 +27,14 @@ import {
   BehaviorSubject,
   switchMap,
   takeUntil,
+  take,
   Subject,
   filter,
   shareReplay,
   catchError,
+  distinctUntilChanged,
+  auditTime,
+  startWith,
 } from 'rxjs';
 import { Chart, registerables } from 'chart.js';
 import { ServiceIIncome, IncomeService } from '../../services/income';
@@ -62,14 +66,23 @@ import {
   faChartColumn
 } from '@fortawesome/free-solid-svg-icons';
 import { FormatService } from '../../services/format.service';
+import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
 
 Chart.register(...registerables);
 type CurrencyMap = { [currency: string]: number };
+type DashboardData = {
+  expenses: ServiceIExpense[];
+  incomes: ServiceIIncome[];
+  budgets: ServiceIBudget[];
+};
+type DashboardDataState = DashboardData & {
+  loading: boolean;
+};
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, FontAwesomeModule, RouterModule],
+  imports: [CommonModule, FormsModule, TranslateModule, FontAwesomeModule, RouterModule, CurrentSpaceTitleComponent],
   providers: [DatePipe],
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.css'],
@@ -118,13 +131,14 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     incomes: ServiceIIncome[];
   }>;
   totalIncomesByCurrency$!: Observable<{ [currency: string]: number }>;
+  isDashboardDataLoading$!: Observable<boolean>;
 
   expenseFilterForm!: FormGroup;
   categoryFilterForm!: FormGroup;
 
   _startDate$: BehaviorSubject<string | null>;
   _endDate$: BehaviorSubject<string | null>;
-  private refresh$ = new BehaviorSubject<void>(undefined);
+  private refresh$ = new BehaviorSubject<number>(0);
 
   titleAnimTrigger: string = 'initial';
   faSync = faSync;
@@ -170,7 +184,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   refreshData(): void {
-    this.refresh$.next();
+    this.refresh$.next(this.refresh$.getValue() + 1);
     this.titleAnimTrigger = 'roll';
     setTimeout(() => (this.titleAnimTrigger = 'initial'), 200);
   }
@@ -313,36 +327,65 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   private initializeDataStreams(): void {
     const dateRange$ = combineLatest([this._startDate$, this._endDate$, this.refresh$]).pipe(
       filter(([startDate, endDate]) => !!startDate && !!endDate),
-      map(([startDate, endDate]) => ({
+      auditTime(0),
+      map(([startDate, endDate, refreshKey]) => ({
         startDate: this.safeParseDate(startDate as string),
         endDate: this.safeParseDate(endDate as string),
+        refreshKey,
       })),
+      distinctUntilChanged(
+        (previous, current) =>
+          previous.startDate.getTime() === current.startDate.getTime() &&
+          previous.endDate.getTime() === current.endDate.getTime() &&
+          previous.refreshKey === current.refreshKey
+      ),
       shareReplay(1)
     );
 
-    const data$ = dateRange$.pipe(
-      switchMap(({ startDate, endDate }) =>
-        this.authService.userProfile$.pipe(
-          switchMap(profile => {
-            if (!profile) {
-              return of({ expenses: [], incomes: [], budgets: [] });
-            }
-            const expenses$ = this.expenseService.getExpenses(startDate, endDate);
-            const incomes$ = this.incomeService.getIncomes(startDate, endDate);
-            const budgets$ = this.budgetService.getBudgets(startDate, endDate);
+    const emptyData: DashboardData = { expenses: [], incomes: [], budgets: [] };
 
-            return combineLatest({
-              expenses: expenses$,
-              incomes: incomes$,
-              budgets: budgets$,
-            });
-          })
-        )
-      ),
+    const dataState$: Observable<DashboardDataState> = combineLatest([dateRange$, this.authService.userProfile$]).pipe(
+      switchMap(([{ startDate, endDate }, profile]) => {
+        if (!profile) {
+          return of({ ...emptyData, loading: false });
+        }
+
+        const expenses$ = this.expenseService.getExpenses(startDate, endDate, profile);
+        const incomes$ = this.incomeService.getIncomes(startDate, endDate, profile);
+        const budgets$ = this.budgetService.getBudgets(startDate, endDate, profile);
+
+        return combineLatest({
+          expenses: expenses$,
+          incomes: incomes$,
+          budgets: budgets$,
+        }).pipe(
+          map((data) => ({ ...data, loading: false })),
+          catchError(err => {
+            console.error('Error in dashboard data load', err);
+            return of({ ...emptyData, loading: false });
+          }),
+          startWith({ ...emptyData, loading: true })
+        );
+      }),
       catchError(err => {
         console.error('Error in data$ stream', err);
-        return of({ expenses: [], incomes: [], budgets: [] });
+        return of({ ...emptyData, loading: false });
       }),
+      shareReplay(1)
+    );
+
+    this.isDashboardDataLoading$ = dataState$.pipe(
+      map((state) => state.loading),
+      distinctUntilChanged()
+    );
+
+    const data$ = dataState$.pipe(
+      filter((state) => !state.loading),
+      map((state) => ({
+        expenses: state.expenses,
+        incomes: state.incomes,
+        budgets: state.budgets,
+      })),
       shareReplay(1)
     );
 
@@ -466,15 +509,13 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // Re-render charts when theme changes (body.light-mode class toggled)
     this.themeObserver = new MutationObserver(() => {
-      this.monthlyExpenseChartData$
-        .pipe(takeUntil(this.destroy$))
-        .subscribe((data) => {
-          if (data) this.renderExpenseChart(data);
-        });
-
-      this.filteredExpensesAndIncomes$
-        .pipe(takeUntil(this.destroy$))
-        .subscribe(({ expenses }) => {
+      combineLatest([
+        this.monthlyExpenseChartData$,
+        this.filteredExpensesAndIncomes$,
+      ])
+        .pipe(take(1), takeUntil(this.destroy$))
+        .subscribe(([chartData, { expenses }]) => {
+          if (chartData) this.renderExpenseChart(chartData);
           this.createCategoryDonutChart(expenses);
         });
     });

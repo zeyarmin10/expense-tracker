@@ -19,16 +19,17 @@ import {
   faEllipsisVertical,
   faLink,
   faPen,
-  faTrash,
+  faTrashCan,
   faUser,
   faUsers,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
 
 @Component({
   selector: 'app-onboarding',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, FontAwesomeModule],
+  imports: [CommonModule, FormsModule, TranslateModule, FontAwesomeModule, CurrentSpaceTitleComponent],
   templateUrl: './onboarding.html',
   styleUrls: ['./onboarding.css'],
 })
@@ -49,7 +50,7 @@ export class OnboardingComponent implements OnInit {
   faCheckCircle = faCheckCircle;
   faEllipsisVertical = faEllipsisVertical;
   faPen = faPen;
-  faTrash = faTrash;
+  faTrashCan = faTrashCan;
 
   userProfile$: Observable<UserProfile | null>;
   userSpaces$!: Observable<UserSpaceSummary[]>;

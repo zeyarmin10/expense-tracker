@@ -48,6 +48,7 @@ export interface IEditHistoryEntry {
   editedAt: string;
   editedBy: string;
   editedByName: string;
+  editedByPhotoURL?: string | null;
   device?: string;
   changes: {
     [field: string]: { from: any; to: any };
@@ -69,10 +70,12 @@ export interface DataIExpense {
   // Tracking
   userId?: string;         // createdById
   createdByName?: string;  // Creator's name at creation time
+  createdByPhotoURL?: string | null;
   groupId?: string;
   createdAt?: string;
   updatedAt?: string;
   updatedBy?: string;      // UID of last editor
+  updatedByPhotoURL?: string | null;
   device?: string;
   editedDevice?: string;
   // ── Edit history: key = timestamp (Date.now()), value = IEditHistoryEntry ──

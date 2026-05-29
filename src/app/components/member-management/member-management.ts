@@ -13,6 +13,7 @@ import { DataManagerService, IGroupDetails, IGroupMemberDetails } from '../../se
 import { InvitationService } from '../../services/invitation.service';
 import Swal from 'sweetalert2';
 import { getActiveGroupId } from '../../services/user-data';
+import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
 
 const Toast = Swal.mixin({
   toast: true,
@@ -30,7 +31,7 @@ const Toast = Swal.mixin({
 @Component({
   selector: 'app-member-management',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, FontAwesomeModule],
+  imports: [CommonModule, FormsModule, TranslateModule, FontAwesomeModule, CurrentSpaceTitleComponent],
   templateUrl: './member-management.html',
   styleUrls: ['./member-management.css']
 })

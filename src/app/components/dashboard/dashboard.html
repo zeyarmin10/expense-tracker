@@ -7,12 +7,15 @@
     <!-- ── Header ── -->
     <div class="dash-header">
       <div class="dash-header-left">
-        <h2 class="dash-title">{{ currentSummaryTitle$ | async }}</h2>
+        <h2 class="dash-title">
+          <span class="dash-title-text">{{ currentSummaryTitle$ | async }}</span>
+        </h2>
         <span class="dash-date-range">{{ currentSummaryDateRange$ | async }}</span>
       </div>
     </div>
 
     <!-- ── Summary Cards — data ရှိမှသာ ပြမည် ── -->
+    <div class="dash-data-shell" [class.dash-data-shell-loading]="isDashboardDataLoading$ | async">
     <ng-container *ngIf="hasData$ | async">
     <div class="dash-summary-grid">
 
@@ -120,8 +123,8 @@
 
     <!-- Shared no-data / loading templates -->
     <ng-template #cardLoading>
-      <div class="dash-card-skeleton">
-        <div class="dash-skeleton-line dash-skeleton-short"></div>
+      <div class="dash-card-spinner" aria-hidden="true">
+        <div class="exp-spinner-sm"></div>
       </div>
     </ng-template>
     <ng-template #cardNoData>
@@ -173,6 +176,13 @@
     </div>
     <!-- </ng-container> -->
     <!-- END Charts -->
+
+    <div class="dash-loading-cover" *ngIf="isDashboardDataLoading$ | async">
+      <div class="exp-loading">
+        <div class="exp-spinner-sm"></div>
+      </div>
+    </div>
+    </div>
 
   </div>
 </div>

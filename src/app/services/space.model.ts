@@ -11,6 +11,10 @@ export interface Space {
   budgetStartDate?: string | null;
   budgetEndDate?: string | null;
   selectedBudgetPeriodId?: string | null;
+  imageUrl?: string | null;
+  avatarUrl?: string | null;
+  logoUrl?: string | null;
+  photoURL?: string | null;
   createdAt?: number | string;
 }
 

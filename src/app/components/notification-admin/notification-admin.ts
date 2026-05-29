@@ -6,11 +6,12 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faBell, faPaperPlane, faShieldHalved } from '@fortawesome/free-solid-svg-icons';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { NotificationService } from '../../services/notification.service';
+import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
 
 @Component({
   selector: 'app-notification-admin',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, FontAwesomeModule, TranslateModule],
+  imports: [CommonModule, FormsModule, RouterModule, FontAwesomeModule, TranslateModule, CurrentSpaceTitleComponent],
   templateUrl: './notification-admin.html',
   styleUrls: ['./notification-admin.css'],
 })

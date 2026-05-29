@@ -18,6 +18,7 @@ import { AuthService } from './auth';
 import { TranslateService } from '@ngx-translate/core';
 import { getActiveGroupId, UserProfile } from './user-data'; // Import UserProfile
 import { SpaceDataService } from './space-data.service';
+import { SpaceSwitchLoadingService } from './space-switch-loading.service';
 
 export interface ServiceICategory {
   id?: string; 
@@ -40,6 +41,7 @@ export class CategoryService {
   private translateService = inject(TranslateService);
   private authService = inject(forwardRef(() => AuthService));
   private spaceDataService = inject(SpaceDataService);
+  private spaceSwitchLoadingService = inject(SpaceSwitchLoadingService);
 
   private categoryUpdatedSource = new Subject<{
     oldName: string;
@@ -76,8 +78,16 @@ export class CategoryService {
               if (!currentProfile) {
                 return of([] as ServiceICategory[]);
               }
-              const { canonicalRef, legacyRef } = await this.spaceDataService.getActiveCollectionContext(currentProfile, 'categories');
-              return listVal<ServiceICategory>(canonicalRef || legacyRef, { keyField: 'id' });
+              const { canonicalRef, legacyRef } = await firstValueFrom(
+                this.spaceSwitchLoadingService.track(
+                  of(null).pipe(
+                    switchMap(() => this.spaceDataService.getActiveCollectionContext(currentProfile, 'categories')),
+                  ),
+                ),
+              );
+              return this.spaceSwitchLoadingService.track(
+                listVal<ServiceICategory>(canonicalRef || legacyRef, { keyField: 'id' }),
+              );
             }),
             switchMap(stream => stream),
           );
@@ -87,8 +97,16 @@ export class CategoryService {
               if (!currentProfile) {
                 return of([] as ServiceICategory[]);
               }
-              const { canonicalRef, legacyRef } = await this.spaceDataService.getActiveCollectionContext(currentProfile, 'categories');
-              return listVal<ServiceICategory>(canonicalRef || legacyRef, { keyField: 'id' });
+              const { canonicalRef, legacyRef } = await firstValueFrom(
+                this.spaceSwitchLoadingService.track(
+                  of(null).pipe(
+                    switchMap(() => this.spaceDataService.getActiveCollectionContext(currentProfile, 'categories')),
+                  ),
+                ),
+              );
+              return this.spaceSwitchLoadingService.track(
+                listVal<ServiceICategory>(canonicalRef || legacyRef, { keyField: 'id' }),
+              );
             }),
             switchMap(stream => stream),
           );

@@ -19,6 +19,7 @@ export interface UserProfile {
   uid: string;
   email: string;
   displayName: string;
+  photoURL?: string | null;
   currency: string;
   language: string;
   createdAt: number; 

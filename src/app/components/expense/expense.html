@@ -387,12 +387,12 @@
                   >{{ this.formatService.formatLocalizedDate(expense.date) }}</span
                 >
                 <span
-                  *ngIf="expense.quantity && expense.unit"
+                  *ngIf="expense.quantity && expense.quantity > 1"
                   class="exp-meta-dot"
                   >·</span
                 >
                 <span
-                  *ngIf="expense.quantity && expense.unit"
+                  *ngIf="expense.quantity && expense.quantity > 1"
                   class="exp-item-qty"
                 >
                   {{ formatLocalizedNumber(expense.quantity) }} {{ expense.unit
@@ -407,7 +407,7 @@
                     class="exp-btn exp-btn-sm exp-btn-outline-info"
                     (click)="startEdit(expense)"
                   >
-                    <fa-icon class="fa-regular-icon fa-edit-btn" [icon]="faPenToSquare"></fa-icon>
+                    <fa-icon class="fa-regular-icon fa-edit-btn" [icon]="faPen"></fa-icon>
                     {{ "EDIT_BUTTON_LABEL" | translate }}
                   </button>
                   <button
@@ -432,8 +432,15 @@
                 *ngIf="userProfile?.accountType === 'group' && expense.userDisplayName"
                 class="exp-created-by p-0"
               >
-                {{ "EXPENSE_CREATED_BY" | translate: { name:
-                expense.userDisplayName } }}
+                <app-user-avatar
+                  [name]="expense.userDisplayName || expense.createdByName || 'Former Member'"
+                  [photoUrl]="expense.userPhotoURL || expense.createdByPhotoURL"
+                  [size]="22"
+                ></app-user-avatar>
+                <span class="exp-created-by-text">
+                  {{ "EXPENSE_CREATED_BY" | translate: { name:
+                  expense.userDisplayName || expense.createdByName || 'Former Member' } }}
+                </span>
               </div>
             </div>
           </div>

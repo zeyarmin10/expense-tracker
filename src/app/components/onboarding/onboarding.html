@@ -33,10 +33,10 @@
               <div class="ob-card-icon ob-icon-space">
                 <fa-icon [icon]="faCheckCircle"></fa-icon>
               </div>
-              <div>
+              <div class="ob-card-head-content">
                 <h3 class="ob-card-title">{{ 'SPACE_SECTION_TITLE' | translate }}</h3>
-                <p class="ob-card-desc">
-                  {{ 'ONBOARDING.CURRENT_SPACE' | translate }}:
+                <p class="ob-card-desc ob-current-space-desc">
+                  <span class="ob-current-label">{{ 'ONBOARDING.CURRENT_SPACE' | translate }}:</span>
                   <span class="ob-inline-accent">
                     {{ profile.currentSpaceName ? getDisplaySpaceName({ type: profile.currentSpaceType || 'personal', name: profile.currentSpaceName }) : ('SPACE_MY_PERSONAL' | translate) }}
                   </span>
@@ -56,7 +56,7 @@
                   <span class="ob-space-item-main">
                     <fa-icon [icon]="faUser" *ngIf="space.type === 'personal'"></fa-icon>
                     <fa-icon [icon]="faUsers" *ngIf="space.type === 'group'"></fa-icon>
-                    <span>{{ getDisplaySpaceName(space) }}</span>
+                    <span class="ob-space-name">{{ getDisplaySpaceName(space) }}</span>
                   </span>
                   <span class="ob-space-badge" *ngIf="profile.currentSpaceId === space.id">
                     {{ 'SPACE_ACTIVE_BADGE' | translate }}
@@ -81,7 +81,7 @@
                       type="button"
                       *ngIf="canDeleteSpace(space)"
                       (click)="deleteSpace(space, $event)">
-                      <fa-icon [icon]="faTrash"></fa-icon>
+                      <fa-icon [icon]="faTrashCan"></fa-icon>
                     </button>
                   </div>
 

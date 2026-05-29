@@ -16,21 +16,25 @@ import {
   Query,
 } from '@angular/fire/database';
 import { Observable, from, of, firstValueFrom } from 'rxjs';
-import { map, switchMap, catchError, filter, take } from 'rxjs/operators';
+import { map, switchMap, catchError, filter } from 'rxjs/operators';
 import { DataIExpense as IExpense } from '../core/models/data';
 import { AuthService } from './auth';
 import { UAParser } from 'ua-parser-js';
 import { getActiveGroupId, UserDataService, UserProfile } from './user-data';
 import { GroupService } from './group.service';
 import { SpaceDataService } from './space-data.service';
+import { SpaceSwitchLoadingService } from './space-switch-loading.service';
 
 export type ServiceIExpense = IExpense & { 
   id: string; 
   unit?: string;
   totalCost: number;
   updatedByName?: string;
+  updatedByPhotoURL?: string | null;
   createdByName?: string; // Add createdByName to the service model
+  createdByPhotoURL?: string | null;
   userDisplayName?: string;
+  userPhotoURL?: string | null;
 };
 
 @Injectable({
@@ -42,6 +46,7 @@ export class ExpenseService {
   private userDataService: UserDataService = inject(UserDataService);
   private groupService: GroupService = inject(GroupService);
   private spaceDataService: SpaceDataService = inject(SpaceDataService);
+  private spaceSwitchLoadingService = inject(SpaceSwitchLoadingService);
 
   constructor() {}
 
@@ -61,12 +66,44 @@ export class ExpenseService {
     return ref(this.db, `group_data/${groupId}/expenses/${expenseId}`);
   }
 
-  getExpenses(startDate?: Date, endDate?: Date): Observable<ServiceIExpense[]> {
-    return this.authService.userProfile$.pipe(
-      filter((profile): profile is UserProfile => profile !== null),
-      take(1),
+  private getProfilePhotoURL(profile: Partial<UserProfile> | null | undefined): string | null {
+    if (!profile) {
+      return null;
+    }
+
+    const profileWithImages = profile as Partial<UserProfile> & {
+      avatarUrl?: string | null;
+      imageUrl?: string | null;
+      profileImageUrl?: string | null;
+      picture?: string | null;
+    };
+
+    return (
+      profileWithImages.photoURL ||
+      profileWithImages.avatarUrl ||
+      profileWithImages.imageUrl ||
+      profileWithImages.profileImageUrl ||
+      profileWithImages.picture ||
+      null
+    );
+  }
+
+  getExpenses(
+    startDate?: Date,
+    endDate?: Date,
+    profileOverride?: UserProfile,
+  ): Observable<ServiceIExpense[]> {
+    const profile$ = profileOverride
+      ? of(profileOverride)
+      : this.authService.userProfile$.pipe(
+          filter((profile): profile is UserProfile => profile !== null),
+        );
+
+    return profile$.pipe(
       switchMap(profile =>
-        from(this.spaceDataService.getActiveCollectionContext(profile, 'expenses')).pipe(
+        this.spaceSwitchLoadingService.track(
+          from(this.spaceDataService.getActiveCollectionContext(profile, 'expenses')),
+        ).pipe(
           switchMap(({ canonicalRef, legacyRef }) => {
             const baseRef = canonicalRef || legacyRef;
             let expensesQuery: Query = baseRef;
@@ -77,7 +114,7 @@ export class ExpenseService {
               expensesQuery = query(baseRef, orderByChild('date'), startAt(start), endAt(end));
             }
 
-            return from(get(expensesQuery)).pipe(
+            const expenses$ = from(get(expensesQuery)).pipe(
           switchMap(async (snapshot) => {
             const expensesData = snapshot.val();
             if (!expensesData) {
@@ -105,18 +142,28 @@ export class ExpenseService {
             const expenses = Object.keys(expensesData).map((key) => {
               const expense = expensesData[key] as IExpense;
               let createdByName = expense.createdByName;
+              let createdByPhotoURL = expense.createdByPhotoURL || null;
               if(expense.userId && !createdByName) {
                  createdByName = userProfiles[expense.userId]?.displayName;
               }
+              if (expense.userId && !createdByPhotoURL) {
+                createdByPhotoURL = this.getProfilePhotoURL(userProfiles[expense.userId]);
+              }
               const updatedByName = expense.updatedBy ? userProfiles[expense.updatedBy]?.displayName : undefined;
+              const updatedByPhotoURL = expense.updatedBy
+                ? (expense.updatedByPhotoURL || this.getProfilePhotoURL(userProfiles[expense.updatedBy]))
+                : null;
 
               return {
                 id: key,
                 ...expense,
                 totalCost: expense.quantity * expense.price,
                 createdByName: createdByName || 'Former Member',
+                createdByPhotoURL,
                 updatedByName: updatedByName,
+                updatedByPhotoURL,
                 userDisplayName: createdByName || 'Former Member',
+                userPhotoURL: createdByPhotoURL,
               } as ServiceIExpense;
             });
 
@@ -127,6 +174,7 @@ export class ExpenseService {
             return of([]);
           })
             );
+            return this.spaceSwitchLoadingService.track(expenses$);
           }),
         ),
       ),
@@ -143,6 +191,7 @@ export class ExpenseService {
     if (!profile?.uid) {
       throw new Error('User not authenticated.');
     }
+    const currentUser = await firstValueFrom(this.authService.currentUser$);
 
     const parser = new UAParser();
     const result = parser.getResult();
@@ -168,6 +217,7 @@ export class ExpenseService {
       ...expenseData,
       userId: profile.uid,
       createdByName: profile.displayName || 'Anonymous',
+      createdByPhotoURL: this.getProfilePhotoURL(profile) || currentUser?.photoURL || null,
       currency: currency,
       totalCost,
       createdAt: new Date().toISOString(),
@@ -189,6 +239,8 @@ export class ExpenseService {
     if (!profile?.uid) {
       throw new Error('User not authenticated.');
     }
+
+    const currentUser = await firstValueFrom(this.authService.currentUser$);
 
     const parser = new UAParser();
     const result = parser.getResult();
@@ -232,6 +284,7 @@ export class ExpenseService {
       updatedAt: now,
       editedDevice: editedDevice,
       updatedBy: profile.uid,
+      updatedByPhotoURL: this.getProfilePhotoURL(profile) || currentUser?.photoURL || null,
       totalCost: quantity * price,
     };
 
@@ -254,6 +307,7 @@ export class ExpenseService {
         editedAt: now,
         editedBy: profile.uid,
         editedByName: profile.displayName || 'Unknown',
+        editedByPhotoURL: this.getProfilePhotoURL(profile) || currentUser?.photoURL || null,
         device: editedDevice,
         changes,
       });
@@ -300,16 +354,23 @@ export class ExpenseService {
                 if (snapshot.exists()) {
                   const expense = snapshot.val() as IExpense;
                   let updatedByName: string | undefined = undefined;
+                  let updatedByPhotoURL = expense.updatedByPhotoURL || null;
                   let createdByName: string | undefined = expense.createdByName;
+                  let createdByPhotoURL = expense.createdByPhotoURL || null;
 
                   if (expense.updatedBy) {
                     const userProfile = await firstValueFrom(this.userDataService.getUserProfile(expense.updatedBy));
                     updatedByName = userProfile?.displayName || 'Unknown User';
+                    updatedByPhotoURL = updatedByPhotoURL || this.getProfilePhotoURL(userProfile);
                   }
 
                   if (expense.userId && !createdByName) {
                     const userProfile = await firstValueFrom(this.userDataService.getUserProfile(expense.userId));
                     createdByName = userProfile?.displayName;
+                    createdByPhotoURL = createdByPhotoURL || this.getProfilePhotoURL(userProfile);
+                  } else if (expense.userId && !createdByPhotoURL) {
+                    const userProfile = await firstValueFrom(this.userDataService.getUserProfile(expense.userId));
+                    createdByPhotoURL = this.getProfilePhotoURL(userProfile);
                   }
 
                   resolve({
@@ -317,8 +378,11 @@ export class ExpenseService {
                     ...expense,
                     totalCost: expense.quantity * expense.price,
                     createdByName: createdByName || 'Former Member',
+                    createdByPhotoURL,
                     updatedByName: updatedByName,
+                    updatedByPhotoURL,
                     userDisplayName: createdByName || 'Former Member',
+                    userPhotoURL: createdByPhotoURL,
                   } as ServiceIExpense);
                 } else {
                   reject('Expense not found.');

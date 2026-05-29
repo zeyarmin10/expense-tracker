@@ -24,6 +24,7 @@ import { FormatService } from '../../services/format.service';
 import { AppTheme, ThemeService } from '../../services/theme.service';
 import { NotificationService, NotificationSettingsState } from '../../services/notification.service';
 import Swal from 'sweetalert2';
+import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
 
 export const AVAILABLE_BUDGET_PERIODS = [
   { code: null, nameKey: 'BUDGET_PERIOD.NONE' },
@@ -55,6 +56,7 @@ const Toast = Swal.mixin({
     FontAwesomeModule,
     FormsModule,
     CustomBudgetPeriodModalComponent,
+    CurrentSpaceTitleComponent,
   ],
   providers: [DatePipe],
   templateUrl: './user-profile.html',

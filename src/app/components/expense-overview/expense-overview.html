@@ -2,8 +2,10 @@
   <div class="expense-container mb-5">
     <!-- Header -->
     <div class="expense-header">
-      <h2 class="expense-title">{{ "EXPENSE" | translate }}<span>{{ "OVERVIEW" | translate }} </span></h2>
-      <span class="header-badge">{{ currentPeriodLabel }}</span>
+      <div>
+        <h2 class="expense-title">{{ "EXPENSE" | translate }}<span>{{ "OVERVIEW" | translate }} </span></h2>
+      </div>
+      <span class="header-badge" *ngIf="selectedDateFilter === 'custom'">{{ currentPeriodLabel }}</span>
     </div>
 
     <!-- Filter Row: custom=3cols+search below, normal=select+search side by side -->
@@ -129,14 +131,22 @@
                     <span class="d-md-none">{{ this.formatService.formatMobileDate(expense.date) }}</span>
                   </td>
                   <td class="td-created-by" *ngIf="isGroupUser">
-                    <span class="created-by-badge">{{ expense.createdByName || '—' }}</span>
+                    <span class="created-by-badge">
+                      <app-user-avatar [name]="expense.createdByName || expense.userDisplayName || 'Former Member'"
+                        [photoUrl]="expense.createdByPhotoURL || expense.userPhotoURL" [size]="20"></app-user-avatar>
+                      <span class="created-by-name">{{ expense.createdByName || '—' }}</span>
+                    </span>
                   </td>
                   <td class="td-category">
                     <span class="category-badge">{{ expense.category }}</span>
                   </td>
                   <td class="td-name">
-                    {{ expense.itemName }}
-                    <span class="td-name-creator" *ngIf="isGroupUser">{{ expense.createdByName || '' }}</span>
+                    <span class="td-item-name">{{ expense.itemName }}</span>
+                    <span class="td-name-creator" *ngIf="isGroupUser">
+                      <app-user-avatar [name]="expense.createdByName || expense.userDisplayName || 'Former Member'"
+                        [photoUrl]="expense.createdByPhotoURL || expense.userPhotoURL" [size]="20"></app-user-avatar>
+                      <span class="td-name-creator-text">{{ expense.createdByName || '' }}</span>
+                    </span>
                   </td>
                   <td class="td-amount">
                     {{ formatService.formatAmountShort(expense.totalCost, expense.currency) }}

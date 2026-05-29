@@ -48,8 +48,9 @@ import {
   faSliders,
   faRotateLeft,
   faArrowRotateLeft,
+  faPen
 } from '@fortawesome/free-solid-svg-icons';
-import { faTrashCan, faPenToSquare } from '@fortawesome/free-regular-svg-icons';
+import { faTrashCan } from '@fortawesome/free-regular-svg-icons';
 
 import { CategoryModalComponent } from '../common/category-modal/category-modal';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -58,9 +59,12 @@ import {
   UserProfile,
   canManageSharedSpace,
   getCurrentSpaceRole,
+  isPersonalContext,
 } from '../../services/user-data';
 import { BURMESE_MONTH_ABBREVIATIONS } from '../../core/constants/app.constants';
 import { FormatService } from '../../services/format.service';
+import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
+import { UserAvatarComponent } from '../common/user-avatar/user-avatar.component';
 
 const Toast = Swal.mixin({
   toast: true,
@@ -85,6 +89,8 @@ const Toast = Swal.mixin({
     FontAwesomeModule,
     CategoryModalComponent,
     TranslateModule,
+    CurrentSpaceTitleComponent,
+    UserAvatarComponent,
   ],
   providers: [DatePipe],
   templateUrl: './expense.html',
@@ -118,6 +124,7 @@ export class Expense implements OnInit {
   isSaving = false;
   isFormOpen = true;
   isQuickMode = true;
+  private activeSpaceModeKey: string | null = null;
   get canManageExpenseRecords(): boolean { return canManageSharedSpace(this.userProfile); }
 
   // ── Date filter mode ──────────────────────────────
@@ -188,7 +195,7 @@ export class Expense implements OnInit {
   faChevronUp = faChevronUp;
   faArrowRotateLeft = faArrowRotateLeft;
   faTrashCan = faTrashCan;
-  faPenToSquare = faPenToSquare;
+  faPen = faPen;
 
   userProfile: UserProfile | null = null;
 
@@ -245,6 +252,11 @@ export class Expense implements OnInit {
     this.authService.userProfile$.subscribe(profile => {
       this.userProfile = profile;
       this.userRole = getCurrentSpaceRole(profile);
+      const spaceModeKey = this.getSpaceModeKey(profile);
+      if (spaceModeKey !== this.activeSpaceModeKey) {
+        this.activeSpaceModeKey = spaceModeKey;
+        this.setQuickMode(isPersonalContext(profile));
+      }
     });
     this.loadCategories();
   }
@@ -254,7 +266,21 @@ export class Expense implements OnInit {
   }
 
   toggleQuickMode(): void {
-    this.isQuickMode = !this.isQuickMode;
+    this.setQuickMode(!this.isQuickMode);
+  }
+
+  private getSpaceModeKey(profile: UserProfile | null): string {
+    if (!profile) {
+      return 'none';
+    }
+
+    const type = profile.currentSpaceType || profile.accountType || 'personal';
+    const id = profile.currentSpaceId || profile.groupId || profile.personalSpaceId || profile.uid;
+    return `${type}:${id}`;
+  }
+
+  private setQuickMode(isQuickMode: boolean): void {
+    this.isQuickMode = isQuickMode;
     const itemNameCtrl = this.newExpenseForm.get('itemName');
     if (this.isQuickMode) {
       itemNameCtrl?.clearValidators();
@@ -624,6 +650,58 @@ export class Expense implements OnInit {
     });
   }
 
+  private getExpenseCreatorName(expense: IExpense): string {
+    return expense.userDisplayName || expense.createdByName || 'Former Member';
+  }
+
+  private getExpenseCreatorPhotoURL(expense: IExpense): string | null {
+    return expense.userPhotoURL || expense.createdByPhotoURL || null;
+  }
+
+  private getUserAvatarInitials(name: string): string {
+    const words = (name || 'User')
+      .split(/[\s_-]+/)
+      .map(word => Array.from(word.trim())[0])
+      .filter(Boolean)
+      .slice(0, 2);
+
+    return (words.join('') || Array.from(name || 'User')[0] || 'U').toUpperCase();
+  }
+
+  private getUserAvatarHue(name: string): number {
+    let hash = 0;
+    for (const char of Array.from(name || 'User')) {
+      hash = ((hash << 5) - hash + char.charCodeAt(0)) | 0;
+    }
+    return Math.abs(hash) % 360;
+  }
+
+  private escapeHtml(value: string): string {
+    return value
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  private getUserAvatarHtml(name: string, photoURL: string | null, size = 25): string {
+    const safeName = this.escapeHtml(name || 'User');
+    const safePhotoURL = photoURL ? this.escapeHtml(photoURL) : '';
+    const hue = this.getUserAvatarHue(name);
+    const initials = this.escapeHtml(this.getUserAvatarInitials(name));
+    const fallbackDisplay = safePhotoURL ? 'none' : 'inline-flex';
+    const imageHtml = safePhotoURL
+      ? `<img src="${safePhotoURL}" alt="${safeName}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-flex';">`
+      : '';
+
+    return `
+      <span title="${safeName}" style="width:${size}px;height:${size}px;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;border-radius:50%;border:1px solid hsl(${hue} 82% 64%);background:linear-gradient(135deg, hsl(${hue} 82% 52%), hsl(${(hue + 34) % 360} 82% 42%));color:#ffffff;font-size:${Math.max(10, Math.round(size * 0.45))}px;font-weight:800;line-height:1;text-transform:uppercase;text-shadow:0 1px 2px rgba(0,0,0,0.22);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.2),0 4px 10px rgba(2,8,23,0.18);vertical-align:middle;">
+        ${imageHtml}
+        <span style="display:${fallbackDisplay};align-items:center;justify-content:center;width:100%;height:100%;">${initials}</span>
+      </span>`;
+  }
+
   showExpenseInfo(expense: IExpense): void {
     const isDark = !document.body.classList.contains('light-mode');
     const bg = isDark ? '#12151c' : '#ffffff';
@@ -669,14 +747,33 @@ export class Expense implements OnInit {
 
     let rows = '';
 
-    rows += row(`<img src="../../assets/icons/bill.svg" alt="bill" style="width:25px;height:25px;filter:${iconFilter};vertical-align:middle;">`, this.translate.instant('EXPENSE_ITEM_NAME_LABEL'), expense.itemName || '—');
-    rows += row(`<img src="../../assets/icons/tag.svg" alt="tag" style="width:25px;height:25px;filter:${iconFilter};vertical-align:middle;">`, this.translate.instant('EXPENSE_CATEGORY_LABEL'), expense.category || '—', accent);
+    rows += row(`<img src="../../assets/icons/shopping-bag.png" alt="bill" style="width:25px;height:25px;filter:${iconFilter};vertical-align:middle;">`, this.translate.instant('EXPENSE_ITEM_NAME_LABEL'), expense.itemName || '—');
+    rows += row(`<img src="../../assets/icons/price-tag.png" alt="tag" style="width:25px;height:25px;filter:${iconFilter};vertical-align:middle;">`, this.translate.instant('EXPENSE_CATEGORY_LABEL'), expense.category || '—', accent);
+    const quantityValue = Number(expense.quantity);
+    const priceValue = Number(expense.price);
+    const hasQuantity = Number.isFinite(quantityValue) && quantityValue > 1;
+    const hasPrice = hasQuantity && Number.isFinite(priceValue) && priceValue > 0;
+
+    if (hasQuantity) {
+      const quantityText = `${this.formatLocalizedNumber(quantityValue)}${expense.unit ? ' ' + expense.unit : ''}`;
+      rows += row(`<img src="../../assets/icons/item.png" alt="quantity" style="width:25px;height:25px;filter:${iconFilter};vertical-align:middle;">`, this.translate.instant('QUANTITY_LABEL'), quantityText);
+    }
+
+    if (hasPrice) {
+      rows += row(`<img src="../../assets/icons/bill.svg" alt="price" style="width:25px;height:25px;filter:${iconFilter};vertical-align:middle;">`, this.translate.instant('PRICE_LABEL'), this.formatService.formatAmountWithSymbol(priceValue, expense.currency));
+    }
+
     const amt = this.formatService.formatAmountWithSymbol(expense.totalCost, expense.currency);
-    rows += row(`<img src="../../assets/icons/money-bag.svg" alt="money-bag" style="width:25px;height:25px;filter:${iconFilter};vertical-align:middle;">`, this.translate.instant('TOTAL_COST_LABEL'), amt, accent);
+    rows += row(`<img src="../../assets/icons/money-bag.png" alt="money-bag" style="width:25px;height:25px;filter:${iconFilter};vertical-align:middle;">`, this.translate.instant('TOTAL_COST_LABEL'), amt, accent);
 
     if (!isPersonal && expense.createdByName) {
       const dt = expense.createdAt ? this.formatService.formatLocalizedDate(expense.createdAt, 'longDateTime') : '';
-      rows += row(`<img src="../../assets/icons/user.svg" alt="user" style="width:25px;height:25px;filter:${iconFilter};vertical-align:middle;">`, this.translate.instant('CREATED_BY_LABEL'), `${expense.createdByName}${dt ? ' · ' + dt : ''}`);
+      const creatorName = this.getExpenseCreatorName(expense);
+      const creatorAvatar = this.getUserAvatarHtml(
+        creatorName,
+        this.getExpenseCreatorPhotoURL(expense),
+      );
+      rows += row(creatorAvatar, this.translate.instant('CREATED_BY_LABEL'), `${this.escapeHtml(creatorName)}${dt ? ' · ' + this.escapeHtml(dt) : ''}`);
     }
 
     if (historyEntries.length > 0) {

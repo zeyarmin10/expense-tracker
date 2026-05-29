@@ -1,6 +1,7 @@
 import { Component, inject, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, NavigationEnd, RouterOutlet, RouterModule, ActivatedRoute } from '@angular/router';
+import { Title } from '@angular/platform-browser';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { Observable, combineLatest, of, from, firstValueFrom, skip } from 'rxjs';
 import { map, filter, startWith, switchMap, distinctUntilChanged, debounceTime } from 'rxjs/operators';
@@ -34,8 +35,10 @@ import { App as CapacitorApp } from '@capacitor/app';
 import { Keyboard } from '@capacitor/keyboard';
 import Swal from 'sweetalert2';
 import { SpaceContextService } from './services/space-context.service';
+import { SpaceSwitchLoadingService } from './services/space-switch-loading.service';
 import { UserSpaceSummary } from './services/space.model';
-import { getActiveGroupId } from './services/user-data';
+import { getActiveGroupId, UserProfile } from './services/user-data';
+import { CurrentSpaceTitleComponent } from './components/common/current-space-title/current-space-title.component';
 
 @Component({
   selector: 'app-root',
@@ -46,7 +49,8 @@ import { getActiveGroupId } from './services/user-data';
     RouterModule,
     TranslateModule,
     Toast,
-    FontAwesomeModule
+    FontAwesomeModule,
+    CurrentSpaceTitleComponent
   ],
   templateUrl: './app.html',
   styleUrls: ['./app.css'],
@@ -65,6 +69,7 @@ export class App implements OnInit {
   currentSpaceId$: Observable<string | null>;
   currentSpaceLabel$: Observable<string | null>;
   showFab$: Observable<boolean>;
+  spaceSwitchLoading$: Observable<boolean>;
   faRightFromBracket = faRightFromBracket;
   faUsers = faUsers;
   faChevronDown = faChevronDown;
@@ -100,14 +105,17 @@ export class App implements OnInit {
   private groupService = inject(GroupService);
   private networkService = inject(NetworkService);
   private spaceContextService = inject(SpaceContextService);
+  private spaceSwitchLoadingService = inject(SpaceSwitchLoadingService);
   private themeService = inject(ThemeService);
   private notificationService = inject(NotificationService);
+  private documentTitle = inject(Title);
 
   constructor(private translate: TranslateService) {
     this.translate.setDefaultLang('en');
     const savedLang = localStorage.getItem('selectedLanguage') || 'en';
     this.translate.use(savedLang);
     this.currentLang = savedLang;
+    this.spaceSwitchLoading$ = this.spaceSwitchLoadingService.loading$;
 
     this.currentUser$ = this.authService.currentUser$;
     this.userDisplayName$ = this.authService.userProfile$.pipe(
@@ -219,6 +227,8 @@ export class App implements OnInit {
     this.themeService.isDarkMode$.subscribe((isDarkMode) => {
       this.isDarkMode = isDarkMode;
     });
+
+    this.initDocumentTitleUpdates();
   }
 
   get pullRefreshOffset(): number {
@@ -296,6 +306,63 @@ export class App implements OnInit {
     this.pullTracking = false;
     this.pullReadyToRefresh = false;
     this.pullDistance = 0;
+  }
+
+  private initDocumentTitleUpdates(): void {
+    const routeTitleKey$ = this.router.events.pipe(
+      filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+      startWith(null),
+      map(() => this.getCurrentRouteTitleKey())
+    );
+
+    const language$ = this.translate.onLangChange.pipe(
+      map((event) => event.lang),
+      startWith(this.currentLang)
+    );
+
+    combineLatest([
+      routeTitleKey$,
+      this.authService.userProfile$.pipe(startWith(null)),
+      language$,
+    ]).pipe(
+      map(([titleKey, profile]) => this.buildDocumentTitle(titleKey, profile)),
+      distinctUntilChanged()
+    ).subscribe((title) => this.documentTitle.setTitle(title));
+  }
+
+  private getCurrentRouteTitleKey(): string {
+    let activeRoute = this.router.routerState.snapshot.root;
+    while (activeRoute.firstChild) {
+      activeRoute = activeRoute.firstChild;
+    }
+
+    const titleKey = activeRoute.data?.['titleKey'];
+    return typeof titleKey === 'string' && titleKey.trim()
+      ? titleKey
+      : 'DASHBOARD_WELCOME';
+  }
+
+  private buildDocumentTitle(titleKey: string, profile: UserProfile | null): string {
+    const translatedTitle = this.translate.instant(titleKey);
+    const pageTitle = translatedTitle && translatedTitle !== titleKey
+      ? translatedTitle
+      : this.title;
+    const spaceName = this.getDocumentSpaceName(profile);
+
+    return [pageTitle, spaceName, this.title]
+      .filter((part): part is string => !!part)
+      .join(' | ');
+  }
+
+  private getDocumentSpaceName(profile: UserProfile | null): string | null {
+    if (!profile) {
+      return null;
+    }
+
+    return this.getDisplaySpaceName({
+      type: profile.currentSpaceType || 'personal',
+      name: profile.currentSpaceName || 'My Personal',
+    });
   }
 
   private canStartPullRefresh(target: EventTarget | null): boolean {
@@ -581,14 +648,20 @@ export class App implements OnInit {
       return;
     }
 
+    const loadingToken = this.spaceSwitchLoadingService.beginSwitch();
     try {
-      await this.spaceContextService.switchSpace(user.uid, spaceId);
+      await this.spaceSwitchLoadingService.trackPromise(
+        this.spaceContextService.switchSpace(user.uid, spaceId),
+      );
       this.closeNavbarMenu();
       if (this.router.url !== '/dashboard') {
-        this.router.navigate(['/dashboard']);
+        await this.spaceSwitchLoadingService.trackPromise(
+          this.router.navigate(['/dashboard']),
+        );
       }
     } catch (error) {
       console.error('Space switch failed', error);
+      this.spaceSwitchLoadingService.cancelSwitch(loadingToken);
       this.toastService.showError('Failed to switch space.');
     }
   }

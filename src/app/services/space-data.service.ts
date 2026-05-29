@@ -23,6 +23,9 @@ export interface ActiveSpaceDataContext {
 export class SpaceDataService {
   private db = inject(Database);
   private readonly ensuredSpaces = new Set<string>();
+  private readonly ensuringSpaces = new Map<string, Promise<void>>();
+  private readonly ensuredCollections = new Set<string>();
+  private readonly ensuringCollections = new Map<string, Promise<void>>();
   private readonly virtualPersonalPrefix = 'personal:';
 
   private isPermissionDenied(error: any): boolean {
@@ -111,17 +114,83 @@ export class SpaceDataService {
     }
   }
 
+  private async ensureSpecificCollectionData(
+    spaceId: string | null | undefined,
+    collection: SpaceCollection,
+    profile: UserProfile,
+    mode: 'personal' | 'group',
+  ): Promise<boolean> {
+    if (!spaceId || this.isVirtualPersonalSpaceId(spaceId) || this.ensuredSpaces.has(spaceId)) {
+      return !!spaceId && !this.isVirtualPersonalSpaceId(spaceId);
+    }
+
+    const fullSpacePromise = this.ensuringSpaces.get(spaceId);
+    if (fullSpacePromise) {
+      await fullSpacePromise;
+      if (this.ensuredSpaces.has(spaceId)) {
+        return true;
+      }
+    }
+
+    const cacheKey = `${spaceId}:${collection}`;
+    if (this.ensuredCollections.has(cacheKey)) {
+      return true;
+    }
+
+    const existingPromise = this.ensuringCollections.get(cacheKey);
+    if (existingPromise) {
+      await existingPromise;
+      return this.ensuredCollections.has(cacheKey);
+    }
+
+    const migrationProfile: UserProfile = {
+      ...profile,
+      currentSpaceId: spaceId,
+      currentSpaceType: mode,
+      groupId: mode === 'group' ? spaceId : null,
+    };
+
+    const ensurePromise = this.backfillCollection(spaceId, collection, migrationProfile)
+      .then(() => {
+        this.ensuredCollections.add(cacheKey);
+      })
+      .catch((error: any) => {
+        if (!this.isPermissionDenied(error)) {
+          throw error;
+        }
+      })
+      .finally(() => {
+        this.ensuringCollections.delete(cacheKey);
+      });
+
+    this.ensuringCollections.set(cacheKey, ensurePromise);
+    await ensurePromise;
+    return this.ensuredCollections.has(cacheKey);
+  }
+
   async ensureActiveSpaceData(profile: UserProfile): Promise<string | null> {
     const spaceId = this.getCurrentSpaceId(profile);
     if (!spaceId || this.isVirtualPersonalSpaceId(spaceId) || this.ensuredSpaces.has(spaceId)) {
       return spaceId;
     }
 
-    await this.ensureSpecificSpaceData(
-      spaceId,
-      profile,
-      getActiveGroupId(profile) ? 'group' : 'personal',
-    );
+    const existingPromise = this.ensuringSpaces.get(spaceId);
+    if (existingPromise) {
+      await existingPromise;
+      return this.ensuredSpaces.has(spaceId) ? spaceId : null;
+    }
+
+    const ensurePromise = this.ensureSpecificSpaceData(
+        spaceId,
+        profile,
+        getActiveGroupId(profile) ? 'group' : 'personal',
+      )
+      .finally(() => {
+        this.ensuringSpaces.delete(spaceId);
+      });
+
+    this.ensuringSpaces.set(spaceId, ensurePromise);
+    await ensurePromise;
     return this.ensuredSpaces.has(spaceId) ? spaceId : null;
   }
 
@@ -145,9 +214,16 @@ export class SpaceDataService {
     collection: SpaceCollection,
   ): Promise<ActiveSpaceDataContext> {
     const legacyRef = this.getLegacyCollectionRef(profile, collection);
-    const spaceId = await this.ensureActiveSpaceData(profile);
+    const spaceId = this.getCurrentSpaceId(profile);
 
-    if (!spaceId || this.isVirtualPersonalSpaceId(spaceId)) {
+    const canUseCanonical = await this.ensureSpecificCollectionData(
+      spaceId,
+      collection,
+      profile,
+      getActiveGroupId(profile) ? 'group' : 'personal',
+    );
+
+    if (!spaceId || this.isVirtualPersonalSpaceId(spaceId) || !canUseCanonical) {
       return {
         spaceId,
         canonicalRef: null,

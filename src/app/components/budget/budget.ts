@@ -58,6 +58,7 @@ import {
 } from '../../services/date-filter.service';
 import { CategoryService } from '../../services/category';
 import Swal from 'sweetalert2';
+import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
 
 Chart.register(...registerables);
 
@@ -117,6 +118,7 @@ interface SpendingMonitorItem {
     TranslateModule,
     FontAwesomeModule,
     FormsModule,
+    CurrentSpaceTitleComponent,
   ],
   providers: [DatePipe],
   templateUrl: './budget.html',

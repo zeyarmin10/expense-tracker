@@ -7,6 +7,12 @@
   </div>
 </div>
 
+<div class="space-switch-loading-overlay" *ngIf="spaceSwitchLoading$ | async" aria-hidden="true">
+  <div class="exp-loading">
+    <div class="exp-spinner"></div>
+  </div>
+</div>
+
 <nav class="app-navbar" *ngIf="showNavbar$ | async">
   <link
     href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap"
@@ -138,6 +144,8 @@
   </div>
 </nav>
 
+<app-current-space-title *ngIf="showNavbar$ | async"></app-current-space-title>
+
 <!-- ═══════════════════════════════════════════
      MOBILE BOTTOM NAVIGATION BAR
      ═══════════════════════════════════════════ -->
@@ -254,23 +262,7 @@
 
   <div class="mob-drawer-divider"></div>
 
-  <div class="mob-drawer-section-label">{{ 'SPACE_SECTION_TITLE' | translate }}</div>
-  <div class="mob-drawer-current-space" *ngIf="currentSpaceLabel$ | async as currentSpaceName">
-    {{ 'SPACE_ACTIVE_LABEL' | translate }}: <span>{{ currentSpaceName }}</span>
-  </div>
   <div class="mob-drawer-links">
-    <button class="mob-drawer-link mob-drawer-space-link" type="button" *ngFor="let space of userSpaces$ | async"
-      (click)="switchSpace(space.id!)" [class.mob-drawer-space-link-active]="(currentSpaceId$ | async) === space.id">
-      <span class="mob-drawer-space-main">
-        <span class="mob-drawer-link-icon">
-          <fa-icon [icon]="faUsers" *ngIf="space.type === 'group'"></fa-icon>
-          <fa-icon [icon]="faPiggyBank" *ngIf="space.type === 'personal'"></fa-icon>
-        </span>
-        <span>{{ getDisplaySpaceName(space) }}</span>
-      </span>
-      <span class="mob-drawer-space-badge" *ngIf="(currentSpaceId$ | async) === space.id">{{ 'SPACE_ACTIVE_BADGE' |
-        translate }}</span>
-    </button>
     <a class="mob-drawer-link" routerLink="/onboarding" (click)="closeNavbarMenu()">
       <span class="mob-drawer-link-icon">
         <fa-icon [icon]="faUsers"></fa-icon>
@@ -291,7 +283,7 @@
             <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
           </svg> -->
         <fa-icon [icon]="faUsers"></fa-icon>
-        {{ gName }}
+        <span class="mob-drawer-group-name-text">{{ gName }}</span>
       </div>
     </ng-container>
     <div class="mob-drawer-section-label">{{ 'NAV_GROUP_MEMBERS' | translate }}</div>

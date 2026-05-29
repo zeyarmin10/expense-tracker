@@ -64,6 +64,64 @@
   --nav-accent-dim: rgba(11, 116, 255, 0.14);
 }
 
+html,
+body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  margin: 0;
+}
+
+app-root {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+.exp-loading {
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.exp-spinner,
+.exp-spinner-sm {
+  border-style: solid;
+  border-color: var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: exp-spin 0.8s linear infinite;
+}
+
+.exp-spinner {
+  width: 48px;
+  height: 48px;
+  border-width: 3px;
+}
+
+.exp-spinner-sm {
+  width: 28px;
+  height: 28px;
+  border-width: 2px;
+  margin: 2rem auto;
+}
+
+@keyframes exp-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 body:not(.light-mode) .lgn-root {
   --bg: #020817;
   --surface: #07162f;

@@ -12,7 +12,7 @@
   /* font-family: 'Syne', sans-serif; */
   background: var(--bg);
   min-height: 100vh;
-  padding: 2rem 1rem 5rem;
+  padding: 3.5rem 1rem 5rem;
   color: var(--text);
 }
 
@@ -21,7 +21,7 @@
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1rem;
 }
 
 /* ── Overlay / Spinner ── */
@@ -575,12 +575,24 @@
 }
 
 .exp-created-by {
-  font-size: 0.7rem;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.35rem;
+  font-size: 0.72rem;
   /* font-family: 'DM Mono', monospace; */
   color: var(--text-muted);
   text-align: right;
   position: relative;
-  margin-top: -0.5rem;
+  margin-top: -0.35rem;
+  min-width: 0;
+}
+
+.exp-created-by-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* ── Edit Form ── */

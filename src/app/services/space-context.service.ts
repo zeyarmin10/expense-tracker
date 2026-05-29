@@ -61,6 +61,7 @@ export class SpaceContextService {
         budgetStartDate: group.budgetStartDate || null,
         budgetEndDate: group.budgetEndDate || null,
         selectedBudgetPeriodId: group.selectedBudgetPeriodId || null,
+        imageUrl: group.imageUrl || group.avatarUrl || group.logoUrl || group.photoURL || null,
         createdAt: group.createdAt || Date.now(),
       };
     }
@@ -94,6 +95,7 @@ export class SpaceContextService {
                 budgetStartDate: profile.budgetStartDate || null,
                 budgetEndDate: profile.budgetEndDate || null,
                 selectedBudgetPeriodId: profile.selectedBudgetPeriodId || null,
+                imageUrl: (profile as any).spaceImageUrl || (profile as any).photoURL || null,
                 createdAt: profile.createdAt || Date.now(),
               }
             : null,
@@ -126,6 +128,7 @@ export class SpaceContextService {
               budgetStartDate: group.budgetStartDate || null,
               budgetEndDate: group.budgetEndDate || null,
               selectedBudgetPeriodId: group.selectedBudgetPeriodId || null,
+              imageUrl: group.imageUrl || group.avatarUrl || group.logoUrl || group.photoURL || null,
               createdAt: group.createdAt || null,
             };
 
@@ -156,6 +159,7 @@ export class SpaceContextService {
               budgetStartDate: profile?.budgetStartDate || null,
               budgetEndDate: profile?.budgetEndDate || null,
               selectedBudgetPeriodId: profile?.selectedBudgetPeriodId || null,
+              imageUrl: (profile as any)?.spaceImageUrl || (profile as any)?.photoURL || null,
               createdAt: profile?.createdAt || Date.now(),
               role: 'owner' as const,
             })
@@ -231,6 +235,7 @@ export class SpaceContextService {
       budgetStartDate: profile.budgetStartDate || null,
       budgetEndDate: profile.budgetEndDate || null,
       selectedBudgetPeriodId: profile.selectedBudgetPeriodId || null,
+      imageUrl: (profile as any).spaceImageUrl || (profile as any).photoURL || null,
       createdAt: Date.now(),
     };
 

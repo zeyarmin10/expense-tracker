@@ -221,6 +221,12 @@
   display: flex;
   align-items: flex-start;
   gap: 0.85rem;
+  min-width: 0;
+}
+
+.ob-card-head-content {
+  min-width: 0;
+  max-width: 100%;
 }
 
 .ob-card-icon {
@@ -259,6 +265,10 @@
   font-weight: 700;
   color: var(--text, #f0f2f7);
   margin: 0 0 0.2rem;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .ob-card-desc {
@@ -266,11 +276,38 @@
   color: var(--text-muted, #6b7280);
   margin: 0;
   line-height: 1.4;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .ob-inline-accent {
+  display: inline-block;
+  max-width: min(100%, 260px);
+  vertical-align: bottom;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: var(--accent, #0b74ff);
   font-weight: 700;
+}
+
+.ob-current-space-desc {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.ob-current-label {
+  flex: 0 0 auto;
+}
+
+.ob-current-space-desc .ob-inline-accent {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: none;
 }
 
 .ob-space-list {
@@ -283,10 +320,13 @@
   position: relative;
   display: flex;
   align-items: stretch;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .ob-space-item {
   width: 100%;
+  min-width: 0;
   min-height: 48px;
   display: flex;
   align-items: center;
@@ -324,7 +364,23 @@
   align-items: center;
   gap: 0.7rem;
   min-width: 0;
-  flex: 1;
+  flex: 1 1 auto;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.ob-space-item-main fa-icon {
+  flex: 0 0 auto;
+}
+
+.ob-space-name {
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .ob-space-item-active {
@@ -336,6 +392,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex: 0 0 auto;
   padding: 0.16rem 0.5rem;
   border-radius: 999px;
   background: rgba(11,116,255,0.14);

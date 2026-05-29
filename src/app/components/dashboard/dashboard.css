@@ -4,6 +4,8 @@
 
 :host {
   display: block;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 .dash-wrapper {
@@ -12,14 +14,19 @@
   min-height: 100vh;
   padding: 2rem 1rem 5rem;
   color: var(--text);
+  max-width: 100vw;
+  overflow-x: hidden;
 }
 
 .dash-container {
   max-width: 1100px;
+  width: 100%;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  min-width: 0;
+  overflow-x: hidden;
 }
 
 /* ── Header ── */
@@ -28,15 +35,34 @@
   align-items: flex-end;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: 0.5rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.dash-header-left {
+  min-width: 0;
+  max-width: 100%;
 }
 
 .dash-title {
   font-size: clamp(1.4rem, 3.5vw, 2rem);
+  font-family: 'MyanmarUIFontBold', 'MyanmarUIFont', sans-serif;
   font-weight: 800;
-  letter-spacing: -0.03em;
+  letter-spacing: 0;
   margin: 0 0 0.2rem;
   line-height: 1;
+  /* padding-block: 0.28rem 0.12rem; */
+  max-width: 100%;
+  overflow: visible;
+  overflow-wrap: anywhere;
+}
+
+.dash-title-text {
+  display: block;
+  line-height: 1.5;
+  padding-block: 0.14rem;
+  overflow: visible;
 }
 
 .dash-date-range {
@@ -46,11 +72,50 @@
   letter-spacing: 0.04em;
 }
 
+.dash-data-shell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  min-height: 320px;
+  min-width: 0;
+  max-width: 100%;
+}
+
 /* ── Summary Cards Grid ── */
+.dash-data-shell-loading > :not(.dash-loading-cover) {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.dash-loading-cover {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 0;
+  background: rgba(2, 8, 23, 0.88);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+.dash-loading-cover .exp-loading {
+  padding: 0;
+}
+
+body.light-mode .dash-loading-cover {
+  background: rgba(255, 255, 255, 0.86);
+}
+
 .dash-summary-grid {
   display: grid;
   grid-template-columns: 1fr;
   gap: 0.85rem;
+  min-width: 0;
+  max-width: 100%;
 }
 
 @media (min-width: 576px) {
@@ -274,6 +339,9 @@
   display: grid;
   grid-template-columns: 1fr;
   gap: 1rem;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 @media (min-width: 992px) {
@@ -303,6 +371,10 @@
   color: var(--text-sub);
   margin: 0.5rem 0 0 0;
   text-align: center;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .dash-chart-container {
@@ -310,6 +382,12 @@
   min-height: 280px;
   flex: 1;
   width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.dash-chart-container canvas {
+  max-width: 100% !important;
 }
 
 .dash-chart-donut {
@@ -467,7 +545,7 @@
 
 .dash-empty-btn-primary {
   background: var(--accent);
-  color: #070a0e;
+  color: #f0f2f7;
   box-shadow: 0 4px 14px rgba(11, 116, 255, 0.25);
 }
 
@@ -519,6 +597,20 @@
   100% { background-position: -200% 0; }
 }
 
+.dash-card-spinner {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.8rem;
+}
+
+.dash-card-spinner .exp-spinner-sm {
+  display: block;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  border-width: 2px;
+}
+
 /* ── Card Empty Hint ── */
 .dash-card-empty-hint {
   font-size: 0.78rem;
@@ -543,6 +635,9 @@
   gap: 0.6rem;
   text-align: center;
   padding: 1rem;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .dash-no-chart-icon {
@@ -554,11 +649,15 @@
   font-size: 0.82rem;
   color: var(--text-muted);
   margin: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 
 .dash-no-chart-cta {
   display: inline-flex;
   align-items: center;
+  max-width: 100%;
+  min-width: 0;
   padding: 0.45rem 1rem;
   border-radius: 8px;
   font-size: 0.78rem;
@@ -569,6 +668,9 @@
   text-decoration: none;
   transition: all 0.15s;
   margin-top: 0.2rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .dash-no-chart-cta:hover {

@@ -3,8 +3,8 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { CategoryService } from '../../../services/category';
 import { CommonModule } from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { faSave, faTimes, faPlus, faEdit, faTrash, faTags } from '@fortawesome/free-solid-svg-icons';
-import { faTrashCan, faPenToSquare } from '@fortawesome/free-regular-svg-icons';
+import { faSave, faTimes, faPlus, faEdit, faTrash, faTags, faPen } from '@fortawesome/free-solid-svg-icons';
+import { faTrashCan } from '@fortawesome/free-regular-svg-icons';
 import { FaIconComponent } from "@fortawesome/angular-fontawesome";
 import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import { ServiceICategory } from '../../../services/category';
@@ -56,7 +56,7 @@ export class CategoryModalComponent implements OnInit {
   faTrash = faTrash;
   faTags = faTags;
   faTrashCan = faTrashCan;
-  faPenToSquare = faPenToSquare;
+  faPen = faPen;
 
   @HostListener('window:popstate', ['$event'])
   onPopState(event: PopStateEvent): void {

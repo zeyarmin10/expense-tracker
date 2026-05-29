@@ -597,6 +597,15 @@
 
 .td-name {
   font-weight: 500;
+  min-width: 0;
+}
+
+.td-item-name {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Mobile: show creator name below item name */
@@ -606,13 +615,26 @@
 
 @media (max-width: 639.98px) {
   .td-name-creator {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    width: 100%;
+    max-width: 100%;
+    margin-top: 0.15rem;
     font-size: 0.6rem;
     font-weight: 400;
     /* color: var(--text-muted); */
     /* margin-top: 0.15rem; */
     color: var(--text-muted);
   }
+}
+
+.td-name-creator-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
 }
 
 /* PC only: created-by column */
@@ -627,9 +649,19 @@
 }
 
 .created-by-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  max-width: 100%;
   font-size: 0.78rem;
   color: var(--text-sub);
   white-space: nowrap;
+}
+
+.created-by-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .td-amount {

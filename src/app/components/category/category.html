@@ -72,7 +72,7 @@
                   (click)="startEdit(category)"
                   [disabled]="editingCategoryId !== null"
                   [attr.aria-label]="'EDIT_BUTTON_LABEL' | translate">
-                  <fa-icon [icon]="faPenToSquare" class="fa-edit-btn"></fa-icon>
+                  <fa-icon [icon]="faPen" class="fa-edit-btn"></fa-icon>
                 </button>
                 <button class="cat-action-btn cat-action-delete"
                   (click)="onDelete(category.id!)"

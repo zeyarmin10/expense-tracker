@@ -180,12 +180,16 @@ export class LoginComponent implements OnInit, OnDestroy {
         uid: user.uid,
         email: user.email || '',
         displayName: user.displayName || 'New User',
+        photoURL: user.photoURL || null,
         currency: currency,
         language: this.currentLang,
         createdAt: Date.now(),
       };
       await this.userDataService.createUserProfile(newUserProfile);
       profile = newUserProfile; // use the new profile
+    } else if (user.photoURL && profile.photoURL !== user.photoURL) {
+      await this.userDataService.updateUserProfile(user.uid, { photoURL: user.photoURL });
+      profile = { ...profile, photoURL: user.photoURL };
     }
 
     await this.spaceContextService.migrateLegacyUserToSpaces(user.uid);

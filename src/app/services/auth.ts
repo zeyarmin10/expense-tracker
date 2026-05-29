@@ -20,7 +20,7 @@ import {
 } from '@angular/fire/auth';
 import { AngularFireDatabase } from '@angular/fire/compat/database';
 import { TranslateService } from '@ngx-translate/core';
-import { Observable, Subject, of, from, firstValueFrom } from 'rxjs';
+import { Observable, Subject, of, from, firstValueFrom, shareReplay } from 'rxjs';
 import { switchMap, map } from 'rxjs/operators';
 import { UserDataService, UserProfile } from './user-data';
 import { GroupService } from './group.service';
@@ -54,10 +54,10 @@ export class AuthService {
 
   constructor(private injector: Injector) {
     this.currentUser$ = new Observable<User | null>((observer) => {
-      onAuthStateChanged(this.auth, (user) => {
+      return onAuthStateChanged(this.auth, (user) => {
         observer.next(user);
-      });
-    });
+      }, (error) => observer.error(error));
+    }).pipe(shareReplay({ bufferSize: 1, refCount: true }));
 
     this.userProfile$ = this.currentUser$.pipe(
       switchMap((user) => {
@@ -130,6 +130,7 @@ export class AuthService {
           }),
         );
       }),
+      shareReplay({ bufferSize: 1, refCount: true }),
     );
   }
 

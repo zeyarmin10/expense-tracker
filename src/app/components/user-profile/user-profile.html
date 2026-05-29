@@ -36,15 +36,14 @@
               <img src="../../../assets/icons/pencil-crayon.svg" alt="Edit Pencil" class="edit-pencil-icon" />
             </button>
           </div>
-          
+
           <!-- Name edit mode -->
           <div class="prof-hero-name-row" *ngIf="isEditingName">
             <input type="text" id="displayName" class="prof-hero-name-input" formControlName="displayName" placeholder=" "
               (keyup.enter)="saveDisplayName()" (keyup.escape)="cancelEditName()">
             <div class="prof-hero-edit-actions">
               <button type="button" class="prof-hero-action-btn prof-hero-save-btn" (click)="saveDisplayName()"
-                [disabled]="userProfileForm.get('displayName')?.invalid"
-                title="{{ 'SAVE_BUTTON_LABEL' | translate }}">
+                [disabled]="userProfileForm.get('displayName')?.invalid" title="{{ 'SAVE_BUTTON_LABEL' | translate }}">
                 <fa-icon [icon]="faSave" class="prof-save-icon"></fa-icon>
               </button>
               <button type="button" class="prof-hero-action-btn prof-hero-cancel-btn" (click)="cancelEditName()"
@@ -53,9 +52,9 @@
               </button>
             </div>
           </div>
-          
+
           <div class="prof-hero-email">{{ userData.email }}</div>
-          
+
           <div class="prof-hero-badges">
             <span class="prof-badge" [ngClass]="userData.accountType === 'group' ? 'prof-badge-info' : 'prof-badge-success'">
               {{ (userData.accountType === 'group' ? 'ACCOUNT_TYPE_GROUP' : 'ACCOUNT_TYPE_PERSONAL') | translate }}
@@ -64,11 +63,12 @@
               {{ userData.roles }}
             </span>
           </div>
-<div class="prof-hero-meta">
-  <div class="prof-hero-meta-item">
-    <span class="prof-hero-meta-label">{{ 'MEMBER_SINCE_LABEL' | translate }}</span>
-    <span class="prof-hero-meta-value">{{ this.formatService.formatLocalizedDate(userData.createdAt, 'MMM d, yyyy')
-      }}</span>
+          <div class="prof-hero-meta">
+            <div class="prof-hero-meta-item">
+              <span class="prof-hero-meta-label">{{ 'MEMBER_SINCE_LABEL' | translate }}</span>
+              <span class="prof-hero-meta-value">{{ this.formatService.formatLocalizedDate(userData.createdAt, 'MMM d,
+                yyyy')
+                }}</span>
             </div>
             <span class="prof-hero-meta-sep" *ngIf="userData.accountType === 'group' && userData.groupName">·</span>
             <div class="prof-hero-meta-item" *ngIf="userData.accountType === 'group' && userData.groupName">
@@ -104,8 +104,8 @@
                 <input type="date" id="budgetStartDate" class="prof-input prof-has-val" formControlName="budgetStartDate"
                   placeholder=" ">
                 <label class="prof-float-label" for="budgetStartDate">{{ 'START_DATE_LABEL' | translate }}</label>
-                </div>
-                <div class="prof-float-field">
+              </div>
+              <div class="prof-float-field">
                 <input type="date" id="budgetEndDate" class="prof-input prof-has-val" formControlName="budgetEndDate" placeholder=" ">
                 <label class="prof-float-label" for="budgetEndDate">{{ 'END_DATE_LABEL' | translate }}</label>
               </div>
@@ -126,7 +126,8 @@
                 <div class="prof-custom-period-info">
                   <span class="prof-custom-period-name">{{ period.name }}</span>
                   <span class="prof-custom-period-range">
-                    {{ this.formatService.formatLocalizedDate(period.startDate, 'shortDate') }} — {{ this.formatService.formatLocalizedDate(period.endDate, 'shortDate') }}
+                    {{ this.formatService.formatLocalizedDate(period.startDate, 'shortDate') }} — {{
+                    this.formatService.formatLocalizedDate(period.endDate, 'shortDate') }}
                   </span>
                 </div>
                 <button class="prof-delete-btn" type="button" (click)="deleteCustomPeriod(period.id, $event)"
@@ -213,8 +214,7 @@
               <span>{{ 'NOTI_MASTER_DESC' | translate }}</span>
             </span>
             <span class="prof-switch-control" [class.prof-switch-loading]="notificationBusyTarget === 'master'">
-              <input type="checkbox" [checked]="notificationState.enabled"
-                [disabled]="!canChangeNotificationEnabled"
+              <input type="checkbox" [checked]="notificationState.enabled" [disabled]="!canChangeNotificationEnabled"
                 (change)="onNotificationToggleChange($event)" />
               <span class="prof-switch-track">
                 <span class="prof-switch-thumb"></span>
@@ -237,8 +237,7 @@
             </span>
             <span class="prof-switch-control" [class.prof-switch-loading]="notificationBusyTarget === 'daily'">
               <input type="checkbox" [checked]="notificationState.dailyReminderEnabled"
-                [disabled]="!canToggleDailyReminder"
-                (change)="onDailyReminderToggleChange($event)" />
+                [disabled]="!canToggleDailyReminder" (change)="onDailyReminderToggleChange($event)" />
               <span class="prof-switch-track">
                 <span class="prof-switch-thumb"></span>
                 <span class="prof-switch-spinner" *ngIf="notificationBusyTarget === 'daily'"></span>
@@ -257,8 +256,7 @@
             <p class="prof-danger-title">{{ 'DELETE_ACCOUNT_BUTTON' | translate }}</p>
             <p class="prof-danger-desc">{{ 'DELETE_ACCOUNT_INFO' | translate }}</p>
           </div>
-          <button type="button" class="prof-delete-account-btn"
-            (click)="deleteAccount()" [disabled]="isDeletingAccount">
+          <button type="button" class="prof-delete-account-btn" (click)="deleteAccount()" [disabled]="isDeletingAccount">
             <fa-icon [icon]="faTrash" *ngIf="!isDeletingAccount"></fa-icon>
             <span *ngIf="!isDeletingAccount">{{ 'DELETE_ACCOUNT_BUTTON' | translate }}</span>
             <span *ngIf="isDeletingAccount">{{ 'DELETING_LABEL' | translate }}…</span>

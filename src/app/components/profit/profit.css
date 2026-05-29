@@ -1267,6 +1267,20 @@
   100% { background-position: -200% 0; }
 }
 
+.pnl-card-spinner {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.8rem;
+}
+
+.pnl-card-spinner .exp-spinner-sm {
+  display: block;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  border-width: 2px;
+}
+
 .pnl-card-empty-hint {
   font-size: 0.78rem;
   color: var(--text-muted);

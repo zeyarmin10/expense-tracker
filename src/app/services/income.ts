@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, Observable, of, firstValueFrom, from } from 'rxjs';
-import { map, switchMap, catchError, filter, take } from 'rxjs/operators';
+import { map, switchMap, catchError, filter } from 'rxjs/operators';
 import {
   Database,
   ref,
@@ -19,6 +19,7 @@ import {
 import { AuthService } from './auth';
 import { getActiveGroupId, UserProfile } from './user-data';
 import { SpaceDataService } from './space-data.service';
+import { SpaceSwitchLoadingService } from './space-switch-loading.service';
 
 export interface ServiceIIncome {
   id?: string; 
@@ -40,6 +41,7 @@ export class IncomeService {
   private db: Database = inject(Database);
   private authService = inject(AuthService);
   private spaceDataService = inject(SpaceDataService);
+  private spaceSwitchLoadingService = inject(SpaceSwitchLoadingService);
 
   constructor() {
   }
@@ -80,12 +82,22 @@ export class IncomeService {
     await push(incomesRef, newIncomeToSave);
   }
 
-  getIncomes(startDate?: Date, endDate?: Date): Observable<ServiceIIncome[]> {
-    return this.authService.userProfile$.pipe(
-      filter((profile): profile is UserProfile => profile !== null),
-      take(1),
+  getIncomes(
+    startDate?: Date,
+    endDate?: Date,
+    profileOverride?: UserProfile,
+  ): Observable<ServiceIIncome[]> {
+    const profile$ = profileOverride
+      ? of(profileOverride)
+      : this.authService.userProfile$.pipe(
+          filter((profile): profile is UserProfile => profile !== null),
+        );
+
+    return profile$.pipe(
       switchMap((profile) =>
-        from(this.spaceDataService.getActiveCollectionContext(profile, 'incomes')).pipe(
+        this.spaceSwitchLoadingService.track(
+          from(this.spaceDataService.getActiveCollectionContext(profile, 'incomes')),
+        ).pipe(
           switchMap(({ canonicalRef, legacyRef }) => {
             const baseRef = canonicalRef || legacyRef;
             let incomesQuery: Query = baseRef;
@@ -96,7 +108,7 @@ export class IncomeService {
               incomesQuery = query(baseRef, orderByChild('date'), startAt(start), endAt(end));
             }
 
-            return from(get(incomesQuery)).pipe(
+            return this.spaceSwitchLoadingService.track(from(get(incomesQuery))).pipe(
           map(snapshot => {
             const incomesData = snapshot.val();
             if (!incomesData) {

@@ -34,6 +34,8 @@ import {
 } from '../../services/date-filter.service';
 import { AuthService } from '../../services/auth';
 import { UserDataService, UserProfile } from '../../services/user-data';
+import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
+import { UserAvatarComponent } from '../common/user-avatar/user-avatar.component';
 
 // Register the required chart components
 Chart.register(PieController, ArcElement, Tooltip, Legend);
@@ -59,6 +61,8 @@ interface CategoryTotal {
     TranslateModule,
     BaseChartDirective,
     FontAwesomeModule,
+    CurrentSpaceTitleComponent,
+    UserAvatarComponent,
   ],
   providers: [DatePipe],
   templateUrl: './expense-overview.html',

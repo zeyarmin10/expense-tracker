@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, of, firstValueFrom, from } from 'rxjs';
-import { switchMap, map, catchError, filter, take } from 'rxjs/operators';
+import { switchMap, map, catchError, filter } from 'rxjs/operators';
 import {
   Database,
   ref,
@@ -13,6 +13,7 @@ import {
 import { AuthService } from './auth';
 import { getActiveGroupId, UserProfile } from './user-data';
 import { SpaceDataService } from './space-data.service';
+import { SpaceSwitchLoadingService } from './space-switch-loading.service';
 
 export interface ServiceIBudget {
   id?: string;
@@ -37,6 +38,7 @@ export class BudgetService {
   private db: Database = inject(Database);
   private authService = inject(AuthService);
   private spaceDataService = inject(SpaceDataService);
+  private spaceSwitchLoadingService = inject(SpaceSwitchLoadingService);
 
   constructor() {}
 
@@ -76,14 +78,24 @@ export class BudgetService {
     await push(budgetsRef, newBudget);
   }
 
-  getBudgets(startDate?: Date, endDate?: Date): Observable<ServiceIBudget[]> {
-    return this.authService.userProfile$.pipe(
-      filter((profile): profile is UserProfile => profile !== null),
-      take(1),
+  getBudgets(
+    startDate?: Date,
+    endDate?: Date,
+    profileOverride?: UserProfile,
+  ): Observable<ServiceIBudget[]> {
+    const profile$ = profileOverride
+      ? of(profileOverride)
+      : this.authService.userProfile$.pipe(
+          filter((profile): profile is UserProfile => profile !== null),
+        );
+
+    return profile$.pipe(
       switchMap(profile =>
-        from(this.spaceDataService.getActiveCollectionContext(profile, 'budgets')).pipe(
+        this.spaceSwitchLoadingService.track(
+          from(this.spaceDataService.getActiveCollectionContext(profile, 'budgets')),
+        ).pipe(
           switchMap(({ canonicalRef, legacyRef }) =>
-            from(get(canonicalRef || legacyRef)).pipe(
+            this.spaceSwitchLoadingService.track(from(get(canonicalRef || legacyRef))).pipe(
           map(snapshot => {
             const budgetsData = snapshot.val();
             if (!budgetsData) {
@@ -96,8 +108,10 @@ export class BudgetService {
             }));
 
             if (startDate && endDate) {
-              const start = new Date(startDate.setHours(0, 0, 0, 0));
-              const end = new Date(endDate.setHours(23, 59, 59, 999));
+              const start = new Date(startDate);
+              start.setHours(0, 0, 0, 0);
+              const end = new Date(endDate);
+              end.setHours(23, 59, 59, 999);
 
               allBudgets = allBudgets.filter(budget => {
                 if (!budget.period) return false;
