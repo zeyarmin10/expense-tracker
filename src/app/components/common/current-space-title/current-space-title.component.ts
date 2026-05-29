@@ -141,7 +141,9 @@ type SpaceImageSource = {
     }
 
     .space-title-switcher {
-      position: relative;
+      position: fixed;
+      top: 0.75rem;
+      right: 1rem;
       width: auto;
       max-width: calc(100vw - 1.5rem);
       min-width: 0;
@@ -159,12 +161,15 @@ type SpaceImageSource = {
       text-align: right;
       font-size: 0.8rem;
       font-weight: 700;
-      color: rgba(255, 255, 255, 0.92);
+      color: var(--accent, #0b74ff);
       letter-spacing: 0.01em;
       text-shadow: 0 1px 4px rgba(0, 0, 0, 0.55);
       opacity: 0;
       margin-right: 0;
       pointer-events: none;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      backdrop-filter: blur(3px);
       transition:
         max-width 3.5s cubic-bezier(0.25, 0.1, 0.25, 1),
         opacity 3.2s cubic-bezier(0.25, 0.1, 0.25, 1),
@@ -335,7 +340,7 @@ type SpaceImageSource = {
     }
 
     :host-context(body.light-mode) .space-title-label {
-      color: rgba(15, 23, 42, 0.85);
+      color: var(--accent, #0b74ff);
       text-shadow: 0 1px 3px rgba(255, 255, 255, 0.6);
     }
   `],
