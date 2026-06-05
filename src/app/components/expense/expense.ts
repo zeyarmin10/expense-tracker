@@ -1,11 +1,9 @@
 import {
   Component,
+  OnDestroy,
   OnInit,
   inject,
   ViewChild,
-  ElementRef,
-  ViewChildren,
-  QueryList,
 } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import {
@@ -16,6 +14,7 @@ import {
   FormsModule,
 } from '@angular/forms';
 import { ServiceIExpense as IExpense, ExpenseService } from '../../services/expense';
+import { ServiceIVoucher, VoucherService } from '../../services/voucher';
 import { ServiceICategory, CategoryService } from '../../services/category';
 import {
   Observable,
@@ -48,11 +47,16 @@ import {
   faSliders,
   faRotateLeft,
   faArrowRotateLeft,
-  faPen
+  faPen,
+  faReceipt,
+  faUpload,
+  faImage,
+  faEye,
 } from '@fortawesome/free-solid-svg-icons';
 import { faTrashCan } from '@fortawesome/free-regular-svg-icons';
 
 import { CategoryModalComponent } from '../common/category-modal/category-modal';
+import { LightboxComponent } from '../common/lightbox/lightbox.component';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../services/auth';
 import {
@@ -79,6 +83,13 @@ const Toast = Swal.mixin({
   }
 });
 
+interface ExpenseCategoryGroup {
+  category: string;
+  expenses: IExpense[];
+  totalsByCurrency: { [key: string]: number };
+  count: number;
+}
+
 @Component({
   selector: 'app-expense',
   standalone: true,
@@ -88,6 +99,7 @@ const Toast = Swal.mixin({
     FormsModule,
     FontAwesomeModule,
     CategoryModalComponent,
+    LightboxComponent,
     TranslateModule,
     CurrentSpaceTitleComponent,
     UserAvatarComponent,
@@ -96,15 +108,19 @@ const Toast = Swal.mixin({
   templateUrl: './expense.html',
   styleUrls: ['./expense.css'],
 })
-export class Expense implements OnInit {
+export class Expense implements OnInit, OnDestroy {
   @ViewChild(CategoryModalComponent) categoryModal!: CategoryModalComponent;
+  @ViewChild(LightboxComponent) lightbox!: LightboxComponent;
 
   newExpenseForm: FormGroup;
+  voucherForm: FormGroup;
 
   expenses$!: Observable<IExpense[]>;
+  vouchers$!: Observable<ServiceIVoucher[]>;
   categories$: Observable<ServiceICategory[]>;
 
   private refreshExpenses$ = new BehaviorSubject<void>(undefined);
+  private refreshVouchers$ = new BehaviorSubject<void>(undefined);
   public _selectedDate$ = new BehaviorSubject<string>('');
   private _activeCurrencyFilter$ = new BehaviorSubject<string | null>(null);
   private _activeCategoryFilter$ = new BehaviorSubject<string | null>(null);
@@ -113,9 +129,12 @@ export class Expense implements OnInit {
   public formatService = inject(FormatService);
 
   displayedExpenses$!: Observable<IExpense[]>;
+  displayedVouchers$!: Observable<ServiceIVoucher[]>;
+  groupedExpenses$!: Observable<ExpenseCategoryGroup[]>;
   totalExpensesByCurrency$!: Observable<{ [key: string]: number }>;
 
   expenseService = inject(ExpenseService);
+  voucherService = inject(VoucherService);
   categoryService = inject(CategoryService);
   datePipe = inject(DatePipe);
   translate = inject(TranslateService);
@@ -123,7 +142,12 @@ export class Expense implements OnInit {
   public userRole: string | null = null;
   isSaving = false;
   isFormOpen = true;
+  isVoucherPanelOpen = false;
+  isVoucherSaving = false;
   isQuickMode = true;
+  selectedVoucherFiles: File[] = [];
+  voucherPreviewUrls: string[] = [];
+  readonly MAX_VOUCHER_IMAGES = 10;
   private activeSpaceModeKey: string | null = null;
   get canManageExpenseRecords(): boolean { return canManageSharedSpace(this.userProfile); }
 
@@ -196,6 +220,10 @@ export class Expense implements OnInit {
   faArrowRotateLeft = faArrowRotateLeft;
   faTrashCan = faTrashCan;
   faPen = faPen;
+  faReceipt = faReceipt;
+  faUpload = faUpload;
+  faImage = faImage;
+  faEye = faEye;
 
   userProfile: UserProfile | null = null;
 
@@ -214,6 +242,14 @@ export class Expense implements OnInit {
       price: ['', [Validators.required, Validators.min(0.01)]],
     });
 
+    this.voucherForm = this.fb.group({
+      date: [todayFormatted, Validators.required],
+      title: ['', [Validators.maxLength(80)]],
+      category: [''],
+      note: ['', [Validators.maxLength(240)]],
+      imageFile: ['', Validators.required],
+    });
+
     this.categories$ = this.categoryService.getCategories();
 
     const storedLang = localStorage.getItem('selectedLanguage');
@@ -222,6 +258,7 @@ export class Expense implements OnInit {
 
   ngOnInit(): void {
     this.loadExpenses();
+    this.loadVouchers();
     this.route.paramMap.subscribe(params => {
       const date = params.get('date');
       const todayStr = this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
@@ -247,6 +284,7 @@ export class Expense implements OnInit {
         this._selectedDate$.next(todayStr);
       }
       this.refreshExpenses$.next();
+      this.refreshVouchers$.next();
     });
 
     this.authService.userProfile$.subscribe(profile => {
@@ -261,8 +299,16 @@ export class Expense implements OnInit {
     this.loadCategories();
   }
 
+  ngOnDestroy(): void {
+    this.clearAllVoucherFiles();
+  }
+
   toggleForm(): void {
     this.isFormOpen = !this.isFormOpen;
+  }
+
+  toggleVoucherPanel(): void {
+    this.isVoucherPanelOpen = !this.isVoucherPanelOpen;
   }
 
   toggleQuickMode(): void {
@@ -319,6 +365,54 @@ export class Expense implements OnInit {
         }, {} as { [key: string]: number })
       )
     );
+
+    this.groupedExpenses$ = this.displayedExpenses$.pipe(
+      map(expenses => this.groupExpensesByCategory(expenses))
+    );
+  }
+
+  loadVouchers(): void {
+    this.vouchers$ = this.refreshVouchers$.pipe(
+      switchMap(() => this.voucherService.getVouchers())
+    );
+
+    this.displayedVouchers$ = combineLatest([
+      this.vouchers$,
+      this._selectedDate$,
+    ]).pipe(
+      map(([vouchers]) =>
+        this.filterByDateMode(vouchers)
+          .sort((a, b) => {
+            const bTime = new Date(b.date || b.createdAt || '').getTime();
+            const aTime = new Date(a.date || a.createdAt || '').getTime();
+            return (Number.isFinite(bTime) ? bTime : 0) - (Number.isFinite(aTime) ? aTime : 0);
+          })
+      )
+    );
+  }
+
+  private groupExpensesByCategory(expenses: IExpense[]): ExpenseCategoryGroup[] {
+    const groups = new Map<string, ExpenseCategoryGroup>();
+
+    expenses.forEach(expense => {
+      const category = expense.category || this.translate.instant('UNCATEGORIZED');
+      if (!groups.has(category)) {
+        groups.set(category, {
+          category,
+          expenses: [],
+          totalsByCurrency: {},
+          count: 0,
+        });
+      }
+
+      const group = groups.get(category)!;
+      group.expenses.push(expense);
+      group.count += 1;
+      group.totalsByCurrency[expense.currency] =
+        (group.totalsByCurrency[expense.currency] || 0) + expense.totalCost;
+    });
+
+    return [...groups.values()].sort((a, b) => a.category.localeCompare(b.category));
   }
 
   onDateChange(date: string): void {
@@ -373,6 +467,161 @@ export class Expense implements OnInit {
     }
   }
 
+  onVoucherFilesSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const newFiles = Array.from(input.files || []);
+    input.value = '';
+
+    if (newFiles.length === 0) return;
+
+    const remaining = this.MAX_VOUCHER_IMAGES - this.selectedVoucherFiles.length;
+    if (remaining <= 0) {
+      Toast.fire({ icon: 'warning', title: this.translate.instant('VOUCHER_ERROR_MAX_IMAGES', { max: this.MAX_VOUCHER_IMAGES }) });
+      return;
+    }
+
+    const maxFileSize = 8 * 1024 * 1024;
+    let addedCount = 0;
+
+    for (const file of newFiles.slice(0, remaining)) {
+      if (!file.type.startsWith('image/')) {
+        Toast.fire({ icon: 'error', title: this.translate.instant('VOUCHER_ERROR_FILE_TYPE') });
+        continue;
+      }
+      if (file.size > maxFileSize) {
+        Toast.fire({ icon: 'error', title: this.translate.instant('VOUCHER_ERROR_FILE_SIZE') });
+        continue;
+      }
+      this.selectedVoucherFiles.push(file);
+      this.voucherPreviewUrls.push(URL.createObjectURL(file));
+      addedCount++;
+    }
+
+    if (addedCount > 0) {
+      this.voucherForm.patchValue({ imageFile: 'set' });
+      if (!this.voucherForm.get('title')?.value) {
+        this.voucherForm.patchValue({ title: newFiles[0].name.replace(/\.[^/.]+$/, '') });
+      }
+    }
+
+    this.voucherForm.get('imageFile')?.markAsTouched();
+  }
+
+  removeVoucherFile(index: number): void {
+    URL.revokeObjectURL(this.voucherPreviewUrls[index]);
+    this.selectedVoucherFiles.splice(index, 1);
+    this.voucherPreviewUrls.splice(index, 1);
+    this.voucherForm.patchValue({ imageFile: this.selectedVoucherFiles.length > 0 ? 'set' : '' });
+    this.voucherForm.get('imageFile')?.markAsTouched();
+  }
+
+  clearAllVoucherFiles(): void {
+    this.voucherPreviewUrls.forEach(url => URL.revokeObjectURL(url));
+    this.selectedVoucherFiles = [];
+    this.voucherPreviewUrls = [];
+    this.voucherForm.patchValue({ imageFile: '' });
+    this.voucherForm.get('imageFile')?.markAsTouched();
+  }
+
+  async onSubmitVoucher(): Promise<void> {
+    this.voucherForm.markAllAsTouched();
+    if (this.voucherForm.invalid || this.selectedVoucherFiles.length === 0) {
+      Toast.fire({ icon: 'error', title: this.translate.instant('VOUCHER_ERROR_SELECT_IMAGE') });
+      return;
+    }
+
+    this.isSaving = true;
+    this.isVoucherSaving = true;
+    const fv = this.voucherForm.value;
+
+    try {
+      await this.voucherService.addVoucher({
+        date: fv.date,
+        title: fv.title,
+        category: fv.category,
+        note: fv.note,
+        files: [...this.selectedVoucherFiles],
+      });
+      Toast.fire({ icon: 'success', title: this.translate.instant('VOUCHER_SUCCESS_ADDED') });
+      this.voucherForm.reset({
+        date: this.datePipe.transform(fv.date, 'yyyy-MM-dd') || '',
+        title: '',
+        category: '',
+        note: '',
+        imageFile: '',
+      });
+      this.clearAllVoucherFiles();
+      this.refreshVouchers$.next();
+    } catch (error: any) {
+      Toast.fire({ icon: 'error', title: this.getVoucherErrorTitle(error, 'VOUCHER_ERROR_ADD') });
+    } finally {
+      this.isVoucherSaving = false;
+      this.isSaving = false;
+    }
+  }
+
+  canDeleteVoucher(voucher: ServiceIVoucher): boolean {
+    return this.canManageExpenseRecords || voucher.userId === this.userProfile?.uid;
+  }
+
+  onDeleteVoucher(voucher: ServiceIVoucher): void {
+    if (!this.canDeleteVoucher(voucher)) {
+      return;
+    }
+
+    Swal.fire({
+      title: this.translate.instant('CONFIRM_DELETE_TITLE'),
+      text: this.translate.instant('VOUCHER_CONFIRM_DELETE'),
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: this.translate.instant('DELETE_BUTTON'),
+      cancelButtonText: this.translate.instant('CANCEL_BUTTON'),
+      reverseButtons: true
+    }).then(async result => {
+      if (result.isConfirmed) {
+        this.isSaving = true;
+        try {
+          await this.voucherService.deleteVoucher(voucher);
+          Toast.fire({ icon: 'success', title: this.translate.instant('VOUCHER_SUCCESS_DELETED') });
+          this.refreshVouchers$.next();
+        } catch (error: any) {
+          Toast.fire({ icon: 'error', title: this.getVoucherErrorTitle(error, 'VOUCHER_ERROR_DELETE') });
+        } finally {
+          this.isSaving = false;
+        }
+      }
+    });
+  }
+
+  formatFileSize(size?: number): string {
+    if (!size) {
+      return '';
+    }
+
+    if (size < 1024 * 1024) {
+      return `${Math.max(1, Math.round(size / 1024))} KB`;
+    }
+
+    return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  openLightbox(images: string[], idx = 0): void {
+    this.lightbox.show(images, idx);
+  }
+
+  getVoucherImages(voucher: ServiceIVoucher): string[] {
+    return voucher.imageUrls?.length ? voucher.imageUrls : [voucher.imageUrl];
+  }
+
+  private getVoucherErrorTitle(error: any, fallbackKey: string): string {
+    const message = typeof error?.message === 'string' ? error.message : '';
+    if (message.startsWith('VOUCHER_')) {
+      return this.translate.instant(message);
+    }
+
+    return message || this.translate.instant(fallbackKey);
+  }
+
   resetActiveFilters(): void {
     this._activeCurrencyFilter$.next(null);
     this._activeCategoryFilter$.next(null);
@@ -389,9 +638,11 @@ export class Expense implements OnInit {
         this.customEndDate = this.customStartDate;
       }
       this.refreshExpenses$.next();
+      this.refreshVouchers$.next();
     } else {
       this.resetActiveFilters();
       this.refreshExpenses$.next();
+      this.refreshVouchers$.next();
     }
   }
 
@@ -400,10 +651,11 @@ export class Expense implements OnInit {
       this.customEndDate = this.customStartDate;
       this.resetActiveFilters();
       this.refreshExpenses$.next();
+      this.refreshVouchers$.next();
     }
   }
 
-  private filterByDateMode(expenses: IExpense[]): IExpense[] {
+  private filterByDateMode<T extends { date: string }>(expenses: T[]): T[] {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const todayStr = this.datePipe.transform(today, 'yyyy-MM-dd') || '';
@@ -435,6 +687,29 @@ export class Expense implements OnInit {
     }
   }
 
+  getFilterLabel(): string {
+    const today = new Date();
+    switch (this.dateFilterMode) {
+      case 'today':
+        return this.datePipe.transform(today, 'MMM d, yyyy') || '';
+      case 'week': {
+        const start = new Date(today);
+        start.setDate(today.getDate() - today.getDay());
+        const end = new Date(start);
+        end.setDate(start.getDate() + 6);
+        return `${this.datePipe.transform(start, 'MMM d')} – ${this.datePipe.transform(end, 'MMM d, yyyy')}`;
+      }
+      case 'month':
+        return this.datePipe.transform(today, 'MMMM yyyy') || '';
+      case 'custom':
+        return this.customStartDate
+          ? (this.datePipe.transform(this.customStartDate, 'MMM d, yyyy') || '')
+          : '';
+      default:
+        return '';
+    }
+  }
+
   resetFilter(): void {
     const todayFormatted = this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
     this._selectedDate$.next(todayFormatted);
@@ -443,6 +718,8 @@ export class Expense implements OnInit {
     this.customStartDate = '';
     this.customEndDate = '';
     this.resetActiveFilters();
+    this.refreshExpenses$.next();
+    this.refreshVouchers$.next();
   }
 
   filterByCurrency(currency: string): void {

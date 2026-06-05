@@ -11,5 +11,9 @@ export const environment = {
         messagingSenderId: "114245767214",
         appId: "1:114245767214:web:d08b6a34f2ff7859d70fbf",
         measurementId: "G-V9NT25DZGJ"
+    },
+    cloudinary: {
+        cloudName: 'da0zqvrps',
+        uploadPreset: 'spendwise_vouchers'
     }
 };

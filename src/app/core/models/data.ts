@@ -81,3 +81,25 @@ export interface DataIExpense {
   // ── Edit history: key = timestamp (Date.now()), value = IEditHistoryEntry ──
   editHistory?: { [key: string]: IEditHistoryEntry };
 }
+
+export interface DataIVoucher {
+  id?: string;
+  date: string;
+  title?: string;
+  category?: string;
+  note?: string;
+  imageUrl: string;
+  imageUrls?: string[];
+  imageCount?: number;
+  storagePath: string;
+  storagePaths?: string[];
+  fileName: string;
+  contentType?: string;
+  size?: number;
+  userId?: string;
+  createdByName?: string;
+  createdByPhotoURL?: string | null;
+  groupId?: string;
+  createdAt?: string;
+  device?: string;
+}

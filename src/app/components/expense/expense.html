@@ -271,6 +271,324 @@
     </div>
     <!-- ── END ADD EXPENSE PANEL ── -->
 
+    <!-- ── ADD VOUCHER PANEL ── -->
+    <div class="exp-panel exp-voucher-panel">
+      <div class="exp-panel-header">
+        <button
+          class="exp-panel-toggle"
+          type="button"
+          (click)="toggleVoucherPanel()"
+          [attr.aria-expanded]="isVoucherPanelOpen"
+        >
+          <span class="exp-panel-toggle-left">
+            <fa-icon [icon]="faReceipt" class="exp-icon-warning"></fa-icon>
+            <span>{{ "VOUCHER_ADD_TITLE" | translate }}</span>
+          </span>
+          <fa-icon
+            [icon]="isVoucherPanelOpen ? faChevronUp : faChevronDown"
+            class="exp-chevron"
+          ></fa-icon>
+        </button>
+      </div>
+
+      <div class="exp-panel-body" [class.open]="isVoucherPanelOpen">
+        <form
+          [formGroup]="voucherForm"
+          (ngSubmit)="onSubmitVoucher()"
+          class="exp-form exp-voucher-form"
+        >
+          <div class="exp-form-row">
+            <div class="exp-float-field">
+              <input
+                type="date"
+                class="exp-float-input"
+                id="voucher-date"
+                formControlName="date"
+                placeholder=" "
+              />
+              <label class="exp-float-label" for="voucher-date">
+                {{ "EXPENSE_DATE_LABEL" | translate }}
+              </label>
+            </div>
+
+            <div class="exp-float-field">
+              <select
+                class="exp-float-input exp-float-select"
+                id="voucher-category"
+                formControlName="category"
+                placeholder=" "
+              >
+                <option value="">{{ "VOUCHER_NO_CATEGORY" | translate }}</option>
+                <option
+                  *ngFor="let cat of categories$ | async"
+                  [value]="cat.name"
+                >
+                  {{ cat.name }}
+                </option>
+              </select>
+              <label class="exp-float-label" for="voucher-category">
+                {{ "EXPENSE_CATEGORY_LABEL" | translate }}
+              </label>
+            </div>
+          </div>
+
+          <div class="exp-float-field">
+            <input
+              type="text"
+              class="exp-float-input"
+              id="voucher-title"
+              formControlName="title"
+              placeholder=" "
+            />
+            <label class="exp-float-label" for="voucher-title">
+              {{ "VOUCHER_TITLE_LABEL" | translate }}
+              <span class="exp-optional-hint">({{ 'OPTIONAL' | translate }})</span>
+            </label>
+          </div>
+
+          <div class="exp-float-field">
+            <textarea
+              class="exp-float-input exp-textarea"
+              id="voucher-note"
+              formControlName="note"
+              placeholder=" "
+              rows="3"
+            ></textarea>
+            <label class="exp-float-label" for="voucher-note">
+              {{ "DESCRIPTION" | translate }}
+              <span class="exp-optional-hint">({{ 'OPTIONAL' | translate }})</span>
+            </label>
+          </div>
+
+          <input
+            #voucherFileInput
+            type="file"
+            accept="image/*"
+            multiple
+            class="exp-file-input"
+            (change)="onVoucherFilesSelected($event)"
+          />
+
+          <!-- Empty state -->
+          <button
+            *ngIf="selectedVoucherFiles.length === 0"
+            type="button"
+            class="exp-upload-empty"
+            (click)="voucherFileInput.click()"
+          >
+            <span class="exp-upload-icon"><fa-icon [icon]="faImage"></fa-icon></span>
+            <span class="exp-upload-title">{{ "VOUCHER_IMAGE_LABEL" | translate }}</span>
+            <span class="exp-upload-hint">{{ "VOUCHER_IMAGE_COUNT_HINT" | translate: { max: MAX_VOUCHER_IMAGES } }}</span>
+          </button>
+
+          <!-- Image grid -->
+          <div class="exp-image-grid" *ngIf="selectedVoucherFiles.length > 0">
+            <div class="exp-image-thumb" *ngFor="let url of voucherPreviewUrls; let i = index">
+              <img
+                [src]="url"
+                [alt]="'VOUCHER_IMAGE_ALT' | translate"
+                (click)="openLightbox(voucherPreviewUrls, i)"
+              />
+              <button
+                type="button"
+                class="exp-thumb-remove"
+                (click)="removeVoucherFile(i)"
+                [title]="'CANCEL_BUTTON_LABEL' | translate"
+              >
+                <fa-icon [icon]="faTimes"></fa-icon>
+              </button>
+            </div>
+            <button
+              *ngIf="selectedVoucherFiles.length < MAX_VOUCHER_IMAGES"
+              type="button"
+              class="exp-image-add-more"
+              (click)="voucherFileInput.click()"
+              [title]="'VOUCHER_ADD_MORE_IMAGES' | translate"
+            >
+              <fa-icon [icon]="faPlus"></fa-icon>
+            </button>
+          </div>
+
+          <!-- Counter + clear -->
+          <div class="exp-image-info-row" *ngIf="selectedVoucherFiles.length > 0">
+            <span class="exp-image-counter">{{ selectedVoucherFiles.length }} / {{ MAX_VOUCHER_IMAGES }}</span>
+            <button
+              type="button"
+              class="exp-btn exp-btn-sm exp-btn-ghost"
+              (click)="clearAllVoucherFiles()"
+            >
+              <fa-icon [icon]="faTimes"></fa-icon>
+              {{ "VOUCHER_CLEAR_ALL" | translate }}
+            </button>
+          </div>
+
+          <div class="exp-form-footer">
+            <button
+              type="submit"
+              class="exp-btn exp-btn-primary"
+              [disabled]="voucherForm.invalid || selectedVoucherFiles.length === 0 || isVoucherSaving"
+            >
+              <fa-icon [icon]="faSave" class="me-2"></fa-icon>
+              {{ "VOUCHER_SAVE_BUTTON" | translate }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <!-- ── END ADD VOUCHER PANEL ── -->
+
+    <!-- ── SHARED DATE FILTER BAR ── -->
+    <div class="exp-filter-bar">
+      <div class="exp-seg-ctrl">
+        <button
+          type="button"
+          class="exp-seg-btn"
+          [class.active]="dateFilterMode === 'today'"
+          (click)="setDateFilterMode('today')"
+        >{{ 'TODAY' | translate }}</button>
+        <button
+          type="button"
+          class="exp-seg-btn"
+          [class.active]="dateFilterMode === 'week'"
+          (click)="setDateFilterMode('week')"
+        >{{ 'THIS_WEEK' | translate }}</button>
+        <button
+          type="button"
+          class="exp-seg-btn"
+          [class.active]="dateFilterMode === 'month'"
+          (click)="setDateFilterMode('month')"
+        >{{ 'THIS_MONTH' | translate }}</button>
+        <button
+          type="button"
+          class="exp-seg-btn"
+          [class.active]="dateFilterMode === 'custom'"
+          (click)="setDateFilterMode('custom')"
+        >{{ 'CUSTOM' | translate }}</button>
+        <button
+          type="button"
+          class="exp-seg-reset"
+          (click)="resetFilter()"
+          [title]="'RESET_FILTER_BUTTON' | translate"
+        >
+          <fa-icon [icon]="faArrowRotateLeft"></fa-icon>
+        </button>
+      </div>
+
+      <div class="exp-filter-date-row" *ngIf="showCustomDatePicker">
+        <input
+          type="date"
+          class="exp-filter-date-input"
+          [(ngModel)]="customStartDate"
+          (ngModelChange)="onCustomDateChange()"
+          [ngModelOptions]="{standalone: true}"
+        />
+      </div>
+
+      <div class="exp-filter-label">
+        <fa-icon [icon]="faCalendarDay" class="exp-filter-label-icon"></fa-icon>
+        <span>{{ getFilterLabel() }}</span>
+      </div>
+    </div>
+    <!-- ── END SHARED DATE FILTER BAR ── -->
+
+    <!-- ── VOUCHER LIST ── -->
+    <div class="exp-list-section">
+      <div class="exp-list-header">
+        <h3 class="exp-section-title exp-section-title-warning">
+          <fa-icon [icon]="faReceipt" class="exp-icon-warning"></fa-icon>
+          {{ "VOUCHER_SAVED_TITLE" | translate }}
+        </h3>
+        <span class="exp-voucher-count" *ngIf="displayedVouchers$ | async as vl">
+          {{ vl.length }}
+        </span>
+      </div>
+
+      <ng-container *ngIf="displayedVouchers$ | async as vouchers">
+        <div *ngIf="vouchers.length === 0" class="exp-empty">
+          {{ "VOUCHER_EMPTY_HINT" | translate }}
+        </div>
+
+        <div class="exp-voucher-list exp-voucher-list-standalone" *ngIf="vouchers.length > 0">
+          <div class="exp-voucher-item" *ngFor="let voucher of vouchers">
+            <button
+              type="button"
+              class="exp-voucher-thumb"
+              (click)="openLightbox(getVoucherImages(voucher), 0)"
+            >
+              <img
+                [src]="voucher.imageUrl"
+                [alt]="'VOUCHER_IMAGE_ALT' | translate"
+              />
+              <span
+                *ngIf="(voucher.imageCount || 1) > 1"
+                class="exp-voucher-multi-badge"
+              >
+                <fa-icon [icon]="faImage"></fa-icon>
+                {{ voucher.imageCount }}
+              </span>
+            </button>
+
+            <div class="exp-voucher-content">
+              <div class="exp-voucher-title">
+                {{ voucher.title || voucher.fileName }}
+              </div>
+              <div class="exp-item-meta">
+                <span *ngIf="voucher.category" class="exp-cat-badge">
+                  {{ voucher.category }}
+                </span>
+                <span *ngIf="voucher.category" class="exp-meta-dot">·</span>
+                <span class="exp-item-date">
+                  {{ formatService.formatLocalizedDate(voucher.date) }}
+                </span>
+                <span *ngIf="voucher.size" class="exp-meta-dot">·</span>
+                <span *ngIf="voucher.size" class="exp-item-qty">
+                  {{ formatFileSize(voucher.size) }}
+                </span>
+              </div>
+              <div *ngIf="voucher.note" class="exp-voucher-note">
+                {{ voucher.note }}
+              </div>
+              <div
+                *ngIf="userProfile?.accountType === 'group' && voucher.userDisplayName"
+                class="exp-created-by exp-voucher-created-by"
+              >
+                <app-user-avatar
+                  [name]="voucher.userDisplayName || voucher.createdByName || 'Former Member'"
+                  [photoUrl]="voucher.userPhotoURL || voucher.createdByPhotoURL"
+                  [size]="22"
+                ></app-user-avatar>
+                <span class="exp-created-by-text">
+                  {{ "EXPENSE_CREATED_BY" | translate: { name:
+                  voucher.userDisplayName || voucher.createdByName || 'Former Member' } }}
+                </span>
+              </div>
+            </div>
+
+            <div class="exp-voucher-actions">
+              <button
+                type="button"
+                class="exp-icon-btn"
+                (click)="openLightbox(getVoucherImages(voucher), 0)"
+                [title]="'VOUCHER_VIEW' | translate"
+              >
+                <fa-icon [icon]="faEye"></fa-icon>
+              </button>
+              <button
+                *ngIf="canDeleteVoucher(voucher)"
+                type="button"
+                class="exp-icon-btn exp-icon-btn-danger"
+                (click)="onDeleteVoucher(voucher)"
+                [title]="'DELETE_BUTTON_LABEL' | translate"
+              >
+                <fa-icon [icon]="faTrashCan"></fa-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+    <!-- ── END VOUCHER LIST ── -->
+
     <!-- ── EXPENSE LIST ── -->
     <div class="exp-list-section">
       <!-- List Header -->
@@ -279,65 +597,6 @@
           <fa-icon [icon]="faTasks" class="exp-icon-success"></fa-icon>
           {{ "EXPENSE_YOUR_EXPENSES_TITLE" | translate }}
         </h3>
-        <!-- Reset filter button -->
-        <div class="exp-filter-reset">
-          <button
-            type="button"
-            class="exp-icon-btn"
-            (click)="resetFilter()"
-            title="Reset"
-          >
-            <fa-icon [icon]="faArrowRotateLeft"></fa-icon>
-          </button>
-        </div>
-      </div>
-
-      <div class="exp-filter-row">
-        <!-- Date Filter Chips -->
-        <div class="exp-filter-modes">
-          <button
-            type="button"
-            class="exp-filter-chip"
-            [class.active]="dateFilterMode === 'today'"
-            (click)="setDateFilterMode('today')"
-          >
-            {{ 'TODAY' | translate }}
-          </button>
-          <button
-            type="button"
-            class="exp-filter-chip"
-            [class.active]="dateFilterMode === 'week'"
-            (click)="setDateFilterMode('week')"
-          >
-            {{ 'THIS_WEEK' | translate }}
-          </button>
-          <button
-            type="button"
-            class="exp-filter-chip"
-            [class.active]="dateFilterMode === 'month'"
-            (click)="setDateFilterMode('month')"
-          >
-            {{ 'THIS_MONTH' | translate }}
-          </button>
-          <button
-            type="button"
-            class="exp-filter-chip"
-            [class.active]="dateFilterMode === 'custom'"
-            (click)="setDateFilterMode('custom')"
-          >
-            {{ 'CUSTOM' | translate }}
-          </button>
-          <!-- Custom date picker — single date -->
-          <div class="exp-custom-dates" *ngIf="showCustomDatePicker">
-            <input
-              type="date"
-              class="exp-input exp-date-input"
-              [(ngModel)]="customStartDate"
-              (ngModelChange)="onCustomDateChange()"
-              [ngModelOptions]="{standalone: true}"
-            />
-          </div>
-        </div>
       </div>
 
       <!-- Currency Totals -->
@@ -364,86 +623,111 @@
       </div>
 
       <!-- List Items -->
-      <div *ngIf="displayedExpenses$ | async as expenses; else loading">
-        <div *ngIf="expenses.length === 0" class="exp-empty">
+      <div *ngIf="groupedExpenses$ | async as categoryGroups; else loading">
+        <div *ngIf="categoryGroups.length === 0" class="exp-empty">
           {{ "EXPENSE_NO_EXPENSES_HINT" | translate }}
         </div>
 
-        <div class="exp-list" *ngIf="expenses.length > 0">
-          <div *ngFor="let expense of expenses" class="exp-item">
-            <div class="exp-item-inner">
-              <div class="exp-item-top">
-                <span class="exp-item-name">{{ expense.itemName }}</span>
-                <span class="exp-item-amount">
-                  {{ formatService.formatAmountShort(expense.totalCost,
-                  expense.currency) }}
-                </span>
-              </div>
-
-              <div class="exp-item-meta">
-                <span class="exp-cat-badge">{{ expense.category }}</span>
-                <span class="exp-meta-dot">·</span>
-                <span class="exp-item-date"
-                  >{{ this.formatService.formatLocalizedDate(expense.date) }}</span
-                >
-                <span
-                  *ngIf="expense.quantity && expense.quantity > 1"
-                  class="exp-meta-dot"
-                  >·</span
-                >
-                <span
-                  *ngIf="expense.quantity && expense.quantity > 1"
-                  class="exp-item-qty"
-                >
-                  {{ formatLocalizedNumber(expense.quantity) }} {{ expense.unit
-                  }} &#64; {{ formatService.formatAmountShort(expense.price,
-                  expense.currency) }}
-                </span>
-              </div>
-
-              <div class="exp-item-actions">
-                <div class="exp-item-actions-left">
-                  <button
-                    class="exp-btn exp-btn-sm exp-btn-outline-info"
-                    (click)="startEdit(expense)"
-                  >
-                    <fa-icon class="fa-regular-icon fa-edit-btn" [icon]="faPen"></fa-icon>
-                    {{ "EDIT_BUTTON_LABEL" | translate }}
-                  </button>
-                  <button
-                    *ngIf="canManageExpenseRecords"
-                    class="exp-btn exp-btn-sm exp-btn-outline-danger"
-                    (click)="onDelete(expense.id!)"
-                  >
-                    <fa-icon class="fa-regular-icon fa-delete-btn" [icon]="faTrashCan"></fa-icon>
-                    <!-- {{ "DELETE_BUTTON_LABEL" | translate }} -->
-                  </button>
-                </div>
-                <fa-icon
-                  [icon]="faInfoCircle"
-                  class="exp-info-icon"
-                  (click)="showExpenseInfo(expense)"
-                  [title]="'EXPENSE_INFO_TITLE' | translate"
-                >
-                </fa-icon>
-              </div>
-
-              <div
-                *ngIf="userProfile?.accountType === 'group' && expense.userDisplayName"
-                class="exp-created-by p-0"
+        <div class="exp-category-list" *ngIf="categoryGroups.length > 0">
+          <section
+            *ngFor="let group of categoryGroups"
+            class="exp-category-group"
+          >
+            <div class="exp-category-group-header">
+              <button
+                type="button"
+                class="exp-category-title-chip"
+                (click)="filterByCategory(group.category)"
               >
-                <app-user-avatar
-                  [name]="expense.userDisplayName || expense.createdByName || 'Former Member'"
-                  [photoUrl]="expense.userPhotoURL || expense.createdByPhotoURL"
-                  [size]="22"
-                ></app-user-avatar>
-                <span class="exp-created-by-text">
-                  {{ "EXPENSE_CREATED_BY" | translate: { name:
-                  expense.userDisplayName || expense.createdByName || 'Former Member' } }}
+                {{ group.category }}
+              </button>
+              <span class="exp-category-count">
+                {{ "EXPENSE_GROUP_COUNT" | translate: { count: group.count } }}
+              </span>
+              <div class="exp-category-totals">
+                <span
+                  class="exp-category-total"
+                  *ngFor="let total of group.totalsByCurrency | keyvalue"
+                >
+                  {{ formatService.formatAmountShort(total.value, total.key) }}
                 </span>
               </div>
             </div>
-          </div>
+
+            <div class="exp-list">
+              <div *ngFor="let expense of group.expenses" class="exp-item">
+                <div class="exp-item-inner">
+                  <div class="exp-item-top">
+                    <span class="exp-item-name">{{ expense.itemName }}</span>
+                    <span class="exp-item-amount">
+                      {{ formatService.formatAmountShort(expense.totalCost,
+                      expense.currency) }}
+                    </span>
+                  </div>
+
+                  <div class="exp-item-meta">
+                    <span class="exp-item-date"
+                      >{{ formatService.formatLocalizedDate(expense.date) }}</span
+                    >
+                    <span
+                      *ngIf="expense.quantity && expense.quantity > 1"
+                      class="exp-meta-dot"
+                      >·</span
+                    >
+                    <span
+                      *ngIf="expense.quantity && expense.quantity > 1"
+                      class="exp-item-qty"
+                    >
+                      {{ formatLocalizedNumber(expense.quantity) }} {{ expense.unit
+                      }} &#64; {{ formatService.formatAmountShort(expense.price,
+                      expense.currency) }}
+                    </span>
+                  </div>
+
+                  <div class="exp-item-actions">
+                    <div class="exp-item-actions-left">
+                      <button
+                        class="exp-btn exp-btn-sm exp-btn-outline-info"
+                        (click)="startEdit(expense)"
+                      >
+                        <fa-icon class="fa-regular-icon fa-edit-btn" [icon]="faPen"></fa-icon>
+                        {{ "EDIT_BUTTON_LABEL" | translate }}
+                      </button>
+                      <button
+                        *ngIf="canManageExpenseRecords"
+                        class="exp-btn exp-btn-sm exp-btn-outline-danger"
+                        (click)="onDelete(expense.id!)"
+                      >
+                        <fa-icon class="fa-regular-icon fa-delete-btn" [icon]="faTrashCan"></fa-icon>
+                      </button>
+                    </div>
+                    <fa-icon
+                      [icon]="faInfoCircle"
+                      class="exp-info-icon"
+                      (click)="showExpenseInfo(expense)"
+                      [title]="'EXPENSE_INFO_TITLE' | translate"
+                    >
+                    </fa-icon>
+                  </div>
+
+                  <div
+                    *ngIf="userProfile?.accountType === 'group' && expense.userDisplayName"
+                    class="exp-created-by p-0"
+                  >
+                    <app-user-avatar
+                      [name]="expense.userDisplayName || expense.createdByName || 'Former Member'"
+                      [photoUrl]="expense.userPhotoURL || expense.createdByPhotoURL"
+                      [size]="22"
+                    ></app-user-avatar>
+                    <span class="exp-created-by-text">
+                      {{ "EXPENSE_CREATED_BY" | translate: { name:
+                      expense.userDisplayName || expense.createdByName || 'Former Member' } }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
         </div>
       </div>
 
@@ -464,3 +748,4 @@
 </div>
 
 <app-category-modal (categoryAdded)="loadCategories()"></app-category-modal>
+<app-lightbox></app-lightbox>

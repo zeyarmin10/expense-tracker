@@ -1,0 +1,25 @@
+[
+  {
+    "origin": [
+      "http://localhost:4200",
+      "http://127.0.0.1:4200",
+      "https://expense-tracker-c94e8.web.app",
+      "https://expense-tracker-c94e8.firebaseapp.com"
+    ],
+    "method": ["GET", "HEAD", "POST", "PUT", "DELETE"],
+    "responseHeader": [
+      "Authorization",
+      "Content-Type",
+      "X-Firebase-AppCheck",
+      "X-Firebase-GMPID",
+      "X-Firebase-Storage-Version",
+      "X-Firebase-Storage-XSRF",
+      "X-Goog-Upload-Command",
+      "X-Goog-Upload-Header-Content-Length",
+      "X-Goog-Upload-Header-Content-Type",
+      "X-Goog-Upload-Protocol",
+      "x-goog-resumable"
+    ],
+    "maxAgeSeconds": 3600
+  }
+]

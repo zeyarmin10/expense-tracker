@@ -1,0 +1,63 @@
+<div class="lb-root" [class.lb-open]="visible" role="dialog" aria-modal="true">
+
+  <!-- Toolbar -->
+  <div class="lb-toolbar">
+    <span class="lb-counter" *ngIf="images.length > 1">
+      {{ idx + 1 }} / {{ images.length }}
+    </span>
+    <span *ngIf="images.length <= 1"></span>
+    <button class="lb-close" (click)="hide()" [attr.aria-label]="'Close'">
+      <fa-icon [icon]="faTimes"></fa-icon>
+    </button>
+  </div>
+
+  <!-- Viewport -->
+  <div
+    #vp
+    class="lb-viewport"
+    (touchstart)="onStart($event)"
+    (touchend)="onEnd($event)"
+    (click)="scale > 1 ? null : null"
+  >
+    <img
+      class="lb-img"
+      [src]="images[idx]"
+      [style.transform]="imgTransform"
+      alt=""
+      draggable="false"
+    />
+  </div>
+
+  <!-- Prev / Next arrows (desktop / large screens) -->
+  <button
+    *ngIf="images.length > 1 && idx > 0"
+    class="lb-nav lb-prev"
+    (click)="prev()"
+    aria-label="Previous"
+  >
+    <fa-icon [icon]="faLeft"></fa-icon>
+  </button>
+  <button
+    *ngIf="images.length > 1 && idx < images.length - 1"
+    class="lb-nav lb-next"
+    (click)="next()"
+    aria-label="Next"
+  >
+    <fa-icon [icon]="faRight"></fa-icon>
+  </button>
+
+  <!-- Dot indicators -->
+  <div class="lb-dots" *ngIf="images.length > 1">
+    <button
+      class="lb-dot"
+      *ngFor="let img of images; let i = index"
+      [class.active]="i === idx"
+      (click)="goTo(i)"
+      [attr.aria-label]="'Image ' + (i + 1)"
+    ></button>
+  </div>
+
+  <!-- Hint (only first time, fades out) -->
+  <div class="lb-hint">double-tap to zoom · swipe to navigate</div>
+
+</div>
