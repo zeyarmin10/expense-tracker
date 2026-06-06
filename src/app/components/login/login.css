@@ -32,7 +32,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1.5rem 1rem;
+  padding: calc(env(safe-area-inset-top, 0px) + 3.5rem) 1rem 1.5rem;
   position: relative;
   overflow: hidden;
 }
@@ -78,7 +78,7 @@
 
 .lgn-top-controls {
   position: fixed;
-  top: 1.25rem;
+  top: calc(env(safe-area-inset-top, 0px) + 0.75rem);
   right: 1.25rem;
   display: flex;
   gap: 0.5rem;
@@ -524,7 +524,6 @@
   align-items: center;
   justify-content: center;
   gap: 0.7rem;
-  /* font-family: 'Syne', sans-serif; */
   font-size: 0.85rem;
   font-weight: 700;
   border-radius: 12px;
@@ -536,14 +535,79 @@
 }
 
 .lgn-google-btn:hover {
-  border-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(11, 116, 255, 0.25);
   background: rgba(255, 255, 255, 0.04);
+}
+
+/* Primary Google button — slightly more prominent */
+.lgn-google-primary {
+  height: 54px;
+  font-size: 0.9rem;
+  border-color: rgba(11, 116, 255, 0.2);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
 }
 
 .lgn-google-icon {
   width: 20px;
   height: 20px;
   flex-shrink: 0;
+}
+
+/* ── Email expand toggle button ── */
+.lgn-email-toggle-btn {
+  width: 100%;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-sub);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.lgn-email-toggle-btn:hover {
+  border-color: rgba(11, 116, 255, 0.25);
+  color: var(--text);
+}
+
+.lgn-email-toggle-left {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.lgn-email-chevron {
+  transition: transform 0.25s ease;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.lgn-email-chevron.open {
+  transform: rotate(180deg);
+}
+
+/* ── Collapsible email form ── */
+.lgn-email-collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s ease;
+  overflow: hidden;
+}
+
+.lgn-email-collapse.open {
+  grid-template-rows: 1fr;
+}
+
+.lgn-email-collapse > form {
+  min-height: 0;
+  overflow: hidden;
+  padding-top: 0.25rem;
 }
 
 /* ── Footer Link ── */
@@ -569,13 +633,42 @@
 }
 
 .lgn-privacy-link {
-  margin-top: 0.5rem;
-  opacity: 0.6;
+  margin: 0;
+  opacity: 0.7;
 }
 
 .lgn-privacy-anchor {
   font-weight: 400;
   font-size: 0.75rem;
+}
+
+/* Footer card — same look as lgn-card but lighter */
+.lgn-footer-card {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 0.9rem 1.5rem;
+  box-shadow:
+    0 0 0 1px rgba(11, 116, 255, 0.04),
+    0 8px 32px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.lgn-footer-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent), var(--gold), transparent);
+  opacity: 0.5;
 }
 
 /* ── Responsive ── */

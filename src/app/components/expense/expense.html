@@ -281,13 +281,12 @@
           [attr.aria-expanded]="isVoucherPanelOpen"
         >
           <span class="exp-panel-toggle-left">
-            <fa-icon [icon]="faReceipt" class="exp-icon-warning"></fa-icon>
+            <svg class="exp-svg-icon exp-icon-warning" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2h16v20l-2-1-2 1-2-1-2 1-2-1-2 1-2-1V2z"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="12" y2="16"/></svg>
             <span>{{ "VOUCHER_ADD_TITLE" | translate }}</span>
           </span>
-          <fa-icon
-            [icon]="isVoucherPanelOpen ? faChevronUp : faChevronDown"
-            class="exp-chevron"
-          ></fa-icon>
+          <svg class="exp-svg-icon exp-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline [attr.points]="isVoucherPanelOpen ? '18 15 12 9 6 15' : '6 9 12 15 18 9'"/>
+          </svg>
         </button>
       </div>
 
@@ -334,6 +333,7 @@
 
           <div class="exp-float-field">
             <input
+              #voucherTitleInput
               type="text"
               class="exp-float-input"
               id="voucher-title"
@@ -502,7 +502,7 @@
     <div class="exp-list-section">
       <div class="exp-list-header">
         <h3 class="exp-section-title exp-section-title-warning">
-          <fa-icon [icon]="faReceipt" class="exp-icon-warning"></fa-icon>
+          <svg class="exp-svg-icon exp-icon-warning" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2h16v20l-2-1-2 1-2-1-2 1-2-1-2 1-2-1V2z"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="12" y2="16"/></svg>
           {{ "VOUCHER_SAVED_TITLE" | translate }}
         </h3>
         <span class="exp-voucher-count" *ngIf="displayedVouchers$ | async as vl">

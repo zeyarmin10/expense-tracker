@@ -647,6 +647,12 @@ export class Profit implements OnInit, OnDestroy {
   ): void {
     if (section === 'incomeForm') {
       this.isIncomeFormCollapsed = !this.isIncomeFormCollapsed;
+      if (!this.isIncomeFormCollapsed) {
+        setTimeout(() => {
+          const input = document.getElementById('incomeAmount') as HTMLInputElement;
+          input?.focus();
+        }, 320);
+      }
     } else if (section === 'dailyCashFlow') {
       this.isDailyCashFlowCollapsed = !this.isDailyCashFlowCollapsed;
     } else if (section === 'recordedIncomes') {

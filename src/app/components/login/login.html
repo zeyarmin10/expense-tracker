@@ -54,96 +54,140 @@
         <div class="lgn-tab-indicator" [class.right]="!isLoginMode"></div>
       </div>
 
-      <!-- Form -->
-      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="lgn-form" autocomplete="off">
-        <!-- Name (register only) -->
-        <div class="lgn-field" *ngIf="!isLoginMode">
-          <div class="lgn-float-wrap">
-            <input type="text" id="lgn-name" class="lgn-input" formControlName="name" placeholder=" "
-              [class.err]="loginForm.controls['name'].invalid && loginForm.controls['name'].touched" />
-            <label class="lgn-label" for="lgn-name">{{ 'NAME_LABEL' | translate }}</label>
-          </div>
-          <div class="lgn-error" *ngIf="loginForm.controls['name'].invalid && loginForm.controls['name'].touched">
-            {{ 'ERROR_NAME_REQUIRED' | translate }}
-          </div>
-        </div>
-
-        <!-- Email -->
-        <div class="lgn-field">
-          <div class="lgn-float-wrap">
-            <input type="email" id="lgn-email" class="lgn-input" formControlName="email" placeholder=" "
-              [class.err]="loginForm.controls['email'].invalid && loginForm.controls['email'].touched" />
-            <label class="lgn-label" for="lgn-email">{{ 'EMAIL_LABEL' | translate }}</label>
-          </div>
-          <div class="lgn-error" *ngIf="loginForm.controls['email'].invalid && loginForm.controls['email'].touched">
-            <span *ngIf="loginForm.controls['email'].errors?.['required']">{{ 'ERROR_EMAIL_REQUIRED' | translate }}</span>
-            <span *ngIf="loginForm.controls['email'].errors?.['email']">{{ 'ERROR_EMAIL_INVALID' | translate }}</span>
-          </div>
-        </div>
-
-        <!-- Password -->
-        <div class="lgn-field">
-          <div class="lgn-float-wrap lgn-pass-wrap">
-            <input [type]="showPassword ? 'text' : 'password'" id="lgn-pass" class="lgn-input lgn-pass-input"
-              formControlName="password" placeholder=" "
-              [class.err]="loginForm.controls['password'].invalid && loginForm.controls['password'].touched" />
-            <label class="lgn-label" for="lgn-pass">{{ 'PASSWORD_LABEL' | translate }}</label>
-            <button type="button" class="lgn-eye-btn" (click)="togglePasswordVisibility()" tabindex="-1">
-              <fa-icon [icon]="showPassword ? faEyeSlash : faEye"></fa-icon>
-            </button>
-          </div>
-          <div class="lgn-error" *ngIf="loginForm.controls['password'].invalid && loginForm.controls['password'].touched">
-            <span *ngIf="loginForm.controls['password'].errors?.['required']">{{ 'ERROR_PASSWORD_REQUIRED' | translate }}</span>
-            <span *ngIf="loginForm.controls['password'].errors?.['minlength']">{{ 'ERROR_PASSWORD_MINLENGTH' | translate }}</span>
-          </div>
-        </div>
-
-        <!-- Error / Success alerts -->
-        <div class="lgn-alert lgn-alert-err" *ngIf="errorMessage" role="alert">
-          {{ errorMessage }}
-        </div>
-        <div class="lgn-alert lgn-alert-ok" *ngIf="successMessage" role="alert">
-          {{ successMessage }}
-        </div>
-
-        <!-- Submit -->
-        <button type="submit" class="lgn-submit-btn" [disabled]="loginForm.invalid">
-          <span class="lgn-btn-text">
-            {{ (isLoginMode ? 'LOGIN_BUTTON' : 'REGISTER_BUTTON') | translate }}
-          </span>
-          <span class="lgn-btn-arrow">→</span>
-        </button>
-      </form>
-
-      <!-- Divider + Google (login only) -->
+      <!-- LOGIN MODE: Google first, email collapsible -->
       <ng-container *ngIf="isLoginMode">
-        <div class="lgn-divider">
-          <span>{{ 'OR_TEXT' | translate }}</span>
-        </div>
-        <button type="button" class="lgn-google-btn" (click)="signInWithGoogle()">
+        <!-- Google (primary) -->
+        <button type="button" class="lgn-google-btn lgn-google-primary" (click)="signInWithGoogle()">
           <img src="assets/icons/google-g.svg" class="lgn-google-icon" alt="Google" />
           {{ 'SIGN_IN_GOOGLE' | translate }}
         </button>
+
+        <!-- Divider -->
+        <div class="lgn-divider">
+          <span>{{ 'OR_TEXT' | translate }}</span>
+        </div>
+
+        <!-- Email toggle button -->
+        <button type="button" class="lgn-email-toggle-btn" (click)="toggleEmailForm()">
+          <span class="lgn-email-toggle-left">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2 4 12 13 22 4"/></svg>
+            {{ 'SIGN_IN_EMAIL' | translate }}
+          </span>
+          <svg class="lgn-email-chevron" [class.open]="showEmailForm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+
+        <!-- Collapsible email form -->
+        <div class="lgn-email-collapse" [class.open]="showEmailForm">
+          <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="lgn-form" autocomplete="off">
+            <!-- Email -->
+            <div class="lgn-field">
+              <div class="lgn-float-wrap">
+                <input type="email" id="lgn-email" class="lgn-input" formControlName="email" placeholder=" "
+                  [class.err]="loginForm.controls['email'].invalid && loginForm.controls['email'].touched" />
+                <label class="lgn-label" for="lgn-email">{{ 'EMAIL_LABEL' | translate }}</label>
+              </div>
+              <div class="lgn-error" *ngIf="loginForm.controls['email'].invalid && loginForm.controls['email'].touched">
+                <span *ngIf="loginForm.controls['email'].errors?.['required']">{{ 'ERROR_EMAIL_REQUIRED' | translate }}</span>
+                <span *ngIf="loginForm.controls['email'].errors?.['email']">{{ 'ERROR_EMAIL_INVALID' | translate }}</span>
+              </div>
+            </div>
+            <!-- Password -->
+            <div class="lgn-field">
+              <div class="lgn-float-wrap lgn-pass-wrap">
+                <input [type]="showPassword ? 'text' : 'password'" id="lgn-pass" class="lgn-input lgn-pass-input"
+                  formControlName="password" placeholder=" "
+                  [class.err]="loginForm.controls['password'].invalid && loginForm.controls['password'].touched" />
+                <label class="lgn-label" for="lgn-pass">{{ 'PASSWORD_LABEL' | translate }}</label>
+                <button type="button" class="lgn-eye-btn" (click)="togglePasswordVisibility()" tabindex="-1">
+                  <fa-icon [icon]="showPassword ? faEyeSlash : faEye"></fa-icon>
+                </button>
+              </div>
+              <div class="lgn-error" *ngIf="loginForm.controls['password'].invalid && loginForm.controls['password'].touched">
+                <span *ngIf="loginForm.controls['password'].errors?.['required']">{{ 'ERROR_PASSWORD_REQUIRED' | translate }}</span>
+                <span *ngIf="loginForm.controls['password'].errors?.['minlength']">{{ 'ERROR_PASSWORD_MINLENGTH' | translate }}</span>
+              </div>
+            </div>
+            <!-- Alerts -->
+            <div class="lgn-alert lgn-alert-err" *ngIf="errorMessage" role="alert">{{ errorMessage }}</div>
+            <div class="lgn-alert lgn-alert-ok" *ngIf="successMessage" role="alert">{{ successMessage }}</div>
+            <!-- Submit -->
+            <button type="submit" class="lgn-submit-btn" [disabled]="loginForm.invalid">
+              <span class="lgn-btn-text">{{ 'LOGIN_BUTTON' | translate }}</span>
+              <span class="lgn-btn-arrow">→</span>
+            </button>
+          </form>
+        </div>
+      </ng-container>
+
+      <!-- REGISTER MODE: normal form -->
+      <ng-container *ngIf="!isLoginMode">
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="lgn-form" autocomplete="off">
+          <!-- Name -->
+          <div class="lgn-field">
+            <div class="lgn-float-wrap">
+              <input type="text" id="lgn-name" class="lgn-input" formControlName="name" placeholder=" "
+                [class.err]="loginForm.controls['name'].invalid && loginForm.controls['name'].touched" />
+              <label class="lgn-label" for="lgn-name">{{ 'NAME_LABEL' | translate }}</label>
+            </div>
+            <div class="lgn-error" *ngIf="loginForm.controls['name'].invalid && loginForm.controls['name'].touched">
+              {{ 'ERROR_NAME_REQUIRED' | translate }}
+            </div>
+          </div>
+          <!-- Email -->
+          <div class="lgn-field">
+            <div class="lgn-float-wrap">
+              <input type="email" id="lgn-email-reg" class="lgn-input" formControlName="email" placeholder=" "
+                [class.err]="loginForm.controls['email'].invalid && loginForm.controls['email'].touched" />
+              <label class="lgn-label" for="lgn-email-reg">{{ 'EMAIL_LABEL' | translate }}</label>
+            </div>
+            <div class="lgn-error" *ngIf="loginForm.controls['email'].invalid && loginForm.controls['email'].touched">
+              <span *ngIf="loginForm.controls['email'].errors?.['required']">{{ 'ERROR_EMAIL_REQUIRED' | translate }}</span>
+              <span *ngIf="loginForm.controls['email'].errors?.['email']">{{ 'ERROR_EMAIL_INVALID' | translate }}</span>
+            </div>
+          </div>
+          <!-- Password -->
+          <div class="lgn-field">
+            <div class="lgn-float-wrap lgn-pass-wrap">
+              <input [type]="showPassword ? 'text' : 'password'" id="lgn-pass-reg" class="lgn-input lgn-pass-input"
+                formControlName="password" placeholder=" "
+                [class.err]="loginForm.controls['password'].invalid && loginForm.controls['password'].touched" />
+              <label class="lgn-label" for="lgn-pass-reg">{{ 'PASSWORD_LABEL' | translate }}</label>
+              <button type="button" class="lgn-eye-btn" (click)="togglePasswordVisibility()" tabindex="-1">
+                <fa-icon [icon]="showPassword ? faEyeSlash : faEye"></fa-icon>
+              </button>
+            </div>
+            <div class="lgn-error" *ngIf="loginForm.controls['password'].invalid && loginForm.controls['password'].touched">
+              <span *ngIf="loginForm.controls['password'].errors?.['required']">{{ 'ERROR_PASSWORD_REQUIRED' | translate }}</span>
+              <span *ngIf="loginForm.controls['password'].errors?.['minlength']">{{ 'ERROR_PASSWORD_MINLENGTH' | translate }}</span>
+            </div>
+          </div>
+          <!-- Alerts -->
+          <div class="lgn-alert lgn-alert-err" *ngIf="errorMessage" role="alert">{{ errorMessage }}</div>
+          <div class="lgn-alert lgn-alert-ok" *ngIf="successMessage" role="alert">{{ successMessage }}</div>
+          <!-- Submit -->
+          <button type="submit" class="lgn-submit-btn" [disabled]="loginForm.invalid">
+            <span class="lgn-btn-text">{{ 'REGISTER_BUTTON' | translate }}</span>
+            <span class="lgn-btn-arrow">→</span>
+          </button>
+        </form>
       </ng-container>
     </div>
     <!-- END card -->
 
-    <!-- Footer link -->
-    <p class="lgn-footer-link mt-4">
-      {{ (isLoginMode ? 'NO_ACCOUNT_QUESTION' : 'HAVE_ACCOUNT_QUESTION') |
-      translate }}
-      <a class="lgn-toggle-link" (click)="toggleMode()">
-        {{ (isLoginMode ? 'REGISTER_HERE_LINK' : 'LOGIN_HERE_LINK') | translate
-        }}
-      </a>
-    </p>
-
-    <!-- Privacy Policy link -->
-    <p class="lgn-footer-link lgn-privacy-link">
-      <a class="lgn-toggle-link lgn-privacy-anchor" routerLink="/privacy-policy">
-        {{ 'NAV_PRIVACY_POLICY' | translate }}
-      </a>
-    </p>
+    <!-- Footer card -->
+    <div class="lgn-footer-card">
+      <p class="lgn-footer-link">
+        {{ (isLoginMode ? 'NO_ACCOUNT_QUESTION' : 'HAVE_ACCOUNT_QUESTION') | translate }}
+        <a class="lgn-toggle-link" (click)="toggleMode()">
+          {{ (isLoginMode ? 'REGISTER_HERE_LINK' : 'LOGIN_HERE_LINK') | translate }}
+        </a>
+      </p>
+      <p class="lgn-footer-link lgn-privacy-link">
+        <a class="lgn-toggle-link lgn-privacy-anchor" routerLink="/privacy-policy">
+          {{ 'NAV_PRIVACY_POLICY' | translate }}
+        </a>
+      </p>
+    </div>
   </div>
   <!-- END center -->
 </div>

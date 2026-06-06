@@ -262,6 +262,9 @@ export class App implements OnInit {
 
     this.themeService.isDarkMode$.subscribe((isDarkMode) => {
       this.isDarkMode = isDarkMode;
+      if (Capacitor.isNativePlatform()) {
+        StatusBar.setStyle({ style: isDarkMode ? Style.Dark : Style.Light }).catch(() => {});
+      }
     });
 
     this.initDocumentTitleUpdates();
@@ -432,14 +435,18 @@ export class App implements OnInit {
     if (Capacitor.isNativePlatform()) {
       try {
         await StatusBar.setOverlaysWebView({ overlay: true });
-        await StatusBar.setStyle({ style: Style.Dark });
         await StatusBar.show();
-
       } catch (e) {
         console.warn('StatusBar error:', e);
       } finally {
         await SplashScreen.hide();
       }
+
+      // Set icon color AFTER splash hides — Android resets status bar appearance during splash dismiss
+      setTimeout(() => {
+        const style = this.themeService.isDarkMode ? Style.Dark : Style.Light;
+        StatusBar.setStyle({ style }).catch(() => {});
+      }, 300);
 
       Camera.requestPermissions({ permissions: ['camera', 'photos'] }).catch(() => {});
     }

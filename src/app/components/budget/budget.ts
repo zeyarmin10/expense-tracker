@@ -176,7 +176,15 @@ export class BudgetComponent implements OnInit, OnDestroy {
   get isAddFormOpen(): boolean { return !this.isBudgetFormCollapsed; }
   get isRecordedOpen(): boolean { return !this.isRecordedBudgetsCollapsed; }
   get canManageBudgets(): boolean { return canManageSharedSpace(this.userProfile); }
-  toggleAddForm(): void { this.isBudgetFormCollapsed = !this.isBudgetFormCollapsed; }
+  toggleAddForm(): void {
+    this.isBudgetFormCollapsed = !this.isBudgetFormCollapsed;
+    if (!this.isBudgetFormCollapsed) {
+      setTimeout(() => {
+        const input = document.getElementById('amount') as HTMLInputElement;
+        input?.focus();
+      }, 320);
+    }
+  }
   toggleRecordedList(): void { this.isRecordedBudgetsCollapsed = !this.isRecordedBudgetsCollapsed; }
 
   // ✅ Empty state button: form ဖွင့်ပြီး amount field focus ကျအောင်

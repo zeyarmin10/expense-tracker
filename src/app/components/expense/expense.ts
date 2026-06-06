@@ -117,6 +117,7 @@ export class Expense implements OnInit, OnDestroy {
   @ViewChild(CategoryModalComponent) categoryModal!: CategoryModalComponent;
   @ViewChild(LightboxComponent) lightbox!: LightboxComponent;
   @ViewChild('galleryFileInput') galleryFileInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('voucherTitleInput') voucherTitleInput!: ElementRef<HTMLInputElement>;
 
   newExpenseForm: FormGroup;
   voucherForm: FormGroup;
@@ -323,6 +324,9 @@ export class Expense implements OnInit, OnDestroy {
 
   toggleVoucherPanel(): void {
     this.isVoucherPanelOpen = !this.isVoucherPanelOpen;
+    if (this.isVoucherPanelOpen) {
+      setTimeout(() => this.voucherTitleInput?.nativeElement?.focus(), 150);
+    }
   }
 
   toggleQuickMode(): void {

@@ -7,6 +7,14 @@
   display: block;
 }
 
+.exp-svg-icon {
+  width: 1em;
+  height: 1em;
+  display: inline-block;
+  vertical-align: -0.125em;
+  flex-shrink: 0;
+}
+
 /* ── Wrapper ── */
 .exp-wrapper {
   /* font-family: 'Syne', sans-serif; */

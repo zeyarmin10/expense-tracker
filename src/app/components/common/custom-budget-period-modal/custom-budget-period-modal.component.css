@@ -4,7 +4,7 @@
 
 .cbp-dialog {
   max-width: 440px;
-  margin: 1.5rem auto;
+  margin: calc(env(safe-area-inset-top, 0px) + 1.5rem) auto 1.5rem;
   width: 95%;
 }
 

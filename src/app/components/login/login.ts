@@ -77,6 +77,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   errorMessage: string | null = null;
   successMessage: string | null = null;
   isLoginMode: boolean = true;
+  showEmailForm: boolean = false;
 
   translate = inject(TranslateService);
   private cdr = inject(ChangeDetectorRef);
@@ -234,8 +235,22 @@ export class LoginComponent implements OnInit, OnDestroy {
     localStorage.setItem('selectedLanguage', lang);
   }
 
+  toggleEmailForm(): void {
+    this.showEmailForm = !this.showEmailForm;
+    if (this.showEmailForm) {
+      setTimeout(() => {
+        const input = document.getElementById('lgn-email') as HTMLInputElement;
+        input?.focus();
+      }, 320);
+    } else {
+      this.loginForm.reset();
+      this.errorMessage = null;
+    }
+  }
+
   toggleMode(): void {
     this.isLoginMode = !this.isLoginMode;
+    this.showEmailForm = false;
     this.errorMessage = null;
     this.successMessage = null;
     this.loginForm.reset();
