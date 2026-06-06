@@ -807,7 +807,7 @@ a.exp-icon-btn {
 
 .exp-category-group {
   border-bottom: 1px solid var(--border);
-  border-left: 2.5px solid hsla(var(--cat-hue), 70%, 65%, 0.55);
+  border-left: 3px solid hsla(var(--cat-hue), var(--cat-sat, 72%), 60%, 0.8);
 }
 
 .exp-category-group:last-child {
@@ -820,15 +820,15 @@ a.exp-icon-btn {
   gap: 0.4rem;
   flex-wrap: nowrap;
   padding: 0.55rem 1rem;
-  background: hsla(var(--cat-hue), 65%, 55%, 0.06);
+  background: hsla(var(--cat-hue), var(--cat-sat, 65%), 50%, 0.10);
   min-width: 0;
 }
 
 .exp-category-title-chip {
   flex-shrink: 0;
-  border: 1px solid hsla(var(--cat-hue), 70%, 65%, 0.4);
-  background: hsla(var(--cat-hue), 70%, 65%, 0.12);
-  color: hsl(var(--cat-hue), 80%, 72%);
+  border: 1px solid hsla(var(--cat-hue), var(--cat-sat, 70%), 60%, 0.55);
+  background: hsla(var(--cat-hue), var(--cat-sat, 70%), 60%, 0.18);
+  color: hsl(var(--cat-hue), var(--cat-sat, 80%), 70%);
   border-radius: 999px;
   padding: 0.22rem 0.6rem;
   font-size: 0.72rem;
@@ -838,7 +838,7 @@ a.exp-icon-btn {
 }
 
 .exp-category-title-chip:hover {
-  border-color: hsla(var(--cat-hue), 70%, 65%, 0.75);
+  border-color: hsla(var(--cat-hue), var(--cat-sat, 70%), 60%, 0.85);
 }
 
 .exp-category-count {

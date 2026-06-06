@@ -54,7 +54,66 @@
 }
 
 .prof-hero .prof-avatar-wrap {
+  position: relative;
   margin-bottom: 0.3rem;
+}
+
+/* Camera edit button — bottom-right badge */
+.prof-avatar-cam-btn {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #0b74ff;
+  border: 2.5px solid var(--surface);
+  color: #fff;
+  font-size: 0.72rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(11,116,255,0.4);
+  transition: background 0.15s, transform 0.15s;
+  z-index: 1;
+}
+
+.prof-avatar-cam-btn:hover {
+  background: #0059cc;
+  transform: scale(1.1);
+}
+
+.prof-avatar-cam-btn:active {
+  transform: scale(0.95);
+}
+
+/* Upload spinner overlay */
+.prof-avatar-spinner {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.prof-spinner-ring {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: prof-spin 0.75s linear infinite;
+}
+
+@keyframes prof-spin {
+  to { transform: rotate(360deg); }
+}
+
+.prof-avatar-uploading {
+  pointer-events: none;
 }
 
 .prof-hero .prof-avatar-img {

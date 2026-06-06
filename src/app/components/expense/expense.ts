@@ -784,12 +784,24 @@ export class Expense implements OnInit, OnDestroy {
     this.voucherForm.patchValue({ imageFile: 'set' });
   }
 
-  getCategoryHue(category: string): number {
-    let hash = 0;
+  getCategoryStyle(category: string): Record<string, string> {
+    // FNV-1a 32-bit — good bit avalanche so similar names diverge widely
+    let h = 2166136261;
     for (let i = 0; i < category.length; i++) {
-      hash = (category.charCodeAt(i) + ((hash << 5) - hash)) | 0;
+      h ^= category.charCodeAt(i);
+      h = Math.imul(h, 16777619) >>> 0;
     }
-    return Math.abs(hash) % 360;
+    // Golden angle (137.508°) gives maximum hue separation for any number of categories
+    const hue = Math.round((h * 137.508) % 360);
+    // Vary saturation 64–86% using upper hash bits so even near-hue pairs look distinct
+    const sat = 64 + ((h >>> 10) % 23);
+    return { '--cat-hue': String(hue), '--cat-sat': `${sat}%` };
+  }
+
+  formatCount(n: number): string {
+    if (this.translate.currentLang !== 'my') return String(n);
+    const mm = ['၀','၁','၂','၃','၄','၅','၆','၇','၈','၉'];
+    return String(n).replace(/\d/g, d => mm[+d]);
   }
 
   // ── Swal-based Edit ────────────────────────────────────────────────────────

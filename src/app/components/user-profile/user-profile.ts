@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, inject, ViewChild } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import {
   FormBuilder,
@@ -6,15 +6,20 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { Observable, of, map, firstValueFrom, combineLatest, Subscription } from 'rxjs';
+import { Observable, of, map, firstValueFrom, combineLatest, Subscription, BehaviorSubject } from 'rxjs';
 import { switchMap, tap, catchError } from 'rxjs/operators';
 import { AuthService } from '../../services/auth';
 import { getActiveGroupId, UserDataService, UserProfile } from '../../services/user-data';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faSave, faUserCircle, faTrash, faPlus, faChevronDown, faChevronUp, faListUl, faEdit, faTimes, faBell, faBellSlash, faClock } from '@fortawesome/free-solid-svg-icons';
+import { faSave, faUserCircle, faTrash, faPlus, faChevronDown, faChevronUp, faListUl, faEdit, faTimes, faBell, faBellSlash, faClock, faCamera, faImages } from '@fortawesome/free-solid-svg-icons';
+import { icon as faRenderIcon } from '@fortawesome/fontawesome-svg-core';
 import { faTrashCan } from '@fortawesome/free-regular-svg-icons';
 import { updateProfile } from '@angular/fire/auth';
+import { HttpClient } from '@angular/common/http';
+import { Camera } from '@capacitor/camera';
+import { Capacitor } from '@capacitor/core';
+import { environment } from '../../../environments/environment';
 import { FormsModule } from '@angular/forms';
 import { AVAILABLE_CURRENCIES } from '../../core/constants/app.constants';
 import { CustomBudgetPeriodModalComponent } from '../common/custom-budget-period-modal/custom-budget-period-modal.component';
@@ -65,6 +70,7 @@ const Toast = Swal.mixin({
 export class UserProfileComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private userDataService = inject(UserDataService);
+  private http = inject(HttpClient);
   private fb = inject(FormBuilder);
   private translate = inject(TranslateService);
   private datePipe = inject(DatePipe);
@@ -77,6 +83,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   userProfileForm: FormGroup;
   userDisplayData$: Observable<any>;
   userPhotoUrl$: Observable<string | null>;
+  private photoUrlOverride = new BehaviorSubject<string | null>(null);
   public userRole: string | null = null;
   public accountType: string | null = null;
   private groupId: string | null = null;
@@ -154,6 +161,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   }
 
   @ViewChild(CustomBudgetPeriodModalComponent) private modalComponent!: CustomBudgetPeriodModalComponent;
+  @ViewChild('avatarFileInput') avatarFileInput!: ElementRef<HTMLInputElement>;
 
   faPlus = faPlus;
   faSave = faSave;
@@ -172,6 +180,8 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   faBell = faBell;
   faBellSlash = faBellSlash;
   faClock = faClock;
+  faCamera = faCamera;
+  isUploadingAvatar = false;
 
   constructor() {
     this.userProfileForm = this.fb.group({
@@ -269,10 +279,13 @@ export class UserProfileComponent implements OnInit, OnDestroy {
       })
     );
 
-    this.userPhotoUrl$ = this.authService.currentUser$.pipe(
-      map((user) => {
+    this.userPhotoUrl$ = combineLatest([
+      this.authService.currentUser$.pipe(map((user) => user?.photoURL || null)),
+      this.photoUrlOverride,
+    ]).pipe(
+      map(([authUrl, overrideUrl]) => {
         this.imageLoadError = false;
-        return user?.photoURL || null;
+        return overrideUrl ?? authUrl;
       })
     );
 
@@ -631,8 +644,130 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   }
 
   onImageError(): void {
-    console.log('Profile image failed to load. Displaying default icon.');
     this.imageLoadError = true;
+  }
+
+  async pickAvatar(): Promise<void> {
+    if (!Capacitor.isNativePlatform()) {
+      this.avatarFileInput.nativeElement.value = '';
+      this.avatarFileInput.nativeElement.click();
+      return;
+    }
+
+    const camSvg = faRenderIcon(faCamera).html.join('');
+    const galSvg = faRenderIcon(faImages).html.join('');
+    const crossSvg = faRenderIcon(faTimes).html.join('');
+    const result = await Swal.fire({
+      title: this.translate.instant('AVATAR_PICK_TITLE'),
+      showCancelButton: true,
+      showDenyButton: true,
+      confirmButtonText: camSvg,
+      denyButtonText: galSvg,
+      cancelButtonText: crossSvg,
+      confirmButtonColor: '#0b74ff',
+      denyButtonColor: '#059669',
+      customClass: {
+        confirmButton: 'swal2-avatar-btn',
+        denyButton: 'swal2-avatar-btn',
+      },
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const perms = await Camera.requestPermissions({ permissions: ['camera'] });
+        if (perms.camera === 'denied') {
+          Toast.fire({ icon: 'error', title: this.translate.instant('PERMISSION_CAMERA_DENIED') });
+          return;
+        }
+        const photo = await Camera.takePhoto({ quality: 85 });
+        if (photo.webPath) {
+          const response = await fetch(photo.webPath);
+          const blob = await response.blob();
+          const file = new File([blob], `avatar_${Date.now()}.jpg`, { type: 'image/jpeg' });
+          await this.uploadAvatar(file);
+        }
+      } catch (e: any) {
+        if (!e?.message?.toLowerCase().includes('cancel')) {
+          Toast.fire({ icon: 'error', title: this.translate.instant('AVATAR_UPLOAD_ERROR') });
+        }
+      }
+    } else if (result.isDenied) {
+      this.avatarFileInput.nativeElement.value = '';
+      this.avatarFileInput.nativeElement.click();
+    }
+  }
+
+  async onAvatarFileSelected(event: Event): Promise<void> {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    await this.uploadAvatar(file);
+    (event.target as HTMLInputElement).value = '';
+  }
+
+  async uploadAvatar(file: File): Promise<void> {
+    const currentUser = await firstValueFrom(this.authService.currentUser$);
+    if (!currentUser) return;
+
+    const profile = await firstValueFrom(this.userDataService.getUserProfile(currentUser.uid));
+    const lastUpload = profile?.lastAvatarUploadAt ?? null;
+    if (lastUpload && Date.now() - lastUpload < 24 * 60 * 60 * 1000) {
+      const remainingMs = 24 * 60 * 60 * 1000 - (Date.now() - lastUpload);
+      const remainingHours = Math.ceil(remainingMs / (60 * 60 * 1000));
+      Toast.fire({ icon: 'warning', title: this.translate.instant('AVATAR_RATE_LIMIT_ERROR', { hours: remainingHours }) });
+      return;
+    }
+
+    this.isUploadingAvatar = true;
+    try {
+      const compressed = await this.compressAvatarImage(file);
+      const { cloudName, uploadPreset } = environment.cloudinary;
+      const formData = new FormData();
+      formData.append('file', compressed);
+      formData.append('upload_preset', uploadPreset);
+      formData.append('folder', `profiles/${currentUser.uid}`);
+
+      const resp = await firstValueFrom(
+        this.http.post<{ secure_url: string }>(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, formData)
+      );
+
+      await updateProfile(currentUser, { photoURL: resp.secure_url });
+      await this.userDataService.updateUserProfile(currentUser.uid, {
+        photoURL: resp.secure_url,
+        lastAvatarUploadAt: Date.now(),
+      });
+
+      this.photoUrlOverride.next(resp.secure_url);
+      Toast.fire({ icon: 'success', title: this.translate.instant('AVATAR_UPLOAD_SUCCESS') });
+    } catch (e: any) {
+      console.error('Avatar upload error:', e);
+      Toast.fire({ icon: 'error', title: this.translate.instant('AVATAR_UPLOAD_ERROR') });
+    } finally {
+      this.isUploadingAvatar = false;
+    }
+  }
+
+  private compressAvatarImage(file: File): Promise<File> {
+    return new Promise((resolve) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const maxSize = 400;
+        const ratio = Math.min(maxSize / img.width, maxSize / img.height, 1);
+        const w = Math.round(img.width * ratio);
+        const h = Math.round(img.height * ratio);
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext('2d')!.drawImage(img, 0, 0, w, h);
+        canvas.toBlob(
+          (blob) => resolve(new File([blob!], file.name, { type: 'image/jpeg' })),
+          'image/jpeg', 0.85
+        );
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+      img.src = url;
+    });
   }
 
   async onSubmit(): Promise<void> {

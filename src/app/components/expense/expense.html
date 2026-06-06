@@ -639,7 +639,7 @@
           <section
             *ngFor="let group of categoryGroups"
             class="exp-category-group"
-            [style.--cat-hue]="getCategoryHue(group.category)"
+            [ngStyle]="getCategoryStyle(group.category)"
           >
             <div class="exp-category-group-header">
               <button
@@ -650,7 +650,7 @@
                 {{ group.category.length > 20 ? group.category.substring(0, 20) + '…' : group.category }}
               </button>
               <span class="exp-category-count">
-                {{ "EXPENSE_GROUP_COUNT" | translate: { count: group.count } }}
+                {{ "EXPENSE_GROUP_COUNT" | translate: { count: formatCount(group.count) } }}
               </span>
               <div class="exp-category-totals">
                 <span

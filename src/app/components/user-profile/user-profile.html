@@ -8,12 +8,17 @@
 
         <!-- Page Header -->
         <div class="prof-page-header">
-          <h2 class="prof-page-title">{{ 'USER_PROFILE_TITLE' | translate }}</h2>
+          <h2 class="prof-page-title pb-2">{{ 'USER_PROFILE_TITLE' | translate }}</h2>
         </div>
 
         <!-- ── Hero Card ── -->
         <div class="prof-hero">
-          <div class="prof-avatar-wrap">
+          <!-- Hidden file input for avatar -->
+          <input #avatarFileInput type="file" accept="image/*" style="display:none"
+            (change)="onAvatarFileSelected($event)" />
+
+          <div class="prof-avatar-wrap" [class.prof-avatar-uploading]="isUploadingAvatar">
+            <!-- Avatar image or fallback -->
             <ng-container *ngIf="userPhotoUrl$ | async as photoUrl; else defaultIcon">
               <img [src]="photoUrl" alt="User Photo" class="prof-avatar-img" (error)="onImageError()"
                 *ngIf="!imageLoadError">
@@ -26,6 +31,17 @@
                 <fa-icon [icon]="faUserCircle"></fa-icon>
               </div>
             </ng-template>
+
+            <!-- Upload spinner overlay -->
+            <div class="prof-avatar-spinner" *ngIf="isUploadingAvatar">
+              <div class="prof-spinner-ring"></div>
+            </div>
+
+            <!-- Camera edit button (bottom-right) -->
+            <button type="button" class="prof-avatar-cam-btn" (click)="pickAvatar()"
+              *ngIf="!isUploadingAvatar" [title]="'AVATAR_PICK_TITLE' | translate">
+              <fa-icon [icon]="faCamera"></fa-icon>
+            </button>
           </div>
 
           <!-- Name view mode -->

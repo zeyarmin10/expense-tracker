@@ -534,3 +534,19 @@ select.prof-input {
   align-items: center;
   justify-content: center;
 }
+
+/* Avatar picker SweetAlert — icon-only square buttons */
+.swal2-avatar-btn {
+  width: 80px !important;
+  height: 80px !important;
+  min-width: unset !important;
+  border-radius: 18px !important;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+.swal2-avatar-btn svg {
+  width: 2.2em !important;
+  height: 2.2em !important;
+}
