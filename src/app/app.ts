@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, NavigationEnd, RouterOutlet, RouterModule, ActivatedRoute } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
-import { Observable, combineLatest, of, from, firstValueFrom, skip } from 'rxjs';
+import { Observable, combineLatest, of, from, firstValueFrom } from 'rxjs';
 import { map, filter, startWith, switchMap, distinctUntilChanged, debounceTime } from 'rxjs/operators';
 import { AuthService } from './services/auth';
 import { User } from '@angular/fire/auth';
@@ -31,6 +31,7 @@ import {
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { Capacitor } from '@capacitor/core';
+import { Camera } from '@capacitor/camera';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Keyboard } from '@capacitor/keyboard';
 import Swal from 'sweetalert2';
@@ -58,6 +59,7 @@ import { CurrentSpaceTitleComponent } from './components/common/current-space-ti
 export class App implements OnInit {
   title = 'SpendWise';
   showNavbar$: Observable<boolean>;
+  pageTitle$!: Observable<string>;
   currentUser$: Observable<User | null>;
   userDisplayName$: Observable<string | null>;
   isGroupAdmin$: Observable<boolean>;
@@ -189,6 +191,40 @@ export class App implements OnInit {
 
     this.showNavbar$ = combineLatest([isLoggedIn$, isSpecialRoute$]).pipe(
       map(([isLoggedIn, isSpecialRoute]) => isLoggedIn && !isSpecialRoute)
+    );
+
+    // Mobile topbar page title (short nav labels)
+    const navTitleMap: Record<string, string> = {
+      '/dashboard':          'NAV_DASHBOARD',
+      '/expense':            'NAV_EXPENSE',
+      '/expense-overview':   'NAV_EXPENSE_OVERVIEW',
+      '/budget':             'NAV_BUDGET',
+      '/profit':             'NAV_PROFIT',
+      '/category':           'NAV_CATEGORY',
+      '/member-management':  'NAV_MEMBER_MANAGEMENT',
+      '/profile':            'NAV_PROFILE_AND_SETTING',
+      '/onboarding':         'SPACE_CREATE_OR_JOIN',
+      '/privacy-policy':     'NAV_PRIVACY_POLICY',
+      '/notification-admin': 'NOTI_ADMIN_TITLE',
+    };
+
+    const currentUrl$ = this.router.events.pipe(
+      filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+      map((e: NavigationEnd) => e.urlAfterRedirects.split('?')[0]),
+      startWith(this.router.url.split('?')[0])
+    );
+
+    this.pageTitle$ = combineLatest([
+      currentUrl$,
+      this.translate.onLangChange.pipe(startWith(null)),
+    ]).pipe(
+      map(([url]) => {
+        const base = '/' + (url.split('/')[1] || '');
+        const key = navTitleMap[base] || 'APP_NAME';
+        const translated = this.translate.instant(key);
+        return translated && translated !== key ? translated : key;
+      }),
+      distinctUntilChanged()
     );
 
     // Close mobile menu on route change
@@ -395,9 +431,8 @@ export class App implements OnInit {
   async ngOnInit(): Promise<void> {
     if (Capacitor.isNativePlatform()) {
       try {
-        await StatusBar.setOverlaysWebView({ overlay: false });
+        await StatusBar.setOverlaysWebView({ overlay: true });
         await StatusBar.setStyle({ style: Style.Dark });
-        await StatusBar.setBackgroundColor({ color: '#0F2340' });
         await StatusBar.show();
 
       } catch (e) {
@@ -405,6 +440,8 @@ export class App implements OnInit {
       } finally {
         await SplashScreen.hide();
       }
+
+      Camera.requestPermissions({ permissions: ['camera', 'photos'] }).catch(() => {});
     }
     this.initTheme();
     this.initKeyboardDetection();
@@ -509,7 +546,6 @@ export class App implements OnInit {
     const bgColor = isDark ? '#07162f' : '#ffffff';
     const titleColor = isDark ? '#ffffff' : '#111827';
     const textColor = isDark ? '#9ca3af' : '#4b5563';
-    const borderColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
 
     const wifiIcon = `
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64"
@@ -598,13 +634,17 @@ export class App implements OnInit {
   onDrawerTouchMove(event: TouchEvent): void {
     if (!this.drawerSwiping) return;
     const deltaY = event.touches[0].clientY - this.drawerSwipeStartY;
-    if (deltaY > 0) {
+    const drawer = document.querySelector('.mob-drawer') as HTMLElement;
+    if (!drawer) return;
+
+    // drawer ထိပ်ဆုံး (scrollTop===0) မှာသာ အောက်ဆွဲရင် drag-to-close လုပ်မည်
+    // drawer ထဲ scroll အကြောင်းအရာ ရှိနေလျှင် native scroll ကို အနှောင့်မဖြတ်
+    if (deltaY > 0 && drawer.scrollTop <= 0) {
       this.drawerSwipeDelta = deltaY;
-      const drawer = document.querySelector('.mob-drawer') as HTMLElement;
-      if (drawer) {
-        drawer.style.transform = `translateY(${deltaY}px)`;
-        drawer.style.transition = 'none';
-      }
+      drawer.style.transform = `translateY(${deltaY}px)`;
+      drawer.style.transition = 'none';
+    } else {
+      this.drawerSwipeDelta = 0;
     }
   }
 
@@ -616,6 +656,7 @@ export class App implements OnInit {
       if (this.drawerSwipeDelta > 120) {
         drawer.style.transform = '';
         this.mobileMenuOpen = false;
+        document.body.classList.remove('mob-drawer-open');
       } else {
         drawer.style.transform = 'translateY(0)';
       }
@@ -625,6 +666,7 @@ export class App implements OnInit {
 
   toggleMobileMenu(): void {
     this.mobileMenuOpen = !this.mobileMenuOpen;
+    document.body.classList.toggle('mob-drawer-open', this.mobileMenuOpen);
   }
 
   toggleLanguage(): void {
@@ -671,15 +713,13 @@ export class App implements OnInit {
       space.type === 'personal' ||
       space.name === 'My Personal';
 
-    if (isPersonal) {
-      return this.translate.instant('SPACE_MY_PERSONAL');
-    }
-
-    return space.name;
+    const name = isPersonal ? this.translate.instant('SPACE_MY_PERSONAL') : space.name;
+    return name.length > 20 ? name.slice(0, 20) + '...' : name;
   }
 
   closeNavbarMenu(): void {
     this.mobileMenuOpen = false;
+    document.body.classList.remove('mob-drawer-open');
     const drawer = document.querySelector('.mob-drawer') as HTMLElement;
     if (drawer) {
       drawer.style.transform = '';

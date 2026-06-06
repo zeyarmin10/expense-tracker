@@ -9,6 +9,12 @@
   color: var(--text);
 }
 
+@media (max-width: 991px) {
+  .pp-wrapper {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 4.5rem);
+  }
+}
+
 .pp-container {
   max-width: 660px;
   margin: 0 auto;

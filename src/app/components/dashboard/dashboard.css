@@ -395,6 +395,10 @@ body.light-mode .dash-loading-cover {
 }
 
 @media (max-width: 991px) {
+  .dash-wrapper {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 4.5rem);
+  }
+
   .dash-chart-container {
     min-height: 260px;
   }

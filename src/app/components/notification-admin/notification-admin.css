@@ -9,6 +9,12 @@
   padding: 2rem 1rem 6rem;
 }
 
+@media (max-width: 991px) {
+  .noti-admin-wrapper {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 4.5rem);
+  }
+}
+
 .noti-admin-container {
   width: min(680px, 100%);
   margin: 0 auto;

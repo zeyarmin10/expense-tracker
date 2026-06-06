@@ -13,6 +13,7 @@ import { DataManagerService, IGroupDetails, IGroupMemberDetails } from '../../se
 import { InvitationService } from '../../services/invitation.service';
 import Swal from 'sweetalert2';
 import { getActiveGroupId } from '../../services/user-data';
+import { Router } from '@angular/router';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
 
 const Toast = Swal.mixin({
@@ -40,6 +41,7 @@ export class MemberManagementComponent implements OnInit {
   private dataManager = inject(DataManagerService);
   private invitationService = inject(InvitationService);
   private translate = inject(TranslateService);
+  private router = inject(Router);
 
   // Font Awesome Icons
   faUserPlus = faUserPlus;
@@ -94,7 +96,13 @@ export class MemberManagementComponent implements OnInit {
     );
   }
 
-  ngOnInit(): void { }
+  ngOnInit(): void {
+    this.authService.userProfile$.subscribe(profile => {
+      if (profile?.currentSpaceType === 'group' && profile?.currentSpaceRole === 'member') {
+        this.router.navigate(['/dashboard']);
+      }
+    });
+  }
 
   isValidEmail(email: string): boolean {
     const re = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;

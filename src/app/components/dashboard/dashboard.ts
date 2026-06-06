@@ -156,6 +156,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   hasCategoryDataForChart: boolean = false;
   currentSummaryDateRange$: Observable<string> | undefined;
   userProfile: UserProfile | null = null;
+  private activeSpaceModeKey: string | null = null;
   get canManageBudgetActions(): boolean { return canManageSharedSpace(this.userProfile); }
 
   constructor(private cdr: ChangeDetectorRef, private datePipe: DatePipe) {
@@ -210,6 +211,11 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       )
       .subscribe((userProfile) => {
         this.userProfile = userProfile;
+        const key = this.getSpaceModeKey(userProfile);
+        if (key !== this.activeSpaceModeKey) {
+          this.activeSpaceModeKey = key;
+          this.refresh$.next(this.refresh$.getValue() + 1);
+        }
         this.setDashboardDateRange(userProfile);
         this.expenseFilterForm.patchValue({
           startDate: this._startDate$.getValue(),
@@ -217,6 +223,13 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         });
         this.updateSummaryTitle(userProfile);
       });
+  }
+
+  private getSpaceModeKey(profile: UserProfile | null): string {
+    if (!profile) return 'none';
+    const type = profile.currentSpaceType || profile.accountType || 'personal';
+    const id = profile.currentSpaceId || profile.groupId || profile.personalSpaceId || profile.uid;
+    return `${type}:${id}`;
   }
 
   private setDashboardDateRange(userProfile: UserProfile): void {

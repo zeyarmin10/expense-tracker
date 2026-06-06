@@ -137,6 +137,7 @@ export class Profit implements OnInit, OnDestroy {
   // --- Form and Data Observables ---
   incomeForm: FormGroup;
   userProfile: UserProfile | null = null;
+  private activeSpaceModeKey: string | null = null;
   availableCurrencies = AVAILABLE_CURRENCIES;
   public userRole: string | null = null;
 
@@ -420,6 +421,12 @@ export class Profit implements OnInit, OnDestroy {
     const profileSubscription = this.authService.userProfile$.subscribe((profile) => {
         this.userProfile = profile;
         if(profile) {
+          const key = this.getSpaceModeKey(profile);
+          if (key !== this.activeSpaceModeKey) {
+            this.activeSpaceModeKey = key;
+            this.refreshIncomes$.next();
+            this.refreshBudgets$.next();
+          }
           const defaultCurrency = profile?.currency || 'MMK';
           this.incomeForm.get('currency')?.setValue(defaultCurrency);
           this.resetForm();
@@ -612,6 +619,13 @@ export class Profit implements OnInit, OnDestroy {
   }
 
   // --- UI/State Management ---
+
+  private getSpaceModeKey(profile: UserProfile | null): string {
+    if (!profile) return 'none';
+    const type = profile.currentSpaceType || profile.accountType || 'personal';
+    const id = profile.currentSpaceId || profile.groupId || profile.personalSpaceId || profile.uid;
+    return `${type}:${id}`;
+  }
 
   resetForm(): void {
     const defaultCurrency = this.userProfile?.currency || 'MMK';

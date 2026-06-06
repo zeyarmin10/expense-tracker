@@ -200,6 +200,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
   private _selectedDateRange$ = new BehaviorSubject<string>('currentMonth');
 
   private authService = inject(AuthService);
+  private activeSpaceModeKey: string | null = null;
   userProfile$: Observable<UserProfile | null> = of(null);
 
   public selectedDateFilter: string = 'currentMonth';
@@ -744,6 +745,13 @@ export class BudgetComponent implements OnInit, OnDestroy {
     const profileSubscription = this.userProfile$.subscribe((profile) => {
       this.userProfile = profile;
       if (profile) {
+        const key = this.getSpaceModeKey(profile);
+        if (key !== this.activeSpaceModeKey) {
+          this.activeSpaceModeKey = key;
+          this.resetForm();
+          this.isBudgetFormCollapsed = true;
+          this.refreshBudgets$.next();
+        }
         this.setInitialDateFilter(profile);
 
         const defaultCurrency = profile.currency || 'MMK';
@@ -985,6 +993,13 @@ export class BudgetComponent implements OnInit, OnDestroy {
             }
           });
     }
+  }
+
+  private getSpaceModeKey(profile: UserProfile | null): string {
+    if (!profile) return 'none';
+    const type = profile.currentSpaceType || profile.accountType || 'personal';
+    const id = profile.currentSpaceId || profile.groupId || profile.personalSpaceId || profile.uid;
+    return `${type}:${id}`;
   }
 
   resetForm(): void {

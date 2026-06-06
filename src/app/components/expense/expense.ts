@@ -4,6 +4,7 @@ import {
   OnInit,
   inject,
   ViewChild,
+  ElementRef,
 } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import {
@@ -24,6 +25,8 @@ import {
   switchMap,
   firstValueFrom,
 } from 'rxjs';
+import { Camera } from '@capacitor/camera';
+import { Capacitor } from '@capacitor/core';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import Swal from 'sweetalert2';
 
@@ -51,7 +54,9 @@ import {
   faReceipt,
   faUpload,
   faImage,
+  faImages,
   faEye,
+  faCamera,
 } from '@fortawesome/free-solid-svg-icons';
 import { faTrashCan } from '@fortawesome/free-regular-svg-icons';
 
@@ -111,6 +116,7 @@ interface ExpenseCategoryGroup {
 export class Expense implements OnInit, OnDestroy {
   @ViewChild(CategoryModalComponent) categoryModal!: CategoryModalComponent;
   @ViewChild(LightboxComponent) lightbox!: LightboxComponent;
+  @ViewChild('galleryFileInput') galleryFileInput!: ElementRef<HTMLInputElement>;
 
   newExpenseForm: FormGroup;
   voucherForm: FormGroup;
@@ -223,7 +229,9 @@ export class Expense implements OnInit, OnDestroy {
   faReceipt = faReceipt;
   faUpload = faUpload;
   faImage = faImage;
+  faImages = faImages;
   faEye = faEye;
+  faCamera = faCamera;
 
   userProfile: UserProfile | null = null;
 
@@ -294,6 +302,12 @@ export class Expense implements OnInit, OnDestroy {
       if (spaceModeKey !== this.activeSpaceModeKey) {
         this.activeSpaceModeKey = spaceModeKey;
         this.setQuickMode(isPersonalContext(profile));
+        this._activeCurrencyFilter$.next(null);
+        this._activeCategoryFilter$.next(null);
+        this.clearAllVoucherFiles();
+        this.isVoucherPanelOpen = false;
+        this.refreshExpenses$.next();
+        this.refreshVouchers$.next();
       }
     });
     this.loadCategories();
@@ -560,8 +574,8 @@ export class Expense implements OnInit, OnDestroy {
     }
   }
 
-  canDeleteVoucher(voucher: ServiceIVoucher): boolean {
-    return this.canManageExpenseRecords || voucher.userId === this.userProfile?.uid;
+  canDeleteVoucher(_voucher: ServiceIVoucher): boolean {
+    return this.canManageExpenseRecords;
   }
 
   onDeleteVoucher(voucher: ServiceIVoucher): void {
@@ -730,6 +744,52 @@ export class Expense implements OnInit, OnDestroy {
   filterByCategory(category: string): void {
     this._activeCurrencyFilter$.next(null);
     this._activeCategoryFilter$.next(category);
+  }
+
+  async openCamera(): Promise<void> {
+    try {
+      if (Capacitor.isNativePlatform()) {
+        const perms = await Camera.requestPermissions({ permissions: ['camera'] });
+        if (perms.camera === 'denied') {
+          Toast.fire({ icon: 'error', title: this.translate.instant('PERMISSION_CAMERA_DENIED') });
+          return;
+        }
+      }
+      const result = await Camera.takePhoto({ quality: 85 });
+      if (result.webPath) {
+        await this.appendFromWebPath(result.webPath, `camera_${Date.now()}.jpg`);
+      }
+    } catch (e: any) {
+      if (!e?.message?.toLowerCase().includes('cancel')) {
+        Toast.fire({ icon: 'error', title: e?.message || 'Camera error' });
+      }
+    }
+  }
+
+  openGallery(): void {
+    this.galleryFileInput.nativeElement.value = '';
+    this.galleryFileInput.nativeElement.click();
+  }
+
+  private async appendFromWebPath(webPath: string, filename: string): Promise<void> {
+    if (this.selectedVoucherFiles.length >= this.MAX_VOUCHER_IMAGES) {
+      Toast.fire({ icon: 'warning', title: this.translate.instant('VOUCHER_ERROR_MAX_IMAGES', { max: this.MAX_VOUCHER_IMAGES }) });
+      return;
+    }
+    const response = await fetch(webPath);
+    const blob = await response.blob();
+    const file = new File([blob], filename, { type: blob.type || 'image/jpeg' });
+    this.selectedVoucherFiles.push(file);
+    this.voucherPreviewUrls.push(URL.createObjectURL(file));
+    this.voucherForm.patchValue({ imageFile: 'set' });
+  }
+
+  getCategoryHue(category: string): number {
+    let hash = 0;
+    for (let i = 0; i < category.length; i++) {
+      hash = (category.charCodeAt(i) + ((hash << 5) - hash)) | 0;
+    }
+    return Math.abs(hash) % 360;
   }
 
   // ── Swal-based Edit ────────────────────────────────────────────────────────

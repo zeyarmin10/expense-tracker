@@ -12,6 +12,12 @@
   max-width: 100vw;
 }
 
+@media (max-width: 991px) {
+  .expense-wrapper {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 4.5rem);
+  }
+}
+
 .expense-container {
   max-width: 860px;
   margin: 0 auto;

@@ -144,7 +144,14 @@
   </div>
 </nav>
 
-<app-current-space-title *ngIf="showNavbar$ | async"></app-current-space-title>
+<!-- ═══════════════════════════════════════════
+     MOBILE TOP TITLE BAR
+     ═══════════════════════════════════════════ -->
+<div class="mob-topbar" *ngIf="showNavbar$ | async">
+  <img src="/images/SpendWise-Logo.png" class="mob-topbar-logo" alt="" aria-hidden="true" />
+  <span class="mob-topbar-title">{{ pageTitle$ | async }}</span>
+  <app-current-space-title [inline]="true"></app-current-space-title>
+</div>
 
 <!-- ═══════════════════════════════════════════
      MOBILE BOTTOM NAVIGATION BAR

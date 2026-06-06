@@ -14,6 +14,12 @@
   color: var(--text);
 }
 
+@media (max-width: 991px) {
+  .cat-wrapper {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 4.5rem);
+  }
+}
+
 .cat-container {
   max-width: 600px;
   margin: 0 auto;

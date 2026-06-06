@@ -360,8 +360,9 @@
             </label>
           </div>
 
+          <!-- Hidden gallery file input -->
           <input
-            #voucherFileInput
+            #galleryFileInput
             type="file"
             accept="image/*"
             multiple
@@ -369,17 +370,19 @@
             (change)="onVoucherFilesSelected($event)"
           />
 
-          <!-- Empty state -->
-          <button
-            *ngIf="selectedVoucherFiles.length === 0"
-            type="button"
-            class="exp-upload-empty"
-            (click)="voucherFileInput.click()"
-          >
-            <span class="exp-upload-icon"><fa-icon [icon]="faImage"></fa-icon></span>
-            <span class="exp-upload-title">{{ "VOUCHER_IMAGE_LABEL" | translate }}</span>
-            <span class="exp-upload-hint">{{ "VOUCHER_IMAGE_COUNT_HINT" | translate: { max: MAX_VOUCHER_IMAGES } }}</span>
-          </button>
+          <!-- Empty state — two action buttons -->
+          <div *ngIf="selectedVoucherFiles.length === 0" class="exp-upload-actions">
+            <button type="button" class="exp-upload-btn exp-upload-btn-camera"
+              (click)="openCamera()">
+              <span class="exp-upload-btn-icon"><fa-icon [icon]="faCamera"></fa-icon></span>
+              <span class="exp-upload-btn-label">{{ "VOUCHER_CAMERA" | translate }}</span>
+            </button>
+            <button type="button" class="exp-upload-btn exp-upload-btn-gallery"
+              (click)="openGallery()">
+              <span class="exp-upload-btn-icon"><fa-icon [icon]="faImages"></fa-icon></span>
+              <span class="exp-upload-btn-label">{{ "VOUCHER_GALLERY" | translate }}</span>
+            </button>
+          </div>
 
           <!-- Image grid -->
           <div class="exp-image-grid" *ngIf="selectedVoucherFiles.length > 0">
@@ -398,15 +401,19 @@
                 <fa-icon [icon]="faTimes"></fa-icon>
               </button>
             </div>
-            <button
-              *ngIf="selectedVoucherFiles.length < MAX_VOUCHER_IMAGES"
-              type="button"
-              class="exp-image-add-more"
-              (click)="voucherFileInput.click()"
-              [title]="'VOUCHER_ADD_MORE_IMAGES' | translate"
-            >
-              <fa-icon [icon]="faPlus"></fa-icon>
-            </button>
+            <div *ngIf="selectedVoucherFiles.length < MAX_VOUCHER_IMAGES"
+              class="exp-image-add-more-wrap">
+              <button type="button" class="exp-image-add-more exp-image-add-camera"
+                (click)="openCamera()"
+                [title]="'VOUCHER_CAMERA' | translate">
+                <fa-icon [icon]="faCamera"></fa-icon>
+              </button>
+              <button type="button" class="exp-image-add-more exp-image-add-gallery"
+                (click)="openGallery()"
+                [title]="'VOUCHER_GALLERY' | translate">
+                <fa-icon [icon]="faImages"></fa-icon>
+              </button>
+            </div>
           </div>
 
           <!-- Counter + clear -->
@@ -632,6 +639,7 @@
           <section
             *ngFor="let group of categoryGroups"
             class="exp-category-group"
+            [style.--cat-hue]="getCategoryHue(group.category)"
           >
             <div class="exp-category-group-header">
               <button
@@ -639,7 +647,7 @@
                 class="exp-category-title-chip"
                 (click)="filterByCategory(group.category)"
               >
-                {{ group.category }}
+                {{ group.category.length > 20 ? group.category.substring(0, 20) + '…' : group.category }}
               </button>
               <span class="exp-category-count">
                 {{ "EXPENSE_GROUP_COUNT" | translate: { count: group.count } }}

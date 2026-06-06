@@ -163,6 +163,22 @@ body {
 }
 
 
+/* ── SweetAlert2 safe-area insets (edge-to-edge Android / notch) ── */
+.swal2-container {
+  padding-top: calc(env(safe-area-inset-top, 0px) + 1rem) !important;
+  padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+  padding-left: calc(env(safe-area-inset-left, 0px) + 1rem) !important;
+  padding-right: calc(env(safe-area-inset-right, 0px) + 1rem) !important;
+}
+
+/* Keep toasts (top-end) compact — less padding than regular modals */
+.swal2-container.swal2-top-end,
+.swal2-container.swal2-top-right {
+  padding-top: calc(env(safe-area-inset-top, 0px) + 0.5rem) !important;
+  padding-left: env(safe-area-inset-left, 0px) !important;
+  padding-right: calc(env(safe-area-inset-right, 0px) + 0.75rem) !important;
+}
+
 /* ── SweetAlert2 Dark Theme Override ── */
 .swal2-popup {
   --swal-alert-color: var(--accent);

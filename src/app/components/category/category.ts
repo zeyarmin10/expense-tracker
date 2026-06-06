@@ -14,6 +14,8 @@ import {
 } from '@angular/forms';
 import { ServiceICategory, CategoryService } from '../../services/category';
 import { Observable, BehaviorSubject, firstValueFrom } from 'rxjs';
+import { AuthService } from '../../services/auth';
+import { UserProfile } from '../../services/user-data';
 
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import {
@@ -70,6 +72,8 @@ export class Category implements OnInit {
   categoryService = inject(CategoryService);
   translateService = inject(TranslateService);
   private cdr = inject(ChangeDetectorRef);
+  private authService = inject(AuthService);
+  private activeSpaceModeKey: string | null = null;
 
   faPlus = faPlus;
   faEdit = faEdit;
@@ -88,6 +92,23 @@ export class Category implements OnInit {
 
   ngOnInit(): void {
     this.loadCategories();
+    this.authService.userProfile$.subscribe((profile) => {
+      const key = this.getSpaceModeKey(profile);
+      if (key !== this.activeSpaceModeKey) {
+        this.activeSpaceModeKey = key;
+        this.editingCategoryId = null;
+        this.editingCategoryFormControl = null;
+        this.addCategoryForm.reset();
+        this.loadCategories();
+      }
+    });
+  }
+
+  private getSpaceModeKey(profile: UserProfile | null): string {
+    if (!profile) return 'none';
+    const type = profile.currentSpaceType || profile.accountType || 'personal';
+    const id = profile.currentSpaceId || profile.groupId || profile.personalSpaceId || profile.uid;
+    return `${type}:${id}`;
   }
 
   public async loadCategories(): Promise<void> {

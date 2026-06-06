@@ -16,6 +16,12 @@
   color: var(--text);
 }
 
+@media (max-width: 991px) {
+  .exp-wrapper {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 4.5rem);
+  }
+}
+
 .exp-container {
   max-width: 760px;
   margin: 0 auto;
@@ -165,11 +171,6 @@
     justify-content: flex-end;
   }
 
-  .exp-category-totals {
-    width: 100%;
-    justify-content: flex-start;
-    margin-left: 0;
-  }
 }
 
 .exp-field {
@@ -307,27 +308,60 @@
 }
 
 /* ── Multi-image upload ── */
-.exp-upload-empty {
-  width: 100%;
-  min-height: 90px;
-  border: 1.5px dashed rgba(96, 165, 250, 0.35);
-  border-radius: 10px;
-  background: rgba(96, 165, 250, 0.06);
-  color: var(--info);
-  cursor: pointer;
+.exp-upload-actions {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: 0.3rem;
-  padding: 1.1rem;
-  text-align: center;
-  transition: border-color 0.15s, background 0.15s;
+  gap: 0.6rem;
 }
 
-.exp-upload-empty:hover {
+.exp-upload-btn {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.exp-upload-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 1rem 0.5rem;
+  border-radius: 12px;
+  border: 1.5px dashed rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.03);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.exp-upload-btn-camera {
+  border-color: rgba(52, 211, 153, 0.35);
+  background: rgba(52, 211, 153, 0.05);
+  color: rgb(52, 211, 153);
+}
+.exp-upload-btn-camera:hover {
+  border-color: rgba(52, 211, 153, 0.7);
+  background: rgba(52, 211, 153, 0.1);
+}
+
+.exp-upload-btn-gallery {
+  border-color: rgba(96, 165, 250, 0.35);
+  background: rgba(96, 165, 250, 0.05);
+  color: var(--info);
+}
+.exp-upload-btn-gallery:hover {
   border-color: var(--info);
-  background: rgba(96, 165, 250, 0.11);
+  background: rgba(96, 165, 250, 0.1);
+}
+
+.exp-upload-btn-icon {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.exp-upload-btn-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
 }
 
 .exp-upload-hint {
@@ -386,21 +420,40 @@
   background: var(--accent-2, #f87171);
 }
 
-.exp-image-add-more {
+.exp-image-add-more-wrap {
   aspect-ratio: 1;
-  border-radius: 8px;
-  border: 1.5px dashed rgba(96, 165, 250, 0.35);
-  background: rgba(96, 165, 250, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.exp-image-add-more {
+  flex: 1;
+  border-radius: 6px;
+  border: 1.5px dashed rgba(96, 165, 250, 0.3);
+  background: rgba(96, 165, 250, 0.05);
   color: var(--info);
-  font-size: 1.1rem;
+  font-size: 0.85rem;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: border-color 0.15s, background 0.15s;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.exp-image-add-more:hover {
+.exp-image-add-camera {
+  border-color: rgba(52, 211, 153, 0.3);
+  background: rgba(52, 211, 153, 0.05);
+  color: rgb(52, 211, 153);
+}
+
+.exp-image-add-camera:hover {
+  border-color: rgba(52, 211, 153, 0.7);
+  background: rgba(52, 211, 153, 0.12);
+}
+
+.exp-image-add-gallery:hover {
   border-color: var(--info);
   background: rgba(96, 165, 250, 0.13);
 }
@@ -754,6 +807,7 @@ a.exp-icon-btn {
 
 .exp-category-group {
   border-bottom: 1px solid var(--border);
+  border-left: 2.5px solid hsla(var(--cat-hue), 70%, 65%, 0.55);
 }
 
 .exp-category-group:last-child {
@@ -763,32 +817,35 @@ a.exp-icon-btn {
 .exp-category-group-header {
   display: flex;
   align-items: center;
-  gap: 0.55rem;
-  flex-wrap: wrap;
-  padding: 0.85rem 1.4rem;
-  background: rgba(255, 255, 255, 0.02);
+  gap: 0.4rem;
+  flex-wrap: nowrap;
+  padding: 0.55rem 1rem;
+  background: hsla(var(--cat-hue), 65%, 55%, 0.06);
+  min-width: 0;
 }
 
 .exp-category-title-chip {
-  max-width: 100%;
-  border: 1px solid rgba(96, 165, 250, 0.3);
-  background: rgba(96, 165, 250, 0.09);
-  color: var(--info);
+  flex-shrink: 0;
+  border: 1px solid hsla(var(--cat-hue), 70%, 65%, 0.4);
+  background: hsla(var(--cat-hue), 70%, 65%, 0.12);
+  color: hsl(var(--cat-hue), 80%, 72%);
   border-radius: 999px;
-  padding: 0.32rem 0.75rem;
-  font-size: 0.78rem;
+  padding: 0.22rem 0.6rem;
+  font-size: 0.72rem;
   font-weight: 800;
   cursor: pointer;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
 }
 
 .exp-category-title-chip:hover {
-  border-color: var(--info);
+  border-color: hsla(var(--cat-hue), 70%, 65%, 0.75);
 }
 
 .exp-category-count {
   color: var(--text-muted);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .exp-category-totals {
@@ -796,8 +853,8 @@ a.exp-icon-btn {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 0.4rem;
-  flex-wrap: wrap;
+  gap: 0.3rem;
+  flex-shrink: 0;
 }
 
 .exp-category-total {
@@ -805,9 +862,9 @@ a.exp-icon-btn {
   border: 1px solid rgba(244, 177, 26, 0.25);
   background: rgba(244, 177, 26, 0.08);
   color: var(--warning);
-  font-size: 0.76rem;
+  font-size: 0.7rem;
   font-weight: 700;
-  padding: 0.25rem 0.6rem;
+  padding: 0.2rem 0.5rem;
   white-space: nowrap;
 }
 
@@ -1000,7 +1057,7 @@ a.exp-icon-btn {
 .exp-voucher-thumb {
   width: 72px;
   height: 72px;
-  border-radius: 8px;
+  border-radius: 0;
   overflow: hidden;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--border);

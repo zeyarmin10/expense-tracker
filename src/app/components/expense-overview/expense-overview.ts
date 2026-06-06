@@ -102,6 +102,7 @@ export class ExpenseOverview implements OnInit {
   currentPeriodLabel: string = '';
 
   public _selectedCategory$ = new BehaviorSubject<string>('');
+  private activeSpaceModeKey: string | null = null;
 
   // --- Pie Chart Properties ---
   public pieChartData: ChartData<'pie'> = {
@@ -137,13 +138,18 @@ export class ExpenseOverview implements OnInit {
     // Use authService.userProfile$ which correctly merges group settings.
     this.userProfile$ = this.authService.userProfile$;
 
-    // Subscribe to the definitive user profile to set the initial date filter.
     this.userProfile$.subscribe((profile) => {
       if (profile) {
+        const key = this.getSpaceModeKey(profile);
+        if (key !== this.activeSpaceModeKey) {
+          this.activeSpaceModeKey = key;
+          this.searchTerm = '';
+          this.searchFilter$.next('');
+          this._selectedCategory$.next('');
+        }
         this.setInitialDateFilter(profile);
         this.isGroupUser = profile?.accountType === 'group';
       } else {
-        // If there's no profile, fall back to a default.
         this.setDateFilter('currentMonth');
       }
     });
@@ -219,6 +225,13 @@ export class ExpenseOverview implements OnInit {
   // --- Methods for Filtering and Calculations ---
   dateFilter$ = new BehaviorSubject<DateRange>({ start: '', end: '' });
   searchFilter$ = new BehaviorSubject<string>('');
+
+  private getSpaceModeKey(profile: UserProfile | null): string {
+    if (!profile) return 'none';
+    const type = profile.currentSpaceType || profile.accountType || 'personal';
+    const id = profile.currentSpaceId || profile.groupId || profile.personalSpaceId || profile.uid;
+    return `${type}:${id}`;
+  }
 
   setInitialDateFilter(profile: UserProfile | null): void {
     const budgetPeriod = profile?.budgetPeriod;

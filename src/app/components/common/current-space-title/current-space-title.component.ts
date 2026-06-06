@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, HostListener, OnDestroy, OnInit, Output, inject } from '@angular/core';
+import { Component, EventEmitter, HostBinding, HostListener, Input, OnDestroy, OnInit, Output, inject } from '@angular/core';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faCheck, faUser } from '@fortawesome/free-solid-svg-icons';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -343,6 +343,37 @@ type SpaceImageSource = {
       color: var(--accent, #0b74ff);
       text-shadow: 0 1px 3px rgba(255, 255, 255, 0.6);
     }
+
+    /* ── Inline mode: embedded inside topbar ── */
+    :host.cst-inline {
+      position: relative;
+      top: auto;
+      right: auto;
+      z-index: auto;
+      width: auto;
+      max-width: none;
+      pointer-events: auto;
+      display: block;
+    }
+
+    :host.cst-inline .space-title-switcher {
+      position: relative;
+      top: auto;
+      right: auto;
+    }
+
+    :host.cst-inline .space-title-menu {
+      position: absolute;
+      top: calc(100% + 0.4rem);
+      right: 0;
+      left: auto;
+    }
+
+    @media (min-width: 992px) {
+      :host.cst-inline {
+        display: none;
+      }
+    }
   `],
 })
 export class CurrentSpaceTitleComponent implements OnInit, OnDestroy {
@@ -354,6 +385,9 @@ export class CurrentSpaceTitleComponent implements OnInit, OnDestroy {
 
   readonly faCheck = faCheck;
   readonly faUser = faUser;
+
+  @Input() inline = false;
+  @HostBinding('class.cst-inline') get isInline() { return this.inline; }
 
   @Output() spaceSwitched = new EventEmitter<void>();
 
