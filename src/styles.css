@@ -535,18 +535,142 @@ select.prof-input {
   justify-content: center;
 }
 
-/* Avatar picker SweetAlert — icon-only square buttons */
-.swal2-avatar-btn {
-  width: 80px !important;
-  height: 80px !important;
-  min-width: unset !important;
-  border-radius: 18px !important;
-  padding: 0 !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
+/* Avatar picker SweetAlert — voucher-style card buttons */
+.swal-avatar-pick-popup .swal2-html-container {
+  margin: 0.5rem 0 0 !important;
+  padding: 0 0.75rem 0.5rem !important;
+  overflow: visible !important;
 }
-.swal2-avatar-btn svg {
-  width: 2.2em !important;
-  height: 2.2em !important;
+
+.swal-avatar-pick-row {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.swal-avatar-pick-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  padding: 1.1rem 0.5rem;
+  border-radius: 14px;
+  border: 1.5px dashed rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.03);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.swal-avatar-pick-camera {
+  border-color: rgba(52,211,153,0.4);
+  background: rgba(52,211,153,0.06);
+  color: rgb(52,211,153);
+}
+.swal-avatar-pick-camera:active {
+  border-color: rgba(52,211,153,0.8);
+  background: rgba(52,211,153,0.12);
+}
+
+.swal-avatar-pick-gallery {
+  border-color: rgba(96,165,250,0.4);
+  background: rgba(96,165,250,0.06);
+  color: rgb(96,165,250);
+}
+.swal-avatar-pick-gallery:active {
+  border-color: rgba(96,165,250,0.8);
+  background: rgba(96,165,250,0.12);
+}
+
+.swal-avatar-pick-icon {
+  font-size: 1.7rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.swal-avatar-pick-icon svg {
+  width: 1.7rem;
+  height: 1.7rem;
+}
+
+.swal-avatar-pick-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.swal-avatar-pick-cancel {
+  width: 100%;
+  padding: 0.6rem;
+  border-radius: 10px;
+  border: 1px solid var(--border, rgba(255,255,255,0.1));
+  background: transparent;
+  color: var(--text-muted, #9ca3af);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s;
+}
+.swal-avatar-pick-cancel:active {
+  background: rgba(255,255,255,0.05);
+}
+
+body.light-mode .swal-avatar-pick-btn {
+  background: rgba(0,0,0,0.02);
+  border-color: rgba(0,0,0,0.1);
+}
+body.light-mode .swal-avatar-pick-camera {
+  border-color: rgba(16,185,129,0.35);
+  background: rgba(16,185,129,0.05);
+  color: #059669;
+}
+body.light-mode .swal-avatar-pick-gallery {
+  border-color: rgba(59,130,246,0.35);
+  background: rgba(59,130,246,0.05);
+  color: #2563eb;
+}
+body.light-mode .swal-avatar-pick-cancel {
+  border-color: rgba(0,0,0,0.12);
+  color: #6b7280;
+}
+
+.swal-avatar-pick-remove {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.6rem;
+  border-radius: 10px;
+  border: 1px solid rgba(239,68,68,0.3);
+  background: rgba(239,68,68,0.06);
+  color: rgb(239,68,68);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 0.5rem;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s;
+}
+.swal-avatar-pick-remove:active {
+  background: rgba(239,68,68,0.14);
+}
+.swal-avatar-remove-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.swal-avatar-remove-icon svg {
+  width: 0.85rem;
+  height: 0.85rem;
+  fill: currentColor;
+}
+body.light-mode .swal-avatar-pick-remove {
+  border-color: rgba(220,38,38,0.28);
+  background: rgba(220,38,38,0.05);
+  color: #dc2626;
 }

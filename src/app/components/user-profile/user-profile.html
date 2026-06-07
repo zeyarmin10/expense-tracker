@@ -18,19 +18,11 @@
             (change)="onAvatarFileSelected($event)" />
 
           <div class="prof-avatar-wrap" [class.prof-avatar-uploading]="isUploadingAvatar">
-            <!-- Avatar image or fallback -->
-            <ng-container *ngIf="userPhotoUrl$ | async as photoUrl; else defaultIcon">
-              <img [src]="photoUrl" alt="User Photo" class="prof-avatar-img" (error)="onImageError()"
-                *ngIf="!imageLoadError">
-              <div class="prof-avatar-fallback" *ngIf="imageLoadError">
-                <fa-icon [icon]="faUserCircle"></fa-icon>
-              </div>
-            </ng-container>
-            <ng-template #defaultIcon>
-              <div class="prof-avatar-fallback">
-                <fa-icon [icon]="faUserCircle"></fa-icon>
-              </div>
-            </ng-template>
+            <app-user-avatar
+              [name]="userProfileForm.get('displayName')?.value || 'User'"
+              [photoUrl]="userPhotoUrl$ | async"
+              [size]="88">
+            </app-user-avatar>
 
             <!-- Upload spinner overlay -->
             <div class="prof-avatar-spinner" *ngIf="isUploadingAvatar">

@@ -30,6 +30,7 @@ import { AppTheme, ThemeService } from '../../services/theme.service';
 import { NotificationService, NotificationSettingsState } from '../../services/notification.service';
 import Swal from 'sweetalert2';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
+import { UserAvatarComponent } from '../common/user-avatar/user-avatar.component';
 
 export const AVAILABLE_BUDGET_PERIODS = [
   { code: null, nameKey: 'BUDGET_PERIOD.NONE' },
@@ -62,6 +63,7 @@ const Toast = Swal.mixin({
     FormsModule,
     CustomBudgetPeriodModalComponent,
     CurrentSpaceTitleComponent,
+    UserAvatarComponent,
   ],
   providers: [DatePipe],
   templateUrl: './user-profile.html',
@@ -280,12 +282,13 @@ export class UserProfileComponent implements OnInit, OnDestroy {
     );
 
     this.userPhotoUrl$ = combineLatest([
-      this.authService.currentUser$.pipe(map((user) => user?.photoURL || null)),
+      this.authService.userProfile$.pipe(map((profile) => profile?.photoURL || null)),
       this.photoUrlOverride,
     ]).pipe(
-      map(([authUrl, overrideUrl]) => {
+      map(([dbUrl, overrideUrl]) => {
         this.imageLoadError = false;
-        return overrideUrl ?? authUrl;
+        if (overrideUrl === '') return null;
+        return overrideUrl ?? dbUrl;
       })
     );
 
@@ -654,25 +657,57 @@ export class UserProfileComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const camSvg = faRenderIcon(faCamera).html.join('');
-    const galSvg = faRenderIcon(faImages).html.join('');
-    const crossSvg = faRenderIcon(faTimes).html.join('');
-    const result = await Swal.fire({
+    const currentPhotoUrl = await firstValueFrom(this.userPhotoUrl$);
+    const hasPhoto = !!currentPhotoUrl;
+
+    const camSvg    = faRenderIcon(faCamera).html.join('');
+    const galSvg    = faRenderIcon(faImages).html.join('');
+    const trashSvg  = faRenderIcon(faTrash).html.join('');
+    const camLabel    = this.translate.instant('VOUCHER_CAMERA');
+    const galLabel    = this.translate.instant('VOUCHER_GALLERY');
+    const removeLabel = this.translate.instant('AVATAR_REMOVE_LABEL');
+    const cancelLabel = this.translate.instant('CANCEL_BUTTON') || 'Cancel';
+
+    let photoChoice: 'camera' | 'gallery' | 'remove' | null = null;
+
+    await Swal.fire({
       title: this.translate.instant('AVATAR_PICK_TITLE'),
-      showCancelButton: true,
-      showDenyButton: true,
-      confirmButtonText: camSvg,
-      denyButtonText: galSvg,
-      cancelButtonText: crossSvg,
-      confirmButtonColor: '#0b74ff',
-      denyButtonColor: '#059669',
-      customClass: {
-        confirmButton: 'swal2-avatar-btn',
-        denyButton: 'swal2-avatar-btn',
+      html: `
+        <div class="swal-avatar-pick-row">
+          <button type="button" id="swal-cam-btn" class="swal-avatar-pick-btn swal-avatar-pick-camera">
+            <span class="swal-avatar-pick-icon">${camSvg}</span>
+            <span class="swal-avatar-pick-label">${camLabel}</span>
+          </button>
+          <button type="button" id="swal-gal-btn" class="swal-avatar-pick-btn swal-avatar-pick-gallery">
+            <span class="swal-avatar-pick-icon">${galSvg}</span>
+            <span class="swal-avatar-pick-label">${galLabel}</span>
+          </button>
+        </div>
+        ${hasPhoto ? `<button type="button" id="swal-remove-btn" class="swal-avatar-pick-remove"><span class="swal-avatar-remove-icon">${trashSvg}</span>${removeLabel}</button>` : ''}
+        <button type="button" id="swal-cancel-btn" class="swal-avatar-pick-cancel">${cancelLabel}</button>
+      `,
+      showConfirmButton: false,
+      showCancelButton: false,
+      allowOutsideClick: true,
+      customClass: { popup: 'swal-avatar-pick-popup' },
+      didOpen: () => {
+        document.getElementById('swal-cam-btn')?.addEventListener('click', () => {
+          photoChoice = 'camera';
+          Swal.close();
+        });
+        document.getElementById('swal-gal-btn')?.addEventListener('click', () => {
+          photoChoice = 'gallery';
+          Swal.close();
+        });
+        document.getElementById('swal-remove-btn')?.addEventListener('click', () => {
+          photoChoice = 'remove';
+          Swal.close();
+        });
+        document.getElementById('swal-cancel-btn')?.addEventListener('click', () => Swal.close());
       },
     });
 
-    if (result.isConfirmed) {
+    if (photoChoice === 'camera') {
       try {
         const perms = await Camera.requestPermissions({ permissions: ['camera'] });
         if (perms.camera === 'denied') {
@@ -691,9 +726,29 @@ export class UserProfileComponent implements OnInit, OnDestroy {
           Toast.fire({ icon: 'error', title: this.translate.instant('AVATAR_UPLOAD_ERROR') });
         }
       }
-    } else if (result.isDenied) {
+    } else if (photoChoice === 'gallery') {
       this.avatarFileInput.nativeElement.value = '';
       this.avatarFileInput.nativeElement.click();
+    } else if (photoChoice === 'remove') {
+      await this.removeAvatar();
+    }
+  }
+
+  async removeAvatar(): Promise<void> {
+    const currentUser = await firstValueFrom(this.authService.currentUser$);
+    if (!currentUser) return;
+
+    this.isUploadingAvatar = true;
+    try {
+      await updateProfile(currentUser, { photoURL: null });
+      await this.userDataService.updateUserProfile(currentUser.uid, { photoURL: null });
+      this.photoUrlOverride.next('');
+      Toast.fire({ icon: 'success', title: this.translate.instant('AVATAR_REMOVE_SUCCESS') });
+    } catch (e) {
+      console.error('Avatar remove error:', e);
+      Toast.fire({ icon: 'error', title: this.translate.instant('AVATAR_UPLOAD_ERROR') });
+    } finally {
+      this.isUploadingAvatar = false;
     }
   }
 

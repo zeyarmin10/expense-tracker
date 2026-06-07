@@ -734,6 +734,8 @@
   "AVATAR_UPLOAD_SUCCESS": "Profile photo updated successfully.",
   "AVATAR_UPLOAD_ERROR": "Failed to upload photo. Please try again.",
   "AVATAR_RATE_LIMIT_ERROR": "You can only change your photo once every 24 hours. Try again in {{hours}} hour(s).",
+  "AVATAR_REMOVE_LABEL": "Remove photo (use default)",
+  "AVATAR_REMOVE_SUCCESS": "Profile photo removed.",
   "VOUCHER_ADD_MORE_IMAGES": "Add more",
   "VOUCHER_CLEAR_ALL": "Clear all",
   "VOUCHER_ERROR_MAX_IMAGES": "You can upload up to {{max}} images per voucher.",
