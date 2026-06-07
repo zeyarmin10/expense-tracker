@@ -736,6 +736,16 @@
   pointer-events: none;
 }
 
+.prof-input-readonly {
+  opacity: 0.6;
+  cursor: default;
+  pointer-events: none;
+}
+
+.prof-input-readonly::-webkit-calendar-picker-indicator {
+  display: none;
+}
+
 /* ── Danger Zone ── */
 .prof-danger-section {
   border-color: rgba(248, 113, 113, 0.25);

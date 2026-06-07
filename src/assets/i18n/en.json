@@ -571,6 +571,8 @@
   "THIS_WEEK": "This Week",
   "THIS_MONTH": "This Month",
   "CUSTOM": "Custom",
+  "DATE_FROM": "From",
+  "DATE_TO": "To",
   "CREATED_BY_LABEL": "Created By",
   "LAST_UPDATED_BY_LABEL": "Last Updated By",
   "DEVICE_LABEL": "Device",

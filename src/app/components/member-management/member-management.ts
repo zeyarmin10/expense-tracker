@@ -15,6 +15,7 @@ import Swal from 'sweetalert2';
 import { getActiveGroupId } from '../../services/user-data';
 import { Router } from '@angular/router';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
+import { UserAvatarComponent } from '../common/user-avatar/user-avatar.component';
 
 const Toast = Swal.mixin({
   toast: true,
@@ -32,7 +33,7 @@ const Toast = Swal.mixin({
 @Component({
   selector: 'app-member-management',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, FontAwesomeModule, CurrentSpaceTitleComponent],
+  imports: [CommonModule, FormsModule, TranslateModule, FontAwesomeModule, CurrentSpaceTitleComponent, UserAvatarComponent],
   templateUrl: './member-management.html',
   styleUrls: ['./member-management.css']
 })
@@ -55,6 +56,7 @@ export class MemberManagementComponent implements OnInit {
   faTrashCan = faTrashCan;
 
   userProfile$: Observable<IUserProfile | null>;
+  isAdmin$!: Observable<boolean>;
   members$: Observable<IGroupMemberDetails[]>;
   pendingInvites$: Observable<IInvitation[]>;
   groupOwnerId$: Observable<string | null>;
@@ -65,6 +67,14 @@ export class MemberManagementComponent implements OnInit {
 
   constructor() {
     this.userProfile$ = this.authService.userProfile$.pipe(shareReplay(1));
+
+    this.isAdmin$ = this.userProfile$.pipe(
+      map(profile => {
+        const role = profile?.currentSpaceRole
+          ?? (profile?.currentSpaceId ? profile?.spaceMemberships?.[profile.currentSpaceId] : null);
+        return role === 'admin' || role === 'owner';
+      })
+    );
 
     this.members$ = this.userProfile$.pipe(
       switchMap(profile => {
@@ -96,13 +106,7 @@ export class MemberManagementComponent implements OnInit {
     );
   }
 
-  ngOnInit(): void {
-    this.authService.userProfile$.subscribe(profile => {
-      if (profile?.currentSpaceType === 'group' && profile?.currentSpaceRole === 'member') {
-        this.router.navigate(['/dashboard']);
-      }
-    });
-  }
+  ngOnInit(): void {}
 
   isValidEmail(email: string): boolean {
     const re = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;

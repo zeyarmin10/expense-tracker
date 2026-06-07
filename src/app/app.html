@@ -114,7 +114,7 @@
       <!-- User Dropdown -->
       <li class="dropdown">
         <a class="user-btn" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-          <span class="user-avatar">{{ (user.displayName || 'U').charAt(0).toUpperCase() }}</span>
+          <app-user-avatar [name]="user.displayName || 'User'" [photoUrl]="userPhotoUrl$ | async" [size]="28"></app-user-avatar>
           <span class="d-none d-lg-inline">{{ user.displayName || 'Profile' }}</span>
           <fa-icon [icon]="faChevronDown" style="font-size: 0.65rem; opacity: 0.6"></fa-icon>
         </a>
@@ -254,7 +254,12 @@
   <!-- User header -->
   <ng-container *ngIf="currentUser$ | async as user">
     <div class="mob-drawer-user">
-      <span class="mob-drawer-avatar">{{ (user.displayName || 'U').charAt(0).toUpperCase() }}</span>
+      <app-user-avatar
+        [name]="user.displayName || 'User'"
+        [photoUrl]="userPhotoUrl$ | async"
+        [size]="42"
+        class="mob-drawer-avatar-cmp"
+      ></app-user-avatar>
       <div class="mob-drawer-user-info">
         <span class="mob-drawer-username">{{ user.displayName || 'User' }}</span>
         <span class="mob-drawer-usersub">{{ user.email }}</span>
@@ -293,19 +298,28 @@
         <span class="mob-drawer-group-name-text">{{ gName }}</span>
       </div>
     </ng-container>
-    <div class="mob-drawer-section-label">{{ 'NAV_GROUP_MEMBERS' | translate }}</div>
-    <div class="mob-drawer-members">
-      <ng-container *ngIf="currentUser$ | async as user">
-        <span class="mob-drawer-member" *ngFor="let member of groupMembers$ | async"
-          [class.mob-drawer-member-me]="member.uid === user.uid">
-          <span class="mob-drawer-member-dot"></span>
-          {{ member.displayName }}
-          <span class="mob-drawer-member-role">{{ (member.role == 'admin' ? 'NAV_ADMIN' : 'NAV_MEMBER') | translate
-            }}</span>
-          <span *ngIf="member.uid === user.uid" class="mob-drawer-member-you">({{ 'NAV_YOU' | translate }})</span>
+    <a class="mob-drawer-members-row" routerLink="/member-management" (click)="closeNavbarMenu()">
+      <div class="mob-drawer-avatar-stack">
+        <ng-container *ngFor="let member of (groupMembers$ | async)?.slice(0, 5); let i = index">
+          <app-user-avatar
+            [name]="member.displayName"
+            [photoUrl]="member.photoURL"
+            [size]="30"
+            [title]="member.displayName"
+            [style.z-index]="10 - i"
+          ></app-user-avatar>
+        </ng-container>
+        <span class="mob-drawer-avatar-more"
+          *ngIf="(groupMembers$ | async)?.length ?? 0 > 5">
+          +{{ ((groupMembers$ | async)?.length ?? 0) - 5 }}
         </span>
-      </ng-container>
-    </div>
+      </div>
+      <span class="mob-drawer-members-label">
+        {{ 'NAV_GROUP_MEMBERS' | translate }}
+        <span class="mob-drawer-members-count">{{ (groupMembers$ | async)?.length }}</span>
+      </span>
+      <svg class="mob-drawer-members-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><polyline points="9 18 15 12 9 6"/></svg>
+    </a>
   </ng-container>
 
   <div class="mob-drawer-divider"></div>

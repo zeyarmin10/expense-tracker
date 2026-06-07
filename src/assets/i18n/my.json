@@ -571,6 +571,8 @@
   "THIS_WEEK": "ဒီသီတင်းပတ်",
   "THIS_MONTH": "ဒီလ",
   "CUSTOM": "စိတ်ကြိုက်",
+  "DATE_FROM": "မှ",
+  "DATE_TO": "အထိ",
   "CREATED_BY_LABEL": "ထည့်သွင်းသူ",
   "LAST_UPDATED_BY_LABEL": "နောက်ဆုံးပြင်ဆင်သူ",
   "DEVICE_LABEL": "စက်ပစ္စည်း",

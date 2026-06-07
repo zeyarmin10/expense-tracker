@@ -20,6 +20,9 @@ public class MainActivity extends BridgeActivity {
         // which fixes bottom-nav overlap on Android 15+ (API 35 forced edge-to-edge).
         Window window = getWindow();
         WindowCompat.setDecorFitsSystemWindows(window, false);
+        // Transparent status bar from the first frame — prevents white flash before
+        // Capacitor's StatusBar plugin takes over with overlaysWebView:true
+        window.setStatusBarColor(Color.TRANSPARENT);
         window.setNavigationBarColor(Color.TRANSPARENT);
 
         // Match app dark theme — prevents white flash before WebView content loads

@@ -235,6 +235,7 @@ export class GroupService {
                     map(profile => ({
                         uid: uid,
                         displayName: profile?.displayName || 'Unknown Member',
+                        photoURL: profile?.photoURL || null,
                         role: role
                     }))
                 );

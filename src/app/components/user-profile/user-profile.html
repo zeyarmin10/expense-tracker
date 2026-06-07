@@ -117,12 +117,12 @@
           <div class="prof-date-pad" *ngIf="showCustomDateRange">
             <div class="prof-date-row">
               <div class="prof-float-field">
-                <input type="date" id="budgetStartDate" class="prof-input prof-has-val" formControlName="budgetStartDate"
-                  placeholder=" ">
+                <input type="date" id="budgetStartDate" class="prof-input prof-has-val prof-input-readonly" formControlName="budgetStartDate"
+                  placeholder=" " readonly>
                 <label class="prof-float-label" for="budgetStartDate">{{ 'START_DATE_LABEL' | translate }}</label>
               </div>
               <div class="prof-float-field">
-                <input type="date" id="budgetEndDate" class="prof-input prof-has-val" formControlName="budgetEndDate" placeholder=" ">
+                <input type="date" id="budgetEndDate" class="prof-input prof-has-val prof-input-readonly" formControlName="budgetEndDate" placeholder=" " readonly>
                 <label class="prof-float-label" for="budgetEndDate">{{ 'END_DATE_LABEL' | translate }}</label>
               </div>
             </div>

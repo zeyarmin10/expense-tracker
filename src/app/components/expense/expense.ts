@@ -151,6 +151,7 @@ export class Expense implements OnInit, OnDestroy {
   isFormOpen = true;
   isVoucherPanelOpen = false;
   isVoucherSaving = false;
+  isSavedVoucherListOpen = false;
   isQuickMode = true;
   selectedVoucherFiles: File[] = [];
   voucherPreviewUrls: string[] = [];
@@ -307,6 +308,10 @@ export class Expense implements OnInit, OnDestroy {
         this._activeCategoryFilter$.next(null);
         this.clearAllVoucherFiles();
         this.isVoucherPanelOpen = false;
+        this.dateFilterMode = 'today';
+        this.showCustomDatePicker = false;
+        this.customStartDate = '';
+        this.customEndDate = '';
         this.refreshExpenses$.next();
         this.refreshVouchers$.next();
       }
@@ -650,10 +655,10 @@ export class Expense implements OnInit, OnDestroy {
     this.showCustomDatePicker = mode === 'custom';
     if (mode === 'custom') {
       if (!this.customStartDate) {
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-        this.customStartDate = this.datePipe.transform(yesterday, 'yyyy-MM-dd') || '';
-        this.customEndDate = this.customStartDate;
+        const start = new Date();
+        start.setDate(start.getDate() - 6);
+        this.customStartDate = this.datePipe.transform(start, 'yyyy-MM-dd') || '';
+        this.customEndDate = this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
       }
       this.refreshExpenses$.next();
       this.refreshVouchers$.next();
@@ -665,8 +670,7 @@ export class Expense implements OnInit, OnDestroy {
   }
 
   onCustomDateChange(): void {
-    if (this.customStartDate) {
-      this.customEndDate = this.customStartDate;
+    if (this.customStartDate && this.customEndDate) {
       this.resetActiveFilters();
       this.refreshExpenses$.next();
       this.refreshVouchers$.next();
@@ -719,10 +723,16 @@ export class Expense implements OnInit, OnDestroy {
       }
       case 'month':
         return this.datePipe.transform(today, 'MMMM yyyy') || '';
-      case 'custom':
+      case 'custom': {
+        if (this.customStartDate && this.customEndDate) {
+          const s = this.datePipe.transform(this.customStartDate, 'MMM d') || '';
+          const e = this.datePipe.transform(this.customEndDate, 'MMM d, yyyy') || '';
+          return this.customStartDate === this.customEndDate ? e : `${s} – ${e}`;
+        }
         return this.customStartDate
           ? (this.datePipe.transform(this.customStartDate, 'MMM d, yyyy') || '')
           : '';
+      }
       default:
         return '';
     }

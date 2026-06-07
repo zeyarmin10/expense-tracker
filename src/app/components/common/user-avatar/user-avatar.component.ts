@@ -52,7 +52,7 @@ import { Component, Input, OnChanges } from '@angular/core';
       box-shadow:
         inset 0 0 0 1px rgba(255, 255, 255, 0.2),
         0 4px 10px rgba(2, 8, 23, 0.18);
-      opacity: 0.6;
+      opacity: 0.8;
     }
 
     .user-avatar-has-image {

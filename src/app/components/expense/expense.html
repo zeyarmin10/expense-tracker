@@ -349,10 +349,10 @@
           <div class="exp-float-field">
             <textarea
               class="exp-float-input exp-textarea"
+              [class.exp-has-val]="voucherForm.get('note')?.value"
               id="voucher-note"
               formControlName="note"
               placeholder=" "
-              rows="3"
             ></textarea>
             <label class="exp-float-label" for="voucher-note">
               {{ "DESCRIPTION" | translate }}
@@ -481,14 +481,37 @@
         </button>
       </div>
 
-      <div class="exp-filter-date-row" *ngIf="showCustomDatePicker">
-        <input
-          type="date"
-          class="exp-filter-date-input"
-          [(ngModel)]="customStartDate"
-          (ngModelChange)="onCustomDateChange()"
-          [ngModelOptions]="{standalone: true}"
-        />
+      <div class="exp-daterange-wrap" *ngIf="showCustomDatePicker">
+        <div class="exp-daterange-row">
+          <div class="exp-daterange-col">
+            <span class="exp-daterange-col-label">{{ 'DATE_FROM' | translate }}</span>
+            <input
+              type="date"
+              class="exp-daterange-input"
+              [(ngModel)]="customStartDate"
+              (ngModelChange)="onCustomDateChange()"
+              [ngModelOptions]="{standalone: true}"
+              [max]="customEndDate || ''"
+            />
+          </div>
+          <div class="exp-daterange-sep">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"/>
+              <polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </div>
+          <div class="exp-daterange-col">
+            <span class="exp-daterange-col-label">{{ 'DATE_TO' | translate }}</span>
+            <input
+              type="date"
+              class="exp-daterange-input"
+              [(ngModel)]="customEndDate"
+              (ngModelChange)="onCustomDateChange()"
+              [ngModelOptions]="{standalone: true}"
+              [min]="customStartDate || ''"
+            />
+          </div>
+        </div>
       </div>
 
       <div class="exp-filter-label">
@@ -500,16 +523,20 @@
 
     <!-- ── VOUCHER LIST ── -->
     <div class="exp-list-section">
-      <div class="exp-list-header">
+      <button type="button" class="exp-list-header exp-list-header-toggle" (click)="isSavedVoucherListOpen = !isSavedVoucherListOpen">
         <h3 class="exp-section-title exp-section-title-warning">
           <svg class="exp-svg-icon exp-icon-warning" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2h16v20l-2-1-2 1-2-1-2 1-2-1-2 1-2-1V2z"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="12" y2="16"/></svg>
           {{ "VOUCHER_SAVED_TITLE" | translate }}
         </h3>
-        <span class="exp-voucher-count" *ngIf="displayedVouchers$ | async as vl">
-          {{ vl.length }}
-        </span>
-      </div>
+        <div class="exp-list-header-right">
+          <span class="exp-voucher-count" *ngIf="displayedVouchers$ | async as vl">
+            {{ vl.length }}
+          </span>
+          <svg class="exp-collapse-chevron" [class.open]="isSavedVoucherListOpen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+      </button>
 
+      <ng-container *ngIf="isSavedVoucherListOpen">
       <ng-container *ngIf="displayedVouchers$ | async as vouchers">
         <div *ngIf="vouchers.length === 0" class="exp-empty">
           {{ "VOUCHER_EMPTY_HINT" | translate }}
@@ -592,6 +619,7 @@
             </div>
           </div>
         </div>
+      </ng-container>
       </ng-container>
     </div>
     <!-- ── END VOUCHER LIST ── -->

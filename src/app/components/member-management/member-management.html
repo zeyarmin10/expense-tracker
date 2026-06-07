@@ -11,7 +11,8 @@
       </h2>
     </div>
 
-    <!-- Invite Panel -->
+    <!-- Invite Panel (admin/owner only) -->
+    <ng-container *ngIf="isAdmin$ | async">
     <div class="mm-panel">
       <div class="mm-panel-header">
         <span class="mm-panel-title mm-title-accent">
@@ -88,6 +89,7 @@
         </div>
       </div>
     </div>
+    </ng-container>
 
     <!-- Current Members -->
     <div class="mm-panel">
@@ -101,11 +103,11 @@
       <div class="mm-list">
         <div *ngFor="let member of members$ | async" class="mm-item">
           <div class="mm-item-left">
-            <div class="mm-avatar" [style.background]="getAvatarColor(member.displayName!) + '22'" [style.border-color]="getAvatarColor(member.displayName!) + '66'">
-              <span class="mm-avatar-letter" [style.color]="getAvatarColor(member.displayName!)">
-                {{ (member.displayName || '?').charAt(0).toUpperCase() }}
-              </span>
-            </div>
+            <app-user-avatar
+              [name]="member.displayName || '?'"
+              [photoUrl]="member.photoURL"
+              [size]="38"
+            ></app-user-avatar>
             <div class="mm-item-info">
               <div class="mm-item-name-row">
                 <span class="mm-item-name">{{ member.displayName }}</span>
@@ -116,7 +118,7 @@
             </div>
           </div>
           <button class="mm-action-btn mm-action-danger"
-            *ngIf="(groupOwnerId$ | async) === (userProfile$ | async)?.uid && member.uid !== (userProfile$ | async)?.uid"
+            *ngIf="(isAdmin$ | async) && member.uid !== (userProfile$ | async)?.uid"
             (click)="confirmDeleteMember(member.uid)"
             title="{{ 'DELETE_BUTTON_LABEL' | translate }}">
             <fa-icon [icon]="faTrashCan" class="fa-delete-btn"></fa-icon>

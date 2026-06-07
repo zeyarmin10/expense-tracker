@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, HostListener } from '@angular/core';
+import { Component, inject, OnInit, AfterViewInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, NavigationEnd, RouterOutlet, RouterModule, ActivatedRoute } from '@angular/router';
 import { Title } from '@angular/platform-browser';
@@ -40,6 +40,7 @@ import { SpaceSwitchLoadingService } from './services/space-switch-loading.servi
 import { UserSpaceSummary } from './services/space.model';
 import { getActiveGroupId, UserProfile } from './services/user-data';
 import { CurrentSpaceTitleComponent } from './components/common/current-space-title/current-space-title.component';
+import { UserAvatarComponent } from './components/common/user-avatar/user-avatar.component';
 
 @Component({
   selector: 'app-root',
@@ -51,17 +52,19 @@ import { CurrentSpaceTitleComponent } from './components/common/current-space-ti
     TranslateModule,
     Toast,
     FontAwesomeModule,
-    CurrentSpaceTitleComponent
+    CurrentSpaceTitleComponent,
+    UserAvatarComponent,
   ],
   templateUrl: './app.html',
   styleUrls: ['./app.css'],
 })
-export class App implements OnInit {
+export class App implements OnInit, AfterViewInit {
   title = 'SpendWise';
   showNavbar$: Observable<boolean>;
   pageTitle$!: Observable<string>;
   currentUser$: Observable<User | null>;
   userDisplayName$: Observable<string | null>;
+  userPhotoUrl$: Observable<string | null>;
   isGroupAdmin$: Observable<boolean>;
   isGroupAccount$: Observable<boolean>;
   groupMembers$: Observable<any[]>;
@@ -122,6 +125,9 @@ export class App implements OnInit {
     this.currentUser$ = this.authService.currentUser$;
     this.userDisplayName$ = this.authService.userProfile$.pipe(
       map(profile => profile ? (profile.displayName || 'User') : null)
+    );
+    this.userPhotoUrl$ = this.authService.userProfile$.pipe(
+      map(profile => profile?.photoURL || null)
     );
 
     this.currentSpaceName$ = this.authService.userProfile$.pipe(
@@ -337,7 +343,13 @@ export class App implements OnInit {
     this.pullDistance = this.pullRefreshThreshold;
 
     setTimeout(() => {
-      window.location.reload();
+      const currentUrl = this.router.url;
+      this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
+        this.router.navigateByUrl(currentUrl).then(() => {
+          this.isPullRefreshing = false;
+          this.pullDistance = 0;
+        });
+      });
     }, 420);
   }
 
@@ -433,21 +445,9 @@ export class App implements OnInit {
 
   async ngOnInit(): Promise<void> {
     if (Capacitor.isNativePlatform()) {
-      try {
-        await StatusBar.setOverlaysWebView({ overlay: true });
-        await StatusBar.show();
-      } catch (e) {
-        console.warn('StatusBar error:', e);
-      } finally {
-        await SplashScreen.hide();
-      }
-
-      // Set icon color AFTER splash hides — Android resets status bar appearance during splash dismiss
-      setTimeout(() => {
-        const style = this.themeService.isDarkMode ? Style.Dark : Style.Light;
-        StatusBar.setStyle({ style }).catch(() => {});
-      }, 300);
-
+      // Configure status bar early — splash hide is deferred to ngAfterViewInit
+      StatusBar.setOverlaysWebView({ overlay: true }).catch(() => {});
+      StatusBar.show().catch(() => {});
       Camera.requestPermissions({ permissions: ['camera', 'photos'] }).catch(() => {});
     }
     this.initTheme();
@@ -482,6 +482,21 @@ export class App implements OnInit {
         return of(null);
       })
     ).subscribe();
+  }
+
+  ngAfterViewInit(): void {
+    if (!Capacitor.isNativePlatform()) return;
+    // Wait for 2 animation frames so Angular's first paint is committed before splash exits
+    requestAnimationFrame(() => {
+      requestAnimationFrame(async () => {
+        await SplashScreen.hide().catch(() => {});
+        // Android resets status bar style during splash dismiss — re-apply after
+        setTimeout(() => {
+          const style = this.themeService.isDarkMode ? Style.Dark : Style.Light;
+          StatusBar.setStyle({ style }).catch(() => {});
+        }, 300);
+      });
+    });
   }
 
   // ── Network monitoring: Native + Web ───────────

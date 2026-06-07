@@ -304,11 +304,26 @@
 }
 
 .exp-textarea {
-  min-height: 92px;
+  min-height: 68px;
   height: auto;
   resize: vertical;
   line-height: 1.35;
-  padding-top: 1.55rem;
+  padding-top: 1.5rem;
+}
+
+.exp-float-input.exp-textarea ~ .exp-float-label {
+  top: 1rem;
+  transform: translateY(0);
+}
+
+.exp-float-input.exp-textarea:focus ~ .exp-float-label,
+.exp-float-input.exp-textarea.exp-has-val ~ .exp-float-label {
+  top: 0.6rem;
+  transform: translateY(0);
+  font-size: 0.68rem;
+  color: var(--accent);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .exp-file-input {
@@ -695,6 +710,31 @@
   gap: 0.75rem;
   padding: 1.2rem 1.4rem;
   border-bottom: 1px solid var(--border);
+}
+
+.exp-list-header-toggle {
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.exp-list-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.exp-collapse-chevron {
+  color: var(--text-muted);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.exp-collapse-chevron.open {
+  transform: rotate(180deg);
 }
 
 .exp-section-title {
@@ -1461,31 +1501,105 @@ a.exp-icon-btn {
   color: var(--text);
 }
 
-/* custom date row */
-.exp-filter-date-row {
+/* date range picker */
+.exp-daterange-wrap {
+  animation: exp-slide-down 0.22s ease forwards;
   padding: 0 2px;
-  animation: exp-slide-down 0.2s ease forwards;
 }
 
-.exp-filter-date-input {
-  width: 100%;
-  height: 40px;
+.exp-daterange-row {
+  display: flex;
+  align-items: center;
+  gap: 0;
   background: var(--surface-2);
-  border: 1px solid rgba(11, 116, 255, 0.35);
-  border-radius: 8px;
+  border: 1px solid rgba(11, 116, 255, 0.28);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.exp-daterange-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 0.45rem 0.75rem 0.4rem;
+  min-width: 0;
+}
+
+.exp-daterange-col-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--accent, #0b74ff);
-  font-size: 0.88rem;
-  font-weight: 600;
-  padding: 0 0.75rem;
+  margin-bottom: 0.18rem;
+  line-height: 1;
+}
+
+.exp-daterange-input {
+  background: transparent;
+  border: none;
   outline: none;
-  box-sizing: border-box;
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 600;
+  width: 100%;
   -webkit-appearance: none;
   appearance: none;
+  padding: 0;
 }
 
-.exp-filter-date-input::-webkit-calendar-picker-indicator {
-  filter: invert(0.4) sepia(1) hue-rotate(200deg);
+.exp-daterange-input::-webkit-calendar-picker-indicator {
+  filter: invert(0.45) sepia(1) hue-rotate(200deg);
   cursor: pointer;
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  margin-left: 4px;
+}
+
+.exp-daterange-sep {
+  width: 28px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  opacity: 0.6;
+  position: relative;
+}
+
+.exp-daterange-sep::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 60%;
+  background: var(--border);
+}
+
+.exp-daterange-sep::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 60%;
+  background: var(--border);
+}
+
+body.light-mode .exp-daterange-row {
+  border-color: rgba(0, 79, 199, 0.22);
+}
+
+body.light-mode .exp-daterange-col-label {
+  color: #004fc7;
+}
+
+body.light-mode .exp-daterange-input::-webkit-calendar-picker-indicator {
+  filter: invert(0.2) sepia(1) hue-rotate(200deg) saturate(1.5);
 }
 
 /* active filter label */
