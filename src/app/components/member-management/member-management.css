@@ -34,6 +34,21 @@
   overflow-x: hidden;
 }
 
+.mm-page-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.mm-space-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--accent, #0b74ff);
+  letter-spacing: 0.01em;
+  opacity: 0.85;
+  padding-left: 0.1rem;
+}
+
 .mm-page-title {
   font-size: clamp(1.3rem, 4vw, 1.9rem);
   font-weight: 800;

@@ -12,7 +12,7 @@ import { AuthService } from '../../services/auth';
 import { getActiveGroupId, UserDataService, UserProfile } from '../../services/user-data';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faSave, faUserCircle, faTrash, faPlus, faChevronDown, faChevronUp, faListUl, faEdit, faTimes, faBell, faBellSlash, faClock, faCamera, faImages } from '@fortawesome/free-solid-svg-icons';
+import { faSave, faUserCircle, faTrash, faPlus, faChevronDown, faChevronUp, faListUl, faEdit, faTimes, faBell, faBellSlash, faClock, faCamera, faImages, faMoon, faDesktop } from '@fortawesome/free-solid-svg-icons';
 import { icon as faRenderIcon } from '@fortawesome/fontawesome-svg-core';
 import { faTrashCan } from '@fortawesome/free-regular-svg-icons';
 import { updateProfile } from '@angular/fire/auth';
@@ -183,6 +183,8 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   faBellSlash = faBellSlash;
   faClock = faClock;
   faCamera = faCamera;
+  faMoon = faMoon;
+  faDesktop = faDesktop;
   isUploadingAvatar = false;
 
   constructor() {

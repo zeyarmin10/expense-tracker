@@ -9,6 +9,7 @@
         <fa-icon [icon]="faUsers" class="mm-icon-accent"></fa-icon>
         {{ 'MEMBER_MANAGEMENT_TITLE' | translate }}
       </h2>
+      <span class="mm-space-name" *ngIf="spaceName$ | async as spaceName">{{ spaceName }}</span>
     </div>
 
     <!-- Invite Panel (admin/owner only) -->

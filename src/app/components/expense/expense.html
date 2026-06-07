@@ -665,9 +665,9 @@
 
         <div class="exp-category-list" *ngIf="categoryGroups.length > 0">
           <section
-            *ngFor="let group of categoryGroups"
+            *ngFor="let group of categoryGroups; let catIdx = index"
             class="exp-category-group"
-            [ngStyle]="getCategoryStyle(group.category)"
+            [ngStyle]="getCategoryStyle(catIdx)"
           >
             <div class="exp-category-group-header">
               <button

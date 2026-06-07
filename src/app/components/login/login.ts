@@ -22,7 +22,7 @@ import { debounceTime, Subject, takeUntil, firstValueFrom } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { SessionManagementService } from '../../services/session-management';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faEye, faEyeSlash, faSun, faMoon } from '@fortawesome/free-solid-svg-icons';
+import { faEye, faEyeSlash, faSun, faMoon, faEnvelope } from '@fortawesome/free-solid-svg-icons';
 import { User } from '@angular/fire/auth';
 import { ToastService } from '../../services/toast'; // Import ToastService
 import { InvitationService } from '../../services/invitation.service';
@@ -59,6 +59,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   faEyeSlash = faEyeSlash;
   faSun = faSun;
   faMoon = faMoon;
+  faEnvelope = faEnvelope;
   isDarkMode = true;
 
   loginForm: FormGroup;

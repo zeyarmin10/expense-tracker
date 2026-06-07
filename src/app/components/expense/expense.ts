@@ -302,16 +302,19 @@ export class Expense implements OnInit, OnDestroy {
       this.userRole = getCurrentSpaceRole(profile);
       const spaceModeKey = this.getSpaceModeKey(profile);
       if (spaceModeKey !== this.activeSpaceModeKey) {
+        const isActualSpaceSwitch = this.activeSpaceModeKey !== null;
         this.activeSpaceModeKey = spaceModeKey;
         this.setQuickMode(isPersonalContext(profile));
         this._activeCurrencyFilter$.next(null);
         this._activeCategoryFilter$.next(null);
         this.clearAllVoucherFiles();
         this.isVoucherPanelOpen = false;
-        this.dateFilterMode = 'today';
-        this.showCustomDatePicker = false;
-        this.customStartDate = '';
-        this.customEndDate = '';
+        if (isActualSpaceSwitch) {
+          this.dateFilterMode = 'today';
+          this.showCustomDatePicker = false;
+          this.customStartDate = '';
+          this.customEndDate = '';
+        }
         this.refreshExpenses$.next();
         this.refreshVouchers$.next();
       }
@@ -798,17 +801,10 @@ export class Expense implements OnInit, OnDestroy {
     this.voucherForm.patchValue({ imageFile: 'set' });
   }
 
-  getCategoryStyle(category: string): Record<string, string> {
-    // FNV-1a 32-bit — good bit avalanche so similar names diverge widely
-    let h = 2166136261;
-    for (let i = 0; i < category.length; i++) {
-      h ^= category.charCodeAt(i);
-      h = Math.imul(h, 16777619) >>> 0;
-    }
-    // Golden angle (137.508°) gives maximum hue separation for any number of categories
-    const hue = Math.round((h * 137.508) % 360);
-    // Vary saturation 64–86% using upper hash bits so even near-hue pairs look distinct
-    const sat = 64 + ((h >>> 10) % 23);
+  getCategoryStyle(index: number): Record<string, string> {
+    // Golden angle ensures every N simultaneously-shown categories are maximally spread
+    const hue = Math.round((index * 137.508) % 360);
+    const sat = 70 + (index % 5) * 3; // cycles 70, 73, 76, 79, 82%
     return { '--cat-hue': String(hue), '--cat-sat': `${sat}%` };
   }
 

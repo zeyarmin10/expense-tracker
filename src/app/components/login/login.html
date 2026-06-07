@@ -70,7 +70,7 @@
         <!-- Email toggle button -->
         <button type="button" class="lgn-email-toggle-btn" (click)="toggleEmailForm()">
           <span class="lgn-email-toggle-left">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2 4 12 13 22 4"/></svg>
+            <fa-icon [icon]="faEnvelope"></fa-icon>
             {{ 'SIGN_IN_EMAIL' | translate }}
           </span>
           <svg class="lgn-email-chevron" [class.open]="showEmailForm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="6 9 12 15 18 9"/></svg>

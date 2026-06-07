@@ -347,6 +347,8 @@ body {
 
 /* ── Light Mode ── */
 body.light-mode {
+  background-color: #f4f8ff;
+  color: #1a202c;
   --bg: #f4f8ff;
   --surface: #ffffff;
   --surface-2: #eaf2ff;

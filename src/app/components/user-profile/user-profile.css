@@ -540,6 +540,17 @@
   box-shadow: 0 1px 6px rgba(11, 116, 255, 0.3);
 }
 
+.prof-segment-btn .theme-icon-img {
+  width: 0.9rem;
+  height: 0.9rem;
+  vertical-align: middle;
+  filter: none;
+}
+
+.prof-segment-btn.active .theme-icon-img {
+  filter: brightness(0) invert(1);
+}
+
 /* ── Floating Label Input (used in date pad) ── */
 .prof-float-field {
   position: relative;

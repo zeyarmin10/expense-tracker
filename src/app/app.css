@@ -133,6 +133,8 @@ body.light-mode {
   --color-bg-secondary: #f8f9fa;
   --color-text-primary: #212529;
   --color-border: #dee2e6;
+  background-color: #f4f8ff;
+  color: #1a2b4a;
 }
 
 .app-navbar {

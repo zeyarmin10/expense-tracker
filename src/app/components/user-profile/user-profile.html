@@ -166,13 +166,13 @@
             <div class="prof-segment">
               <button type="button" class="prof-segment-btn" [class.active]="appTheme === 'light'"
                 (click)="onThemeChange('light')">
-                ☀️ {{ 'THEME_LIGHT' | translate }}
+                <img src="assets/icons/sun-light.svg" class="theme-icon-img" alt="Light mode" /> {{ 'THEME_LIGHT' | translate }}
               </button>
               <button type="button" class="prof-segment-btn" [class.active]="appTheme === 'dark'" (click)="onThemeChange('dark')">
-                🌙 {{ 'THEME_DARK' | translate }}
+                <fa-icon [icon]="faMoon"></fa-icon> {{ 'THEME_DARK' | translate }}
               </button>
               <button type="button" class="prof-segment-btn" [class.active]="appTheme === 'system'" (click)="onThemeChange('system')">
-                📱 {{ 'THEME_SYSTEM' | translate }}
+                <fa-icon [icon]="faDesktop"></fa-icon> {{ 'THEME_SYSTEM' | translate }}
               </button>
             </div>
           </div>
