@@ -20,12 +20,15 @@
           [attr.aria-expanded]="isFormOpen"
         >
           <span class="exp-panel-toggle-left">
-            <fa-icon [icon]="faWallet" class="exp-icon-accent"></fa-icon>
+            <span class="exp-icon-badge exp-icon-badge-accent">
+              <fa-icon [icon]="faWallet"></fa-icon>
+            </span>
             <span>{{ "EXPENSE_ADD_TITLE" | translate }}</span>
           </span>
           <fa-icon
-            [icon]="isFormOpen ? faChevronUp : faChevronDown"
+            [icon]="faChevronDown"
             class="exp-chevron"
+            [class.open]="isFormOpen"
           ></fa-icon>
         </button>
         <!-- Quick/Full toggle — personal account -->
@@ -36,12 +39,13 @@
           [class.active]="!isQuickMode"
           [title]="isQuickMode ? ('SWITCH_TO_FULL_FORM' | translate) : ('SWITCH_TO_QUICK_ADD' | translate)"
         >
-          <span *ngIf="isQuickMode">⚡ {{ 'QUICK' | translate }}</span>
-          <span *ngIf="!isQuickMode">📋 {{ 'FULL' | translate }}</span>
+          <span *ngIf="isQuickMode"><fa-icon [icon]="faBolt"></fa-icon> {{ 'QUICK' | translate }}</span>
+          <span *ngIf="!isQuickMode"><fa-icon [icon]="faListUl"></fa-icon> {{ 'FULL' | translate }}</span>
         </button>
       </div>
 
       <div class="exp-panel-body" [class.open]="isFormOpen">
+        <div class="exp-panel-inner">
         <form
           [formGroup]="newExpenseForm"
           (ngSubmit)="onSubmitNewExpense()"
@@ -267,6 +271,7 @@
             </button>
           </div>
         </form>
+        </div>
       </div>
     </div>
     <!-- ── END ADD EXPENSE PANEL ── -->
@@ -281,16 +286,21 @@
           [attr.aria-expanded]="isVoucherPanelOpen"
         >
           <span class="exp-panel-toggle-left">
-            <svg class="exp-svg-icon exp-icon-warning" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2h16v20l-2-1-2 1-2-1-2 1-2-1-2 1-2-1V2z"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="12" y2="16"/></svg>
+            <span class="exp-icon-badge exp-icon-badge-warning">
+              <fa-icon [icon]="faReceipt"></fa-icon>
+            </span>
             <span>{{ "VOUCHER_ADD_TITLE" | translate }}</span>
           </span>
-          <svg class="exp-svg-icon exp-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline [attr.points]="isVoucherPanelOpen ? '18 15 12 9 6 15' : '6 9 12 15 18 9'"/>
-          </svg>
+          <fa-icon
+            [icon]="faChevronDown"
+            class="exp-chevron"
+            [class.open]="isVoucherPanelOpen"
+          ></fa-icon>
         </button>
       </div>
 
       <div class="exp-panel-body" [class.open]="isVoucherPanelOpen">
+        <div class="exp-panel-inner">
         <form
           [formGroup]="voucherForm"
           (ngSubmit)="onSubmitVoucher()"
@@ -440,6 +450,7 @@
             </button>
           </div>
         </form>
+        </div>
       </div>
     </div>
     <!-- ── END ADD VOUCHER PANEL ── -->
@@ -447,30 +458,38 @@
     <!-- ── SHARED DATE FILTER BAR ── -->
     <div class="exp-filter-bar">
       <div class="exp-seg-ctrl">
-        <button
-          type="button"
-          class="exp-seg-btn"
-          [class.active]="dateFilterMode === 'today'"
-          (click)="setDateFilterMode('today')"
-        >{{ 'TODAY' | translate }}</button>
-        <button
-          type="button"
-          class="exp-seg-btn"
-          [class.active]="dateFilterMode === 'week'"
-          (click)="setDateFilterMode('week')"
-        >{{ 'THIS_WEEK' | translate }}</button>
-        <button
-          type="button"
-          class="exp-seg-btn"
-          [class.active]="dateFilterMode === 'month'"
-          (click)="setDateFilterMode('month')"
-        >{{ 'THIS_MONTH' | translate }}</button>
-        <button
-          type="button"
-          class="exp-seg-btn"
-          [class.active]="dateFilterMode === 'custom'"
-          (click)="setDateFilterMode('custom')"
-        >{{ 'CUSTOM' | translate }}</button>
+        <div class="exp-seg-track">
+          <!-- sliding pill indicator -->
+          <span
+            class="exp-seg-indicator"
+            [style.transform]="'translateX(calc(' + getDateFilterIndex() + ' * 100%))'"
+            aria-hidden="true"
+          ></span>
+          <button
+            type="button"
+            class="exp-seg-btn"
+            [class.active]="dateFilterMode === 'today'"
+            (click)="setDateFilterMode('today')"
+          >{{ 'TODAY' | translate }}</button>
+          <button
+            type="button"
+            class="exp-seg-btn"
+            [class.active]="dateFilterMode === 'week'"
+            (click)="setDateFilterMode('week')"
+          >{{ 'THIS_WEEK' | translate }}</button>
+          <button
+            type="button"
+            class="exp-seg-btn"
+            [class.active]="dateFilterMode === 'month'"
+            (click)="setDateFilterMode('month')"
+          >{{ 'THIS_MONTH' | translate }}</button>
+          <button
+            type="button"
+            class="exp-seg-btn"
+            [class.active]="dateFilterMode === 'custom'"
+            (click)="setDateFilterMode('custom')"
+          >{{ 'CUSTOM' | translate }}</button>
+        </div>
         <button
           type="button"
           class="exp-seg-reset"
@@ -525,7 +544,9 @@
     <div class="exp-list-section">
       <button type="button" class="exp-list-header exp-list-header-toggle" (click)="isSavedVoucherListOpen = !isSavedVoucherListOpen">
         <h3 class="exp-section-title exp-section-title-warning">
-          <svg class="exp-svg-icon exp-icon-warning" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2h16v20l-2-1-2 1-2-1-2 1-2-1-2 1-2-1V2z"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="12" y2="16"/></svg>
+          <span class="exp-icon-badge exp-icon-badge-warning">
+            <fa-icon [icon]="faBoxArchive"></fa-icon>
+          </span>
           {{ "VOUCHER_SAVED_TITLE" | translate }}
         </h3>
         <div class="exp-list-header-right">
@@ -536,7 +557,8 @@
         </div>
       </button>
 
-      <ng-container *ngIf="isSavedVoucherListOpen">
+      <div class="exp-voucher-collapse-body" [class.open]="isSavedVoucherListOpen">
+      <div>
       <ng-container *ngIf="displayedVouchers$ | async as vouchers">
         <div *ngIf="vouchers.length === 0" class="exp-empty">
           {{ "VOUCHER_EMPTY_HINT" | translate }}
@@ -620,7 +642,8 @@
           </div>
         </div>
       </ng-container>
-      </ng-container>
+      </div>
+      </div>
     </div>
     <!-- ── END VOUCHER LIST ── -->
 
@@ -629,7 +652,9 @@
       <!-- List Header -->
       <div class="exp-list-header">
         <h3 class="exp-section-title">
-          <fa-icon [icon]="faTasks" class="exp-icon-success"></fa-icon>
+          <span class="exp-icon-badge exp-icon-badge-success">
+            <fa-icon [icon]="faTasks"></fa-icon>
+          </span>
           {{ "EXPENSE_YOUR_EXPENSES_TITLE" | translate }}
         </h3>
       </div>

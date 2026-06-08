@@ -57,6 +57,9 @@ import {
   faImages,
   faEye,
   faCamera,
+  faBolt,
+  faListUl,
+  faBoxArchive,
 } from '@fortawesome/free-solid-svg-icons';
 import { faTrashCan } from '@fortawesome/free-regular-svg-icons';
 
@@ -148,7 +151,7 @@ export class Expense implements OnInit, OnDestroy {
 
   public userRole: string | null = null;
   isSaving = false;
-  isFormOpen = true;
+  isFormOpen = false;
   isVoucherPanelOpen = false;
   isVoucherSaving = false;
   isSavedVoucherListOpen = false;
@@ -232,6 +235,9 @@ export class Expense implements OnInit, OnDestroy {
   faUpload = faUpload;
   faImage = faImage;
   faImages = faImages;
+  faBolt = faBolt;
+  faListUl = faListUl;
+  faBoxArchive = faBoxArchive;
   faEye = faEye;
   faCamera = faCamera;
 
@@ -328,6 +334,12 @@ export class Expense implements OnInit, OnDestroy {
 
   toggleForm(): void {
     this.isFormOpen = !this.isFormOpen;
+    if (this.isFormOpen) {
+      setTimeout(() => {
+        const id = this.isQuickMode ? 'itemName-quick' : 'itemName';
+        (document.getElementById(id) as HTMLInputElement)?.focus();
+      }, 150);
+    }
   }
 
   toggleVoucherPanel(): void {
@@ -653,6 +665,10 @@ export class Expense implements OnInit, OnDestroy {
     this._activeCategoryFilter$.next(null);
   }
 
+  getDateFilterIndex(): number {
+    return ['today', 'week', 'month', 'custom'].indexOf(this.dateFilterMode);
+  }
+
   setDateFilterMode(mode: 'today' | 'week' | 'month' | 'custom'): void {
     this.dateFilterMode = mode;
     this.showCustomDatePicker = mode === 'custom';
@@ -802,10 +818,8 @@ export class Expense implements OnInit, OnDestroy {
   }
 
   getCategoryStyle(index: number): Record<string, string> {
-    // Golden angle ensures every N simultaneously-shown categories are maximally spread
     const hue = Math.round((index * 137.508) % 360);
-    const sat = 70 + (index % 5) * 3; // cycles 70, 73, 76, 79, 82%
-    return { '--cat-hue': String(hue), '--cat-sat': `${sat}%` };
+    return { '--cat-hue': String(hue) };
   }
 
   formatCount(n: number): string {

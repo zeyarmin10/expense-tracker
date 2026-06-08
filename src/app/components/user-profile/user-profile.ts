@@ -889,19 +889,43 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   }
 
   async onPeriodSaved(period: { name: string, startDate: string, endDate: string }): Promise<void> {
-    if (!this.canEditSettings) {
-      return;
-    }
+    if (!this.canEditSettings) return;
     const currentUser = await firstValueFrom(this.authService.currentUser$);
-    if (currentUser) {
-      try {
-        const newPeriodRef = await this.customBudgetPeriodService.addCustomBudgetPeriod(currentUser.uid, period);
-        this.userProfileForm.get('budgetPeriod')?.setValue(newPeriodRef.key);
-        Toast.fire({ icon: 'success', title: this.translate.instant('CUSTOM_BUDGET_PERIOD_SAVE_SUCCESS') });
-      } catch (error) {
-        Swal.fire({ icon: 'error', title: this.translate.instant('ERROR_TITLE'), text: this.translate.instant('CUSTOM_BUDGET_PERIOD_SAVE_ERROR') });
-        console.error('Error saving custom budget period:', error);
+    if (!currentUser) return;
+    try {
+      const newPeriodRef = await this.customBudgetPeriodService.addCustomBudgetPeriod(currentUser.uid, period);
+
+      // emitEvent: false — customBudgetPeriods ထဲ မရောက်သေးလို့ autoSave ကို prevent လုပ်မယ်
+      this.userProfileForm.get('budgetPeriod')?.setValue(newPeriodRef.key, { emitEvent: false });
+      this.userProfileForm.get('budgetStartDate')?.setValue(period.startDate, { emitEvent: false });
+      this.userProfileForm.get('budgetEndDate')?.setValue(period.endDate, { emitEvent: false });
+      this.showCustomDateRange = true;
+      this.syncSettingsControlState();
+
+      const formValues = this.userProfileForm.getRawValue();
+      const profileData: Partial<UserProfile> = {
+        currency: formValues.currency,
+        budgetPeriod: 'custom',
+        budgetStartDate: period.startDate,
+        budgetEndDate: period.endDate,
+        selectedBudgetPeriodId: newPeriodRef.key,
+      };
+      await this.userDataService.updateUserProfile(currentUser.uid, profileData);
+
+      if (this.canEditSettings && this.accountType === 'group' && this.groupId) {
+        await this.groupService.updateGroupSettings(this.groupId, {
+          currency: profileData.currency,
+          budgetPeriod: profileData.budgetPeriod,
+          budgetStartDate: profileData.budgetStartDate,
+          budgetEndDate: profileData.budgetEndDate,
+          selectedBudgetPeriodId: profileData.selectedBudgetPeriodId,
+        });
       }
+
+      Toast.fire({ icon: 'success', title: this.translate.instant('CUSTOM_BUDGET_PERIOD_SAVE_SUCCESS') });
+    } catch (error) {
+      Swal.fire({ icon: 'error', title: this.translate.instant('ERROR_TITLE'), text: this.translate.instant('CUSTOM_BUDGET_PERIOD_SAVE_ERROR') });
+      console.error('Error saving custom budget period:', error);
     }
   }
 

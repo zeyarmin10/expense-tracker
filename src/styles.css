@@ -1,3 +1,18 @@
+@import "tailwindcss/utilities";
+
+@source "../src";
+
+@theme inline {
+  --color-t-surface:  var(--surface);
+  --color-t-surface2: var(--surface-2);
+  --color-t-accent:   var(--accent);
+  --color-t-warning:  var(--warning);
+  --color-t-success:  var(--success);
+  --color-t-text:     var(--text);
+  --color-t-muted:    var(--text-muted);
+  --color-t-border:   var(--border);
+}
+
 /* ── Global Design Tokens ── */
 :root {
   --bg: #020817;
@@ -494,6 +509,46 @@ body.light-mode select option {
 body.light-mode input[type="date"]::-webkit-calendar-picker-indicator {
   filter: invert(0) !important;
   opacity: 0.5;
+}
+
+/* ── Dark mode: theme-segment sun icon visibility ── */
+body:not(.light-mode) .prof-segment-btn:not(.active) .theme-icon-img {
+  filter: brightness(0) invert(0.7);
+}
+
+/* ── Light mode: date filter segment control ── */
+body.light-mode .exp-filter-bar {
+  background: #f0f5ff;
+  border-color: rgba(99, 143, 220, 0.2);
+}
+
+body.light-mode .exp-seg-ctrl {
+  background: rgba(99, 143, 220, 0.18);
+}
+
+body.light-mode .exp-seg-indicator {
+  background: #ffffff;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.1),
+    0 2px 8px rgba(0, 0, 0, 0.08),
+    0 0 0 1px rgba(0, 0, 0, 0.07);
+}
+
+body.light-mode .exp-seg-btn {
+  color: rgba(55, 78, 130, 0.55);
+}
+
+body.light-mode .exp-seg-btn.active {
+  color: var(--accent);
+}
+
+body.light-mode .exp-seg-reset {
+  color: rgba(55, 78, 130, 0.5);
+}
+
+body.light-mode .exp-seg-reset:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: rgba(55, 78, 130, 0.85);
 }
 
 /* ── Dark mode SweetAlert toast shadow ── */

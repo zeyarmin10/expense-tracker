@@ -81,6 +81,38 @@
   border: 1px solid var(--border);
   border-radius: 16px;
   overflow: hidden;
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.35);
+  transition: box-shadow 0.25s ease;
+}
+
+.exp-panel:has(.exp-panel-body.open) {
+  box-shadow: 0 4px 32px rgba(11, 116, 255, 0.1), 0 2px 20px rgba(0, 0, 0, 0.35);
+}
+
+.exp-icon-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  flex-shrink: 0;
+}
+
+.exp-icon-badge-accent {
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+
+.exp-icon-badge-warning {
+  background: rgba(251, 191, 36, 0.1);
+  color: var(--warning);
+}
+
+.exp-icon-badge-success {
+  background: rgba(52, 211, 153, 0.1);
+  color: var(--success);
 }
 
 .exp-panel-toggle {
@@ -113,23 +145,36 @@
 .exp-chevron {
   font-size: 0.75rem;
   color: var(--text-muted);
-  transition: transform 0.2s;
+  flex-shrink: 0;
+  transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .exp-panel-body {
-  max-height: 0;
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.exp-panel-inner {
   overflow: hidden;
-  transition: max-height 0.3s ease, padding 0.3s ease;
-  border-top: 0px solid var(--border);
+  min-height: 0;
+  opacity: 0;
+  transition: opacity 0.18s ease;
 }
 
 .exp-panel-body.open {
-  max-height: 1000px;
+  grid-template-rows: 1fr;
   border-top: 1px solid var(--border);
 }
 
-.exp-voucher-panel .exp-panel-body.open {
-  max-height: none;
+.exp-panel-body.open .exp-panel-inner {
+  opacity: 1;
+  transition: opacity 0.3s ease 0.14s;
+}
+
+.exp-voucher-collapse-body > * {
+  overflow: hidden;
+  min-height: 0;
 }
 
 /* ── Form ── */
@@ -727,14 +772,47 @@
   gap: 0.5rem;
 }
 
+.exp-chevron.open {
+  transform: rotate(180deg);
+}
+
 .exp-collapse-chevron {
   color: var(--text-muted);
-  transition: transform 0.2s ease;
+  transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1);
   flex-shrink: 0;
 }
 
 .exp-collapse-chevron.open {
   transform: rotate(180deg);
+}
+
+.exp-voucher-collapse-body {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.exp-voucher-collapse-body > * {
+  overflow: hidden;
+  min-height: 0;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+
+.exp-voucher-collapse-body.open {
+  grid-template-rows: 1fr;
+}
+
+.exp-voucher-collapse-body.open > * {
+  opacity: 1;
+  transition: opacity 0.3s ease 0.14s;
+}
+
+.exp-icon-badge-sm {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 0.4rem;
+  font-size: 0.72rem;
 }
 
 .exp-section-title {
@@ -746,7 +824,16 @@
   margin: 0;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.6rem;
+}
+
+.exp-section-title .exp-icon-badge {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 0.4rem;
+  font-size: 0.72rem;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .exp-section-title-warning {
@@ -855,7 +942,8 @@ a.exp-icon-btn {
 
 .exp-category-group {
   border-bottom: 1px solid var(--border);
-  border-left: 3px solid hsla(var(--cat-hue), var(--cat-sat, 72%), 60%, 0.8);
+  border-left: 3px solid hsla(var(--cat-hue), 90%, 55%, 0.9);
+  border-left: 3px solid oklch(0.65 0.21 var(--cat-hue) / 0.9);
 }
 
 .exp-category-group:last-child {
@@ -868,25 +956,50 @@ a.exp-icon-btn {
   gap: 0.4rem;
   flex-wrap: nowrap;
   padding: 0.55rem 1rem;
-  background: hsla(var(--cat-hue), var(--cat-sat, 65%), 50%, 0.10);
+  background: hsla(var(--cat-hue), 88%, 50%, 0.10);
+  background: oklch(0.68 0.16 var(--cat-hue) / 0.10);
   min-width: 0;
 }
 
 .exp-category-title-chip {
   flex-shrink: 0;
-  border: 1px solid hsla(var(--cat-hue), var(--cat-sat, 70%), 60%, 0.55);
-  background: hsla(var(--cat-hue), var(--cat-sat, 70%), 60%, 0.18);
-  color: hsl(var(--cat-hue), var(--cat-sat, 80%), 70%);
   border-radius: 999px;
   padding: 0.22rem 0.6rem;
   font-size: 0.72rem;
   font-weight: 800;
   cursor: pointer;
   white-space: nowrap;
+
+  /* HSL fallback */
+  border: 1px solid hsla(var(--cat-hue), 90%, 55%, 0.5);
+  background: hsla(var(--cat-hue), 90%, 52%, 0.14);
+  color: hsl(var(--cat-hue), 90%, 65%);
+  /* OKLCH override — perceptually equal brightness across all hues */
+  border: 1px solid oklch(0.65 0.2 var(--cat-hue) / 0.5);
+  background: oklch(0.68 0.15 var(--cat-hue) / 0.14);
+  color: oklch(0.74 0.2 var(--cat-hue));
 }
 
 .exp-category-title-chip:hover {
-  border-color: hsla(var(--cat-hue), var(--cat-sat, 70%), 60%, 0.85);
+  background: hsla(var(--cat-hue), 90%, 52%, 0.22);
+  background: oklch(0.68 0.15 var(--cat-hue) / 0.22);
+  border-color: hsla(var(--cat-hue), 90%, 60%, 0.8);
+  border-color: oklch(0.72 0.2 var(--cat-hue) / 0.8);
+}
+
+/* light mode — much darker for readability on light bg */
+body.light-mode .exp-category-title-chip {
+  color: hsl(var(--cat-hue), 85%, 34%);
+  color: oklch(0.42 0.18 var(--cat-hue));
+  border-color: hsla(var(--cat-hue), 85%, 40%, 0.55);
+  border-color: oklch(0.5 0.18 var(--cat-hue) / 0.55);
+  background: hsla(var(--cat-hue), 85%, 46%, 0.12);
+  background: oklch(0.68 0.15 var(--cat-hue) / 0.12);
+}
+
+body.light-mode .exp-category-title-chip:hover {
+  background: hsla(var(--cat-hue), 85%, 46%, 0.2);
+  background: oklch(0.68 0.15 var(--cat-hue) / 0.2);
 }
 
 .exp-category-count {
@@ -1445,42 +1558,75 @@ a.exp-icon-btn {
   z-index: 50;
 }
 
-/* segment track */
+/* ── iOS-style Segmented Control ── */
 .exp-seg-ctrl {
   display: flex;
   align-items: center;
   background: var(--surface-2);
   border-radius: 10px;
   padding: 3px;
-  gap: 2px;
+  gap: 4px;
+}
+
+/* track: relative container for buttons + sliding indicator */
+.exp-seg-track {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* sliding pill — the iOS indicator */
+.exp-seg-indicator {
+  position: absolute;
+  inset: 0;
+  width: 25%;          /* 100% ÷ 4 tabs */
+  border-radius: 7px;
+  background: var(--surface);
+  box-shadow:
+    0 1px 6px rgba(0, 0, 0, 0.3),
+    0 0 0 0.5px rgba(11, 116, 255, 0.15);
+  transition: transform 0.42s cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: transform;
+  pointer-events: none;
+  z-index: 0;
 }
 
 .exp-seg-btn {
   flex: 1;
   min-height: 36px;
   padding: 0.35rem 0.2rem;
-  border-radius: 8px;
   border: none;
   background: transparent;
   color: var(--text-muted);
   font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
   white-space: nowrap;
   -webkit-tap-highlight-color: transparent;
+  position: relative;
+  z-index: 1;
+  transition: color 0.22s ease, transform 0.12s ease;
+  border-radius: 7px;
+}
+
+.exp-seg-btn:active {
+  transform: scale(0.93);
 }
 
 .exp-seg-btn.active {
-  background: var(--surface);
-  color: var(--accent, #0b74ff);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.22), 0 0 0 1px rgba(11,116,255,0.12);
+  color: var(--accent);
+  font-weight: 700;
+  background: transparent;
+  box-shadow: none;
 }
 
-/* reset button in segment row */
+/* reset button */
 .exp-seg-reset {
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   flex-shrink: 0;
   border-radius: 8px;
   border: none;
@@ -1491,14 +1637,18 @@ a.exp-icon-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.15s, color 0.15s;
+  transition: background 0.15s, color 0.15s, transform 0.2s ease;
   -webkit-tap-highlight-color: transparent;
-  margin-left: 2px;
+}
+
+.exp-seg-reset:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
 }
 
 .exp-seg-reset:active {
-  background: var(--surface-2);
-  color: var(--text);
+  transform: rotate(-45deg);
+  color: var(--accent);
 }
 
 /* date range picker */
