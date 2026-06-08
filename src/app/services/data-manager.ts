@@ -20,6 +20,7 @@ import { SpaceContextService } from './space-context.service';
 export interface IGroupDetails {
   groupName: string;
   ownerId: string;
+  imageUrl?: string | null;
 }
 
 // New interface for the combined member data

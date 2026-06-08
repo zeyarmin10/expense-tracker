@@ -54,9 +54,10 @@
           <fa-icon [icon]="faPiggyBank" class="bgt-icon-accent"></fa-icon>
           {{ "ADD_BUDGET" | translate }}
         </span>
-        <fa-icon [icon]="isAddFormOpen ? faChevronUp : faChevronDown" class="bgt-chevron"></fa-icon>
+        <fa-icon [icon]="faChevronDown" class="bgt-chevron" [class.open]="isAddFormOpen"></fa-icon>
       </button>
       <div class="bgt-panel-body" [class.open]="isAddFormOpen">
+        <div class="bgt-panel-inner">
         <form [formGroup]="budgetForm" (ngSubmit)="onSubmitBudget()" class="bgt-form">
 
           <div class="bgt-form-row">
@@ -120,6 +121,7 @@
             </button>
           </div>
         </form>
+        </div>
       </div>
     </div>
 
@@ -131,9 +133,10 @@
           <fa-icon [icon]="faTasks" class="bgt-icon-success"></fa-icon>
           {{ "RECORDED_BUDGETS" | translate }}
         </span>
-        <fa-icon [icon]="isRecordedOpen ? faChevronUp : faChevronDown" class="bgt-chevron"></fa-icon>
+        <fa-icon [icon]="faChevronDown" class="bgt-chevron" [class.open]="isRecordedOpen"></fa-icon>
       </button>
       <div class="bgt-panel-body" [class.open]="isRecordedOpen">
+        <div class="bgt-panel-inner">
         <div class="bgt-recorded-body">
           <ng-container *ngIf="filteredBudgets$ | async as budgets; else loadingBudget">
             <ng-container *ngIf="budgets.length > 0; else noBudgetsTemplate">
@@ -170,6 +173,7 @@
           <ng-template #loadingBudget>
             <p class="bgt-empty">{{ "LOADING_DATA" | translate }}</p>
           </ng-template>
+        </div>
         </div>
       </div>
     </div>

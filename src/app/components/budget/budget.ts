@@ -155,7 +155,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
   faTrash = faTrash;
   faSave = faSave;
   faChevronDown = faChevronDown;
-  faChevronUp = faChevronUp;
   faTriangleExclamation = faTriangleExclamation;
   faCircleCheck = faCircleCheck;
   faPiggyBank = faPiggyBank;

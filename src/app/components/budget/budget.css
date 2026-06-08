@@ -225,18 +225,35 @@
 .bgt-chevron {
   font-size: 0.7rem;
   color: var(--text-muted);
+  transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+}
+
+.bgt-chevron.open {
+  transform: rotate(180deg);
 }
 
 .bgt-panel-body {
-  max-height: 0;
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bgt-panel-inner {
   overflow: hidden;
-  transition: max-height 0.3s ease;
-  border-top: 0px solid var(--border);
+  min-height: 0;
+  opacity: 0;
+  transition: opacity 0.18s ease;
 }
 
 .bgt-panel-body.open {
-  max-height: 9999px;
+  grid-template-rows: 1fr;
   border-top: 1px solid var(--border);
+}
+
+.bgt-panel-body.open .bgt-panel-inner {
+  opacity: 1;
+  transition: opacity 0.3s ease 0.14s;
 }
 
 /* Static header (no toggle) */

@@ -61,6 +61,7 @@ export class MemberManagementComponent implements OnInit {
   pendingInvites$: Observable<IInvitation[]>;
   groupOwnerId$: Observable<string | null>;
   spaceName$: Observable<string | null>;
+  spaceImageUrl$!: Observable<string | null>;
   invitationSent: boolean = false;
 
   newMemberEmail: string = '';
@@ -114,6 +115,17 @@ export class MemberManagementComponent implements OnInit {
             map((details: IGroupDetails | null) => details ? details.groupName : null)
           )
           : of(profile?.currentSpaceName || null);
+      })
+    );
+
+    this.spaceImageUrl$ = this.userProfile$.pipe(
+      switchMap(profile => {
+        const activeGroupId = getActiveGroupId(profile);
+        return profile && activeGroupId
+          ? from(this.dataManager.getGroupDetails(activeGroupId)).pipe(
+            map((details: IGroupDetails | null) => details?.imageUrl ?? null)
+          )
+          : of(null);
       })
     );
   }

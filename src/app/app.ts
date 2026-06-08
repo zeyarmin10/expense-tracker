@@ -19,6 +19,7 @@ import { NotificationService } from './services/notification.service';
 import {
   faRightFromBracket,
   faUsers,
+  faUser,
   faChevronDown,
   faSun,
   faMoon,
@@ -75,6 +76,7 @@ export class App implements OnInit, AfterViewInit {
   currentSpaceLabel$: Observable<string | null>;
   showFab$: Observable<boolean>;
   spaceSwitchLoading$: Observable<boolean>;
+  currentGroupImageUrl$: Observable<string | null>;
   faRightFromBracket = faRightFromBracket;
   faUsers = faUsers;
   faChevronDown = faChevronDown;
@@ -89,6 +91,7 @@ export class App implements OnInit, AfterViewInit {
   faPiggyBank = faPiggyBank;
   faShoppingCart = faShoppingCart;
   faTags = faTags;
+  faUser = faUser;
   faArrowDown = faArrowDown;
   faRotateRight = faRotateRight;
   pullDistance = 0;
@@ -183,6 +186,10 @@ export class App implements OnInit, AfterViewInit {
 
     this.userSpaces$ = this.currentUser$.pipe(
       switchMap((user) => user ? this.spaceContextService.getUserSpaces(user.uid) : of([]))
+    );
+
+    this.currentGroupImageUrl$ = combineLatest([this.userSpaces$, this.currentSpaceId$]).pipe(
+      map(([spaces, currentId]) => spaces.find(s => s.id === currentId)?.imageUrl ?? null)
     );
 
     const isLoggedIn$ = this.currentUser$.pipe(map(user => !!user));

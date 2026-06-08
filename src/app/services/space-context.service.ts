@@ -109,7 +109,18 @@ export class SpaceContextService {
     return objectVal<Space | null>(spaceRef).pipe(
       switchMap((space) => {
         if (space) {
-          return of({ ...space, id: spaceId });
+          // If imageUrl is already set, no extra read needed
+          if (space.imageUrl) {
+            return of({ ...space, id: spaceId });
+          }
+          // Backfill imageUrl from groups node for spaces that predate image support
+          return objectVal<any>(legacyGroupRef).pipe(
+            map((group) => ({
+              ...space,
+              id: spaceId,
+              imageUrl: group?.imageUrl || group?.avatarUrl || group?.logoUrl || group?.photoURL || null,
+            })),
+          );
         }
 
         return objectVal<any>(legacyGroupRef).pipe(

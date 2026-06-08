@@ -187,7 +187,6 @@ export class Profit implements OnInit, OnDestroy {
   faTrash = faTrash;
   faSave = faSave;
   faChevronDown = faChevronDown;
-  faChevronUp = faChevronUp;
   faMoneyBillWave = faMoneyBillWave;
   faShoppingCart = faShoppingCart;
   faChartLine = faChartLine;

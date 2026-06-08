@@ -5,6 +5,7 @@ export interface Group {
   groupName: string;
   currency: string;
   members?: { [key: string]: Role };
+  imageUrl?: string | null;
   // Budget settings
   budgetPeriod?: 'monthly' | 'quarterly' | 'yearly' | 'custom' | 'weekly' | null;
   budgetStartDate?: string | null;

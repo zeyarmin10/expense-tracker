@@ -197,9 +197,10 @@
           <fa-icon [icon]="faChartColumn" class="pnl-icon-accent"></fa-icon>
           {{ 'DAILY_CASH_FLOW' | translate }}
         </span>
-        <fa-icon [icon]="isDailyCashFlowCollapsed ? faChevronDown : faChevronUp" class="pnl-chevron"></fa-icon>
+        <fa-icon [icon]="faChevronDown" class="pnl-chevron" [class.open]="!isDailyCashFlowCollapsed"></fa-icon>
       </button>
       <div class="pnl-panel-body" [class.open]="!isDailyCashFlowCollapsed">
+        <div class="pnl-panel-inner">
         <div class="pnl-cash-flow-shell pnl-cash-flow-shell-padded">
           <ng-container *ngIf="dailyCashFlowSummary$ | async as cashSummary">
             <div class="pnl-cash-flow-summary-grid">
@@ -301,6 +302,7 @@
           </ng-template>
           </div>
         </div>
+        </div>
       </div>
     </div>
 
@@ -311,9 +313,10 @@
           <fa-icon [icon]="faMoneyBillWave" class="pnl-icon-income"></fa-icon>
           {{ 'ADD_INCOME' | translate }}
         </span>
-        <fa-icon [icon]="isIncomeFormCollapsed ? faChevronDown : faChevronUp" class="pnl-chevron"></fa-icon>
+        <fa-icon [icon]="faChevronDown" class="pnl-chevron" [class.open]="!isIncomeFormCollapsed"></fa-icon>
       </button>
       <div class="pnl-panel-body" [class.open]="!isIncomeFormCollapsed">
+        <div class="pnl-panel-inner">
         <form [formGroup]="incomeForm" (ngSubmit)="onSubmitIncome()" class="pnl-form">
           <div class="pnl-form-row">
             <div class="pnl-float-field">
@@ -349,6 +352,7 @@
             </button>
           </div>
         </form>
+        </div>
       </div>
     </div>
 
@@ -359,9 +363,10 @@
           <fa-icon [icon]="faMoneyBillWave" class="pnl-icon-income"></fa-icon>
           {{ 'RECORDED_INCOMES' | translate }}
         </span>
-        <fa-icon [icon]="isRecordedIncomesCollapsed ? faChevronDown : faChevronUp" class="pnl-chevron"></fa-icon>
+        <fa-icon [icon]="faChevronDown" class="pnl-chevron" [class.open]="!isRecordedIncomesCollapsed"></fa-icon>
       </button>
       <div class="pnl-panel-body" [class.open]="!isRecordedIncomesCollapsed">
+        <div class="pnl-panel-inner">
         <div class="pnl-list-body">
           <ng-container *ngIf="incomes$ | async as incomes; else listLoading">
             <ng-container *ngIf="incomes.length > 0; else listEmpty">
@@ -387,6 +392,7 @@
             <p class="pnl-empty">{{ 'LOADING_DATA' | translate }}</p>
           </ng-template>
         </div>
+        </div>
       </div>
     </div>
 
@@ -397,9 +403,10 @@
           <fa-icon [icon]="faPiggyBank" class="pnl-icon-budget"></fa-icon>
           {{ 'RECORDED_BUDGETS' | translate }}
         </span>
-        <fa-icon [icon]="isRecordedBudgetsCollapsed ? faChevronDown : faChevronUp" class="pnl-chevron"></fa-icon>
+        <fa-icon [icon]="faChevronDown" class="pnl-chevron" [class.open]="!isRecordedBudgetsCollapsed"></fa-icon>
       </button>
       <div class="pnl-panel-body" [class.open]="!isRecordedBudgetsCollapsed">
+        <div class="pnl-panel-inner">
         <div class="pnl-list-body">
           <ng-container *ngIf="filteredBudgets$ | async as budgets; else listLoading">
             <ng-container *ngIf="budgets.length > 0; else listEmpty">
@@ -431,6 +438,7 @@
           <ng-template #listLoading>
             <p class="pnl-empty">{{ 'LOADING_DATA' | translate }}</p>
           </ng-template>
+        </div>
         </div>
       </div>
     </div>

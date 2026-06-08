@@ -1,4 +1,4 @@
-<div class="ob-root">
+<div class="ob-root" (click)="closeSpaceActions()">
   <div class="ob-bg-grid"></div>
   <div class="ob-bg-glow"></div>
 
@@ -49,13 +49,15 @@
                 <button
                   class="ob-space-item"
                   [class.ob-space-item-has-actions]="hasSpaceActions(space)"
-                  [class.ob-space-item-actions-open]="openActionMenuSpaceId === space.id"
                   type="button"
                   (click)="switchSpace(space.id!)"
                   [class.ob-space-item-active]="profile.currentSpaceId === space.id">
                   <span class="ob-space-item-main">
-                    <fa-icon [icon]="faUser" *ngIf="space.type === 'personal'"></fa-icon>
-                    <fa-icon [icon]="faUsers" *ngIf="space.type === 'group'"></fa-icon>
+                    <span class="ob-space-avatar" *ngIf="space.imageUrl">
+                      <img [src]="space.imageUrl" alt="">
+                    </span>
+                    <fa-icon [icon]="faUser" *ngIf="!space.imageUrl && space.type === 'personal'"></fa-icon>
+                    <fa-icon [icon]="faUsers" *ngIf="!space.imageUrl && space.type === 'group'"></fa-icon>
                     <span class="ob-space-name">{{ getDisplaySpaceName(space) }}</span>
                   </span>
                   <span class="ob-space-badge" *ngIf="profile.currentSpaceId === space.id">
@@ -64,33 +66,33 @@
                 </button>
 
                 <div class="ob-space-actions" *ngIf="hasSpaceActions(space)">
-                  <div
-                    class="ob-space-action-panel"
-                    [class.ob-space-action-panel-open]="openActionMenuSpaceId === space.id"
-                    (click)="$event.stopPropagation()">
-                    <button
-                      class="ob-space-action-btn"
-                      type="button"
-                      *ngIf="canRenameSpace(space)"
-                      (click)="renameSpace(space, $event)">
-                      <fa-icon [icon]="faPen"></fa-icon>
-                    </button>
-
-                    <button
-                      class="ob-space-action-btn ob-space-action-btn-danger"
-                      type="button"
-                      *ngIf="canDeleteSpace(space)"
-                      (click)="deleteSpace(space, $event)">
-                      <fa-icon [icon]="faTrashCan"></fa-icon>
-                    </button>
-                  </div>
-
                   <button
                     class="ob-space-action-trigger"
                     type="button"
                     (click)="toggleSpaceActions(space.id!, $event)"
+                    [class.ob-space-action-trigger-open]="openActionMenuSpaceId === space.id"
                     [attr.aria-expanded]="openActionMenuSpaceId === space.id">
                     <fa-icon [icon]="faEllipsisVertical"></fa-icon>
+                  </button>
+                </div>
+
+                <div class="ob-dropdown-menu"
+                  *ngIf="hasSpaceActions(space)"
+                  [class.ob-dropdown-open]="openActionMenuSpaceId === space.id"
+                  (click)="$event.stopPropagation()">
+                  <button class="ob-dropdown-item" type="button"
+                    *ngIf="canRenameSpace(space)"
+                    (click)="openEditGroupModal(space, $event)">
+                    <fa-icon [icon]="faPen"></fa-icon>
+                    <span>{{ 'EDIT_BUTTON_LABEL' | translate }}</span>
+                  </button>
+                  <div class="ob-dropdown-divider"
+                    *ngIf="canRenameSpace(space) && canDeleteSpace(space)"></div>
+                  <button class="ob-dropdown-item ob-dropdown-item-danger" type="button"
+                    *ngIf="canDeleteSpace(space)"
+                    (click)="deleteSpace(space, $event)">
+                    <fa-icon [icon]="faTrashCan"></fa-icon>
+                    <span>{{ 'DELETE_BUTTON' | translate }}</span>
                   </button>
                 </div>
               </div>
@@ -128,23 +130,7 @@
               </div>
             </div>
             <div class="ob-input-row">
-              <div class="ob-fl-wrap">
-                <input
-                  type="text"
-                  class="ob-fl-input"
-                  id="ob-group-name"
-                  [(ngModel)]="newGroupName"
-                  [attr.maxlength]="maxSpaceNameLength"
-                  placeholder=" "
-                  autocomplete="off" />
-                <label class="ob-fl-label" for="ob-group-name">
-                  {{ 'ONBOARDING.ENTER_GROUP_NAME' | translate }}
-                </label>
-              </div>
-              <div class="ob-input-meta">
-                {{ 'SPACE_NAME_LIMIT_HINT' | translate:{ max: maxSpaceNameLength } }}
-              </div>
-              <button class="ob-btn ob-btn-accent" (click)="createGroup()" [disabled]="!isNewGroupNameValid()">
+              <button class="ob-btn ob-btn-accent" (click)="openCreateGroupModal()">
                 {{ 'ONBOARDING.CREATE_GROUP_BUTTON' | translate }}
               </button>
             </div>

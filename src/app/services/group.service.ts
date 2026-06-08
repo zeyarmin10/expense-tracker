@@ -64,7 +64,7 @@ export class GroupService {
     return this.spaceContextService;
   }
 
-  async createGroup(groupName: string, language: string): Promise<string> {
+  async createGroup(groupName: string, language: string, imageUrl?: string | null): Promise<string> {
     const authService = this.getAuthService();
     const userDataService = this.getUserDataService();
     
@@ -100,6 +100,7 @@ export class GroupService {
       budgetPeriod: userProfile?.budgetPeriod || null,
       selectedBudgetPeriodId: userProfile?.selectedBudgetPeriodId || null,
       createdAt: Date.now(),
+      ...(imageUrl ? { imageUrl } : {}),
     };
 
     const legacyUpdates: { [key: string]: any } = {};
@@ -148,8 +149,18 @@ export class GroupService {
   }
 
   async updateGroupSettings(groupId: string, settings: Partial<Group>): Promise<void> {
-    const groupSettingsRef = ref(this.db, `groups/${groupId}`);
-    return update(groupSettingsRef, settings);
+    await update(ref(this.db, `groups/${groupId}`), settings);
+
+    // Mirror imageUrl to /spaces/ node so getSpace() picks it up
+    if ('imageUrl' in settings) {
+      try {
+        await update(ref(this.db, `spaces/${groupId}`), { imageUrl: settings.imageUrl ?? null });
+      } catch (error: any) {
+        if (!isPermissionDenied(error)) {
+          throw error;
+        }
+      }
+    }
   }
 
   async renameGroup(groupId: string, nextName: string): Promise<void> {

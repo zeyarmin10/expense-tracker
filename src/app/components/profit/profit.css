@@ -474,15 +474,35 @@
 .pnl-chevron {
   font-size: 0.7rem;
   color: var(--text-muted);
+  transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+}
+
+.pnl-chevron.open {
+  transform: rotate(180deg);
 }
 
 .pnl-panel-body {
-  display: none;
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pnl-panel-inner {
+  overflow: hidden;
+  min-height: 0;
+  opacity: 0;
+  transition: opacity 0.18s ease;
 }
 
 .pnl-panel-body.open {
-  display: block;
+  grid-template-rows: 1fr;
   border-top: 1px solid var(--border);
+}
+
+.pnl-panel-body.open .pnl-panel-inner {
+  opacity: 1;
+  transition: opacity 0.3s ease 0.14s;
 }
 
 /* ── Form ── */
