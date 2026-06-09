@@ -24,7 +24,7 @@ export class NotificationAdminComponent {
   faShieldHalved = faShieldHalved;
 
   adminSecret = '';
-  title = 'SpendWise';
+  title = 'Kyat Wise';
   body = '';
   link = '/expense';
   targetUid = '';

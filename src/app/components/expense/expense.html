@@ -604,20 +604,6 @@
               <div *ngIf="voucher.note" class="exp-voucher-note">
                 {{ voucher.note }}
               </div>
-              <div
-                *ngIf="userProfile?.accountType === 'group' && voucher.userDisplayName"
-                class="exp-created-by exp-voucher-created-by"
-              >
-                <app-user-avatar
-                  [name]="voucher.userDisplayName || voucher.createdByName || 'Former Member'"
-                  [photoUrl]="voucher.userPhotoURL || voucher.createdByPhotoURL"
-                  [size]="22"
-                ></app-user-avatar>
-                <span class="exp-created-by-text">
-                  {{ "EXPENSE_CREATED_BY" | translate: { name:
-                  voucher.userDisplayName || voucher.createdByName || 'Former Member' } }}
-                </span>
-              </div>
             </div>
 
             <div class="exp-voucher-actions">
@@ -638,6 +624,21 @@
               >
                 <fa-icon [icon]="faTrashCan"></fa-icon>
               </button>
+              <div
+                *ngIf="userProfile?.accountType === 'group' && voucher.userDisplayName"
+                class="exp-avatar-btn"
+                (click)="toggleVoucherAvatarName(voucher.id!, $event)"
+              >
+                <app-user-avatar
+                  [name]="voucher.userDisplayName || voucher.createdByName || 'Former Member'"
+                  [photoUrl]="voucher.userPhotoURL || voucher.createdByPhotoURL"
+                  [size]="26"
+                ></app-user-avatar>
+                <span
+                  class="exp-avatar-name-bubble"
+                  [class.visible]="activeAvatarVoucherId === voucher.id"
+                >{{ voucher.userDisplayName || voucher.createdByName || 'Former Member' }}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -762,28 +763,29 @@
                         <fa-icon class="fa-regular-icon fa-delete-btn" [icon]="faTrashCan"></fa-icon>
                       </button>
                     </div>
-                    <fa-icon
-                      [icon]="faInfoCircle"
-                      class="exp-info-icon"
-                      (click)="showExpenseInfo(expense)"
-                      [title]="'EXPENSE_INFO_TITLE' | translate"
-                    >
-                    </fa-icon>
-                  </div>
-
-                  <div
-                    *ngIf="userProfile?.accountType === 'group' && expense.userDisplayName"
-                    class="exp-created-by p-0"
-                  >
-                    <app-user-avatar
-                      [name]="expense.userDisplayName || expense.createdByName || 'Former Member'"
-                      [photoUrl]="expense.userPhotoURL || expense.createdByPhotoURL"
-                      [size]="22"
-                    ></app-user-avatar>
-                    <span class="exp-created-by-text">
-                      {{ "EXPENSE_CREATED_BY" | translate: { name:
-                      expense.userDisplayName || expense.createdByName || 'Former Member' } }}
-                    </span>
+                    <div class="exp-info-avatar-row">
+                      <fa-icon
+                        [icon]="faInfoCircle"
+                        class="exp-info-icon"
+                        (click)="showExpenseInfo(expense)"
+                        [title]="'EXPENSE_INFO_TITLE' | translate"
+                      ></fa-icon>
+                      <div
+                        *ngIf="userProfile?.accountType === 'group' && expense.userDisplayName"
+                        class="exp-avatar-btn"
+                        (click)="toggleAvatarName(expense.id!, $event)"
+                      >
+                        <app-user-avatar
+                          [name]="expense.userDisplayName || expense.createdByName || 'Former Member'"
+                          [photoUrl]="expense.userPhotoURL || expense.createdByPhotoURL"
+                          [size]="26"
+                        ></app-user-avatar>
+                        <span
+                          class="exp-avatar-name-bubble"
+                          [class.visible]="activeAvatarExpenseId === expense.id"
+                        >{{ expense.userDisplayName || expense.createdByName || 'Former Member' }}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

@@ -7,28 +7,23 @@ import {
   HostListener,
   inject,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { CommonModule, DecimalPipe } from '@angular/common';
 import { NgZone } from '@angular/core';
-import { faTimes, faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 
 @Component({
   selector: 'app-lightbox',
   standalone: true,
-  imports: [CommonModule, FontAwesomeModule],
+  imports: [CommonModule, DecimalPipe],
   templateUrl: './lightbox.component.html',
   styleUrls: ['./lightbox.component.css'],
 })
 export class LightboxComponent implements AfterViewInit, OnDestroy {
   private ngZone = inject(NgZone);
 
-  faTimes = faTimes;
-  faLeft = faChevronLeft;
-  faRight = faChevronRight;
-
   images: string[] = [];
   idx = 0;
   visible = false;
+  fading = false;
   scale = 1;
   tx = 0;
   ty = 0;
@@ -69,6 +64,7 @@ export class LightboxComponent implements AfterViewInit, OnDestroy {
     this.images = images;
     this.idx = Math.max(0, Math.min(startIdx, images.length - 1));
     this.resetZoom();
+    this.fading = false;
     this.visible = true;
     document.body.style.overflow = 'hidden';
   }
@@ -76,6 +72,10 @@ export class LightboxComponent implements AfterViewInit, OnDestroy {
   hide(): void {
     this.visible = false;
     this.restoreScroll();
+  }
+
+  onOverlayClick(e: MouseEvent): void {
+    if (e.target === e.currentTarget) this.hide();
   }
 
   private restoreScroll(): void {
@@ -122,7 +122,6 @@ export class LightboxComponent implements AfterViewInit, OnDestroy {
     const t = e.changedTouches[0];
     const now = Date.now();
 
-    // Double tap to zoom toggle
     if (this.n === 1 && now - this.lastTap < 280) {
       this.lastTap = 0;
       if (this.scale > 1) {
@@ -134,7 +133,6 @@ export class LightboxComponent implements AfterViewInit, OnDestroy {
     }
     this.lastTap = now;
 
-    // Swipe navigation (only when not zoomed)
     if (this.n === 1 && this.scale <= 1.05) {
       const dx = t.clientX - this.sx0;
       const dy = t.clientY - this.sy0;
@@ -174,23 +172,25 @@ export class LightboxComponent implements AfterViewInit, OnDestroy {
     this.ty = 0;
   }
 
-  prev(): void {
-    if (this.idx > 0) {
+  private navigate(newIdx: number): void {
+    this.fading = true;
+    setTimeout(() => {
       this.resetZoom();
-      this.idx--;
-    }
+      this.idx = newIdx;
+      this.fading = false;
+    }, 140);
+  }
+
+  prev(): void {
+    if (this.idx > 0) this.navigate(this.idx - 1);
   }
 
   next(): void {
-    if (this.idx < this.images.length - 1) {
-      this.resetZoom();
-      this.idx++;
-    }
+    if (this.idx < this.images.length - 1) this.navigate(this.idx + 1);
   }
 
   goTo(i: number): void {
-    this.resetZoom();
-    this.idx = i;
+    if (i !== this.idx) this.navigate(i);
   }
 
   get imgTransform(): string {
@@ -201,9 +201,9 @@ export class LightboxComponent implements AfterViewInit, OnDestroy {
   onKey(e: KeyboardEvent): void {
     if (!this.visible) return;
     switch (e.key) {
-      case 'Escape': this.hide(); break;
-      case 'ArrowLeft': this.prev(); break;
-      case 'ArrowRight': this.next(); break;
+      case 'Escape':      this.hide(); break;
+      case 'ArrowLeft':   this.prev(); break;
+      case 'ArrowRight':  this.next(); break;
     }
   }
 

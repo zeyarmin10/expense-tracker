@@ -60,7 +60,7 @@ import { UserAvatarComponent } from './components/common/user-avatar/user-avatar
   styleUrls: ['./app.css'],
 })
 export class App implements OnInit, AfterViewInit {
-  title = 'SpendWise';
+  title = 'Kyat Wise';
   showNavbar$: Observable<boolean>;
   pageTitle$!: Observable<string>;
   currentUser$: Observable<User | null>;

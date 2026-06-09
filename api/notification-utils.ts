@@ -255,7 +255,7 @@ export async function sendFcmMessage(
               link: absoluteLink,
             },
             notification: {
-              icon: '/images/SpendWise-Logo.png',
+              icon: '/images/Kyat-Wise-Logo.png',
               badge: '/favicon.ico',
             },
           },

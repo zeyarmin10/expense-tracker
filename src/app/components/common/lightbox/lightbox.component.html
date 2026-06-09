@@ -1,63 +1,84 @@
-<div class="lb-root" [class.lb-open]="visible" role="dialog" aria-modal="true">
+<div
+  class="lb-overlay"
+  [class.lb-open]="visible"
+  role="dialog"
+  aria-modal="true"
+  (click)="onOverlayClick($event)"
+>
 
-  <!-- Toolbar -->
-  <div class="lb-toolbar">
+  <!-- Top bar -->
+  <div class="lb-topbar">
     <span class="lb-counter" *ngIf="images.length > 1">
-      {{ idx + 1 }} / {{ images.length }}
+      {{ idx + 1 }}<span class="lb-counter-sep">/</span>{{ images.length }}
     </span>
     <span *ngIf="images.length <= 1"></span>
-    <button class="lb-close" (click)="hide()" [attr.aria-label]="'Close'">
-      <fa-icon [icon]="faTimes"></fa-icon>
-    </button>
+
+    <div class="lb-topbar-actions">
+      <a
+        class="lb-action-btn"
+        [href]="images[idx]"
+        download
+        target="_blank"
+        rel="noopener"
+        aria-label="Download"
+        (click)="$event.stopPropagation()"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      </a>
+      <button class="lb-action-btn lb-close-btn" (click)="hide()" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
   </div>
 
-  <!-- Viewport -->
+  <!-- Image stage -->
   <div
     #vp
-    class="lb-viewport"
+    class="lb-stage"
     (touchstart)="onStart($event)"
     (touchend)="onEnd($event)"
-    (click)="scale > 1 ? null : null"
+    (click)="hide()"
   >
-    <img
-      class="lb-img"
-      [src]="images[idx]"
-      [style.transform]="imgTransform"
-      alt=""
-      draggable="false"
-    />
+    <div class="lb-img-wrap" [class.lb-img-fade]="fading" (click)="$event.stopPropagation()">
+      <img
+        class="lb-img"
+        [src]="images[idx]"
+        [style.transform]="imgTransform"
+        alt=""
+        draggable="false"
+      />
+    </div>
+
+    <!-- Zoom badge -->
+    <div class="lb-zoom-badge" *ngIf="scale > 1.05">
+      {{ (scale * 100) | number:'1.0-0' }}%
+    </div>
   </div>
 
-  <!-- Prev / Next arrows (desktop / large screens) -->
-  <button
-    *ngIf="images.length > 1 && idx > 0"
-    class="lb-nav lb-prev"
-    (click)="prev()"
-    aria-label="Previous"
-  >
-    <fa-icon [icon]="faLeft"></fa-icon>
+  <!-- Prev / Next -->
+  <button *ngIf="images.length > 1 && idx > 0"     class="lb-nav lb-prev" (click)="prev()" aria-label="Previous">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
   </button>
-  <button
-    *ngIf="images.length > 1 && idx < images.length - 1"
-    class="lb-nav lb-next"
-    (click)="next()"
-    aria-label="Next"
-  >
-    <fa-icon [icon]="faRight"></fa-icon>
+  <button *ngIf="images.length > 1 && idx < images.length - 1" class="lb-nav lb-next" (click)="next()" aria-label="Next">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
   </button>
 
-  <!-- Dot indicators -->
-  <div class="lb-dots" *ngIf="images.length > 1">
-    <button
-      class="lb-dot"
-      *ngFor="let img of images; let i = index"
-      [class.active]="i === idx"
-      (click)="goTo(i)"
-      [attr.aria-label]="'Image ' + (i + 1)"
-    ></button>
+  <!-- Thumbnail filmstrip -->
+  <div class="lb-filmstrip" *ngIf="images.length > 1">
+    <div class="lb-filmstrip-inner">
+      <button
+        class="lb-thumb"
+        *ngFor="let img of images; let i = index"
+        [class.lb-thumb-active]="i === idx"
+        (click)="goTo(i); $event.stopPropagation()"
+      >
+        <img [src]="img" alt="" draggable="false" />
+      </button>
+    </div>
   </div>
 
-  <!-- Hint (only first time, fades out) -->
-  <div class="lb-hint">double-tap to zoom · swipe to navigate</div>
+  <!-- Hint -->
+  <div class="lb-hint" *ngIf="images.length > 1">swipe · double-tap to zoom</div>
+  <div class="lb-hint" *ngIf="images.length <= 1">double-tap to zoom</div>
 
 </div>

@@ -5,6 +5,7 @@ import {
   inject,
   ViewChild,
   ElementRef,
+  HostListener,
 } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import {
@@ -240,6 +241,9 @@ export class Expense implements OnInit, OnDestroy {
   faBoxArchive = faBoxArchive;
   faEye = faEye;
   faCamera = faCamera;
+
+  activeAvatarExpenseId: string | null = null;
+  activeAvatarVoucherId: string | null = null;
 
   userProfile: UserProfile | null = null;
 
@@ -1073,6 +1077,24 @@ export class Expense implements OnInit, OnDestroy {
         ${imageHtml}
         <span style="display:${fallbackDisplay};align-items:center;justify-content:center;width:100%;height:100%;">${initials}</span>
       </span>`;
+  }
+
+  @HostListener('click')
+  closeAvatarBubbles(): void {
+    this.activeAvatarExpenseId = null;
+    this.activeAvatarVoucherId = null;
+  }
+
+  toggleAvatarName(expenseId: string, event: Event): void {
+    event.stopPropagation();
+    this.activeAvatarExpenseId = this.activeAvatarExpenseId === expenseId ? null : expenseId;
+    this.activeAvatarVoucherId = null;
+  }
+
+  toggleVoucherAvatarName(voucherId: string, event: Event): void {
+    event.stopPropagation();
+    this.activeAvatarVoucherId = this.activeAvatarVoucherId === voucherId ? null : voucherId;
+    this.activeAvatarExpenseId = null;
   }
 
   showExpenseInfo(expense: IExpense): void {

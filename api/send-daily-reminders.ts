@@ -76,7 +76,7 @@ export default async function handler(
         await sendToTokens(accessToken, myanmar, {
           title:
             process.env.DAILY_REMINDER_TITLE_MY ||
-            'SpendWise သတိပေးချက်',
+            'Kyat Wise သတိပေးချက်',
           body:
             process.env.DAILY_REMINDER_BODY_MY ||
             'ဒီနေ့ အသုံးစရိတ်ထည့်ဖို့ မမေ့ပါနဲ့။',
@@ -93,7 +93,7 @@ export default async function handler(
         await sendToTokens(accessToken, english, {
           title:
             process.env.DAILY_REMINDER_TITLE_EN ||
-            'SpendWise reminder',
+            'Kyat Wise reminder',
           body:
             process.env.DAILY_REMINDER_BODY_EN ||
             'Do not forget to add today\'s expenses.',

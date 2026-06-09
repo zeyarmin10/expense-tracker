@@ -273,9 +273,10 @@ export class OnboardingComponent implements OnInit {
         if (file) {
           Swal.showLoading();
           try {
+            const compressed = await this.compressSpaceImage(file);
             const { cloudName, uploadPreset } = environment.cloudinary;
             const fd = new FormData();
-            fd.append('file', file);
+            fd.append('file', compressed);
             fd.append('upload_preset', uploadPreset);
             fd.append('folder', 'groups');
             const resp = await firstValueFrom(
@@ -470,9 +471,10 @@ export class OnboardingComponent implements OnInit {
         if (file) {
           Swal.showLoading();
           try {
+            const compressed = await this.compressSpaceImage(file);
             const { cloudName, uploadPreset } = environment.cloudinary;
             const formData = new FormData();
-            formData.append('file', file);
+            formData.append('file', compressed);
             formData.append('upload_preset', uploadPreset);
             formData.append('folder', 'groups');
             const resp = await firstValueFrom(
@@ -581,5 +583,29 @@ export class OnboardingComponent implements OnInit {
       default:
         return this.translate.instant('ONBOARDING_GROUP_CREATION_FAILED');
     }
+  }
+
+  private compressSpaceImage(file: File): Promise<File> {
+    return new Promise((resolve) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const maxSize = 400;
+        const ratio = Math.min(maxSize / img.width, maxSize / img.height, 1);
+        const w = Math.round(img.width * ratio);
+        const h = Math.round(img.height * ratio);
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext('2d')!.drawImage(img, 0, 0, w, h);
+        canvas.toBlob(
+          (blob) => resolve(new File([blob!], file.name, { type: 'image/jpeg' })),
+          'image/jpeg', 0.85
+        );
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+      img.src = url;
+    });
   }
 }
