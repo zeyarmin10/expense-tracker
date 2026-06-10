@@ -7,7 +7,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { Observable, of, map, firstValueFrom, combineLatest, Subscription, BehaviorSubject } from 'rxjs';
-import { switchMap, tap, catchError } from 'rxjs/operators';
+import { switchMap, tap, catchError, distinctUntilChanged } from 'rxjs/operators';
 import { AuthService } from '../../services/auth';
 import { getActiveGroupId, UserDataService, UserProfile } from '../../services/user-data';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -25,6 +25,7 @@ import { AVAILABLE_CURRENCIES } from '../../core/constants/app.constants';
 import { CustomBudgetPeriodModalComponent } from '../common/custom-budget-period-modal/custom-budget-period-modal.component';
 import { CustomBudgetPeriod, CustomBudgetPeriodService } from '../../services/custom-budget-period.service';
 import { GroupService } from '../../services/group.service';
+import { SpaceDataService } from '../../services/space-data.service';
 import { FormatService } from '../../services/format.service';
 import { AppTheme, ThemeService } from '../../services/theme.service';
 import { NotificationService, NotificationSettingsState } from '../../services/notification.service';
@@ -78,6 +79,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   private datePipe = inject(DatePipe);
   private customBudgetPeriodService = inject(CustomBudgetPeriodService);
   private groupService = inject(GroupService);
+  private spaceDataService = inject(SpaceDataService);
   private themeService = inject(ThemeService);
   private notificationService = inject(NotificationService);
   public formatService = inject(FormatService);
@@ -89,6 +91,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   public userRole: string | null = null;
   public accountType: string | null = null;
   private groupId: string | null = null;
+  private spaceId: string | null = null;
 
   selectedLanguage: string = 'my';
   selectedCurrency: string = 'MMK';
@@ -226,16 +229,14 @@ export class UserProfileComponent implements OnInit, OnDestroy {
 
               this.syncSettingsControlState();
 
-              // Patch form values
+              // Patch non-space-specific form values only.
+              // Budget period is owned by ngOnInit's userProfile$ subscription
+              // to avoid being overwritten by re-emissions of the raw profile.
               this.userProfileForm.patchValue({
                 displayName: profile.displayName || user.displayName || '',
                 currency: profile.currency || 'MMK',
-                budgetPeriod: profile.selectedBudgetPeriodId || profile.budgetPeriod || null,
-                budgetStartDate: profile.budgetStartDate || null,
-                budgetEndDate: profile.budgetEndDate || null,
               }, { emitEvent: false });
               this.selectedCurrency = profile.currency || 'MMK';
-              this.handleBudgetPeriodChange(this.userProfileForm.get('budgetPeriod')?.value, true);
 
               // Fetch group name if accountType is 'group'
               const activeGroupId = getActiveGroupId(profile);
@@ -249,6 +250,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
                   this.userRole = effectiveRole;
                   this.accountType = mergedProfile?.accountType || this.accountType;
                   this.groupId = getActiveGroupId(mergedProfile || profile);
+                  this.spaceId = this.spaceDataService.getCurrentSpaceId(mergedProfile || profile);
                   this.syncSettingsControlState();
                   // group member ဆို mergedProfile မှာ group currency ရှိပြီးသား
                   const effectiveCurrency = mergedProfile?.currency || profile.currency || 'MMK';
@@ -332,10 +334,40 @@ export class UserProfileComponent implements OnInit, OnDestroy {
     this.translateBudgetPeriodNames();
     void this.refreshNotificationState();
 
-    this.authService.currentUser$.pipe(
-      switchMap(user => user ? this.customBudgetPeriodService.getCustomBudgetPeriods(user.uid) : of([]))
-    ).subscribe(periods => {
+    // Periods stream: only restarts when spaceId/uid changes, not on every profile save.
+    // combineLatest ensures we still react to profile updates without dropping the live periods subscription.
+    const spaceKey$ = this.authService.userProfile$.pipe(
+      map(profile => ({
+        uid: profile?.uid ?? null,
+        spaceId: profile ? this.spaceDataService.getCurrentSpaceId(profile) : null,
+      })),
+      distinctUntilChanged((a, b) => a.uid === b.uid && a.spaceId === b.spaceId)
+    );
+
+    combineLatest([
+      spaceKey$.pipe(
+        switchMap(({ uid, spaceId }) => uid
+          ? this.customBudgetPeriodService.getCustomBudgetPeriods(uid, spaceId)
+          : of([] as CustomBudgetPeriod[])
+        )
+      ),
+      this.authService.userProfile$,
+    ]).subscribe(([periods, profile]) => {
       this.customBudgetPeriods = periods.sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
+      if (profile) {
+        const rawId = profile.selectedBudgetPeriodId ?? null;
+        const customMatch = !!rawId && periods.some(p => p.id === rawId);
+        // Only use selectedBudgetPeriodId if it actually exists in the loaded list.
+        // Fall back to standard budgetPeriod so a stale/cross-space ID never shows a blank dropdown.
+        const periodId = customMatch
+          ? rawId
+          : (profile.budgetPeriod && profile.budgetPeriod !== 'custom' ? profile.budgetPeriod : null);
+        this.userProfileForm.patchValue({
+          budgetPeriod: periodId,
+          budgetStartDate: profile.budgetStartDate || null,
+          budgetEndDate: profile.budgetEndDate || null,
+        }, { emitEvent: false });
+      }
       this.handleBudgetPeriodChange(this.userProfileForm.get('budgetPeriod')?.value, true);
     });
   }
@@ -416,25 +448,25 @@ export class UserProfileComponent implements OnInit, OnDestroy {
 
     const formValues = this.userProfileForm.getRawValue();
     const isCustom = this.customBudgetPeriods.some(p => p.id === formValues.budgetPeriod);
-
-    const profileData: Partial<UserProfile> = {
-      currency: formValues.currency,
-      budgetPeriod: isCustom ? 'custom' : formValues.budgetPeriod,
+    const isGroup = this.accountType === 'group' && !!this.groupId;
+    const budgetFields = {
+      budgetPeriod: isCustom ? 'custom' as const : formValues.budgetPeriod,
       budgetStartDate: isCustom ? formValues.budgetStartDate : null,
       budgetEndDate: isCustom ? formValues.budgetEndDate : null,
-      selectedBudgetPeriodId: isCustom ? formValues.budgetPeriod : null
+      selectedBudgetPeriodId: isCustom ? formValues.budgetPeriod : null,
     };
 
-    try {
-      await this.userDataService.updateUserProfile(currentUser.uid, profileData);
+    // budget period fields are space-specific — only write to user profile for personal spaces
+    const userProfileData: Partial<UserProfile> = { currency: formValues.currency };
+    if (!isGroup) Object.assign(userProfileData, budgetFields);
 
-      if (this.canEditSettings && this.accountType === 'group' && this.groupId) {
-        await this.groupService.updateGroupSettings(this.groupId, {
-          currency: profileData.currency,
-          budgetPeriod: profileData.budgetPeriod,
-          budgetStartDate: profileData.budgetStartDate,
-          budgetEndDate: profileData.budgetEndDate,
-          selectedBudgetPeriodId: profileData.selectedBudgetPeriodId,
+    try {
+      await this.userDataService.updateUserProfile(currentUser.uid, userProfileData);
+
+      if (this.canEditSettings && isGroup) {
+        await this.groupService.updateGroupSettings(this.groupId!, {
+          currency: formValues.currency,
+          ...budgetFields,
         });
       }
       this.userProfileForm.markAsPristine();
@@ -833,33 +865,31 @@ export class UserProfileComponent implements OnInit, OnDestroy {
       if (currentUser && currentUser.uid) {
         const formValues = this.userProfileForm.getRawValue();
         const isCustom = this.customBudgetPeriods.some(p => p.id === formValues.budgetPeriod);
-
-        const profileData: Partial<UserProfile> = {
-          displayName: formValues.displayName,
-          currency: formValues.currency,
-          budgetPeriod: isCustom ? 'custom' : formValues.budgetPeriod,
+        const isGroup = this.accountType === 'group' && !!this.groupId;
+        const budgetFields = {
+          budgetPeriod: isCustom ? 'custom' as const : formValues.budgetPeriod,
           budgetStartDate: isCustom ? formValues.budgetStartDate : null,
           budgetEndDate: isCustom ? formValues.budgetEndDate : null,
-          selectedBudgetPeriodId: isCustom ? formValues.budgetPeriod : null
+          selectedBudgetPeriodId: isCustom ? formValues.budgetPeriod : null,
         };
 
-        try {
-          // Step 1: Update the user's personal profile
-          if (currentUser.displayName !== profileData.displayName) {
-            await updateProfile(currentUser, { displayName: profileData.displayName });
-          }
-          await this.userDataService.updateUserProfile(currentUser.uid, profileData);
+        const userProfileData: Partial<UserProfile> = {
+          displayName: formValues.displayName,
+          currency: formValues.currency,
+        };
+        if (!isGroup) Object.assign(userProfileData, budgetFields);
 
-          // Step 2: If the user is an admin/owner of a group, update the group's settings
-          if (this.canEditSettings && this.accountType === 'group' && this.groupId) {
-            const groupSettings = {
-              currency: profileData.currency,
-              budgetPeriod: profileData.budgetPeriod,
-              budgetStartDate: profileData.budgetStartDate,
-              budgetEndDate: profileData.budgetEndDate,
-              selectedBudgetPeriodId: profileData.selectedBudgetPeriodId,
-            };
-            await this.groupService.updateGroupSettings(this.groupId, groupSettings);
+        try {
+          if (currentUser.displayName !== formValues.displayName) {
+            await updateProfile(currentUser, { displayName: formValues.displayName });
+          }
+          await this.userDataService.updateUserProfile(currentUser.uid, userProfileData);
+
+          if (this.canEditSettings && isGroup) {
+            await this.groupService.updateGroupSettings(this.groupId!, {
+              currency: formValues.currency,
+              ...budgetFields,
+            });
           }
 
           Toast.fire({ icon: 'success', title: this.translate.instant('PROFILE_UPDATE_SUCCESS') });
@@ -893,7 +923,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
     const currentUser = await firstValueFrom(this.authService.currentUser$);
     if (!currentUser) return;
     try {
-      const newPeriodRef = await this.customBudgetPeriodService.addCustomBudgetPeriod(currentUser.uid, period);
+      const newPeriodRef = await this.customBudgetPeriodService.addCustomBudgetPeriod(currentUser.uid, period, this.spaceId);
 
       // emitEvent: false — customBudgetPeriods ထဲ မရောက်သေးလို့ autoSave ကို prevent လုပ်မယ်
       this.userProfileForm.get('budgetPeriod')?.setValue(newPeriodRef.key, { emitEvent: false });
@@ -903,22 +933,22 @@ export class UserProfileComponent implements OnInit, OnDestroy {
       this.syncSettingsControlState();
 
       const formValues = this.userProfileForm.getRawValue();
-      const profileData: Partial<UserProfile> = {
-        currency: formValues.currency,
-        budgetPeriod: 'custom',
+      const isGroup = this.canEditSettings && this.accountType === 'group' && !!this.groupId;
+      const budgetFields = {
+        budgetPeriod: 'custom' as const,
         budgetStartDate: period.startDate,
         budgetEndDate: period.endDate,
         selectedBudgetPeriodId: newPeriodRef.key,
       };
-      await this.userDataService.updateUserProfile(currentUser.uid, profileData);
 
-      if (this.canEditSettings && this.accountType === 'group' && this.groupId) {
-        await this.groupService.updateGroupSettings(this.groupId, {
-          currency: profileData.currency,
-          budgetPeriod: profileData.budgetPeriod,
-          budgetStartDate: profileData.budgetStartDate,
-          budgetEndDate: profileData.budgetEndDate,
-          selectedBudgetPeriodId: profileData.selectedBudgetPeriodId,
+      const userProfileData: Partial<UserProfile> = { currency: formValues.currency };
+      if (!isGroup) Object.assign(userProfileData, budgetFields);
+      await this.userDataService.updateUserProfile(currentUser.uid, userProfileData);
+
+      if (isGroup) {
+        await this.groupService.updateGroupSettings(this.groupId!, {
+          currency: formValues.currency,
+          ...budgetFields,
         });
       }
 
@@ -957,7 +987,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
       if (result.isConfirmed) {
         if (currentUser) {
           try {
-            await this.customBudgetPeriodService.deleteCustomBudgetPeriod(currentUser.uid, periodId);
+            await this.customBudgetPeriodService.deleteCustomBudgetPeriod(currentUser.uid, periodId, this.spaceId);
             if (this.userProfileForm.get('budgetPeriod')?.value === periodId) {
               this.userProfileForm.get('budgetPeriod')?.setValue(null);
             }
