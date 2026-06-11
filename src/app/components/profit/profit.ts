@@ -71,6 +71,7 @@ import {
 } from '../../services/profit-loss.service';
 import Swal from 'sweetalert2';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
+import { ShowFullTextDirective } from '../../directives/show-full-text.directive';
 
 Chart.register(...registerables);
 
@@ -111,6 +112,7 @@ type DailyCashFlowChartItem = DailyCashFlowData & {
     FontAwesomeModule,
     FormsModule,
     CurrentSpaceTitleComponent,
+    ShowFullTextDirective,
   ],
   providers: [DatePipe],
   templateUrl: './profit.html',

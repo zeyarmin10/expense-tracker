@@ -1247,10 +1247,10 @@
   font-size: 0.8rem;
   color: var(--text-muted);
   font-style: italic;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  /* text-overflow: ellipsis;
-  white-space: nowrap; */
-  max-width: fit-content;
 }
 
 /* Light mode adjustments */

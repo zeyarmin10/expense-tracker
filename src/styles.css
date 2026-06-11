@@ -731,3 +731,35 @@ body.light-mode .swal-avatar-pick-remove {
   background: rgba(220,38,38,0.05);
   color: #dc2626;
 }
+
+/* ── Full-text popup (show-full-text directive) ── */
+.swal-fulltext-popup {
+  background: var(--surface-2) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 16px !important;
+  padding: 1.4rem 1.6rem !important;
+  max-width: min(90vw, 360px) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45) !important;
+}
+
+.swal-fulltext-popup .swal2-html-container {
+  color: var(--text) !important;
+  font-size: 0.95rem !important;
+  line-height: 1.6 !important;
+  text-align: start !important;
+  word-break: break-word !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.swal-fulltext-close {
+  color: var(--text-muted) !important;
+  font-size: 1.4rem !important;
+  top: 0.6rem !important;
+  right: 0.75rem !important;
+}
+
+body.light-mode .swal-fulltext-popup {
+  background: #ffffff !important;
+  box-shadow: 0 8px 32px rgba(15, 23, 42, 0.18) !important;
+}

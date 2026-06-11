@@ -1077,6 +1077,9 @@ body.light-mode .exp-category-title-chip:hover {
   color: var(--text);
   flex: 1;
   min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .exp-item-amount {

@@ -376,7 +376,7 @@
                   <span class="pnl-record-amount pnl-amount-income">
                     {{ formatService.formatAmountWithSymbol(income.amount, income.currency) }}
                   </span>
-                  <span class="pnl-record-desc" *ngIf="income.description">{{ income.description }}</span>
+                  <span class="pnl-record-desc" *ngIf="income.description" appShowFullText>{{ income.description }}</span>
                 </div>
                 <button *ngIf="canManageProfitActions" class="pnl-delete-btn"
                   type="button" (click)="confirmDeleteIncome(income.id)">

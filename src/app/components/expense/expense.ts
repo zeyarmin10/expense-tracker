@@ -78,6 +78,7 @@ import { BURMESE_MONTH_ABBREVIATIONS } from '../../core/constants/app.constants'
 import { FormatService } from '../../services/format.service';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
 import { UserAvatarComponent } from '../common/user-avatar/user-avatar.component';
+import { ShowFullTextDirective } from '../../directives/show-full-text.directive';
 
 const Toast = Swal.mixin({
   toast: true,
@@ -112,6 +113,7 @@ interface ExpenseCategoryGroup {
     TranslateModule,
     CurrentSpaceTitleComponent,
     UserAvatarComponent,
+    ShowFullTextDirective,
   ],
   providers: [DatePipe],
   templateUrl: './expense.html',

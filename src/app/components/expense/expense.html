@@ -726,7 +726,7 @@
               <div *ngFor="let expense of group.expenses" class="exp-item">
                 <div class="exp-item-inner">
                   <div class="exp-item-top">
-                    <span class="exp-item-name">{{ expense.itemName }}</span>
+                    <span class="exp-item-name" appShowFullText>{{ expense.itemName }}</span>
                     <span class="exp-item-amount">
                       {{ formatService.formatAmountShort(expense.totalCost,
                       expense.currency) }}

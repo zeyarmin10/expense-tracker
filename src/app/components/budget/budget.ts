@@ -59,6 +59,7 @@ import {
 import { CategoryService } from '../../services/category';
 import Swal from 'sweetalert2';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
+import { ShowFullTextDirective } from '../../directives/show-full-text.directive';
 
 Chart.register(...registerables);
 
@@ -119,6 +120,7 @@ interface SpendingMonitorItem {
     FontAwesomeModule,
     FormsModule,
     CurrentSpaceTitleComponent,
+    ShowFullTextDirective,
   ],
   providers: [DatePipe],
   templateUrl: './budget.html',

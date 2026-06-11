@@ -159,7 +159,7 @@
                   <span class="bgt-row-date">
                     {{ budget.type === "monthly" ? this.formatService.formatLocalizedDate(budget.period) : budget.period || "" }}
                   </span>
-                  <span class="bgt-row-desc" *ngIf="budget.description">· {{ budget.description }}</span>
+                  <span class="bgt-row-desc" *ngIf="budget.description" appShowFullText>· {{ budget.description }}</span>
                 </div>
                 <button *ngIf="canManageBudgets"
                   class="bgt-delete-btn" type="button" (click)="confirmDeleteBudget(budget.id)">
