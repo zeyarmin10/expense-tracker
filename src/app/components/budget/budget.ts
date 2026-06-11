@@ -1232,8 +1232,8 @@ export class BudgetComponent implements OnInit, OnDestroy {
     );
 
     return totalBalance >= 0
-      ? 'profit-loss-card'
-      : 'profit-loss-card-loss';
+      ? 'balance-positive'
+      : 'balance-negative';
   }
 
   getBalanceAmountClass(value: number): string {

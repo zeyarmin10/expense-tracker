@@ -126,6 +126,8 @@
   "HALF_YEARLY_PROFIT_LOSS": "Half-Yearly Profit and Loss",
   "MONTHLY_PROFIT_LOSS": "Monthly Profit and Loss",
   "NET_PROFIT": "Net Profit",
+  "BALANCE_LABEL": "Remaining Balance",
+  "BALANCE_DEFICIT": "Deficit",
   "NO_DATA_FOR_YEAR": "No data available for this year.",
   "NO_DATA_FOR_HALF_YEAR": "No data available for this half-year.",
   "NO_DATA_FOR_MONTH_YEAR": "No profit or loss data for this month and year.",
