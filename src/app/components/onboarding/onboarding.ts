@@ -134,7 +134,6 @@ export class OnboardingComponent implements OnInit {
       return;
     }
     try {
-      await this.spaceContextService.migrateLegacyUserToSpaces(user.uid);
       const refreshedProfile = await this.userDataService.fetchUserProfile(user.uid);
       const personalSpaceId = refreshedProfile?.personalSpaceId;
       if (!personalSpaceId) {

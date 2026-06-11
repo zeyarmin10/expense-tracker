@@ -9,7 +9,7 @@ import {
 } from '@angular/fire/database';
 import { Observable, combineLatest, map, of, switchMap } from 'rxjs';
 import { CategoryService } from './category';
-import { Space, SpaceRole, UserSpaceSummary } from './space.model';
+import { Space, UserSpaceSummary } from './space.model';
 import { UserDataService } from './user-data';
 
 @Injectable({
@@ -34,45 +34,6 @@ export class SpaceContextService {
       error?.code === 'PERMISSION_DENIED' ||
       error?.message === 'permission_denied'
     );
-  }
-
-  private async trySyncLegacyGroupAsSpace(
-    groupId: string,
-    userId: string,
-    role: SpaceRole,
-  ): Promise<void> {
-    const groupSnapshot = await get(ref(this.db, `groups/${groupId}`));
-    if (!groupSnapshot.exists()) {
-      return;
-    }
-
-    const group = groupSnapshot.val();
-    const updates: Record<string, unknown> = {
-      [`/space_members/${groupId}/${userId}`]: { role },
-    };
-
-    if (role === 'admin' || role === 'owner') {
-      updates[`/spaces/${groupId}`] = {
-        type: 'group',
-        name: group.groupName,
-        ownerId: group.ownerId,
-        currency: group.currency,
-        budgetPeriod: group.budgetPeriod || null,
-        budgetStartDate: group.budgetStartDate || null,
-        budgetEndDate: group.budgetEndDate || null,
-        selectedBudgetPeriodId: group.selectedBudgetPeriodId || null,
-        imageUrl: group.imageUrl || group.avatarUrl || group.logoUrl || group.photoURL || null,
-        createdAt: group.createdAt || Date.now(),
-      };
-    }
-
-    try {
-      await update(ref(this.db), updates);
-    } catch (error: any) {
-      if (!this.isPermissionDenied(error)) {
-        throw error;
-      }
-    }
   }
 
   getSpace(spaceId: string | null | undefined): Observable<Space | null> {
@@ -308,73 +269,6 @@ export class SpaceContextService {
     }
 
     return personalSpaceId;
-  }
-
-  async migrateLegacyUserToSpaces(userId: string): Promise<void> {
-    const initialProfile = await this.userDataService.fetchUserProfile(userId);
-    if (!initialProfile) {
-      return;
-    }
-
-    const personalSpaceId = await this.ensurePersonalSpace(userId);
-    const profile = (await this.userDataService.fetchUserProfile(userId)) || initialProfile;
-
-    const legacyRoleEntries = Object.entries(profile.roles || {}) as Array<
-      [string, SpaceRole | 'member']
-    >;
-    const legacyGroupIds = new Set<string>();
-
-    if (profile.groupId) {
-      legacyGroupIds.add(profile.groupId);
-    }
-
-    for (const [groupId] of legacyRoleEntries) {
-      legacyGroupIds.add(groupId);
-    }
-
-    const nextMemberships: Record<string, SpaceRole> = {
-      ...(profile.spaceMemberships || {}),
-      [personalSpaceId]: 'owner',
-    };
-
-    for (const groupId of legacyGroupIds) {
-      const role =
-        (profile.spaceMemberships?.[groupId] ||
-          profile.roles?.[groupId] ||
-          'member') as SpaceRole;
-      nextMemberships[groupId] = role;
-      await this.trySyncLegacyGroupAsSpace(groupId, userId, role);
-    }
-
-    const currentSpaceId =
-      profile.currentSpaceId ||
-      profile.groupId ||
-      personalSpaceId;
-    const isPersonalCurrent =
-      currentSpaceId === personalSpaceId ||
-      this.isVirtualPersonalSpaceId(currentSpaceId);
-
-    let currentSpaceName = profile.currentSpaceName || 'My Personal';
-    if (!isPersonalCurrent) {
-      const groupSnapshot = await get(ref(this.db, `groups/${currentSpaceId}`));
-      if (groupSnapshot.exists()) {
-        currentSpaceName =
-          groupSnapshot.val()?.groupName || currentSpaceName;
-      }
-    }
-
-    await update(ref(this.db, `users/${userId}`), {
-      personalSpaceId,
-      currentSpaceId,
-      currentSpaceType: isPersonalCurrent ? 'personal' : 'group',
-      currentSpaceName,
-      currentSpaceRole: isPersonalCurrent
-        ? 'owner'
-        : nextMemberships[currentSpaceId] || 'member',
-      spaceMemberships: nextMemberships,
-      accountType: isPersonalCurrent ? 'personal' : 'group',
-      groupId: isPersonalCurrent ? null : currentSpaceId,
-    });
   }
 
   async switchSpace(userId: string, spaceId: string): Promise<void> {

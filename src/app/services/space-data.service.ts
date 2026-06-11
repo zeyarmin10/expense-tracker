@@ -195,21 +195,6 @@ export class SpaceDataService {
     return this.ensuredSpaces.has(spaceId) ? spaceId : null;
   }
 
-  async migrateAllUserSpaces(profile: UserProfile): Promise<void> {
-    await this.ensureSpecificSpaceData(profile.personalSpaceId || null, profile, 'personal');
-
-    const allMemberships = {
-      ...(profile.spaceMemberships || {}),
-      ...(profile.roles || {}),
-    };
-
-    for (const spaceId of Object.keys(allMemberships)) {
-      if (spaceId !== profile.personalSpaceId) {
-        await this.ensureSpecificSpaceData(spaceId, profile, 'group');
-      }
-    }
-  }
-
   async getActiveCollectionContext(
     profile: UserProfile,
     collection: SpaceCollection,
