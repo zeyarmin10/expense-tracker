@@ -34,7 +34,7 @@ export class CustomBudgetPeriodModalComponent {
 
   constructor() {
     this.budgetPeriodForm = this.formBuilder.group({
-      name: ['', Validators.required],
+      name: ['', [Validators.required, Validators.maxLength(50)]],
       startDate: ['', Validators.required],
       endDate: ['', Validators.required],
     });
@@ -91,7 +91,8 @@ export class CustomBudgetPeriodModalComponent {
 
   save(): void {
     if (this.budgetPeriodForm.valid) {
-      this.periodSaved.emit(this.budgetPeriodForm.value);
+      const v = this.budgetPeriodForm.value;
+      this.periodSaved.emit({ ...v, name: (v.name || '').trim() });
       this.close();
     }
   }

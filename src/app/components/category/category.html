@@ -21,6 +21,7 @@
             class="cat-fl-input"
             formControlName="name"
             placeholder=" "
+            maxlength="30"
             [class.err]="addCategoryForm.controls['name'].invalid && addCategoryForm.controls['name'].touched"
           />
           <label class="cat-fl-label" for="newCategoryName">
@@ -94,6 +95,7 @@
                   class="cat-fl-input"
                   [formControl]="editingCategoryFormControl!"
                   placeholder=" "
+                  maxlength="30"
                   [class.err]="editingCategoryFormControl!.invalid && editingCategoryFormControl!.touched"
                   (keydown.enter)="onUpdateInline(category.id!)"
                 />

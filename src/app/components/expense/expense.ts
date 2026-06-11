@@ -256,15 +256,15 @@ export class Expense implements OnInit, OnDestroy {
     this.newExpenseForm = this.fb.group({
       date: [todayFormatted, Validators.required],
       category: ['', Validators.required],
-      itemName: ['', Validators.required],
-      quantity: [1, [Validators.required, Validators.min(0.01)]],
-      unit: [''],
-      price: ['', [Validators.required, Validators.min(0.01)]],
+      itemName: ['', [Validators.required, Validators.maxLength(50)]],
+      quantity: [1, [Validators.required, Validators.min(0.01), Validators.max(99999)]],
+      unit: ['', Validators.maxLength(20)],
+      price: ['', [Validators.required, Validators.min(0.01), Validators.max(999999999)]],
     });
 
     this.voucherForm = this.fb.group({
       date: [todayFormatted, Validators.required],
-      title: ['', [Validators.maxLength(80)]],
+      title: ['', [Validators.maxLength(50)]],
       category: [''],
       note: ['', [Validators.maxLength(240)]],
       imageFile: ['', Validators.required],

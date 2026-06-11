@@ -86,7 +86,7 @@ export class Category implements OnInit {
 
   constructor(private fb: FormBuilder) {
     this.addCategoryForm = this.fb.group({
-      name: ['', Validators.required],
+      name: ['', [Validators.required, Validators.maxLength(30)]],
     });
   }
 
@@ -180,7 +180,7 @@ export class Category implements OnInit {
     this.editingCategoryId = category.id!;
     this.editingCategoryFormControl = new FormControl(
       category.name,
-      Validators.required
+      [Validators.required, Validators.maxLength(30)]
     );
   }
 
@@ -210,7 +210,7 @@ export class Category implements OnInit {
       return;
     }
 
-    const newCategoryName = this.editingCategoryFormControl.value;
+    const newCategoryName = (this.editingCategoryFormControl.value || '').trim();
     try {
       await this.categoryService.updateCategory(
         categoryId,

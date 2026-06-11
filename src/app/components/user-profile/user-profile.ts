@@ -501,7 +501,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   async saveDisplayName(): Promise<void> {
     const currentUser = await firstValueFrom(this.authService.currentUser$);
     if (!currentUser) return;
-    const displayName = this.userProfileForm.get('displayName')?.value || '';
+    const displayName = (this.userProfileForm.get('displayName')?.value || '').trim();
     try {
       await updateProfile(currentUser, { displayName });
       await this.userDataService.updateUserProfile(currentUser.uid, { displayName });
@@ -873,15 +873,16 @@ export class UserProfileComponent implements OnInit, OnDestroy {
           selectedBudgetPeriodId: isCustom ? formValues.budgetPeriod : null,
         };
 
+        const trimmedDisplayName = (formValues.displayName || '').trim();
         const userProfileData: Partial<UserProfile> = {
-          displayName: formValues.displayName,
+          displayName: trimmedDisplayName,
           currency: formValues.currency,
         };
         if (!isGroup) Object.assign(userProfileData, budgetFields);
 
         try {
-          if (currentUser.displayName !== formValues.displayName) {
-            await updateProfile(currentUser, { displayName: formValues.displayName });
+          if (currentUser.displayName !== trimmedDisplayName) {
+            await updateProfile(currentUser, { displayName: trimmedDisplayName });
           }
           await this.userDataService.updateUserProfile(currentUser.uid, userProfileData);
 

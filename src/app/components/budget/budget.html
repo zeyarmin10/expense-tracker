@@ -110,6 +110,7 @@
           <!-- Description -->
           <div class="bgt-float-field">
             <textarea id="description" formControlName="description" class="bgt-input bgt-textarea" placeholder=" "
+              maxlength="200"
               [class.bgt-has-val]="budgetForm.get('description')?.value"></textarea>
             <label class="bgt-float-label" for="description">{{ "DESCRIPTION" | translate }}</label>
           </div>

@@ -48,7 +48,7 @@
           <!-- Name edit mode -->
           <div class="prof-hero-name-row" *ngIf="isEditingName">
             <input type="text" id="displayName" class="prof-hero-name-input" formControlName="displayName" placeholder=" "
-              (keyup.enter)="saveDisplayName()" (keyup.escape)="cancelEditName()">
+              maxlength="50" (keyup.enter)="saveDisplayName()" (keyup.escape)="cancelEditName()">
             <div class="prof-hero-edit-actions">
               <button type="button" class="prof-hero-action-btn prof-hero-save-btn" (click)="saveDisplayName()"
                 [disabled]="userProfileForm.get('displayName')?.invalid" title="{{ 'SAVE_BUTTON_LABEL' | translate }}">

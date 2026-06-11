@@ -228,8 +228,8 @@ export class Profit implements OnInit, OnDestroy {
 
   constructor() {
     this.incomeForm = this.fb.group({
-      description: [''],
-      amount: ['', [Validators.required, Validators.min(0.01)]],
+      description: ['', Validators.maxLength(200)],
+      amount: ['', [Validators.required, Validators.min(0.01), Validators.max(999999999)]],
       currency: ['MMK', Validators.required],
       date: [
         this.datePipe.transform(new Date(), 'yyyy-MM-dd'),
@@ -526,7 +526,7 @@ export class Profit implements OnInit, OnDestroy {
 
     if (this.incomeForm.valid) {
       const incomeData: Omit<ServiceIIncome, 'id' | 'userId' | 'createdAt' | 'device' | 'editedDevice'> = {
-        description: this.incomeForm.value.description,
+        description: (this.incomeForm.value.description || '').trim(),
         amount: this.incomeForm.value.amount,
         currency: defaultCurrency,
         date: this.incomeForm.value.date,

@@ -236,13 +236,13 @@ export class BudgetComponent implements OnInit, OnDestroy {
     this.budgetForm = this.fb.group({
       type: ['monthly', Validators.required],
       category: ['all', Validators.required],
-      amount: ['', [Validators.required, Validators.min(0.01)]],
+      amount: ['', [Validators.required, Validators.min(0.01), Validators.max(999999999)]],
       currency: ['MMK', Validators.required],
       period: [
         this.datePipe.transform(new Date(), 'yyyy-MM-dd'), // Full date format
         Validators.required,
       ],
-      description: [''],
+      description: ['', Validators.maxLength(200)],
     });
     this.budgets$ = this.refreshBudgets$.pipe(
       switchMap(() => this.budgetService.getBudgets())
@@ -914,7 +914,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
           > = {
             type: formValue.type,
             category: categoryName,
-            description: formValue.description || '',
+            description: (formValue.description || '').trim(),
             amount: formValue.amount,
             currency: defaultCurrency,
             period: formValue.period,
