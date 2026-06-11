@@ -133,6 +133,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   totalIncomesByCurrency$!: Observable<{ [currency: string]: number }>;
   isDashboardDataLoading$!: Observable<boolean>;
 
+  private dashboardAllData$!: Observable<DashboardData>;
   expenseFilterForm!: FormGroup;
   categoryFilterForm!: FormGroup;
 
@@ -498,8 +499,10 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       )
     );
 
-    this.monthlyExpenseChartData$ = this.filteredExpensesAndIncomes$.pipe(
-      map(({ expenses }) => this.createMonthlyExpenseChartData(expenses)),
+    this.dashboardAllData$ = data$;
+
+    this.monthlyExpenseChartData$ = this.dashboardAllData$.pipe(
+      map((dashData) => this.createMonthlyChartData(dashData)),
       catchError(err => {
         console.error('Error in monthlyExpenseChartData$', err);
         return of({ labels: [], datasets: [] });
@@ -613,7 +616,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.expenseChartInstance?.destroy();
 
-    const hasData = data?.datasets?.[0]?.data?.some((v: number) => v > 0) ?? false;
+    const hasData = data?.datasets?.some((ds: any) => ds.data?.some((v: number) => v > 0)) ?? false;
     this.hasExpenseDataForChart = hasData;
     this.cdr.detectChanges();
 
@@ -622,19 +625,58 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     const isLight = document.body.classList.contains('light-mode');
     const gridColor = isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.05)';
     const tickColor = isLight ? '#4a5568' : '#6b7280';
+    const legendColor = isLight ? '#4a5568' : '#9ca3af';
+
+    // Colors match the summary cards above (--income-color, --budget-color, --expense-color)
+    const palette = isLight
+      ? [
+          { border: '#00b894', bg: 'rgba(0,184,148,0.25)' },   // income
+          { border: '#0984e3', bg: 'rgba(9,132,227,0.25)' },   // budget
+          { border: '#d99800', bg: 'rgba(217,152,0,0.25)' },   // expense
+        ]
+      : [
+          { border: '#34d399', bg: 'rgba(52,211,153,0.25)' },  // income
+          { border: '#60a5fa', bg: 'rgba(96,165,250,0.25)' },  // budget
+          { border: '#f4b11a', bg: 'rgba(244,177,26,0.25)' },  // expense
+        ];
+
+    const themedData = {
+      ...data,
+      datasets: data.datasets.map((ds: any, i: number) => ({
+        ...ds,
+        borderColor: palette[i]?.border ?? ds.borderColor,
+        backgroundColor: palette[i]?.bg ?? ds.backgroundColor,
+      })),
+    };
 
     this.expenseChartInstance = new Chart(canvas, {
       type: 'bar',
-      data: data,
+      data: themedData,
       options: {
         indexAxis: 'x',
         responsive: true,
         maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: true,
+            position: 'bottom',
+            labels: {
+              boxWidth: 14,
+              color: legendColor,
+              font: { family: 'MyanmarUIFont, Arial, sans-serif', size: 11 },
+            },
+          },
+          tooltip: {
+            callbacks: {
+              label: (ctx: any) => ` ${ctx.dataset.label}: ${this.formatService.formatAmountShort(ctx.parsed.y)}`,
+            },
+          },
+        },
         scales: {
           x: {
             beginAtZero: true,
             grid: { color: gridColor },
-            ticks: { color: tickColor, font: { family: 'MyanmarUIFont, Arial, sans-serif', size: 11 } }
+            ticks: { color: tickColor, font: { family: 'MyanmarUIFont, Arial, sans-serif', size: 11 } },
           },
           y: {
             beginAtZero: true,
@@ -686,40 +728,98 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     return value >= 0 ? 'balance-positive-amount' : 'balance-negative-amount';
   }
 
-  private createMonthlyExpenseChartData(expenses: ServiceIExpense[]): {
-    labels: string[];
-    datasets: any[];
-  } {
-    const monthlyExpensesMap: { [label: string]: number } = {};
-    const labels: string[] = [];
+  private createMonthlyChartData(dashData: DashboardData): { labels: string[]; datasets: any[] } {
+    const { expenses, incomes, budgets } = dashData;
     const currentLang = this.translate.currentLang;
     const startDateValue = this._startDate$.getValue();
     const endDateValue = this._endDate$.getValue();
 
     if (!startDateValue || !endDateValue) {
-        return { labels: [], datasets: [] };
+      return { labels: [], datasets: [] };
     }
 
     const startDate = this.safeParseDate(startDateValue);
     const endDate = this.safeParseDate(endDateValue);
-    let currentDate = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
-    while (currentDate <= endDate) {
-      const label = this.datePipe.transform(currentDate, 'MMM yy', undefined, currentLang) || '';
-      labels.push(label);
-      monthlyExpensesMap[label] = 0;
-      currentDate.setMonth(currentDate.getMonth() + 1);
+
+    interface MonthSlot { label: string; year: number; }
+    const monthSlots: MonthSlot[] = [];
+    const expMap: Record<string, number> = {};
+    const incMap: Record<string, number> = {};
+    const budMap: Record<string, number> = {};
+
+    let cur = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+    while (cur <= endDate) {
+      const lbl = this.datePipe.transform(cur, 'MMM yy', undefined, currentLang) || '';
+      monthSlots.push({ label: lbl, year: cur.getFullYear() });
+      expMap[lbl] = 0;
+      incMap[lbl] = 0;
+      budMap[lbl] = 0;
+      cur = new Date(cur.getFullYear(), cur.getMonth() + 1, 1);
     }
-    expenses.forEach((expense) => {
-      const expenseDate = this.safeParseDate(expense.date);
-      const periodKey = this.datePipe.transform(expenseDate, 'MMM yy', undefined, currentLang) || '';
-      if (monthlyExpensesMap.hasOwnProperty(periodKey)) {
-        monthlyExpensesMap[periodKey] += expense.totalCost;
+    const labels = monthSlots.map(s => s.label);
+
+    expenses.forEach(e => {
+      const lbl = this.datePipe.transform(this.safeParseDate(e.date), 'MMM yy', undefined, currentLang) || '';
+      if (expMap.hasOwnProperty(lbl)) expMap[lbl] += e.totalCost;
+    });
+
+    incomes.forEach(i => {
+      const lbl = this.datePipe.transform(this.safeParseDate(i.date), 'MMM yy', undefined, currentLang) || '';
+      if (incMap.hasOwnProperty(lbl)) incMap[lbl] += i.amount;
+    });
+
+    // Budget aggregation per month (all-category takes precedence over individual)
+    const budGroups = new Map<string, { total: number; individual: number }>(
+      monthSlots.map(s => [s.label, { total: 0, individual: 0 }])
+    );
+
+    budgets.forEach(b => {
+      if (!b.period) return;
+      const budDate = this.safeParseDate(b.period);
+      if (b.type === 'yearly') {
+        const perMonth = b.amount / 12;
+        monthSlots.filter(s => s.year === budDate.getFullYear()).forEach(slot => {
+          const g = budGroups.get(slot.label)!;
+          if (b.category === 'all') g.total += perMonth; else g.individual += perMonth;
+        });
+      } else {
+        const lbl = this.datePipe.transform(budDate, 'MMM yy', undefined, currentLang) || '';
+        const g = budGroups.get(lbl);
+        if (!g) return;
+        if (b.category === 'all') g.total += b.amount; else g.individual += b.amount;
       }
     });
-    const expenseData = labels.map((label) => monthlyExpensesMap[label] || 0);
+
+    monthSlots.forEach(slot => {
+      const g = budGroups.get(slot.label)!;
+      budMap[slot.label] = g.total > 0 ? g.total : g.individual;
+    });
+
     return {
       labels,
-      datasets: [{ label: this.translate.instant('EXPENSE_AMOUNT'), data: expenseData, backgroundColor: 'rgba(11,116,255,0.25)', borderColor: '#0b74ff', borderWidth: 1, },],
+      datasets: [
+        {
+          label: this.translate.instant('INCOME_AMOUNT'),
+          data: labels.map(l => incMap[l] || 0),
+          backgroundColor: 'rgba(16,185,129,0.25)',
+          borderColor: '#10b981',
+          borderWidth: 1,
+        },
+        {
+          label: this.translate.instant('BUDGET_AMOUNT'),
+          data: labels.map(l => budMap[l] || 0),
+          backgroundColor: 'rgba(245,158,11,0.25)',
+          borderColor: '#f59e0b',
+          borderWidth: 1,
+        },
+        {
+          label: this.translate.instant('EXPENSE_AMOUNT'),
+          data: labels.map(l => expMap[l] || 0),
+          backgroundColor: 'rgba(11,116,255,0.25)',
+          borderColor: '#0b74ff',
+          borderWidth: 1,
+        },
+      ],
     };
   }
 
