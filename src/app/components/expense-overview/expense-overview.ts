@@ -101,6 +101,20 @@ export class ExpenseOverview implements OnInit {
 
   currentPeriodLabel: string = '';
 
+  private readonly categoryColorPalette = [
+    '#0b74ff', '#60a5fa', '#f4b11a', '#f87171', '#a78bfa',
+    '#38bdf8', '#fb923c', '#e879f9', '#facc15', '#34d399',
+  ];
+
+  getCategoryColor(index: number): string {
+    return this.categoryColorPalette[index % this.categoryColorPalette.length];
+  }
+
+  getCategoryPercent(total: number): number {
+    const sum = this.categoryTotals.reduce((s, c) => s + c.total, 0);
+    return sum > 0 ? (total / sum) * 100 : 0;
+  }
+
   public _selectedCategory$ = new BehaviorSubject<string>('');
   private activeSpaceModeKey: string | null = null;
 

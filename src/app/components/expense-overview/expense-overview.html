@@ -91,17 +91,43 @@
           </div>
         </div>
 
-        <!-- Category Chips -->
-        <div class="chip-bar">
-          <button class="chip active" type="button" (click)="filterByCategory('')">
-            <fa-icon [icon]="faFilter"></fa-icon> {{ "ALL_CATEGORIES" | translate }}
-          </button>
-          <button class="chip" type="button" *ngFor="let total of categoryTotals" [ngClass]="{
-              'active': total.category === (_selectedCategory$ | async)
-            }" (click)="filterByCategory(total.category)">
-            {{ total.category }}
-            <span class="chip-amount">{{ formatService.formatAmountShort(total.total, total.currency) }}</span>
-          </button>
+        <!-- Category Breakdown Bars -->
+        <div class="ov-breakdown-panel" *ngIf="categoryTotals.length > 0">
+          <div class="ov-breakdown-header">
+            <fa-icon [icon]="faChartColumn"></fa-icon>
+            <span>{{ 'CATEGORY_BREAKDOWN' | translate }}</span>
+          </div>
+          <div class="ov-bar-list">
+            <!-- All Categories row -->
+            <div class="ov-bar-row ov-bar-row-all"
+                 (click)="filterByCategory('')"
+                 [class.ov-bar-active]="!(_selectedCategory$ | async)">
+              <div class="ov-bar-meta">
+                <span class="ov-bar-dot ov-bar-dot-all"></span>
+                <span class="ov-bar-name">{{ 'ALL_CATEGORIES' | translate }}</span>
+              </div>
+            </div>
+            <div class="ov-bar-divider"></div>
+            <!-- Per-category rows -->
+            <div class="ov-bar-row"
+                 *ngFor="let cat of categoryTotals; let i = index"
+                 (click)="filterByCategory(cat.category)"
+                 [class.ov-bar-active]="cat.category === (_selectedCategory$ | async)">
+              <div class="ov-bar-meta">
+                <span class="ov-bar-dot" [style.background]="getCategoryColor(i)"></span>
+                <span class="ov-bar-name">{{ cat.category }}</span>
+                <span class="ov-bar-amount">{{ formatService.formatAmountShort(cat.total, cat.currency) }}</span>
+              </div>
+              <div class="ov-bar-footer">
+                <div class="ov-bar-track">
+                  <div class="ov-bar-fill"
+                       [style.width.%]="getCategoryPercent(cat.total)"
+                       [style.background]="getCategoryColor(i)"></div>
+                </div>
+                <span class="ov-bar-pct">{{ getCategoryPercent(cat.total) | number:'1.0-0' }}%</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Expense Table -->

@@ -423,6 +423,134 @@
   color: var(--text);
 }
 
+/* ── Category Breakdown Bars ── */
+.ov-breakdown-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1rem 1.1rem 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.ov-breakdown-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.85rem;
+}
+
+.ov-bar-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.ov-bar-row {
+  padding: 0.55rem 0.4rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.14s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ov-bar-row:active,
+.ov-bar-active {
+  background: var(--surface-2, rgba(255,255,255,0.05));
+}
+
+body.light-mode .ov-bar-row:active,
+body.light-mode .ov-bar-active {
+  background: rgba(0,0,0,0.04);
+}
+
+.ov-bar-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-bottom: 0.4rem;
+}
+
+.ov-bar-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  opacity: 0.9;
+}
+
+.ov-bar-name {
+  flex: 1;
+  font-size: 0.88rem;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
+}
+
+.ov-bar-amount {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.ov-bar-footer {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.ov-bar-track {
+  flex: 1;
+  height: 5px;
+  background: rgba(255,255,255,0.07);
+  border-radius: 100px;
+  overflow: hidden;
+}
+
+body.light-mode .ov-bar-track {
+  background: rgba(0,0,0,0.07);
+}
+
+.ov-bar-fill {
+  height: 100%;
+  border-radius: 100px;
+  opacity: 0.8;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ov-bar-pct {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  min-width: 2.4rem;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.ov-bar-dot-all {
+  background: var(--accent) !important;
+}
+
+.ov-bar-row-all .ov-bar-name {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.ov-bar-row-all.ov-bar-active .ov-bar-name {
+  color: var(--accent);
+}
+
+.ov-bar-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 0.3rem 0.4rem 0.4rem;
+}
+
 /* Category Filter Chips */
 .chip-bar {
   overflow-x: auto;

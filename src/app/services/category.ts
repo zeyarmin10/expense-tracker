@@ -21,8 +21,9 @@ import { SpaceDataService } from './space-data.service';
 import { SpaceSwitchLoadingService } from './space-switch-loading.service';
 
 export interface ServiceICategory {
-  id?: string; 
+  id?: string;
   name: string;
+  icon?: string;
   userId?: string;
   groupId?: string;
   createdAt?: string;
@@ -119,20 +120,21 @@ export class CategoryService {
 
   async setupPersonalAccountCategories(): Promise<void> {
     const profile = await firstValueFrom(this.authService.userProfile$.pipe(take(1))) as UserProfile | null;
-    if (!profile || getActiveGroupId(profile)) {
+    if (!profile?.uid || getActiveGroupId(profile)) {
       return;
     }
 
-    const categoriesRef = this.getCategoriesRef(profile.uid);
+    const { canonicalRef, legacyRef } = await this.spaceDataService.getActiveCollectionContext(profile, 'categories');
+    const categoriesRef = canonicalRef || legacyRef;
     const snapshot = await get(categoriesRef);
 
     if (!snapshot.exists()) {
-        const currentLang = this.translateService.currentLang || 'my';
-        await this.addDefaultCategories(profile.uid, currentLang);
+      const currentLang = this.translateService.currentLang || 'my';
+      await this.addDefaultCategories(profile.uid, currentLang, categoriesRef);
     }
   }
 
-  async addCategory(categoryName: string): Promise<void> {
+  async addCategory(categoryName: string, icon?: string): Promise<void> {
     const profile = await firstValueFrom(this.authService.userProfile$) as UserProfile | null;
     if (!profile?.uid) {
       throw new Error('User not authenticated.');
@@ -140,6 +142,7 @@ export class CategoryService {
 
     const newCategory: Omit<ServiceICategory, 'id'> = {
       name: categoryName.trim(),
+      ...(icon ? { icon } : {}),
       createdAt: new Date().toISOString(),
     };
 
@@ -158,7 +161,7 @@ export class CategoryService {
     await push(categoriesRef, newCategory);
   }
 
-  async updateCategory(categoryId: string, newCategoryName: string): Promise<void> {
+  async updateCategory(categoryId: string, newCategoryName: string, icon?: string): Promise<void> {
     const profile = await firstValueFrom(this.authService.userProfile$) as UserProfile | null;
     if (!profile?.uid) {
       throw new Error('User not authenticated.');
@@ -180,13 +183,19 @@ export class CategoryService {
     }
     
     const oldCategorySnap = await get(categoryRef);
-    const oldCategoryName = oldCategorySnap.val()?.name;
+    const oldCategoryData = oldCategorySnap.val();
+    const oldCategoryName = oldCategoryData?.name;
+    const oldIcon = oldCategoryData?.icon;
 
-    if (oldCategoryName?.trim() === newCategoryName.trim()) {
+    const nameUnchanged = oldCategoryName?.trim() === newCategoryName.trim();
+    const iconUnchanged = icon === undefined || icon === oldIcon;
+    if (nameUnchanged && iconUnchanged) {
       return;
     }
 
-    await update(categoryRef, { name: newCategoryName.trim() });
+    const updateData: { name: string; icon?: string } = { name: newCategoryName.trim() };
+    if (icon !== undefined) updateData.icon = icon;
+    await update(categoryRef, updateData);
 
     if (oldCategoryName) {
       // ✅ Expense တွေမှာ category name ကိုပါ တပြိုင်နက် update လုပ်မည်
@@ -249,19 +258,26 @@ export class CategoryService {
       throw new Error('Category ID is required for deletion.');
     }
 
-    let categoryRef: DatabaseReference;
     const activeGroupId = getActiveGroupId(profile);
     const currentSpaceId = this.spaceDataService.getCurrentSpaceId(profile);
     const { canonicalRef } = await this.spaceDataService.getActiveCollectionContext(profile, 'categories');
+
+    const deleteOps: Promise<void>[] = [];
+
     if (canonicalRef && currentSpaceId) {
-      categoryRef = ref(this.db, `space_data/${currentSpaceId}/categories/${categoryId}`);
+      deleteOps.push(remove(ref(this.db, `space_data/${currentSpaceId}/categories/${categoryId}`)));
+      // Also remove from legacy path so backfill doesn't restore on next reload
+      const legacyPath = activeGroupId
+        ? `group_data/${activeGroupId}/categories/${categoryId}`
+        : `users/${profile.uid}/categories/${categoryId}`;
+      deleteOps.push(remove(ref(this.db, legacyPath)).catch(() => {}));
     } else if (activeGroupId) {
-      categoryRef = ref(this.db, `group_data/${activeGroupId}/categories/${categoryId}`);
+      deleteOps.push(remove(ref(this.db, `group_data/${activeGroupId}/categories/${categoryId}`)));
     } else {
-      categoryRef = ref(this.db, `users/${profile.uid}/categories/${categoryId}`);
+      deleteOps.push(remove(ref(this.db, `users/${profile.uid}/categories/${categoryId}`)));
     }
 
-    await remove(categoryRef);
+    await Promise.all(deleteOps);
   }
 
   async isCategoryUsedInExpenses(categoryId: string): Promise<boolean> {
@@ -310,7 +326,7 @@ export class CategoryService {
     }
   }
 
-  async addDefaultCategories(userId: string, language: string): Promise<void> {
+  async addDefaultCategories(userId: string, language: string, categoriesRef?: DatabaseReference): Promise<void> {
     const defaultCategories = [
       { en: 'Food', my: 'အစားအသောက်' },
       { en: 'Transportation', my: 'သယ်ယူပို့ဆောင်ရေး' },
@@ -319,6 +335,7 @@ export class CategoryService {
       { en: 'Shopping', my: 'စျေးဝယ်' },
     ];
 
+    const targetRef = categoriesRef || this.getCategoriesRef(userId);
     for (const categoryData of defaultCategories) {
       const categoryName =
         language === 'my' ? categoryData.my : categoryData.en;
@@ -327,7 +344,7 @@ export class CategoryService {
         userId: userId,
         createdAt: new Date().toISOString(),
       };
-      await push(this.getCategoriesRef(userId), newCategory);
+      await push(targetRef, newCategory);
     }
   }
 

@@ -87,8 +87,85 @@
 /* ── Form ── */
 .cat-form {
   display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.cat-form-row {
+  display: flex;
   gap: 0.65rem;
   align-items: flex-end;
+}
+
+/* Icon trigger button */
+.cat-icon-trigger {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-sub);
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cat-icon-trigger:hover,
+.cat-icon-trigger-open {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+
+/* Icon picker grid */
+.cat-icon-picker {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 3px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.6rem;
+  max-height: 210px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+@media (max-width: 400px) {
+  .cat-icon-picker {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+
+.cat-icon-opt {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1.5px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--text-sub);
+  padding: 0;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cat-icon-opt:hover {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.cat-icon-opt-selected {
+  background: var(--accent-dim) !important;
+  border-color: var(--accent) !important;
+  color: var(--accent) !important;
 }
 
 /* Floating label input */

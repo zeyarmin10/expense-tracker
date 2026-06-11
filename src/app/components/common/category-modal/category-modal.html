@@ -21,25 +21,38 @@
 
         <!-- Add / Edit Form -->
         <form [formGroup]="categoryForm" (ngSubmit)="onSave()" class="cat-form">
-          <div class="cat-fl-wrap">
-            <input
-              type="text"
-              class="cat-fl-input"
-              formControlName="name"
-              placeholder=" "
-              id="catNameInput"
-              autocomplete="off" />
-            <label class="cat-fl-label" for="catNameInput">
-              {{ 'CATEGORY_NAME_LABEL' | translate }}
-            </label>
+          <div class="cat-form-row">
+            <button type="button" class="cat-icon-trigger"
+                    [class.cat-icon-trigger-open]="showIconPicker"
+                    (click)="showIconPicker = !showIconPicker">
+              <lucide-icon [img]="selectedIconData" [size]="20"></lucide-icon>
+            </button>
+            <div class="cat-fl-wrap">
+              <input
+                type="text"
+                class="cat-fl-input"
+                formControlName="name"
+                placeholder=" "
+                id="catNameInput"
+                autocomplete="off" />
+              <label class="cat-fl-label" for="catNameInput">
+                {{ 'CATEGORY_NAME_LABEL' | translate }}
+              </label>
+            </div>
+            <button class="cat-save-btn" type="submit" [disabled]="categoryForm.invalid">
+              <fa-icon [icon]="isEditMode ? faSave : faPlus"></fa-icon>
+              <span>{{ (isEditMode ? 'SAVE_BUTTON_LABEL' : 'ADD_BUTTON') | translate }}</span>
+            </button>
           </div>
-          <button
-            class="cat-save-btn"
-            type="submit"
-            [disabled]="categoryForm.invalid">
-            <fa-icon [icon]="isEditMode ? faSave : faPlus"></fa-icon>
-            <span>{{ (isEditMode ? 'SAVE_BUTTON_LABEL' : 'ADD_BUTTON') | translate }}</span>
-          </button>
+          <!-- Icon Picker Grid -->
+          <div class="cat-icon-picker" *ngIf="showIconPicker">
+            <button type="button" class="cat-icon-opt"
+                    *ngFor="let opt of categoryIcons"
+                    [class.cat-icon-opt-selected]="opt.name === selectedIcon"
+                    (click)="selectIcon(opt.name)">
+              <lucide-icon [img]="opt.icon" [size]="18"></lucide-icon>
+            </button>
+          </div>
         </form>
 
         <!-- Category List -->
@@ -57,7 +70,7 @@
             <li *ngFor="let category of categories" class="cat-item"
                 [class.cat-item-editing]="editingCategoryId === category.id">
               <div class="cat-item-avatar">
-                {{ category.name.charAt(0).toUpperCase() }}
+                <lucide-icon [img]="getIconData(category.icon)" [size]="16"></lucide-icon>
               </div>
               <span class="cat-item-name">{{ category.name }}</span>
               <div class="cat-item-actions">
