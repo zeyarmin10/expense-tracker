@@ -21,15 +21,11 @@
         >
           <span class="exp-panel-toggle-left">
             <span class="exp-icon-badge exp-icon-badge-accent">
-              <fa-icon [icon]="faWallet"></fa-icon>
+              <lucide-icon [img]="iconWallet" [size]="16"></lucide-icon>
             </span>
             <span>{{ "EXPENSE_ADD_TITLE" | translate }}</span>
           </span>
-          <fa-icon
-            [icon]="faChevronDown"
-            class="exp-chevron"
-            [class.open]="isFormOpen"
-          ></fa-icon>
+          <lucide-icon [img]="iconChevronDown" [size]="16" class="exp-chevron" [class.open]="isFormOpen"></lucide-icon>
         </button>
         <!-- Quick/Full toggle — personal account -->
         <button
@@ -39,8 +35,8 @@
           [class.active]="!isQuickMode"
           [title]="isQuickMode ? ('SWITCH_TO_FULL_FORM' | translate) : ('SWITCH_TO_QUICK_ADD' | translate)"
         >
-          <span *ngIf="isQuickMode"><fa-icon [icon]="faBolt"></fa-icon> {{ 'QUICK' | translate }}</span>
-          <span *ngIf="!isQuickMode"><fa-icon [icon]="faListUl"></fa-icon> {{ 'FULL' | translate }}</span>
+          <span *ngIf="isQuickMode"><lucide-icon [img]="iconZap" [size]="14"></lucide-icon> {{ 'QUICK' | translate }}</span>
+          <span *ngIf="!isQuickMode"><lucide-icon [img]="iconList" [size]="14"></lucide-icon> {{ 'FULL' | translate }}</span>
         </button>
       </div>
 
@@ -90,7 +86,7 @@
                   (click)="openCategoryModal()"
                   title="Add category"
                 >
-                  <fa-icon [icon]="faPlus"></fa-icon>
+                  <lucide-icon [img]="iconPlus" [size]="16"></lucide-icon>
                 </button>
               </div>
             </div>
@@ -186,7 +182,7 @@
                   (click)="openCategoryModal()"
                   title="Add category"
                 >
-                  <fa-icon [icon]="faPlus"></fa-icon>
+                  <lucide-icon [img]="iconPlus" [size]="16"></lucide-icon>
                 </button>
               </div>
             </div>
@@ -270,7 +266,7 @@
               class="exp-btn exp-btn-primary"
               [disabled]="newExpenseForm.invalid"
             >
-              <fa-icon [icon]="faSave" class="me-2"></fa-icon>
+              <lucide-icon [img]="iconSave" [size]="16" class="me-2"></lucide-icon>
               {{ "SAVE_BUTTON_LABEL" | translate }}
             </button>
           </div>
@@ -291,15 +287,11 @@
         >
           <span class="exp-panel-toggle-left">
             <span class="exp-icon-badge exp-icon-badge-warning">
-              <fa-icon [icon]="faReceipt"></fa-icon>
+              <lucide-icon [img]="iconReceipt" [size]="16"></lucide-icon>
             </span>
             <span>{{ "VOUCHER_ADD_TITLE" | translate }}</span>
           </span>
-          <fa-icon
-            [icon]="faChevronDown"
-            class="exp-chevron"
-            [class.open]="isVoucherPanelOpen"
-          ></fa-icon>
+          <lucide-icon [img]="iconChevronDown" [size]="16" class="exp-chevron" [class.open]="isVoucherPanelOpen"></lucide-icon>
         </button>
       </div>
 
@@ -390,12 +382,12 @@
           <div *ngIf="selectedVoucherFiles.length === 0" class="exp-upload-actions">
             <button type="button" class="exp-upload-btn exp-upload-btn-camera"
               (click)="openCamera()">
-              <span class="exp-upload-btn-icon"><fa-icon [icon]="faCamera"></fa-icon></span>
+              <span class="exp-upload-btn-icon"><lucide-icon [img]="iconCamera" [size]="16"></lucide-icon></span>
               <span class="exp-upload-btn-label">{{ "VOUCHER_CAMERA" | translate }}</span>
             </button>
             <button type="button" class="exp-upload-btn exp-upload-btn-gallery"
               (click)="openGallery()">
-              <span class="exp-upload-btn-icon"><fa-icon [icon]="faImages"></fa-icon></span>
+              <span class="exp-upload-btn-icon"><lucide-icon [img]="iconImages" [size]="16"></lucide-icon></span>
               <span class="exp-upload-btn-label">{{ "VOUCHER_GALLERY" | translate }}</span>
             </button>
           </div>
@@ -414,7 +406,7 @@
                 (click)="removeVoucherFile(i)"
                 [title]="'CANCEL_BUTTON_LABEL' | translate"
               >
-                <fa-icon [icon]="faTimes"></fa-icon>
+                <lucide-icon [img]="iconX" [size]="16"></lucide-icon>
               </button>
             </div>
             <div *ngIf="selectedVoucherFiles.length < MAX_VOUCHER_IMAGES"
@@ -422,12 +414,12 @@
               <button type="button" class="exp-image-add-more exp-image-add-camera"
                 (click)="openCamera()"
                 [title]="'VOUCHER_CAMERA' | translate">
-                <fa-icon [icon]="faCamera"></fa-icon>
+                <lucide-icon [img]="iconCamera" [size]="16"></lucide-icon>
               </button>
               <button type="button" class="exp-image-add-more exp-image-add-gallery"
                 (click)="openGallery()"
                 [title]="'VOUCHER_GALLERY' | translate">
-                <fa-icon [icon]="faImages"></fa-icon>
+                <lucide-icon [img]="iconImages" [size]="16"></lucide-icon>
               </button>
             </div>
           </div>
@@ -440,7 +432,7 @@
               class="exp-btn exp-btn-sm exp-btn-ghost"
               (click)="clearAllVoucherFiles()"
             >
-              <fa-icon [icon]="faTimes"></fa-icon>
+              <lucide-icon [img]="iconX" [size]="16"></lucide-icon>
               {{ "VOUCHER_CLEAR_ALL" | translate }}
             </button>
           </div>
@@ -451,7 +443,7 @@
               class="exp-btn exp-btn-primary"
               [disabled]="voucherForm.invalid || selectedVoucherFiles.length === 0 || isVoucherSaving"
             >
-              <fa-icon [icon]="faSave" class="me-2"></fa-icon>
+              <lucide-icon [img]="iconSave" [size]="16" class="me-2"></lucide-icon>
               {{ "VOUCHER_SAVE_BUTTON" | translate }}
             </button>
           </div>
@@ -502,7 +494,7 @@
           (click)="resetFilter()"
           [title]="'RESET_FILTER_BUTTON' | translate"
         >
-          <fa-icon [icon]="faArrowRotateLeft"></fa-icon>
+          <lucide-icon [img]="iconRotateCcw" [size]="16"></lucide-icon>
         </button>
       </div>
 
@@ -540,7 +532,7 @@
       </div>
 
       <div class="exp-filter-label">
-        <fa-icon [icon]="faCalendarDay" class="exp-filter-label-icon"></fa-icon>
+        <lucide-icon [img]="iconCalendar" [size]="16" class="exp-filter-label-icon"></lucide-icon>
         <span>{{ getFilterLabel() }}</span>
       </div>
     </div>
@@ -551,7 +543,7 @@
       <button type="button" class="exp-list-header exp-list-header-toggle" (click)="isSavedVoucherListOpen = !isSavedVoucherListOpen">
         <h3 class="exp-section-title exp-section-title-warning">
           <span class="exp-icon-badge exp-icon-badge-warning">
-            <fa-icon [icon]="faBoxArchive"></fa-icon>
+            <lucide-icon [img]="iconArchive" [size]="16"></lucide-icon>
           </span>
           {{ "VOUCHER_SAVED_TITLE" | translate }}
         </h3>
@@ -585,7 +577,7 @@
                 *ngIf="(voucher.imageCount || 1) > 1"
                 class="exp-voucher-multi-badge"
               >
-                <fa-icon [icon]="faImage"></fa-icon>
+                <lucide-icon [img]="iconImage" [size]="14"></lucide-icon>
                 {{ voucher.imageCount }}
               </span>
             </button>
@@ -619,7 +611,7 @@
                 (click)="openLightbox(getVoucherImages(voucher), 0)"
                 [title]="'VOUCHER_VIEW' | translate"
               >
-                <fa-icon [icon]="faEye"></fa-icon>
+                <lucide-icon [img]="iconEye" [size]="16"></lucide-icon>
               </button>
               <button
                 *ngIf="canDeleteVoucher(voucher)"
@@ -628,7 +620,7 @@
                 (click)="onDeleteVoucher(voucher)"
                 [title]="'DELETE_BUTTON_LABEL' | translate"
               >
-                <fa-icon [icon]="faTrashCan"></fa-icon>
+                <lucide-icon [img]="iconTrash2" [size]="16"></lucide-icon>
               </button>
               <div
                 *ngIf="userProfile?.accountType === 'group' && voucher.userDisplayName"
@@ -660,7 +652,7 @@
       <div class="exp-list-header">
         <h3 class="exp-section-title">
           <span class="exp-icon-badge exp-icon-badge-success">
-            <fa-icon [icon]="faTasks"></fa-icon>
+            <lucide-icon [img]="iconListChecks" [size]="16"></lucide-icon>
           </span>
           {{ "EXPENSE_YOUR_EXPENSES_TITLE" | translate }}
         </h3>
@@ -672,7 +664,7 @@
           <ng-container
             *ngIf="(totals | keyvalue).length > 0; else noTotalsForDate"
           >
-            <fa-icon [icon]="faCoins" class="exp-icon-warning"></fa-icon>
+            <lucide-icon [img]="iconCoins" [size]="16" class="exp-icon-warning"></lucide-icon>
             <button
               type="button"
               class="exp-total-chip"
@@ -758,7 +750,7 @@
                         class="exp-btn exp-btn-sm exp-btn-outline-info"
                         (click)="startEdit(expense)"
                       >
-                        <fa-icon class="fa-regular-icon fa-edit-btn" [icon]="faPen"></fa-icon>
+                        <lucide-icon [img]="iconPen" [size]="16" class="fa-regular-icon fa-edit-btn"></lucide-icon>
                         {{ "EDIT_BUTTON_LABEL" | translate }}
                       </button>
                       <button
@@ -766,16 +758,17 @@
                         class="exp-btn exp-btn-sm exp-btn-outline-danger"
                         (click)="onDelete(expense.id!)"
                       >
-                        <fa-icon class="fa-regular-icon fa-delete-btn" [icon]="faTrashCan"></fa-icon>
+                        <lucide-icon [img]="iconTrash2" [size]="16" class="fa-regular-icon fa-delete-btn"></lucide-icon>
                       </button>
                     </div>
                     <div class="exp-info-avatar-row">
-                      <fa-icon
-                        [icon]="faInfoCircle"
+                      <lucide-icon
+                        [img]="iconInfo"
+                        [size]="16"
                         class="exp-info-icon"
                         (click)="showExpenseInfo(expense)"
                         [title]="'EXPENSE_INFO_TITLE' | translate"
-                      ></fa-icon>
+                      ></lucide-icon>
                       <div
                         *ngIf="userProfile?.accountType === 'group' && expense.userDisplayName"
                         class="exp-avatar-btn"

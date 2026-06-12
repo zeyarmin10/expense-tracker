@@ -20,23 +20,12 @@ import {
 import { ServiceIBudget, BudgetService } from '../../services/budget';
 import { ServiceIExpense, ExpenseService } from '../../services/expense';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import {
-  faTrash,
-  faSave,
-  faChevronDown,
-  faChevronUp,
-  faTriangleExclamation,
-  faCircleCheck,
-  faPiggyBank,
-  faShoppingCart,
-  faChartLine,
-  faArrowTrendDown,
-  faTasks,
-  faChartBar,
-  faChartColumn,
-} from '@fortawesome/free-solid-svg-icons';
-import { faTrashCan } from '@fortawesome/free-regular-svg-icons';
+  LucideAngularModule, LucideIconData,
+  Trash2, Save, ChevronDown, TriangleAlert, CircleCheck,
+  PiggyBank, ShoppingCart, ChartLine, ListChecks,
+  ChartColumn, Wallet,
+} from 'lucide-angular';
 import { Chart, registerables } from 'chart.js';
 import { AuthService } from '../../services/auth';
 import {
@@ -117,7 +106,7 @@ interface SpendingMonitorItem {
     CommonModule,
     ReactiveFormsModule,
     TranslateModule,
-    FontAwesomeModule,
+    LucideAngularModule,
     FormsModule,
     CurrentSpaceTitleComponent,
     ShowFullTextDirective,
@@ -154,19 +143,17 @@ export class BudgetComponent implements OnInit, OnDestroy {
   filteredBudgets$: Observable<ServiceIBudget[]>;
   spendingMonitorData$: Observable<SpendingMonitorItem[]>;
 
-  faTrash = faTrash;
-  faSave = faSave;
-  faChevronDown = faChevronDown;
-  faTriangleExclamation = faTriangleExclamation;
-  faCircleCheck = faCircleCheck;
-  faPiggyBank = faPiggyBank;
-  faShoppingCart = faShoppingCart;
-  faChartLine = faChartLine;
-  faArrowTrendDown = faArrowTrendDown;
-  faTasks = faTasks;
-  faChartBar = faChartBar;
-  faChartColumn = faChartColumn;
-  faTrashCan = faTrashCan;
+  readonly iconTrash2 = Trash2;
+  readonly iconSave = Save;
+  readonly iconChevronDown = ChevronDown;
+  readonly iconTriangleAlert = TriangleAlert;
+  readonly iconCircleCheck = CircleCheck;
+  readonly iconPiggyBank = PiggyBank;
+  readonly iconShoppingCart = ShoppingCart;
+  readonly iconChartLine = ChartLine;
+  readonly iconListChecks = ListChecks;
+  readonly iconChartColumn = ChartColumn;
+  readonly iconWallet = Wallet;
 
   isBudgetFormCollapsed: boolean = true;
   hasChartData: boolean = false;
@@ -1269,15 +1256,11 @@ export class BudgetComponent implements OnInit, OnDestroy {
     }
   }
 
-  getBalanceIcon(balances: { [key: string]: number } | null): any {
-    if (!balances) {
-      return this.faChartLine; // Default icon
-    }
-    const totalBalance = Object.values(balances).reduce(
-      (sum, value) => sum + value,
-      0
-    );
-    return totalBalance >= 0 ? this.faChartLine : this.faArrowTrendDown;
+  getBalanceIcon(balances: { [key: string]: number } | null): LucideIconData {
+    const totalBalance = balances
+      ? Object.values(balances).reduce((sum, value) => sum + value, 0)
+      : 1;
+    return totalBalance >= 0 ? Wallet : TriangleAlert;
   }
 
   getBalanceIconClass(balances: { [key: string]: number } | null): string {

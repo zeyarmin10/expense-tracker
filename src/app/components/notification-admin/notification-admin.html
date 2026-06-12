@@ -3,7 +3,7 @@
     <div class="noti-admin-header">
       <div class="noti-admin-title-row">
         <span class="noti-admin-icon">
-          <fa-icon [icon]="faBell"></fa-icon>
+          <lucide-icon [img]="iconBell" [size]="16"></lucide-icon>
         </span>
         <div>
           <h2>{{ 'NOTI_ADMIN_TITLE' | translate }}</h2>
@@ -14,7 +14,7 @@
 
     <form class="noti-admin-panel" (ngSubmit)="sendNotification()">
       <div class="noti-admin-security">
-        <fa-icon [icon]="faShieldHalved"></fa-icon>
+        <lucide-icon [img]="iconShield" [size]="16"></lucide-icon>
         <span>{{ 'NOTI_ADMIN_SECRET_HELP' | translate }}</span>
       </div>
 
@@ -69,7 +69,7 @@
       </div>
 
       <button type="submit" class="noti-admin-send-btn" [disabled]="isSending">
-        <fa-icon [icon]="faPaperPlane" *ngIf="!isSending"></fa-icon>
+        <lucide-icon [img]="iconSend" [size]="16" *ngIf="!isSending"></lucide-icon>
         <span>{{ (isSending ? 'NOTI_ADMIN_SENDING' : 'NOTI_ADMIN_SEND') | translate }}</span>
       </button>
 

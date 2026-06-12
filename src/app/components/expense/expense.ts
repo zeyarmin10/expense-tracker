@@ -31,38 +31,12 @@ import { Capacitor } from '@capacitor/core';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import Swal from 'sweetalert2';
 
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import {
-  faPlus,
-  faEdit,
-  faTrash,
-  faSave,
-  faTimes,
-  faSync,
-  faInfoCircle,
-  faWallet,
-  faTasks,
-  faCoins,
-  faChevronDown,
-  faChevronUp,
-  faCalendarDay,
-  faCalendarWeek,
-  faCalendar,
-  faSliders,
-  faRotateLeft,
-  faArrowRotateLeft,
-  faPen,
-  faReceipt,
-  faUpload,
-  faImage,
-  faImages,
-  faEye,
-  faCamera,
-  faBolt,
-  faListUl,
-  faBoxArchive,
-} from '@fortawesome/free-solid-svg-icons';
-import { faTrashCan } from '@fortawesome/free-regular-svg-icons';
+  LucideAngularModule,
+  Plus, Pencil, Trash2, Save, X, RotateCcw, Info, Wallet, ListChecks,
+  Coins, ChevronDown, ChevronUp, Calendar, RotateCw, Pen, Receipt,
+  Image, Images, Eye, Camera as LucideCamera, Zap, List, Archive,
+} from 'lucide-angular';
 
 import { CategoryModalComponent } from '../common/category-modal/category-modal';
 import { LightboxComponent } from '../common/lightbox/lightbox.component';
@@ -107,7 +81,7 @@ interface ExpenseCategoryGroup {
     CommonModule,
     ReactiveFormsModule,
     FormsModule,
-    FontAwesomeModule,
+    LucideAngularModule,
     CategoryModalComponent,
     LightboxComponent,
     TranslateModule,
@@ -214,35 +188,29 @@ export class Expense implements OnInit, OnDestroy {
   // ────────────────────────────────────────────────────
 
   // Icons
-  faPlus = faPlus;
-  faEdit = faEdit;
-  faTrash = faTrash;
-  faSave = faSave;
-  faTimes = faTimes;
-  faSync = faSync;
-  faCalendarDay = faCalendarDay;
-  faCalendarWeek = faCalendarWeek;
-  faCalendar = faCalendar;
-  faSliders = faSliders;
-  faRotateLeft = faRotateLeft;
-  faInfoCircle = faInfoCircle;
-  faWallet = faWallet;
-  faTasks = faTasks;
-  faCoins = faCoins;
-  faChevronDown = faChevronDown;
-  faChevronUp = faChevronUp;
-  faArrowRotateLeft = faArrowRotateLeft;
-  faTrashCan = faTrashCan;
-  faPen = faPen;
-  faReceipt = faReceipt;
-  faUpload = faUpload;
-  faImage = faImage;
-  faImages = faImages;
-  faBolt = faBolt;
-  faListUl = faListUl;
-  faBoxArchive = faBoxArchive;
-  faEye = faEye;
-  faCamera = faCamera;
+  readonly iconPlus = Plus;
+  readonly iconPencil = Pencil;
+  readonly iconTrash2 = Trash2;
+  readonly iconSave = Save;
+  readonly iconX = X;
+  readonly iconRotateCcw = RotateCcw;
+  readonly iconCalendar = Calendar;
+  readonly iconInfo = Info;
+  readonly iconWallet = Wallet;
+  readonly iconListChecks = ListChecks;
+  readonly iconCoins = Coins;
+  readonly iconChevronDown = ChevronDown;
+  readonly iconChevronUp = ChevronUp;
+  readonly iconRotateCw = RotateCw;
+  readonly iconPen = Pen;
+  readonly iconReceipt = Receipt;
+  readonly iconImage = Image;
+  readonly iconImages = Images;
+  readonly iconEye = Eye;
+  readonly iconCamera = LucideCamera;
+  readonly iconZap = Zap;
+  readonly iconList = List;
+  readonly iconArchive = Archive;
 
   activeAvatarExpenseId: string | null = null;
   activeAvatarVoucherId: string | null = null;

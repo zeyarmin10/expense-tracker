@@ -7,7 +7,7 @@
     <!-- ── Page Header ── -->
     <div class="bgt-page-header">
       <h2 class="bgt-page-title">
-        <fa-icon [icon]="faPiggyBank" class="bgt-icon-accent"></fa-icon>
+        <lucide-icon [img]="iconPiggyBank" class="bgt-icon-accent"></lucide-icon>
         {{ "BUDGET_TITLE" | translate }}
       </h2>
     </div>
@@ -51,10 +51,10 @@
     <div class="bgt-panel" *ngIf="canManageBudgets">
       <button class="bgt-panel-toggle" type="button" (click)="toggleAddForm()" [attr.aria-expanded]="isAddFormOpen">
         <span class="bgt-panel-toggle-left">
-          <fa-icon [icon]="faPiggyBank" class="bgt-icon-accent"></fa-icon>
+          <lucide-icon [img]="iconPiggyBank" class="bgt-icon-accent"></lucide-icon>
           {{ "ADD_BUDGET" | translate }}
         </span>
-        <fa-icon [icon]="faChevronDown" class="bgt-chevron" [class.open]="isAddFormOpen"></fa-icon>
+        <lucide-icon [img]="iconChevronDown" class="bgt-chevron" [class.open]="isAddFormOpen"></lucide-icon>
       </button>
       <div class="bgt-panel-body" [class.open]="isAddFormOpen">
         <div class="bgt-panel-inner">
@@ -117,7 +117,7 @@
 
           <div class="bgt-form-footer">
             <button type="submit" class="bgt-btn bgt-btn-primary" [disabled]="budgetForm.invalid">
-              <fa-icon [icon]="faSave" class="me-2"></fa-icon>
+              <lucide-icon [img]="iconSave" class="me-2"></lucide-icon>
               {{ "SAVE_BUTTON_LABEL" | translate }}
             </button>
           </div>
@@ -131,10 +131,10 @@
       <button class="bgt-panel-toggle" type="button" (click)="toggleRecordedList()"
         [attr.aria-expanded]="isRecordedOpen">
         <span class="bgt-panel-toggle-left">
-          <fa-icon [icon]="faTasks" class="bgt-icon-success"></fa-icon>
+          <lucide-icon [img]="iconListChecks" class="bgt-icon-success"></lucide-icon>
           {{ "RECORDED_BUDGETS" | translate }}
         </span>
-        <fa-icon [icon]="faChevronDown" class="bgt-chevron" [class.open]="isRecordedOpen"></fa-icon>
+        <lucide-icon [img]="iconChevronDown" class="bgt-chevron" [class.open]="isRecordedOpen"></lucide-icon>
       </button>
       <div class="bgt-panel-body" [class.open]="isRecordedOpen">
         <div class="bgt-panel-inner">
@@ -163,7 +163,7 @@
                 </div>
                 <button *ngIf="canManageBudgets"
                   class="bgt-delete-btn" type="button" (click)="confirmDeleteBudget(budget.id)">
-                  <fa-icon [icon]="faTrashCan" class="fa-delete-btn"></fa-icon>
+                  <lucide-icon [img]="iconTrash2" class="fa-delete-btn"></lucide-icon>
                 </button>
               </div>
             </ng-container>
@@ -213,7 +213,7 @@
           </ng-container>
           </div>
         <div class="bgt-card-right">
-          <span class="bgt-card-icon bgt-icon-budget"><fa-icon [icon]="faPiggyBank"></fa-icon></span>
+          <span class="bgt-card-icon bgt-icon-budget"><lucide-icon [img]="iconPiggyBank"></lucide-icon></span>
         </div>
         </div>
 
@@ -230,7 +230,7 @@
           </ng-container>
           </div>
         <div class="bgt-card-right">
-          <span class="bgt-card-icon bgt-icon-expense"><fa-icon [icon]="faShoppingCart"></fa-icon></span>
+          <span class="bgt-card-icon bgt-icon-expense"><lucide-icon [img]="iconShoppingCart"></lucide-icon></span>
         </div>
         </div>
 
@@ -246,7 +246,7 @@
               </div>
               <div class="bgt-card-right">
               <span class="bgt-card-icon" [ngClass]="getBalanceIconClass(remainingBalanceByCurrency$ | async)">
-                <fa-icon [icon]="getBalanceIcon(remainingBalanceByCurrency$ | async)"></fa-icon>
+                <lucide-icon [img]="getBalanceIcon(remainingBalanceByCurrency$ | async)"></lucide-icon>
               </span>
             </div>
           </ng-container>
@@ -268,14 +268,14 @@
     <!-- ── Budget Comparison Chart ── -->
     <div class="bgt-chart-panel ps-1 pe-1">
       <h5 class="bgt-chart-title">
-        <fa-icon [icon]="faChartColumn" class="bgt-icon-info ms-3"></fa-icon>
+        <lucide-icon [img]="iconChartColumn" class="bgt-icon-info ms-3"></lucide-icon>
         {{ "BUDGET_COMPARISON" | translate }}
       </h5>
       <div class="bgt-chart-container">
         <canvas id="budgetChart"></canvas>
         <div *ngIf="!hasChartData" class="bgt-no-chart-data">
           <div class="bgt-no-chart-inner">
-            <fa-icon [icon]="faChartColumn" class="bgt-no-chart-icon-fa"></fa-icon>
+            <lucide-icon [img]="iconChartColumn" class="bgt-no-chart-icon-fa"></lucide-icon>
             <p class="bgt-no-chart-msg">{{ 'NO_BUDGET_CHART_DATA' | translate }}</p>
             <button type="button" class="bgt-no-chart-cta" (click)="openBudgetFormAndFocus()">
               + {{ 'SET_BUDGET' | translate }}
@@ -288,7 +288,7 @@
     <!-- ── Spending Monitor ── -->
     <div class="bgt-panel bgt-spending-panel">
       <div class="bgt-panel-static-header">
-        <fa-icon [icon]="faShoppingCart" class="bgt-icon-warning"></fa-icon>
+        <lucide-icon [img]="iconShoppingCart" class="bgt-icon-warning"></lucide-icon>
         {{ "SPENDING_MONITOR" | translate }}
       </div>
       <div class="bgt-spending-body">
@@ -325,8 +325,8 @@
                         'bgt-icon-warning-color': monthData.total.percentage > 75 && monthData.total.percentage < 100,
                         'bgt-icon-danger-color':  monthData.total.percentage >= 100
                       }">
-                      <fa-icon
-                        [icon]="monthData.total.percentage >= 75 ? faTriangleExclamation : faCircleCheck"></fa-icon>
+                      <lucide-icon
+                        [img]="monthData.total.percentage >= 75 ? iconTriangleAlert : iconCircleCheck"></lucide-icon>
                     </span>
                   </div>
                   <div class="bgt-progress-amounts">
@@ -386,8 +386,8 @@
                               'bgt-icon-warning-color': category.percentage > 75 && category.percentage < 100,
                               'bgt-icon-danger-color':  category.percentage >= 100
                             }">
-                            <fa-icon
-                              [icon]="category.percentage >= 75 ? faTriangleExclamation : faCircleCheck"></fa-icon>
+                            <lucide-icon
+                              [img]="category.percentage >= 75 ? iconTriangleAlert : iconCircleCheck"></lucide-icon>
                           </small>
                         </div>
                         <div class="bgt-progress-amounts">

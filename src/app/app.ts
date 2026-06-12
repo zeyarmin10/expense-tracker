@@ -8,7 +8,7 @@ import { map, filter, startWith, switchMap, distinctUntilChanged, debounceTime }
 import { AuthService } from './services/auth';
 import { User } from '@angular/fire/auth';
 import { Toast } from './components/toast/toast';
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { LucideAngularModule, LogOut, Users as LucideUsers, User as LucideUserIcon, ChevronDown, Sun, Moon, PiggyBank, ShoppingCart, Tags, ArrowDown, RotateCw } from 'lucide-angular';
 import { InvitationService } from './services/invitation.service';
 import { DataManagerService } from './services/data-manager';
 import { ToastService } from './services/toast';
@@ -16,19 +16,6 @@ import { GroupService } from './services/group.service';
 import { NetworkService } from './services/network.service';
 import { ThemeService } from './services/theme.service';
 import { NotificationService } from './services/notification.service';
-import {
-  faRightFromBracket,
-  faUsers,
-  faUser,
-  faChevronDown,
-  faSun,
-  faMoon,
-  faPiggyBank,
-  faShoppingCart,
-  faTags,
-  faArrowDown,
-  faRotateRight,
-} from '@fortawesome/free-solid-svg-icons';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { Capacitor } from '@capacitor/core';
@@ -52,7 +39,7 @@ import { UserAvatarComponent } from './components/common/user-avatar/user-avatar
     RouterModule,
     TranslateModule,
     Toast,
-    FontAwesomeModule,
+    LucideAngularModule,
     CurrentSpaceTitleComponent,
     UserAvatarComponent,
   ],
@@ -77,23 +64,23 @@ export class App implements OnInit, AfterViewInit {
   showFab$: Observable<boolean>;
   spaceSwitchLoading$: Observable<boolean>;
   currentGroupImageUrl$: Observable<string | null>;
-  faRightFromBracket = faRightFromBracket;
-  faUsers = faUsers;
-  faChevronDown = faChevronDown;
+  readonly iconLogOut = LogOut;
+  readonly iconUsers = LucideUsers;
+  readonly iconUser = LucideUserIcon;
+  readonly iconChevronDown = ChevronDown;
+  readonly iconSun = Sun;
+  readonly iconMoon = Moon;
+  readonly iconPiggyBank = PiggyBank;
+  readonly iconShoppingCart = ShoppingCart;
+  readonly iconTags = Tags;
+  readonly iconArrowDown = ArrowDown;
+  readonly iconRotateCw = RotateCw;
   currentLang: string;
   mobileMenuOpen = false;
   isDarkMode = true;
   drawerSwipeStartY = 0;
   drawerSwipeDelta = 0;
   drawerSwiping = false;
-  faSun = faSun;
-  faMoon = faMoon;
-  faPiggyBank = faPiggyBank;
-  faShoppingCart = faShoppingCart;
-  faTags = faTags;
-  faUser = faUser;
-  faArrowDown = faArrowDown;
-  faRotateRight = faRotateRight;
   pullDistance = 0;
   pullReadyToRefresh = false;
   isPullRefreshing = false;

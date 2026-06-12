@@ -17,13 +17,9 @@ import { Observable, BehaviorSubject, firstValueFrom } from 'rxjs';
 import { AuthService } from '../../services/auth';
 import { UserProfile } from '../../services/user-data';
 
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import {
-  faPlus, faEdit, faTrash, faSave, faTimes, faTags, faPen,
-} from '@fortawesome/free-solid-svg-icons';
-import { faTrashCan } from '@fortawesome/free-regular-svg-icons';
 import {
   LucideAngularModule, LucideIconData,
+  Plus, Tags, Save, Pen, Trash2, X,
   Utensils, Coffee, Pizza, Wine, CookingPot, Sandwich, Cake, Salad,
   IceCreamCone, Beer, Croissant, Cookie, Donut, Beef, Soup, Fish, Candy, Popcorn, Milk,
   Car, Bus, Plane, TrainFront, Motorbike, Fuel, Bike, Luggage,
@@ -67,7 +63,6 @@ const Toast = Swal.mixin({
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    FontAwesomeModule,
     TranslateModule,
     CurrentSpaceTitleComponent,
     LucideAngularModule,
@@ -91,14 +86,12 @@ export class Category implements OnInit {
   private authService = inject(AuthService);
   private activeSpaceModeKey: string | null = null;
 
-  faPlus = faPlus;
-  faEdit = faEdit;
-  faTrash = faTrash;
-  faSave = faSave;
-  faTimes = faTimes;
-  faTags = faTags;
-  faTrashCan = faTrashCan;
-  faPen = faPen;
+  readonly iconPlus = Plus;
+  readonly iconTags = Tags;
+  readonly iconSave = Save;
+  readonly iconPen = Pen;
+  readonly iconTrash2 = Trash2;
+  readonly iconTimes = X;
 
   readonly categoryIcons: { name: string; icon: LucideIconData }[] = [
     // Food & Drink

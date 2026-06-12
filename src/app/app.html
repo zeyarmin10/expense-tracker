@@ -2,8 +2,8 @@
   [class.ready]="pullReadyToRefresh" [class.refreshing]="isPullRefreshing"
   [style.transform]="'translate3d(-50%, ' + pullRefreshOffset + 'px, 0)'" aria-hidden="true">
   <div class="pull-refresh-orb">
-    <fa-icon [icon]="faArrowDown" class="pull-refresh-arrow"></fa-icon>
-    <fa-icon [icon]="faRotateRight" class="pull-refresh-spinner"></fa-icon>
+    <lucide-icon [img]="iconArrowDown" [size]="16" class="pull-refresh-arrow"></lucide-icon>
+    <lucide-icon [img]="iconRotateCw" [size]="16" class="pull-refresh-spinner"></lucide-icon>
   </div>
 </div>
 
@@ -56,7 +56,7 @@
           aria-expanded="false">
           <span class="space-switcher-label">{{ (currentSpaceLabel$ | async) || ('SPACE_MY_PERSONAL' | translate)
             }}</span>
-          <fa-icon [icon]="faChevronDown" style="font-size: 0.65rem; opacity: 0.6"></fa-icon>
+          <lucide-icon [img]="iconChevronDown" [size]="11" style="opacity: 0.6"></lucide-icon>
         </a>
         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="spaceDropdown">
           <li class="dropdown-space-title">{{ 'SPACE_SECTION_TITLE' | translate }}</li>
@@ -67,7 +67,7 @@
                 <span class="dropdown-space-avatar" *ngIf="space.imageUrl">
                   <img [src]="space.imageUrl" alt="">
                 </span>
-                <fa-icon *ngIf="!space.imageUrl" [icon]="space.type === 'personal' ? faUser : faUsers" class="dropdown-space-type-icon"></fa-icon>
+                <lucide-icon *ngIf="!space.imageUrl" [img]="space.type === 'personal' ? iconUser : iconUsers" [size]="16" class="dropdown-space-type-icon"></lucide-icon>
                 <span>{{ getDisplaySpaceName(space) }}</span>
               </span>
               <span class="dropdown-space-badge" *ngIf="(currentSpaceId$ | async) === space.id">{{ 'SPACE_ACTIVE_BADGE'
@@ -86,7 +86,7 @@
       <li class="dropdown" *ngIf="isGroupAccount$ | async">
         <a class="nav-icon-btn" href="#" id="groupMemberDropdown" role="button" data-bs-toggle="dropdown"
           aria-expanded="false">
-          <fa-icon [icon]="faUsers"></fa-icon>
+          <lucide-icon [img]="iconUsers" [size]="16"></lucide-icon>
         </a>
         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="groupMemberDropdown">
           <!-- Group Name Header -->
@@ -98,7 +98,7 @@
                 <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
                 <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
               </svg> -->
-              <fa-icon [icon]="faUsers"></fa-icon>
+              <lucide-icon [img]="iconUsers" [size]="16"></lucide-icon>
               {{ gName }}
             </div>
           </li>
@@ -120,7 +120,7 @@
         <a class="user-btn" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
           <app-user-avatar [name]="user.displayName || 'User'" [photoUrl]="userPhotoUrl$ | async" [size]="28"></app-user-avatar>
           <span class="d-none d-lg-inline">{{ user.displayName || 'Profile' }}</span>
-          <fa-icon [icon]="faChevronDown" style="font-size: 0.65rem; opacity: 0.6"></fa-icon>
+          <lucide-icon [img]="iconChevronDown" [size]="11" style="opacity: 0.6"></lucide-icon>
         </a>
         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
           <li><a class="dropdown-item" routerLink="/profile" (click)="closeNavbarMenu()">{{ 'NAV_PROFILE_AND_SETTING' |
@@ -140,8 +140,8 @@
       <li>
         <button class="theme-toggle-btn" type="button" (click)="toggleTheme()"
           [title]="isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
-          <img *ngIf="isDarkMode" src="assets/icons/sun-light.svg" class="theme-icon-img" alt="Light mode" />
-          <fa-icon *ngIf="!isDarkMode" [icon]="faMoon" class="theme-icon"></fa-icon>
+          <lucide-icon *ngIf="isDarkMode" [img]="iconSun" [size]="18" class="theme-icon-img"></lucide-icon>
+          <lucide-icon *ngIf="!isDarkMode" [img]="iconMoon" [size]="18" class="theme-icon"></lucide-icon>
         </button>
       </li>
     </ul>
@@ -210,7 +210,7 @@
           <line x1="9" y1="13" x2="15" y2="13"/>
           <line x1="9" y1="17" x2="13" y2="17"/>
         </svg> -->
-        <fa-icon [icon]="faShoppingCart"></fa-icon>
+        <lucide-icon [img]="iconShoppingCart" [size]="16"></lucide-icon>
       </span>
     </ng-template>
     <span class="mob-nav-label">{{ 'NAV_EXPENSE' | translate }}</span>
@@ -225,7 +225,7 @@
         <path d="M20 12a2 2 0 0 1 0 4H6a2 2 0 0 1-2-2v-1"/>
         <circle cx="17" cy="12" r="1" fill="currentColor"/>
       </svg> -->
-      <fa-icon [icon]="faPiggyBank"></fa-icon>
+      <lucide-icon [img]="iconPiggyBank" [size]="16"></lucide-icon>
     </span>
     <span class="mob-nav-label">{{ 'NAV_BUDGET' | translate }}</span>
   </a>
@@ -269,8 +269,8 @@
         <span class="mob-drawer-usersub">{{ user.email }}</span>
       </div>
       <button class="mob-drawer-theme-btn" type="button" (click)="toggleTheme()">
-        <img *ngIf="isDarkMode" src="assets/icons/sun-light.svg" class="theme-icon-img" alt="Light mode" />
-        <fa-icon *ngIf="!isDarkMode" [icon]="faMoon" class="theme-icon"></fa-icon>
+        <lucide-icon *ngIf="isDarkMode" [img]="iconSun" [size]="18" class="theme-icon-img"></lucide-icon>
+        <lucide-icon *ngIf="!isDarkMode" [img]="iconMoon" [size]="18" class="theme-icon"></lucide-icon>
       </button>
     </div>
 
@@ -281,7 +281,7 @@
   <div class="mob-drawer-links">
     <a class="mob-drawer-link" routerLink="/onboarding" (click)="closeNavbarMenu()">
       <span class="mob-drawer-link-icon">
-        <fa-icon [icon]="faUsers"></fa-icon>
+        <lucide-icon [img]="iconUsers" [size]="16"></lucide-icon>
       </span>
       <span>{{ 'SPACE_CREATE_OR_JOIN' | translate }}</span>
     </a>
@@ -298,7 +298,7 @@
           </span>
         </ng-container>
         <ng-template #groupIconFallback>
-          <fa-icon [icon]="faUsers"></fa-icon>
+          <lucide-icon [img]="iconUsers" [size]="16"></lucide-icon>
         </ng-template>
         <span class="mob-drawer-group-name-text">{{ gName }}</span>
       </div>
@@ -348,7 +348,7 @@
         <!-- <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M4 6h16M4 12h10M4 18h6" />
             </svg> -->
-        <fa-icon [icon]="faTags" class="cat-icon-accent"></fa-icon>
+        <lucide-icon [img]="iconTags" [size]="16" class="cat-icon-accent"></lucide-icon>
       </span>
       <span>{{ 'NAV_CATEGORY' | translate }}</span>
     </a>
@@ -356,14 +356,7 @@
     <a class="mob-drawer-link" *ngIf="isGroupAdmin$ | async" routerLink="/member-management"
       routerLinkActive="mob-drawer-active" (click)="closeNavbarMenu()">
       <span class="mob-drawer-link-icon">
-        <!-- <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-          stroke-linejoin="round">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-          <circle cx="9" cy="7" r="4" />
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-        </svg> -->
-        <fa-icon [icon]="faUsers"></fa-icon>
+        <lucide-icon [img]="iconUsers" [size]="16"></lucide-icon>
       </span>
       <span>{{ 'NAV_MEMBER_MANAGEMENT' | translate }}</span>
     </a>

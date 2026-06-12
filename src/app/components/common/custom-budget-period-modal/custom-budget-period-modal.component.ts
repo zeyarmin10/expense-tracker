@@ -2,15 +2,14 @@ import { Component, EventEmitter, inject, Output, HostListener } from '@angular/
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faSave, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { CalendarRange, LucideAngularModule, Save, X } from 'lucide-angular';
 
 declare var bootstrap: any;
 
 @Component({
   selector: 'app-custom-budget-period-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, TranslateModule, FontAwesomeModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, TranslateModule, LucideAngularModule],
   templateUrl: './custom-budget-period-modal.component.html',
   styleUrls: ['./custom-budget-period-modal.component.css'],
 })
@@ -22,8 +21,9 @@ export class CustomBudgetPeriodModalComponent {
   private modalInstance: any;
   private isModalOpen = false;
 
-  faSave = faSave;
-  faTimes = faTimes;
+  readonly iconSave = Save;
+  readonly iconTimes = X;
+  readonly iconCalendarRange = CalendarRange;
 
   @HostListener('window:popstate', ['$event'])
   onPopState(event: PopStateEvent): void {
