@@ -602,6 +602,7 @@
   "SPACE_RENAME_SUCCESS": "Space name updated successfully.",
   "SPACE_RENAME_ERROR": "Failed to rename the space. Please try again.",
   "SPACE_NAME_MAX_LENGTH_ERROR": "Space name must be {{max}} characters or fewer.",
+  "SPACE_LIMIT_REACHED": "You can only create up to 5 spaces per account.",
   "SPACE_NAME_LIMIT_HINT": "Use up to {{max}} characters for a space name.",
   "INVITE_CODE_LENGTH_HINT": "Invite code must be exactly {{length}} characters.",
   "SPACE_DELETE_CONFIRM": "Delete \"{{name}}\"? This will permanently remove its shared records and cannot be undone.",

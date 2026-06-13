@@ -570,6 +570,8 @@ export class OnboardingComponent implements OnInit {
         });
       case 'Group name is required.':
         return this.translate.instant('SPACE_RENAME_EMPTY_ERROR');
+      case 'Space limit reached.':
+        return this.translate.instant('SPACE_LIMIT_REACHED');
       default:
         return this.translate.instant('ONBOARDING_GROUP_CREATION_FAILED');
     }

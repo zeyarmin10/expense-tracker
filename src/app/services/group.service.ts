@@ -85,6 +85,17 @@ export class GroupService {
 
     const userProfile = await firstValueFrom(userDataService.getUserProfile(userId));
 
+    const personalSpaceId = userProfile?.personalSpaceId || '';
+    const ownedGroupSpaces = Object.entries(userProfile?.spaceMemberships || {})
+      .filter(([spaceId, role]) =>
+        role === 'owner' &&
+        spaceId !== personalSpaceId &&
+        !spaceId.startsWith('personal:')
+      );
+    if (ownedGroupSpaces.length >= 5) {
+      throw new Error('Space limit reached.');
+    }
+
     const groupRef = push(ref(this.db, 'groups'));
     const newGroupId = groupRef.key!;
     if (!newGroupId) {
