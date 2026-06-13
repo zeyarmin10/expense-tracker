@@ -28,6 +28,9 @@ import { ServiceIExpense } from '../../services/expense'; // Assuming types are 
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ServiceIIncome, IncomeService } from '../../services/income';
 import { ServiceIBudget, BudgetService } from '../../services/budget';
+import { CategoryService, ServiceICategory } from '../../services/category';
+import { LucideAngularModule } from 'lucide-angular';
+import { getIconData, getCategoryHue } from '../../utils/category-icons';
 import {
   FontAwesomeModule,
   FaIconLibrary,
@@ -113,6 +116,7 @@ type DailyCashFlowChartItem = DailyCashFlowData & {
     FormsModule,
     CurrentSpaceTitleComponent,
     ShowFullTextDirective,
+    LucideAngularModule,
   ],
   providers: [DatePipe],
   templateUrl: './profit.html',
@@ -131,6 +135,14 @@ export class Profit implements OnInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
   public formatService = inject(FormatService);
   private profitLossService = inject(ProfitLossService);
+  private categoryService = inject(CategoryService);
+
+  categoryList: ServiceICategory[] = [];
+  getCategoryHue = getCategoryHue;
+
+  getIconForCategory(categoryName: string) {
+    return getIconData(this.categoryList.find(c => c.name === categoryName)?.icon);
+  }
 
   // --- View Children ---
   @ViewChild('profitChartCanvas')
@@ -372,6 +384,9 @@ export class Profit implements OnInit, OnDestroy {
   // --- Lifecycle Hooks ---
 
   ngOnInit(): void {
+    this.subscriptions.add(
+      this.categoryService.getCategories().subscribe(cats => { this.categoryList = cats; })
+    );
     // Disable form control for currency as it's set from user profile
     this.incomeForm.controls['currency'].disable();
     Chart.defaults.font.family = 'Syne, MyanmarUIFont, sans-serif';

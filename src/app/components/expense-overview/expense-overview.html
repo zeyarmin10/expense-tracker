@@ -114,7 +114,7 @@
                  (click)="filterByCategory(cat.category)"
                  [class.ov-bar-active]="cat.category === (_selectedCategory$ | async)">
               <div class="ov-bar-meta">
-                <span class="ov-bar-dot" [style.background]="getCategoryColor(i)"></span>
+                <lucide-icon [img]="getIconForCategory(cat.category)" [size]="14" class="ov-bar-cat-icon" [style.color]="getCategoryColor(cat.category)"></lucide-icon>
                 <span class="ov-bar-name">{{ cat.category }}</span>
                 <span class="ov-bar-amount">{{ formatService.formatAmountShort(cat.total, cat.currency) }}</span>
               </div>
@@ -122,7 +122,7 @@
                 <div class="ov-bar-track">
                   <div class="ov-bar-fill"
                        [style.width.%]="getCategoryPercent(cat.total)"
-                       [style.background]="getCategoryColor(i)"></div>
+                       [style.background]="getCategoryColor(cat.category)"></div>
                 </div>
                 <span class="ov-bar-pct">{{ getCategoryPercent(cat.total) | number:'1.0-0' }}%</span>
               </div>
@@ -164,7 +164,10 @@
                     </span>
                   </td>
                   <td class="td-category">
-                    <span class="category-badge">{{ expense.category }}</span>
+                    <span class="category-badge" [style.--cat-hue]="getCategoryHue(expense.category)">
+                      <lucide-icon [img]="getIconForCategory(expense.category)" [size]="11" style="flex-shrink:0"></lucide-icon>
+                      {{ expense.category }}
+                    </span>
                   </td>
                   <td class="td-name">
                     <span class="td-item-name">{{ expense.itemName }}</span>

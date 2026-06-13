@@ -34,6 +34,9 @@ import {
 } from '../../services/date-filter.service';
 import { AuthService } from '../../services/auth';
 import { UserDataService, UserProfile } from '../../services/user-data';
+import { CategoryService, ServiceICategory } from '../../services/category';
+import { LucideAngularModule } from 'lucide-angular';
+import { getIconData, getCategoryHue } from '../../utils/category-icons';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
 import { UserAvatarComponent } from '../common/user-avatar/user-avatar.component';
 
@@ -63,6 +66,7 @@ interface CategoryTotal {
     FontAwesomeModule,
     CurrentSpaceTitleComponent,
     UserAvatarComponent,
+    LucideAngularModule,
   ],
   providers: [DatePipe],
   templateUrl: './expense-overview.html',
@@ -75,6 +79,14 @@ export class ExpenseOverview implements OnInit {
   translate = inject(TranslateService);
   authService = inject(AuthService);
   userDataService = inject(UserDataService);
+  private categoryService = inject(CategoryService);
+
+  categoryList: ServiceICategory[] = [];
+  getCategoryHue = getCategoryHue;
+
+  getIconForCategory(categoryName: string) {
+    return getIconData(this.categoryList.find(c => c.name === categoryName)?.icon);
+  }
 
   faMagnifyingGlass = faMagnifyingGlass;
   faChartPie = faChartPie;
@@ -101,13 +113,9 @@ export class ExpenseOverview implements OnInit {
 
   currentPeriodLabel: string = '';
 
-  private readonly categoryColorPalette = [
-    '#0b74ff', '#60a5fa', '#f4b11a', '#f87171', '#a78bfa',
-    '#38bdf8', '#fb923c', '#e879f9', '#facc15', '#34d399',
-  ];
-
-  getCategoryColor(index: number): string {
-    return this.categoryColorPalette[index % this.categoryColorPalette.length];
+  getCategoryColor(category: string): string {
+    const hue = getCategoryHue(category);
+    return `hsl(${hue} 80% 62%)`;
   }
 
   getCategoryPercent(total: number): number {
@@ -151,6 +159,7 @@ export class ExpenseOverview implements OnInit {
 
     // Use authService.userProfile$ which correctly merges group settings.
     this.userProfile$ = this.authService.userProfile$;
+    this.categoryService.getCategories().subscribe(cats => { this.categoryList = cats; });
 
     this.userProfile$.subscribe((profile) => {
       if (profile) {

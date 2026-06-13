@@ -40,6 +40,8 @@ import {
 
 import { CategoryModalComponent } from '../common/category-modal/category-modal';
 import { LightboxComponent } from '../common/lightbox/lightbox.component';
+import { LucideAngularModule } from 'lucide-angular';
+import { getIconData, getCategoryHue } from '../../utils/category-icons';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../services/auth';
 import {
@@ -84,6 +86,7 @@ interface ExpenseCategoryGroup {
     LucideAngularModule,
     CategoryModalComponent,
     LightboxComponent,
+    LucideAngularModule,
     TranslateModule,
     CurrentSpaceTitleComponent,
     UserAvatarComponent,
@@ -105,6 +108,12 @@ export class Expense implements OnInit, OnDestroy {
   expenses$!: Observable<IExpense[]>;
   vouchers$!: Observable<ServiceIVoucher[]>;
   categories$: Observable<ServiceICategory[]>;
+  categoryList: ServiceICategory[] = [];
+  getCategoryHue = getCategoryHue;
+
+  getIconForCategory(categoryName: string) {
+    return getIconData(this.categoryList.find(c => c.name === categoryName)?.icon);
+  }
 
   private refreshExpenses$ = new BehaviorSubject<void>(undefined);
   private refreshVouchers$ = new BehaviorSubject<void>(undefined);
@@ -241,6 +250,7 @@ export class Expense implements OnInit, OnDestroy {
     });
 
     this.categories$ = this.categoryService.getCategories();
+    this.categories$.subscribe(cats => { this.categoryList = cats; });
 
     const storedLang = localStorage.getItem('selectedLanguage');
     this.translate.use(storedLang || this.translate.getBrowserLang() || 'en');
@@ -434,6 +444,7 @@ export class Expense implements OnInit, OnDestroy {
 
   loadCategories(): void {
     this.categories$ = this.categoryService.getCategories();
+    this.categories$.subscribe(cats => { this.categoryList = cats; });
   }
 
   openCategoryModal(): void {
@@ -791,9 +802,8 @@ export class Expense implements OnInit, OnDestroy {
     this.voucherForm.patchValue({ imageFile: 'set' });
   }
 
-  getCategoryStyle(index: number): Record<string, string> {
-    const hue = Math.round((index * 137.508) % 360);
-    return { '--cat-hue': String(hue) };
+  getCategoryStyle(category: string): Record<string, string> {
+    return { '--cat-hue': String(getCategoryHue(category)) };
   }
 
   formatCount(n: number): string {

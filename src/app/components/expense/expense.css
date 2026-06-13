@@ -968,6 +968,9 @@ a.exp-icon-btn {
 }
 
 .exp-category-title-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
   flex-shrink: 0;
   border-radius: 999px;
   padding: 0.22rem 0.6rem;
@@ -1100,14 +1103,15 @@ body.light-mode .exp-category-title-chip:hover {
 }
 
 .exp-cat-badge {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
   font-size: 0.68rem;
-  /* font-family: 'DM Mono', monospace; */
   padding: 0.15rem 0.55rem;
   border-radius: 6px;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  color: var(--text-sub);
+  background: hsl(var(--cat-hue, 220) 80% 55% / 0.13);
+  border: 1px solid hsl(var(--cat-hue, 220) 80% 55% / 0.35);
+  color: hsl(var(--cat-hue, 220) 80% 70%);
 }
 
 .exp-meta-dot {

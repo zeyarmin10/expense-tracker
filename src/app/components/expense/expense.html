@@ -587,7 +587,8 @@
                 {{ voucher.title || voucher.fileName }}
               </div>
               <div class="exp-item-meta">
-                <span *ngIf="voucher.category" class="exp-cat-badge">
+                <span *ngIf="voucher.category" class="exp-cat-badge" [style.--cat-hue]="getCategoryHue(voucher.category)">
+                  <lucide-icon [img]="getIconForCategory(voucher.category)" [size]="11" style="flex-shrink:0"></lucide-icon>
                   {{ voucher.category }}
                 </span>
                 <span *ngIf="voucher.category" class="exp-meta-dot">·</span>
@@ -691,7 +692,7 @@
           <section
             *ngFor="let group of categoryGroups; let catIdx = index"
             class="exp-category-group"
-            [ngStyle]="getCategoryStyle(catIdx)"
+            [ngStyle]="getCategoryStyle(group.category)"
           >
             <div class="exp-category-group-header">
               <button
@@ -699,6 +700,7 @@
                 class="exp-category-title-chip"
                 (click)="filterByCategory(group.category)"
               >
+                <lucide-icon [img]="getIconForCategory(group.category)" [size]="13" style="flex-shrink:0"></lucide-icon>
                 {{ group.category.length > 20 ? group.category.substring(0, 20) + '…' : group.category }}
               </button>
               <span class="exp-category-count">

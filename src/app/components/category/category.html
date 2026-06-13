@@ -85,7 +85,7 @@
           <!-- View mode -->
           <ng-container *ngIf="editingCategoryId !== category.id; else editMode">
             <div class="cat-item-inner">
-              <span class="cat-item-icon">
+              <span class="cat-item-icon" [style.--cat-hue]="getCategoryHue(category.name)">
                 <lucide-icon [img]="getIconData(category.icon)" [size]="18"></lucide-icon>
               </span>
               <span class="cat-item-name">{{ category.name }}</span>

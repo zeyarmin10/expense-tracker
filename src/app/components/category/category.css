@@ -157,8 +157,8 @@
   width: 32px;
   height: 32px;
   border-radius: 8px;
-  background: var(--surface-2);
-  color: var(--accent);
+  background: hsl(var(--cat-hue, 220) 80% 55% / 0.15);
+  color: hsl(var(--cat-hue, 220) 80% 68%);
   flex-shrink: 0;
 }
 

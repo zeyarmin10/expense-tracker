@@ -45,7 +45,9 @@ import {
   DateFilterService,
   DateRange,
 } from '../../services/date-filter.service';
-import { CategoryService } from '../../services/category';
+import { CategoryService, ServiceICategory } from '../../services/category';
+import { LucideAngularModule } from 'lucide-angular';
+import { getIconData, getCategoryHue } from '../../utils/category-icons';
 import Swal from 'sweetalert2';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
 import { ShowFullTextDirective } from '../../directives/show-full-text.directive';
@@ -110,6 +112,7 @@ interface SpendingMonitorItem {
     FormsModule,
     CurrentSpaceTitleComponent,
     ShowFullTextDirective,
+    LucideAngularModule,
   ],
   providers: [DatePipe],
   templateUrl: './budget.html',
@@ -124,6 +127,13 @@ export class BudgetComponent implements OnInit, OnDestroy {
   private translate = inject(TranslateService);
   public formatService = inject(FormatService);
   private categoryService = inject(CategoryService);
+
+  categoryList: ServiceICategory[] = [];
+  getCategoryHue = getCategoryHue;
+
+  getIconForCategory(categoryName: string) {
+    return getIconData(this.categoryList.find(c => c.name === categoryName)?.icon);
+  }
 
   budgetForm: FormGroup;
 
@@ -771,6 +781,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.categories$.subscribe((categories) => {
         this.categories = categories;
+        this.categoryList = categories.filter(c => c.id !== 'all') as ServiceICategory[];
       })
     );
   }

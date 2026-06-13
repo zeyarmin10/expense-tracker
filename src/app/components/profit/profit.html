@@ -421,7 +421,9 @@
                   <span class="pnl-record-amount pnl-amount-budget">
                     {{ formatService.formatAmountWithSymbol(budget.amount, budget.currency) }}
                   </span>
-                  <span class="pnl-record-desc" *ngIf="budget.category">
+                  <span class="pnl-record-desc" *ngIf="budget.category" [style.--cat-hue]="getCategoryHue(budget.category)">
+                    <lucide-icon *ngIf="budget.category !== 'all'"
+                      [img]="getIconForCategory(budget.category)" [size]="11" style="flex-shrink:0;vertical-align:middle"></lucide-icon>
                     {{ budget.category === 'all' ? ('ALL_CATEGORY' | translate) : budget.category }}
                   </span>
                 </div>
