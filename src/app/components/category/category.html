@@ -6,7 +6,7 @@
     <!-- ── Page Header ── -->
     <div class="cat-page-header">
       <h2 class="cat-page-title">
-        <fa-icon [icon]="faTags" class="cat-icon-accent"></fa-icon>
+        <lucide-icon [img]="iconTags" [size]="16" class="cat-icon-accent"></lucide-icon>
         {{ "CREATE_CATEGORY_TITLE" | translate }}
       </h2>
     </div>
@@ -17,7 +17,7 @@
         <div class="cat-icon-row">
           <button type="button" class="cat-icon-trigger"
                   [class.cat-icon-trigger-open]="showAddIconPicker"
-                  (click)="showAddIconPicker = !showAddIconPicker">
+                  (click)="toggleAddIconPicker($event)">
             <lucide-icon [img]="selectedAddIconData" [size]="22"></lucide-icon>
           </button>
           <div class="cat-fl-wrap cat-fl-name">
@@ -53,7 +53,7 @@
         <div class="cat-add-footer">
           <button type="submit" class="cat-btn cat-btn-primary"
             [disabled]="addCategoryForm.invalid">
-            <fa-icon [icon]="faSave"></fa-icon>
+            <lucide-icon [img]="iconSave" [size]="15"></lucide-icon>
             {{ "SAVE_BUTTON_LABEL" | translate }}
           </button>
         </div>
@@ -65,7 +65,7 @@
 
       <div class="cat-list-header">
         <h3 class="cat-list-title">
-          <fa-icon [icon]="faTags" class="cat-icon-success"></fa-icon>
+          <lucide-icon [img]="iconTags" [size]="16" class="cat-icon-success"></lucide-icon>
           {{ "EXISTING_CATEGORIES_TITLE" | translate }}
         </h3>
         <span class="cat-count-badge" *ngIf="(categories$ | async) as cats">
@@ -94,13 +94,13 @@
                   (click)="startEdit(category)"
                   [disabled]="editingCategoryId !== null"
                   [attr.aria-label]="'EDIT_BUTTON_LABEL' | translate">
-                  <fa-icon [icon]="faPen" class="fa-edit-btn"></fa-icon>
+                  <lucide-icon [img]="iconPen" [size]="13" class="fa-edit-btn"></lucide-icon>
                 </button>
                 <button class="cat-action-btn cat-action-delete"
                   (click)="onDelete(category.id!)"
                   [disabled]="editingCategoryId !== null"
                   [attr.aria-label]="'DELETE_BUTTON_LABEL' | translate">
-                  <fa-icon [icon]="faTrashCan" class="fa-delete-btn"></fa-icon>
+                  <lucide-icon [img]="iconTrash2" [size]="13" class="fa-delete-btn"></lucide-icon>
                 </button>
               </div>
             </div>
@@ -112,7 +112,7 @@
               <div class="cat-icon-row">
                 <button type="button" class="cat-icon-trigger"
                         [class.cat-icon-trigger-open]="showEditIconPicker"
-                        (click)="showEditIconPicker = !showEditIconPicker">
+                        (click)="toggleEditIconPicker($event)">
                   <lucide-icon [img]="selectedEditIconData" [size]="22"></lucide-icon>
                 </button>
                 <div class="cat-fl-wrap cat-fl-name">
@@ -145,13 +145,13 @@
               </div>
               <div class="cat-edit-actions">
                 <button class="cat-btn cat-btn-ghost cat-btn-sm" (click)="cancelEdit()">
-                  <fa-icon [icon]="faTimes"></fa-icon>
+                  <lucide-icon [img]="iconTimes" [size]="14"></lucide-icon>
                   {{ "CANCEL_BUTTON_LABEL" | translate }}
                 </button>
                 <button class="cat-btn cat-btn-primary cat-btn-sm"
                   (click)="onUpdateInline(category.id!)"
                   [disabled]="editingCategoryFormControl?.invalid">
-                  <fa-icon [icon]="faSave"></fa-icon>
+                  <lucide-icon [img]="iconSave" [size]="15"></lucide-icon>
                   {{ "SAVE_BUTTON_LABEL" | translate }}
                 </button>
               </div>

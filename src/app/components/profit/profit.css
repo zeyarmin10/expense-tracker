@@ -759,6 +759,80 @@
   color: hsl(var(--cat-hue, 220) 70% 65%);
 }
 
+.pnl-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.55rem 1rem;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.12s;
+}
+
+.pnl-row:last-child { border-bottom: none; }
+
+.pnl-row:hover { background: var(--surface-2); }
+
+.pnl-row-left {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.pnl-row-amount {
+  font-size: 0.9rem;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.pnl-row-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: 20px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.pnl-row-badge-monthly {
+  background: rgba(96, 165, 250, 0.12);
+  color: #60a5fa;
+  border: 1px solid rgba(96, 165, 250, 0.22);
+}
+
+.pnl-row-badge-yearly {
+  background: rgba(244, 177, 26, 0.12);
+  color: #f4b11a;
+  border: 1px solid rgba(244, 177, 26, 0.22);
+}
+
+.pnl-row-badge-cat {
+  background: hsl(var(--cat-hue, 220) 80% 55% / 0.13);
+  border: 1px solid hsl(var(--cat-hue, 220) 80% 55% / 0.35);
+  color: hsl(var(--cat-hue, 220) 80% 70%);
+}
+
+.pnl-row-date {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.pnl-row-desc {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
 .pnl-delete-btn {
   display: flex;
   align-items: center;

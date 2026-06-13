@@ -32,27 +32,10 @@ import { CategoryService, ServiceICategory } from '../../services/category';
 import { LucideAngularModule } from 'lucide-angular';
 import { getIconData, getCategoryHue } from '../../utils/category-icons';
 import {
-  FontAwesomeModule,
-  FaIconLibrary,
-} from '@fortawesome/angular-fontawesome';
-import {
-  faTrash,
-  faSave,
-  faChevronDown,
-  faChevronUp,
-  faMoneyBillWave,
-  faShoppingCart,
-  faChartLine,
-  faArrowTrendDown,
-  faChartPie, 
-  faFilter, 
-  faCalendarAlt, 
-  faEllipsisH,
-  faPiggyBank,
-  faChartColumn,
-  faPlus
-} from '@fortawesome/free-solid-svg-icons';
-import { faTrashCan } from '@fortawesome/free-regular-svg-icons';
+  TrendingUp, TrendingDown, Banknote, ShoppingCart, ChartLine,
+  PiggyBank, ChartColumn, ChevronDown, ChevronUp, Save, Trash2, Plus,
+  LucideIconData,
+} from 'lucide-angular';
 import { AuthService } from '../../services/auth';
 import { Chart, registerables } from 'chart.js';
 import {
@@ -112,7 +95,6 @@ type DailyCashFlowChartItem = DailyCashFlowData & {
     CommonModule,
     ReactiveFormsModule,
     TranslateModule,
-    FontAwesomeModule,
     FormsModule,
     CurrentSpaceTitleComponent,
     ShowFullTextDirective,
@@ -197,22 +179,16 @@ export class Profit implements OnInit, OnDestroy {
   isRecordedBudgetsCollapsed: boolean = true;
   get canManageProfitActions(): boolean { return canManageSharedSpace(this.userProfile); }
 
-  // --- Font Awesome Icons ---
-  faTrash = faTrash;
-  faSave = faSave;
-  faChevronDown = faChevronDown;
-  faMoneyBillWave = faMoneyBillWave;
-  faShoppingCart = faShoppingCart;
-  faChartLine = faChartLine;
-  faArrowTrendDown = faArrowTrendDown;
-  faChartPie = faChartPie;
-  faFilter = faFilter;
-  faCalendarAlt = faCalendarAlt;
-  faEllipsisH = faEllipsisH;
-  faPiggyBank = faPiggyBank;
-  faChartColumn = faChartColumn;
-  faPlus = faPlus;
-  faTrashCan = faTrashCan;
+  readonly iconChartLine = ChartLine;
+  readonly iconBanknote = Banknote;
+  readonly iconShoppingCart = ShoppingCart;
+  readonly iconPiggyBank = PiggyBank;
+  readonly iconChevronDown = ChevronDown;
+  readonly iconSave = Save;
+  readonly iconTrash2 = Trash2;
+  readonly iconChartColumn = ChartColumn;
+  readonly iconTrendingUp = TrendingUp;
+  readonly iconTrendingDown = TrendingDown;
 
   // ── Comma formatting ──────────────────────────
   incomeAmountDisplay: string = '';
@@ -749,12 +725,10 @@ export class Profit implements OnInit, OnDestroy {
     return totalProfit >= 0 ? 'profit-loss-card' : 'profit-loss-card-loss';
   }
   
-  getProfitLossIcon(profit: CurrencyMap | null | undefined): any {
-    if (!profit) {
-      return this.faChartLine; // Default icon
-    }
+  getProfitLossIcon(profit: CurrencyMap | null | undefined): LucideIconData {
+    if (!profit) return this.iconTrendingUp;
     const totalProfit = Object.values(profit).reduce((sum, value) => sum + value, 0);
-    return totalProfit >= 0 ? this.faChartLine : this.faArrowTrendDown;
+    return totalProfit >= 0 ? this.iconTrendingUp : this.iconTrendingDown;
   }
   
   getProfitLossIconClass(profit: CurrencyMap | null | undefined): string {
@@ -843,15 +817,10 @@ export class Profit implements OnInit, OnDestroy {
     }));
   }
 
-  getBalanceIcon(balances: { [key: string]: number } | null | undefined): any {
-    if (!balances) {
-      return this.faChartLine; // Default icon
-    }
-    const totalBalance = Object.values(balances).reduce(
-      (sum, value) => sum + value,
-      0
-    );
-    return totalBalance >= 0 ? this.faChartLine : this.faArrowTrendDown;
+  getBalanceIcon(balances: { [key: string]: number } | null | undefined): LucideIconData {
+    if (!balances) return this.iconTrendingUp;
+    const totalBalance = Object.values(balances).reduce((sum, value) => sum + value, 0);
+    return totalBalance >= 0 ? this.iconTrendingUp : this.iconTrendingDown;
   }
 
   isBalanceNegative(balances: { [key: string]: number } | null | undefined): boolean {

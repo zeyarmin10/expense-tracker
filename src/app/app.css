@@ -9,6 +9,24 @@ body {
   color: #f0f2f7;
 }
 
+/* Status bar area fill — always covers the top safe-area regardless of page/nav state */
+.status-bar-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: env(safe-area-inset-top, 0px);
+  background: var(--nav-bg, #06142d);
+  z-index: 999;
+  pointer-events: none;
+}
+
+@media (max-width: 991px) {
+  .status-bar-bg {
+    height: calc(env(safe-area-inset-top, 0px) + 58px);
+  }
+}
+
 /* Active nav link */
 .active-link {
   color: #0b74ff !important;
@@ -572,9 +590,8 @@ body.light-mode {
 }
 
 .theme-icon-img {
-  width: 1.5rem;
-  height: 1.5rem;
-  filter: invert(1);
+  color: var(--text);
+  display: flex;
 }
 /* ═══════════════════════════════════════════════════
    MOBILE BOTTOM NAVIGATION BAR
@@ -1210,6 +1227,13 @@ body.light-mode .mob-drawer-backdrop {
 /* ✅ Fix 6: Drawer active link icon color */
 .mob-drawer-link.mob-drawer-active .mob-drawer-link-icon svg {
   stroke: var(--nav-active, #0b74ff) !important;
+}
+
+/* ✅ Fix 7: Lucide icons active color (use color, not stroke, because lucide uses stroke="currentColor") */
+.mob-nav-item.mob-nav-active .mob-nav-icon lucide-icon,
+.mob-nav-fab.mob-nav-fab-active .mob-nav-icon lucide-icon,
+.mob-nav-more-btn.mob-nav-active .mob-nav-icon lucide-icon {
+  color: var(--nav-active, #0b74ff) !important;
 }
 
 .mob-drawer-link.mob-drawer-active .mob-drawer-link-icon {

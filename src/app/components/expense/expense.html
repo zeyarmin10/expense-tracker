@@ -266,7 +266,7 @@
               class="exp-btn exp-btn-primary"
               [disabled]="newExpenseForm.invalid"
             >
-              <lucide-icon [img]="iconSave" [size]="16" class="me-2"></lucide-icon>
+              <lucide-icon [img]="iconSave" [size]="16"></lucide-icon>
               {{ "SAVE_BUTTON_LABEL" | translate }}
             </button>
           </div>
@@ -382,12 +382,12 @@
           <div *ngIf="selectedVoucherFiles.length === 0" class="exp-upload-actions">
             <button type="button" class="exp-upload-btn exp-upload-btn-camera"
               (click)="openCamera()">
-              <span class="exp-upload-btn-icon"><lucide-icon [img]="iconCamera" [size]="16"></lucide-icon></span>
+              <span class="exp-upload-btn-icon"><lucide-icon [img]="iconCamera" [size]="28"></lucide-icon></span>
               <span class="exp-upload-btn-label">{{ "VOUCHER_CAMERA" | translate }}</span>
             </button>
             <button type="button" class="exp-upload-btn exp-upload-btn-gallery"
               (click)="openGallery()">
-              <span class="exp-upload-btn-icon"><lucide-icon [img]="iconImages" [size]="16"></lucide-icon></span>
+              <span class="exp-upload-btn-icon"><lucide-icon [img]="iconImages" [size]="28"></lucide-icon></span>
               <span class="exp-upload-btn-label">{{ "VOUCHER_GALLERY" | translate }}</span>
             </button>
           </div>
@@ -443,7 +443,7 @@
               class="exp-btn exp-btn-primary"
               [disabled]="voucherForm.invalid || selectedVoucherFiles.length === 0 || isVoucherSaving"
             >
-              <lucide-icon [img]="iconSave" [size]="16" class="me-2"></lucide-icon>
+              <lucide-icon [img]="iconSave" [size]="16"></lucide-icon>
               {{ "VOUCHER_SAVE_BUTTON" | translate }}
             </button>
           </div>

@@ -296,7 +296,7 @@ body {
 /* Buttons */
 .swal2-confirm {
   background: #0b74ff !important;
-  color: #0a0c10 !important;
+  color: #ffffff !important;
   border-radius: 10px !important;
   font-weight: 700 !important;
   font-size: 0.85rem !important;
@@ -427,6 +427,11 @@ body.light-mode {
 }
 
 /* Light mode SweetAlert2 */
+body.light-mode {
+  --swal-preview-bg: #edf2f7;
+  --swal-preview-border: #cbd5e0;
+}
+
 body.light-mode .swal2-popup {
   background: #ffffff !important;
   color: #1a202c !important;
@@ -445,12 +450,23 @@ body.light-mode .swal2-content {
 
 body.light-mode .swal2-confirm {
   background: #005eea !important;
+  color: #ffffff !important;
 }
 
 body.light-mode .swal2-cancel {
   background: rgba(0, 0, 0, 0.05) !important;
   color: #4a5568 !important;
   border: 1px solid rgba(0, 0, 0, 0.1) !important;
+}
+
+body.light-mode .swal2-input {
+  background: #ffffff !important;
+  border: 1px solid rgba(5, 38, 84, 0.18) !important;
+  color: #1a202c !important;
+}
+
+body.light-mode .swal2-input::placeholder {
+  color: #718096 !important;
 }
 
 body.light-mode .swal2-toast {
@@ -762,4 +778,14 @@ body.light-mode .swal-avatar-pick-remove {
 body.light-mode .swal-fulltext-popup {
   background: #ffffff !important;
   box-shadow: 0 8px 32px rgba(15, 23, 42, 0.18) !important;
+}
+
+/* ── Expense Overview — category bar track (light mode) ── */
+body.light-mode .ov-bar-track {
+  background: #c8d3e0 !important;
+}
+
+body.light-mode .ov-bar-fill {
+  opacity: 1 !important;
+  filter: saturate(1.3) brightness(0.78) !important;
 }

@@ -11,10 +11,7 @@ import { switchMap, tap, catchError, distinctUntilChanged } from 'rxjs/operators
 import { AuthService } from '../../services/auth';
 import { getActiveGroupId, UserDataService, UserProfile } from '../../services/user-data';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faSave, faUserCircle, faTrash, faPlus, faChevronDown, faChevronUp, faListUl, faEdit, faTimes, faBell, faBellSlash, faClock, faCamera, faImages, faMoon, faDesktop } from '@fortawesome/free-solid-svg-icons';
-import { icon as faRenderIcon } from '@fortawesome/fontawesome-svg-core';
-import { faTrashCan } from '@fortawesome/free-regular-svg-icons';
+import { LucideAngularModule, Save, Trash2, Plus, ChevronDown, ChevronUp, X, Bell, BellOff, Clock, Camera as LucideCamera, Images, Moon, Monitor, Sun, CalendarRange, Pen } from 'lucide-angular';
 import { updateProfile } from '@angular/fire/auth';
 import { HttpClient } from '@angular/common/http';
 import { Camera } from '@capacitor/camera';
@@ -60,7 +57,7 @@ const Toast = Swal.mixin({
     CommonModule,
     ReactiveFormsModule,
     TranslateModule,
-    FontAwesomeModule,
+    LucideAngularModule,
     FormsModule,
     CustomBudgetPeriodModalComponent,
     CurrentSpaceTitleComponent,
@@ -168,26 +165,25 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   @ViewChild(CustomBudgetPeriodModalComponent) private modalComponent!: CustomBudgetPeriodModalComponent;
   @ViewChild('avatarFileInput') avatarFileInput!: ElementRef<HTMLInputElement>;
 
-  faPlus = faPlus;
-  faSave = faSave;
-  faUserCircle = faUserCircle;
-  faEdit = faEdit;
-  faTimes = faTimes;
-  faTrash = faTrash;
-  faChevronDown = faChevronDown;
-  faChevronUp = faChevronUp;
+  readonly iconPlus = Plus;
+  readonly iconSave = Save;
+  readonly iconPen = Pen;
+  readonly iconTimes = X;
+  readonly iconTrash2 = Trash2;
+  readonly iconChevronDown = ChevronDown;
+  readonly iconChevronUp = ChevronUp;
+  readonly iconBell = Bell;
+  readonly iconBellOff = BellOff;
+  readonly iconClock = Clock;
+  readonly iconCamera = LucideCamera;
+  readonly iconMoon = Moon;
+  readonly iconMonitor = Monitor;
+  readonly iconSun = Sun;
+  readonly iconCalendarRange = CalendarRange;
   imageLoadError: boolean = false;
   isEditingName: boolean = false;
   isFormReady: boolean = false;
   isDeletingAccount: boolean = false;
-  faListUl = faListUl;
-  faTrashCan = faTrashCan;
-  faBell = faBell;
-  faBellSlash = faBellSlash;
-  faClock = faClock;
-  faCamera = faCamera;
-  faMoon = faMoon;
-  faDesktop = faDesktop;
   isUploadingAvatar = false;
 
   constructor() {
@@ -694,9 +690,9 @@ export class UserProfileComponent implements OnInit, OnDestroy {
     const currentPhotoUrl = await firstValueFrom(this.userPhotoUrl$);
     const hasPhoto = !!currentPhotoUrl;
 
-    const camSvg    = faRenderIcon(faCamera).html.join('');
-    const galSvg    = faRenderIcon(faImages).html.join('');
-    const trashSvg  = faRenderIcon(faTrash).html.join('');
+    const camSvg   = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>`;
+    const galSvg   = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 22H4a2 2 0 0 1-2-2V6"/><path d="m22 13-1.296-1.296a2.41 2.41 0 0 0-3.408 0L11 18"/><circle cx="12" cy="8" r="2"/><rect width="16" height="16" x="6" y="2" rx="2"/></svg>`;
+    const trashSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>`;
     const camLabel    = this.translate.instant('VOUCHER_CAMERA');
     const galLabel    = this.translate.instant('VOUCHER_GALLERY');
     const removeLabel = this.translate.instant('AVATAR_REMOVE_LABEL');

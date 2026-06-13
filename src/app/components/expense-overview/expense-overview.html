@@ -48,7 +48,7 @@
         <input type="text" class="search-input" placeholder="{{ 'SEARCH_PLACEHOLDER' | translate }}"
           [(ngModel)]="searchTerm" (keyup.enter)="onSearch()" />
         <button class="search-btn" type="button" (click)="onSearch()">
-          <fa-icon [icon]="faMagnifyingGlass"></fa-icon>
+          <lucide-icon [img]="iconSearch" [size]="15"></lucide-icon>
         </button>
       </div>
 
@@ -60,7 +60,7 @@
         <input type="text" class="search-input" placeholder="{{ 'SEARCH_PLACEHOLDER' | translate }}"
           [(ngModel)]="searchTerm" (keyup.enter)="onSearch()" />
         <button class="search-btn" type="button" (click)="onSearch()">
-          <fa-icon [icon]="faMagnifyingGlass"></fa-icon>
+          <lucide-icon [img]="iconSearch" [size]="15"></lucide-icon>
         </button>
       </div>
     </div>
@@ -82,8 +82,7 @@
           </div>
 
           <div class="summary-card category-highlight-card">
-            <div class="category-icon"><img src="../../../assets/icons/fire.svg" alt="fire"
-                style="width:25px;height:25px;vertical-align:middle;"></div>
+            <div class="category-icon"><lucide-icon [img]="iconFlame" [size]="25" style="vertical-align:middle;color:#f97316"></lucide-icon></div>
             <div>
               <div class="summary-label">{{ "MOST_EXPENSIVE_CATEGORY" | translate }}</div>
               <span class="summary-amount">{{ mostExpenseCategory }}</span>
@@ -94,7 +93,7 @@
         <!-- Category Breakdown Bars -->
         <div class="ov-breakdown-panel" *ngIf="categoryTotals.length > 0">
           <div class="ov-breakdown-header">
-            <fa-icon [icon]="faChartColumn"></fa-icon>
+            <lucide-icon [img]="iconChartColumn" [size]="15"></lucide-icon>
             <span>{{ 'CATEGORY_BREAKDOWN' | translate }}</span>
           </div>
           <div class="ov-bar-list">
@@ -105,6 +104,9 @@
               <div class="ov-bar-meta">
                 <span class="ov-bar-dot ov-bar-dot-all"></span>
                 <span class="ov-bar-name">{{ 'ALL_CATEGORIES' | translate }}</span>
+                <span class="ov-bar-amount" *ngFor="let t of getAllCategoriesTotal()">
+                  {{ formatService.formatAmountShort(t.amount, t.currency) }}
+                </span>
               </div>
             </div>
             <div class="ov-bar-divider"></div>
@@ -114,7 +116,7 @@
                  (click)="filterByCategory(cat.category)"
                  [class.ov-bar-active]="cat.category === (_selectedCategory$ | async)">
               <div class="ov-bar-meta">
-                <lucide-icon [img]="getIconForCategory(cat.category)" [size]="14" class="ov-bar-cat-icon" [style.color]="getCategoryColor(cat.category)"></lucide-icon>
+                <lucide-icon [img]="getIconForCategory(cat.category)" [size]="16" class="ov-bar-cat-icon" [style.color]="getCategoryColor(cat.category)"></lucide-icon>
                 <span class="ov-bar-name">{{ cat.category }}</span>
                 <span class="ov-bar-amount">{{ formatService.formatAmountShort(cat.total, cat.currency) }}</span>
               </div>
@@ -134,7 +136,7 @@
         <div class="table-section">
           <div class="table-header">
             <h5 class="table-title">
-              <fa-icon [icon]="faList"></fa-icon>
+              <lucide-icon [img]="iconList" [size]="15"></lucide-icon>
               {{ "EXPENSE_LIST" | translate }}
             </h5>
             <span class="table-count">{{ expenses.length }} items</span>

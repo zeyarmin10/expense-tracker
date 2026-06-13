@@ -2,9 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faUserPlus, faEnvelope, faInbox, faTrash, faUserSlash, faUserCircle, faPaperPlane, faUsers } from '@fortawesome/free-solid-svg-icons';
-import { faTrashCan } from '@fortawesome/free-regular-svg-icons';
+import { LucideAngularModule, UserPlus, Mail, Inbox, Trash2, UserX, User, Send, Users, Crown } from 'lucide-angular';
 import { IUserProfile, IInvitation } from '../../core/models/data';
 import { Observable, of, firstValueFrom, from } from 'rxjs';
 import { switchMap, shareReplay, map } from 'rxjs/operators';
@@ -33,7 +31,7 @@ const Toast = Swal.mixin({
 @Component({
   selector: 'app-member-management',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, FontAwesomeModule, CurrentSpaceTitleComponent, UserAvatarComponent],
+  imports: [CommonModule, FormsModule, TranslateModule, LucideAngularModule, CurrentSpaceTitleComponent, UserAvatarComponent],
   templateUrl: './member-management.html',
   styleUrls: ['./member-management.css']
 })
@@ -44,16 +42,15 @@ export class MemberManagementComponent implements OnInit {
   private translate = inject(TranslateService);
   private router = inject(Router);
 
-  // Font Awesome Icons
-  faUserPlus = faUserPlus;
-  faEnvelope = faEnvelope;
-  faInbox = faInbox;
-  faTrash = faTrash;
-  faUserSlash = faUserSlash;
-  faUserCircle = faUserCircle;
-  faPaperPlane = faPaperPlane;
-  faUsers = faUsers;
-  faTrashCan = faTrashCan;
+  readonly iconUsers = Users;
+  readonly iconUserPlus = UserPlus;
+  readonly iconSend = Send;
+  readonly iconMail = Mail;
+  readonly iconUserX = UserX;
+  readonly iconUser = User;
+  readonly iconInbox = Inbox;
+  readonly iconTrash2 = Trash2;
+  readonly iconCrown = Crown;
 
   userProfile$: Observable<IUserProfile | null>;
   isAdmin$!: Observable<boolean>;

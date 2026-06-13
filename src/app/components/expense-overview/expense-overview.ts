@@ -23,10 +23,6 @@ import {
   Legend,
 } from 'chart.js';
 import { Router } from '@angular/router';
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faMagnifyingGlass, faChartPie, faCalendarAlt, faFilter, faList, faChartColumn } from '@fortawesome/free-solid-svg-icons';
-
-
 import { FormatService } from '../../services/format.service';
 import {
   DateFilterService,
@@ -35,7 +31,7 @@ import {
 import { AuthService } from '../../services/auth';
 import { UserDataService, UserProfile } from '../../services/user-data';
 import { CategoryService, ServiceICategory } from '../../services/category';
-import { LucideAngularModule } from 'lucide-angular';
+import { LucideAngularModule, Search, ChartColumn, ChartPie, List, Flame } from 'lucide-angular';
 import { getIconData, getCategoryHue } from '../../utils/category-icons';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
 import { UserAvatarComponent } from '../common/user-avatar/user-avatar.component';
@@ -63,7 +59,6 @@ interface CategoryTotal {
     FormsModule,
     TranslateModule,
     BaseChartDirective,
-    FontAwesomeModule,
     CurrentSpaceTitleComponent,
     UserAvatarComponent,
     LucideAngularModule,
@@ -88,12 +83,11 @@ export class ExpenseOverview implements OnInit {
     return getIconData(this.categoryList.find(c => c.name === categoryName)?.icon);
   }
 
-  faMagnifyingGlass = faMagnifyingGlass;
-  faChartPie = faChartPie;
-  faCalendarAlt = faCalendarAlt;
-  faFilter = faFilter;
-  faList = faList;
-  faChartColumn = faChartColumn;
+  readonly iconSearch = Search;
+  readonly iconChartColumn = ChartColumn;
+  readonly iconChartPie = ChartPie;
+  readonly iconList = List;
+  readonly iconFlame = Flame;
 
   // --- Filtering and Search Properties ---
   allExpenses$: Observable<IExpense[]> = this.expenseService.getExpenses();
@@ -121,6 +115,14 @@ export class ExpenseOverview implements OnInit {
   getCategoryPercent(total: number): number {
     const sum = this.categoryTotals.reduce((s, c) => s + c.total, 0);
     return sum > 0 ? (total / sum) * 100 : 0;
+  }
+
+  getAllCategoriesTotal(): { amount: number; currency: string }[] {
+    const map: { [currency: string]: number } = {};
+    for (const cat of this.categoryTotals) {
+      map[cat.currency] = (map[cat.currency] || 0) + cat.total;
+    }
+    return Object.entries(map).map(([currency, amount]) => ({ amount, currency }));
   }
 
   public _selectedCategory$ = new BehaviorSubject<string>('');

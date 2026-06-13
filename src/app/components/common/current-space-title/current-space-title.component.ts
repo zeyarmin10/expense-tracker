@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { Component, EventEmitter, HostBinding, HostListener, Input, OnDestroy, OnInit, Output, inject } from '@angular/core';
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faCheck, faUser } from '@fortawesome/free-solid-svg-icons';
+import { LucideAngularModule, Check, User, Plus } from 'lucide-angular';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import {
   combineLatest,
@@ -37,7 +37,7 @@ type SpaceImageSource = {
 @Component({
   selector: 'app-current-space-title',
   standalone: true,
-  imports: [CommonModule, FontAwesomeModule, TranslateModule],
+  imports: [CommonModule, LucideAngularModule, TranslateModule, RouterModule],
   template: `
     <div class="space-title-switcher" *ngIf="viewModel$ | async as vm">
       <span class="space-title-label" [class.space-title-label-visible]="showLabel">{{ vm.currentName }}</span>
@@ -67,7 +67,7 @@ type SpaceImageSource = {
             class="space-title-avatar-icon"
             *ngIf="!shouldShowImage(vm.currentSpaceId, vm.currentImageUrl) && vm.currentType === 'personal'"
           >
-            <fa-icon [icon]="faUser"></fa-icon>
+            <lucide-icon [img]="iconUser" [size]="14"></lucide-icon>
           </span>
           <span
             class="space-title-avatar-text"
@@ -79,46 +79,56 @@ type SpaceImageSource = {
       </button>
 
       <div class="space-title-menu" *ngIf="menuOpen">
-        <button
-          class="space-title-option"
-          type="button"
-          *ngFor="let space of vm.spaces"
-          (click)="switchSpace(space, $event)"
-          [class.space-title-option-active]="space.id === vm.currentSpaceId"
-          [disabled]="isSwitching || space.id === vm.currentSpaceId"
-        >
-          <span
-            class="space-title-avatar space-title-avatar-sm"
-            [style.background]="space.avatarBackground"
-            [style.border-color]="space.avatarColor"
+        <div class="space-title-list">
+          <button
+            class="space-title-option"
+            type="button"
+            *ngFor="let space of vm.spaces"
+            (click)="switchSpace(space, $event)"
+            [class.space-title-option-active]="space.id === vm.currentSpaceId"
+            [disabled]="isSwitching || space.id === vm.currentSpaceId"
           >
-            <img
-              *ngIf="shouldShowImage(space.id, space.imageUrl)"
-              class="space-title-avatar-image"
-              [src]="space.imageUrl!"
-              alt=""
-              (error)="markImageFailed(space.id, space.imageUrl)"
-            />
             <span
-              class="space-title-avatar-icon"
-              *ngIf="!shouldShowImage(space.id, space.imageUrl) && space.type === 'personal'"
+              class="space-title-avatar space-title-avatar-sm"
+              [style.background]="space.avatarBackground"
+              [style.border-color]="space.avatarColor"
             >
-              <fa-icon [icon]="faUser"></fa-icon>
+              <img
+                *ngIf="shouldShowImage(space.id, space.imageUrl)"
+                class="space-title-avatar-image"
+                [src]="space.imageUrl!"
+                alt=""
+                (error)="markImageFailed(space.id, space.imageUrl)"
+              />
+              <span
+                class="space-title-avatar-icon"
+                *ngIf="!shouldShowImage(space.id, space.imageUrl) && space.type === 'personal'"
+              >
+                <lucide-icon [img]="iconUser" [size]="14"></lucide-icon>
+              </span>
+              <span
+                class="space-title-avatar-text"
+                *ngIf="!shouldShowImage(space.id, space.imageUrl) && space.type !== 'personal'"
+              >
+                {{ space.avatarInitials }}
+              </span>
             </span>
-            <span
-              class="space-title-avatar-text"
-              *ngIf="!shouldShowImage(space.id, space.imageUrl) && space.type !== 'personal'"
-            >
-              {{ space.avatarInitials }}
+            <span class="space-title-option-name">{{ space.displayName }}</span>
+            <lucide-icon [img]="iconCheck" [size]="12" class="space-title-check"
+              *ngIf="space.id === vm.currentSpaceId"></lucide-icon>
+          </button>
+        </div>
+        <div class="space-title-footer">
+          <div class="space-title-divider"></div>
+          <a class="space-title-option space-title-create-option"
+             routerLink="/onboarding"
+             (click)="menuOpen = false">
+            <span class="space-title-avatar space-title-avatar-sm space-title-create-avatar">
+              <lucide-icon [img]="iconPlus" [size]="14"></lucide-icon>
             </span>
-          </span>
-          <span class="space-title-option-name">{{ space.displayName }}</span>
-          <fa-icon
-            class="space-title-check"
-            *ngIf="space.id === vm.currentSpaceId"
-            [icon]="faCheck"
-          ></fa-icon>
-        </button>
+            <span class="space-title-option-name">{{ 'SPACE_CREATE_OR_JOIN' | translate }}</span>
+          </a>
+        </div>
       </div>
     </div>
   `,
@@ -272,8 +282,9 @@ type SpaceImageSource = {
       width: min(290px, calc(100vw - 1.5rem));
       box-sizing: border-box;
       max-height: min(320px, calc(100vh - 6rem));
-      overflow-y: auto;
-      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
       padding: 0.35rem;
       border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
       border-radius: 14px;
@@ -281,6 +292,18 @@ type SpaceImageSource = {
       box-shadow: 0 18px 45px rgba(0, 0, 0, 0.34);
       backdrop-filter: blur(14px);
       -webkit-backdrop-filter: blur(14px);
+    }
+
+    .space-title-list {
+      overflow-y: auto;
+      overflow-x: hidden;
+      flex: 1 1 auto;
+      min-height: 0;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .space-title-footer {
+      flex-shrink: 0;
     }
 
     .space-title-option {
@@ -327,6 +350,23 @@ type SpaceImageSource = {
       flex: 0 0 auto;
       color: var(--accent, #0b74ff);
       font-size: 0.64rem;
+    }
+
+    .space-title-divider {
+      height: 1px;
+      background: var(--border, rgba(255, 255, 255, 0.1));
+      margin: 0.3rem 0.25rem;
+    }
+
+    .space-title-create-option {
+      text-decoration: none;
+      color: var(--text, #ffffff);
+    }
+
+    .space-title-create-avatar {
+      background: rgba(11, 116, 255, 0.15) !important;
+      border-color: rgba(11, 116, 255, 0.35) !important;
+      color: var(--accent, #0b74ff);
     }
 
     :host-context(.mob-drawer-space-switcher) {
@@ -383,8 +423,9 @@ export class CurrentSpaceTitleComponent implements OnInit, OnDestroy {
   private readonly toastService = inject(ToastService);
   private readonly translate = inject(TranslateService);
 
-  readonly faCheck = faCheck;
-  readonly faUser = faUser;
+  readonly iconCheck = Check;
+  readonly iconUser = User;
+  readonly iconPlus = Plus;
 
   @Input() inline = false;
   @HostBinding('class.cst-inline') get isInline() { return this.inline; }

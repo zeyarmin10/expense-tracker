@@ -471,7 +471,7 @@ body.light-mode .ov-bar-active {
   display: flex;
   align-items: center;
   gap: 0.55rem;
-  margin-bottom: 0.4rem;
+  /* margin-bottom: 0.4rem; */
 }
 
 .ov-bar-dot {
@@ -518,9 +518,6 @@ body.light-mode .ov-bar-active {
   overflow: hidden;
 }
 
-body.light-mode .ov-bar-track {
-  background: rgba(0,0,0,0.07);
-}
 
 .ov-bar-fill {
   height: 100%;

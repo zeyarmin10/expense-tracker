@@ -46,7 +46,6 @@ import {
   DateRange,
 } from '../../services/date-filter.service';
 import { CategoryService, ServiceICategory } from '../../services/category';
-import { LucideAngularModule } from 'lucide-angular';
 import { getIconData, getCategoryHue } from '../../utils/category-icons';
 import Swal from 'sweetalert2';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';

@@ -21,8 +21,7 @@ import { CategoryService } from '../../services/category';
 import { debounceTime, Subject, takeUntil, firstValueFrom } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { SessionManagementService } from '../../services/session-management';
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faEye, faEyeSlash, faSun, faMoon, faEnvelope } from '@fortawesome/free-solid-svg-icons';
+import { LucideAngularModule, Eye, EyeOff, Sun, Moon, Mail } from 'lucide-angular';
 import { User } from '@angular/fire/auth';
 import { ToastService } from '../../services/toast'; // Import ToastService
 import { InvitationService } from '../../services/invitation.service';
@@ -40,7 +39,7 @@ import { Capacitor } from '@capacitor/core';
     CommonModule,
     ReactiveFormsModule,
     TranslateModule,
-    FontAwesomeModule,
+    LucideAngularModule,
     RouterModule,
   ],
   templateUrl: './login.html',
@@ -54,11 +53,11 @@ export class LoginComponent implements OnInit, OnDestroy {
   private auth = inject(Auth);
 
   showPassword = false;
-  faEye = faEye;
-  faEyeSlash = faEyeSlash;
-  faSun = faSun;
-  faMoon = faMoon;
-  faEnvelope = faEnvelope;
+  readonly iconEye = Eye;
+  readonly iconEyeOff = EyeOff;
+  readonly iconSun = Sun;
+  readonly iconMoon = Moon;
+  readonly iconMail = Mail;
   isDarkMode = true;
 
   loginForm: FormGroup;

@@ -54,17 +54,7 @@ import {
   UserDataService,
   canManageSharedSpace,
 } from '../../services/user-data';
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import {
-  faSync,
-  faMoneyBillWave,
-  faPiggyBank,
-  faShoppingCart,
-  faArrowTrendUp,
-  faArrowTrendDown,
-  faChartPie,
-  faChartColumn
-} from '@fortawesome/free-solid-svg-icons';
+import { LucideAngularModule, TrendingUp, TrendingDown, Banknote, PiggyBank, ShoppingCart, ChartColumn, ChartPie, RotateCw, LucideIconData } from 'lucide-angular';
 import { FormatService } from '../../services/format.service';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
 
@@ -82,7 +72,7 @@ type DashboardDataState = DashboardData & {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, FontAwesomeModule, RouterModule, CurrentSpaceTitleComponent],
+  imports: [CommonModule, FormsModule, TranslateModule, LucideAngularModule, RouterModule, CurrentSpaceTitleComponent],
   providers: [DatePipe],
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.css'],
@@ -142,12 +132,14 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   private refresh$ = new BehaviorSubject<number>(0);
 
   titleAnimTrigger: string = 'initial';
-  faSync = faSync;
-  faMoneyBillWave = faMoneyBillWave;
-  faPiggyBank = faPiggyBank;
-  faShoppingCart = faShoppingCart;
-  faChartPie = faChartPie;
-  faChartColumn = faChartColumn;
+  readonly iconRotateCw = RotateCw;
+  readonly iconBanknote = Banknote;
+  readonly iconPiggyBank = PiggyBank;
+  readonly iconShoppingCart = ShoppingCart;
+  readonly iconChartPie = ChartPie;
+  readonly iconChartColumn = ChartColumn;
+  readonly iconTrendingUp = TrendingUp;
+  readonly iconTrendingDown = TrendingDown;
 
   availableCurrencies = AVAILABLE_CURRENCIES;
   private expenseChartInstance: Chart | undefined;
@@ -702,12 +694,10 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     return value >= 0 ? 'balance-positive-amount' : 'balance-negative-amount';
   }
 
-  getProfitLossIcon(balances: { [currency: string]: number } | null): any {
-    if (!balances) {
-      return faArrowTrendUp;
-    }
+  getProfitLossIcon(balances: { [currency: string]: number } | null): LucideIconData {
+    if (!balances) return this.iconTrendingUp;
     const totalBalance = Object.values(balances).reduce((sum, value) => sum + value, 0);
-    return totalBalance >= 0 ? faArrowTrendUp : faArrowTrendDown;
+    return totalBalance >= 0 ? this.iconTrendingUp : this.iconTrendingDown;
   }
 
   getProfitLossIconClass(balances: { [currency: string]: number } | null): string {

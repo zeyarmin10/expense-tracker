@@ -33,7 +33,7 @@
           </div>
         <div class="dash-card-right">
           <span class="dash-card-icon dash-icon-income">
-            <fa-icon [icon]="faMoneyBillWave"></fa-icon>
+            <lucide-icon [img]="iconBanknote" [size]="30"></lucide-icon>
           </span>
         </div>
         </div>
@@ -52,7 +52,7 @@
           </div>
         <div class="dash-card-right">
           <span class="dash-card-icon dash-icon-budget">
-            <fa-icon [icon]="faPiggyBank"></fa-icon>
+            <lucide-icon [img]="iconPiggyBank" [size]="30"></lucide-icon>
           </span>
         </div>
         </div>
@@ -71,7 +71,7 @@
           </div>
         <div class="dash-card-right">
           <span class="dash-card-icon dash-icon-expense">
-            <fa-icon [icon]="faShoppingCart"></fa-icon>
+            <lucide-icon [img]="iconShoppingCart" [size]="30"></lucide-icon>
           </span>
         </div>
         </div>
@@ -90,7 +90,7 @@
               </div>
               <div class="dash-card-right">
               <span class="dash-card-icon" [ngClass]="getProfitLossIconClass(totalProfitLossByCurrency$ | async)">
-                <fa-icon [icon]="getProfitLossIcon(totalProfitLossByCurrency$ | async)"></fa-icon>
+                <lucide-icon [img]="getProfitLossIcon(totalProfitLossByCurrency$ | async)" [size]="30"></lucide-icon>
               </span>
             </div>
           </ng-container>
@@ -105,7 +105,7 @@
     <ng-container *ngIf="(totalExpensesByCurrency$ | async) as expTotals">
       <div class="dash-empty-banner"
            *ngIf="!expTotals || (expTotals | keyvalue).length === 0">
-        <div class="dash-empty-icon">💡</div>
+        <div class="dash-empty-icon"><lucide-icon [img]="iconChartColumn" [size]="32"></lucide-icon></div>
         <div class="dash-empty-content">
           <p class="dash-empty-title">{{ 'EMPTY_STATE_TITLE' | translate }}</p>
           <p class="dash-empty-sub">{{ 'EMPTY_STATE_SUB' | translate }}</p>
@@ -144,7 +144,7 @@
           <canvas #expenseChartCanvas></canvas>
           <div *ngIf="!hasExpenseDataForChart" class="dash-no-chart-data">
             <div class="dash-no-chart-inner">
-                <div class="dash-no-chart-icon"><fa-icon [icon]="faChartColumn"></fa-icon></div>
+                <div class="dash-no-chart-icon"><lucide-icon [img]="iconChartColumn" [size]="32"></lucide-icon></div>
                 <p class="dash-no-chart-msg">{{ 'NO_EXPENSE_FOR_CHART' | translate }}</p>
                 <a routerLink="/expense" class="dash-no-chart-cta">
                 + {{ 'ADD_FIRST_EXPENSE' | translate }}
@@ -163,7 +163,7 @@
           <canvas #categoryDonutChartCanvas></canvas>
           <div *ngIf="!hasCategoryDataForChart" class="dash-no-chart-data">
             <div class="dash-no-chart-inner">
-              <div class="dash-no-chart-icon"><fa-icon [icon]="faChartPie"></fa-icon></div>
+              <div class="dash-no-chart-icon"><lucide-icon [img]="iconChartPie" [size]="32"></lucide-icon></div>
               <p class="dash-no-chart-msg">{{ 'NO_EXPENSE_FOR_CATEGORY' | translate }}</p>
               <a routerLink="/expense" class="dash-no-chart-cta">
                 + {{ 'ADD_FIRST_EXPENSE' | translate }}

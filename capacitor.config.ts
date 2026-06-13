@@ -10,8 +10,7 @@ const config: CapacitorConfig = {
   },
   plugins: {
     StatusBar: {
-      style: 'LIGHT',
-      backgroundColor: '#12151c',
+      style: 'DARK',
       overlaysWebView: true
     },
     SplashScreen: {

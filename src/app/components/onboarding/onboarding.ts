@@ -15,23 +15,13 @@ import { InvitationService } from '../../services/invitation.service';
 import { SpaceContextService } from '../../services/space-context.service';
 import { UserSpaceSummary } from '../../services/space.model';
 import Swal from 'sweetalert2';
-import {
-  faCheckCircle,
-  faCreditCard,
-  faEllipsisVertical,
-  faLink,
-  faPen,
-  faTrashCan,
-  faUser,
-  faUsers,
-} from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { LucideAngularModule, CircleCheck, Link, EllipsisVertical, Pen, Trash2, User, Users } from 'lucide-angular';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
 
 @Component({
   selector: 'app-onboarding',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, FontAwesomeModule, CurrentSpaceTitleComponent],
+  imports: [CommonModule, FormsModule, TranslateModule, LucideAngularModule, CurrentSpaceTitleComponent],
   templateUrl: './onboarding.html',
   styleUrls: ['./onboarding.css'],
 })
@@ -46,14 +36,13 @@ export class OnboardingComponent implements OnInit {
   private invitationService = inject(InvitationService);
   private spaceContextService = inject(SpaceContextService);
 
-  faCreditCard = faCreditCard;
-  faUser = faUser;
-  faUsers = faUsers;
-  faLink = faLink;
-  faCheckCircle = faCheckCircle;
-  faEllipsisVertical = faEllipsisVertical;
-  faPen = faPen;
-  faTrashCan = faTrashCan;
+  readonly iconUser = User;
+  readonly iconUsers = Users;
+  readonly iconLink = Link;
+  readonly iconCircleCheck = CircleCheck;
+  readonly iconEllipsisVertical = EllipsisVertical;
+  readonly iconPen = Pen;
+  readonly iconTrash2 = Trash2;
 
   userProfile$: Observable<UserProfile | null>;
   userSpaces$!: Observable<UserSpaceSummary[]>;
@@ -192,15 +181,16 @@ export class OnboardingComponent implements OnInit {
 
     const result = await Swal.fire<{ name: string; imageUrl: string | null; photoChanged: boolean }>({
       title: this.translate.instant('SPACE_RENAME_TITLE'),
+      position: 'top',
       html: `
         <div style="display:flex;flex-direction:column;align-items:center;gap:0.85rem;">
           <div style="position:relative;cursor:pointer;"
                onclick="document.getElementById('swal-edit-photo').click()">
             <div id="swal-edit-preview"
                  style="width:80px;height:80px;border-radius:50%;
-                        background:#1e2130;border:2px dashed #2a2f3d;
+                        background:var(--swal-preview-bg,#1e2130);border:2px dashed var(--swal-preview-border,#2a2f3d);
                         display:flex;align-items:center;justify-content:center;
-                        overflow:hidden;font-size:2rem;color:#6b7280;">
+                        overflow:hidden;font-size:2rem;color:var(--text-muted,#6b7280);">
               ${existingPhoto}
             </div>
             <div style="position:absolute;bottom:0;right:0;width:22px;height:22px;
@@ -387,15 +377,16 @@ export class OnboardingComponent implements OnInit {
 
     const result = await Swal.fire<{ name: string; imageUrl: string | null }>({
       title: this.translate.instant('ONBOARDING.CREATE_NEW_GROUP'),
+      position: 'top',
       html: `
         <div style="display:flex;flex-direction:column;align-items:center;gap:0.85rem;">
           <div style="position:relative;cursor:pointer;"
                onclick="document.getElementById('swal-grp-photo').click()">
             <div id="swal-grp-preview"
                  style="width:80px;height:80px;border-radius:50%;
-                        background:#1e2130;border:2px dashed #2a2f3d;
+                        background:var(--swal-preview-bg,#1e2130);border:2px dashed var(--swal-preview-border,#2a2f3d);
                         display:flex;align-items:center;justify-content:center;
-                        overflow:hidden;font-size:2rem;color:#6b7280;">
+                        overflow:hidden;font-size:2rem;color:var(--text-muted,#6b7280);">
               👥
             </div>
             <div style="position:absolute;bottom:0;right:0;width:22px;height:22px;

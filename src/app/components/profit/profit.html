@@ -7,7 +7,7 @@
     <!-- Page Header -->
     <div class="pnl-page-header">
       <h2 class="pnl-page-title">
-        <fa-icon [icon]="faChartLine" class="pnl-icon-accent"></fa-icon>
+        <lucide-icon [img]="iconChartLine" [size]="15" class="pnl-icon-accent"></lucide-icon>
         {{ 'PROFIT_LOSS_TITLE' | translate }}
       </h2>
     </div>
@@ -64,7 +64,7 @@
           </ng-container>
           </div>
         <div class="pnl-card-right">
-          <span class="pnl-card-icon pnl-icon-income"><fa-icon [icon]="faMoneyBillWave"></fa-icon></span>
+          <span class="pnl-card-icon pnl-icon-income"><lucide-icon [img]="iconBanknote" [size]="30"></lucide-icon></span>
         </div>
         </div>
 
@@ -81,7 +81,7 @@
           </ng-container>
           </div>
         <div class="pnl-card-right">
-          <span class="pnl-card-icon pnl-icon-expense"><fa-icon [icon]="faShoppingCart"></fa-icon></span>
+          <span class="pnl-card-icon pnl-icon-expense"><lucide-icon [img]="iconShoppingCart" [size]="30"></lucide-icon></span>
         </div>
         </div>
 
@@ -98,7 +98,7 @@
           </ng-container>
           </div>
         <div class="pnl-card-right">
-          <span class="pnl-card-icon pnl-icon-budget"><fa-icon [icon]="faPiggyBank"></fa-icon></span>
+          <span class="pnl-card-icon pnl-icon-budget"><lucide-icon [img]="iconPiggyBank" [size]="30"></lucide-icon></span>
         </div>
         </div>
 
@@ -116,7 +116,7 @@
               </div>
               <div class="pnl-card-right">
               <span class="pnl-card-icon" [ngClass]="getProfitLossIconClass(totalProfitLossByCurrency$ | async)">
-                <fa-icon [icon]="getProfitLossIcon(totalProfitLossByCurrency$ | async)"></fa-icon>
+                <lucide-icon [img]="getProfitLossIcon(totalProfitLossByCurrency$ | async)" [size]="30"></lucide-icon>
               </span>
               </div>
           </ng-container>
@@ -138,7 +138,7 @@
           </ng-container>
         </div>
         <div class="pnl-card-right">
-          <span class="pnl-card-icon pnl-icon-balance"><fa-icon [icon]="getBalanceIcon(remainingBalanceByCurrency$ | async)"></fa-icon></span>
+          <span class="pnl-card-icon pnl-icon-balance"><lucide-icon [img]="getBalanceIcon(remainingBalanceByCurrency$ | async)" [size]="30"></lucide-icon></span>
         </div>
       </div>
 
@@ -157,7 +157,7 @@
 
     <!-- ── Empty State Banner ── -->
     <div class="pnl-empty-banner" *ngIf="(hasIncomeData$ | async) === false">
-      <div class="pnl-empty-icon"><fa-icon [icon]="faChartColumn"></fa-icon></div>
+      <div class="pnl-empty-icon"><lucide-icon [img]="iconChartColumn" [size]="32"></lucide-icon></div>
       <div class="pnl-empty-content">
         <p class="pnl-empty-title">{{ 'PNL_EMPTY_TITLE' | translate }}</p>
         <p class="pnl-empty-sub">{{ 'PNL_EMPTY_SUB' | translate }}</p>
@@ -173,14 +173,14 @@
     <!-- Chart -->
     <div class="pnl-chart-panel">
       <h5 class="pnl-chart-title">
-        <fa-icon [icon]="faChartLine" class="pnl-icon-accent"></fa-icon>
+        <lucide-icon [img]="iconChartLine" [size]="15" class="pnl-icon-accent"></lucide-icon>
         {{ 'PROFIT_CHART_TITLE' | translate }}
       </h5>
       <div class="pnl-chart-container">
         <canvas #profitChartCanvas></canvas>
         <div *ngIf="!(hasChartData$ | async)" class="pnl-no-chart-data">
           <div class="pnl-no-chart-inner">
-            <fa-icon [icon]="faChartColumn" class="pnl-no-chart-icon-fa"></fa-icon>
+            <lucide-icon [img]="iconChartColumn" [size]="32" class="pnl-no-chart-icon-fa"></lucide-icon>
             <p class="pnl-no-chart-msg">{{ 'NO_PNL_CHART_DATA' | translate }}</p>
             <button *ngIf="canManageProfitActions" type="button" class="pnl-no-chart-cta" (click)="openIncomeFormAndFocus()">
               + {{ 'ADD_INCOME' | translate }}
@@ -194,10 +194,10 @@
     <div class="pnl-panel">
       <button class="pnl-panel-toggle" type="button" (click)="toggleVisibility('dailyCashFlow')">
         <span class="pnl-panel-toggle-left">
-          <fa-icon [icon]="faChartColumn" class="pnl-icon-accent"></fa-icon>
+          <lucide-icon [img]="iconChartColumn" [size]="15" class="pnl-icon-accent"></lucide-icon>
           {{ 'DAILY_CASH_FLOW' | translate }}
         </span>
-        <fa-icon [icon]="faChevronDown" class="pnl-chevron" [class.open]="!isDailyCashFlowCollapsed"></fa-icon>
+        <lucide-icon [img]="iconChevronDown" [size]="15" class="pnl-chevron" [class.open]="!isDailyCashFlowCollapsed"></lucide-icon>
       </button>
       <div class="pnl-panel-body" [class.open]="!isDailyCashFlowCollapsed">
         <div class="pnl-panel-inner">
@@ -310,10 +310,10 @@
     <div class="pnl-panel" *ngIf="canManageProfitActions">
       <button class="pnl-panel-toggle" type="button" (click)="toggleVisibility('incomeForm')">
         <span class="pnl-panel-toggle-left">
-          <fa-icon [icon]="faMoneyBillWave" class="pnl-icon-income"></fa-icon>
+          <lucide-icon [img]="iconBanknote" [size]="15" class="pnl-icon-income"></lucide-icon>
           {{ 'ADD_INCOME' | translate }}
         </span>
-        <fa-icon [icon]="faChevronDown" class="pnl-chevron" [class.open]="!isIncomeFormCollapsed"></fa-icon>
+        <lucide-icon [img]="iconChevronDown" [size]="15" class="pnl-chevron" [class.open]="!isIncomeFormCollapsed"></lucide-icon>
       </button>
       <div class="pnl-panel-body" [class.open]="!isIncomeFormCollapsed">
         <div class="pnl-panel-inner">
@@ -347,7 +347,7 @@
           </div>
           <div class="pnl-form-footer">
             <button type="submit" class="pnl-btn pnl-btn-primary" [disabled]="incomeForm.invalid">
-              <fa-icon [icon]="faSave" class="me-2"></fa-icon>
+              <lucide-icon [img]="iconSave" [size]="15"></lucide-icon>
               {{ 'SAVE_BUTTON_LABEL' | translate }}
             </button>
           </div>
@@ -360,27 +360,27 @@
     <div class="pnl-panel">
       <button class="pnl-panel-toggle" type="button" (click)="toggleVisibility('recordedIncomes')">
         <span class="pnl-panel-toggle-left">
-          <fa-icon [icon]="faMoneyBillWave" class="pnl-icon-income"></fa-icon>
+          <lucide-icon [img]="iconBanknote" [size]="15" class="pnl-icon-income"></lucide-icon>
           {{ 'RECORDED_INCOMES' | translate }}
         </span>
-        <fa-icon [icon]="faChevronDown" class="pnl-chevron" [class.open]="!isRecordedIncomesCollapsed"></fa-icon>
+        <lucide-icon [img]="iconChevronDown" [size]="15" class="pnl-chevron" [class.open]="!isRecordedIncomesCollapsed"></lucide-icon>
       </button>
       <div class="pnl-panel-body" [class.open]="!isRecordedIncomesCollapsed">
         <div class="pnl-panel-inner">
         <div class="pnl-list-body">
           <ng-container *ngIf="incomes$ | async as incomes; else listLoading">
             <ng-container *ngIf="incomes.length > 0; else listEmpty">
-              <div *ngFor="let income of incomes" class="pnl-record-item">
-                <div class="pnl-record-left">
-                  <span class="pnl-record-date">{{ this.formatService.formatLocalizedDate(income.date) }}</span>
-                  <span class="pnl-record-amount pnl-amount-income">
+              <div *ngFor="let income of incomes" class="pnl-row">
+                <div class="pnl-row-left">
+                  <span class="pnl-row-amount pnl-amount-income">
                     {{ formatService.formatAmountWithSymbol(income.amount, income.currency) }}
                   </span>
-                  <span class="pnl-record-desc" *ngIf="income.description" appShowFullText>{{ income.description }}</span>
+                  <span class="pnl-row-date">{{ this.formatService.formatLocalizedDate(income.date) }}</span>
+                  <span class="pnl-row-desc" *ngIf="income.description" appShowFullText>· {{ income.description }}</span>
                 </div>
                 <button *ngIf="canManageProfitActions" class="pnl-delete-btn"
                   type="button" (click)="confirmDeleteIncome(income.id)">
-                  <fa-icon [icon]="faTrashCan" class="fa-delete-btn"></fa-icon>
+                  <lucide-icon [img]="iconTrash2" [size]="15"></lucide-icon>
                 </button>
               </div>
             </ng-container>
@@ -400,36 +400,38 @@
     <div class="pnl-panel">
       <button class="pnl-panel-toggle" type="button" (click)="toggleVisibility('recordedBudgets')">
         <span class="pnl-panel-toggle-left">
-          <fa-icon [icon]="faPiggyBank" class="pnl-icon-budget"></fa-icon>
+          <lucide-icon [img]="iconPiggyBank" [size]="15" class="pnl-icon-budget"></lucide-icon>
           {{ 'RECORDED_BUDGETS' | translate }}
         </span>
-        <fa-icon [icon]="faChevronDown" class="pnl-chevron" [class.open]="!isRecordedBudgetsCollapsed"></fa-icon>
+        <lucide-icon [img]="iconChevronDown" [size]="15" class="pnl-chevron" [class.open]="!isRecordedBudgetsCollapsed"></lucide-icon>
       </button>
       <div class="pnl-panel-body" [class.open]="!isRecordedBudgetsCollapsed">
         <div class="pnl-panel-inner">
         <div class="pnl-list-body">
           <ng-container *ngIf="filteredBudgets$ | async as budgets; else listLoading">
             <ng-container *ngIf="budgets.length > 0; else listEmpty">
-              <div *ngFor="let budget of budgets" class="pnl-record-item">
-                <div class="pnl-record-left">
-                  <div class="pnl-record-meta">
-                    <span class="pnl-record-date">{{ budget.period || '' }}</span>
-                    <span class="pnl-type-badge">
-                      {{ (budget.type === 'monthly' ? 'MONTHLY' : 'YEARLY') | translate }}
-                    </span>
-                  </div>
-                  <span class="pnl-record-amount pnl-amount-budget">
+              <div *ngFor="let budget of budgets" class="pnl-row">
+                <div class="pnl-row-left">
+                  <span class="pnl-row-amount pnl-amount-budget">
                     {{ formatService.formatAmountWithSymbol(budget.amount, budget.currency) }}
                   </span>
-                  <span class="pnl-record-desc" *ngIf="budget.category" [style.--cat-hue]="getCategoryHue(budget.category)">
-                    <lucide-icon *ngIf="budget.category !== 'all'"
-                      [img]="getIconForCategory(budget.category)" [size]="11" style="flex-shrink:0;vertical-align:middle"></lucide-icon>
-                    {{ budget.category === 'all' ? ('ALL_CATEGORY' | translate) : budget.category }}
+                  <span class="pnl-row-badge pnl-row-badge-monthly" *ngIf="budget.type === 'monthly'">
+                    {{ 'MONTHLY' | translate }}
+                  </span>
+                  <span class="pnl-row-badge pnl-row-badge-yearly" *ngIf="budget.type === 'yearly'">
+                    {{ 'YEARLY' | translate }}
+                  </span>
+                  <span class="pnl-row-badge pnl-row-badge-cat" *ngIf="budget.category && budget.category !== 'all'" [style.--cat-hue]="getCategoryHue(budget.category)">
+                    <lucide-icon [img]="getIconForCategory(budget.category)" [size]="11" style="flex-shrink:0"></lucide-icon>
+                    {{ budget.category }}
+                  </span>
+                  <span class="pnl-row-date">
+                    {{ budget.type === 'monthly' ? this.formatService.formatLocalizedDate(budget.period) : budget.period || '' }}
                   </span>
                 </div>
                 <button *ngIf="canManageProfitActions" class="pnl-delete-btn"
                   type="button" (click)="confirmDeleteBudget(budget.id)">
-                  <fa-icon [icon]="faTrashCan" class="fa-delete-btn"></fa-icon>
+                  <lucide-icon [img]="iconTrash2" [size]="15"></lucide-icon>
                 </button>
               </div>
             </ng-container>

@@ -102,6 +102,35 @@ export class Category implements OnInit {
     this.showEditIconPicker = false;
   }
 
+  toggleAddIconPicker(event: MouseEvent): void {
+    this.showAddIconPicker = !this.showAddIconPicker;
+    if (this.showAddIconPicker) {
+      this.scrollPickerIntoView(event.currentTarget as HTMLElement);
+    }
+  }
+
+  toggleEditIconPicker(event: MouseEvent): void {
+    this.showEditIconPicker = !this.showEditIconPicker;
+    if (this.showEditIconPicker) {
+      this.scrollPickerIntoView(event.currentTarget as HTMLElement);
+    }
+  }
+
+  private scrollPickerIntoView(trigger: HTMLElement): void {
+    setTimeout(() => {
+      const container = trigger.closest('.cat-item-edit, .cat-add-form-wrap, form');
+      const picker = (container ?? document).querySelector('.cat-icon-picker') as HTMLElement;
+      if (!picker) return;
+      const rect = picker.getBoundingClientRect();
+      const navBarHeight = 70;
+      const gap = 12;
+      const overflow = rect.bottom + navBarHeight + gap - window.innerHeight;
+      if (overflow > 0) {
+        window.scrollBy({ top: overflow, behavior: 'smooth' });
+      }
+    }, 60);
+  }
+
   constructor(private fb: FormBuilder) {
     this.addCategoryForm = this.fb.group({
       name: ['', [Validators.required, Validators.maxLength(30)]],

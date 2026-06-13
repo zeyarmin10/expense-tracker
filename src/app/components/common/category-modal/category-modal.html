@@ -6,13 +6,13 @@
       <!-- Header -->
       <div class="cat-modal-header">
         <div class="cat-modal-title-wrap">
-          <fa-icon [icon]="faTags" class="cat-modal-icon"></fa-icon>
+          <lucide-icon [img]="iconTags" [size]="16" class="cat-modal-icon"></lucide-icon>
           <h5 class="cat-modal-title" id="categoryModalLabel">
             {{ (isEditMode ? 'EDIT_CATEGORY_TITLE' : 'CATEGORY_MODAL_TITLE') | translate }}
           </h5>
         </div>
         <button type="button" class="cat-close-btn" (click)="closeModal()">
-          <fa-icon [icon]="faTimes"></fa-icon>
+          <lucide-icon [img]="iconTimes" [size]="16"></lucide-icon>
         </button>
       </div>
 
@@ -40,8 +40,8 @@
               </label>
             </div>
             <button class="cat-save-btn" type="submit" [disabled]="categoryForm.invalid">
-              <fa-icon [icon]="isEditMode ? faSave : faPlus"></fa-icon>
-              <span>{{ (isEditMode ? 'SAVE_BUTTON_LABEL' : 'ADD_BUTTON') | translate }}</span>
+              <lucide-icon [img]="isEditMode ? iconSave : iconPlus" [size]="20"></lucide-icon>
+              <!-- <span>{{ (isEditMode ? 'SAVE_BUTTON_LABEL' : 'ADD_BUTTON') | translate }}</span> -->
             </button>
           </div>
           <!-- Icon Picker Grid -->
@@ -76,12 +76,12 @@
               <div class="cat-item-actions">
                 <button class="cat-action-btn cat-edit-btn" type="button"
                   (click)="onEdit(category)" title="Edit">
-                  <fa-icon [icon]="faPen" class="fa-regular-icon fa-edit-btn"></fa-icon>
+                  <lucide-icon [img]="iconPen" [size]="15" class="fa-edit-btn"></lucide-icon>
                 </button>
                 <button class="cat-action-btn cat-delete-btn" type="button"
                   (click)="onDelete(category.id!)"
                   [disabled]="isDeleting(category.id!)" title="Delete">
-                  <fa-icon [icon]="faTrashCan" class="fa-regular-icon fa-delete-btn"></fa-icon>
+                  <lucide-icon [img]="iconTrash2" [size]="15" class="fa-delete-btn"></lucide-icon>
                 </button>
               </div>
             </li>

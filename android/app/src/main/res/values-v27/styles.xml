@@ -5,12 +5,12 @@
     <item name="android:windowFullscreen">false</item>
     <item name="android:windowContentOverlay">@null</item>
     <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
-    <item name="android:statusBarColor">@color/splash_background</item>
-    <item name="android:navigationBarColor">@color/splash_background</item>
+    <item name="android:statusBarColor">@color/window_background</item>
+    <item name="android:navigationBarColor">@color/window_background</item>
     <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+    <item name="android:windowLightStatusBar">false</item>
     <item name="android:popupMenuStyle">@style/DarkPopupMenu</item>
     <item name="android:dropDownListViewStyle">@style/DarkDropDown</item>
-    <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
     <item name="android:fitsSystemWindows">false</item>
   </style>
 </resources>

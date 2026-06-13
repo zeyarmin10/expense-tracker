@@ -18,14 +18,6 @@ import { provideHttpClient, HttpClient } from '@angular/common/http';
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 
-import {
-  FaIconLibrary,
-  FontAwesomeModule,
-} from '@fortawesome/angular-fontawesome';
-import { fas } from '@fortawesome/free-solid-svg-icons';
-import { fab } from '@fortawesome/free-brands-svg-icons';
-import { far } from '@fortawesome/free-regular-svg-icons';
-
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 
 // AOT compilation support for ngx-translate
@@ -47,7 +39,6 @@ export const appConfig: ApplicationConfig = {
 
     // These should be imported via importProvidersFrom as they are Angular Modules
     importProvidersFrom(
-      FontAwesomeModule, // <== Moved FontAwesomeModule here
       AngularFireModule.initializeApp(environment.firebaseConfig),
       AngularFireDatabaseModule,
       TranslateModule.forRoot({
@@ -58,15 +49,5 @@ export const appConfig: ApplicationConfig = {
         },
       })
     ),
-    // Add a provider to configure FaIconLibrary with icons.
-    // This part is correct in its usage with `provide: FaIcon-library`.
-    {
-      provide: FaIconLibrary,
-      useFactory: () => {
-        const library = new FaIconLibrary();
-        library.addIconPacks(fas, fab, far);
-        return library;
-      },
-    },
   ],
 };

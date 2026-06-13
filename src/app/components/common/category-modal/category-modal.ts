@@ -3,11 +3,9 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { CategoryService } from '../../../services/category';
 import { CommonModule } from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { faSave, faTimes, faPlus, faEdit, faTrash, faTags, faPen } from '@fortawesome/free-solid-svg-icons';
-import { faTrashCan } from '@fortawesome/free-regular-svg-icons';
-import { FaIconComponent } from "@fortawesome/angular-fontawesome";
 import {
   LucideAngularModule, LucideIconData, Tag,
+  Save, X, Plus, Tags, Pen, Trash2,
 } from 'lucide-angular';
 import { CATEGORY_ICONS, getIconData } from '../../../utils/category-icons';
 import { BehaviorSubject, firstValueFrom } from 'rxjs';
@@ -32,7 +30,7 @@ const Toast = Swal.mixin({
 @Component({
   selector: 'app-category-modal',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslateModule, FaIconComponent, LucideAngularModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslateModule, LucideAngularModule],
   templateUrl: './category-modal.html',
   styleUrls: ['./category-modal.css']
 })
@@ -53,14 +51,12 @@ export class CategoryModalComponent implements OnInit {
 
   private categories$ = new BehaviorSubject<ServiceICategory[]>([]);
 
-  faSave = faSave;
-  faTimes = faTimes;
-  faPlus = faPlus;
-  faEdit = faEdit;
-  faTrash = faTrash;
-  faTags = faTags;
-  faTrashCan = faTrashCan;
-  faPen = faPen;
+  readonly iconSave = Save;
+  readonly iconTimes = X;
+  readonly iconPlus = Plus;
+  readonly iconTags = Tags;
+  readonly iconPen = Pen;
+  readonly iconTrash2 = Trash2;
 
   readonly categoryIcons = CATEGORY_ICONS;
 

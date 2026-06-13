@@ -9,9 +9,8 @@
   <div class="lgn-top-controls">
     <!-- Theme toggle -->
     <button class="lgn-lang-btn" type="button" (click)="toggleTheme()" [title]="isDarkMode ? 'Light Mode' : 'Dark Mode'">
-      <img *ngIf="isDarkMode" src="assets/icons/sun-light.svg" class="theme-icon-img" alt="Light mode" />
-    
-      <fa-icon *ngIf="!isDarkMode" [icon]="faMoon" class="theme-icon"></fa-icon>
+      <lucide-icon *ngIf="isDarkMode" [img]="iconSun" [size]="16" class="theme-icon"></lucide-icon>
+      <lucide-icon *ngIf="!isDarkMode" [img]="iconMoon" [size]="16" class="theme-icon"></lucide-icon>
       <!-- <span [class]="isDarkMode ? 'light-text' : 'dark-text'">
         {{ (isDarkMode ? 'LOGIN_LIGHT' : 'LOGIN_DARK') | translate }}
       </span> -->
@@ -70,7 +69,7 @@
         <!-- Email toggle button -->
         <button type="button" class="lgn-email-toggle-btn" (click)="toggleEmailForm()">
           <span class="lgn-email-toggle-left">
-            <fa-icon [icon]="faEnvelope"></fa-icon>
+            <lucide-icon [img]="iconMail" [size]="16"></lucide-icon>
             {{ 'SIGN_IN_EMAIL' | translate }}
           </span>
           <svg class="lgn-email-chevron" [class.open]="showEmailForm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="6 9 12 15 18 9"/></svg>
@@ -99,7 +98,7 @@
                   [class.err]="loginForm.controls['password'].invalid && loginForm.controls['password'].touched" />
                 <label class="lgn-label" for="lgn-pass">{{ 'PASSWORD_LABEL' | translate }}</label>
                 <button type="button" class="lgn-eye-btn" (click)="togglePasswordVisibility()" tabindex="-1">
-                  <fa-icon [icon]="showPassword ? faEyeSlash : faEye"></fa-icon>
+                  <lucide-icon [img]="showPassword ? iconEyeOff : iconEye" [size]="15"></lucide-icon>
                 </button>
               </div>
               <div class="lgn-error" *ngIf="loginForm.controls['password'].invalid && loginForm.controls['password'].touched">
@@ -153,7 +152,7 @@
                 [class.err]="loginForm.controls['password'].invalid && loginForm.controls['password'].touched" />
               <label class="lgn-label" for="lgn-pass-reg">{{ 'PASSWORD_LABEL' | translate }}</label>
               <button type="button" class="lgn-eye-btn" (click)="togglePasswordVisibility()" tabindex="-1">
-                <fa-icon [icon]="showPassword ? faEyeSlash : faEye"></fa-icon>
+                <lucide-icon [img]="showPassword ? iconEyeOff : iconEye" [size]="15"></lucide-icon>
               </button>
             </div>
             <div class="lgn-error" *ngIf="loginForm.controls['password'].invalid && loginForm.controls['password'].touched">

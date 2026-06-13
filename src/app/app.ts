@@ -4,7 +4,7 @@ import { Router, NavigationEnd, RouterOutlet, RouterModule, ActivatedRoute } fro
 import { Title } from '@angular/platform-browser';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { Observable, combineLatest, of, from, firstValueFrom } from 'rxjs';
-import { map, filter, startWith, switchMap, distinctUntilChanged, debounceTime } from 'rxjs/operators';
+import { map, filter, startWith, switchMap, distinctUntilChanged, debounceTime, take } from 'rxjs/operators';
 import { AuthService } from './services/auth';
 import { User } from '@angular/fire/auth';
 import { Toast } from './components/toast/toast';
@@ -62,6 +62,7 @@ export class App implements OnInit, AfterViewInit {
   currentSpaceId$: Observable<string | null>;
   currentSpaceLabel$: Observable<string | null>;
   showFab$: Observable<boolean>;
+  isDrawerRouteActive$!: Observable<boolean>;
   spaceSwitchLoading$: Observable<boolean>;
   currentGroupImageUrl$: Observable<string | null>;
   readonly iconLogOut = LogOut;
@@ -256,6 +257,18 @@ export class App implements OnInit, AfterViewInit {
       )
     );
 
+    const drawerRoutes = ['/profit', '/category', '/member-management', '/profile', '/privacy-policy'];
+    this.isDrawerRouteActive$ = this.router.events.pipe(
+      filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+      map((e: NavigationEnd) => e.urlAfterRedirects.split('?')[0]),
+      startWith(this.router.url.split('?')[0])
+    ).pipe(
+      map(url => {
+        const base = '/' + (url.split('/')[1] || '');
+        return drawerRoutes.includes(base);
+      })
+    );
+
     this.translate.onLangChange.subscribe(event => {
       this.currentLang = event.lang;
     });
@@ -442,7 +455,10 @@ export class App implements OnInit, AfterViewInit {
       // Configure status bar early — splash hide is deferred to ngAfterViewInit
       StatusBar.setOverlaysWebView({ overlay: true }).catch(() => {});
       StatusBar.show().catch(() => {});
-      Camera.requestPermissions({ permissions: ['camera', 'photos'] }).catch(() => {});
+      // Apply correct icon style immediately after setOverlaysWebView
+      const earlyStyle = this.themeService.isDarkMode ? Style.Dark : Style.Light;
+      StatusBar.setStyle({ style: earlyStyle }).catch(() => {});
+      Camera.requestPermissions({ permissions: ['camera'] }).catch(() => {});
     }
     this.initTheme();
     this.initKeyboardDetection();
@@ -480,15 +496,23 @@ export class App implements OnInit, AfterViewInit {
 
   ngAfterViewInit(): void {
     if (!Capacitor.isNativePlatform()) return;
-    // Wait for 2 animation frames so Angular's first paint is committed before splash exits
-    requestAnimationFrame(() => {
-      requestAnimationFrame(async () => {
-        await SplashScreen.hide().catch(() => {});
-        // Android resets status bar style during splash dismiss — re-apply after
-        setTimeout(() => {
+    // Wait until the first route navigation finishes (content is rendered) before hiding splash.
+    // This prevents the white flash caused by the splash exiting onto a blank/loading screen.
+    this.router.events.pipe(
+      filter(e => e instanceof NavigationEnd),
+      take(1)
+    ).subscribe(() => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(async () => {
+          await SplashScreen.hide().catch(() => {});
+          // Re-apply overlay + style — Android may reset both during splash dismiss
+          StatusBar.setOverlaysWebView({ overlay: true }).catch(() => {});
           const style = this.themeService.isDarkMode ? Style.Dark : Style.Light;
           StatusBar.setStyle({ style }).catch(() => {});
-        }, 300);
+          setTimeout(() => {
+            StatusBar.setStyle({ style: this.themeService.isDarkMode ? Style.Dark : Style.Light }).catch(() => {});
+          }, 200);
+        });
       });
     });
   }

@@ -1,3 +1,5 @@
+<div class="status-bar-bg" aria-hidden="true"></div>
+
 <div class="pull-refresh-indicator" [class.visible]="pullDistance > 0 || isPullRefreshing"
   [class.ready]="pullReadyToRefresh" [class.refreshing]="isPullRefreshing"
   [style.transform]="'translate3d(-50%, ' + pullRefreshOffset + 'px, 0)'" aria-hidden="true">
@@ -210,7 +212,7 @@
           <line x1="9" y1="13" x2="15" y2="13"/>
           <line x1="9" y1="17" x2="13" y2="17"/>
         </svg> -->
-        <lucide-icon [img]="iconShoppingCart" [size]="16"></lucide-icon>
+        <lucide-icon [img]="iconShoppingCart" [size]="22"></lucide-icon>
       </span>
     </ng-template>
     <span class="mob-nav-label">{{ 'NAV_EXPENSE' | translate }}</span>
@@ -225,14 +227,14 @@
         <path d="M20 12a2 2 0 0 1 0 4H6a2 2 0 0 1-2-2v-1"/>
         <circle cx="17" cy="12" r="1" fill="currentColor"/>
       </svg> -->
-      <lucide-icon [img]="iconPiggyBank" [size]="16"></lucide-icon>
+      <lucide-icon [img]="iconPiggyBank" [size]="22"></lucide-icon>
     </span>
     <span class="mob-nav-label">{{ 'NAV_BUDGET' | translate }}</span>
   </a>
 
   <!-- More -->
   <button class="mob-nav-item mob-nav-more-btn" type="button" (click)="toggleMobileMenu()"
-    [class.mob-nav-active]="mobileMenuOpen">
+    [class.mob-nav-active]="mobileMenuOpen || (isDrawerRouteActive$ | async)">
     <span class="mob-nav-icon">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
         <circle cx="5" cy="12" r="1.5" />
@@ -309,7 +311,7 @@
           <app-user-avatar
             [name]="member.displayName"
             [photoUrl]="member.photoURL"
-            [size]="30"
+            [size]="28"
             [title]="member.displayName"
             [style.z-index]="10 - i"
           ></app-user-avatar>

@@ -40,7 +40,6 @@ import {
 
 import { CategoryModalComponent } from '../common/category-modal/category-modal';
 import { LightboxComponent } from '../common/lightbox/lightbox.component';
-import { LucideAngularModule } from 'lucide-angular';
 import { getIconData, getCategoryHue } from '../../utils/category-icons';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../services/auth';

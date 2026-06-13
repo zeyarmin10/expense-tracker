@@ -10,6 +10,11 @@
   filter: invert(1);
 }
 
+.theme-icon {
+  color: var(--text);
+  display: flex;
+}
+
 .lgn-lang-btn .light-text {
   color: #fffafa;
   font-size: 0.8rem;

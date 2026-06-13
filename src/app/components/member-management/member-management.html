@@ -6,7 +6,7 @@
     <!-- Page Header -->
     <div class="mm-page-header">
       <h2 class="mm-page-title">
-        <fa-icon [icon]="faUsers" class="mm-icon-accent"></fa-icon>
+        <lucide-icon [img]="iconUsers" [size]="16" class="mm-icon-accent"></lucide-icon>
         {{ 'MEMBER_MANAGEMENT_TITLE' | translate }}
       </h2>
       <div class="mm-space-name-row" *ngIf="spaceName$ | async as spaceName">
@@ -24,7 +24,7 @@
     <div class="mm-panel">
       <div class="mm-panel-header">
         <span class="mm-panel-title mm-title-accent">
-          <fa-icon [icon]="faUserPlus"></fa-icon>
+          <lucide-icon [img]="iconUserPlus" [size]="15"></lucide-icon>
           {{ 'INVITE_NEW_MEMBER' | translate }}
         </span>
       </div>
@@ -58,7 +58,7 @@
           <button class="mm-send-btn"
             (click)="sendInvite()"
             [disabled]="isSending || !newMemberEmail || !isValidEmail(newMemberEmail)">
-            <span *ngIf="!isSending"><fa-icon [icon]="faPaperPlane"></fa-icon></span>
+            <span *ngIf="!isSending"><lucide-icon [img]="iconSend" [size]="22"></lucide-icon></span>
             <span *ngIf="isSending" class="mm-spinner"></span>
           </button>
         </div>
@@ -75,7 +75,7 @@
     <div class="mm-panel" *ngIf="(pendingInvites$ | async)?.length ?? 0 > 0">
       <div class="mm-panel-header">
         <span class="mm-panel-title mm-title-warning">
-          <fa-icon [icon]="faEnvelope"></fa-icon>
+          <lucide-icon [img]="iconMail" [size]="15"></lucide-icon>
           {{ 'PENDING_INVITATIONS' | translate }}
         </span>
         <span class="mm-badge mm-badge-warning">{{ (pendingInvites$ | async)?.length }}</span>
@@ -84,7 +84,7 @@
         <div *ngFor="let invite of pendingInvites$ | async" class="mm-item">
           <div class="mm-item-left">
             <div class="mm-avatar mm-avatar-pending">
-              <fa-icon [icon]="faEnvelope"></fa-icon>
+              <lucide-icon [img]="iconMail" [size]="15"></lucide-icon>
             </div>
             <div class="mm-item-info">
               <span class="mm-item-name">{{ invite.email }}</span>
@@ -92,7 +92,7 @@
             </div>
           </div>
           <button class="mm-action-btn mm-action-warn" (click)="confirmRevokeInvite(invite.key)" title="{{ 'REVOKE_BUTTON' | translate }}">
-            <fa-icon [icon]="faUserSlash"></fa-icon>
+            <lucide-icon [img]="iconUserX" [size]="15"></lucide-icon>
           </button>
         </div>
       </div>
@@ -103,7 +103,7 @@
     <div class="mm-panel">
       <div class="mm-panel-header">
         <span class="mm-panel-title mm-title-success">
-          <fa-icon [icon]="faInbox"></fa-icon>
+          <lucide-icon [img]="iconInbox" [size]="15"></lucide-icon>
           {{ 'CURRENT_MEMBERS' | translate }}
         </span>
         <span class="mm-badge mm-badge-success">{{ (members$ | async)?.length }}</span>
@@ -119,7 +119,7 @@
             <div class="mm-item-info">
               <div class="mm-item-name-row">
                 <span class="mm-item-name">{{ member.displayName }}</span>
-                <span class="mm-owner-badge" *ngIf="member.uid === (groupOwnerId$ | async)">👑</span>
+                <span class="mm-owner-badge" *ngIf="member.uid === (groupOwnerId$ | async)"><lucide-icon [img]="iconCrown" [size]="15"></lucide-icon></span>
               </div>
               <span class="mm-item-sub">{{ member.role === 'admin' ? ('NAV_ADMIN' | translate) : ('NAV_MEMBER' | translate) }}</span>
               <span class="mm-item-email">{{ member.email }}</span>
@@ -129,7 +129,7 @@
             *ngIf="(isAdmin$ | async) && member.uid !== (userProfile$ | async)?.uid"
             (click)="confirmDeleteMember(member.uid)"
             title="{{ 'DELETE_BUTTON_LABEL' | translate }}">
-            <fa-icon [icon]="faTrashCan" class="fa-delete-btn"></fa-icon>
+            <lucide-icon [img]="iconTrash2" [size]="15" class="fa-delete-btn"></lucide-icon>
           </button>
         </div>
       </div>

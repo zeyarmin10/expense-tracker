@@ -117,7 +117,7 @@
 
           <div class="bgt-form-footer">
             <button type="submit" class="bgt-btn bgt-btn-primary" [disabled]="budgetForm.invalid">
-              <lucide-icon [img]="iconSave" class="me-2"></lucide-icon>
+              <lucide-icon [img]="iconSave" [size]="16"></lucide-icon>
               {{ "SAVE_BUTTON_LABEL" | translate }}
             </button>
           </div>
@@ -164,7 +164,7 @@
                 </div>
                 <button *ngIf="canManageBudgets"
                   class="bgt-delete-btn" type="button" (click)="confirmDeleteBudget(budget.id)">
-                  <lucide-icon [img]="iconTrash2" class="fa-delete-btn"></lucide-icon>
+                  <lucide-icon [img]="iconTrash2" [size]="15"></lucide-icon>
                 </button>
               </div>
             </ng-container>
@@ -214,7 +214,7 @@
           </ng-container>
           </div>
         <div class="bgt-card-right">
-          <span class="bgt-card-icon bgt-icon-budget"><lucide-icon [img]="iconPiggyBank"></lucide-icon></span>
+          <span class="bgt-card-icon bgt-icon-budget"><lucide-icon [img]="iconPiggyBank" [size]="30"></lucide-icon></span>
         </div>
         </div>
 
@@ -231,7 +231,7 @@
           </ng-container>
           </div>
         <div class="bgt-card-right">
-          <span class="bgt-card-icon bgt-icon-expense"><lucide-icon [img]="iconShoppingCart"></lucide-icon></span>
+          <span class="bgt-card-icon bgt-icon-expense"><lucide-icon [img]="iconShoppingCart" [size]="30"></lucide-icon></span>
         </div>
         </div>
 
@@ -240,14 +240,16 @@
         <ng-container *ngIf="remainingBalanceByCurrency$ | async as balances; else cardLoading">
           <ng-container *ngIf="(balances | keyvalue).length > 0; else cardNoData">
             <div class="bgt-card-left" *ngFor="let balance of balances | keyvalue">
-              <span class="bgt-card-label">{{ "REMAINING_BALANCE" | translate }}</span>
+              <span class="bgt-card-label">
+                {{ balance.value >= 0 ? ("REMAINING_BALANCE" | translate) : ("BALANCE_DEFICIT" | translate) }}
+              </span>
               <span class="bgt-card-amount" [ngClass]="getBalanceAmountClass(balance.value)">
-                {{ formatService.formatAmountShort(balance.value, balance.key) }}
+                {{ formatService.formatAmountShort(getMath().abs(balance.value), balance.key) }}
               </span>
               </div>
               <div class="bgt-card-right">
               <span class="bgt-card-icon" [ngClass]="getBalanceIconClass(remainingBalanceByCurrency$ | async)">
-                <lucide-icon [img]="getBalanceIcon(remainingBalanceByCurrency$ | async)"></lucide-icon>
+                <lucide-icon [img]="getBalanceIcon(remainingBalanceByCurrency$ | async)" [size]="30"></lucide-icon>
               </span>
             </div>
           </ng-container>

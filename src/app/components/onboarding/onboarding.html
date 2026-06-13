@@ -31,7 +31,7 @@
           <div class="ob-card-inner">
             <div class="ob-card-head">
               <div class="ob-card-icon ob-icon-space">
-                <fa-icon [icon]="faCheckCircle"></fa-icon>
+                <lucide-icon [img]="iconCircleCheck" [size]="18"></lucide-icon>
               </div>
               <div class="ob-card-head-content">
                 <h3 class="ob-card-title">{{ 'SPACE_SECTION_TITLE' | translate }}</h3>
@@ -56,8 +56,8 @@
                     <span class="ob-space-avatar" *ngIf="space.imageUrl">
                       <img [src]="space.imageUrl" alt="">
                     </span>
-                    <fa-icon [icon]="faUser" *ngIf="!space.imageUrl && space.type === 'personal'"></fa-icon>
-                    <fa-icon [icon]="faUsers" *ngIf="!space.imageUrl && space.type === 'group'"></fa-icon>
+                    <lucide-icon [img]="iconUser" [size]="16" *ngIf="!space.imageUrl && space.type === 'personal'"></lucide-icon>
+                    <lucide-icon [img]="iconUsers" [size]="16" *ngIf="!space.imageUrl && space.type === 'group'"></lucide-icon>
                     <span class="ob-space-name">{{ getDisplaySpaceName(space) }}</span>
                   </span>
                   <span class="ob-space-badge" *ngIf="profile.currentSpaceId === space.id">
@@ -72,7 +72,7 @@
                     (click)="toggleSpaceActions(space.id!, $event)"
                     [class.ob-space-action-trigger-open]="openActionMenuSpaceId === space.id"
                     [attr.aria-expanded]="openActionMenuSpaceId === space.id">
-                    <fa-icon [icon]="faEllipsisVertical"></fa-icon>
+                    <lucide-icon [img]="iconEllipsisVertical" [size]="16"></lucide-icon>
                   </button>
                 </div>
 
@@ -83,7 +83,7 @@
                   <button class="ob-dropdown-item" type="button"
                     *ngIf="canRenameSpace(space)"
                     (click)="openEditGroupModal(space, $event)">
-                    <fa-icon [icon]="faPen"></fa-icon>
+                    <lucide-icon [img]="iconPen" [size]="13"></lucide-icon>
                     <span>{{ 'EDIT_BUTTON_LABEL' | translate }}</span>
                   </button>
                   <div class="ob-dropdown-divider"
@@ -91,7 +91,7 @@
                   <button class="ob-dropdown-item ob-dropdown-item-danger" type="button"
                     *ngIf="canDeleteSpace(space)"
                     (click)="deleteSpace(space, $event)">
-                    <fa-icon [icon]="faTrashCan"></fa-icon>
+                    <lucide-icon [img]="iconTrash2" [size]="13"></lucide-icon>
                     <span>{{ 'DELETE_BUTTON' | translate }}</span>
                   </button>
                 </div>
@@ -122,7 +122,7 @@
           <div class="ob-card-inner">
             <div class="ob-card-head">
               <div class="ob-card-icon ob-icon-group">
-                <fa-icon [icon]="faUsers"></fa-icon>
+                <lucide-icon [img]="iconUsers" [size]="18"></lucide-icon>
               </div>
               <div>
                 <h3 class="ob-card-title">{{ 'ONBOARDING.CREATE_NEW_GROUP' | translate }}</h3>
@@ -141,7 +141,7 @@
           <div class="ob-card-inner">
             <div class="ob-card-head">
               <div class="ob-card-icon ob-icon-join">
-                <fa-icon [icon]="faLink"></fa-icon>
+                <lucide-icon [img]="iconLink" [size]="18"></lucide-icon>
               </div>
               <div>
                 <h3 class="ob-card-title">{{ 'ONBOARDING.JOIN_EXISTING_GROUP' | translate }}</h3>
