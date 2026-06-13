@@ -17,19 +17,21 @@ import {
   get,
 } from '@angular/fire/database';
 import { AuthService } from './auth';
-import { getActiveGroupId, UserProfile } from './user-data';
+import { getActiveGroupId, UserDataService, UserProfile } from './user-data';
 import { SpaceDataService } from './space-data.service';
 import { SpaceSwitchLoadingService } from './space-switch-loading.service';
 
 export interface ServiceIIncome {
-  id?: string; 
+  id?: string;
   date: string;
   amount: number;
   currency: string;
   description?: string;
-  userId?: string; 
+  userId?: string;
   groupId?: string;
-  createdAt?: string; 
+  createdAt?: string;
+  createdByName?: string;
+  createdByPhotoURL?: string | null;
   device: string;
   editedDevice?: string;
 }
@@ -40,6 +42,7 @@ export interface ServiceIIncome {
 export class IncomeService {
   private db: Database = inject(Database);
   private authService = inject(AuthService);
+  private userDataService = inject(UserDataService);
   private spaceDataService = inject(SpaceDataService);
   private spaceSwitchLoadingService = inject(SpaceSwitchLoadingService);
 
@@ -65,6 +68,8 @@ export class IncomeService {
     const newIncomeToSave: Omit<ServiceIIncome, 'id'> = {
       ...incomeData,
       userId: profile.uid,
+      createdByName: profile.displayName || 'Anonymous',
+      createdByPhotoURL: profile.photoURL || null,
       createdAt: new Date().toISOString(),
       device: navigator.userAgent,
     };
@@ -109,15 +114,45 @@ export class IncomeService {
             }
 
             return this.spaceSwitchLoadingService.track(from(get(incomesQuery))).pipe(
-          map(snapshot => {
+          switchMap(async snapshot => {
             const incomesData = snapshot.val();
             if (!incomesData) {
               return [];
             }
-            return Object.keys(incomesData).map(key => ({
-              id: key,
-              ...incomesData[key]
-            }));
+
+            const missingNameIds = new Set<string>();
+            Object.values(incomesData).forEach((income: any) => {
+              if (income.userId && !income.createdByName) {
+                missingNameIds.add(income.userId);
+              }
+            });
+
+            const userProfiles: Record<string, UserProfile> = {};
+            if (missingNameIds.size > 0) {
+              const results = await Promise.all(
+                [...missingNameIds].map(uid =>
+                  firstValueFrom(this.userDataService.getUserProfile(uid))
+                    .then(p => ({ uid, profile: p }))
+                )
+              );
+              results.forEach(({ uid, profile }) => {
+                if (profile) userProfiles[uid] = profile;
+              });
+            }
+
+            return Object.keys(incomesData).map(key => {
+              const income = incomesData[key] as ServiceIIncome;
+              const createdByName = income.createdByName ||
+                (income.userId ? userProfiles[income.userId]?.displayName : undefined);
+              const createdByPhotoURL = income.createdByPhotoURL ??
+                (income.userId ? userProfiles[income.userId]?.photoURL || null : null);
+              return {
+                id: key,
+                ...income,
+                createdByName: createdByName || 'Former Member',
+                createdByPhotoURL,
+              } as ServiceIIncome;
+            });
           }),
           catchError(error => {
             console.error('Error fetching incomes:', error);

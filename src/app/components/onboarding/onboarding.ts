@@ -572,6 +572,8 @@ export class OnboardingComponent implements OnInit {
         return this.translate.instant('SPACE_RENAME_EMPTY_ERROR');
       case 'Space limit reached.':
         return this.translate.instant('SPACE_LIMIT_REACHED');
+      case 'Duplicate group name.':
+        return this.translate.instant('SPACE_DUPLICATE_NAME');
       default:
         return this.translate.instant('ONBOARDING_GROUP_CREATION_FAILED');
     }

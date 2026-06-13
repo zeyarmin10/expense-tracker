@@ -377,6 +377,14 @@
                   </span>
                   <span class="pnl-row-date">{{ this.formatService.formatLocalizedDate(income.date) }}</span>
                   <span class="pnl-row-desc" *ngIf="income.description" appShowFullText>· {{ income.description }}</span>
+                  <span *ngIf="userProfile?.accountType === 'group' && income.createdByName" class="pnl-row-creator">
+                    <app-user-avatar
+                      [name]="income.createdByName || 'Former Member'"
+                      [photoUrl]="income.createdByPhotoURL || null"
+                      [size]="16">
+                    </app-user-avatar>
+                    <span class="pnl-row-creator-name">{{ income.createdByName || 'Former Member' }}</span>
+                  </span>
                 </div>
                 <button *ngIf="canManageProfitActions" class="pnl-delete-btn"
                   type="button" (click)="confirmDeleteIncome(income.id)">

@@ -833,6 +833,18 @@
   font-style: italic;
 }
 
+.pnl-row-creator {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.15rem;
+}
+
+.pnl-row-creator-name {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
 .pnl-delete-btn {
   display: flex;
   align-items: center;

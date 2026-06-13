@@ -94,13 +94,13 @@
                   (click)="startEdit(category)"
                   [disabled]="editingCategoryId !== null"
                   [attr.aria-label]="'EDIT_BUTTON_LABEL' | translate">
-                  <lucide-icon [img]="iconPen" [size]="13" class="fa-edit-btn"></lucide-icon>
+                  <lucide-icon [img]="iconPen" [size]="15" class="fa-edit-btn"></lucide-icon>
                 </button>
                 <button class="cat-action-btn cat-action-delete"
                   (click)="onDelete(category.id!)"
                   [disabled]="editingCategoryId !== null"
                   [attr.aria-label]="'DELETE_BUTTON_LABEL' | translate">
-                  <lucide-icon [img]="iconTrash2" [size]="13" class="fa-delete-btn"></lucide-icon>
+                  <lucide-icon [img]="iconTrash2" [size]="15" class="fa-delete-btn"></lucide-icon>
                 </button>
               </div>
             </div>
@@ -145,7 +145,7 @@
               </div>
               <div class="cat-edit-actions">
                 <button class="cat-btn cat-btn-ghost cat-btn-sm" (click)="cancelEdit()">
-                  <lucide-icon [img]="iconTimes" [size]="14"></lucide-icon>
+                  <lucide-icon [img]="iconTimes" [size]="15"></lucide-icon>
                   {{ "CANCEL_BUTTON_LABEL" | translate }}
                 </button>
                 <button class="cat-btn cat-btn-primary cat-btn-sm"

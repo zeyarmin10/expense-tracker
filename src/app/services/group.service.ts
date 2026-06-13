@@ -13,7 +13,7 @@ import {
 import { AuthService } from './auth';
 import { CategoryService } from './category';
 import { combineLatest, firstValueFrom, map, Observable, of, switchMap } from 'rxjs';
-import { UserDataService, UserProfile } from './user-data';
+import { UserDataService } from './user-data';
 import { Group } from './group.model'; // Import Group from the new model file
 import { SpaceContextService } from './space-context.service';
 
@@ -94,6 +94,18 @@ export class GroupService {
       );
     if (ownedGroupSpaces.length >= 5) {
       throw new Error('Space limit reached.');
+    }
+
+    const existingNames = await Promise.all(
+      ownedGroupSpaces.map(async ([spaceId]) => {
+        const spaceSnap = await get(ref(this.db, `spaces/${spaceId}/name`));
+        if (spaceSnap.exists()) return (spaceSnap.val() as string).trim().toLowerCase();
+        const groupSnap = await get(ref(this.db, `groups/${spaceId}/groupName`));
+        return groupSnap.exists() ? (groupSnap.val() as string).trim().toLowerCase() : null;
+      })
+    );
+    if (existingNames.some(name => name === trimmedName.toLowerCase())) {
+      throw new Error('Duplicate group name.');
     }
 
     const groupRef = push(ref(this.db, 'groups'));
