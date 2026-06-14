@@ -128,6 +128,7 @@
   "NET_PROFIT": "Net Profit",
   "BALANCE_LABEL": "Remaining Balance",
   "BALANCE_DEFICIT": "Budget Deficit",
+  "EXPENSE_DEFICIT": "Expense Deficit",
   "NO_DATA_FOR_YEAR": "No data available for this year.",
   "NO_DATA_FOR_HALF_YEAR": "No data available for this half-year.",
   "NO_DATA_FOR_MONTH_YEAR": "No profit or loss data for this month and year.",

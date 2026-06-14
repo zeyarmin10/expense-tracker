@@ -27,6 +27,13 @@ body {
   }
 }
 
+/* Standalone pages (login, onboarding, privacy-policy) have no topbar —
+   only cover the safe-area and use transparent bg so the page shows through. */
+.status-bar-bg.standalone-page {
+  height: env(safe-area-inset-top, 0px) !important;
+  background: transparent !important;
+}
+
 /* Active nav link */
 .active-link {
   color: #0b74ff !important;
@@ -637,8 +644,9 @@ body.light-mode {
     display: flex;
   }
 
-  /* Push page content above bottom nav and below topbar */
-  router-outlet + * {
+  /* Push page content above bottom nav and below topbar.
+     Exclude standalone pages (login, onboarding, privacy-policy) that have no bottom nav. */
+  router-outlet + *:not(app-login):not(app-privacy-policy):not(app-onboarding) {
     display: block !important;
     padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 68px) !important;
   }

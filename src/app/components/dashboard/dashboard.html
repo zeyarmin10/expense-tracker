@@ -82,7 +82,7 @@
           <ng-container *ngIf="(profitLosses | keyvalue).length > 0; else cardNoData">
             <div class="dash-card-left" *ngFor="let profit of profitLosses | keyvalue">
               <span class="dash-card-label">
-                {{ ($any(profit).value >= 0 ? 'BALANCE_LABEL' : 'BALANCE_DEFICIT') | translate }}
+                {{ ($any(profit).value >= 0 ? 'BALANCE_LABEL' : 'EXPENSE_DEFICIT') | translate }}
               </span>
               <span class="dash-card-amount" [ngClass]="getProfitLossAmountClass($any(profit).value)">
                 {{ formatService.formatAmountShort($any(profit).value, $any(profit).key) }}

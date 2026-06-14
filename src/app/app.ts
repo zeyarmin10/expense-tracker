@@ -49,6 +49,7 @@ import { UserAvatarComponent } from './components/common/user-avatar/user-avatar
 export class App implements OnInit, AfterViewInit {
   title = 'Kyat Wise';
   showNavbar$: Observable<boolean>;
+  isStandalonePage$!: Observable<boolean>;
   pageTitle$!: Observable<string>;
   currentUser$: Observable<User | null>;
   userDisplayName$: Observable<string | null>;
@@ -187,7 +188,20 @@ export class App implements OnInit, AfterViewInit {
       map((event: NavigationEnd) => event.urlAfterRedirects),
       startWith(this.router.url)
     ).pipe(
-      map(url => url.includes('/login') || url.includes('/onboarding'))
+      map(url => url.includes('/login') || url.includes('/onboarding') || url.includes('/privacy-policy'))
+    );
+
+    const routeUrl$ = this.router.events.pipe(
+      filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+      map((event: NavigationEnd) => event.urlAfterRedirects),
+      startWith(this.router.url)
+    );
+    this.isStandalonePage$ = routeUrl$.pipe(
+      map(url =>
+        url.includes('/login') ||
+        url.includes('/onboarding') ||
+        url.includes('/privacy-policy')
+      )
     );
 
     this.showNavbar$ = combineLatest([isLoggedIn$, isSpecialRoute$]).pipe(
@@ -279,6 +293,16 @@ export class App implements OnInit, AfterViewInit {
         StatusBar.setStyle({ style: isDarkMode ? Style.Dark : Style.Light }).catch(() => {});
       }
     });
+
+    // Android can reset the StatusBar icon style after in-app navigations (e.g. login → dashboard).
+    // Re-apply on every NavigationEnd so the style always matches the current theme.
+    if (Capacitor.isNativePlatform()) {
+      this.router.events.pipe(
+        filter((e): e is NavigationEnd => e instanceof NavigationEnd)
+      ).subscribe(() => {
+        StatusBar.setStyle({ style: this.themeService.isDarkMode ? Style.Dark : Style.Light }).catch(() => {});
+      });
+    }
 
     this.initDocumentTitleUpdates();
   }

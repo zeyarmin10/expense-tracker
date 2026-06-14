@@ -1,4 +1,4 @@
-<div class="status-bar-bg" aria-hidden="true"></div>
+<div class="status-bar-bg" [class.standalone-page]="isStandalonePage$ | async" aria-hidden="true"></div>
 
 <div class="pull-refresh-indicator" [class.visible]="pullDistance > 0 || isPullRefreshing"
   [class.ready]="pullReadyToRefresh" [class.refreshing]="isPullRefreshing"

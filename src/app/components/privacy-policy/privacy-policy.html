@@ -1,21 +1,21 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap"
   rel="stylesheet">
 
+<!-- Floating back button -->
+<button class="pp-float-back" (click)="goBack()" aria-label="Go back">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+    stroke-linejoin="round">
+    <polyline points="15 18 9 12 15 6" />
+  </svg>
+</button>
+
 <div class="pp-wrapper">
   <div class="pp-container mb-5">
 
     <!-- ── Page Header ── -->
     <div class="pp-page-header">
-      <button class="pp-back-btn" (click)="goBack()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
-          stroke-linejoin="round">
-          <polyline points="15 18 9 12 15 6" />
-        </svg>
-      </button>
-      <div>
-        <h2 class="pp-page-title">{{ 'PRIVACY_POLICY_TITLE' | translate }}</h2>
-        <p class="pp-last-updated">{{ 'PRIVACY_LAST_UPDATED' | translate }}</p>
-      </div>
+      <h2 class="pp-page-title">{{ 'PRIVACY_POLICY_TITLE' | translate }}</h2>
+      <p class="pp-last-updated">{{ 'PRIVACY_LAST_UPDATED' | translate }}</p>
     </div>
 
     <!-- ── Intro ── -->
