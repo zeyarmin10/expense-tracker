@@ -14,20 +14,14 @@
     <div class="ov-filter-row" [class.ov-filter-row-custom]="selectedDateFilter === 'custom'">
 
       <!-- Date Range Select -->
-      <div class="ov-fl-wrap">
-        <select class="ov-fl-input ov-fl-select" [(ngModel)]="selectedDateFilter"
-          (change)="setDateFilter(selectedDateFilter)">
-          <option value="currentWeek">{{ "CURRENT_WEEK" | translate }}</option>
-          <option value="last30Days">{{ "LAST_30_DAYS" | translate }}</option>
-          <option value="currentMonth">{{ "CURRENT_MONTH" | translate }}</option>
-          <option value="lastMonth">{{ "LAST_MONTH" | translate }}</option>
-          <option value="lastSixMonths">{{ "LAST_SIX_MONTHS" | translate }}</option>
-          <option value="currentYear">{{ "CURRENT_YEAR" | translate }}</option>
-          <option value="lastYear">{{ "LAST_YEAR" | translate }}</option>
-          <option value="custom">{{ "CUSTOM_DATE" | translate }}</option>
-        </select>
-        <label class="ov-fl-label">{{ "DATE_FILTER" | translate }}</label>
-      </div>
+      <app-custom-select
+        [(ngModel)]="selectedDateFilter"
+        (ngModelChange)="setDateFilter($event)"
+        [options]="dateFilterOptions"
+        [label]="'DATE_FILTER' | translate"
+        [fitContent]="true"
+        [showSearch]="false">
+      </app-custom-select>
 
       <!-- Custom: Start + End Date side by side -->
       <div class="ov-date-row" *ngIf="selectedDateFilter === 'custom'">

@@ -47,6 +47,7 @@ import {
 } from '../../services/date-filter.service';
 import { CategoryService, ServiceICategory } from '../../services/category';
 import { getIconData, getCategoryHue } from '../../utils/category-icons';
+import { CustomSelectComponent, SelectOption } from '../common/custom-select/custom-select.component';
 import Swal from 'sweetalert2';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
 import { ShowFullTextDirective } from '../../directives/show-full-text.directive';
@@ -112,6 +113,7 @@ interface SpendingMonitorItem {
     CurrentSpaceTitleComponent,
     ShowFullTextDirective,
     LucideAngularModule,
+    CustomSelectComponent,
   ],
   providers: [DatePipe],
   templateUrl: './budget.html',
@@ -128,6 +130,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
   private categoryService = inject(CategoryService);
 
   categoryList: ServiceICategory[] = [];
+  categorySelectOptions$!: Observable<SelectOption[]>;
   getCategoryHue = getCategoryHue;
 
   getIconForCategory(categoryName: string) {
@@ -209,6 +212,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
   userProfile$: Observable<UserProfile | null> = of(null);
 
   public selectedDateFilter: string = 'currentMonth';
+  public dateFilterOptions: SelectOption[] = [];
   public startDate: string | null = null;
   public endDate: string | null = null;
   public dateFilter$ = new BehaviorSubject<DateRange>({ start: '', end: '' });
@@ -743,6 +747,22 @@ export class BudgetComponent implements OnInit, OnDestroy {
     Chart.defaults.font.family = 'MyanmarUIFont, Arial, sans-serif';
 
     // --- Initialize Date Filter & User Profile ---
+    this.subscriptions.add(
+      this.translate.stream([
+        'CURRENT_WEEK', 'LAST_30_DAYS', 'CURRENT_MONTH',
+        'LAST_SIX_MONTHS', 'CURRENT_YEAR', 'LAST_YEAR', 'CUSTOM_DATE',
+      ]).subscribe(t => {
+        this.dateFilterOptions = [
+          { value: 'currentWeek',   label: t['CURRENT_WEEK'] },
+          { value: 'last30Days',    label: t['LAST_30_DAYS'] },
+          { value: 'currentMonth',  label: t['CURRENT_MONTH'] },
+          { value: 'lastSixMonths', label: t['LAST_SIX_MONTHS'] },
+          { value: 'currentYear',   label: t['CURRENT_YEAR'] },
+          { value: 'lastYear',      label: t['LAST_YEAR'] },
+          { value: 'custom',        label: t['CUSTOM_DATE'] },
+        ];
+      })
+    );
     this.setDateFilter(this.selectedDateFilter);
 
     this.userProfile$ = this.authService.userProfile$;
@@ -777,6 +797,9 @@ export class BudgetComponent implements OnInit, OnDestroy {
           ...categories,
         ])
       );
+    this.categorySelectOptions$ = this.categories$.pipe(
+      map(cats => cats.map(c => ({ value: c.id ?? '', label: c.name, icon: c.icon })))
+    );
     this.subscriptions.add(
       this.categories$.subscribe((categories) => {
         this.categories = categories;

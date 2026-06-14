@@ -97,13 +97,12 @@
           </div>
 
           <div class="prof-select-row">
-            <select id="budgetPeriod" class="prof-native-select" formControlName="budgetPeriod"
-              (change)="autoSaveField('budgetPeriod')" title="{{ 'BUDGET_PERIOD_LABEL' | translate }}">
-              <option *ngFor="let period of translatedBudgetPeriods" [value]="period.code">{{ period.name }}</option>
-              <optgroup label="{{ 'BUDGET_PERIOD.CUSTOM' | translate }}" *ngIf="customBudgetPeriods.length > 0">
-                <option *ngFor="let period of customBudgetPeriods" [value]="period.id">{{ period.name }}</option>
-              </optgroup>
-            </select>
+            <app-custom-select
+              formControlName="budgetPeriod"
+              [options]="budgetPeriodSelectOptions"
+              [showSearch]="false"
+              [expandList]="true">
+            </app-custom-select>
           </div>
 
           <div class="prof-date-pad" *ngIf="showCustomDateRange">
@@ -150,14 +149,11 @@
         <div class="prof-list-card">
           <div class="prof-list-item">
             <span class="prof-list-title">{{ 'CURRENCY' | translate }}</span>
-            <div class="prof-select-pill">
-              <select id="currency" class="prof-pill-select" formControlName="currency"
-                [attr.disabled]="!canEditSettings ? true : null" (change)="autoSaveField('currency')">
-                <option *ngFor="let currency of translatedCurrencies" [value]="currency.code">
-                  {{ currency.name }} ({{ currency.symbol }})
-                </option>
-              </select>
-            </div>
+            <app-custom-select
+              formControlName="currency"
+              [options]="currencySelectOptions"
+              [fitContent]="true">
+            </app-custom-select>
           </div>
 
           <div class="prof-list-item prof-list-item-col">

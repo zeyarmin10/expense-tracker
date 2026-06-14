@@ -129,6 +129,8 @@
   "BALANCE_LABEL": "Remaining Balance",
   "BALANCE_DEFICIT": "Budget Deficit",
   "EXPENSE_DEFICIT": "Expense Deficit",
+  "CUSTOM_SELECT_SEARCH": "Search...",
+  "CUSTOM_SELECT_NO_RESULTS": "No results found",
   "NO_DATA_FOR_YEAR": "No data available for this year.",
   "NO_DATA_FOR_HALF_YEAR": "No data available for this half-year.",
   "NO_DATA_FOR_MONTH_YEAR": "No profit or loss data for this month and year.",

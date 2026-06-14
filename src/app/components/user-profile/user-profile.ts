@@ -29,6 +29,7 @@ import { NotificationService, NotificationSettingsState } from '../../services/n
 import Swal from 'sweetalert2';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
 import { UserAvatarComponent } from '../common/user-avatar/user-avatar.component';
+import { CustomSelectComponent, SelectOption } from '../common/custom-select/custom-select.component';
 
 export const AVAILABLE_BUDGET_PERIODS = [
   { code: null, nameKey: 'BUDGET_PERIOD.NONE' },
@@ -62,6 +63,7 @@ const Toast = Swal.mixin({
     CustomBudgetPeriodModalComponent,
     CurrentSpaceTitleComponent,
     UserAvatarComponent,
+    CustomSelectComponent,
   ],
   providers: [DatePipe],
   templateUrl: './user-profile.html',
@@ -99,6 +101,8 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   translatedBudgetPeriods: any[] = [];
   availableCurrencies = AVAILABLE_CURRENCIES;
   translatedCurrencies: any[] = [];
+  budgetPeriodSelectOptions: SelectOption[] = [];
+  currencySelectOptions: SelectOption[] = [];
   customBudgetPeriods: CustomBudgetPeriod[] = [];
   showCustomDateRange = false;
   isCustomBudgetListCollapsed = true;
@@ -302,6 +306,12 @@ export class UserProfileComponent implements OnInit, OnDestroy {
       }
     });
 
+    this.userProfileForm.get('currency')?.valueChanges.subscribe((currency) => {
+      if (this.isFormReady && currency) {
+        this.autoSaveField('currency');
+      }
+    });
+
   }
 
   ngOnInit(): void {
@@ -350,6 +360,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
       this.authService.userProfile$,
     ]).subscribe(([periods, profile]) => {
       this.customBudgetPeriods = periods.sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
+      this.rebuildBudgetPeriodOptions();
       if (profile) {
         const rawId = profile.selectedBudgetPeriodId ?? null;
         const customMatch = !!rawId && periods.some(p => p.id === rawId);
@@ -378,6 +389,10 @@ export class UserProfileComponent implements OnInit, OnDestroy {
       ...currency,
       name: this.translate.instant('CURRENCY_NAMES.' + currency.code),
     }));
+    this.currencySelectOptions = this.translatedCurrencies.map(c => ({
+      value: c.code,
+      label: `${c.name} (${c.symbol})`,
+    }));
     if (currentCurrency) {
       setTimeout(() => {
         this.userProfileForm.get('currency')?.setValue(currentCurrency, { emitEvent: false });
@@ -390,6 +405,13 @@ export class UserProfileComponent implements OnInit, OnDestroy {
       ...period,
       name: this.translate.instant(period.nameKey),
     }));
+    this.rebuildBudgetPeriodOptions();
+  }
+
+  private rebuildBudgetPeriodOptions(): void {
+    const standard = this.translatedBudgetPeriods.map(p => ({ value: p.code, label: p.name }));
+    const custom = this.customBudgetPeriods.map(p => ({ value: p.id, label: p.name }));
+    this.budgetPeriodSelectOptions = [...standard, ...custom];
   }
 
   private syncSettingsControlState(): void {

@@ -129,6 +129,8 @@
   "BALANCE_LABEL": "လက်ကျန်ငွေ",
   "BALANCE_DEFICIT": "ဘတ်ဂျက်လိုငွေ",
   "EXPENSE_DEFICIT": "လိုငွေ",
+  "CUSTOM_SELECT_SEARCH": "ရှာဖွေရန်...",
+  "CUSTOM_SELECT_NO_RESULTS": "ရှာဖွေမတွေ့ပါ",
   "NO_DATA_FOR_YEAR": "ဒီနှစ်အတွက် ဒေတာမရှိသေးပါဘူး။",
   "NO_DATA_FOR_HALF_YEAR": "ဒီခြောက်လပတ်အတွက် ဒေတာမရှိသေးပါဘူး။",
   "NO_DATA_FOR_MONTH_YEAR": "ဒီလနဲ့ဒီနှစ်အတွက် အမြတ် (သို့) အရှုံးဒေတာမရှိပါ။",

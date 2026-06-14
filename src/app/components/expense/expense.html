@@ -58,28 +58,13 @@
                 <label class="exp-float-label" for="date-quick">{{ "EXPENSE_DATE_LABEL" | translate }}</label>
               </div>
               <div class="exp-float-field exp-float-group">
-                <div class="exp-float-field" style="flex: 1; min-width: 0">
-                  <select
-                    class="exp-float-input exp-float-select"
-                    id="category"
-                    formControlName="category"
-                    placeholder=" "
-                    [class.is-invalid]="newExpenseForm.controls['category'].invalid && newExpenseForm.controls['category'].touched"
-                  >
-                    <option value="" disabled selected>
-                      {{ "EXPENSE_SELECT_CATEGORY" | translate }}
-                    </option>
-                    <option
-                      *ngFor="let cat of categories$ | async"
-                      [value]="cat.name"
-                    >
-                      {{ cat.name }}
-                    </option>
-                  </select>
-                  <label class="exp-float-label" for="category"
-                    >{{ "EXPENSE_CATEGORY_LABEL" | translate }}</label
-                  >
-                </div>
+                <app-custom-select
+                  formControlName="category"
+                  [options]="categorySelectOptions$ | async"
+                  [label]="'EXPENSE_CATEGORY_LABEL' | translate"
+                  [showIcons]="true"
+                  [hasAddon]="true">
+                </app-custom-select>
                 <button
                   type="button"
                   class="exp-addon-btn"
@@ -154,28 +139,13 @@
               </div>
               <!-- Category -->
               <div class="exp-float-field exp-float-group">
-                <div class="exp-float-field" style="flex: 1; min-width: 0">
-                  <select
-                    class="exp-float-input exp-float-select"
-                    id="category-full"
-                    formControlName="category"
-                    placeholder=" "
-                    [class.is-invalid]="newExpenseForm.controls['category'].invalid && newExpenseForm.controls['category'].touched"
-                  >
-                    <option value="" disabled selected>
-                      {{ "EXPENSE_SELECT_CATEGORY" | translate }}
-                    </option>
-                    <option
-                      *ngFor="let cat of categories$ | async"
-                      [value]="cat.name"
-                    >
-                      {{ cat.name }}
-                    </option>
-                  </select>
-                  <label class="exp-float-label" for="category-full"
-                    >{{ "EXPENSE_CATEGORY_LABEL" | translate }}</label
-                  >
-                </div>
+                <app-custom-select
+                  formControlName="category"
+                  [options]="categorySelectOptions$ | async"
+                  [label]="'EXPENSE_CATEGORY_LABEL' | translate"
+                  [showIcons]="true"
+                  [hasAddon]="true">
+                </app-custom-select>
                 <button
                   type="button"
                   class="exp-addon-btn"
@@ -317,23 +287,12 @@
             </div>
 
             <div class="exp-float-field">
-              <select
-                class="exp-float-input exp-float-select"
-                id="voucher-category"
+              <app-custom-select
                 formControlName="category"
-                placeholder=" "
-              >
-                <option value="">{{ "VOUCHER_NO_CATEGORY" | translate }}</option>
-                <option
-                  *ngFor="let cat of categories$ | async"
-                  [value]="cat.name"
-                >
-                  {{ cat.name }}
-                </option>
-              </select>
-              <label class="exp-float-label" for="voucher-category">
-                {{ "EXPENSE_CATEGORY_LABEL" | translate }}
-              </label>
+                [options]="voucherCategorySelectOptions$ | async"
+                [label]="'EXPENSE_CATEGORY_LABEL' | translate"
+                [showIcons]="true">
+              </app-custom-select>
             </div>
           </div>
 

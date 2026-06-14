@@ -18,6 +18,7 @@ import {
 import { ServiceIExpense as IExpense, ExpenseService } from '../../services/expense';
 import { ServiceIVoucher, VoucherService } from '../../services/voucher';
 import { ServiceICategory, CategoryService } from '../../services/category';
+import { CustomSelectComponent, SelectOption } from '../common/custom-select/custom-select.component';
 import {
   Observable,
   BehaviorSubject,
@@ -90,6 +91,7 @@ interface ExpenseCategoryGroup {
     CurrentSpaceTitleComponent,
     UserAvatarComponent,
     ShowFullTextDirective,
+    CustomSelectComponent,
   ],
   providers: [DatePipe],
   templateUrl: './expense.html',
@@ -107,6 +109,8 @@ export class Expense implements OnInit, OnDestroy {
   expenses$!: Observable<IExpense[]>;
   vouchers$!: Observable<ServiceIVoucher[]>;
   categories$: Observable<ServiceICategory[]>;
+  categorySelectOptions$!: Observable<SelectOption[]>;
+  voucherCategorySelectOptions$!: Observable<SelectOption[]>;
   categoryList: ServiceICategory[] = [];
   getCategoryHue = getCategoryHue;
 
@@ -249,6 +253,15 @@ export class Expense implements OnInit, OnDestroy {
     });
 
     this.categories$ = this.categoryService.getCategories();
+    this.categorySelectOptions$ = this.categories$.pipe(
+      map(cats => cats.map(c => ({ value: c.name, label: c.name, icon: c.icon })))
+    );
+    this.voucherCategorySelectOptions$ = this.categories$.pipe(
+      map(cats => [
+        { value: '', label: this.translate.instant('VOUCHER_NO_CATEGORY') },
+        ...cats.map(c => ({ value: c.name, label: c.name, icon: c.icon })),
+      ])
+    );
     this.categories$.subscribe(cats => { this.categoryList = cats; });
 
     const storedLang = localStorage.getItem('selectedLanguage');
@@ -443,6 +456,15 @@ export class Expense implements OnInit, OnDestroy {
 
   loadCategories(): void {
     this.categories$ = this.categoryService.getCategories();
+    this.categorySelectOptions$ = this.categories$.pipe(
+      map(cats => cats.map(c => ({ value: c.name, label: c.name, icon: c.icon })))
+    );
+    this.voucherCategorySelectOptions$ = this.categories$.pipe(
+      map(cats => [
+        { value: '', label: this.translate.instant('VOUCHER_NO_CATEGORY') },
+        ...cats.map(c => ({ value: c.name, label: c.name, icon: c.icon })),
+      ])
+    );
     this.categories$.subscribe(cats => { this.categoryList = cats; });
   }
 

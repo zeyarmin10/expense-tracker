@@ -59,6 +59,7 @@ import Swal from 'sweetalert2';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
 import { UserAvatarComponent } from '../common/user-avatar/user-avatar.component';
 import { ShowFullTextDirective } from '../../directives/show-full-text.directive';
+import { CustomSelectComponent, SelectOption } from '../common/custom-select/custom-select.component';
 
 Chart.register(...registerables);
 
@@ -101,6 +102,7 @@ type DailyCashFlowChartItem = DailyCashFlowData & {
     UserAvatarComponent,
     ShowFullTextDirective,
     LucideAngularModule,
+    CustomSelectComponent,
   ],
   providers: [DatePipe],
   templateUrl: './profit.html',
@@ -169,6 +171,7 @@ export class Profit implements OnInit, OnDestroy {
   private _endDate$ = new BehaviorSubject<string>('');
 
   selectedDateFilter: string = 'currentMonth';
+  dateFilterOptions: SelectOption[] = [];
   startDate: string = '';
   endDate: string = '';
 
@@ -364,6 +367,23 @@ export class Profit implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.subscriptions.add(
       this.categoryService.getCategories().subscribe(cats => { this.categoryList = cats; })
+    );
+    this.subscriptions.add(
+      this.translate.stream([
+        'CURRENT_WEEK', 'LAST_30_DAYS', 'CURRENT_MONTH', 'LAST_MONTH',
+        'LAST_SIX_MONTHS', 'CURRENT_YEAR', 'LAST_YEAR', 'CUSTOM_DATE',
+      ]).subscribe(t => {
+        this.dateFilterOptions = [
+          { value: 'currentWeek',   label: t['CURRENT_WEEK'] },
+          { value: 'last30Days',    label: t['LAST_30_DAYS'] },
+          { value: 'currentMonth',  label: t['CURRENT_MONTH'] },
+          { value: 'lastMonth',     label: t['LAST_MONTH'] },
+          { value: 'lastSixMonths', label: t['LAST_SIX_MONTHS'] },
+          { value: 'currentYear',   label: t['CURRENT_YEAR'] },
+          { value: 'lastYear',      label: t['LAST_YEAR'] },
+          { value: 'custom',        label: t['CUSTOM_DATE'] },
+        ];
+      })
     );
     // Disable form control for currency as it's set from user profile
     this.incomeForm.controls['currency'].disable();

@@ -35,6 +35,7 @@ import { LucideAngularModule, Search, ChartColumn, ChartPie, List, Flame } from 
 import { getIconData, getCategoryHue } from '../../utils/category-icons';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
 import { UserAvatarComponent } from '../common/user-avatar/user-avatar.component';
+import { CustomSelectComponent, SelectOption } from '../common/custom-select/custom-select.component';
 
 // Register the required chart components
 Chart.register(PieController, ArcElement, Tooltip, Legend);
@@ -62,6 +63,7 @@ interface CategoryTotal {
     CurrentSpaceTitleComponent,
     UserAvatarComponent,
     LucideAngularModule,
+    CustomSelectComponent,
   ],
   providers: [DatePipe],
   templateUrl: './expense-overview.html',
@@ -93,6 +95,7 @@ export class ExpenseOverview implements OnInit {
   allExpenses$: Observable<IExpense[]> = this.expenseService.getExpenses();
   filteredExpenses$: Observable<IExpense[]> = of([]);
   selectedDateFilter: string = 'currentMonth';
+  dateFilterOptions: SelectOption[] = [];
   startDate: string = '';
   endDate: string = '';
   searchTerm: string = '';
@@ -149,6 +152,22 @@ export class ExpenseOverview implements OnInit {
   router = inject(Router);
 
   ngOnInit(): void {
+    this.translate.stream([
+      'CURRENT_WEEK', 'LAST_30_DAYS', 'CURRENT_MONTH', 'LAST_MONTH',
+      'LAST_SIX_MONTHS', 'CURRENT_YEAR', 'LAST_YEAR', 'CUSTOM_DATE',
+    ]).subscribe(t => {
+      this.dateFilterOptions = [
+        { value: 'currentWeek',    label: t['CURRENT_WEEK'] },
+        { value: 'last30Days',     label: t['LAST_30_DAYS'] },
+        { value: 'currentMonth',   label: t['CURRENT_MONTH'] },
+        { value: 'lastMonth',      label: t['LAST_MONTH'] },
+        { value: 'lastSixMonths',  label: t['LAST_SIX_MONTHS'] },
+        { value: 'currentYear',    label: t['CURRENT_YEAR'] },
+        { value: 'lastYear',       label: t['LAST_YEAR'] },
+        { value: 'custom',         label: t['CUSTOM_DATE'] },
+      ];
+    });
+
     // set the default date for custom date selection
     const now = new Date();
     const oneYearAgo = new Date(

@@ -16,19 +16,14 @@
     <div class="bgt-filter-bar" [class.bgt-filter-bar-custom]="selectedDateFilter === 'custom'">
 
       <!-- Period Select -->
-      <div class="bgt-fl-wrap">
-        <select class="bgt-fl-input bgt-fl-select" [(ngModel)]="selectedDateFilter"
-          (change)="setDateFilter(selectedDateFilter)">
-          <option value="currentWeek">{{ "CURRENT_WEEK" | translate }}</option>
-          <option value="last30Days">{{ "LAST_30_DAYS" | translate }}</option>
-          <option value="currentMonth">{{ "CURRENT_MONTH" | translate }}</option>
-          <option value="lastSixMonths">{{ "LAST_SIX_MONTHS" | translate }}</option>
-          <option value="currentYear">{{ "CURRENT_YEAR" | translate }}</option>
-          <option value="lastYear">{{ "LAST_YEAR" | translate }}</option>
-          <option value="custom">{{ "CUSTOM_DATE" | translate }}</option>
-        </select>
-        <label class="bgt-fl-label">{{ "DATE_FILTER" | translate }}</label>
-      </div>
+      <app-custom-select
+        [(ngModel)]="selectedDateFilter"
+        (ngModelChange)="setDateFilter($event)"
+        [options]="dateFilterOptions"
+        [label]="'DATE_FILTER' | translate"
+        [fitContent]="true"
+        [showSearch]="false">
+      </app-custom-select>
 
       <!-- Custom date pickers -->
       <ng-container *ngIf="selectedDateFilter === 'custom'">
@@ -74,12 +69,12 @@
             </div>
             <!-- Category -->
             <div class="bgt-float-field">
-              <select id="category" formControlName="category" class="bgt-input bgt-select-field" placeholder=" "
-                [class.is-invalid]="budgetForm.controls['category'].invalid && budgetForm.controls['category'].touched">
-                <option value="" disabled></option>
-                <option *ngFor="let category of categories$ | async" [value]="category.id">{{ category.name }}</option>
-              </select>
-              <label class="bgt-float-label" for="category">{{ "CATEGORY" | translate }}</label>
+              <app-custom-select
+                formControlName="category"
+                [options]="categorySelectOptions$ | async"
+                [label]="'CATEGORY' | translate"
+                [showIcons]="true">
+              </app-custom-select>
             </div>
           </div>
 

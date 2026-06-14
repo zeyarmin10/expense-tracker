@@ -1,0 +1,123 @@
+<!-- ── Trigger Field ── -->
+<div class="csl-field"
+     [class.csl-field-invalid]="isInvalid"
+     [class.csl-field-disabled]="isDisabled">
+
+  <button
+    type="button"
+    class="csl-trigger"
+    [class.csl-trigger-addon]="hasAddon"
+    [class.csl-trigger-open]="isOpen"
+    [disabled]="isDisabled"
+    (click)="open()">
+
+    <span class="csl-trigger-content">
+      <span class="csl-icon-pill"
+            *ngIf="showIcons && selectedOption?.icon"
+            [style.--cat-hue]="getCategoryHue(selectedOption!.label)">
+        <lucide-icon [img]="getIconData(selectedOption!.icon)" [size]="15"></lucide-icon>
+      </span>
+      <span class="csl-value" *ngIf="selectedOption">{{ selectedOption.label }}</span>
+    </span>
+
+    <lucide-icon [img]="iconChevronDown" [size]="15"
+                 class="csl-chevron"
+                 [class.csl-chevron-open]="isOpen">
+    </lucide-icon>
+  </button>
+
+  <label class="csl-label" [class.csl-label-up]="selectedOption || isOpen">
+    {{ label }}
+  </label>
+</div>
+
+
+<!-- ════════════════════════════════
+     MOBILE — Bottom Sheet
+     ════════════════════════════════ -->
+<ng-container *ngIf="isMobile">
+
+  <div class="csl-backdrop" *ngIf="isOpen" (click)="close()"></div>
+
+  <div class="csl-sheet" [class.csl-sheet-open]="isOpen" (click)="$event.stopPropagation()">
+    <div class="csl-handle"></div>
+
+    <div class="csl-sheet-header">
+      <span class="csl-sheet-title">{{ label }}</span>
+      <button type="button" class="csl-sheet-close" (click)="close()">
+        <lucide-icon [img]="iconX" [size]="18"></lucide-icon>
+      </button>
+    </div>
+
+    <div class="csl-search-wrap" *ngIf="showSearch">
+      <lucide-icon [img]="iconSearch" [size]="15" class="csl-search-icon"></lucide-icon>
+      <input type="text" class="csl-search-input" [(ngModel)]="searchQuery"
+             [placeholder]="'CUSTOM_SELECT_SEARCH' | translate" autocomplete="off" />
+    </div>
+
+    <div class="csl-list">
+      <p class="csl-empty" *ngIf="filteredOptions.length === 0">
+        {{ 'CUSTOM_SELECT_NO_RESULTS' | translate }}
+      </p>
+      <button type="button" class="csl-item"
+              [class.csl-item-selected]="opt.value === value"
+              *ngFor="let opt of filteredOptions"
+              (click)="select(opt)">
+        <span class="csl-item-icon" *ngIf="showIcons && opt.icon"
+              [style.--cat-hue]="getCategoryHue(opt.label)">
+          <lucide-icon [img]="getIconData(opt.icon)" [size]="18"></lucide-icon>
+        </span>
+        <span class="csl-item-label">{{ opt.label }}</span>
+        <lucide-icon *ngIf="opt.value === value" [img]="iconCheck" [size]="16"
+                     class="csl-item-check"></lucide-icon>
+      </button>
+    </div>
+  </div>
+
+</ng-container>
+
+
+<!-- ════════════════════════════════
+     DESKTOP / TABLET — Floating Panel
+     ════════════════════════════════ -->
+<ng-container *ngIf="!isMobile && isOpen">
+
+  <!-- Transparent backdrop to capture outside clicks -->
+  <div class="csl-backdrop csl-backdrop-desktop" (click)="close()"></div>
+
+  <!-- Floating panel — position: fixed, coords set from JS -->
+  <div class="csl-panel"
+       [class.csl-panel-above]="panelAbove"
+       [style.top]="!panelAbove ? panelTop + 'px' : null"
+       [style.bottom]="panelAbove ? panelBottom + 'px' : null"
+       [style.left.px]="panelLeft"
+       [style.width.px]="panelWidth"
+       (click)="$event.stopPropagation()">
+
+    <div class="csl-panel-search" *ngIf="showSearch">
+      <lucide-icon [img]="iconSearch" [size]="14" class="csl-panel-search-icon"></lucide-icon>
+      <input type="text" class="csl-panel-search-input" [(ngModel)]="searchQuery"
+             [placeholder]="'CUSTOM_SELECT_SEARCH' | translate" autocomplete="off" />
+    </div>
+
+    <div class="csl-panel-list">
+      <p class="csl-empty" *ngIf="filteredOptions.length === 0">
+        {{ 'CUSTOM_SELECT_NO_RESULTS' | translate }}
+      </p>
+      <button type="button" class="csl-item csl-panel-item"
+              [class.csl-item-selected]="opt.value === value"
+              *ngFor="let opt of filteredOptions"
+              (click)="select(opt)">
+        <span class="csl-item-icon csl-panel-icon" *ngIf="showIcons && opt.icon"
+              [style.--cat-hue]="getCategoryHue(opt.label)">
+          <lucide-icon [img]="getIconData(opt.icon)" [size]="15"></lucide-icon>
+        </span>
+        <span class="csl-item-label">{{ opt.label }}</span>
+        <lucide-icon *ngIf="opt.value === value" [img]="iconCheck" [size]="14"
+                     class="csl-item-check"></lucide-icon>
+      </button>
+    </div>
+
+  </div>
+
+</ng-container>
