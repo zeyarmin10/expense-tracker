@@ -62,6 +62,34 @@
   }
 }
 
+/* Mobile: custom mode — select fit-content + date picker fills rest */
+@media (max-width: 639px) {
+  .bgt-filter-bar-custom {
+    flex-direction: row;
+    align-items: stretch;
+    flex-wrap: nowrap;
+    gap: 0.25rem;
+  }
+
+  .bgt-filter-bar-custom app-custom-select {
+    flex: 0 0 auto;
+    width: fit-content;
+    max-width: 44%;
+    min-width: 0;
+  }
+
+  .bgt-filter-bar-custom .bgt-date-row {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    width: auto;
+  }
+
+  .bgt-filter-bar-custom .bgt-date-row app-date-range-input {
+    width: 100% !important;
+    flex: 1 1 auto !important;
+  }
+}
 
 /* ── Filter floating label inputs (bgt-fl-*) ── */
 .bgt-fl-wrap {

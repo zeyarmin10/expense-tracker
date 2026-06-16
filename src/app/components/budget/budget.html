@@ -28,16 +28,16 @@
       <!-- Custom date pickers -->
       <ng-container *ngIf="selectedDateFilter === 'custom'">
         <div class="bgt-date-row">
-          <div class="bgt-fl-wrap">
-            <input type="date" class="bgt-fl-input" [(ngModel)]="startDate" (change)="setDateFilter('custom')"
-              placeholder=" " />
-            <label class="bgt-fl-label">{{ "START_DATE" | translate }}</label>
-          </div>
-          <div class="bgt-fl-wrap">
-            <input type="date" class="bgt-fl-input" [(ngModel)]="endDate" (change)="setDateFilter('custom')"
-              placeholder=" " />
-            <label class="bgt-fl-label">{{ "END_DATE" | translate }}</label>
-          </div>
+          <app-date-range-input
+            [fitContent]="true"
+            [startDate]="startDate ?? ''"
+            (startDateChange)="startDate = $event"
+            [endDate]="endDate ?? ''"
+            (endDateChange)="endDate = $event"
+            (rangeChange)="setDateFilter('custom')"
+            [startLabel]="'START_DATE' | translate"
+            [endLabel]="'END_DATE' | translate">
+          </app-date-range-input>
         </div>
       </ng-container>
     </div>
@@ -81,9 +81,9 @@
           <div class="bgt-form-row">
             <!-- Period -->
             <div class="bgt-float-field">
-              <input type="date" id="period" formControlName="period" class="bgt-input bgt-has-val" placeholder=" "
-                [class.is-invalid]="budgetForm.controls['period'].invalid && budgetForm.controls['period'].touched" />
-              <label class="bgt-float-label" for="period">{{ "DATE" | translate }}</label>
+              <app-date-input formControlName="period" inputId="period"
+                [label]="'DATE' | translate">
+              </app-date-input>
             </div>
             <!-- Amount -->
             <div class="bgt-float-field bgt-float-group">

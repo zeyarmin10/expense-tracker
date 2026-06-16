@@ -25,16 +25,14 @@
 
       <!-- Custom: Start + End Date side by side -->
       <div class="ov-date-row" *ngIf="selectedDateFilter === 'custom'">
-        <div class="ov-fl-wrap">
-          <input type="date" class="ov-fl-input" [(ngModel)]="startDate" (change)="setDateFilter('custom')"
-            placeholder=" " />
-          <label class="ov-fl-label">{{ "START_DATE" | translate }}</label>
-        </div>
-        <div class="ov-fl-wrap">
-          <input type="date" class="ov-fl-input" [(ngModel)]="endDate" (change)="setDateFilter('custom')"
-            placeholder=" " />
-          <label class="ov-fl-label">{{ "END_DATE" | translate }}</label>
-        </div>
+        <app-date-range-input
+          [fitContent]="true"
+          [(startDate)]="startDate"
+          [(endDate)]="endDate"
+          (rangeChange)="setDateFilter('custom')"
+          [startLabel]="'START_DATE' | translate"
+          [endLabel]="'END_DATE' | translate">
+        </app-date-range-input>
       </div>
 
       <!-- Normal: search sits in same row -->

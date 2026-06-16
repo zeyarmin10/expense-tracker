@@ -60,6 +60,8 @@ import { CurrentSpaceTitleComponent } from '../common/current-space-title/curren
 import { UserAvatarComponent } from '../common/user-avatar/user-avatar.component';
 import { ShowFullTextDirective } from '../../directives/show-full-text.directive';
 import { CustomSelectComponent, SelectOption } from '../common/custom-select/custom-select.component';
+import { DateInputComponent } from '../common/date-input/date-input.component';
+import { DateRangeInputComponent } from '../common/date-range-input/date-range-input.component';
 
 Chart.register(...registerables);
 
@@ -103,6 +105,8 @@ type DailyCashFlowChartItem = DailyCashFlowData & {
     ShowFullTextDirective,
     LucideAngularModule,
     CustomSelectComponent,
+    DateInputComponent,
+    DateRangeInputComponent,
   ],
   providers: [DatePipe],
   templateUrl: './profit.html',

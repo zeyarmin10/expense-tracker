@@ -33,22 +33,14 @@
           </div>
 
           <!-- Date Row -->
-          <div class="cbp-date-row">
-            <div class="cbp-fl-wrap">
-              <input type="date" class="cbp-fl-input cbp-has-val" id="modalBudgetStartDate" formControlName="startDate"
-                placeholder=" " />
-              <label class="cbp-fl-label" for="modalBudgetStartDate">
-                {{ 'START_DATE' | translate }}
-              </label>
-            </div>
-            <div class="cbp-fl-wrap">
-              <input type="date" class="cbp-fl-input cbp-has-val" id="modalBudgetEndDate" formControlName="endDate"
-                placeholder=" " />
-              <label class="cbp-fl-label" for="modalBudgetEndDate">
-                {{ 'END_DATE' | translate }}
-              </label>
-            </div>
-          </div>
+          <app-date-range-input
+            [startDate]="budgetPeriodForm.get('startDate')?.value || ''"
+            (startDateChange)="budgetPeriodForm.patchValue({ startDate: $event })"
+            [endDate]="budgetPeriodForm.get('endDate')?.value || ''"
+            (endDateChange)="budgetPeriodForm.patchValue({ endDate: $event })"
+            [startLabel]="'START_DATE' | translate"
+            [endLabel]="'END_DATE' | translate">
+          </app-date-range-input>
 
         </form>
       </div>

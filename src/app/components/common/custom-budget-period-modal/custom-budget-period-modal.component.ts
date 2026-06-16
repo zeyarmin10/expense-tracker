@@ -3,13 +3,15 @@ import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } 
 import { CommonModule } from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { CalendarRange, LucideAngularModule, Save, X } from 'lucide-angular';
+import { DateInputComponent } from '../date-input/date-input.component';
+import { DateRangeInputComponent } from '../date-range-input/date-range-input.component';
 
 declare var bootstrap: any;
 
 @Component({
   selector: 'app-custom-budget-period-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, TranslateModule, LucideAngularModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, TranslateModule, LucideAngularModule, DateInputComponent, DateRangeInputComponent],
   templateUrl: './custom-budget-period-modal.component.html',
   styleUrls: ['./custom-budget-period-modal.component.css'],
 })

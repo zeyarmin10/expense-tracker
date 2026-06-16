@@ -19,6 +19,7 @@ import { ServiceIExpense as IExpense, ExpenseService } from '../../services/expe
 import { ServiceIVoucher, VoucherService } from '../../services/voucher';
 import { ServiceICategory, CategoryService } from '../../services/category';
 import { CustomSelectComponent, SelectOption } from '../common/custom-select/custom-select.component';
+import { DateInputComponent } from '../common/date-input/date-input.component';
 import {
   Observable,
   BehaviorSubject,
@@ -92,6 +93,7 @@ interface ExpenseCategoryGroup {
     UserAvatarComponent,
     ShowFullTextDirective,
     CustomSelectComponent,
+    DateInputComponent,
   ],
   providers: [DatePipe],
   templateUrl: './expense.html',

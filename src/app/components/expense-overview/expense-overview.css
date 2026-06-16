@@ -154,6 +154,38 @@
   }
 }
 
+/* Mobile: custom mode — select fit-content + date picker fills rest */
+@media (max-width: 639px) {
+  .ov-filter-row-custom {
+    flex-direction: row;
+    align-items: stretch;
+    flex-wrap: nowrap;
+    gap: 0.3rem;
+  }
+
+  .ov-filter-row-custom app-custom-select {
+    flex: 0 0 auto;
+    width: fit-content;
+    max-width: 44%;
+    min-width: 0;
+  }
+
+  .ov-filter-row-custom .ov-date-row {
+    flex: 1;
+    min-width: 0;
+    width: auto;
+  }
+
+  .ov-filter-row-custom .ov-date-row app-date-range-input {
+    width: 100% !important;
+    flex: 1 1 auto !important;
+  }
+
+  .ov-filter-row-custom .ov-date-row app-date-range-input .dri-trigger {
+    width: 100% !important;
+  }
+}
+
 /* search row below in custom mode */
 .ov-search-row {
   margin-bottom: 1.25rem;

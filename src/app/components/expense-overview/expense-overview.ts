@@ -36,6 +36,8 @@ import { getIconData, getCategoryHue } from '../../utils/category-icons';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
 import { UserAvatarComponent } from '../common/user-avatar/user-avatar.component';
 import { CustomSelectComponent, SelectOption } from '../common/custom-select/custom-select.component';
+import { DateInputComponent } from '../common/date-input/date-input.component';
+import { DateRangeInputComponent } from '../common/date-range-input/date-range-input.component';
 
 // Register the required chart components
 Chart.register(PieController, ArcElement, Tooltip, Legend);
@@ -64,6 +66,8 @@ interface CategoryTotal {
     UserAvatarComponent,
     LucideAngularModule,
     CustomSelectComponent,
+    DateInputComponent,
+    DateRangeInputComponent,
   ],
   providers: [DatePipe],
   templateUrl: './expense-overview.html',

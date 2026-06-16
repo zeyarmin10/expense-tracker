@@ -48,6 +48,8 @@ import {
 import { CategoryService, ServiceICategory } from '../../services/category';
 import { getIconData, getCategoryHue } from '../../utils/category-icons';
 import { CustomSelectComponent, SelectOption } from '../common/custom-select/custom-select.component';
+import { DateInputComponent } from '../common/date-input/date-input.component';
+import { DateRangeInputComponent } from '../common/date-range-input/date-range-input.component';
 import Swal from 'sweetalert2';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
 import { ShowFullTextDirective } from '../../directives/show-full-text.directive';
@@ -114,6 +116,8 @@ interface SpendingMonitorItem {
     ShowFullTextDirective,
     LucideAngularModule,
     CustomSelectComponent,
+    DateInputComponent,
+    DateRangeInputComponent,
   ],
   providers: [DatePipe],
   templateUrl: './budget.html',

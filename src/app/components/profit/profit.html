@@ -13,7 +13,7 @@
     </div>
 
     <!-- Date Filter Bar -->
-    <div class="pnl-filter-bar">
+    <div class="pnl-filter-bar" [class.pnl-filter-bar-custom]="selectedDateFilter === 'custom'">
 
       <!-- Period select -->
       <app-custom-select
@@ -27,16 +27,14 @@
 
       <!-- Custom date pickers: side by side row below select -->
       <div class="pnl-date-row" *ngIf="selectedDateFilter === 'custom'">
-        <div class="pnl-fl-wrap">
-          <input type="date" class="pnl-fl-input" [(ngModel)]="startDate" (change)="setDateFilter('custom')"
-            placeholder=" " />
-          <label class="pnl-fl-label">{{ "START_DATE" | translate }}</label>
-        </div>
-        <div class="pnl-fl-wrap">
-          <input type="date" class="pnl-fl-input" [(ngModel)]="endDate" (change)="setDateFilter('custom')"
-            placeholder=" " />
-          <label class="pnl-fl-label">{{ "END_DATE" | translate }}</label>
-        </div>
+        <app-date-range-input
+          [fitContent]="true"
+          [(startDate)]="startDate"
+          [(endDate)]="endDate"
+          (rangeChange)="setDateFilter('custom')"
+          [startLabel]="'START_DATE' | translate"
+          [endLabel]="'END_DATE' | translate">
+        </app-date-range-input>
       </div>
 
     </div>
@@ -314,10 +312,9 @@
         <form [formGroup]="incomeForm" (ngSubmit)="onSubmitIncome()" class="pnl-form">
           <div class="pnl-form-row">
             <div class="pnl-float-field">
-              <input type="date" id="incomeDate" formControlName="date" class="pnl-input pnl-input-field pnl-has-val"
-                placeholder=" "
-                [class.is-invalid]="incomeForm.controls['date'].invalid && incomeForm.controls['date'].touched" />
-              <label class="pnl-float-label" for="incomeDate">{{ 'DATE' | translate }}</label>
+              <app-date-input formControlName="date" inputId="incomeDate"
+                [label]="'DATE' | translate">
+              </app-date-input>
             </div>
             <div class="pnl-float-field pnl-float-group">
               <span class="pnl-currency-badge">{{ userProfile?.currency || 'MMK' }}</span>

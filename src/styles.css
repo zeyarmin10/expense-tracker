@@ -789,3 +789,146 @@ body.light-mode .ov-bar-fill {
   opacity: 1 !important;
   filter: saturate(1.3) brightness(0.78) !important;
 }
+
+
+/* ════════════════════════════════════════════════════════
+   ANGULAR MATERIAL — mat-calendar theme override
+   Forces calendar to match app's dark / light CSS vars
+   ════════════════════════════════════════════════════════ */
+mat-calendar,
+.mat-calendar {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  font-family: inherit !important;
+}
+
+/* Header (month/year label + nav arrows) */
+.mat-calendar-header {
+  background: var(--surface) !important;
+  padding: 0.25rem 0.5rem 0 !important;
+}
+
+.mat-calendar-controls {
+  margin: 0 0 0.25rem !important;
+}
+
+.mat-calendar-period-button,
+.mat-calendar-previous-button,
+.mat-calendar-next-button {
+  color: var(--text) !important;
+}
+
+.mat-calendar-period-button:hover,
+.mat-calendar-previous-button:hover,
+.mat-calendar-next-button:hover {
+  background: var(--surface-2) !important;
+  border-radius: 8px !important;
+}
+
+/* Day-of-week row */
+.mat-calendar-table-header th,
+.mat-calendar-table-header-divider::after {
+  color: var(--text-muted) !important;
+  background: transparent !important;
+}
+
+/* Day cells */
+.mat-calendar-body-cell-content {
+  color: var(--text) !important;
+  border-radius: 8px !important;
+}
+
+/* Today's date */
+.mat-calendar-body-today:not(.mat-calendar-body-selected) .mat-calendar-body-cell-content {
+  border: 1.5px solid var(--accent) !important;
+  color: var(--accent) !important;
+  background: transparent !important;
+}
+
+/* Hover on day */
+.mat-calendar-body-cell:not(.mat-calendar-body-disabled):hover
+  > .mat-calendar-body-cell-content:not(.mat-calendar-body-selected) {
+  background: var(--surface-2) !important;
+}
+
+/* Selected day */
+.mat-calendar-body-selected {
+  background: var(--accent) !important;
+  color: #fff !important;
+}
+
+/* Range in-between highlight */
+.mat-calendar-body-in-range::before {
+  background: var(--accent-dim) !important;
+}
+.mat-calendar-body-range-start::before,
+.mat-calendar-body-range-end::before {
+  background: var(--accent-dim) !important;
+}
+
+/* Disabled days */
+.mat-calendar-body-disabled > .mat-calendar-body-cell-content {
+  color: var(--text-muted) !important;
+  opacity: 0.35 !important;
+}
+
+/* Month/year view cells */
+.mat-calendar-body-label {
+  color: var(--text-muted) !important;
+}
+
+/* Month/year selection cells */
+.mat-calendar-body-cell-content.mat-focus-indicator {
+  color: var(--text) !important;
+}
+
+/* Light mode adjustments */
+body.light-mode mat-calendar,
+body.light-mode .mat-calendar {
+  background: #ffffff !important;
+}
+
+body.light-mode .mat-calendar-header {
+  background: #ffffff !important;
+}
+
+/* Mobile custom filter rows — side-by-side layout */
+@media (max-width: 639px) {
+  /* Custom-select: no minimum width so HOST shrinks to fit-content */
+  .ov-filter-row-custom app-custom-select .csl-trigger,
+  .bgt-filter-bar-custom app-custom-select .csl-trigger,
+  .pnl-filter-bar-custom app-custom-select .csl-trigger {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+
+  /* Date-range-input: fill remaining space */
+  .ov-filter-row-custom app-date-range-input .dri-trigger,
+  .bgt-filter-bar-custom app-date-range-input .dri-trigger,
+  .pnl-filter-bar-custom app-date-range-input .dri-trigger {
+    width: 100% !important;
+  }
+
+  /* Compact value font for custom-select */
+  .ov-filter-row-custom app-custom-select .csl-value,
+  .bgt-filter-bar-custom app-custom-select .csl-value,
+  .pnl-filter-bar-custom app-custom-select .csl-value {
+    font-size: 0.8rem !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  /* Compact date text in date-range-input */
+  .ov-filter-row-custom app-date-range-input .dri-tv-start,
+  .ov-filter-row-custom app-date-range-input .dri-tv-end,
+  .ov-filter-row-custom app-date-range-input .dri-tv-sep,
+  .bgt-filter-bar-custom app-date-range-input .dri-tv-start,
+  .bgt-filter-bar-custom app-date-range-input .dri-tv-end,
+  .bgt-filter-bar-custom app-date-range-input .dri-tv-sep,
+  .pnl-filter-bar-custom app-date-range-input .dri-tv-start,
+  .pnl-filter-bar-custom app-date-range-input .dri-tv-end,
+  .pnl-filter-bar-custom app-date-range-input .dri-tv-sep {
+    font-size: 0.8rem !important;
+  }
+}

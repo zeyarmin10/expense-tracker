@@ -1,0 +1,87 @@
+<!-- ── Single Combined Trigger ── -->
+<div class="dri-field">
+
+  <button type="button" class="dri-trigger"
+          [class.dri-trigger-open]="isOpen"
+          (click)="open()">
+
+    <span class="dri-trigger-value" *ngIf="startDate || endDate">
+      <span class="dri-tv-start">{{ startDate ? formatDate(startDate, fitContent && isMobile) : '?' }}</span>
+      <span class="dri-tv-sep">–</span>
+      <span class="dri-tv-end" [class.dri-tv-placeholder]="!endDate">
+        {{ endDate ? formatDate(endDate, fitContent && isMobile) : '?' }}
+      </span>
+    </span>
+
+    <lucide-icon [img]="iconCalendar" [size]="15" class="dri-cal-icon"></lucide-icon>
+  </button>
+
+  <label class="dri-label" [class.dri-label-up]="startDate || endDate || isOpen">
+    {{ startLabel }} – {{ endLabel }}
+  </label>
+
+</div>
+
+
+<!-- ════════════════════════════════
+     MOBILE — Bottom Sheet
+     ════════════════════════════════ -->
+<ng-container *ngIf="isMobile">
+  <div class="dri-backdrop" *ngIf="isOpen" (click)="close()"></div>
+
+  <div class="dri-sheet" [class.dri-sheet-open]="isOpen" (click)="$event.stopPropagation()">
+    <div class="dri-handle"></div>
+    <div class="dri-sheet-header">
+      <span class="dri-sheet-title">
+        {{ pendingStart ? endLabel : startLabel }}
+      </span>
+      <button type="button" class="dri-sheet-close" (click)="close()">
+        <lucide-icon [img]="iconX" [size]="18"></lucide-icon>
+      </button>
+    </div>
+
+    <div class="dri-range-hint" *ngIf="pendingStart">
+      <span class="dri-hint-start">{{ formatDate(pendingStart) }}</span>
+      <span class="dri-hint-arrow">→</span>
+      <span class="dri-hint-end">{{ endLabel }}</span>
+    </div>
+
+    <mat-calendar *ngIf="isOpen"
+                  startView="multi-year"
+                  [selected]="calSelected"
+                  [minDate]="minDate"
+                  [maxDate]="maxDate"
+                  (selectedChange)="onDateSelected($event)">
+    </mat-calendar>
+  </div>
+</ng-container>
+
+
+<!-- ════════════════════════════════
+     DESKTOP — Floating Panel
+     ════════════════════════════════ -->
+<ng-container *ngIf="!isMobile && isOpen">
+  <div class="dri-backdrop dri-backdrop-desktop" (click)="close()"></div>
+
+  <div class="dri-panel"
+       [class.dri-panel-above]="panelAbove"
+       [style.top]="!panelAbove ? panelTop + 'px' : null"
+       [style.bottom]="panelAbove ? panelBottom + 'px' : null"
+       [style.left.px]="panelLeft"
+       [style.width.px]="panelWidth"
+       (click)="$event.stopPropagation()">
+
+    <div class="dri-panel-hint" *ngIf="pendingStart">
+      <span class="dri-hint-start">{{ formatDate(pendingStart) }}</span>
+      <span class="dri-hint-arrow">→</span>
+      <span class="dri-hint-end">{{ endLabel }}</span>
+    </div>
+
+    <mat-calendar startView="multi-year"
+                  [selected]="calSelected"
+                  [minDate]="minDate"
+                  [maxDate]="maxDate"
+                  (selectedChange)="onDateSelected($event)">
+    </mat-calendar>
+  </div>
+</ng-container>

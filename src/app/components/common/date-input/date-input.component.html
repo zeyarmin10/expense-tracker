@@ -1,0 +1,68 @@
+<!-- ── Trigger Field ── -->
+<div class="di-field"
+     [class.di-field-invalid]="isControlInvalid"
+     [class.di-field-disabled]="isDisabled">
+
+  <button type="button" class="di-trigger"
+          [class.di-trigger-open]="isOpen"
+          [disabled]="isDisabled"
+          (click)="open()">
+    <span class="di-trigger-value" *ngIf="value">{{ displayDate }}</span>
+    <lucide-icon [img]="iconCalendar" [size]="15" class="di-cal-icon"></lucide-icon>
+  </button>
+
+  <label *ngIf="label" class="di-label" [for]="inputId || null"
+         [class.di-label-up]="value || isOpen">
+    {{ label }}
+  </label>
+</div>
+
+
+<!-- ════════════════════════════════
+     MOBILE — Bottom Sheet
+     ════════════════════════════════ -->
+<ng-container *ngIf="isMobile">
+  <div class="di-backdrop" *ngIf="isOpen" (click)="close()"></div>
+
+  <div class="di-sheet" [class.di-sheet-open]="isOpen" (click)="$event.stopPropagation()">
+    <div class="di-handle"></div>
+    <div class="di-sheet-header">
+      <span class="di-sheet-title">{{ label }}</span>
+      <button type="button" class="di-sheet-close" (click)="close()">
+        <lucide-icon [img]="iconX" [size]="18"></lucide-icon>
+      </button>
+    </div>
+
+    <mat-calendar *ngIf="isOpen"
+                  startView="multi-year"
+                  [selected]="selectedDate"
+                  [minDate]="minDate"
+                  [maxDate]="maxDate"
+                  (selectedChange)="onDateSelected($event)">
+    </mat-calendar>
+  </div>
+</ng-container>
+
+
+<!-- ════════════════════════════════
+     DESKTOP — Floating Panel
+     ════════════════════════════════ -->
+<ng-container *ngIf="!isMobile && isOpen">
+  <div class="di-backdrop di-backdrop-desktop" (click)="close()"></div>
+
+  <div class="di-panel"
+       [class.di-panel-above]="panelAbove"
+       [style.top]="!panelAbove ? panelTop + 'px' : null"
+       [style.bottom]="panelAbove ? panelBottom + 'px' : null"
+       [style.left.px]="panelLeft"
+       [style.width.px]="panelWidth"
+       (click)="$event.stopPropagation()">
+
+    <mat-calendar startView="multi-year"
+                  [selected]="selectedDate"
+                  [minDate]="minDate"
+                  [maxDate]="maxDate"
+                  (selectedChange)="onDateSelected($event)">
+    </mat-calendar>
+  </div>
+</ng-container>

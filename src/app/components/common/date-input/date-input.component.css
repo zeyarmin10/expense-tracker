@@ -1,0 +1,190 @@
+:host {
+  display: block;
+  flex: 1;
+  min-width: 0;
+  position: relative;
+}
+
+/* ── Trigger Field ── */
+.di-field {
+  position: relative;
+}
+
+.di-trigger {
+  width: 100%;
+  height: 56px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 0.9rem;
+  padding: 1.35rem 2.4rem 0.45rem 0.9rem;
+  display: flex;
+  align-items: flex-end;
+  cursor: pointer;
+  transition: border-color 0.15s;
+  text-align: left;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  font-family: inherit;
+}
+
+.di-trigger:focus-visible { border-color: var(--accent); }
+.di-trigger.di-trigger-open { border-color: var(--accent); }
+.di-field-invalid .di-trigger { border-color: var(--danger, #ef4444); }
+.di-field-disabled .di-trigger { opacity: 0.5; cursor: not-allowed; }
+
+.di-trigger-value {
+  flex: 1;
+  font-size: 0.9rem;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.di-cal-icon {
+  position: absolute;
+  right: 0.9rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.di-label {
+  position: absolute;
+  left: 0.9rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  pointer-events: none;
+  transition: top 0.15s, font-size 0.15s, transform 0.15s, color 0.15s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: calc(100% - 2.5rem);
+}
+
+.di-label.di-label-up {
+  top: 0.6rem;
+  transform: translateY(0);
+  font-size: 0.68rem;
+  color: var(--accent);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ── Backdrop ── */
+.di-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  background: rgba(0, 0, 0, 0.48);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  animation: di-fade-in 0.2s ease;
+}
+
+.di-backdrop.di-backdrop-desktop {
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  animation: none;
+}
+
+@keyframes di-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Mobile Centered Modal ── */
+.di-sheet {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 9001;
+  width: min(380px, 92vw);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 8px 48px rgba(0, 0, 0, 0.40);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transform: translate(-50%, -50%) scale(0.92);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.18s ease;
+}
+
+.di-sheet.di-sheet-open {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.di-handle { display: none; }
+
+.di-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1rem 0.25rem;
+  flex-shrink: 0;
+}
+
+.di-sheet-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.di-sheet-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── Desktop Floating Panel ── */
+.di-panel {
+  position: fixed;
+  z-index: 9001;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.22), 0 2px 8px rgba(0, 0, 0, 0.10);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: di-panel-in 0.14s ease;
+  min-width: 300px;
+}
+
+body.light-mode .di-panel {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12), 0 1px 4px rgba(0, 0, 0, 0.07);
+}
+
+@keyframes di-panel-in {
+  from { opacity: 0; transform: translateY(-6px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.di-panel.di-panel-above {
+  animation: di-panel-in-above 0.14s ease;
+  transform-origin: bottom center;
+}
+
+@keyframes di-panel-in-above {
+  from { opacity: 0; transform: translateY(6px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
