@@ -55,7 +55,8 @@
             <div class="exp-form-row">
               <div class="exp-float-field">
                 <app-date-input formControlName="date" inputId="date-quick"
-                  [label]="'EXPENSE_DATE_LABEL' | translate">
+                  [label]="'EXPENSE_DATE_LABEL' | translate"
+                  [min]="expenseDateMin" [max]="expenseDateMax">
                 </app-date-input>
               </div>
               <div class="exp-float-field exp-float-group">
@@ -127,7 +128,8 @@
               <!-- Date -->
               <div class="exp-float-field">
                 <app-date-input formControlName="date" inputId="date"
-                  [label]="'EXPENSE_DATE_LABEL' | translate">
+                  [label]="'EXPENSE_DATE_LABEL' | translate"
+                  [min]="expenseDateMin" [max]="expenseDateMax">
                 </app-date-input>
               </div>
               <!-- Category -->
@@ -268,7 +270,8 @@
           <div class="exp-form-row">
             <div class="exp-float-field">
               <app-date-input formControlName="date" inputId="voucher-date"
-                [label]="'EXPENSE_DATE_LABEL' | translate">
+                [label]="'EXPENSE_DATE_LABEL' | translate"
+                [min]="expenseDateMin" [max]="expenseDateMax">
               </app-date-input>
             </div>
 

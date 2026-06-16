@@ -34,7 +34,7 @@
     </div>
 
     <mat-calendar *ngIf="isOpen"
-                  startView="multi-year"
+                  startView="month"
                   [selected]="selectedDate"
                   [minDate]="minDate"
                   [maxDate]="maxDate"
@@ -58,7 +58,7 @@
        [style.width.px]="panelWidth"
        (click)="$event.stopPropagation()">
 
-    <mat-calendar startView="multi-year"
+    <mat-calendar startView="month"
                   [selected]="selectedDate"
                   [minDate]="minDate"
                   [maxDate]="maxDate"

@@ -50,7 +50,7 @@
                   startView="multi-year"
                   [selected]="calSelected"
                   [minDate]="minDate"
-                  [maxDate]="maxDate"
+                  [maxDate]="effectiveMaxDate"
                   (selectedChange)="onDateSelected($event)">
     </mat-calendar>
   </div>
@@ -80,7 +80,7 @@
     <mat-calendar startView="multi-year"
                   [selected]="calSelected"
                   [minDate]="minDate"
-                  [maxDate]="maxDate"
+                  [maxDate]="effectiveMaxDate"
                   (selectedChange)="onDateSelected($event)">
     </mat-calendar>
   </div>

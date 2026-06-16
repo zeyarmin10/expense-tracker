@@ -102,7 +102,7 @@ export class ExpenseOverview implements OnInit {
   dateFilterOptions: SelectOption[] = [];
   startDate: string = '';
   endDate: string = '';
-  searchTerm: string = '';
+searchTerm: string = '';
   userProfile$: Observable<UserProfile | null> = of(null);
   isGroupUser = false;
 

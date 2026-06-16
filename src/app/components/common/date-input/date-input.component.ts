@@ -1,13 +1,19 @@
 import {
   Component, Input, Self, Optional,
-  HostListener, ElementRef,
+  HostListener, ElementRef, inject,
 } from '@angular/core';
 import { ControlValueAccessor, NgControl } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { LucideAngularModule, CalendarDays, X } from 'lucide-angular';
+import { TranslateService } from '@ngx-translate/core';
 
 function pad(n: number): string { return String(n).padStart(2, '0'); }
+
+const MONTHS_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MONTHS_MY = ['ဇန်','ဖေ','မတ်','ဧပြီ','မေ','ဇွန်','ဇူ','သြ','စက်','အောက်','နို','ဒီ'];
+const MY_DIGITS = '၀၁၂၃၄၅၆၇၈၉';
+function toMy(n: number): string { return String(n).replace(/\d/g, d => MY_DIGITS[+d]); }
 
 const MOBILE_BP = 768;
 
@@ -39,6 +45,7 @@ export class DateInputComponent implements ControlValueAccessor {
   readonly iconCalendar = CalendarDays;
   readonly iconX = X;
 
+  private translate = inject(TranslateService);
   private onChange: (val: string) => void = () => {};
   private onTouched: () => void = () => {};
 
@@ -56,8 +63,9 @@ export class DateInputComponent implements ControlValueAccessor {
   get displayDate(): string {
     if (!this.value) return '';
     const [y, m, d] = this.value.split('-').map(Number);
-    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    return `${d} ${months[m - 1]} ${y}`;
+    const lang = this.translate.currentLang || this.translate.getDefaultLang();
+    if (lang === 'my') return `${toMy(d)} ${MONTHS_MY[m - 1]} ${toMy(y)}`;
+    return `${d} ${MONTHS_EN[m - 1]} ${y}`;
   }
 
   /** Convert yyyy-MM-dd string → Date for mat-calendar */

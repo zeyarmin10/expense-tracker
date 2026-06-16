@@ -153,6 +153,15 @@ export class Expense implements OnInit, OnDestroy {
   private activeSpaceModeKey: string | null = null;
   get canManageExpenseRecords(): boolean { return canManageSharedSpace(this.userProfile); }
 
+  // ── Date picker bounds for expense / voucher forms ──
+  readonly expenseDateMax: string = (() => {
+    const t = new Date(); return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
+  })();
+  readonly expenseDateMin: string = (() => {
+    const t = new Date(); t.setFullYear(t.getFullYear() - 2);
+    return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
+  })();
+
   // ── Date filter mode ──────────────────────────────
   public dateFilterMode: 'today' | 'week' | 'month' | 'custom' = 'today';
   public customStartDate: string = '';

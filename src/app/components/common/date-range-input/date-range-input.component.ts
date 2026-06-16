@@ -22,6 +22,8 @@ function fromDate(d: Date): string {
 const MOBILE_BP = 768;
 const MONTHS_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const MONTHS_MY = ['ဇန်','ဖေ','မတ်','ဧပြီ','မေ','ဇွန်','ဇူ','သြ','စက်','အောက်','နို','ဒီ'];
+const MY_DIGITS = '၀၁၂၃၄၅၆၇၈၉';
+function toMy(n: number): string { return String(n).replace(/\d/g, d => MY_DIGITS[+d]); }
 
 function fmt(s: string): string {
   if (!s) return '';
@@ -81,9 +83,10 @@ export class DateRangeInputComponent implements OnChanges {
     if (!dateStr) return '?';
     const [y, m, d] = dateStr.split('-').map(Number);
     const lang = this.translate.currentLang || this.translate.getDefaultLang();
-    const months = lang === 'my' ? MONTHS_MY : MONTHS_EN;
+    const yy = compact ? y % 100 : y;
+    if (lang === 'my') return `${toMy(d)} ${MONTHS_MY[m - 1]} ${toMy(yy)}`;
     const year = compact ? String(y).slice(-2) : String(y);
-    return `${d} ${months[m - 1]} ${year}`;
+    return `${d} ${MONTHS_EN[m - 1]} ${year}`;
   }
 
   ngOnChanges(_changes: SimpleChanges): void {
@@ -109,6 +112,20 @@ export class DateRangeInputComponent implements OnChanges {
 
   get minDate(): Date | null { return toDate(this.min); }
   get maxDate(): Date | null { return toDate(this.max); }
+
+  /** While picking end date: cap max at startDate + 4 years */
+  get effectiveMaxDate(): Date | null {
+    if (this.pendingStart) {
+      const s = toDate(this.pendingStart);
+      if (s) {
+        const cap = new Date(s);
+        cap.setFullYear(cap.getFullYear() + 4);
+        const ext = this.maxDate;
+        return ext && ext < cap ? ext : cap;
+      }
+    }
+    return this.maxDate;
+  }
 
   open(): void {
     this.pendingStart = this.startDate || null;
