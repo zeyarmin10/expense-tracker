@@ -49,8 +49,9 @@
     <mat-calendar *ngIf="isOpen"
                   startView="multi-year"
                   [selected]="calSelected"
-                  [minDate]="minDate"
-                  [maxDate]="effectiveMaxDate"
+                  [minDate]="calMinDate"
+                  [maxDate]="calMaxDate"
+                  [dateFilter]="endDateFilter"
                   (selectedChange)="onDateSelected($event)">
     </mat-calendar>
   </div>
@@ -79,8 +80,9 @@
 
     <mat-calendar startView="multi-year"
                   [selected]="calSelected"
-                  [minDate]="minDate"
-                  [maxDate]="effectiveMaxDate"
+                  [minDate]="calMinDate"
+                  [maxDate]="calMaxDate"
+                  [dateFilter]="endDateFilter"
                   (selectedChange)="onDateSelected($event)">
     </mat-calendar>
   </div>

@@ -113,19 +113,20 @@ export class DateRangeInputComponent implements OnChanges {
   get minDate(): Date | null { return toDate(this.min); }
   get maxDate(): Date | null { return toDate(this.max); }
 
-  /** While picking end date: cap max at startDate + 4 years */
-  get effectiveMaxDate(): Date | null {
-    if (this.pendingStart) {
-      const s = toDate(this.pendingStart);
-      if (s) {
-        const cap = new Date(s);
-        cap.setFullYear(cap.getFullYear() + 4);
-        const ext = this.maxDate;
-        return ext && ext < cap ? ext : cap;
-      }
-    }
-    return this.maxDate;
-  }
+  /** During start-date selection use external min/max; during end-date selection pass null
+   *  so Angular Material's multi-year page centres on the start year instead of anchoring to maxDate. */
+  get calMinDate(): Date | null { return this.pendingStart ? null : this.minDate; }
+  get calMaxDate(): Date | null { return this.pendingStart ? null : this.maxDate; }
+
+  /** Disable dates outside ±4 years of the chosen start date during end-date selection. */
+  readonly endDateFilter = (date: Date | null): boolean => {
+    if (!date || !this.pendingStart) return true;
+    const s = toDate(this.pendingStart);
+    if (!s) return true;
+    const lo = new Date(s); lo.setFullYear(lo.getFullYear() - 4);
+    const hi = new Date(s); hi.setFullYear(hi.getFullYear() + 4);
+    return date >= lo && date <= hi;
+  };
 
   open(): void {
     this.pendingStart = this.startDate || null;
