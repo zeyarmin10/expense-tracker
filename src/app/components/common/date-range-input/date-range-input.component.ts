@@ -1,7 +1,7 @@
 import {
   Component, Input, Output, EventEmitter,
-  HostListener, HostBinding, ElementRef, OnChanges, SimpleChanges,
-  ViewChildren, QueryList, inject,
+  HostListener, HostBinding, ElementRef, OnChanges, OnDestroy, SimpleChanges,
+  ViewChildren, QueryList, inject, ChangeDetectorRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatDatepickerModule, MatCalendar } from '@angular/material/datepicker';
@@ -38,7 +38,7 @@ function fmt(s: string): string {
   templateUrl: './date-range-input.component.html',
   styleUrls: ['./date-range-input.component.css'],
 })
-export class DateRangeInputComponent implements OnChanges {
+export class DateRangeInputComponent implements OnChanges, OnDestroy {
   @Input() startDate = '';
   @Input() endDate = '';
   @Input() startLabel = '';
@@ -52,13 +52,17 @@ export class DateRangeInputComponent implements OnChanges {
   @Output() startDateChange = new EventEmitter<string>();
   @Output() endDateChange = new EventEmitter<string>();
   @Output() rangeChange = new EventEmitter<{ start: string; end: string }>();
+  @Output() isOpenChange = new EventEmitter<boolean>();
 
   isOpen = false;
   isMobile = typeof window !== 'undefined' ? window.innerWidth < MOBILE_BP : true;
 
+  private _backdropEl: HTMLDivElement | null = null;
+
   // Internal range selection state: first click = start, second click = end
   pendingStart: string | null = null;
   previewEnd: string | null = null;   // hover preview
+  rangeError = '';
 
   // What mat-calendar sees as "selected"
   calSelected: DateRange<Date> | null = null;
@@ -76,6 +80,7 @@ export class DateRangeInputComponent implements OnChanges {
   readonly iconX = X;
 
   private translate = inject(TranslateService);
+  private cdr = inject(ChangeDetectorRef);
 
   constructor(private elRef: ElementRef) {}
 
@@ -97,8 +102,9 @@ export class DateRangeInputComponent implements OnChanges {
     const s = toDate(this.startDate);
     const e = toDate(this.endDate);
     this.calSelected = s ? new DateRange<Date>(s, e) : null;
-    this.pendingStart = null;
+    this.setPendingStart(null);
     this.previewEnd = null;
+    this.rangeError = '';
   }
 
   get displayLabel(): string {
@@ -113,36 +119,73 @@ export class DateRangeInputComponent implements OnChanges {
   get minDate(): Date | null { return toDate(this.min); }
   get maxDate(): Date | null { return toDate(this.max); }
 
-  /** During start-date selection use external min/max; during end-date selection pass null
-   *  so Angular Material's multi-year page centres on the start year instead of anchoring to maxDate. */
-  get calMinDate(): Date | null { return this.pendingStart ? null : this.minDate; }
-  get calMaxDate(): Date | null { return this.pendingStart ? null : this.maxDate; }
+  // During end-date selection pass null so Angular Material's multi-year page
+  // centres on the start year rather than anchoring to maxDate.
+  calMinDate: Date | null = null;
+  calMaxDate: Date | null = null;
 
-  /** Disable dates outside ±4 years of the chosen start date during end-date selection. */
-  readonly endDateFilter = (date: Date | null): boolean => {
-    if (!date || !this.pendingStart) return true;
-    const s = toDate(this.pendingStart);
-    if (!s) return true;
-    const lo = new Date(s); lo.setFullYear(lo.getFullYear() - 4);
-    const hi = new Date(s); hi.setFullYear(hi.getFullYear() + 4);
-    return date >= lo && date <= hi;
-  };
+  private setPendingStart(val: string | null): void {
+    this.pendingStart = val;
+    if (val) {
+      this.calMinDate = null;
+      this.calMaxDate = null;
+    } else {
+      this.calMinDate = this.minDate;
+      this.calMaxDate = this.maxDate;
+    }
+  }
 
   open(): void {
-    this.pendingStart = this.startDate || null;
+    this.rangeError = '';
     this.syncCalSelected();
-    if (!this.isMobile) this.calcPanelPos();
-    else history.pushState(null, '');
+    if (!this.isMobile) {
+      this.calcPanelPos();
+    } else {
+      this._createBodyBackdrop();
+      history.pushState(null, '');
+    }
     this.isOpen = true;
+    this.isOpenChange.emit(true);
   }
 
   close(): void {
     if (!this.isOpen) return;
+    this._removeBodyBackdrop();
     if (this.isMobile) history.back();
-    else this.isOpen = false;
-    this.pendingStart = null;
+    else { this.isOpen = false; this.isOpenChange.emit(false); }
     this.previewEnd = null;
     this.syncCalSelected();
+  }
+
+  ngOnDestroy(): void {
+    this._removeBodyBackdrop();
+  }
+
+  private _createBodyBackdrop(): void {
+    if (this._backdropEl) return;
+    const el = document.createElement('div');
+    el.className = 'dri-body-backdrop';
+    el.addEventListener('click', () => this.close());
+    el.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+    document.body.appendChild(el);
+    this._backdropEl = el;
+    this._lockBodyScroll();
+  }
+
+  private _removeBodyBackdrop(): void {
+    if (this._backdropEl) {
+      this._backdropEl.remove();
+      this._backdropEl = null;
+      this._unlockBodyScroll();
+    }
+  }
+
+  private _lockBodyScroll(): void {
+    document.body.classList.add('dri-scroll-locked');
+  }
+
+  private _unlockBodyScroll(): void {
+    document.body.classList.remove('dri-scroll-locked');
   }
 
   onDateSelected(date: Date | null): void {
@@ -151,23 +194,35 @@ export class DateRangeInputComponent implements OnChanges {
 
     if (!this.pendingStart) {
       // First click — set start, wait for end
-      this.pendingStart = str;
+      this.setPendingStart(str);
       this.calSelected = new DateRange<Date>(date, null);
-      // Reset to year view so end-date also starts from year selection
+      this.rangeError = '';
       setTimeout(() => this.calendars.forEach(c => c.currentView = 'multi-year'));
     } else {
-      // Second click — set end (swap if needed)
+      // Second click — validate 3-year limit before accepting
       let start = this.pendingStart;
       let end = str;
       if (end < start) { [start, end] = [end, start]; }
 
+      const startD = toDate(start)!, endD = toDate(end)!;
+      const threeYearsLater = new Date(startD.getFullYear() + 3, startD.getMonth(), startD.getDate());
+
+      if (endD > threeYearsLater) {
+        const lang = this.translate.currentLang || this.translate.getDefaultLang();
+        this.rangeError = lang === 'my'
+          ? `ရွေးချယ်သည့် ကာလ ${toMy(3)} နှစ်ထက် မကျော်ရပါ`
+          : 'Date range cannot exceed 3 years';
+        this.cdr.detectChanges();
+        return;
+      }
+
+      this.rangeError = '';
       this.startDate = start;
       this.endDate = end;
       this.startDateChange.emit(start);
       this.endDateChange.emit(end);
       this.rangeChange.emit({ start, end });
 
-      this.pendingStart = null;
       this.previewEnd = null;
       this.syncCalSelected();
       setTimeout(() => this.close(), 120);
@@ -197,13 +252,24 @@ export class DateRangeInputComponent implements OnChanges {
   onResize(): void {
     const nowMobile = window.innerWidth < MOBILE_BP;
     if (nowMobile === this.isMobile) return;
-    if (this.isOpen) { this.isOpen = false; if (this.isMobile) history.back(); }
+    if (this.isOpen) {
+      this._removeBodyBackdrop();
+      this.isOpen = false;
+      this.isOpenChange.emit(false);
+      if (this.isMobile) history.back();
+    }
     this.isMobile = nowMobile;
   }
 
   @HostListener('window:popstate')
   onPopState(): void {
-    if (this.isOpen && this.isMobile) { this.isOpen = false; this.pendingStart = null; this.syncCalSelected(); }
+    if (this.isOpen && this.isMobile) {
+      this._removeBodyBackdrop();
+      this.isOpen = false;
+      this.pendingStart = null;
+      this.syncCalSelected();
+      this.isOpenChange.emit(false);
+    }
   }
 
   @HostListener('document:keydown.escape')

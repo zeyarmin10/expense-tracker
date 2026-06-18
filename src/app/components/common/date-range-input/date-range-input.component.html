@@ -27,8 +27,6 @@
      MOBILE — Bottom Sheet
      ════════════════════════════════ -->
 <ng-container *ngIf="isMobile">
-  <div class="dri-backdrop" *ngIf="isOpen" (click)="close()"></div>
-
   <div class="dri-sheet" [class.dri-sheet-open]="isOpen" (click)="$event.stopPropagation()">
     <div class="dri-handle"></div>
     <div class="dri-sheet-header">
@@ -40,20 +38,23 @@
       </button>
     </div>
 
-    <div class="dri-range-hint" *ngIf="pendingStart">
-      <span class="dri-hint-start">{{ formatDate(pendingStart) }}</span>
-      <span class="dri-hint-arrow">→</span>
-      <span class="dri-hint-end">{{ endLabel }}</span>
-    </div>
+    <div class="dri-sheet-body">
+      <div class="dri-range-hint" *ngIf="pendingStart">
+        <span class="dri-hint-start">{{ formatDate(pendingStart) }}</span>
+        <span class="dri-hint-arrow">→</span>
+        <span class="dri-hint-end">{{ endLabel }}</span>
+      </div>
 
-    <mat-calendar *ngIf="isOpen"
-                  startView="multi-year"
-                  [selected]="calSelected"
-                  [minDate]="calMinDate"
-                  [maxDate]="calMaxDate"
-                  [dateFilter]="endDateFilter"
-                  (selectedChange)="onDateSelected($event)">
-    </mat-calendar>
+      <div class="dri-range-error" *ngIf="rangeError">{{ rangeError }}</div>
+
+      <mat-calendar *ngIf="isOpen"
+                    startView="multi-year"
+                    [selected]="calSelected"
+                    [minDate]="calMinDate"
+                    [maxDate]="calMaxDate"
+                    (selectedChange)="onDateSelected($event)">
+      </mat-calendar>
+    </div>
   </div>
 </ng-container>
 
@@ -78,11 +79,12 @@
       <span class="dri-hint-end">{{ endLabel }}</span>
     </div>
 
+    <div class="dri-range-error" *ngIf="rangeError">{{ rangeError }}</div>
+
     <mat-calendar startView="multi-year"
                   [selected]="calSelected"
                   [minDate]="calMinDate"
                   [maxDate]="calMaxDate"
-                  [dateFilter]="endDateFilter"
                   (selectedChange)="onDateSelected($event)">
     </mat-calendar>
   </div>

@@ -46,6 +46,17 @@ export class DateInputComponent implements ControlValueAccessor {
   readonly iconX = X;
 
   private translate = inject(TranslateService);
+
+  // Stable function reference passed to mat-calendar [dateFilter].
+  // Enforces min/max without anchoring the multi-year page to maxDate.
+  readonly dateFilterFn = (date: Date | null): boolean => {
+    if (!date) return true;
+    const mn = this.minDate;
+    const mx = this.maxDate;
+    if (mn && date < mn) return false;
+    if (mx && date > mx) return false;
+    return true;
+  };
   private onChange: (val: string) => void = () => {};
   private onTouched: () => void = () => {};
 
@@ -100,7 +111,8 @@ export class DateInputComponent implements ControlValueAccessor {
     else { this.isOpen = false; this.onTouched(); }
   }
 
-  onDateSelected(date: Date): void {
+  onDateSelected(date: Date | null): void {
+    if (!date) return;
     const str = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
     this.value = str;
     this.onChange(str);

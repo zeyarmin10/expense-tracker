@@ -537,7 +537,7 @@
               <div class="exp-item-meta">
                 <span *ngIf="voucher.category" class="exp-cat-badge" [style.--cat-hue]="getCategoryHue(voucher.category)">
                   <lucide-icon [img]="getIconForCategory(voucher.category)" [size]="11" style="flex-shrink:0"></lucide-icon>
-                  {{ voucher.category }}
+                  <span class="exp-cat-badge-text">{{ voucher.category }}</span>
                 </span>
                 <span *ngIf="voucher.category" class="exp-meta-dot">·</span>
                 <span class="exp-item-date">

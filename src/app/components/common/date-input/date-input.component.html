@@ -36,8 +36,7 @@
     <mat-calendar *ngIf="isOpen"
                   startView="month"
                   [selected]="selectedDate"
-                  [minDate]="minDate"
-                  [maxDate]="maxDate"
+                  [dateFilter]="dateFilterFn"
                   (selectedChange)="onDateSelected($event)">
     </mat-calendar>
   </div>
@@ -60,8 +59,7 @@
 
     <mat-calendar startView="month"
                   [selected]="selectedDate"
-                  [minDate]="minDate"
-                  [maxDate]="maxDate"
+                  [dateFilter]="dateFilterFn"
                   (selectedChange)="onDateSelected($event)">
     </mat-calendar>
   </div>

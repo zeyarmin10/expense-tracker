@@ -103,6 +103,10 @@
   border-color: var(--danger);
 }
 
+.csl-field-invalid .csl-trigger.csl-trigger-addon {
+  border-right: 1px solid var(--danger);
+}
+
 .csl-field-disabled .csl-trigger {
   opacity: 0.5;
   cursor: not-allowed;

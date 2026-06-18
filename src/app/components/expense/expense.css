@@ -1112,6 +1112,15 @@ body.light-mode .exp-category-title-chip:hover {
   background: hsl(var(--cat-hue, 220) 80% 55% / 0.13);
   border: 1px solid hsl(var(--cat-hue, 220) 80% 55% / 0.35);
   color: hsl(var(--cat-hue, 220) 80% 70%);
+  max-width: 140px;
+  min-width: 0;
+}
+
+.exp-cat-badge-text {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .exp-meta-dot {
@@ -1536,7 +1545,7 @@ body.light-mode .exp-category-title-chip:hover {
   color: var(--info);
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
-  height: 56px;
+  height: 60px;
   flex-shrink: 0;
 }
 
@@ -1545,8 +1554,9 @@ body.light-mode .exp-category-title-chip:hover {
   color: #fff;
 }
 
-/* Left part of float group (select wrapper) */
-.exp-float-group>.exp-float-field {
+/* Left part of float group (select wrapper or custom-select component) */
+.exp-float-group>.exp-float-field,
+.exp-float-group>app-custom-select {
   flex: 1;
   min-width: 0;
 }
@@ -1874,3 +1884,4 @@ body.light-mode .exp-seg-reset {
   from { opacity: 0; transform: translateY(-6px) scaleY(0.92); }
   to   { opacity: 1; transform: translateY(0) scaleY(1); }
 }
+

@@ -14,6 +14,17 @@
 }
 
 
+/* ── Range validation error (inside sheet / panel) ── */
+.dri-range-error {
+  margin: 0 1rem 0.5rem;
+  padding: 0.45rem 0.75rem;
+  border-radius: 8px;
+  background: var(--danger-dim);
+  color: var(--danger);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
 /* ── Single Combined Trigger Field ── */
 .dri-field {
   position: relative;
@@ -159,19 +170,30 @@
   position: fixed;
   top: 50%;
   left: 50%;
-  z-index: 9001;
+  z-index: 9003;
   width: min(380px, 92vw);
+  height: min(500px, 84dvh);
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 16px;
   box-shadow: 0 8px 48px rgba(0, 0, 0, 0.40);
   overflow: hidden;
+  touch-action: none;
   display: flex;
   flex-direction: column;
   transform: translate(-50%, -50%) scale(0.92);
   opacity: 0;
   pointer-events: none;
   transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.18s ease;
+}
+
+.dri-sheet-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  overscroll-behavior: contain;
 }
 
 .dri-sheet.dri-sheet-open {
@@ -213,7 +235,7 @@
 /* ── Desktop Floating Panel ── */
 .dri-panel {
   position: fixed;
-  z-index: 9001;
+  z-index: 9003;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
