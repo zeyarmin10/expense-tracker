@@ -79,13 +79,15 @@
       <span class="dri-hint-end">{{ endLabel }}</span>
     </div>
 
-    <div class="dri-range-error" *ngIf="rangeError">{{ rangeError }}</div>
+    <div class="dri-panel-body">
+      <div class="dri-range-error" *ngIf="rangeError">{{ rangeError }}</div>
 
-    <mat-calendar startView="multi-year"
-                  [selected]="calSelected"
-                  [minDate]="calMinDate"
-                  [maxDate]="calMaxDate"
-                  (selectedChange)="onDateSelected($event)">
-    </mat-calendar>
+      <mat-calendar startView="multi-year"
+                    [selected]="calSelected"
+                    [minDate]="calMinDate"
+                    [maxDate]="calMaxDate"
+                    (selectedChange)="onDateSelected($event)">
+      </mat-calendar>
+    </div>
   </div>
 </ng-container>

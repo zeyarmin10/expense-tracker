@@ -19,7 +19,7 @@ import { UserProfile } from '../../services/user-data';
 
 import {
   LucideAngularModule, LucideIconData,
-  Plus, Tags, Save, Pen, Trash2, X, Tag,
+  Plus, Tags, Save, Pencil, Trash2, X, Tag,
 } from 'lucide-angular';
 import { CATEGORY_ICONS, getIconData, getCategoryHue } from '../../utils/category-icons';
 
@@ -72,7 +72,7 @@ export class Category implements OnInit {
   readonly iconPlus = Plus;
   readonly iconTags = Tags;
   readonly iconSave = Save;
-  readonly iconPen = Pen;
+  readonly iconPen = Pencil;
   readonly iconTrash2 = Trash2;
   readonly iconTimes = X;
 

@@ -36,7 +36,7 @@ import Swal from 'sweetalert2';
 import {
   LucideAngularModule,
   Plus, Pencil, Trash2, Save, X, RotateCcw, Info, Wallet, ListChecks,
-  Coins, ChevronDown, ChevronUp, Calendar, RotateCw, Pen, Receipt,
+  Coins, ChevronDown, ChevronUp, Calendar, RotateCw, Receipt,
   Image, Images, Eye, Camera as LucideCamera, Zap, List, Archive,
 } from 'lucide-angular';
 
@@ -71,8 +71,8 @@ const Toast = Swal.mixin({
   }
 });
 
-interface ExpenseCategoryGroup {
-  category: string;
+interface ExpenseDateGroup {
+  date: string;
   expenses: IExpense[];
   totalsByCurrency: { [key: string]: number };
   count: number;
@@ -133,7 +133,7 @@ export class Expense implements OnInit, OnDestroy {
 
   displayedExpenses$!: Observable<IExpense[]>;
   displayedVouchers$!: Observable<ServiceIVoucher[]>;
-  groupedExpenses$!: Observable<ExpenseCategoryGroup[]>;
+  groupedExpenses$!: Observable<ExpenseDateGroup[]>;
   totalExpensesByCurrency$!: Observable<{ [key: string]: number }>;
 
   expenseService = inject(ExpenseService);
@@ -227,7 +227,7 @@ export class Expense implements OnInit, OnDestroy {
   readonly iconChevronDown = ChevronDown;
   readonly iconChevronUp = ChevronUp;
   readonly iconRotateCw = RotateCw;
-  readonly iconPen = Pen;
+  readonly iconPen = Pencil;
   readonly iconReceipt = Receipt;
   readonly iconImage = Image;
   readonly iconImages = Images;
@@ -414,7 +414,7 @@ export class Expense implements OnInit, OnDestroy {
     );
 
     this.groupedExpenses$ = this.displayedExpenses$.pipe(
-      map(expenses => this.groupExpensesByCategory(expenses))
+      map(expenses => this.groupExpensesByDate(expenses))
     );
   }
 
@@ -438,28 +438,22 @@ export class Expense implements OnInit, OnDestroy {
     );
   }
 
-  private groupExpensesByCategory(expenses: IExpense[]): ExpenseCategoryGroup[] {
-    const groups = new Map<string, ExpenseCategoryGroup>();
+  private groupExpensesByDate(expenses: IExpense[]): ExpenseDateGroup[] {
+    const groups = new Map<string, ExpenseDateGroup>();
 
     expenses.forEach(expense => {
-      const category = expense.category || this.translate.instant('UNCATEGORIZED');
-      if (!groups.has(category)) {
-        groups.set(category, {
-          category,
-          expenses: [],
-          totalsByCurrency: {},
-          count: 0,
-        });
+      const date = expense.date || '';
+      if (!groups.has(date)) {
+        groups.set(date, { date, expenses: [], totalsByCurrency: {}, count: 0 });
       }
-
-      const group = groups.get(category)!;
+      const group = groups.get(date)!;
       group.expenses.push(expense);
       group.count += 1;
       group.totalsByCurrency[expense.currency] =
         (group.totalsByCurrency[expense.currency] || 0) + expense.totalCost;
     });
 
-    return [...groups.values()].sort((a, b) => a.category.localeCompare(b.category));
+    return [...groups.values()].sort((a, b) => b.date.localeCompare(a.date));
   }
 
   onDateChange(date: string): void {

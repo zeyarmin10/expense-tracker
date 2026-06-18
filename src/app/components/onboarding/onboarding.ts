@@ -15,7 +15,7 @@ import { InvitationService } from '../../services/invitation.service';
 import { SpaceContextService } from '../../services/space-context.service';
 import { UserSpaceSummary } from '../../services/space.model';
 import Swal from 'sweetalert2';
-import { LucideAngularModule, CircleCheck, Link, EllipsisVertical, Pen, Trash2, User, Users } from 'lucide-angular';
+import { LucideAngularModule, CircleCheck, Link, EllipsisVertical, Pencil, Trash2, User, Users } from 'lucide-angular';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
 
 @Component({
@@ -41,7 +41,7 @@ export class OnboardingComponent implements OnInit {
   readonly iconLink = Link;
   readonly iconCircleCheck = CircleCheck;
   readonly iconEllipsisVertical = EllipsisVertical;
-  readonly iconPen = Pen;
+  readonly iconPencil = Pencil;
   readonly iconTrash2 = Trash2;
 
   userProfile$: Observable<UserProfile | null>;

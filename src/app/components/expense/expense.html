@@ -610,32 +610,26 @@
       </div>
 
       <!-- List Items -->
-      <div *ngIf="groupedExpenses$ | async as categoryGroups; else loading">
-        <div *ngIf="categoryGroups.length === 0" class="exp-empty">
+      <div *ngIf="groupedExpenses$ | async as dateGroups; else loading">
+        <div *ngIf="dateGroups.length === 0" class="exp-empty">
           {{ "EXPENSE_NO_EXPENSES_HINT" | translate }}
         </div>
 
-        <div class="exp-category-list" *ngIf="categoryGroups.length > 0">
+        <div class="exp-date-list" *ngIf="dateGroups.length > 0">
           <section
-            *ngFor="let group of categoryGroups; let catIdx = index"
-            class="exp-category-group"
-            [ngStyle]="getCategoryStyle(group.category)"
+            *ngFor="let group of dateGroups"
+            class="exp-date-group"
           >
-            <div class="exp-category-group-header">
-              <button
-                type="button"
-                class="exp-category-title-chip"
-                (click)="filterByCategory(group.category)"
-              >
-                <lucide-icon [img]="getIconForCategory(group.category)" [size]="13" style="flex-shrink:0"></lucide-icon>
-                {{ group.category.length > 20 ? group.category.substring(0, 20) + '…' : group.category }}
-              </button>
-              <span class="exp-category-count">
+            <div class="exp-date-group-header">
+              <span class="exp-date-label">
+                {{ formatService.formatLocalizedDate(group.date) }}
+              </span>
+              <span class="exp-date-count">
                 {{ "EXPENSE_GROUP_COUNT" | translate: { count: formatCount(group.count) } }}
               </span>
-              <div class="exp-category-totals">
+              <div class="exp-date-totals">
                 <span
-                  class="exp-category-total"
+                  class="exp-date-total"
                   *ngFor="let total of group.totalsByCurrency | keyvalue"
                 >
                   {{ formatService.formatAmountShort(total.value, total.key) }}
@@ -649,15 +643,15 @@
                   <div class="exp-item-top">
                     <span class="exp-item-name" appShowFullText>{{ expense.itemName }}</span>
                     <span class="exp-item-amount">
-                      {{ formatService.formatAmountShort(expense.totalCost,
-                      expense.currency) }}
+                      {{ formatService.formatAmountShort(expense.totalCost, expense.currency) }}
                     </span>
                   </div>
 
                   <div class="exp-item-meta">
-                    <span class="exp-item-date"
-                      >{{ formatService.formatLocalizedDate(expense.date) }}</span
-                    >
+                    <span class="exp-cat-badge" [style.--cat-hue]="getCategoryHue(expense.category)">
+                      <lucide-icon [img]="getIconForCategory(expense.category)" [size]="11" style="flex-shrink:0"></lucide-icon>
+                      <span class="exp-cat-badge-text">{{ expense.category }}</span>
+                    </span>
                     <span
                       *ngIf="expense.quantity && expense.quantity > 1"
                       class="exp-meta-dot"
@@ -668,8 +662,7 @@
                       class="exp-item-qty"
                     >
                       {{ formatLocalizedNumber(expense.quantity) }} {{ expense.unit
-                      }} &#64; {{ formatService.formatAmountShort(expense.price,
-                      expense.currency) }}
+                      }} &#64; {{ formatService.formatAmountShort(expense.price, expense.currency) }}
                     </span>
                   </div>
 

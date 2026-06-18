@@ -184,7 +184,8 @@
   transform: translate(-50%, -50%) scale(0.92);
   opacity: 0;
   pointer-events: none;
-  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.18s ease;
+  /* fires on OPEN (source = closed state): smooth ease-out expo — fast start, silky settle */
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease-out;
 }
 
 .dri-sheet-body {
@@ -200,6 +201,8 @@
   transform: translate(-50%, -50%) scale(1);
   opacity: 1;
   pointer-events: auto;
+  /* fires on CLOSE (source = open state): quick ease-in — snappy, decisive dismiss */
+  transition: transform 0.2s cubic-bezier(0.4, 0, 1, 1), opacity 0.16s ease-in;
 }
 
 .dri-handle { display: none; }
@@ -245,6 +248,15 @@
   overflow: hidden;
   animation: dri-panel-in 0.14s ease;
   min-width: 300px;
+  max-width: 420px;
+  max-height: min(500px, 82vh);
+}
+
+.dri-panel-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 body.light-mode .dri-panel {

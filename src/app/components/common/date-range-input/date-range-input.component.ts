@@ -58,6 +58,7 @@ export class DateRangeInputComponent implements OnChanges, OnDestroy {
   isMobile = typeof window !== 'undefined' ? window.innerWidth < MOBILE_BP : true;
 
   private _backdropEl: HTMLDivElement | null = null;
+  private _closeTimer: number | null = null;
 
   // Internal range selection state: first click = start, second click = end
   pendingStart: string | null = null;
@@ -142,7 +143,7 @@ export class DateRangeInputComponent implements OnChanges, OnDestroy {
       this.calcPanelPos();
     } else {
       this._createBodyBackdrop();
-      history.pushState(null, '');
+      if (!this._insideModal()) history.pushState(null, '');
     }
     this.isOpen = true;
     this.isOpenChange.emit(true);
@@ -150,15 +151,37 @@ export class DateRangeInputComponent implements OnChanges, OnDestroy {
 
   close(): void {
     if (!this.isOpen) return;
-    this._removeBodyBackdrop();
-    if (this.isMobile) history.back();
-    else { this.isOpen = false; this.isOpenChange.emit(false); }
+    const insideModal = this._insideModal();
+    this.isOpen = false;
     this.previewEnd = null;
     this.syncCalSelected();
+    this._animateBackdropOut();
+    if (this._closeTimer) clearTimeout(this._closeTimer);
+    this._closeTimer = setTimeout(() => {
+      this._removeBodyBackdrop();
+      if (this.isMobile && !insideModal) {
+        history.back();
+        this.isOpenChange.emit(false);
+      } else {
+        this.isOpenChange.emit(false);
+      }
+    }, 220);
   }
 
   ngOnDestroy(): void {
+    if (this._closeTimer) clearTimeout(this._closeTimer);
     this._removeBodyBackdrop();
+  }
+
+  private _animateBackdropOut(): void {
+    if (!this._backdropEl) return;
+    this._backdropEl.style.transition = 'opacity 0.2s ease-in';
+    this._backdropEl.style.opacity = '0';
+    this._backdropEl.style.pointerEvents = 'none';
+  }
+
+  private _insideModal(): boolean {
+    return !!this.elRef.nativeElement.closest('.modal');
   }
 
   private _createBodyBackdrop(): void {
@@ -167,9 +190,16 @@ export class DateRangeInputComponent implements OnChanges, OnDestroy {
     el.className = 'dri-body-backdrop';
     el.addEventListener('click', () => this.close());
     el.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
-    document.body.appendChild(el);
+    const modalAncestor = this.elRef.nativeElement.closest('.modal') as HTMLElement;
+    if (modalAncestor) {
+      // Append inside the modal's DOM so the backdrop z-index stays within the
+      // modal's stacking context — keeps it below .dri-sheet (9010) and above the form
+      modalAncestor.appendChild(el);
+    } else {
+      document.body.appendChild(el);
+      this._lockBodyScroll();
+    }
     this._backdropEl = el;
-    this._lockBodyScroll();
   }
 
   private _removeBodyBackdrop(): void {
@@ -264,11 +294,11 @@ export class DateRangeInputComponent implements OnChanges, OnDestroy {
   @HostListener('window:popstate')
   onPopState(): void {
     if (this.isOpen && this.isMobile) {
-      this._removeBodyBackdrop();
       this.isOpen = false;
-      this.pendingStart = null;
       this.syncCalSelected();
       this.isOpenChange.emit(false);
+      this._animateBackdropOut();
+      setTimeout(() => this._removeBodyBackdrop(), 220);
     }
   }
 

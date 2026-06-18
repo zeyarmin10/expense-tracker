@@ -83,7 +83,7 @@
                   <button class="ob-dropdown-item" type="button"
                     *ngIf="canRenameSpace(space)"
                     (click)="openEditGroupModal(space, $event)">
-                    <lucide-icon [img]="iconPen" [size]="13"></lucide-icon>
+                    <lucide-icon [img]="iconPencil" [size]="15"></lucide-icon>
                     <span>{{ 'EDIT_BUTTON_LABEL' | translate }}</span>
                   </button>
                   <div class="ob-dropdown-divider"
@@ -91,7 +91,7 @@
                   <button class="ob-dropdown-item ob-dropdown-item-danger" type="button"
                     *ngIf="canDeleteSpace(space)"
                     (click)="deleteSpace(space, $event)">
-                    <lucide-icon [img]="iconTrash2" [size]="13"></lucide-icon>
+                    <lucide-icon [img]="iconTrash2" [size]="15"></lucide-icon>
                     <span>{{ 'DELETE_BUTTON' | translate }}</span>
                   </button>
                 </div>

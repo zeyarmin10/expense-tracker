@@ -5,7 +5,7 @@ import { CommonModule } from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import {
   LucideAngularModule, LucideIconData, Tag,
-  Save, X, Plus, Tags, Pen, Trash2,
+  Save, X, Plus, Tags, Pencil, Trash2,
 } from 'lucide-angular';
 import { CATEGORY_ICONS, getIconData } from '../../../utils/category-icons';
 import { BehaviorSubject, firstValueFrom } from 'rxjs';
@@ -55,7 +55,7 @@ export class CategoryModalComponent implements OnInit {
   readonly iconTimes = X;
   readonly iconPlus = Plus;
   readonly iconTags = Tags;
-  readonly iconPen = Pen;
+  readonly iconPen = Pencil;
   readonly iconTrash2 = Trash2;
 
   readonly categoryIcons = CATEGORY_ICONS;

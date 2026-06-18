@@ -940,6 +940,69 @@ a.exp-icon-btn {
   color: var(--text-muted);
 }
 
+/* ── Date Groups ── */
+.exp-date-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.exp-date-group {
+  border-bottom: 1px solid var(--border);
+}
+
+.exp-date-group:last-child {
+  border-bottom: none;
+}
+
+.exp-date-group-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: nowrap;
+  padding: 0.5rem 1rem;
+  background: var(--surface-2);
+  min-width: 0;
+}
+
+.exp-date-label {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--text-sub);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.exp-date-count {
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.exp-date-totals {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.3rem;
+  flex-shrink: 0;
+}
+
+.exp-date-total {
+  border-radius: 999px;
+  border: 1px solid rgba(244, 177, 26, 0.25);
+  background: rgba(244, 177, 26, 0.08);
+  color: var(--warning);
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.2rem 0.5rem;
+  white-space: nowrap;
+}
+
+.exp-date-group .exp-list {
+  border-top: 1px solid var(--border);
+}
+
 /* ── Expense Items ── */
 .exp-category-list {
   display: flex;
