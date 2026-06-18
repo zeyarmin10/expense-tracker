@@ -1738,7 +1738,25 @@ body.light-mode .exp-category-title-chip:hover {
   color: var(--accent);
 }
 
-/* date range picker */
+/* when picker is visible, flatten filter bar bottom so it connects to the picker below */
+.exp-filter-bar-expanded {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-bottom-color: transparent;
+}
+
+/* date range picker outer — connects to filter bar above, no stacking context (no transform/animation) */
+.exp-daterange-outer {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: none;
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
+  padding: 0.3rem 0.5rem 0.6rem;
+  margin-top: -1rem; /* cancel the parent container's gap so it butts up against the filter bar */
+}
+
+/* kept for reference but no longer used in HTML */
 .exp-daterange-wrap {
   animation: exp-slide-down 0.22s ease forwards;
   padding: 0 2px;

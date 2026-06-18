@@ -402,7 +402,7 @@
     <!-- ── END ADD VOUCHER PANEL ── -->
 
     <!-- ── SHARED DATE FILTER BAR ── -->
-    <div class="exp-filter-bar">
+    <div class="exp-filter-bar" [class.exp-filter-bar-expanded]="showCustomDatePicker">
       <div class="exp-seg-ctrl">
         <div class="exp-seg-track">
           <!-- sliding pill indicator -->
@@ -446,45 +446,24 @@
         </button>
       </div>
 
-      <div class="exp-daterange-wrap" *ngIf="showCustomDatePicker">
-        <div class="exp-daterange-row">
-          <div class="exp-daterange-col">
-            <span class="exp-daterange-col-label">{{ 'DATE_FROM' | translate }}</span>
-            <input
-              type="date"
-              class="exp-daterange-input"
-              [(ngModel)]="customStartDate"
-              (ngModelChange)="onCustomDateChange()"
-              [ngModelOptions]="{standalone: true}"
-              [max]="customEndDate || ''"
-            />
-          </div>
-          <div class="exp-daterange-sep">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="5" y1="12" x2="19" y2="12"/>
-              <polyline points="12 5 19 12 12 19"/>
-            </svg>
-          </div>
-          <div class="exp-daterange-col">
-            <span class="exp-daterange-col-label">{{ 'DATE_TO' | translate }}</span>
-            <input
-              type="date"
-              class="exp-daterange-input"
-              [(ngModel)]="customEndDate"
-              (ngModelChange)="onCustomDateChange()"
-              [ngModelOptions]="{standalone: true}"
-              [min]="customStartDate || ''"
-            />
-          </div>
-        </div>
-      </div>
-
       <div class="exp-filter-label">
         <lucide-icon [img]="iconCalendar" [size]="16" class="exp-filter-label-icon"></lucide-icon>
         <span>{{ getFilterLabel() }}</span>
       </div>
     </div>
     <!-- ── END SHARED DATE FILTER BAR ── -->
+
+    <!-- Date range picker lives OUTSIDE the sticky bar so the modal (z-index 9010)
+         is in the root stacking context and renders above the backdrop correctly. -->
+    <div class="exp-daterange-outer" *ngIf="showCustomDatePicker">
+      <app-date-range-input
+        [(startDate)]="customStartDate"
+        [(endDate)]="customEndDate"
+        (rangeChange)="onCustomDateChange()"
+        [startLabel]="'DATE_FROM' | translate"
+        [endLabel]="'DATE_TO' | translate">
+      </app-date-range-input>
+    </div>
 
     <!-- ── VOUCHER LIST ── -->
     <div class="exp-list-section">

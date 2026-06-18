@@ -170,9 +170,9 @@
   position: fixed;
   top: 50%;
   left: 50%;
-  z-index: 9003;
+  z-index: 9010;
   width: min(380px, 92vw);
-  height: min(500px, 84dvh);
+  max-height: min(500px, 84dvh);
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 16px;
@@ -235,7 +235,7 @@
 /* ── Desktop Floating Panel ── */
 .dri-panel {
   position: fixed;
-  z-index: 9003;
+  z-index: 9010;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;

@@ -51,7 +51,8 @@ import {
   getCurrentSpaceRole,
   isPersonalContext,
 } from '../../services/user-data';
-import { BURMESE_MONTH_ABBREVIATIONS } from '../../core/constants/app.constants';
+import { BURMESE_MONTH_FULL_NAMES } from '../../core/constants/app.constants';
+import { DateRangeInputComponent } from '../common/date-range-input/date-range-input.component';
 import { FormatService } from '../../services/format.service';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
 import { UserAvatarComponent } from '../common/user-avatar/user-avatar.component';
@@ -94,6 +95,7 @@ interface ExpenseCategoryGroup {
     ShowFullTextDirective,
     CustomSelectComponent,
     DateInputComponent,
+    DateRangeInputComponent,
   ],
   providers: [DatePipe],
   templateUrl: './expense.html',
@@ -746,29 +748,58 @@ export class Expense implements OnInit, OnDestroy {
   }
 
   getFilterLabel(): string {
+    const lang = this.translate.currentLang || this.translate.getDefaultLang();
+    const isMy = lang === 'my';
     const today = new Date();
+
+    const toMy = (n: number) =>
+      new Intl.NumberFormat('my-MM', { numberingSystem: 'mymr', useGrouping: false }).format(n);
+
+    const myMonth = (d: Date): string => {
+      const en = this.datePipe.transform(d, 'MMMM') as keyof typeof BURMESE_MONTH_FULL_NAMES;
+      return BURMESE_MONTH_FULL_NAMES[en] ?? en;
+    };
+
+    // Returns localized date string; withYear controls whether year is appended
+    const fmt = (d: Date, withYear = true): string => {
+      if (isMy) {
+        const base = `${toMy(d.getDate())} ${myMonth(d)}`;
+        return withYear ? `${base} ${toMy(d.getFullYear())}` : base;
+      }
+      return withYear
+        ? (this.datePipe.transform(d, 'MMM d, yyyy') || '')
+        : (this.datePipe.transform(d, 'MMM d') || '');
+    };
+
+    const parseLocal = (s: string) => new Date(s + 'T00:00:00');
+
     switch (this.dateFilterMode) {
       case 'today':
-        return this.datePipe.transform(today, 'MMM d, yyyy') || '';
+        return fmt(today);
+
       case 'week': {
         const start = new Date(today);
         start.setDate(today.getDate() - today.getDay());
         const end = new Date(start);
         end.setDate(start.getDate() + 6);
-        return `${this.datePipe.transform(start, 'MMM d')} – ${this.datePipe.transform(end, 'MMM d, yyyy')}`;
+        return `${fmt(start, false)} – ${fmt(end)}`;
       }
+
       case 'month':
-        return this.datePipe.transform(today, 'MMMM yyyy') || '';
+        return isMy
+          ? `${myMonth(today)} ${toMy(today.getFullYear())}`
+          : (this.datePipe.transform(today, 'MMMM yyyy') || '');
+
       case 'custom': {
         if (this.customStartDate && this.customEndDate) {
-          const s = this.datePipe.transform(this.customStartDate, 'MMM d') || '';
-          const e = this.datePipe.transform(this.customEndDate, 'MMM d, yyyy') || '';
-          return this.customStartDate === this.customEndDate ? e : `${s} – ${e}`;
+          const s = parseLocal(this.customStartDate);
+          const e = parseLocal(this.customEndDate);
+          if (this.customStartDate === this.customEndDate) return fmt(e);
+          return `${fmt(s, false)} – ${fmt(e)}`;
         }
-        return this.customStartDate
-          ? (this.datePipe.transform(this.customStartDate, 'MMM d, yyyy') || '')
-          : '';
+        return this.customStartDate ? fmt(parseLocal(this.customStartDate)) : '';
       }
+
       default:
         return '';
     }
