@@ -391,7 +391,7 @@ export class Profit implements OnInit, OnDestroy {
     );
     // Disable form control for currency as it's set from user profile
     this.incomeForm.controls['currency'].disable();
-    Chart.defaults.font.family = 'Syne, MyanmarUIFont, sans-serif';
+    Chart.defaults.font.family = 'MyanmarUIFont, Arial, sans-serif';
     Chart.defaults.color = '#6b7280';
 
     // Set initial date range for display/input fields
@@ -724,7 +724,7 @@ export class Profit implements OnInit, OnDestroy {
             grid: { color: gridColor },
             ticks: {
               color: tickColor,
-              font: { family: 'DM Mono, monospace', size: 11 },
+              font: { family: 'MyanmarUIFont, Arial, sans-serif', size: 11 },
               callback: function (value: any) {
                 const currentLang = component.translate?.currentLang;
                 if (currentLang === 'my') {

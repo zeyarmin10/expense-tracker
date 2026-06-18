@@ -93,7 +93,7 @@
 .pp-section-number {
   font-size: 0.65rem;
   font-weight: 700;
-  font-family: 'DM Mono', monospace;
+  font-family: 'MyanmarUIFont', sans-serif;
   color: var(--accent);
   background: var(--accent-dim);
   border: 1px solid var(--accent-glow);
