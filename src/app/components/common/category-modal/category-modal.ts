@@ -1,4 +1,4 @@
-import { Component, ElementRef, EventEmitter, OnInit, Output, ViewChild, inject, HostListener } from '@angular/core';
+import { Component, ElementRef, EventEmitter, OnInit, OnDestroy, Output, ViewChild, inject, HostListener } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CategoryService } from '../../../services/category';
 import { CommonModule } from '@angular/common';
@@ -34,7 +34,7 @@ const Toast = Swal.mixin({
   templateUrl: './category-modal.html',
   styleUrls: ['./category-modal.css']
 })
-export class CategoryModalComponent implements OnInit {
+export class CategoryModalComponent implements OnInit, OnDestroy {
   @Output() categoryAdded = new EventEmitter<void>();
 
   categoryForm: FormGroup;
@@ -90,6 +90,16 @@ export class CategoryModalComponent implements OnInit {
     this.categories$.subscribe(categories => {
       this.categories = categories;
     });
+  }
+
+  ngOnDestroy(): void {
+    if (this.bsModal) {
+      this.bsModal.hide();
+    }
+    document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+    document.body.classList.remove('modal-open');
+    document.body.style.removeProperty('overflow');
+    document.body.style.removeProperty('padding-right');
   }
 
   private async initializeModal(): Promise<void> {

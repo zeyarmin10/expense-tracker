@@ -247,6 +247,10 @@ export class App implements OnInit, AfterViewInit {
       filter((event): event is NavigationEnd => event instanceof NavigationEnd)
     ).subscribe(() => {
       this.mobileMenuOpen = false;
+      document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+      document.body.classList.remove('modal-open');
+      document.body.style.removeProperty('overflow');
+      document.body.style.removeProperty('padding-right');
     });
 
     // ✅ BUG FIX: /expense-overview ပါ exclude လုပ်ထည့်ပါ

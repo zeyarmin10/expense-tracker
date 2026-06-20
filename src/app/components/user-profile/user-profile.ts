@@ -1033,6 +1033,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
 
     // Step 1: Require typing DELETE to confirm
     const confirmResult = await Swal.fire({
+      position: 'top',
       title: this.translate.instant('DELETE_ACCOUNT_CONFIRM_TITLE'),
       html: `<p style="font-size:0.9rem;color:var(--text-sub)">${this.translate.instant('DELETE_ACCOUNT_CONFIRM_TEXT')}</p>
              <p style="font-size:0.8rem;margin-top:0.75rem;opacity:0.65">${this.translate.instant('DELETE_ACCOUNT_TYPE_TO_CONFIRM')}</p>`,
@@ -1059,6 +1060,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
     let password: string | undefined;
     if (providerId === 'password') {
       const passResult = await Swal.fire({
+        position: 'top',
         title: this.translate.instant('DELETE_ACCOUNT_PASSWORD_TITLE'),
         input: 'password',
         inputPlaceholder: this.translate.instant('DELETE_ACCOUNT_PASSWORD_PLACEHOLDER'),

@@ -1,4 +1,4 @@
-import { Component, EventEmitter, inject, Output, HostListener } from '@angular/core';
+import { Component, EventEmitter, inject, OnDestroy, Output, HostListener } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -15,7 +15,7 @@ declare var bootstrap: any;
   templateUrl: './custom-budget-period-modal.component.html',
   styleUrls: ['./custom-budget-period-modal.component.css'],
 })
-export class CustomBudgetPeriodModalComponent {
+export class CustomBudgetPeriodModalComponent implements OnDestroy {
   @Output() periodSaved = new EventEmitter<{ name: string; startDate: string; endDate: string }>();
 
   private formBuilder = inject(FormBuilder);
@@ -97,5 +97,15 @@ export class CustomBudgetPeriodModalComponent {
       this.periodSaved.emit({ ...v, name: (v.name || '').trim() });
       this.close();
     }
+  }
+
+  ngOnDestroy(): void {
+    if (this.modalInstance) {
+      this.modalInstance.hide();
+    }
+    document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+    document.body.classList.remove('modal-open');
+    document.body.style.removeProperty('overflow');
+    document.body.style.removeProperty('padding-right');
   }
 }
