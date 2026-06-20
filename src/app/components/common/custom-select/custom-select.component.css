@@ -17,14 +17,6 @@
   padding-right: 0.75rem;
 }
 
-:host(.csl-fit-content) .csl-panel-list {
-  max-height: none;
-}
-
-:host(.csl-fit-content) .csl-list {
-  overflow-y: visible;
-}
-
 /* ── No-label mode: vertically center the value text ── */
 :host(.csl-no-label) .csl-trigger {
   padding-top: 0;

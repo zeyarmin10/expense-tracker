@@ -69,7 +69,7 @@
           <ul class="cat-list">
             <li *ngFor="let category of categories" class="cat-item"
                 [class.cat-item-editing]="editingCategoryId === category.id">
-              <div class="cat-item-avatar">
+              <div class="cat-item-avatar" [style.--cat-hue]="getCategoryHue(category.name)">
                 <lucide-icon [img]="getIconData(category.icon)" [size]="16"></lucide-icon>
               </div>
               <span class="cat-item-name">{{ category.name }}</span>

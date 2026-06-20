@@ -177,6 +177,15 @@ body {
   font-family: 'MyanmarUIFont', sans-serif;
 }
 
+.mat-typography h1,
+.mat-typography h2,
+.mat-typography h3,
+.mat-typography h4,
+.mat-typography h5,
+.mat-typography h6 {
+  font-family: 'MyanmarUIFont', sans-serif;
+}
+
 
 /* ── SweetAlert2 safe-area insets (edge-to-edge Android / notch) ── */
 .swal2-container {

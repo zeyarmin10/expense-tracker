@@ -7,7 +7,7 @@ import {
   LucideAngularModule, LucideIconData, Tag,
   Save, X, Plus, Tags, Pencil, Trash2,
 } from 'lucide-angular';
-import { CATEGORY_ICONS, getIconData } from '../../../utils/category-icons';
+import { CATEGORY_ICONS, getIconData, getCategoryHue } from '../../../utils/category-icons';
 import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import { ServiceICategory } from '../../../services/category';
 import Swal from 'sweetalert2';
@@ -65,6 +65,7 @@ export class CategoryModalComponent implements OnInit {
   showIconPicker = false;
 
   getIconData = getIconData;
+  getCategoryHue = getCategoryHue;
 
   selectIcon(name: string): void {
     this.selectedIcon = name;

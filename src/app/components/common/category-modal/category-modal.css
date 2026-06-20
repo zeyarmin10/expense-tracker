@@ -356,11 +356,8 @@
   width: 32px;
   height: 32px;
   border-radius: 8px;
-  background: rgba(11, 116, 255, 0.1);
-  border: 1px solid rgba(11, 116, 255, 0.2);
-  color: var(--accent, #0b74ff);
-  font-size: 0.78rem;
-  font-weight: 700;
+  background: hsl(var(--cat-hue, 220) 80% 55% / 0.15);
+  color: hsl(var(--cat-hue, 220) 80% 68%);
   display: flex;
   align-items: center;
   justify-content: center;
