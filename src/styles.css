@@ -905,6 +905,19 @@ body.light-mode .ov-bar-fill {
   font-family: inherit !important;
 }
 
+.fp-my-year {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  font-family: inherit;
+  color: var(--text);
+}
+
 .flatpickr-current-month .flatpickr-monthDropdown-months {
   background: var(--surface) !important;
   color: var(--text) !important;

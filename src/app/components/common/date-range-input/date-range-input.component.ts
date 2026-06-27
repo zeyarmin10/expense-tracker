@@ -8,6 +8,7 @@ import { LucideAngularModule, CalendarDays, X } from 'lucide-angular';
 import { TranslateService } from '@ngx-translate/core';
 import flatpickr from 'flatpickr';
 import type { Instance } from 'flatpickr/dist/types/instance';
+import { Burmese } from 'flatpickr/dist/l10n/my';
 
 function pad(n: number): string { return String(n).padStart(2, '0'); }
 function toDate(s: string): Date | null {
@@ -149,6 +150,24 @@ export class DateRangeInputComponent implements OnChanges, OnDestroy {
     container.appendChild(input);
 
     const defaultDates = [this.startDate, this.endDate].filter(Boolean) as string[];
+    const lang = this.translate.currentLang || this.translate.getDefaultLang();
+    const isMy = lang === 'my';
+
+    const applyYearOverlay = () => {
+      if (!isMy) return;
+      const yearInput = this.fp?.calendarContainer?.querySelector('.cur-year') as HTMLInputElement | null;
+      if (!yearInput) return;
+      const wrapper = yearInput.parentElement;
+      if (!wrapper) return;
+      let overlay = wrapper.querySelector<HTMLSpanElement>('.fp-my-year');
+      if (!overlay) {
+        overlay = document.createElement('span');
+        overlay.className = 'fp-my-year';
+        yearInput.style.color = 'transparent';
+        wrapper.appendChild(overlay);
+      }
+      overlay.textContent = toMy(+yearInput.value);
+    };
 
     this.fp = flatpickr(input, {
       inline: true,
@@ -157,6 +176,14 @@ export class DateRangeInputComponent implements OnChanges, OnDestroy {
       minDate: this.min || undefined,
       maxDate: this.max || undefined,
       disableMobile: true,
+      locale: isMy ? Burmese : undefined,
+      onDayCreate: (_dArr, _dStr, _fp, dayElem) => {
+        if (!isMy) return;
+        dayElem.textContent = (dayElem.textContent ?? '').replace(/\d/g, (d: string) => MY_DIGITS[+d]);
+      },
+      onReady: () => applyYearOverlay(),
+      onMonthChange: () => applyYearOverlay(),
+      onYearChange: () => applyYearOverlay(),
       onChange: (dates) => {
         if (dates.length === 1) {
           this.pendingStart = fromDate(dates[0]);
@@ -168,8 +195,8 @@ export class DateRangeInputComponent implements OnChanges, OnDestroy {
           const threeYearsLater = new Date(startD.getFullYear() + 3, startD.getMonth(), startD.getDate());
 
           if (endD > threeYearsLater) {
-            const lang = this.translate.currentLang || this.translate.getDefaultLang();
-            this.rangeError = lang === 'my'
+            const currentLang = this.translate.currentLang || this.translate.getDefaultLang();
+            this.rangeError = currentLang === 'my'
               ? `ရွေးချယ်သည့် ကာလ ${toMy(3)} နှစ်ထက် မကျော်ရပါ`
               : 'Date range cannot exceed 3 years';
             this.fp?.clear();

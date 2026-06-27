@@ -421,21 +421,22 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       })
     );
 
-    this.totalBudgetsByCurrency$ = data$.pipe(
-      map(({ budgets }) => {
+    this.totalBudgetsByCurrency$ = combineLatest([data$, dateRange$]).pipe(
+      map(([{ budgets }, { startDate, endDate }]) => {
         const budgetGroups = new Map<string, { total: number; individual: number; currency: string }>();
         const totalBudgets: { [currency: string]: number } = {};
 
         budgets.forEach((budget) => {
           if (!budget.period) return;
+          if (!this.isBudgetInRange(budget, startDate, endDate)) return;
 
           const budgetDate = this.safeParseDate(budget.period);
-          const periodKey = budget.type === 'yearly' 
+          const periodKey = budget.type === 'yearly'
             ? this.datePipe.transform(budgetDate, 'yyyy')
             : this.datePipe.transform(budgetDate, 'yyyy-MM');
-          
+
           if (!periodKey) return;
-        
+
           const groupKey = `${periodKey}_${budget.currency}`;
           const currentGroup = budgetGroups.get(groupKey) || { total: 0, individual: 0, currency: budget.currency };
 
@@ -446,7 +447,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
           }
           budgetGroups.set(groupKey, currentGroup);
         });
-        
+
         budgetGroups.forEach((group) => {
           const effectiveAmount = group.total > 0 ? group.total : group.individual;
           totalBudgets[group.currency] = (totalBudgets[group.currency] || 0) + effectiveAmount;
@@ -811,6 +812,12 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         },
       ],
     };
+  }
+
+  private isBudgetInRange(budget: ServiceIBudget, rangeStart: Date, rangeEnd: Date): boolean {
+    if (!budget.period) return false;
+    const periodDate = this.safeParseDate(budget.period);
+    return periodDate >= rangeStart && periodDate <= rangeEnd;
   }
 
   private calculateTotalByCurrency(items: any[], amountKey: string): { [currency: string]: number } {
