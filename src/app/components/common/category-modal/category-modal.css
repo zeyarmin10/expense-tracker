@@ -5,7 +5,7 @@
 /* ── Dialog sizing ── */
 .cat-modal-dialog {
   max-width: 460px;
-  margin: 1.5rem auto;
+  margin: calc(env(safe-area-inset-top) + 1rem) auto 1.5rem;
   width: 95%;
 }
 
