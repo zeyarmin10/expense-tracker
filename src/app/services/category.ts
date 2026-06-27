@@ -328,11 +328,11 @@ export class CategoryService {
 
   async addDefaultCategories(userId: string, language: string, categoriesRef?: DatabaseReference): Promise<void> {
     const defaultCategories = [
-      { en: 'Food', my: 'အစားအသောက်' },
-      { en: 'Transportation', my: 'သယ်ယူပို့ဆောင်ရေး' },
-      { en: 'Utilities', my: 'အသုံးစရိတ်' },
-      { en: 'Entertainment', my: 'ဖျော်ဖြေရေး' },
-      { en: 'Shopping', my: 'စျေးဝယ်' },
+      { en: 'Food',           my: 'အစားအသောက်',           icon: 'utensils'     },
+      { en: 'Transportation', my: 'သယ်ယူပို့ဆောင်ရေး',   icon: 'car'          },
+      { en: 'Utilities',      my: 'အသုံးစရိတ်',            icon: 'lightbulb'    },
+      { en: 'Entertainment',  my: 'ဖျော်ဖြေရေး',           icon: 'gamepad'      },
+      { en: 'Shopping',       my: 'စျေးဝယ်',               icon: 'shopping-bag' },
     ];
 
     const targetRef = categoriesRef || this.getCategoriesRef(userId);
@@ -341,6 +341,7 @@ export class CategoryService {
         language === 'my' ? categoryData.my : categoryData.en;
       const newCategory: Omit<ServiceICategory, 'id'> = {
         name: categoryName.trim(),
+        icon: categoryData.icon,
         userId: userId,
         createdAt: new Date().toISOString(),
       };
@@ -350,11 +351,11 @@ export class CategoryService {
 
   async addDefaultGroupCategories(groupId: string, language: string): Promise<void> {
     const defaultCategories = [
-      { en: 'Food', my: 'အစားအသောက်' },
-      { en: 'Transportation', my: 'သယ်ယူပို့ဆောင်ရေး' },
-      { en: 'Utilities', my: 'အသုံးစရိတ်' },
-      { en: 'Entertainment', my: 'ဖျော်ဖြေရေး' },
-      { en: 'Shopping', my: 'စျေးဝယ်' },
+      { en: 'Food',           my: 'အစားအသောက်',           icon: 'utensils'     },
+      { en: 'Transportation', my: 'သယ်ယူပို့ဆောင်ရေး',   icon: 'car'          },
+      { en: 'Utilities',      my: 'အသုံးစရိတ်',            icon: 'lightbulb'    },
+      { en: 'Entertainment',  my: 'ဖျော်ဖြေရေး',           icon: 'gamepad'      },
+      { en: 'Shopping',       my: 'စျေးဝယ်',               icon: 'shopping-bag' },
     ];
 
     const groupCategoriesRef = this.getGroupCategoriesRef(groupId);
@@ -363,6 +364,7 @@ export class CategoryService {
         language === 'my' ? categoryData.my : categoryData.en;
       const newCategory: Omit<ServiceICategory, 'id'> = {
         name: categoryName.trim(),
+        icon: categoryData.icon,
         groupId: groupId,
         createdAt: new Date().toISOString(),
       };

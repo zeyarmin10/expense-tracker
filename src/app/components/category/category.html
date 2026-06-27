@@ -4,7 +4,7 @@
     <!-- ── Page Header ── -->
     <div class="cat-page-header">
       <h2 class="cat-page-title">
-        <lucide-icon [img]="iconTags" [size]="16" class="cat-icon-accent"></lucide-icon>
+        <lucide-icon [img]="iconTags" [size]="25" class="cat-icon-accent"></lucide-icon>
         {{ "CREATE_CATEGORY_TITLE" | translate }}
       </h2>
     </div>
@@ -63,7 +63,7 @@
 
       <div class="cat-list-header">
         <h3 class="cat-list-title">
-          <lucide-icon [img]="iconTags" [size]="16" class="cat-icon-success"></lucide-icon>
+          <lucide-icon [img]="iconTags" [size]="20" class="cat-icon-success"></lucide-icon>
           {{ "EXISTING_CATEGORIES_TITLE" | translate }}
         </h3>
         <span class="cat-count-badge" *ngIf="(categories$ | async) as cats">
@@ -84,7 +84,7 @@
           <ng-container *ngIf="editingCategoryId !== category.id; else editMode">
             <div class="cat-item-inner">
               <span class="cat-item-icon" [style.--cat-hue]="getCategoryHue(category.name)">
-                <lucide-icon [img]="getIconData(category.icon)" [size]="18"></lucide-icon>
+                <lucide-icon [img]="getIconData(category.icon)" [size]="20"></lucide-icon>
               </span>
               <span class="cat-item-name">{{ category.name }}</span>
               <div class="cat-item-actions">

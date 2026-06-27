@@ -6,7 +6,7 @@
       <!-- Header -->
       <div class="cat-modal-header">
         <div class="cat-modal-title-wrap">
-          <lucide-icon [img]="iconTags" [size]="16" class="cat-modal-icon"></lucide-icon>
+          <lucide-icon [img]="iconTags" [size]="20" class="cat-modal-icon"></lucide-icon>
           <h5 class="cat-modal-title" id="categoryModalLabel">
             {{ (isEditMode ? 'EDIT_CATEGORY_TITLE' : 'CATEGORY_MODAL_TITLE') | translate }}
           </h5>
@@ -70,19 +70,32 @@
             <li *ngFor="let category of categories" class="cat-item"
                 [class.cat-item-editing]="editingCategoryId === category.id">
               <div class="cat-item-avatar" [style.--cat-hue]="getCategoryHue(category.name)">
-                <lucide-icon [img]="getIconData(category.icon)" [size]="16"></lucide-icon>
+                <lucide-icon [img]="getIconData(category.icon)" [size]="20"></lucide-icon>
               </div>
               <span class="cat-item-name">{{ category.name }}</span>
               <div class="cat-item-actions">
-                <button class="cat-action-btn cat-edit-btn" type="button"
-                  (click)="onEdit(category)" title="Edit">
-                  <lucide-icon [img]="iconPen" [size]="15" class="fa-edit-btn"></lucide-icon>
-                </button>
-                <button class="cat-action-btn cat-delete-btn" type="button"
-                  (click)="onDelete(category.id!)"
-                  [disabled]="isDeleting(category.id!)" title="Delete">
-                  <lucide-icon [img]="iconTrash2" [size]="15" class="fa-delete-btn"></lucide-icon>
-                </button>
+                <div class="cat-menu-wrap">
+                  <button class="cat-action-btn cat-more-btn" type="button"
+                    (click)="toggleMenu(category.id!, $event)" title="Options">
+                    <lucide-icon [img]="iconMoreVertical" [size]="16"></lucide-icon>
+                  </button>
+                  <div class="cat-float-menu"
+                    *ngIf="openMenuId === category.id"
+                    [style.top.px]="menuY"
+                    [style.left.px]="menuX">
+                    <button class="cat-float-item cat-float-edit" type="button"
+                      (click)="onEdit(category); openMenuId = null">
+                      <lucide-icon [img]="iconPen" [size]="14"></lucide-icon>
+                      <span>{{ 'EDIT_CATEGORY_TITLE' | translate }}</span>
+                    </button>
+                    <button class="cat-float-item cat-float-delete" type="button"
+                      (click)="onDelete(category.id!); openMenuId = null"
+                      [disabled]="isDeleting(category.id!)">
+                      <lucide-icon [img]="iconTrash2" [size]="14"></lucide-icon>
+                      <span>{{ 'DELETE_BUTTON' | translate }}</span>
+                    </button>
+                  </div>
+                </div>
               </div>
             </li>
           </ul>

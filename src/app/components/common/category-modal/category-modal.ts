@@ -5,7 +5,7 @@ import { CommonModule } from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import {
   LucideAngularModule, LucideIconData, Tag,
-  Save, X, Plus, Tags, Pencil, Trash2,
+  Save, X, Plus, Tags, Pencil, Trash2, MoreVertical,
 } from 'lucide-angular';
 import { CATEGORY_ICONS, getIconData, getCategoryHue } from '../../../utils/category-icons';
 import { BehaviorSubject, firstValueFrom } from 'rxjs';
@@ -57,6 +57,11 @@ export class CategoryModalComponent implements OnInit, OnDestroy {
   readonly iconTags = Tags;
   readonly iconPen = Pencil;
   readonly iconTrash2 = Trash2;
+  readonly iconMoreVertical = MoreVertical;
+
+  openMenuId: string | null = null;
+  menuX = 0;
+  menuY = 0;
 
   readonly categoryIcons = CATEGORY_ICONS;
 
@@ -71,6 +76,24 @@ export class CategoryModalComponent implements OnInit, OnDestroy {
     this.selectedIcon = name;
     this.selectedIconData = getIconData(name);
     this.showIconPicker = false;
+  }
+
+  toggleMenu(id: string, event: MouseEvent): void {
+    event.stopPropagation();
+    if (this.openMenuId === id) {
+      this.openMenuId = null;
+      return;
+    }
+    const btn = event.currentTarget as HTMLElement;
+    const rect = btn.getBoundingClientRect();
+    this.menuY = rect.bottom + 4;
+    this.menuX = rect.right - 128;
+    this.openMenuId = id;
+  }
+
+  @HostListener('document:click')
+  onDocumentClick(): void {
+    this.openMenuId = null;
   }
 
   @HostListener('window:popstate', ['$event'])

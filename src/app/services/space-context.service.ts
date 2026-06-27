@@ -272,12 +272,11 @@ export class SpaceContextService {
   }
 
   async switchSpace(userId: string, spaceId: string): Promise<void> {
-    const profile = await this.userDataService.fetchUserProfile(userId);
-    if (!profile?.spaceMemberships?.[spaceId] && profile?.personalSpaceId !== spaceId) {
-      throw new Error('Space access denied.');
-    }
-
     if (this.isVirtualPersonalSpaceId(spaceId)) {
+      const ownVirtualId = this.buildVirtualPersonalSpaceId(userId);
+      if (spaceId !== ownVirtualId) {
+        throw new Error('Space access denied.');
+      }
       await update(ref(this.db, `users/${userId}`), {
         currentSpaceId: spaceId,
         currentSpaceType: 'personal',
@@ -287,6 +286,11 @@ export class SpaceContextService {
         groupId: null,
       });
       return;
+    }
+
+    const profile = await this.userDataService.fetchUserProfile(userId);
+    if (!profile?.spaceMemberships?.[spaceId] && profile?.personalSpaceId !== spaceId) {
+      throw new Error('Space access denied.');
     }
 
     const spaceSnapshot = await get(ref(this.db, `spaces/${spaceId}`));
@@ -302,6 +306,17 @@ export class SpaceContextService {
         : null) as Partial<Space> | null;
 
     if (!space) {
+      if (profile?.personalSpaceId === spaceId) {
+        await update(ref(this.db, `users/${userId}`), {
+          currentSpaceId: spaceId,
+          currentSpaceType: 'personal',
+          currentSpaceName: 'My Personal',
+          currentSpaceRole: 'owner',
+          accountType: 'personal',
+          groupId: null,
+        });
+        return;
+      }
       throw new Error('Space not found.');
     }
 

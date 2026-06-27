@@ -593,7 +593,11 @@ export class CurrentSpaceTitleComponent implements OnInit, OnDestroy {
     } catch (error) {
       console.error('Space switch failed', error);
       this.spaceSwitchLoadingService.cancelSwitch(loadingToken);
-      this.toastService.showError('Failed to switch space.');
+      if (space.type === 'personal') {
+        this.menuOpen = false;
+      } else {
+        this.toastService.showError('Failed to switch space.');
+      }
     } finally {
       this.isSwitching = false;
     }

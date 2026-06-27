@@ -160,7 +160,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.errorMessage = null;
     this.successMessage = null;
     try {
-      const user = await this.authService.signInWithGoogle();
+      await this.authService.signInWithGoogle();
       // The currentUser$ subscription in ngOnInit will handle post-login actions
     } catch (error: any) {
       console.error('Google sign-in error:', error);
@@ -186,6 +186,7 @@ export class LoginComponent implements OnInit, OnDestroy {
       };
       await this.userDataService.createUserProfile(newUserProfile);
       profile = newUserProfile; // use the new profile
+      await this.categoryService.addDefaultCategories(user.uid, this.currentLang);
     } else if (user.photoURL && profile.photoURL !== user.photoURL) {
       await this.userDataService.updateUserProfile(user.uid, { photoURL: user.photoURL });
       profile = { ...profile, photoURL: user.photoURL };

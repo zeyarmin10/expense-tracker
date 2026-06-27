@@ -302,7 +302,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
 
     this.userProfileForm.get('budgetPeriod')?.valueChanges.subscribe((periodId) => {
       this.handleBudgetPeriodChange(periodId);
-      if (this.isFormReady && periodId && periodId !== 'custom') {
+      if (this.isFormReady && periodId != null && periodId !== 'custom') {
         this.autoSaveField('budgetPeriod');
       }
     });
@@ -410,7 +410,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   }
 
   private rebuildBudgetPeriodOptions(): void {
-    const standard = this.translatedBudgetPeriods.map(p => ({ value: p.code, label: p.name }));
+    const standard = this.translatedBudgetPeriods.map(p => ({ value: p.code ?? '', label: p.name }));
     const custom = this.customBudgetPeriods.map(p => ({ value: p.id, label: p.name }));
     this.budgetPeriodSelectOptions = [...standard, ...custom];
   }
