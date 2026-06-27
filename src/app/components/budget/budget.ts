@@ -265,13 +265,16 @@ export class BudgetComponent implements OnInit, OnDestroy {
       this.budgets$,
       this.expenses$,
       this.dateFilter$,
+      this.authService.userProfile$,
     ]).pipe(
-      map(([budgets, expenses, dateRange]) => {
+      map(([budgets, expenses, dateRange, profile]) => {
         const start = new Date(dateRange.start);
         const end = new Date(dateRange.end);
+        const profileCurrency = profile?.currency;
 
         const filteredBudgets = budgets
           .filter((b) => {
+            if (profileCurrency && b.currency !== profileCurrency) return false;
             if (b.type === 'monthly' && b.period) {
               const budgetDate = new Date(b.period);
               return budgetDate >= start && budgetDate <= end;
@@ -284,6 +287,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
           .sort((a, b) => new Date(a.period!).getTime() - new Date(b.period!).getTime());
 
         const filteredExpenses = expenses.filter((e) => {
+          if (profileCurrency && e.currency !== profileCurrency) return false;
           const expenseDate = new Date(e.date);
           return expenseDate >= start && expenseDate <= end;
         });

@@ -365,7 +365,12 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
           incomes: incomes$,
           budgets: budgets$,
         }).pipe(
-          map((data) => ({ ...data, loading: false })),
+          map((data) => ({
+            expenses: profile.currency ? data.expenses.filter(e => e.currency === profile.currency) : data.expenses,
+            incomes: profile.currency ? data.incomes.filter(i => i.currency === profile.currency) : data.incomes,
+            budgets: profile.currency ? data.budgets.filter(b => b.currency === profile.currency) : data.budgets,
+            loading: false,
+          })),
           catchError(err => {
             console.error('Error in dashboard data load', err);
             return of({ ...emptyData, loading: false });

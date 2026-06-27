@@ -267,10 +267,26 @@ export class Profit implements OnInit, OnDestroy {
       switchMap(() => this.budgetService.getBudgets())
     );
 
+    const profileCurrency$ = this.authService.userProfile$.pipe(
+      map(profile => profile?.currency ?? null)
+    );
+
+    const filteredExpenses$ = combineLatest([this.expenseService.getExpenses(), profileCurrency$]).pipe(
+      map(([expenses, currency]) => currency ? expenses.filter(e => e.currency === currency) : expenses)
+    );
+
+    const filteredIncomes$ = combineLatest([incomesData$, profileCurrency$]).pipe(
+      map(([incomes, currency]) => currency ? incomes.filter(i => i.currency === currency) : incomes)
+    );
+
+    const filteredBudgets$ = combineLatest([budgetsData$, profileCurrency$]).pipe(
+      map(([budgets, currency]) => currency ? budgets.filter(b => b.currency === currency) : budgets)
+    );
+
     const profitLossData$ = this.profitLossService.getProfitLossData(
-      this.expenseService.getExpenses(),
-      incomesData$,
-      budgetsData$,
+      filteredExpenses$,
+      filteredIncomes$,
+      filteredBudgets$,
       dateRange$
     ).pipe(shareReplay(1));
 

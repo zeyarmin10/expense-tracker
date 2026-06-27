@@ -207,8 +207,10 @@ searchTerm: string = '';
       this.dateFilter$,
       this.searchFilter$,
       this._selectedCategory$,
+      this.userProfile$,
     ]).pipe(
-      map(([expenses, { start, end }, searchTerm, selectedCategory]) => {
+      map(([expenses, { start, end }, searchTerm, selectedCategory, profile]) => {
+        const profileCurrency = profile?.currency;
         // --- MODIFIED: Daily Average Day Count Calculation ---
         const startDate = new Date(start);
         const originalEndDate = new Date(end);
@@ -233,6 +235,8 @@ searchTerm: string = '';
         // --- END MODIFICATION ---
 
         let filtered = expenses;
+
+        if (profileCurrency) filtered = filtered.filter(e => e.currency === profileCurrency);
 
         // Date filtering logic
         filtered = filtered.filter((expense) => {

@@ -395,10 +395,12 @@ export class Expense implements OnInit, OnDestroy {
       this._selectedDate$,
       this._activeCurrencyFilter$,
       this._activeCategoryFilter$,
+      this.authService.userProfile$,
     ]).pipe(
-      map(([expenses, selectedDate, activeCurrency, activeCategory]) => {
+      map(([expenses, _selectedDate, _activeCurrency, activeCategory, profile]) => {
+        const profileCurrency = profile?.currency;
         let filtered = this.filterByDateMode(expenses);
-        if (activeCurrency) filtered = filtered.filter(e => e.currency === activeCurrency);
+        if (profileCurrency) filtered = filtered.filter(e => e.currency === profileCurrency);
         if (activeCategory) filtered = filtered.filter(e => e.category === activeCategory);
         return filtered.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       })
