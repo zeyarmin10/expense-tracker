@@ -162,7 +162,6 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     this.initializeForms();
     this.initializeUserDataAndDateRange();
     this.initializeDataStreams();
-    Chart.defaults.font.family = 'MyanmarUIFont, Arial, sans-serif';
   }
 
   ngAfterViewInit(): void {
@@ -193,8 +192,8 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private initializeUserDataAndDateRange(): void {
-    this.userDisplayName$ = this.authService.currentUser$.pipe(
-      map((user) => user?.displayName || null)
+    this.userDisplayName$ = this.authService.userProfile$.pipe(
+      map((profile) => profile?.displayName || null)
     );
 
     this.authService.userProfile$
@@ -252,10 +251,10 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
           break;
         case 'custom':
           startDate = userProfile.budgetStartDate
-            ? new Date(userProfile.budgetStartDate)
+            ? this.safeParseDate(userProfile.budgetStartDate)
             : new Date(currentYear, 0, 1);
           endDate = userProfile.budgetEndDate
-            ? new Date(userProfile.budgetEndDate)
+            ? this.safeParseDate(userProfile.budgetEndDate)
             : new Date(currentYear, 11, 31);
           break;
         default:
@@ -320,11 +319,10 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private safeParseDate(dateStr: string): Date {
-    if (!dateStr) {
-        return new Date(0); 
-    }
+    if (!dateStr) return new Date(0);
     const parts = dateStr.split('-').map(s => parseInt(s, 10));
     const year = parts[0];
+    if (!year || isNaN(year)) return new Date(0);
     const month = parts.length > 1 ? parts[1] - 1 : 0;
     const day = parts.length > 2 ? parts[2] : 1;
     return new Date(year, month, day, 12, 0, 0);
@@ -426,13 +424,15 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       })
     );
 
-    this.totalBudgetsByCurrency$ = combineLatest([data$, dateRange$]).pipe(
-      map(([{ budgets }, { startDate, endDate }]) => {
+    this.totalBudgetsByCurrency$ = data$.pipe(
+      map(({ budgets }) => {
+        const startDate = this.safeParseDate(this._startDate$.getValue() || '');
+        const endDate = this.safeParseDate(this._endDate$.getValue() || '');
         const budgetGroups = new Map<string, { total: number; individual: number; currency: string }>();
         const totalBudgets: { [currency: string]: number } = {};
 
         budgets.forEach((budget) => {
-          if (!budget.period) return;
+          if (!budget.period || !budget.currency) return;
           if (!this.isBudgetInRange(budget, startDate, endDate)) return;
 
           const budgetDate = this.safeParseDate(budget.period);
@@ -605,6 +605,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   onTimeRangeChange(): void {
     this._startDate$.next(this.expenseFilterForm.value.startDate);
     this._endDate$.next(this.expenseFilterForm.value.endDate);
+    this.updateSummaryTitle(this.userProfile);
     this.cdr.detectChanges();
   }
 
@@ -737,8 +738,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     const startDate = this.safeParseDate(startDateValue);
     const endDate = this.safeParseDate(endDateValue);
 
-    interface MonthSlot { label: string; year: number; }
-    const monthSlots: MonthSlot[] = [];
+    const monthSlots: { label: string }[] = [];
     const expMap: Record<string, number> = {};
     const incMap: Record<string, number> = {};
     const budMap: Record<string, number> = {};
@@ -746,7 +746,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     let cur = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
     while (cur <= endDate) {
       const lbl = this.datePipe.transform(cur, 'MMM yy', undefined, currentLang) || '';
-      monthSlots.push({ label: lbl, year: cur.getFullYear() });
+      monthSlots.push({ label: lbl });
       expMap[lbl] = 0;
       incMap[lbl] = 0;
       budMap[lbl] = 0;
@@ -764,31 +764,32 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       if (incMap.hasOwnProperty(lbl)) incMap[lbl] += i.amount;
     });
 
-    // Budget aggregation per month (all-category takes precedence over individual)
-    const budGroups = new Map<string, { total: number; individual: number }>(
-      monthSlots.map(s => [s.label, { total: 0, individual: 0 }])
-    );
+    // Budget aggregation — mirrors totalBudgetsByCurrency$ logic exactly:
+    // group by periodKey (yyyy-MM or yyyy for yearly) so same-period budgets
+    // get the "all-category takes precedence over individual" treatment,
+    // then map each group to its month-slot label for display.
+    const slotLabelSet = new Set(monthSlots.map(s => s.label));
+    const periodGroups = new Map<string, { total: number; individual: number; lbl: string }>();
 
     budgets.forEach(b => {
       if (!b.period) return;
+      if (!this.isBudgetInRange(b, startDate, endDate)) return;
       const budDate = this.safeParseDate(b.period);
-      if (b.type === 'yearly') {
-        const perMonth = b.amount / 12;
-        monthSlots.filter(s => s.year === budDate.getFullYear()).forEach(slot => {
-          const g = budGroups.get(slot.label)!;
-          if (b.category === 'all') g.total += perMonth; else g.individual += perMonth;
-        });
-      } else {
-        const lbl = this.datePipe.transform(budDate, 'MMM yy', undefined, currentLang) || '';
-        const g = budGroups.get(lbl);
-        if (!g) return;
-        if (b.category === 'all') g.total += b.amount; else g.individual += b.amount;
-      }
+      const periodKey = b.type === 'yearly'
+        ? this.datePipe.transform(budDate, 'yyyy') || ''
+        : this.datePipe.transform(budDate, 'yyyy-MM') || '';
+      if (!periodKey) return;
+      const lbl = this.datePipe.transform(budDate, 'MMM yy', undefined, currentLang) || '';
+      if (!slotLabelSet.has(lbl)) return;
+      const key = `${periodKey}_${b.currency || ''}`;
+      const g = periodGroups.get(key) || { total: 0, individual: 0, lbl };
+      if (b.category === 'all') g.total += b.amount; else g.individual += b.amount;
+      periodGroups.set(key, g);
     });
 
-    monthSlots.forEach(slot => {
-      const g = budGroups.get(slot.label)!;
-      budMap[slot.label] = g.total > 0 ? g.total : g.individual;
+    periodGroups.forEach(({ total, individual, lbl }) => {
+      const effective = total > 0 ? total : individual;
+      budMap[lbl] = (budMap[lbl] || 0) + effective;
     });
 
     return {
@@ -827,6 +828,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private calculateTotalByCurrency(items: any[], amountKey: string): { [currency: string]: number } {
     return items.reduce((acc, item) => {
+      if (!item.currency) return acc;
       acc[item.currency] = (acc[item.currency] || 0) + item[amountKey];
       return acc;
     }, {} as { [currency: string]: number });

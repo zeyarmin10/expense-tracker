@@ -241,13 +241,13 @@ type SpaceImageSource = {
     }
 
     .space-title-avatar-trigger {
-      width: 32px;
-      height: 32px;
+      width: 35px;
+      height: 35px;
     }
 
     .space-title-avatar-sm {
-      width: 30px;
-      height: 30px;
+      width: 40px;
+      height: 40px;
       border-radius: 10px;
     }
 
