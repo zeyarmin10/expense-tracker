@@ -2,7 +2,6 @@ import { inject, Injectable } from '@angular/core';
 import { combineLatest, map, Observable } from 'rxjs';
 import { ServiceIExpense } from './expense'; // Assuming path
 import { ServiceIIncome } from './income';   // Assuming path
-import { ServiceIBudget } from './budget';   // Assuming path
 
 // Interface for the date range object provided by DateFilterService
 interface DateRange {
@@ -25,13 +24,10 @@ export interface DailyCashFlowData {
 export interface ProfitLossData {
   expenses: ServiceIExpense[];
   incomes: ServiceIIncome[];
-  budgets: ServiceIBudget[];
   dailyCashFlow: DailyCashFlowData[];
   totalExpenses: CurrencyMap;
   totalIncomes: CurrencyMap;
-  totalBudgets: CurrencyMap;
   profitLoss: CurrencyMap;
-  remainingBalance: CurrencyMap;
 }
 
 @Injectable({
@@ -53,22 +49,14 @@ export class ProfitLossService {
   getProfitLossData(
     expenses$: Observable<ServiceIExpense[]>,
     incomes$: Observable<ServiceIIncome[]>,
-    budgets$: Observable<ServiceIBudget[]>,
     dateRange$: Observable<DateRange>
   ): Observable<ProfitLossData> {
-    return combineLatest([
-      expenses$,
-      incomes$,
-      budgets$,
-      dateRange$,
-    ]).pipe(
-      map(([expenses, incomes, budgets, range]) => {
+    return combineLatest([expenses$, incomes$, dateRange$]).pipe(
+      map(([expenses, incomes, range]) => {
         const start = new Date(range.start);
         const end = new Date(range.end);
-        // Ensure end date includes the entire day
         end.setHours(23, 59, 59, 999);
 
-        // --- 1. Filtering ---
         const filteredExpenses = expenses.filter((e) => {
           const expenseDate = new Date(e.date);
           return expenseDate >= start && expenseDate <= end;
@@ -79,69 +67,18 @@ export class ProfitLossService {
           return incomeDate >= start && incomeDate <= end;
         });
 
-        const filteredBudgets = budgets.filter((b) => {
-          if (!b.period) return false;
-
-          let budgetStart: Date;
-          let budgetEnd: Date;
-
-          switch (b.type) {
-            case 'yearly': {
-              const year = parseInt(b.period, 10);
-              if (isNaN(year)) return false;
-              budgetStart = new Date(year, 0, 1);
-              budgetEnd = new Date(year, 11, 31, 23, 59, 59, 999);
-              break;
-            }
-            case 'monthly': {
-              const [year, month] = b.period.split('-').map(Number);
-              if (isNaN(year) || isNaN(month)) return false;
-              budgetStart = new Date(year, month - 1, 1);
-              budgetEnd = new Date(year, month, 0, 23, 59, 59, 999);
-              break;
-            }
-            case 'weekly': {
-              budgetStart = new Date(b.period);
-              if (isNaN(budgetStart.getTime())) return false;
-              budgetEnd = new Date(budgetStart);
-              budgetEnd.setDate(budgetStart.getDate() + 6);
-              budgetEnd.setHours(23, 59, 59, 999);
-              break;
-            }
-            default:
-              return false;
-          }
-          // Check for overlap: budget period intersects with the filter range.
-          return budgetStart <= end && budgetEnd >= start;
-        });
-
-        // --- 2. Calculation of Totals ---
         const totalExpenses = this.calculateTotal(filteredExpenses, 'totalCost');
         const totalIncomes = this.calculateTotal(filteredIncomes, 'amount');
-        const totalBudgets = this.calculateTotal(filteredBudgets, 'amount');
-        const dailyCashFlow = this.calculateDailyCashFlow(
-          filteredExpenses,
-          filteredIncomes
-        );
-
-        // --- 3. Profit/Loss and Balance Calculations ---
+        const dailyCashFlow = this.calculateDailyCashFlow(filteredExpenses, filteredIncomes);
         const profitLoss = this.calculateProfitLoss(totalIncomes, totalExpenses);
-        const remainingBalance = this.calculateProfitLoss(
-          totalBudgets,
-          totalExpenses
-        );
 
-        // --- 4. Return Combined Data ---
         return {
           expenses: filteredExpenses,
           incomes: filteredIncomes,
-          budgets: filteredBudgets,
           dailyCashFlow,
           totalExpenses,
           totalIncomes,
-          totalBudgets,
           profitLoss,
-          remainingBalance,
         };
       })
     );

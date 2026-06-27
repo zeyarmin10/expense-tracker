@@ -114,7 +114,6 @@ interface SpendingMonitorItem {
     FormsModule,
     CurrentSpaceTitleComponent,
     ShowFullTextDirective,
-    LucideAngularModule,
     CustomSelectComponent,
     DateInputComponent,
     DateRangeInputComponent,
@@ -235,9 +234,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
       now.getMonth(),
       now.getDate()
     );
-
-    this.startDate = this.datePipe.transform(oneYearAgo, 'yyyy-MM-dd');
-    this.endDate = this.datePipe.transform(now, 'yyyy-MM-dd');
 
     this.budgetForm = this.fb.group({
       type: ['monthly', Validators.required],
@@ -554,6 +550,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
     this.totalExpensesByCurrency$ = filteredData$.pipe(
       map(({ expenses }) => {
         return expenses.reduce((acc, expense) => {
+          if (!expense.currency) return acc; // B5: guard undefined currency
           acc[expense.currency] =
             (acc[expense.currency] || 0) + expense.totalCost;
           return acc;
@@ -600,6 +597,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
         });
 
         expenses.forEach((expense) => {
+          if (!expense.currency) return; // B6: guard undefined currency
           allCurrencies.add(expense.currency);
           balance[expense.currency] =
             (balance[expense.currency] || 0) - expense.totalCost;
@@ -723,15 +721,18 @@ export class BudgetComponent implements OnInit, OnDestroy {
       })
     );
 
-    this.budgetChartData$.subscribe((data) => {
-      setTimeout(() => {
-        this.renderChart(data);
-      }, 100);
-    });
-
-    // Re-render chart when theme changes
-    this.themeObserver = new MutationObserver(() => {
+    // B1: add to subscriptions so ngOnDestroy cleans it up
+    this.subscriptions.add(
       this.budgetChartData$.subscribe((data) => {
+        setTimeout(() => {
+          this.renderChart(data);
+        }, 100);
+      })
+    );
+
+    // B2: use take(1) so each theme-change creates at most one emission, not an ever-growing leak
+    this.themeObserver = new MutationObserver(() => {
+      this.budgetChartData$.pipe(take(1)).subscribe((data) => {
         if (data) this.renderChart(data);
       });
     });
@@ -784,8 +785,9 @@ export class BudgetComponent implements OnInit, OnDestroy {
           this.resetForm();
           this.isBudgetFormCollapsed = true;
           this.refreshBudgets$.next();
+          // B3: only reset date filter on space change, not every profile emit
+          this.setInitialDateFilter(profile);
         }
-        this.setInitialDateFilter(profile);
 
         const defaultCurrency = profile.currency || 'MMK';
         this.budgetForm.get('currency')?.setValue(defaultCurrency);
@@ -831,11 +833,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
 
     if (type === 'monthly') {
       periodControl?.setValidators(Validators.required);
-      const firstDayOfMonth = new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth(),
-        1
-      );
       periodControl?.setValue(
         this.datePipe.transform(currentDate, 'yyyy-MM-dd')
       );

@@ -1301,8 +1301,8 @@ body.light-mode .mob-drawer-backdrop {
 
 .mob-drawer-group-avatar {
   flex-shrink: 0;
-  width: 28px;
-  height: 28px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   overflow: hidden;
   border: 2px solid rgba(11, 116, 255, 0.35);

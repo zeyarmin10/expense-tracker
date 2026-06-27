@@ -4,7 +4,7 @@
     <!-- Page Header -->
     <div class="pnl-page-header">
       <h2 class="pnl-page-title">
-        <lucide-icon [img]="iconChartLine" [size]="15" class="pnl-icon-accent"></lucide-icon>
+        <lucide-icon [img]="iconChartLine" [size]="25" class="pnl-icon-accent"></lucide-icon>
         {{ 'PROFIT_LOSS_TITLE' | translate }}
       </h2>
     </div>
@@ -74,23 +74,6 @@
         </div>
         </div>
 
-      <!-- Total Budget -->
-      <div class="pnl-card pnl-card-budget">
-        <div class="pnl-card-left">
-          <span class="pnl-card-label">{{ 'TOTAL_BUDGET' | translate }}</span>
-          <ng-container *ngIf="totalBudgetsByCurrency$ | async as totals; else cardLoading">
-            <ng-container *ngIf="(totals | keyvalue).length > 0; else cardNoData">
-              <span *ngFor="let t of totals | keyvalue" class="pnl-card-amount pnl-amount-budget">
-                {{ formatService.formatAmountShort(t.value, t.key) }}
-              </span>
-            </ng-container>
-          </ng-container>
-          </div>
-        <div class="pnl-card-right">
-          <span class="pnl-card-icon pnl-icon-budget"><lucide-icon [img]="iconPiggyBank" [size]="30"></lucide-icon></span>
-        </div>
-        </div>
-
       <!-- Profit / Loss -->
       <div class="pnl-card" [ngClass]="getProfitLossCardClass(totalProfitLossByCurrency$ | async)">
         <ng-container *ngIf="totalProfitLossByCurrency$ | async as profits; else cardLoading">
@@ -110,25 +93,6 @@
               </div>
           </ng-container>
         </ng-container>
-      </div>
-
-      <!-- Remaining Balance -->
-      <div class="pnl-card pnl-card-balance"
-        [class.pnl-card-balance-negative]="isBalanceNegative(remainingBalanceByCurrency$ | async)">
-        <div class="pnl-card-left">
-          <span class="pnl-card-label">{{ 'REMAINING_BALANCE' | translate }}</span>
-          <ng-container *ngIf="remainingBalanceByCurrency$ | async as totals; else cardLoading">
-            <ng-container *ngIf="(totals | keyvalue).length > 0; else cardNoData">
-              <span *ngFor="let t of totals | keyvalue" class="pnl-card-amount" [class.pnl-amount-profit]="t.value >= 0"
-                [class.pnl-amount-loss]="t.value < 0">
-                {{ formatService.formatAmountShort(t.value, t.key) }}
-              </span>
-            </ng-container>
-          </ng-container>
-        </div>
-        <div class="pnl-card-right">
-          <span class="pnl-card-icon pnl-icon-balance"><lucide-icon [img]="getBalanceIcon(remainingBalanceByCurrency$ | async)" [size]="30"></lucide-icon></span>
-        </div>
       </div>
 
     </div>
@@ -382,57 +346,6 @@
             </ng-container>
             <ng-template #listEmpty>
               <p class="pnl-empty">{{ 'NO_INCOME_DATA' | translate }}</p>
-            </ng-template>
-          </ng-container>
-          <ng-template #listLoading>
-            <p class="pnl-empty">{{ 'LOADING_DATA' | translate }}</p>
-          </ng-template>
-        </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Recorded Budgets -->
-    <div class="pnl-panel">
-      <button class="pnl-panel-toggle" type="button" (click)="toggleVisibility('recordedBudgets')">
-        <span class="pnl-panel-toggle-left">
-          <lucide-icon [img]="iconPiggyBank" [size]="15" class="pnl-icon-budget"></lucide-icon>
-          {{ 'RECORDED_BUDGETS' | translate }}
-        </span>
-        <lucide-icon [img]="iconChevronDown" [size]="15" class="pnl-chevron" [class.open]="!isRecordedBudgetsCollapsed"></lucide-icon>
-      </button>
-      <div class="pnl-panel-body" [class.open]="!isRecordedBudgetsCollapsed">
-        <div class="pnl-panel-inner">
-        <div class="pnl-list-body">
-          <ng-container *ngIf="filteredBudgets$ | async as budgets; else listLoading">
-            <ng-container *ngIf="budgets.length > 0; else listEmpty">
-              <div *ngFor="let budget of budgets" class="pnl-row">
-                <div class="pnl-row-left">
-                  <span class="pnl-row-amount pnl-amount-budget">
-                    {{ formatService.formatAmountWithSymbol(budget.amount, budget.currency) }}
-                  </span>
-                  <span class="pnl-row-badge pnl-row-badge-monthly" *ngIf="budget.type === 'monthly'">
-                    {{ 'MONTHLY' | translate }}
-                  </span>
-                  <span class="pnl-row-badge pnl-row-badge-yearly" *ngIf="budget.type === 'yearly'">
-                    {{ 'YEARLY' | translate }}
-                  </span>
-                  <span class="pnl-row-badge pnl-row-badge-cat" *ngIf="budget.category && budget.category !== 'all'" [style.--cat-hue]="getCategoryHue(budget.category)">
-                    <lucide-icon [img]="getIconForCategory(budget.category)" [size]="11" style="flex-shrink:0"></lucide-icon>
-                    {{ budget.category }}
-                  </span>
-                  <span class="pnl-row-date">
-                    {{ budget.type === 'monthly' ? this.formatService.formatLocalizedDate(budget.period) : budget.period || '' }}
-                  </span>
-                </div>
-                <button *ngIf="canManageProfitActions" class="pnl-delete-btn"
-                  type="button" (click)="confirmDeleteBudget(budget.id)">
-                  <lucide-icon [img]="iconTrash2" [size]="15"></lucide-icon>
-                </button>
-              </div>
-            </ng-container>
-            <ng-template #listEmpty>
-              <p class="pnl-empty">{{ 'NO_BUDGETS_FOUND' | translate }}</p>
             </ng-template>
           </ng-container>
           <ng-template #listLoading>

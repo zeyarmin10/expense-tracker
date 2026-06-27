@@ -23,17 +23,17 @@ import {
   map,
   switchMap,
   shareReplay,
+  take,
 } from 'rxjs';
 import { ServiceIExpense } from '../../services/expense'; // Assuming types are kept here
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ServiceIIncome, IncomeService } from '../../services/income';
-import { ServiceIBudget, BudgetService } from '../../services/budget';
 import { CategoryService, ServiceICategory } from '../../services/category';
 import { LucideAngularModule } from 'lucide-angular';
 import { getIconData, getCategoryHue } from '../../utils/category-icons';
 import {
   TrendingUp, TrendingDown, Banknote, ShoppingCart, ChartLine,
-  PiggyBank, ChartColumn, ChevronDown, ChevronUp, Save, Trash2, Plus,
+  ChartColumn, ChevronDown, Save, Trash2,
   LucideIconData,
 } from 'lucide-angular';
 import { AuthService } from '../../services/auth';
@@ -43,10 +43,7 @@ import {
   canManageSharedSpace,
   getCurrentSpaceRole,
 } from '../../services/user-data';
-import {
-  AVAILABLE_CURRENCIES,
-  BURMESE_MONTH_ABBREVIATIONS,
-} from '../../core/constants/app.constants';
+import { AVAILABLE_CURRENCIES } from '../../core/constants/app.constants';
 
 import { FormatService } from '../../services/format.service';
 import { DateFilterService } from '../../services/date-filter.service';
@@ -56,7 +53,6 @@ import {
   ProfitLossService,
 } from '../../services/profit-loss.service';
 import Swal from 'sweetalert2';
-import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
 import { UserAvatarComponent } from '../common/user-avatar/user-avatar.component';
 import { ShowFullTextDirective } from '../../directives/show-full-text.directive';
 import { CustomSelectComponent, SelectOption } from '../common/custom-select/custom-select.component';
@@ -100,7 +96,6 @@ type DailyCashFlowChartItem = DailyCashFlowData & {
     ReactiveFormsModule,
     TranslateModule,
     FormsModule,
-    CurrentSpaceTitleComponent,
     UserAvatarComponent,
     ShowFullTextDirective,
     LucideAngularModule,
@@ -119,7 +114,6 @@ export class Profit implements OnInit, OnDestroy {
   public datePipe = inject(DatePipe);
   private expenseService = inject(ExpenseService);
   private incomeService = inject(IncomeService);
-  private budgetService = inject(BudgetService);
   private translate = inject(TranslateService);
   private authService = inject(AuthService);
   private cdr = inject(ChangeDetectorRef);
@@ -146,11 +140,9 @@ export class Profit implements OnInit, OnDestroy {
   public userRole: string | null = null;
 
   private refreshIncomes$ = new BehaviorSubject<void>(undefined);
-  private refreshBudgets$ = new BehaviorSubject<void>(undefined);
 
   // Observables for filtered data (likely provided by ProfitLossService)
   incomes$!: Observable<ServiceIIncome[]>;
-  filteredBudgets$!: Observable<ServiceIBudget[]>;
   dailyCashFlow$!: Observable<DailyCashFlowData[]>;
   dailyCashFlowSummary$!: Observable<DailyCashFlowSummary>;
   dailyCashFlowChart$!: Observable<DailyCashFlowChartItem[]>;
@@ -159,8 +151,6 @@ export class Profit implements OnInit, OnDestroy {
   totalExpensesByCurrency$!: Observable<CurrencyMap>;
   totalIncomesByCurrency$!: Observable<CurrencyMap>;
   totalProfitLossByCurrency$!: Observable<CurrencyMap>;
-  totalBudgetsByCurrency$!: Observable<CurrencyMap>;
-  remainingBalanceByCurrency$!: Observable<CurrencyMap>;
 
   // Chart data observables
   profitChartData$!: Observable<any>;
@@ -185,13 +175,11 @@ export class Profit implements OnInit, OnDestroy {
   isIncomeFormCollapsed: boolean = true;
   isDailyCashFlowCollapsed: boolean = true;
   isRecordedIncomesCollapsed: boolean = true;
-  isRecordedBudgetsCollapsed: boolean = true;
   get canManageProfitActions(): boolean { return canManageSharedSpace(this.userProfile); }
 
   readonly iconChartLine = ChartLine;
   readonly iconBanknote = Banknote;
   readonly iconShoppingCart = ShoppingCart;
-  readonly iconPiggyBank = PiggyBank;
   readonly iconChevronDown = ChevronDown;
   readonly iconSave = Save;
   readonly iconTrash2 = Trash2;
@@ -263,10 +251,6 @@ export class Profit implements OnInit, OnDestroy {
       switchMap(() => this.incomeService.getIncomes())
     );
 
-    const budgetsData$ = this.refreshBudgets$.pipe(
-      switchMap(() => this.budgetService.getBudgets())
-    );
-
     const profileCurrency$ = this.authService.userProfile$.pipe(
       map(profile => profile?.currency ?? null)
     );
@@ -279,24 +263,18 @@ export class Profit implements OnInit, OnDestroy {
       map(([incomes, currency]) => currency ? incomes.filter(i => i.currency === currency) : incomes)
     );
 
-    const filteredBudgets$ = combineLatest([budgetsData$, profileCurrency$]).pipe(
-      map(([budgets, currency]) => currency ? budgets.filter(b => b.currency === currency) : budgets)
-    );
-
     const profitLossData$ = this.profitLossService.getProfitLossData(
       filteredExpenses$,
       filteredIncomes$,
-      filteredBudgets$,
       dateRange$
     ).pipe(shareReplay(1));
 
     this.incomes$ = profitLossData$.pipe(
       map((data) =>
-        [...data.incomes] // copy to avoid mutating the source array
-          .sort((a, b) => (new Date(a.date ?? 0).getTime()) - (new Date(b.date ?? 0).getTime()))
+        [...data.incomes]
+          .sort((a, b) => (new Date(b.date ?? 0).getTime()) - (new Date(a.date ?? 0).getTime()))
       )
     );
-    this.filteredBudgets$ = profitLossData$.pipe(map((data) => data.budgets));
     const dailyCashFlowData$ = profitLossData$.pipe(
       map((data) => data.dailyCashFlow)
     );
@@ -313,14 +291,8 @@ export class Profit implements OnInit, OnDestroy {
     this.totalIncomesByCurrency$ = profitLossData$.pipe(
       map((data) => data.totalIncomes)
     );
-    this.totalBudgetsByCurrency$ = profitLossData$.pipe(
-      map((data) => data.totalBudgets)
-    );
     this.totalProfitLossByCurrency$ = profitLossData$.pipe(
       map((data) => data.profitLoss)
-    );
-    this.remainingBalanceByCurrency$ = profitLossData$.pipe(
-      map((data) => data.remainingBalance)
     );
 
     // Chart Data Generation
@@ -429,6 +401,7 @@ export class Profit implements OnInit, OnDestroy {
     this.subscriptions.unsubscribe();
     if (this.profitChartInstance) {
       this.profitChartInstance.destroy();
+      this.profitChartInstance = undefined;
     }
     this.themeObserver?.disconnect();
   }
@@ -459,39 +432,29 @@ export class Profit implements OnInit, OnDestroy {
           if (key !== this.activeSpaceModeKey) {
             this.activeSpaceModeKey = key;
             this.refreshIncomes$.next();
-            this.refreshBudgets$.next();
+            this.resetForm();
+
+            const budgetPeriod = profile?.budgetPeriod;
+            let dateFilter: string;
+            switch (budgetPeriod) {
+              case 'yearly':  dateFilter = 'currentYear';  break;
+              case 'monthly': dateFilter = 'currentMonth'; break;
+              case 'weekly':  dateFilter = 'currentWeek';  break;
+              case 'custom':
+                if (profile?.budgetStartDate && profile?.budgetEndDate) {
+                  this.startDate = profile.budgetStartDate;
+                  this.endDate = profile.budgetEndDate;
+                  dateFilter = 'custom';
+                } else {
+                  dateFilter = 'currentMonth';
+                }
+                break;
+              default: dateFilter = 'currentMonth';
+            }
+            this.setDateFilter(dateFilter, true);
           }
           const defaultCurrency = profile?.currency || 'MMK';
           this.incomeForm.get('currency')?.setValue(defaultCurrency);
-          this.resetForm();
-
-          const budgetPeriod = profile?.budgetPeriod;
-          let dateFilter: string;
-
-          switch (budgetPeriod) {
-            case 'yearly':
-              dateFilter = 'currentYear';
-              break;
-            case 'monthly':
-              dateFilter = 'currentMonth';
-              break;
-            case 'weekly':
-              dateFilter = 'currentWeek';
-              break;
-            case 'custom':
-              if (profile?.budgetStartDate && profile?.budgetEndDate) {
-                this.startDate = profile.budgetStartDate;
-                this.endDate = profile.budgetEndDate;
-                dateFilter = 'custom';
-              } else {
-                dateFilter = 'currentMonth';
-              }
-              break;
-            default:
-              dateFilter = 'currentMonth';
-          }
-
-          this.setDateFilter(dateFilter, true);
 
           this.userRole = getCurrentSpaceRole(profile);
       }
@@ -539,9 +502,9 @@ export class Profit implements OnInit, OnDestroy {
       })
     );
 
-    // Re-render chart when theme changes
+    // P1: use take(1) so each theme-change creates at most one emission, not an ever-growing leak
     this.themeObserver = new MutationObserver(() => {
-      this.profitChartData$.subscribe((data) => {
+      this.profitChartData$.pipe(take(1)).subscribe((data) => {
         if (data) this.renderProfitChart(data);
       });
     });
@@ -617,41 +580,6 @@ export class Profit implements OnInit, OnDestroy {
     }
   }
 
-  // --- Budget Management ---
-
-  confirmDeleteBudget(budgetId: string | undefined): void {
-    if (!this.canManageProfitActions) {
-      return;
-    }
-    if (budgetId) {
-        Swal.fire({
-            title: this.translate.instant('CONFIRM_DELETE_TITLE'),
-            text: this.translate.instant('CONFIRM_DELETE_BUDGET'),
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: this.translate.instant('DELETE_BUTTON'),
-            cancelButtonText: this.translate.instant('CANCEL_BUTTON'),
-            reverseButtons: true
-          }).then((result) => {
-            if (result.isConfirmed) {
-              this.budgetService
-                .deleteBudget(budgetId)
-                .then(() => {
-                  Toast.fire({ icon: 'success', title: this.translate.instant('BUDGET_DELETE_SUCCESS') });
-                  this.refreshBudgets$.next();
-                })
-                .catch((error) => {
-                    console.error('Error deleting budget:', error);
-                    Toast.fire({
-                        icon: 'error',
-                        title: error.message || this.translate.instant('BUDGET_DELETE_ERROR')
-                      });
-                });
-            }
-          });
-    }
-  }
-
   // --- UI/State Management ---
 
   private getSpaceModeKey(profile: UserProfile | null): string {
@@ -672,13 +600,7 @@ export class Profit implements OnInit, OnDestroy {
     });
   }
 
-  toggleVisibility(
-    section:
-      | 'incomeForm'
-      | 'dailyCashFlow'
-      | 'recordedIncomes'
-      | 'recordedBudgets'
-  ): void {
+  toggleVisibility(section: 'incomeForm' | 'dailyCashFlow' | 'recordedIncomes'): void {
     if (section === 'incomeForm') {
       this.isIncomeFormCollapsed = !this.isIncomeFormCollapsed;
       if (!this.isIncomeFormCollapsed) {
@@ -691,8 +613,6 @@ export class Profit implements OnInit, OnDestroy {
       this.isDailyCashFlowCollapsed = !this.isDailyCashFlowCollapsed;
     } else if (section === 'recordedIncomes') {
       this.isRecordedIncomesCollapsed = !this.isRecordedIncomesCollapsed;
-    } else if (section === 'recordedBudgets') {
-      this.isRecordedBudgetsCollapsed = !this.isRecordedBudgetsCollapsed;
     }
   }
 
@@ -721,6 +641,7 @@ export class Profit implements OnInit, OnDestroy {
 
     if (this.profitChartInstance) {
       this.profitChartInstance.destroy();
+      this.profitChartInstance = undefined;
     }
 
     const isLight = document.body.classList.contains('light-mode');
@@ -859,21 +780,4 @@ export class Profit implements OnInit, OnDestroy {
     }));
   }
 
-  getBalanceIcon(balances: { [key: string]: number } | null | undefined): LucideIconData {
-    if (!balances) return this.iconTrendingUp;
-    const totalBalance = Object.values(balances).reduce((sum, value) => sum + value, 0);
-    return totalBalance >= 0 ? this.iconTrendingUp : this.iconTrendingDown;
-  }
-
-  isBalanceNegative(balances: { [key: string]: number } | null | undefined): boolean {
-    if (!balances) {
-      return false;
-    }
-
-    const totalBalance = Object.values(balances).reduce(
-      (sum, value) => sum + value,
-      0
-    );
-    return totalBalance < 0;
-  }
 }

@@ -96,7 +96,7 @@
               <div class="ov-bar-meta">
                 <span class="ov-bar-dot ov-bar-dot-all"></span>
                 <span class="ov-bar-name">{{ 'ALL_CATEGORIES' | translate }}</span>
-                <span class="ov-bar-amount" *ngFor="let t of getAllCategoriesTotal()">
+                <span class="ov-bar-amount" *ngFor="let t of allCategoriesTotal">
                   {{ formatService.formatAmountShort(t.amount, t.currency) }}
                 </span>
               </div>

@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ExpenseService, ServiceIExpense as IExpense } from '../../services/expense';
@@ -8,39 +8,22 @@ import {
   combineLatest,
   map,
   of,
-  switchMap,
+  shareReplay,
+  Subject,
+  takeUntil,
 } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { BaseChartDirective } from 'ng2-charts';
-import {
-  ChartData,
-  ChartOptions,
-  ChartType,
-  Chart,
-  PieController,
-  ArcElement,
-  Tooltip,
-  Legend,
-} from 'chart.js';
 import { Router } from '@angular/router';
 import { FormatService } from '../../services/format.service';
-import {
-  DateFilterService,
-  DateRange,
-} from '../../services/date-filter.service';
+import { DateFilterService, DateRange } from '../../services/date-filter.service';
 import { AuthService } from '../../services/auth';
 import { UserDataService, UserProfile } from '../../services/user-data';
 import { CategoryService, ServiceICategory } from '../../services/category';
-import { LucideAngularModule, Search, ChartColumn, ChartPie, List, Flame } from 'lucide-angular';
+import { LucideAngularModule, Search, ChartColumn, List, Flame } from 'lucide-angular';
 import { getIconData, getCategoryHue } from '../../utils/category-icons';
-import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
 import { UserAvatarComponent } from '../common/user-avatar/user-avatar.component';
 import { CustomSelectComponent, SelectOption } from '../common/custom-select/custom-select.component';
-import { DateInputComponent } from '../common/date-input/date-input.component';
 import { DateRangeInputComponent } from '../common/date-range-input/date-range-input.component';
-
-// Register the required chart components
-Chart.register(PieController, ArcElement, Tooltip, Legend);
 
 interface CurrencySummary {
   currency: string;
@@ -61,19 +44,16 @@ interface CategoryTotal {
     CommonModule,
     FormsModule,
     TranslateModule,
-    BaseChartDirective,
-    CurrentSpaceTitleComponent,
     UserAvatarComponent,
     LucideAngularModule,
     CustomSelectComponent,
-    DateInputComponent,
     DateRangeInputComponent,
   ],
   providers: [DatePipe],
   templateUrl: './expense-overview.html',
   styleUrls: ['./expense-overview.css'],
 })
-export class ExpenseOverview implements OnInit {
+export class ExpenseOverview implements OnInit, OnDestroy {
   expenseService = inject(ExpenseService);
   dateFilterService = inject(DateFilterService);
   datePipe = inject(DatePipe);
@@ -81,6 +61,8 @@ export class ExpenseOverview implements OnInit {
   authService = inject(AuthService);
   userDataService = inject(UserDataService);
   private categoryService = inject(CategoryService);
+
+  private destroy$ = new Subject<void>();
 
   categoryList: ServiceICategory[] = [];
   getCategoryHue = getCategoryHue;
@@ -91,7 +73,6 @@ export class ExpenseOverview implements OnInit {
 
   readonly iconSearch = Search;
   readonly iconChartColumn = ChartColumn;
-  readonly iconChartPie = ChartPie;
   readonly iconList = List;
   readonly iconFlame = Flame;
 
@@ -102,15 +83,16 @@ export class ExpenseOverview implements OnInit {
   dateFilterOptions: SelectOption[] = [];
   startDate: string = '';
   endDate: string = '';
-searchTerm: string = '';
+  searchTerm: string = '';
   userProfile$: Observable<UserProfile | null> = of(null);
   isGroupUser = false;
 
   // --- Summary Statistics Properties ---
   currencySummaries: CurrencySummary[] = [];
   mostExpenseCategory: string = 'N/A';
-
   categoryTotals: CategoryTotal[] = [];
+  categoryTotalsSum = 0;
+  allCategoriesTotal: { amount: number; currency: string }[] = [];
 
   currentPeriodLabel: string = '';
 
@@ -119,74 +101,51 @@ searchTerm: string = '';
     return `hsl(${hue} 80% 62%)`;
   }
 
+  // Fix #6: O(1) lookup using cached sum instead of O(N) reduce per call
   getCategoryPercent(total: number): number {
-    const sum = this.categoryTotals.reduce((s, c) => s + c.total, 0);
-    return sum > 0 ? (total / sum) * 100 : 0;
-  }
-
-  getAllCategoriesTotal(): { amount: number; currency: string }[] {
-    const map: { [currency: string]: number } = {};
-    for (const cat of this.categoryTotals) {
-      map[cat.currency] = (map[cat.currency] || 0) + cat.total;
-    }
-    return Object.entries(map).map(([currency, amount]) => ({ amount, currency }));
+    return this.categoryTotalsSum > 0 ? (total / this.categoryTotalsSum) * 100 : 0;
   }
 
   public _selectedCategory$ = new BehaviorSubject<string>('');
   private activeSpaceModeKey: string | null = null;
 
-  // --- Pie Chart Properties ---
-  public pieChartData: ChartData<'pie'> = {
-    labels: [],
-    datasets: [
-      {
-        data: [],
-        backgroundColor: [],
-        hoverBackgroundColor: [],
-      },
-    ],
-  };
-  public pieChartOptions: ChartOptions<'pie'> = {
-    responsive: true,
-  };
-  public pieChartType: ChartType = 'pie';
+  dateFilter$ = new BehaviorSubject<DateRange>({ start: '', end: '' });
+  searchFilter$ = new BehaviorSubject<string>('');
 
   public formatService = inject(FormatService);
-
   router = inject(Router);
 
   ngOnInit(): void {
     this.translate.stream([
       'CURRENT_WEEK', 'LAST_30_DAYS', 'CURRENT_MONTH', 'LAST_MONTH',
       'LAST_SIX_MONTHS', 'CURRENT_YEAR', 'LAST_YEAR', 'CUSTOM_DATE',
-    ]).subscribe(t => {
+    ]).pipe(takeUntil(this.destroy$)).subscribe(t => {
       this.dateFilterOptions = [
-        { value: 'currentWeek',    label: t['CURRENT_WEEK'] },
-        { value: 'last30Days',     label: t['LAST_30_DAYS'] },
-        { value: 'currentMonth',   label: t['CURRENT_MONTH'] },
-        { value: 'lastMonth',      label: t['LAST_MONTH'] },
-        { value: 'lastSixMonths',  label: t['LAST_SIX_MONTHS'] },
-        { value: 'currentYear',    label: t['CURRENT_YEAR'] },
-        { value: 'lastYear',       label: t['LAST_YEAR'] },
-        { value: 'custom',         label: t['CUSTOM_DATE'] },
+        { value: 'currentWeek',   label: t['CURRENT_WEEK']      },
+        { value: 'last30Days',    label: t['LAST_30_DAYS']       },
+        { value: 'currentMonth',  label: t['CURRENT_MONTH']      },
+        { value: 'lastMonth',     label: t['LAST_MONTH']         },
+        { value: 'lastSixMonths', label: t['LAST_SIX_MONTHS']    },
+        { value: 'currentYear',   label: t['CURRENT_YEAR']       },
+        { value: 'lastYear',      label: t['LAST_YEAR']          },
+        { value: 'custom',        label: t['CUSTOM_DATE']        },
       ];
     });
 
-    // set the default date for custom date selection
     const now = new Date();
-    const oneYearAgo = new Date(
-      now.getFullYear() - 1,
-      now.getMonth(),
-      now.getDate()
-    );
+    const oneYearAgo = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
     this.startDate = this.datePipe.transform(oneYearAgo, 'yyyy-MM-dd') || '';
-    this.endDate = this.datePipe.transform(now, 'yyyy-MM-dd') || '';
+    this.endDate   = this.datePipe.transform(now,        'yyyy-MM-dd') || '';
 
-    // Use authService.userProfile$ which correctly merges group settings.
     this.userProfile$ = this.authService.userProfile$;
-    this.categoryService.getCategories().subscribe(cats => { this.categoryList = cats; });
 
-    this.userProfile$.subscribe((profile) => {
+    // Fix #4: takeUntil to prevent memory leak
+    this.categoryService.getCategories()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(cats => { this.categoryList = cats; });
+
+    // Fix #4 + #8: takeUntil + setInitialDateFilter only on space change
+    this.userProfile$.pipe(takeUntil(this.destroy$)).subscribe((profile) => {
       if (profile) {
         const key = this.getSpaceModeKey(profile);
         if (key !== this.activeSpaceModeKey) {
@@ -194,8 +153,8 @@ searchTerm: string = '';
           this.searchTerm = '';
           this.searchFilter$.next('');
           this._selectedCategory$.next('');
+          this.setInitialDateFilter(profile);
         }
-        this.setInitialDateFilter(profile);
         this.isGroupUser = profile?.accountType === 'group';
       } else {
         this.setDateFilter('currentMonth');
@@ -211,177 +170,153 @@ searchTerm: string = '';
     ]).pipe(
       map(([expenses, { start, end }, searchTerm, selectedCategory, profile]) => {
         const profileCurrency = profile?.currency;
-        // --- MODIFIED: Daily Average Day Count Calculation ---
-        const startDate = new Date(start);
-        const originalEndDate = new Date(end);
+
+        // Fix #2: parseLocalDate avoids UTC midnight timezone off-by-one
+        const startDate      = this.parseLocalDate(start);
+        const originalEndDate = this.parseLocalDate(end);
         const today = new Date();
-        let totalDays: number;
 
         let effectiveEndDate = originalEndDate;
-
-        // If 'custom' filter is used and its end date is in the future, use today as the end date for calculation.
         if (this.selectedDateFilter === 'custom' && originalEndDate > today) {
           effectiveEndDate = today;
         }
 
-        // Ensure start date isn't after the effective end date (e.g., if start is in the future).
+        let totalDays: number;
         if (startDate > effectiveEndDate) {
           totalDays = 0;
         } else {
-          const timeDifference = effectiveEndDate.getTime() - startDate.getTime();
-          // Add 1 for inclusivity, use Math.floor for whole days.
-          totalDays = Math.floor(timeDifference / (1000 * 60 * 60 * 24)) + 1;
+          const ms = effectiveEndDate.getTime() - startDate.getTime();
+          totalDays = Math.floor(ms / (1000 * 60 * 60 * 24)) + 1;
         }
-        // --- END MODIFICATION ---
 
         let filtered = expenses;
 
-        if (profileCurrency) filtered = filtered.filter(e => e.currency === profileCurrency);
+        if (profileCurrency) {
+          filtered = filtered.filter(e => e.currency === profileCurrency);
+        }
 
-        // Date filtering logic
-        filtered = filtered.filter((expense) => {
-          return expense.date >= start && expense.date <= end;
-        });
+        filtered = filtered.filter(e => e.date >= start && e.date <= end);
 
-        // Search term filtering logic
         if (searchTerm) {
-          const lowerCaseSearch = searchTerm.toLowerCase();
+          const lower = searchTerm.toLowerCase();
           filtered = filtered.filter(
-            (expense) =>
-              expense.itemName.toLowerCase().includes(lowerCaseSearch) ||
-              expense.category.toLowerCase().includes(lowerCaseSearch)
+            e => e.itemName.toLowerCase().includes(lower) ||
+                 e.category.toLowerCase().includes(lower)
           );
         }
 
-        // Add the new category filtering logic here
         if (selectedCategory) {
           filtered = filtered.filter(
-            (expense) =>
-              expense.category.toLowerCase() === selectedCategory.toLowerCase()
+            e => e.category.toLowerCase() === selectedCategory.toLowerCase()
           );
         }
 
-        // Sort expenses by date in descending order
-        filtered.sort(
-          (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+        // Fix #1: descending sort (newest first)
+        filtered = filtered.slice().sort(
+          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
         );
 
+        // Fix #3: calculateSummary is the only side effect; shareReplay(1) below
+        // ensures the map runs only once even if multiple subscribers exist
         this.calculateSummary(filtered, totalDays);
-        this.updatePieChart(filtered);
-
         return filtered;
-      })
+      }),
+      // Fix #3: prevent pipeline from re-running on multiple async-pipe subscriptions
+      shareReplay(1)
     );
   }
 
-  // --- Methods for Filtering and Calculations ---
-  dateFilter$ = new BehaviorSubject<DateRange>({ start: '', end: '' });
-  searchFilter$ = new BehaviorSubject<string>('');
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  // Fix #2: local-noon parse — matches safeParseDate pattern used elsewhere
+  private parseLocalDate(dateStr: string): Date {
+    if (!dateStr) return new Date(0);
+    const parts = dateStr.split('-').map(Number);
+    const year = parts[0];
+    if (!year || isNaN(year)) return new Date(0);
+    return new Date(year, (parts[1] || 1) - 1, parts[2] || 1, 12, 0, 0);
+  }
 
   private getSpaceModeKey(profile: UserProfile | null): string {
     if (!profile) return 'none';
     const type = profile.currentSpaceType || profile.accountType || 'personal';
-    const id = profile.currentSpaceId || profile.groupId || profile.personalSpaceId || profile.uid;
+    const id   = profile.currentSpaceId || profile.groupId || profile.personalSpaceId || profile.uid;
     return `${type}:${id}`;
   }
 
   setInitialDateFilter(profile: UserProfile | null): void {
     const budgetPeriod = profile?.budgetPeriod;
-    const startDate = profile?.budgetStartDate; // YYYY-MM-DD
-    const endDate = profile?.budgetEndDate; // YYYY-MM-DD
+    const startDate    = profile?.budgetStartDate;
+    const endDate      = profile?.budgetEndDate;
 
-    let filterValue: string = 'currentMonth'; // Default filter
-
-    if (budgetPeriod) {
-      if (budgetPeriod === 'custom' && startDate && endDate) {
-        this.setCustomBudgetRange(startDate, endDate);
-        this.setDateFilter('custom');
-        return; // Exit after setting custom range
-      }
-
-      switch (budgetPeriod) {
-        case 'weekly':
-          filterValue = 'currentWeek';
-          break;
-        case 'monthly':
-          filterValue = 'currentMonth';
-          break;
-        case 'yearly':
-          filterValue = 'currentYear';
-          break;
-        default:
-          break;
-      }
+    if (budgetPeriod === 'custom' && startDate && endDate) {
+      this.setCustomBudgetRange(startDate, endDate);
+      this.setDateFilter('custom');
+      return;
     }
 
+    let filterValue = 'currentMonth';
+    switch (budgetPeriod) {
+      case 'weekly':  filterValue = 'currentWeek';  break;
+      case 'monthly': filterValue = 'currentMonth'; break;
+      case 'yearly':  filterValue = 'currentYear';  break;
+    }
     this.setDateFilter(filterValue);
   }
 
   setCustomBudgetRange(startDate: string, endDate: string): void {
     this.startDate = startDate;
-    this.endDate = endDate;
+    this.endDate   = endDate;
   }
 
   setDateFilter(filter: string): void {
     this.selectedDateFilter = filter;
     this.updateCurrentPeriodLabel(filter);
 
-    const serviceFilters = [
-      'last30Days',
-      'currentMonth',
-      'lastMonth',
-      'lastSixMonths',
-      'currentYear',
-      'lastYear',
-      'currentWeek',
+    const presetFilters = [
+      'last30Days', 'currentMonth', 'lastMonth',
+      'lastSixMonths', 'currentYear', 'lastYear', 'currentWeek',
     ];
 
-    if (serviceFilters.includes(filter)) {
+    if (presetFilters.includes(filter)) {
       const dateRange = this.dateFilterService.getDateRange(
-        this.datePipe,
-        filter,
-        this.startDate,
-        this.endDate
+        this.datePipe, filter, this.startDate, this.endDate
       );
       this.dateFilter$.next(dateRange);
     } else if (filter === 'custom') {
       if (this.startDate && this.endDate) {
-        this.dateFilter$.next({
-          start: this.startDate,
-          end: this.endDate,
-        });
+        this.dateFilter$.next({ start: this.startDate, end: this.endDate });
       } else {
-        // Fallback to a default if custom dates aren't set
         this.setDateFilter('currentMonth');
       }
     }
   }
 
-
   updateCurrentPeriodLabel(filter: string): void {
     if (filter === 'custom') {
       if (this.startDate && this.endDate) {
         const start = this.formatService.formatLocalizedDate(this.datePipe.transform(this.startDate));
-        const end = this.formatService.formatLocalizedDate(this.datePipe.transform(this.endDate));
+        const end   = this.formatService.formatLocalizedDate(this.datePipe.transform(this.endDate));
         this.currentPeriodLabel = `${start} - ${end}`;
       } else {
         this.currentPeriodLabel = this.translate.instant('CUSTOM_DATE_RANGE');
       }
     } else {
       const keyMap: { [key: string]: string } = {
-        'currentWeek': 'BUDGET_PERIOD.WEEKLY',
-        'currentMonth': 'BUDGET_PERIOD.MONTHLY',
-        'currentYear': 'BUDGET_PERIOD.YEARLY',
-        'last30Days': 'LAST_30_DAYS',
-        'lastMonth': 'LAST_MONTH',
-        'lastSixMonths': 'LAST_SIX_MONTHS',
-        'lastYear': 'LAST_YEAR',
+        'currentWeek':    'BUDGET_PERIOD.WEEKLY',
+        'currentMonth':   'BUDGET_PERIOD.MONTHLY',
+        'currentYear':    'BUDGET_PERIOD.YEARLY',
+        'last30Days':     'LAST_30_DAYS',
+        'lastMonth':      'LAST_MONTH',
+        'lastSixMonths':  'LAST_SIX_MONTHS',
+        'lastYear':       'LAST_YEAR',
       };
-      const translationKey = keyMap[filter];
-      this.currentPeriodLabel = this.translate.instant(translationKey || filter);
+      this.currentPeriodLabel = this.translate.instant(keyMap[filter] || filter);
     }
   }
-
 
   onSearch(): void {
     this.searchFilter$.next(this.searchTerm);
@@ -392,86 +327,53 @@ searchTerm: string = '';
 
   calculateSummary(expenses: IExpense[], totalDays: number): void {
     if (!expenses || expenses.length === 0) {
-      this.currencySummaries = [];
+      this.currencySummaries  = [];
+      this.categoryTotals     = [];
+      this.categoryTotalsSum  = 0;
+      this.allCategoriesTotal = [];
       this.mostExpenseCategory = 'N/A';
       return;
     }
 
-    const groupedByCurrency = expenses.reduce((acc, expense) => {
-      const currency = expense.currency;
-      if (!acc[currency]) {
-        acc[currency] = [];
-      }
-      acc[currency].push(expense);
+    // Currency summaries
+    const groupedByCurrency = expenses.reduce((acc, e) => {
+      if (!e.currency) return acc;
+      (acc[e.currency] = acc[e.currency] || []).push(e);
       return acc;
     }, {} as { [key: string]: IExpense[] });
 
     this.currencySummaries = Object.keys(groupedByCurrency).map((currency) => {
-      const currencyExpenses = groupedByCurrency[currency];
-      const totalExpenses = currencyExpenses.reduce(
-        (sum: number, e: IExpense) => sum + e.totalCost,
-        0
-      );
-      const dailyAverage = totalDays > 0 ? totalExpenses / totalDays : 0;
-
-      return {
-        currency,
-        totalExpenses,
-        dailyAverage,
-      };
+      const list         = groupedByCurrency[currency];
+      const totalExpenses = list.reduce((s, e) => s + e.totalCost, 0);
+      const dailyAverage  = totalDays > 0 ? totalExpenses / totalDays : 0;
+      return { currency, totalExpenses, dailyAverage };
     });
 
-    const categoryTotalsMap = expenses.reduce((acc, expense) => {
-      if (!acc[expense.category]) {
-        acc[expense.category] = {
-          category: expense.category,
-          total: 0,
-          currency: expense.currency,
-        };
+    // Fix #9: guard undefined currency in category totals map
+    const categoryTotalsMap = expenses.reduce((acc, e) => {
+      if (!e.currency || !e.category) return acc;
+      if (!acc[e.category]) {
+        acc[e.category] = { category: e.category, total: 0, currency: e.currency };
       }
-      acc[expense.category].total += expense.totalCost;
+      acc[e.category].total += e.totalCost;
       return acc;
     }, {} as { [key: string]: CategoryTotal });
 
-    this.categoryTotals = (Object.values(categoryTotalsMap) as CategoryTotal[]).sort(
-      (a: CategoryTotal, b: CategoryTotal) => b.total - a.total
-    );
-    const mostExpensive = this.categoryTotals[0]?.category;
-    this.mostExpenseCategory = mostExpensive || 'N/A';
-  }
+    this.categoryTotals = (Object.values(categoryTotalsMap) as CategoryTotal[])
+      .sort((a, b) => b.total - a.total);
 
-  updatePieChart(expenses: IExpense[]): void {
-    const categoryTotals = expenses.reduce((acc, expense) => {
-      acc[expense.category] = (acc[expense.category] || 0) + expense.totalCost;
-      return acc;
-    }, {} as { [key: string]: number });
+    // Fix #6: precompute sum once so getCategoryPercent() is O(1)
+    this.categoryTotalsSum = this.categoryTotals.reduce((s, c) => s + c.total, 0);
 
-    const labels = Object.keys(categoryTotals);
-    const data = Object.values(categoryTotals) as number[];
-
-    this.pieChartData = {
-      labels: labels,
-      datasets: [
-        {
-          data: data,
-          backgroundColor: this.generateRandomColors(labels.length),
-          hoverBackgroundColor: this.generateRandomColors(labels.length),
-        },
-      ],
-    };
-  }
-
-  private generateRandomColors(count: number): string[] {
-    const colors = [];
-    for (let i = 0; i < count; i++) {
-      const color =
-        '#' +
-        Math.floor(Math.random() * 16777215)
-          .toString(16)
-          .padStart(6, '0');
-      colors.push(color);
+    // Fix #7: precompute allCategoriesTotal as a property instead of template method call
+    const currencyMap: { [currency: string]: number } = {};
+    for (const cat of this.categoryTotals) {
+      currencyMap[cat.currency] = (currencyMap[cat.currency] || 0) + cat.total;
     }
-    return colors;
+    this.allCategoriesTotal = Object.entries(currencyMap)
+      .map(([currency, amount]) => ({ amount, currency }));
+
+    this.mostExpenseCategory = this.categoryTotals[0]?.category || 'N/A';
   }
 
   onRowClick(expense: IExpense): void {

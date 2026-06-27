@@ -27,6 +27,8 @@ import {
   map,
   switchMap,
   firstValueFrom,
+  Subject,
+  takeUntil,
 } from 'rxjs';
 import { Camera } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
@@ -88,7 +90,6 @@ interface ExpenseDateGroup {
     LucideAngularModule,
     CategoryModalComponent,
     LightboxComponent,
-    LucideAngularModule,
     TranslateModule,
     CurrentSpaceTitleComponent,
     UserAvatarComponent,
@@ -112,7 +113,7 @@ export class Expense implements OnInit, OnDestroy {
 
   expenses$!: Observable<IExpense[]>;
   vouchers$!: Observable<ServiceIVoucher[]>;
-  categories$: Observable<ServiceICategory[]>;
+  categories$!: Observable<ServiceICategory[]>;
   categorySelectOptions$!: Observable<SelectOption[]>;
   voucherCategorySelectOptions$!: Observable<SelectOption[]>;
   categoryList: ServiceICategory[] = [];
@@ -130,6 +131,7 @@ export class Expense implements OnInit, OnDestroy {
 
   private authService = inject(AuthService);
   public formatService = inject(FormatService);
+  private destroy$ = new Subject<void>();
 
   displayedExpenses$!: Observable<IExpense[]>;
   displayedVouchers$!: Observable<ServiceIVoucher[]>;
@@ -265,18 +267,6 @@ export class Expense implements OnInit, OnDestroy {
       imageFile: ['', Validators.required],
     });
 
-    this.categories$ = this.categoryService.getCategories();
-    this.categorySelectOptions$ = this.categories$.pipe(
-      map(cats => cats.map(c => ({ value: c.name, label: c.name, icon: c.icon })))
-    );
-    this.voucherCategorySelectOptions$ = this.categories$.pipe(
-      map(cats => [
-        { value: '', label: this.translate.instant('VOUCHER_NO_CATEGORY') },
-        ...cats.map(c => ({ value: c.name, label: c.name, icon: c.icon })),
-      ])
-    );
-    this.categories$.subscribe(cats => { this.categoryList = cats; });
-
     const storedLang = localStorage.getItem('selectedLanguage');
     this.translate.use(storedLang || this.translate.getBrowserLang() || 'en');
   }
@@ -284,7 +274,7 @@ export class Expense implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loadExpenses();
     this.loadVouchers();
-    this.route.paramMap.subscribe(params => {
+    this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe(params => {
       const date = params.get('date');
       const todayStr = this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
 
@@ -312,7 +302,7 @@ export class Expense implements OnInit, OnDestroy {
       this.refreshVouchers$.next();
     });
 
-    this.authService.userProfile$.subscribe(profile => {
+    this.authService.userProfile$.pipe(takeUntil(this.destroy$)).subscribe(profile => {
       this.userProfile = profile;
       this.userRole = getCurrentSpaceRole(profile);
       const spaceModeKey = this.getSpaceModeKey(profile);
@@ -338,6 +328,8 @@ export class Expense implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
     this.clearAllVoucherFiles();
   }
 
@@ -409,6 +401,7 @@ export class Expense implements OnInit, OnDestroy {
     this.totalExpensesByCurrency$ = this.displayedExpenses$.pipe(
       map(expenses =>
         expenses.reduce((acc, e) => {
+          if (!e.currency) return acc;
           acc[e.currency] = (acc[e.currency] || 0) + e.totalCost;
           return acc;
         }, {} as { [key: string]: number })
@@ -451,8 +444,10 @@ export class Expense implements OnInit, OnDestroy {
       const group = groups.get(date)!;
       group.expenses.push(expense);
       group.count += 1;
-      group.totalsByCurrency[expense.currency] =
-        (group.totalsByCurrency[expense.currency] || 0) + expense.totalCost;
+      if (expense.currency) {
+        group.totalsByCurrency[expense.currency] =
+          (group.totalsByCurrency[expense.currency] || 0) + expense.totalCost;
+      }
     });
 
     return [...groups.values()].sort((a, b) => b.date.localeCompare(a.date));
@@ -474,7 +469,7 @@ export class Expense implements OnInit, OnDestroy {
         ...cats.map(c => ({ value: c.name, label: c.name, icon: c.icon })),
       ])
     );
-    this.categories$.subscribe(cats => { this.categoryList = cats; });
+    this.categories$.pipe(takeUntil(this.destroy$)).subscribe(cats => { this.categoryList = cats; });
   }
 
   openCategoryModal(): void {
@@ -663,7 +658,9 @@ export class Expense implements OnInit, OnDestroy {
   }
 
   getVoucherImages(voucher: ServiceIVoucher): string[] {
-    return voucher.imageUrls?.length ? voucher.imageUrls : [voucher.imageUrl];
+    if (voucher.imageUrls?.length) return voucher.imageUrls;
+    if (voucher.imageUrl) return [voucher.imageUrl];
+    return [];
   }
 
   private getVoucherErrorTitle(error: any, fallbackKey: string): string {
@@ -859,6 +856,7 @@ export class Expense implements OnInit, OnDestroy {
     this.selectedVoucherFiles.push(file);
     this.voucherPreviewUrls.push(URL.createObjectURL(file));
     this.voucherForm.patchValue({ imageFile: 'set' });
+    this.voucherForm.get('imageFile')?.markAsTouched();
   }
 
   getCategoryStyle(category: string): Record<string, string> {
@@ -1001,7 +999,7 @@ export class Expense implements OnInit, OnDestroy {
           Swal.showValidationMessage(this.translate.instant('EXPENSE_CATEGORY_LABEL') + ' ' + this.translate.instant('ERROR_FILL_ALL_FIELDS'));
           return false;
         }
-        if (isNaN(price) || price < 0) {
+        if (isNaN(price) || price <= 0) {
           Swal.showValidationMessage(this.translate.instant('PRICE_LABEL') + ' ' + this.translate.instant('ERROR_FILL_ALL_FIELDS'));
           return false;
         }

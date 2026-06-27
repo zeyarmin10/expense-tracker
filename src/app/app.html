@@ -259,7 +259,7 @@
       <app-user-avatar
         [name]="user.displayName || 'User'"
         [photoUrl]="userPhotoUrl$ | async"
-        [size]="42"
+        [size]="45"
         class="mob-drawer-avatar-cmp"
       ></app-user-avatar>
       <div class="mob-drawer-user-info">
@@ -296,7 +296,7 @@
           </span>
         </ng-container>
         <ng-template #groupIconFallback>
-          <lucide-icon [img]="iconUsers" [size]="16"></lucide-icon>
+          <lucide-icon [img]="iconUsers" [size]="20"></lucide-icon>
         </ng-template>
         <span class="mob-drawer-group-name-text">{{ gName }}</span>
       </div>

@@ -6,8 +6,8 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { Observable, of, map, firstValueFrom, combineLatest, Subscription, BehaviorSubject } from 'rxjs';
-import { switchMap, tap, catchError, distinctUntilChanged } from 'rxjs/operators';
+import { Observable, of, map, firstValueFrom, combineLatest, Subscription, BehaviorSubject, Subject } from 'rxjs';
+import { switchMap, tap, catchError, distinctUntilChanged, takeUntil, take } from 'rxjs/operators';
 import { AuthService } from '../../services/auth';
 import { getActiveGroupId, UserDataService, UserProfile } from '../../services/user-data';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -97,6 +97,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   selectedBudgetPeriod: string | null = null;
   appTheme: AppTheme = 'system';
   private readonly themeSubscription = new Subscription();
+  private readonly destroy$ = new Subject<void>();
   availableBudgetPeriods = AVAILABLE_BUDGET_PERIODS;
   translatedBudgetPeriods: any[] = [];
   availableCurrencies = AVAILABLE_CURRENCIES;
@@ -300,18 +301,23 @@ export class UserProfileComponent implements OnInit, OnDestroy {
     // ✅ isFormReady flag — initial patch ပြီးမှသာ autoSave trigger ဖြစ်မည်
     setTimeout(() => { this.isFormReady = true; }, 500);
 
-    this.userProfileForm.get('budgetPeriod')?.valueChanges.subscribe((periodId) => {
-      this.handleBudgetPeriodChange(periodId);
-      if (this.isFormReady && periodId != null && periodId !== 'custom') {
-        this.autoSaveField('budgetPeriod');
-      }
-    });
+    // U1: takeUntil so these don't outlive the component
+    this.userProfileForm.get('budgetPeriod')?.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((periodId) => {
+        this.handleBudgetPeriodChange(periodId);
+        if (this.isFormReady && periodId != null && periodId !== 'custom') {
+          this.autoSaveField('budgetPeriod');
+        }
+      });
 
-    this.userProfileForm.get('currency')?.valueChanges.subscribe((currency) => {
-      if (this.isFormReady && currency) {
-        this.autoSaveField('currency');
-      }
-    });
+    this.userProfileForm.get('currency')?.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((currency) => {
+        if (this.isFormReady && currency) {
+          this.autoSaveField('currency');
+        }
+      });
 
   }
 
@@ -332,7 +338,8 @@ export class UserProfileComponent implements OnInit, OnDestroy {
       })
     );
 
-    this.translate.onLangChange.subscribe(() => {
+    // U2: takeUntil to prevent leak on singleton TranslateService
+    this.translate.onLangChange.pipe(takeUntil(this.destroy$)).subscribe(() => {
       this.translateCurrencyNames();
       this.translateBudgetPeriodNames();
     });
@@ -351,6 +358,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
       distinctUntilChanged((a, b) => a.uid === b.uid && a.spaceId === b.spaceId)
     );
 
+    // U3: takeUntil to prevent leak from long-lived userProfile$ subscription
     combineLatest([
       spaceKey$.pipe(
         switchMap(({ uid, spaceId }) => uid
@@ -359,7 +367,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
         )
       ),
       this.authService.userProfile$,
-    ]).subscribe(([periods, profile]) => {
+    ]).pipe(takeUntil(this.destroy$)).subscribe(([periods, profile]) => {
       this.customBudgetPeriods = periods.sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
       this.rebuildBudgetPeriodOptions();
       if (profile) {
@@ -381,6 +389,8 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
     this.themeSubscription.unsubscribe();
   }
 
@@ -492,6 +502,8 @@ export class UserProfileComponent implements OnInit, OnDestroy {
       Toast.fire({ icon: 'success', title: this.translate.instant('PROFILE_UPDATE_SUCCESS') });
     } catch (error: any) {
       console.error('Auto-save error:', error);
+      // U8: show error toast so user knows the save failed
+      Toast.fire({ icon: 'error', title: this.translate.instant('PROFILE_UPDATE_ERROR') });
     }
   }
 
@@ -506,9 +518,10 @@ export class UserProfileComponent implements OnInit, OnDestroy {
 
   cancelEditName(): void {
     this.isEditingName = false;
-    // revert to original value
+    // U4: take(1) so each cancel call creates exactly one emission then completes
     this.authService.currentUser$.pipe(
-      switchMap(user => user ? this.userDataService.getUserProfile(user.uid) : of(null)),
+      take(1),
+      switchMap(user => user ? this.userDataService.getUserProfile(user.uid).pipe(take(1)) : of(null)),
     ).subscribe(profile => {
       if (profile) {
         this.userProfileForm.patchValue({ displayName: profile.displayName || '' }, { emitEvent: false });
@@ -529,6 +542,8 @@ export class UserProfileComponent implements OnInit, OnDestroy {
       Toast.fire({ icon: 'success', title: this.translate.instant('PROFILE_UPDATE_SUCCESS') });
     } catch (error: any) {
       console.error('Name save error:', error);
+      // U9: show error toast so user knows the save failed
+      Toast.fire({ icon: 'error', title: this.translate.instant('PROFILE_UPDATE_ERROR') });
     }
   }
 
@@ -868,8 +883,9 @@ export class UserProfileComponent implements OnInit, OnDestroy {
         canvas.width = w;
         canvas.height = h;
         canvas.getContext('2d')!.drawImage(img, 0, 0, w, h);
+        // U7: guard null blob (can occur under memory pressure or tainted canvas)
         canvas.toBlob(
-          (blob) => resolve(new File([blob!], file.name, { type: 'image/jpeg' })),
+          (blob) => resolve(blob ? new File([blob], file.name, { type: 'image/jpeg' }) : file),
           'image/jpeg', 0.85
         );
       };

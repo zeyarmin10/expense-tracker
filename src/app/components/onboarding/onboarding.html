@@ -56,8 +56,8 @@
                     <span class="ob-space-avatar" *ngIf="space.imageUrl">
                       <img [src]="space.imageUrl" alt="">
                     </span>
-                    <lucide-icon [img]="iconUser" [size]="16" *ngIf="!space.imageUrl && space.type === 'personal'"></lucide-icon>
-                    <lucide-icon [img]="iconUsers" [size]="16" *ngIf="!space.imageUrl && space.type === 'group'"></lucide-icon>
+                    <lucide-icon [img]="iconUser" [size]="20" *ngIf="!space.imageUrl && space.type === 'personal'"></lucide-icon>
+                    <lucide-icon [img]="iconUsers" [size]="20" *ngIf="!space.imageUrl && space.type === 'group'"></lucide-icon>
                     <span class="ob-space-name">{{ getDisplaySpaceName(space) }}</span>
                   </span>
                   <span class="ob-space-badge" *ngIf="profile.currentSpaceId === space.id">
