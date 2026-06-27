@@ -204,7 +204,7 @@ body {
 }
 
 /* Mobile: center toast at top instead of top-end */
-@media (max-width: 767px) {
+@media (max-width: 400px) {
   body.swal2-toast-shown .swal2-container.swal2-top-end,
   body.swal2-toast-shown .swal2-container.swal2-top-right {
     right: auto !important;
@@ -275,6 +275,8 @@ body {
   color: #f0f2f7 !important;
   font-size: 1.1rem !important;
   font-weight: 700 !important;
+  margin: 0 !important;
+  line-height: 1.3 !important;
 }
 
 .swal2-html-container,
@@ -349,13 +351,13 @@ body {
 
 .swal2-toast .swal2-title {
   color: #f0f2f7 !important;
-  font-size: 0.85rem !important;
-  margin: 0 !important;
-  padding: 0 !important;
+  font-size: 0.9rem !important;
+  margin: 0.5em 1em !important;
 }
 
-.swal2-toast .swal2-icon {
-  margin: 0 0.5em 0 0 !important;
+.swal2-toast .swal2-html-container {
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 .swal2-timer-progress-bar {
@@ -503,6 +505,12 @@ body.light-mode .swal2-toast {
 
 body.light-mode .swal2-toast .swal2-title {
   color: #1a202c !important;
+  margin: 0.5em 1em !important;
+}
+
+body.light-mode .swal2-toast .swal2-html-container {
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 body.light-mode .swal2-timer-progress-bar {
@@ -818,104 +826,232 @@ body.light-mode .ov-bar-fill {
 
 
 /* ════════════════════════════════════════════════════════
-   ANGULAR MATERIAL — mat-calendar theme override
-   Forces calendar to match app's dark / light CSS vars
+   FLATPICKR — dark theme override (default)
    ════════════════════════════════════════════════════════ */
-mat-calendar,
-.mat-calendar {
+
+/* Constrain arrow SVGs — must be before any fill/color rules */
+.flatpickr-months .flatpickr-prev-month svg,
+.flatpickr-months .flatpickr-next-month svg {
+  width: 14px !important;
+  height: 14px !important;
+}
+
+.flatpickr-calendar {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+  font-family: inherit !important;
+}
+
+.flatpickr-calendar.inline {
+  position: relative !important;
+  display: block !important;
+  top: 0 !important;
+  box-shadow: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+}
+
+.fp-container {
+  padding: 0.25rem 0 0.5rem;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.flatpickr-months {
+  display: flex !important;
+  position: relative !important;
+  padding: 0.25rem 0;
+  width: 307.875px;
+}
+
+.flatpickr-months .flatpickr-prev-month,
+.flatpickr-months .flatpickr-next-month {
+  position: absolute !important;
+  top: 0 !important;
+  color: var(--text-muted) !important;
+  fill: var(--text-muted) !important;
+}
+
+.flatpickr-months .flatpickr-prev-month {
+  left: 0 !important;
+}
+
+.flatpickr-months .flatpickr-next-month {
+  right: 0 !important;
+}
+
+.flatpickr-months .flatpickr-prev-month:hover,
+.flatpickr-months .flatpickr-next-month:hover {
+  color: var(--text) !important;
+  fill: var(--text) !important;
+}
+
+.flatpickr-month,
+.flatpickr-months .flatpickr-month {
+  background: transparent !important;
+  color: var(--text) !important;
+  fill: var(--text) !important;
+  flex: 1 !important;
+}
+
+.flatpickr-current-month {
+  color: var(--text) !important;
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+  font-family: inherit !important;
+}
+
+.flatpickr-current-month .flatpickr-monthDropdown-months {
   background: var(--surface) !important;
   color: var(--text) !important;
   font-family: inherit !important;
 }
 
-/* Header (month/year label + nav arrows) */
-.mat-calendar-header {
-  background: var(--surface) !important;
-  padding: 0.25rem 0.5rem 0 !important;
-}
-
-.mat-calendar-controls {
-  margin: 0 0 0.25rem !important;
-}
-
-.mat-calendar-period-button,
-.mat-calendar-previous-button,
-.mat-calendar-next-button {
+.flatpickr-current-month input.cur-year {
   color: var(--text) !important;
+  font-family: inherit !important;
 }
 
-.mat-calendar-period-button:hover,
-.mat-calendar-previous-button:hover,
-.mat-calendar-next-button:hover {
-  background: var(--surface-2) !important;
-  border-radius: 8px !important;
-}
-
-/* Day-of-week row */
-.mat-calendar-table-header th,
-.mat-calendar-table-header-divider::after {
-  color: var(--text-muted) !important;
+.flatpickr-weekdays {
   background: transparent !important;
+  display: flex !important;
+  width: 307.875px !important;
 }
 
-/* Day cells */
-.mat-calendar-body-cell-content {
+.flatpickr-weekdays .flatpickr-weekdaycontainer {
+  display: flex !important;
+  flex: 1 !important;
+}
+
+span.flatpickr-weekday {
+  background: transparent !important;
+  color: var(--text-muted) !important;
+  font-family: inherit !important;
+  font-size: 0.78rem !important;
+}
+
+.flatpickr-days {
+  border: none !important;
+  display: flex !important;
+  width: 307.875px !important;
+}
+
+.dayContainer {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  width: 307.875px !important;
+  min-width: 307.875px !important;
+  max-width: 307.875px !important;
+}
+
+.flatpickr-day {
   color: var(--text) !important;
   border-radius: 8px !important;
+  font-family: inherit !important;
+  font-size: 0.85rem !important;
+  border: none !important;
 }
 
-/* Today's date */
-.mat-calendar-body-today:not(.mat-calendar-body-selected) .mat-calendar-body-cell-content {
+.flatpickr-day:hover {
+  background: var(--surface-2) !important;
+  border-color: transparent !important;
+}
+
+.flatpickr-day.today {
   border: 1.5px solid var(--accent) !important;
   color: var(--accent) !important;
   background: transparent !important;
+  font-weight: 600 !important;
 }
 
-/* Hover on day */
-.mat-calendar-body-cell:not(.mat-calendar-body-disabled):hover
-  > .mat-calendar-body-cell-content:not(.mat-calendar-body-selected) {
-  background: var(--surface-2) !important;
+.flatpickr-day.today:hover {
+  background: var(--accent-dim) !important;
+  color: var(--accent) !important;
 }
 
-/* Selected day */
-.mat-calendar-body-selected {
+.flatpickr-day.selected,
+.flatpickr-day.startRange,
+.flatpickr-day.endRange {
   background: var(--accent) !important;
+  border-color: var(--accent) !important;
   color: #fff !important;
+  font-weight: 600 !important;
 }
 
-/* Range in-between highlight */
-.mat-calendar-body-in-range::before {
+.flatpickr-day.selected:hover,
+.flatpickr-day.startRange:hover,
+.flatpickr-day.endRange:hover {
+  background: var(--accent) !important;
+}
+
+.flatpickr-day.inRange {
   background: var(--accent-dim) !important;
-}
-.mat-calendar-body-range-start::before,
-.mat-calendar-body-range-end::before {
-  background: var(--accent-dim) !important;
-}
-
-/* Disabled days */
-.mat-calendar-body-disabled > .mat-calendar-body-cell-content {
-  color: var(--text-muted) !important;
-  opacity: 0.35 !important;
-}
-
-/* Month/year view cells */
-.mat-calendar-body-label {
-  color: var(--text-muted) !important;
-}
-
-/* Month/year selection cells */
-.mat-calendar-body-cell-content.mat-focus-indicator {
+  border-color: transparent !important;
   color: var(--text) !important;
+  box-shadow: none !important;
 }
 
-/* Light mode adjustments */
-body.light-mode mat-calendar,
-body.light-mode .mat-calendar {
-  background: #ffffff !important;
+.flatpickr-day.flatpickr-disabled,
+.flatpickr-day.flatpickr-disabled:hover,
+.flatpickr-day.prevMonthDay,
+.flatpickr-day.nextMonthDay {
+  color: var(--text-muted) !important;
+  opacity: 0.3 !important;
 }
 
-body.light-mode .mat-calendar-header {
+/* Light mode overrides */
+body.light-mode .flatpickr-calendar {
   background: #ffffff !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12) !important;
+}
+
+body.light-mode .flatpickr-month,
+body.light-mode .flatpickr-months .flatpickr-month {
+  color: #1a202c !important;
+  fill: #1a202c !important;
+}
+
+body.light-mode .flatpickr-current-month,
+body.light-mode .flatpickr-current-month input.cur-year {
+  color: #1a202c !important;
+}
+
+body.light-mode .flatpickr-current-month .flatpickr-monthDropdown-months {
+  background: #ffffff !important;
+  color: #1a202c !important;
+}
+
+body.light-mode .flatpickr-months .flatpickr-prev-month,
+body.light-mode .flatpickr-months .flatpickr-next-month {
+  color: #718096 !important;
+  fill: #718096 !important;
+}
+
+body.light-mode span.flatpickr-weekday {
+  color: #718096 !important;
+}
+
+body.light-mode .flatpickr-day {
+  color: #1a202c !important;
+}
+
+body.light-mode .flatpickr-day:hover {
+  background: #edf2f7 !important;
+}
+
+body.light-mode .flatpickr-day.inRange {
+  background: rgba(11, 116, 255, 0.1) !important;
+}
+
+body.light-mode .flatpickr-day.flatpickr-disabled,
+body.light-mode .flatpickr-day.prevMonthDay,
+body.light-mode .flatpickr-day.nextMonthDay {
+  color: #a0aec0 !important;
 }
 
 /* Mobile custom filter rows — side-by-side layout */

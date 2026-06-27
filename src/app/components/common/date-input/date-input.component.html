@@ -19,7 +19,7 @@
 
 
 <!-- ════════════════════════════════
-     MOBILE — Bottom Sheet
+     MOBILE — Centered Modal
      ════════════════════════════════ -->
 <ng-container *ngIf="isMobile">
   <div class="di-backdrop" *ngIf="isOpen" (click)="close()"></div>
@@ -33,12 +33,7 @@
       </button>
     </div>
 
-    <mat-calendar *ngIf="isOpen"
-                  startView="month"
-                  [selected]="selectedDate"
-                  [dateFilter]="dateFilterFn"
-                  (selectedChange)="onDateSelected($event)">
-    </mat-calendar>
+    <div class="fp-container"></div>
   </div>
 </ng-container>
 
@@ -57,10 +52,6 @@
        [style.width.px]="panelWidth"
        (click)="$event.stopPropagation()">
 
-    <mat-calendar startView="month"
-                  [selected]="selectedDate"
-                  [dateFilter]="dateFilterFn"
-                  (selectedChange)="onDateSelected($event)">
-    </mat-calendar>
+    <div class="fp-container"></div>
   </div>
 </ng-container>

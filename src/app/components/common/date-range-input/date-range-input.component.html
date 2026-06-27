@@ -47,13 +47,7 @@
 
       <div class="dri-range-error" *ngIf="rangeError">{{ rangeError }}</div>
 
-      <mat-calendar *ngIf="isOpen"
-                    startView="multi-year"
-                    [selected]="calSelected"
-                    [minDate]="calMinDate"
-                    [maxDate]="calMaxDate"
-                    (selectedChange)="onDateSelected($event)">
-      </mat-calendar>
+      <div class="fp-container"></div>
     </div>
   </div>
 </ng-container>
@@ -82,12 +76,7 @@
     <div class="dri-panel-body">
       <div class="dri-range-error" *ngIf="rangeError">{{ rangeError }}</div>
 
-      <mat-calendar startView="multi-year"
-                    [selected]="calSelected"
-                    [minDate]="calMinDate"
-                    [maxDate]="calMaxDate"
-                    (selectedChange)="onDateSelected($event)">
-      </mat-calendar>
+      <div class="fp-container"></div>
     </div>
   </div>
 </ng-container>

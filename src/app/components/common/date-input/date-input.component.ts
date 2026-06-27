@@ -1,12 +1,13 @@
 import {
   Component, Input, Self, Optional,
-  HostListener, ElementRef, inject,
+  HostListener, ElementRef, OnDestroy, inject,
 } from '@angular/core';
 import { ControlValueAccessor, NgControl } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { MatDatepickerModule } from '@angular/material/datepicker';
 import { LucideAngularModule, CalendarDays, X } from 'lucide-angular';
 import { TranslateService } from '@ngx-translate/core';
+import flatpickr from 'flatpickr';
+import type { Instance } from 'flatpickr/dist/types/instance';
 
 function pad(n: number): string { return String(n).padStart(2, '0'); }
 
@@ -20,22 +21,21 @@ const MOBILE_BP = 768;
 @Component({
   selector: 'app-date-input',
   standalone: true,
-  imports: [CommonModule, MatDatepickerModule, LucideAngularModule],
+  imports: [CommonModule, LucideAngularModule],
   templateUrl: './date-input.component.html',
   styleUrls: ['./date-input.component.css'],
 })
-export class DateInputComponent implements ControlValueAccessor {
+export class DateInputComponent implements ControlValueAccessor, OnDestroy {
   @Input() label = '';
   @Input() inputId = '';
   @Input() min = '';
   @Input() max = '';
 
-  value = '';          // yyyy-MM-dd string
+  value = '';
   isOpen = false;
   isDisabled = false;
   isMobile = typeof window !== 'undefined' ? window.innerWidth < MOBILE_BP : true;
 
-  // Desktop panel position
   panelTop = 0;
   panelLeft = 0;
   panelWidth = 0;
@@ -45,18 +45,8 @@ export class DateInputComponent implements ControlValueAccessor {
   readonly iconCalendar = CalendarDays;
   readonly iconX = X;
 
+  private fp: Instance | null = null;
   private translate = inject(TranslateService);
-
-  // Stable function reference passed to mat-calendar [dateFilter].
-  // Enforces min/max without anchoring the multi-year page to maxDate.
-  readonly dateFilterFn = (date: Date | null): boolean => {
-    if (!date) return true;
-    const mn = this.minDate;
-    const mx = this.maxDate;
-    if (mn && date < mn) return false;
-    if (mx && date > mx) return false;
-    return true;
-  };
   private onChange: (val: string) => void = () => {};
   private onTouched: () => void = () => {};
 
@@ -79,45 +69,58 @@ export class DateInputComponent implements ControlValueAccessor {
     return `${d} ${MONTHS_EN[m - 1]} ${y}`;
   }
 
-  /** Convert yyyy-MM-dd string → Date for mat-calendar */
-  get selectedDate(): Date | null {
-    if (!this.value) return null;
-    const [y, m, d] = this.value.split('-').map(Number);
-    return new Date(y, m - 1, d);
-  }
-
-  get minDate(): Date | null {
-    if (!this.min) return null;
-    const [y, m, d] = this.min.split('-').map(Number);
-    return new Date(y, m - 1, d);
-  }
-
-  get maxDate(): Date | null {
-    if (!this.max) return null;
-    const [y, m, d] = this.max.split('-').map(Number);
-    return new Date(y, m - 1, d);
-  }
-
   open(): void {
     if (this.isDisabled) return;
     if (!this.isMobile) this.calcPanelPos();
     else history.pushState(null, '');
     this.isOpen = true;
+    setTimeout(() => this.initFlatpickr(), 0);
   }
 
   close(): void {
     if (!this.isOpen) return;
+    this.destroyFlatpickr();
     if (this.isMobile) history.back();
     else { this.isOpen = false; this.onTouched(); }
   }
 
-  onDateSelected(date: Date | null): void {
-    if (!date) return;
-    const str = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-    this.value = str;
-    this.onChange(str);
-    this.onTouched();
-    this.close();
+  private initFlatpickr(): void {
+    if (this.fp) return;
+    const container = this.elRef.nativeElement.querySelector('.fp-container') as HTMLElement | null;
+    if (!container) return;
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.style.display = 'none';
+    container.appendChild(input);
+
+    this.fp = flatpickr(input, {
+      inline: true,
+      defaultDate: this.value || undefined,
+      minDate: this.min || undefined,
+      maxDate: this.max || undefined,
+      disableMobile: true,
+      onChange: (dates) => {
+        if (!dates[0]) return;
+        const d = dates[0];
+        const str = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+        this.value = str;
+        this.onChange(str);
+        this.onTouched();
+        this.close();
+      },
+    }) as unknown as Instance;
+  }
+
+  private destroyFlatpickr(): void {
+    if (this.fp) {
+      this.fp.destroy();
+      this.fp = null;
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.destroyFlatpickr();
   }
 
   private calcPanelPos(): void {
@@ -125,7 +128,7 @@ export class DateInputComponent implements ControlValueAccessor {
     if (!trigger) return;
     const rect = trigger.getBoundingClientRect();
     const spaceBelow = window.innerHeight - rect.bottom;
-    const estimatedH = 360;
+    const estimatedH = 320;
     this.panelLeft = rect.left;
     this.panelWidth = Math.max(rect.width, 300);
     if (spaceBelow < estimatedH && rect.top > spaceBelow) {
@@ -143,13 +146,13 @@ export class DateInputComponent implements ControlValueAccessor {
   onResize(): void {
     const nowMobile = window.innerWidth < MOBILE_BP;
     if (nowMobile === this.isMobile) return;
-    if (this.isOpen) { this.isOpen = false; if (this.isMobile) history.back(); }
+    if (this.isOpen) { this.destroyFlatpickr(); this.isOpen = false; if (this.isMobile) history.back(); }
     this.isMobile = nowMobile;
   }
 
   @HostListener('window:popstate')
   onPopState(): void {
-    if (this.isOpen && this.isMobile) { this.isOpen = false; this.onTouched(); }
+    if (this.isOpen && this.isMobile) { this.isOpen = false; this.destroyFlatpickr(); this.onTouched(); }
   }
 
   @HostListener('document:keydown.escape')

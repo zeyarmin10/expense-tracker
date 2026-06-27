@@ -19,7 +19,6 @@ import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
-import { MatNativeDateModule } from '@angular/material/core';
 
 // AOT compilation support for ngx-translate
 export function HttpLoaderFactory(http: HttpClient) {
@@ -49,7 +48,6 @@ export const appConfig: ApplicationConfig = {
           deps: [HttpClient],
         },
       }),
-      MatNativeDateModule,
     ),
   ],
 };
