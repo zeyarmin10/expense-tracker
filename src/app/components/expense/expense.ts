@@ -44,7 +44,7 @@ import {
 
 import { CategoryModalComponent } from '../common/category-modal/category-modal';
 import { LightboxComponent } from '../common/lightbox/lightbox.component';
-import { getIconData, getCategoryHue } from '../../utils/category-icons';
+import { getIconData, getIconHue } from '../../utils/category-icons';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../services/auth';
 import {
@@ -117,8 +117,6 @@ export class Expense implements OnInit, OnDestroy {
   categorySelectOptions$!: Observable<SelectOption[]>;
   voucherCategorySelectOptions$!: Observable<SelectOption[]>;
   categoryList: ServiceICategory[] = [];
-  getCategoryHue = getCategoryHue;
-
   getIconForCategory(categoryName: string) {
     return getIconData(this.categoryList.find(c => c.name === categoryName)?.icon);
   }
@@ -859,8 +857,12 @@ export class Expense implements OnInit, OnDestroy {
     this.voucherForm.get('imageFile')?.markAsTouched();
   }
 
-  getCategoryStyle(category: string): Record<string, string> {
-    return { '--cat-hue': String(getCategoryHue(category)) };
+  getCategoryStyle(categoryName: string): Record<string, string> {
+    return { '--cat-hue': String(this.getIconHueForCategory(categoryName)) };
+  }
+
+  getIconHueForCategory(categoryName: string): number {
+    return getIconHue(this.categoryList.find(c => c.name === categoryName)?.icon);
   }
 
   formatCount(n: number): string {

@@ -158,7 +158,7 @@
                     </span>
                   </td>
                   <td class="td-category">
-                    <span class="category-badge" [style.--cat-hue]="getCategoryHue(expense.category)">
+                    <span class="category-badge" [style.--cat-hue]="getIconHueForCategory(expense.category)">
                       <lucide-icon [img]="getIconForCategory(expense.category)" [size]="11" style="flex-shrink:0"></lucide-icon>
                       {{ expense.category }}
                     </span>

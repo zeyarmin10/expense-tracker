@@ -509,7 +509,7 @@
                 {{ voucher.title || voucher.fileName }}
               </div>
               <div class="exp-item-meta">
-                <span *ngIf="voucher.category" class="exp-cat-badge" [style.--cat-hue]="getCategoryHue(voucher.category)">
+                <span *ngIf="voucher.category" class="exp-cat-badge" [style.--cat-hue]="getIconHueForCategory(voucher.category)">
                   <lucide-icon [img]="getIconForCategory(voucher.category)" [size]="11" style="flex-shrink:0"></lucide-icon>
                   <span class="exp-cat-badge-text">{{ voucher.category }}</span>
                 </span>
@@ -643,7 +643,7 @@
                   </div>
 
                   <div class="exp-item-meta">
-                    <span class="exp-cat-badge" [style.--cat-hue]="getCategoryHue(expense.category)">
+                    <span class="exp-cat-badge" [style.--cat-hue]="getIconHueForCategory(expense.category)">
                       <lucide-icon [img]="getIconForCategory(expense.category)" [size]="11" style="flex-shrink:0"></lucide-icon>
                       <span class="exp-cat-badge-text">{{ expense.category }}</span>
                     </span>

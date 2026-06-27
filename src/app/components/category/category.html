@@ -15,6 +15,7 @@
         <div class="cat-icon-row">
           <button type="button" class="cat-icon-trigger"
                   [class.cat-icon-trigger-open]="showAddIconPicker"
+                  [style.--cat-hue]="getIconHue(selectedAddIcon)"
                   (click)="toggleAddIconPicker($event)">
             <lucide-icon [img]="selectedAddIconData" [size]="22"></lucide-icon>
           </button>
@@ -39,6 +40,7 @@
           <button type="button" class="cat-icon-opt"
                   *ngFor="let opt of categoryIcons"
                   [class.cat-icon-opt-selected]="opt.name === selectedAddIcon"
+                  [style.--cat-hue]="getIconHue(opt.name)"
                   (click)="selectAddIcon(opt.name)">
             <lucide-icon [img]="opt.icon" [size]="20"></lucide-icon>
           </button>
@@ -83,7 +85,7 @@
           <!-- View mode -->
           <ng-container *ngIf="editingCategoryId !== category.id; else editMode">
             <div class="cat-item-inner">
-              <span class="cat-item-icon" [style.--cat-hue]="getCategoryHue(category.name)">
+              <span class="cat-item-icon" [style.--cat-hue]="getIconHue(category.icon)">
                 <lucide-icon [img]="getIconData(category.icon)" [size]="20"></lucide-icon>
               </span>
               <span class="cat-item-name">{{ category.name }}</span>
@@ -110,6 +112,7 @@
               <div class="cat-icon-row">
                 <button type="button" class="cat-icon-trigger"
                         [class.cat-icon-trigger-open]="showEditIconPicker"
+                        [style.--cat-hue]="getIconHue(selectedEditIcon)"
                         (click)="toggleEditIconPicker($event)">
                   <lucide-icon [img]="selectedEditIconData" [size]="22"></lucide-icon>
                 </button>
@@ -133,6 +136,7 @@
                 <button type="button" class="cat-icon-opt"
                         *ngFor="let opt of categoryIcons"
                         [class.cat-icon-opt-selected]="opt.name === selectedEditIcon"
+                        [style.--cat-hue]="getIconHue(opt.name)"
                         (click)="selectEditIcon(opt.name)">
                   <lucide-icon [img]="opt.icon" [size]="20"></lucide-icon>
                 </button>

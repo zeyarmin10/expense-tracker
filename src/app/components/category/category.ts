@@ -21,7 +21,7 @@ import {
   LucideAngularModule, LucideIconData,
   Plus, Tags, Save, Pencil, Trash2, X, Tag,
 } from 'lucide-angular';
-import { CATEGORY_ICONS, getIconData, getCategoryHue } from '../../utils/category-icons';
+import { CATEGORY_ICONS, getIconData, getIconHue } from '../../utils/category-icons';
 
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import Swal from 'sweetalert2';
@@ -88,7 +88,7 @@ export class Category implements OnInit {
   showEditIconPicker = false;
 
   getIconData = getIconData;
-  getCategoryHue = getCategoryHue;
+  getIconHue = getIconHue;
 
   selectAddIcon(name: string): void {
     this.selectedAddIcon = name;

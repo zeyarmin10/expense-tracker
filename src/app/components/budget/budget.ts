@@ -46,7 +46,7 @@ import {
   DateRange,
 } from '../../services/date-filter.service';
 import { CategoryService, ServiceICategory } from '../../services/category';
-import { getIconData, getCategoryHue } from '../../utils/category-icons';
+import { getIconData, getIconHue } from '../../utils/category-icons';
 import { CustomSelectComponent, SelectOption } from '../common/custom-select/custom-select.component';
 import { DateInputComponent } from '../common/date-input/date-input.component';
 import { DateRangeInputComponent } from '../common/date-range-input/date-range-input.component';
@@ -134,7 +134,9 @@ export class BudgetComponent implements OnInit, OnDestroy {
 
   categoryList: ServiceICategory[] = [];
   categorySelectOptions$!: Observable<SelectOption[]>;
-  getCategoryHue = getCategoryHue;
+  getIconHueForCategory(categoryName: string): number {
+    return getIconHue(this.categoryList.find(c => c.name === categoryName)?.icon);
+  }
 
   getIconForCategory(categoryName: string) {
     return getIconData(this.categoryList.find(c => c.name === categoryName)?.icon);

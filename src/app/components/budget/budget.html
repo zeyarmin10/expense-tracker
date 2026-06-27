@@ -145,7 +145,7 @@
                   <span class="bgt-row-badge bgt-badge-yearly" *ngIf="budget.type === 'yearly'">
                     {{ 'YEARLY' | translate }}
                   </span>
-                  <span class="bgt-row-badge bgt-badge-cat" *ngIf="budget.category && budget.category !== 'all'" [style.--cat-hue]="getCategoryHue(budget.category)">
+                  <span class="bgt-row-badge bgt-badge-cat" *ngIf="budget.category && budget.category !== 'all'" [style.--cat-hue]="getIconHueForCategory(budget.category)">
                     <lucide-icon [img]="getIconForCategory(budget.category)" [size]="11" style="flex-shrink:0"></lucide-icon>
                     {{ budget.category }}
                   </span>
@@ -375,7 +375,7 @@
                           'bgt-prog-red':    category.percentage >= 100
                         }">
                         <div class="bgt-progress-header">
-                          <small class="bgt-cat-name" [style.--cat-hue]="getCategoryHue(category.name)">
+                          <small class="bgt-cat-name" [style.--cat-hue]="getIconHueForCategory(category.name)">
                             <lucide-icon [img]="getIconForCategory(category.name)" [size]="12" style="flex-shrink:0"></lucide-icon>
                             {{ category.name }}
                           </small>

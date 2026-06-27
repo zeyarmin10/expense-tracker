@@ -20,7 +20,7 @@ import { AuthService } from '../../services/auth';
 import { UserDataService, UserProfile } from '../../services/user-data';
 import { CategoryService, ServiceICategory } from '../../services/category';
 import { LucideAngularModule, Search, ChartColumn, List, Flame } from 'lucide-angular';
-import { getIconData, getCategoryHue } from '../../utils/category-icons';
+import { getIconData, getIconHue } from '../../utils/category-icons';
 import { UserAvatarComponent } from '../common/user-avatar/user-avatar.component';
 import { CustomSelectComponent, SelectOption } from '../common/custom-select/custom-select.component';
 import { DateRangeInputComponent } from '../common/date-range-input/date-range-input.component';
@@ -65,7 +65,7 @@ export class ExpenseOverview implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   categoryList: ServiceICategory[] = [];
-  getCategoryHue = getCategoryHue;
+  getIconHue = getIconHue;
 
   getIconForCategory(categoryName: string) {
     return getIconData(this.categoryList.find(c => c.name === categoryName)?.icon);
@@ -96,9 +96,13 @@ export class ExpenseOverview implements OnInit, OnDestroy {
 
   currentPeriodLabel: string = '';
 
-  getCategoryColor(category: string): string {
-    const hue = getCategoryHue(category);
-    return `hsl(${hue} 80% 62%)`;
+  getCategoryColor(categoryName: string): string {
+    const icon = this.categoryList.find(c => c.name === categoryName)?.icon;
+    return `hsl(${getIconHue(icon)} 80% 62%)`;
+  }
+
+  getIconHueForCategory(categoryName: string): number {
+    return getIconHue(this.categoryList.find(c => c.name === categoryName)?.icon);
   }
 
   // Fix #6: O(1) lookup using cached sum instead of O(N) reduce per call
