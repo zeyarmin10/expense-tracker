@@ -31,7 +31,6 @@ import { AuthService } from '../../services/auth';
 import {
   UserDataService,
   UserProfile,
-  canManageSharedSpace,
   getCurrentSpaceRole,
 } from '../../services/user-data';
 import {
@@ -180,7 +179,18 @@ export class BudgetComponent implements OnInit, OnDestroy {
   // UI state for dark-theme panels
   get isAddFormOpen(): boolean { return !this.isBudgetFormCollapsed; }
   get isRecordedOpen(): boolean { return !this.isRecordedBudgetsCollapsed; }
-  get canManageBudgets(): boolean { return canManageSharedSpace(this.userProfile); }
+  get canManageBudgets(): boolean {
+    if (!this.userProfile) return false;
+    if (this.userProfile.accountType === 'personal') return true;
+    const role = getCurrentSpaceRole(this.userProfile);
+    return role === 'admin' || role === 'owner' || role === 'member';
+  }
+  get canDeleteBudgets(): boolean {
+    if (!this.userProfile) return false;
+    if (this.userProfile.accountType === 'personal') return true;
+    const role = getCurrentSpaceRole(this.userProfile);
+    return role === 'admin' || role === 'owner';
+  }
   toggleAddForm(): void {
     this.isBudgetFormCollapsed = !this.isBudgetFormCollapsed;
     if (!this.isBudgetFormCollapsed) {
@@ -999,7 +1009,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
   }
 
   confirmDeleteBudget(budgetId: string | undefined): void {
-    if (!this.canManageBudgets) {
+    if (!this.canDeleteBudgets) {
       return;
     }
     if (budgetId) {

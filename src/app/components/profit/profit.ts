@@ -40,7 +40,6 @@ import { AuthService } from '../../services/auth';
 import { Chart, registerables } from 'chart.js';
 import {
   UserProfile,
-  canManageSharedSpace,
   getCurrentSpaceRole,
 } from '../../services/user-data';
 import { AVAILABLE_CURRENCIES } from '../../core/constants/app.constants';
@@ -175,7 +174,18 @@ export class Profit implements OnInit, OnDestroy {
   isIncomeFormCollapsed: boolean = true;
   isDailyCashFlowCollapsed: boolean = true;
   isRecordedIncomesCollapsed: boolean = true;
-  get canManageProfitActions(): boolean { return canManageSharedSpace(this.userProfile); }
+  get canManageProfitActions(): boolean {
+    if (!this.userProfile) return false;
+    if (this.userProfile.accountType === 'personal') return true;
+    const role = getCurrentSpaceRole(this.userProfile);
+    return role === 'admin' || role === 'owner' || role === 'member';
+  }
+  get canDeleteIncome(): boolean {
+    if (!this.userProfile) return false;
+    if (this.userProfile.accountType === 'personal') return true;
+    const role = getCurrentSpaceRole(this.userProfile);
+    return role === 'admin' || role === 'owner';
+  }
 
   readonly iconChartLine = ChartLine;
   readonly iconBanknote = Banknote;
@@ -548,7 +558,7 @@ export class Profit implements OnInit, OnDestroy {
   }
 
   confirmDeleteIncome(incomeId: string | undefined): void {
-    if (!this.canManageProfitActions) {
+    if (!this.canDeleteIncome) {
       return;
     }
     if (incomeId) {

@@ -154,7 +154,7 @@
                   </span>
                   <span class="bgt-row-desc" *ngIf="budget.description" appShowFullText>· {{ budget.description }}</span>
                 </div>
-                <button *ngIf="canManageBudgets"
+                <button *ngIf="canDeleteBudgets"
                   class="bgt-delete-btn" type="button" (click)="confirmDeleteBudget(budget.id)">
                   <lucide-icon [img]="iconTrash2" [size]="15"></lucide-icon>
                 </button>
