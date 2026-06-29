@@ -333,19 +333,10 @@ export class Expense implements OnInit, OnDestroy {
 
   toggleForm(): void {
     this.isFormOpen = !this.isFormOpen;
-    if (this.isFormOpen) {
-      setTimeout(() => {
-        const id = this.isQuickMode ? 'itemName-quick' : 'itemName';
-        (document.getElementById(id) as HTMLInputElement)?.focus();
-      }, 150);
-    }
   }
 
   toggleVoucherPanel(): void {
     this.isVoucherPanelOpen = !this.isVoucherPanelOpen;
-    if (this.isVoucherPanelOpen) {
-      setTimeout(() => this.voucherTitleInput?.nativeElement?.focus(), 150);
-    }
   }
 
   toggleQuickMode(): void {

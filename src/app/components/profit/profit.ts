@@ -613,12 +613,6 @@ export class Profit implements OnInit, OnDestroy {
   toggleVisibility(section: 'incomeForm' | 'dailyCashFlow' | 'recordedIncomes'): void {
     if (section === 'incomeForm') {
       this.isIncomeFormCollapsed = !this.isIncomeFormCollapsed;
-      if (!this.isIncomeFormCollapsed) {
-        setTimeout(() => {
-          const input = document.getElementById('incomeAmount') as HTMLInputElement;
-          input?.focus();
-        }, 320);
-      }
     } else if (section === 'dailyCashFlow') {
       this.isDailyCashFlowCollapsed = !this.isDailyCashFlowCollapsed;
     } else if (section === 'recordedIncomes') {
@@ -626,19 +620,11 @@ export class Profit implements OnInit, OnDestroy {
     }
   }
 
-  // ✅ Empty state button — form ဖွင့်ပြီး amount field focus
   openIncomeFormAndFocus(): void {
     if (!this.canManageProfitActions) {
       return;
     }
     this.isIncomeFormCollapsed = false;
-    setTimeout(() => {
-      const input = document.getElementById('incomeAmount') as HTMLInputElement;
-      if (input) {
-        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        input.focus();
-      }
-    }, 320);
   }
 
   // --- Formatting and Chart Rendering ---

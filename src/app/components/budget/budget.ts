@@ -194,29 +194,15 @@ export class BudgetComponent implements OnInit, OnDestroy {
   }
   toggleAddForm(): void {
     this.isBudgetFormCollapsed = !this.isBudgetFormCollapsed;
-    if (!this.isBudgetFormCollapsed) {
-      setTimeout(() => {
-        const input = document.getElementById('amount') as HTMLInputElement;
-        input?.focus();
-      }, 320);
-    }
   }
   toggleRecordedList(): void { this.isRecordedBudgetsCollapsed = !this.isRecordedBudgetsCollapsed; }
   toggleSpendingMonitor(): void { this.isSpendingMonitorCollapsed = !this.isSpendingMonitorCollapsed; }
 
-  // ✅ Empty state button: form ဖွင့်ပြီး amount field focus ကျအောင်
   openBudgetFormAndFocus(): void {
     if (!this.canManageBudgets) {
       return;
     }
     this.isBudgetFormCollapsed = false;
-    setTimeout(() => {
-      const input = document.getElementById('amount') as HTMLInputElement;
-      if (input) {
-        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        input.focus();
-      }
-    }, 320);
   }
   private refreshBudgets$ = new BehaviorSubject<void>(undefined);
 
