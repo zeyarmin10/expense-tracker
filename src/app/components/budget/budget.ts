@@ -175,6 +175,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
   hasChartData: boolean = false;
   amountDisplayValue: string = '';
   isRecordedBudgetsCollapsed: boolean = true;
+  isSpendingMonitorCollapsed: boolean = false;
 
   // UI state for dark-theme panels
   get isAddFormOpen(): boolean { return !this.isBudgetFormCollapsed; }
@@ -201,6 +202,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
     }
   }
   toggleRecordedList(): void { this.isRecordedBudgetsCollapsed = !this.isRecordedBudgetsCollapsed; }
+  toggleSpendingMonitor(): void { this.isSpendingMonitorCollapsed = !this.isSpendingMonitorCollapsed; }
 
   // ✅ Empty state button: form ဖွင့်ပြီး amount field focus ကျအောင်
   openBudgetFormAndFocus(): void {

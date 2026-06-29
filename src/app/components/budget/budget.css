@@ -745,6 +745,143 @@
   border-width: 2px;
 }
 
+/* ── Toggle Pill Icons ── */
+.bgt-toggle-pill {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.bgt-toggle-pill-budget {
+  background: var(--budget-dim);
+  color: var(--budget-color);
+}
+
+.bgt-toggle-pill-accent {
+  background: rgba(11, 116, 255, 0.1);
+  color: var(--accent);
+}
+
+.bgt-toggle-pill-warning {
+  background: rgba(245, 158, 11, 0.12);
+  color: var(--warning);
+}
+
+/* ── Budget Card List ── */
+.bgt-budget-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem 0.85rem;
+}
+
+.bgt-budget-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.85rem 0.9rem;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--budget-color);
+  background: var(--surface-2);
+  transition: background 0.15s;
+}
+
+.bgt-budget-card:hover {
+  background: var(--surface);
+}
+
+.bgt-budget-card-icon-wrap {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: var(--budget-dim);
+  color: var(--budget-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.bgt-budget-card-icon-cat {
+  background: hsl(var(--cat-hue, 220) 80% 55% / 0.15);
+  color: hsl(var(--cat-hue, 220) 80% 70%);
+}
+
+.bgt-budget-card-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
+}
+
+.bgt-budget-card-top {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.bgt-budget-card-amount {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--budget-color);
+  white-space: nowrap;
+}
+
+.bgt-budget-card-badges {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.bgt-budget-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.bgt-budget-card-date {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.bgt-budget-card-desc {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-style: italic;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Budget List Empty State ── */
+.bgt-list-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 2.5rem 1rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.bgt-list-empty p { margin: 0; }
+
+.bgt-list-empty-icon {
+  opacity: 0.25;
+  color: var(--budget-color);
+}
+
 /* ── Chart Panel ── */
 .bgt-chart-panel {
   background: var(--surface);
