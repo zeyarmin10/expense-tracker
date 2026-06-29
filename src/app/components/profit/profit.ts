@@ -625,6 +625,15 @@ export class Profit implements OnInit, OnDestroy {
       return;
     }
     this.isIncomeFormCollapsed = false;
+    setTimeout(() => {
+      const el = document.getElementById('pnl-add-panel');
+      if (el) {
+        const topbar = document.querySelector('.mob-topbar') as HTMLElement;
+        const offset = (topbar ? topbar.offsetHeight : 64) + 8;
+        const y = el.getBoundingClientRect().top + window.scrollY - offset;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+      }
+    }, 320);
   }
 
   // --- Formatting and Chart Rendering ---

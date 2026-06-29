@@ -203,6 +203,15 @@ export class BudgetComponent implements OnInit, OnDestroy {
       return;
     }
     this.isBudgetFormCollapsed = false;
+    setTimeout(() => {
+      const el = document.getElementById('bgt-add-panel');
+      if (el) {
+        const topbar = document.querySelector('.mob-topbar') as HTMLElement;
+        const offset = (topbar ? topbar.offsetHeight : 64) + 8;
+        const y = el.getBoundingClientRect().top + window.scrollY - offset;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+      }
+    }, 320);
   }
   private refreshBudgets$ = new BehaviorSubject<void>(undefined);
 

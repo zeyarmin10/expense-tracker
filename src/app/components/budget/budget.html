@@ -136,7 +136,7 @@
     </div>
 
     <!-- ── Add Budget Panel ── -->
-    <div class="bgt-panel" *ngIf="canManageBudgets">
+    <div class="bgt-panel" id="bgt-add-panel" *ngIf="canManageBudgets">
       <button class="bgt-panel-toggle" type="button" (click)="toggleAddForm()" [attr.aria-expanded]="isAddFormOpen">
         <span class="bgt-panel-toggle-left">
           <span class="bgt-toggle-pill bgt-toggle-pill-budget">
