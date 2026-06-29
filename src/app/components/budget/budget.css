@@ -1140,6 +1140,9 @@
 .bgt-empty-icon {
   font-size: 2.4rem;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   animation: bgt-bounce 3s ease-in-out infinite;
 }
 

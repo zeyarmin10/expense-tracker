@@ -100,7 +100,9 @@
     <!-- ── Empty State ── -->
     <ng-container *ngIf="(totalBudgetByCurrency$ | async) as budTotals">
       <div class="bgt-empty-banner" *ngIf="!budTotals || (budTotals | keyvalue).length === 0">
-        <div class="bgt-empty-icon">💰</div>
+        <div class="bgt-empty-icon">
+          <lucide-icon [img]="iconPiggyBank" [size]="42" class="bgt-icon-accent"></lucide-icon>
+        </div>
         <div class="bgt-empty-content">
           <p class="bgt-empty-title">{{ 'BUDGET_EMPTY_TITLE' | translate }}</p>
           <p class="bgt-empty-sub">{{ 'BUDGET_EMPTY_SUB' | translate }}</p>
