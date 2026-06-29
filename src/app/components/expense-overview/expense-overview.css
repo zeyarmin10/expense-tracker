@@ -26,40 +26,6 @@
 }
 
 /* Header */
-.expense-header {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  margin-bottom: 1.5rem;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.expense-title {
-  font-size: clamp(1.6rem, 4vw, 2.4rem);
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  margin: 0;
-  line-height: 1.4 !important;
-}
-
-.expense-title span {
-  margin-left: 0.5rem;
-  color: var(--accent);
-}
-
-.header-badge {
-  /* font-family: 'DM Mono', monospace; */
-  font-size: 0.72rem;
-  background: var(--accent-dim);
-  color: var(--accent);
-  border: 1px solid rgba(11, 116, 255, 0.25);
-  padding: 0.3rem 0.75rem;
-  border-radius: 100px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
 /* ── Filter Row ── */
 /* Mobile: column stack */
 .ov-filter-row {

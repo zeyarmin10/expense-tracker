@@ -959,13 +959,14 @@ a.exp-icon-btn {
   align-items: center;
   gap: 0.5rem;
   flex-wrap: nowrap;
-  padding: 0.5rem 1rem;
+  padding: 0.45rem 1rem;
   background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
   min-width: 0;
 }
 
 .exp-date-label {
-  font-size: 0.75rem;
+  font-size: 0.73rem;
   font-weight: 800;
   color: var(--text-sub);
   white-space: nowrap;
@@ -974,7 +975,7 @@ a.exp-icon-btn {
 
 .exp-date-count {
   color: var(--text-muted);
-  font-size: 0.68rem;
+  font-size: 0.67rem;
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -990,18 +991,15 @@ a.exp-icon-btn {
 
 .exp-date-total {
   border-radius: 999px;
-  border: 1px solid rgba(244, 177, 26, 0.25);
-  background: rgba(244, 177, 26, 0.08);
+  border: 1px solid rgba(244, 177, 26, 0.2);
+  background: rgba(244, 177, 26, 0.07);
   color: var(--warning);
   font-size: 0.7rem;
   font-weight: 700;
-  padding: 0.2rem 0.5rem;
+  padding: 0.18rem 0.5rem;
   white-space: nowrap;
 }
 
-.exp-date-group .exp-list {
-  border-top: 1px solid var(--border);
-}
 
 /* ── Expense Items ── */
 .exp-category-list {
@@ -1112,6 +1110,7 @@ body.light-mode .exp-category-title-chip:hover {
 
 .exp-item {
   border-bottom: 1px solid var(--border);
+  border-left: 3px solid hsl(var(--cat-hue, 220) 80% 55% / 0.55);
   transition: background 0.15s;
 }
 
@@ -1123,8 +1122,12 @@ body.light-mode .exp-category-title-chip:hover {
   background: var(--surface-2);
 }
 
+body.light-mode .exp-item {
+  border-left-color: hsl(var(--cat-hue, 220) 60% 45% / 0.6);
+}
+
 .exp-item-inner {
-  padding: 1rem 1.4rem;
+  padding: 0.85rem 1.1rem 0.85rem 1rem;
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
@@ -1451,6 +1454,26 @@ body.light-mode .exp-category-title-chip:hover {
   color: var(--text-muted);
   font-size: 0.88rem;
   padding: 2.5rem 1.5rem;
+}
+
+.exp-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 2.5rem 1.5rem;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  text-align: center;
+}
+
+.exp-empty-state-icon {
+  opacity: 0.2;
+  color: var(--success);
+}
+
+.exp-empty-state p {
+  margin: 0;
 }
 
 .exp-loading {

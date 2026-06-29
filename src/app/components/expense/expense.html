@@ -606,8 +606,9 @@
 
       <!-- List Items -->
       <div *ngIf="groupedExpenses$ | async as dateGroups; else loading">
-        <div *ngIf="dateGroups.length === 0" class="exp-empty">
-          {{ "EXPENSE_NO_EXPENSES_HINT" | translate }}
+        <div *ngIf="dateGroups.length === 0" class="exp-empty-state">
+          <lucide-icon [img]="iconListChecks" [size]="34" class="exp-empty-state-icon"></lucide-icon>
+          <p>{{ "EXPENSE_NO_EXPENSES_HINT" | translate }}</p>
         </div>
 
         <div class="exp-date-list" *ngIf="dateGroups.length > 0">
@@ -633,7 +634,7 @@
             </div>
 
             <div class="exp-list">
-              <div *ngFor="let expense of group.expenses" class="exp-item">
+              <div *ngFor="let expense of group.expenses" class="exp-item" [style.--cat-hue]="getIconHueForCategory(expense.category)">
                 <div class="exp-item-inner">
                   <div class="exp-item-top">
                     <span class="exp-item-name" appShowFullText>{{ expense.itemName }}</span>
