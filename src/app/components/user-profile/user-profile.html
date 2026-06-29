@@ -3,11 +3,6 @@
     <ng-container *ngIf="userDisplayData$ | async as userData">
       <form [formGroup]="userProfileForm" (ngSubmit)="onSubmit()">
 
-        <!-- Page Header -->
-        <div class="prof-page-header">
-          <h2 class="prof-page-title pb-2">{{ 'USER_PROFILE_TITLE' | translate }}</h2>
-        </div>
-
         <!-- ── Hero Card ── -->
         <div class="prof-hero">
           <!-- Hidden file input for avatar -->
@@ -86,7 +81,12 @@
         <!-- ── Budget Period ── -->
         <div class="prof-list-card" *ngIf="canEditSettings">
           <div class="prof-card-header-row">
-            <span class="prof-card-label">{{ 'BUDGET_PERIOD_LABEL' | translate }}</span>
+            <div class="prof-card-header-left">
+              <span class="prof-section-pill prof-section-pill-accent">
+                <lucide-icon [img]="iconCalendarRange" [size]="14"></lucide-icon>
+              </span>
+              <span class="prof-card-label">{{ 'BUDGET_PERIOD_LABEL' | translate }}</span>
+            </div>
             <button class="prof-icon-btn" type="button" (click)="openBudgetPeriodModal()"
               title="{{ 'CREATE_CUSTOM_BUDGET_PERIOD' | translate }}">
               <lucide-icon [img]="iconPlus" [size]="15"></lucide-icon>
@@ -144,6 +144,14 @@
 
         <!-- ── Preferences ── -->
         <div class="prof-list-card">
+          <div class="prof-card-header-row">
+            <div class="prof-card-header-left">
+              <span class="prof-section-pill prof-section-pill-accent">
+                <lucide-icon [img]="iconSettings2" [size]="14"></lucide-icon>
+              </span>
+              <span class="prof-card-label">{{ 'PREFERENCES_LABEL' | translate }}</span>
+            </div>
+          </div>
           <div class="prof-list-item">
             <span class="prof-list-title">{{ 'CURRENCY' | translate }}</span>
             <app-custom-select
@@ -188,8 +196,8 @@
         <div class="prof-section prof-notification-section" [class.prof-noti-section-loading]="isNotificationBusy">
           <div class="prof-noti-header">
             <div class="prof-noti-title">
-              <span class="prof-noti-icon">
-                <lucide-icon [img]="isNotificationEnabled ? iconBell : iconBellOff" [size]="15"></lucide-icon>
+              <span class="prof-section-pill prof-section-pill-accent">
+                <lucide-icon [img]="isNotificationEnabled ? iconBell : iconBellOff" [size]="14"></lucide-icon>
               </span>
               <div>
                 <span class="prof-section-label">{{ 'NOTI_SECTION_LABEL' | translate }}</span>
@@ -250,7 +258,12 @@
 
       <!-- ── Danger Zone ── -->
       <div class="prof-section prof-danger-section">
-        <span class="prof-section-label prof-danger-label">{{ 'DANGER_ZONE_LABEL' | translate }}</span>
+        <div class="prof-section-header">
+          <span class="prof-section-pill prof-section-pill-danger">
+            <lucide-icon [img]="iconShieldAlert" [size]="14"></lucide-icon>
+          </span>
+          <span class="prof-section-label prof-danger-label">{{ 'DANGER_ZONE_LABEL' | translate }}</span>
+        </div>
         <div class="prof-danger-row">
           <div class="prof-danger-info">
             <p class="prof-danger-title">{{ 'DELETE_ACCOUNT_BUTTON' | translate }}</p>

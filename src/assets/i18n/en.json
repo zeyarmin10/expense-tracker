@@ -101,6 +101,7 @@
   "CATEGORY_NAME_LABEL": "Category Name",
   "CATEGORY_NAME_PLACEHOLDER": "e.g., Food",
   "CATEGORY_NAME_REQUIRED": "Category name is required.",
+  "CATEGORY_NAME_MAX_LENGTH_ERROR": "Category name cannot exceed 30 characters.",
   "UPDATE_CATEGORY_BUTTON": " Update Category",
   "ADD_CATEGORY_BUTTON": " Add Category",
   "CANCEL_BUTTON": "Cancel",

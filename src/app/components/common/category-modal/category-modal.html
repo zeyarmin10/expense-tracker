@@ -35,16 +35,30 @@
                 formControlName="name"
                 placeholder=" "
                 id="catNameInput"
-                autocomplete="off" />
+                maxlength="30"
+                autocomplete="off"
+                [class.err]="(categoryForm.get('name')?.value?.length ?? 0) >= 30" />
               <label class="cat-fl-label" for="catNameInput">
                 {{ 'CATEGORY_NAME_LABEL' | translate }}
               </label>
             </div>
             <button class="cat-save-btn" type="submit" [disabled]="categoryForm.invalid">
               <lucide-icon [img]="isEditMode ? iconSave : iconPlus" [size]="20"></lucide-icon>
-              <!-- <span>{{ (isEditMode ? 'SAVE_BUTTON_LABEL' : 'ADD_BUTTON') | translate }}</span> -->
             </button>
           </div>
+          <!-- Character counter -->
+          <div class="cat-char-row" *ngIf="(categoryForm.get('name')?.value?.length ?? 0) > 0">
+            <span class="cat-char-hint" *ngIf="(categoryForm.get('name')?.value?.length ?? 0) >= 30">
+              {{ 'CATEGORY_NAME_MAX_LENGTH_ERROR' | translate }}
+            </span>
+            <span class="cat-char-count" [class.cat-char-at-limit]="(categoryForm.get('name')?.value?.length ?? 0) >= 30">
+              {{ categoryForm.get('name')?.value?.length ?? 0 }} / 30
+            </span>
+          </div>
+          <div class="cat-modal-error" *ngIf="categoryForm.controls['name'].touched && categoryForm.controls['name'].errors?.['required']">
+            {{ 'CATEGORY_NAME_REQUIRED' | translate }}
+          </div>
+
           <!-- Icon Picker Grid -->
           <div class="cat-icon-picker" *ngIf="showIconPicker">
             <button type="button" class="cat-icon-opt"

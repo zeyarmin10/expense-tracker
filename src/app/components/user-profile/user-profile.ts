@@ -11,7 +11,7 @@ import { switchMap, tap, catchError, distinctUntilChanged, takeUntil, take } fro
 import { AuthService } from '../../services/auth';
 import { getActiveGroupId, UserDataService, UserProfile } from '../../services/user-data';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { LucideAngularModule, Save, Trash2, Plus, ChevronDown, ChevronUp, X, Bell, BellOff, Clock, Camera as LucideCamera, Images, Moon, Monitor, Sun, CalendarRange, Pencil, PencilLine } from 'lucide-angular';
+import { LucideAngularModule, Save, Trash2, Plus, ChevronDown, ChevronUp, X, Bell, BellOff, Clock, Camera as LucideCamera, Images, Moon, Monitor, Sun, CalendarRange, Pencil, PencilLine, Settings2, ShieldAlert } from 'lucide-angular';
 import { updateProfile } from '@angular/fire/auth';
 import { HttpClient } from '@angular/common/http';
 import { Camera } from '@capacitor/camera';
@@ -186,6 +186,8 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   readonly iconMonitor = Monitor;
   readonly iconSun = Sun;
   readonly iconCalendarRange = CalendarRange;
+  readonly iconSettings2 = Settings2;
+  readonly iconShieldAlert = ShieldAlert;
   imageLoadError: boolean = false;
   isEditingName: boolean = false;
   isFormReady: boolean = false;

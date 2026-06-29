@@ -101,6 +101,7 @@
   "CATEGORY_NAME_LABEL": "အမျိုးအစားအမည်",
   "CATEGORY_NAME_PLACEHOLDER": "ဥပမာ- အစားအသောက်",
   "CATEGORY_NAME_REQUIRED": "အမျိုးအစားအမည်ကို ဖြည့်ရန် လိုအပ်ပါသည်။",
+  "CATEGORY_NAME_MAX_LENGTH_ERROR": "အမျိုးအစားအမည်သည် စာလုံး ၃၀ ထက် မကျော်ရပါ။",
   "UPDATE_CATEGORY_BUTTON": "အမျိုးအစား အပ်ဒိတ်လုပ်ရန်",
   "ADD_CATEGORY_BUTTON": "အမျိုးအစားထည့်ရန်",
   "CANCEL_BUTTON": "မလုပ်တော့ပါ",

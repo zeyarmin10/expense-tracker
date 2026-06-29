@@ -207,9 +207,9 @@ export class OnboardingComponent implements OnInit {
                    style="margin:0;width:100%;">
             <div style="display:flex;justify-content:space-between;align-items:center;
                         margin-top:0.35rem;padding:0 0.1rem;">
-              <span style="font-size:0.7rem;color:#f87171;">${counterHint}</span>
+              <span id="swal-edit-hint" style="font-size:0.7rem;color:#f87171;display:${space.name.length >= max ? 'block' : 'none'};">${counterHint}</span>
               <span id="swal-edit-count"
-                    style="font-size:0.7rem;color:#6b7280;">${space.name.length} / ${max}</span>
+                    style="font-size:0.7rem;color:${space.name.length >= max ? '#f87171' : '#6b7280'};">${space.name.length} / ${max}</span>
             </div>
           </div>
         </div>
@@ -221,6 +221,7 @@ export class OnboardingComponent implements OnInit {
         const fileInput = document.getElementById('swal-edit-photo') as HTMLInputElement;
         const nameInput = document.getElementById('swal-edit-name') as HTMLInputElement;
         const countEl   = document.getElementById('swal-edit-count') as HTMLElement;
+        const hintEl    = document.getElementById('swal-edit-hint') as HTMLElement;
 
         fileInput?.addEventListener('change', () => {
           const file = fileInput.files?.[0];
@@ -238,9 +239,11 @@ export class OnboardingComponent implements OnInit {
 
         nameInput?.addEventListener('input', () => {
           const len = nameInput.value.length;
+          const atLimit = len >= max;
           countEl.textContent = `${len} / ${max}`;
-          countEl.style.color = len > max ? '#f87171' : '#6b7280';
-          nameInput.style.borderColor = len > max ? '#f87171' : '';
+          countEl.style.color = atLimit ? '#f87171' : '#6b7280';
+          nameInput.style.borderColor = atLimit ? '#f87171' : '';
+          if (hintEl) hintEl.style.display = atLimit ? 'block' : 'none';
         });
 
         setTimeout(() => { nameInput?.focus(); nameInput?.select(); }, 80);
@@ -404,7 +407,7 @@ export class OnboardingComponent implements OnInit {
             <div id="swal-grp-counter"
                  style="display:flex;justify-content:space-between;align-items:center;
                         margin-top:0.35rem;padding:0 0.1rem;">
-              <span id="swal-grp-hint" style="font-size:0.7rem;color:#f87171;">${counterHint}</span>
+              <span id="swal-grp-hint" style="font-size:0.7rem;color:#f87171;display:none;">${counterHint}</span>
               <span id="swal-grp-count" style="font-size:0.7rem;color:#6b7280;">0 / ${max}</span>
             </div>
           </div>
@@ -417,6 +420,7 @@ export class OnboardingComponent implements OnInit {
         const fileInput  = document.getElementById('swal-grp-photo')  as HTMLInputElement;
         const nameInput  = document.getElementById('swal-grp-name')   as HTMLInputElement;
         const countEl    = document.getElementById('swal-grp-count')  as HTMLElement;
+        const hintEl     = document.getElementById('swal-grp-hint')   as HTMLElement;
 
         fileInput?.addEventListener('change', () => {
           const file = fileInput.files?.[0];
@@ -434,9 +438,11 @@ export class OnboardingComponent implements OnInit {
 
         nameInput?.addEventListener('input', () => {
           const len = nameInput.value.length;
+          const atLimit = len >= max;
           countEl.textContent = `${len} / ${max}`;
-          countEl.style.color = len > max ? '#f87171' : '#6b7280';
-          nameInput.style.borderColor = len > max ? '#f87171' : '';
+          countEl.style.color = atLimit ? '#f87171' : '#6b7280';
+          nameInput.style.borderColor = atLimit ? '#f87171' : '';
+          if (hintEl) hintEl.style.display = atLimit ? 'block' : 'none';
         });
 
         setTimeout(() => nameInput?.focus(), 80);

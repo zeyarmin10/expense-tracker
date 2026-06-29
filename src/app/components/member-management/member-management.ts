@@ -52,6 +52,7 @@ export class MemberManagementComponent implements OnInit {
   readonly iconTrash2 = Trash2;
   readonly iconCrown = Crown;
 
+
   userProfile$: Observable<IUserProfile | null>;
   isAdmin$!: Observable<boolean>;
   members$: Observable<IGroupMemberDetails[]>;

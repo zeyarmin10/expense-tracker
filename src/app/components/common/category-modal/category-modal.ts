@@ -105,7 +105,7 @@ export class CategoryModalComponent implements OnInit, OnDestroy {
 
   constructor(private fb: FormBuilder) {
     this.categoryForm = this.fb.group({
-      name: ['', Validators.required]
+      name: ['', [Validators.required, Validators.maxLength(30)]]
     });
   }
 

@@ -27,7 +27,7 @@
               formControlName="name"
               placeholder=" "
               maxlength="30"
-              [class.err]="addCategoryForm.controls['name'].invalid && addCategoryForm.controls['name'].touched"
+              [class.err]="(addCategoryForm.get('name')?.value?.length ?? 0) >= 30"
             />
             <label class="cat-fl-label" for="newCategoryName">
               {{ "CATEGORY_NAME_LABEL" | translate }}
@@ -46,9 +46,17 @@
           </button>
         </div>
 
-        <div *ngIf="addCategoryForm.controls['name'].invalid && addCategoryForm.controls['name'].touched"
+        <div class="cat-char-row" *ngIf="(addCategoryForm.get('name')?.value?.length ?? 0) > 0">
+          <span class="cat-char-hint" *ngIf="(addCategoryForm.get('name')?.value?.length ?? 0) >= 30">
+            {{ 'CATEGORY_NAME_MAX_LENGTH_ERROR' | translate }}
+          </span>
+          <span class="cat-char-count" [class.cat-char-at-limit]="(addCategoryForm.get('name')?.value?.length ?? 0) >= 30">
+            {{ addCategoryForm.get('name')?.value?.length ?? 0 }} / 30
+          </span>
+        </div>
+        <div *ngIf="addCategoryForm.controls['name'].touched && addCategoryForm.controls['name'].errors?.['required']"
           class="cat-error">
-          {{ "CATEGORY_NAME_REQUIRED" | translate }}
+          {{ 'CATEGORY_NAME_REQUIRED' | translate }}
         </div>
         <div class="cat-add-footer">
           <button type="submit" class="cat-btn cat-btn-primary"
@@ -124,7 +132,7 @@
                     [formControl]="editingCategoryFormControl!"
                     placeholder=" "
                     maxlength="30"
-                    [class.err]="editingCategoryFormControl!.invalid && editingCategoryFormControl!.touched"
+                    [class.err]="(editingCategoryFormControl?.value?.length ?? 0) >= 30"
                     (keydown.enter)="onUpdateInline(category.id!)"
                   />
                   <label class="cat-fl-label" [for]="'edit-' + category.id">
@@ -141,9 +149,17 @@
                   <lucide-icon [img]="opt.icon" [size]="20"></lucide-icon>
                 </button>
               </div>
-              <div *ngIf="editingCategoryFormControl!.invalid && editingCategoryFormControl!.touched"
+              <div class="cat-char-row" *ngIf="(editingCategoryFormControl?.value?.length ?? 0) > 0">
+                <span class="cat-char-hint" *ngIf="(editingCategoryFormControl?.value?.length ?? 0) >= 30">
+                  {{ 'CATEGORY_NAME_MAX_LENGTH_ERROR' | translate }}
+                </span>
+                <span class="cat-char-count" [class.cat-char-at-limit]="(editingCategoryFormControl?.value?.length ?? 0) >= 30">
+                  {{ editingCategoryFormControl?.value?.length ?? 0 }} / 30
+                </span>
+              </div>
+              <div *ngIf="editingCategoryFormControl!.touched && editingCategoryFormControl!.errors?.['required']"
                 class="cat-error">
-                {{ "CATEGORY_NAME_REQUIRED" | translate }}
+                {{ 'CATEGORY_NAME_REQUIRED' | translate }}
               </div>
               <div class="cat-edit-actions">
                 <button class="cat-btn cat-btn-ghost cat-btn-sm" (click)="cancelEdit()">
