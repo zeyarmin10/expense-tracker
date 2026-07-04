@@ -21,7 +21,7 @@ import { DataIExpense as IExpense } from '../core/models/data';
 import { AuthService } from './auth';
 import { UAParser } from 'ua-parser-js';
 import { getActiveGroupId, UserDataService, UserProfile } from './user-data';
-import { GroupService } from './group.service';
+import { SpaceContextService } from './space-context.service';
 import { SpaceDataService } from './space-data.service';
 import { SpaceSwitchLoadingService } from './space-switch-loading.service';
 
@@ -44,7 +44,7 @@ export class ExpenseService {
   private db: Database = inject(Database);
   private authService: AuthService = inject(AuthService);
   private userDataService: UserDataService = inject(UserDataService);
-  private groupService: GroupService = inject(GroupService);
+  private spaceContextService: SpaceContextService = inject(SpaceContextService);
   private spaceDataService: SpaceDataService = inject(SpaceDataService);
   private spaceSwitchLoadingService = inject(SpaceSwitchLoadingService);
 
@@ -205,8 +205,8 @@ export class ExpenseService {
     const { canonicalRef, legacyRef } = await this.spaceDataService.getActiveCollectionContext(profile, 'expenses');
 
     if (activeGroupId) {
-      const groupSettings = await firstValueFrom(this.groupService.getGroupSettings(activeGroupId));
-      currency = groupSettings?.currency || profile.currency;
+      const space = await firstValueFrom(this.spaceContextService.getSpace(activeGroupId));
+      currency = space?.currency || profile.currency;
       expensesRef = canonicalRef || legacyRef;
     } else {
       currency = profile.currency;

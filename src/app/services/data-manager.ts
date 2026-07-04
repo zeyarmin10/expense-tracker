@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import {
   Database,
   ref,
+  push,
   remove,
   listVal,
   get,
@@ -10,26 +11,20 @@ import {
   equalTo,
   update,
 } from '@angular/fire/database';
-import { Observable, switchMap, firstValueFrom, of, from, combineLatest, map as rxMap } from 'rxjs';
+import { Observable, switchMap, firstValueFrom, of, combineLatest, map as rxMap } from 'rxjs';
 import { AuthService } from './auth';
-import { IGroupMember, IUserProfile, IInvitation } from '../core/models/data';
-import { getActiveGroupId, UserDataService } from './user-data';
+import { CategoryService } from './category';
+import { IUserProfile, IInvitation } from '../core/models/data';
+import { UserDataService } from './user-data';
 import { Invitation } from './invitation.service';
 import { SpaceContextService } from './space-context.service';
+import { Space } from './space.model';
 
-export interface IGroupDetails {
-  groupName: string;
-  ownerId: string;
-  imageUrl?: string | null;
-}
+export const MAX_SPACE_NAME_LENGTH = 50;
 
 // New interface for the combined member data
 export interface IGroupMemberDetails extends IUserProfile {
   role: string; // Add role to the user profile data
-}
-
-function isPermissionDenied(error: any): boolean {
-  return error?.code === 'PERMISSION_DENIED' || error?.message === 'permission_denied';
 }
 
 @Injectable({
@@ -40,6 +35,174 @@ export class DataManagerService {
   private authService: AuthService = inject(AuthService);
   private userDataService: UserDataService = inject(UserDataService);
   private spaceContextService: SpaceContextService = inject(SpaceContextService);
+  private categoryService: CategoryService = inject(CategoryService);
+
+  async createGroup(groupName: string, language: string, imageUrl?: string | null): Promise<string> {
+    const userId = (await firstValueFrom(
+      this.authService.currentUser$.pipe(rxMap((user) => user?.uid))
+    ))!;
+    if (!userId) {
+      throw new Error('User not authenticated.');
+    }
+
+    const trimmedName = groupName.trim();
+    if (!trimmedName) {
+      throw new Error('Group name is required.');
+    }
+    if (trimmedName.length > MAX_SPACE_NAME_LENGTH) {
+      throw new Error('Group name is too long.');
+    }
+
+    const userProfile = await firstValueFrom(this.userDataService.getUserProfile(userId));
+
+    const personalSpaceId = userProfile?.personalSpaceId || '';
+    const ownedGroupSpaces = Object.entries(userProfile?.spaceMemberships || {})
+      .filter(([spaceId, role]) =>
+        role === 'owner' &&
+        spaceId !== personalSpaceId &&
+        !spaceId.startsWith('personal:')
+      );
+    if (ownedGroupSpaces.length >= 5) {
+      throw new Error('Space limit reached.');
+    }
+
+    const existingNames = await Promise.all(
+      ownedGroupSpaces.map(async ([spaceId]) => {
+        const spaceSnap = await get(ref(this.db, `spaces/${spaceId}/name`));
+        return spaceSnap.exists() ? (spaceSnap.val() as string).trim().toLowerCase() : null;
+      })
+    );
+    if (existingNames.some(name => name === trimmedName.toLowerCase())) {
+      throw new Error('Duplicate group name.');
+    }
+
+    const spaceRef = push(ref(this.db, 'spaces'));
+    const newGroupId = spaceRef.key!;
+    if (!newGroupId) {
+      throw new Error('Failed to create new space ID.');
+    }
+
+    const updates: { [key: string]: any } = {};
+    updates[`/spaces/${newGroupId}`] = {
+      type: 'group',
+      name: trimmedName,
+      ownerId: userId,
+      currency: userProfile?.currency || 'MMK',
+      budgetPeriod: userProfile?.budgetPeriod || null,
+      budgetStartDate: userProfile?.budgetStartDate || null,
+      budgetEndDate: userProfile?.budgetEndDate || null,
+      selectedBudgetPeriodId: userProfile?.selectedBudgetPeriodId || null,
+      createdAt: Date.now(),
+      ...(imageUrl ? { imageUrl } : {}),
+    };
+    updates[`/space_members/${newGroupId}/${userId}`] = { role: 'owner' };
+    updates[`/users/${userId}/accountType`] = 'group';
+    updates[`/users/${userId}/currentSpaceId`] = newGroupId;
+    updates[`/users/${userId}/currentSpaceType`] = 'group';
+    updates[`/users/${userId}/currentSpaceName`] = trimmedName;
+    updates[`/users/${userId}/currentSpaceRole`] = 'owner';
+    updates[`/users/${userId}/spaceMemberships/${newGroupId}`] = 'owner';
+
+    await update(ref(this.db), updates);
+
+    await this.categoryService.addDefaultGroupCategories(newGroupId, language);
+
+    return newGroupId;
+  }
+
+  async updateGroupSettings(groupId: string, settings: Partial<Space>): Promise<void> {
+    await update(ref(this.db, `spaces/${groupId}`), settings);
+  }
+
+  async renameGroup(groupId: string, nextName: string): Promise<void> {
+    const trimmedName = nextName.trim();
+    if (!trimmedName) {
+      throw new Error('Group name is required.');
+    }
+    if (trimmedName.length > MAX_SPACE_NAME_LENGTH) {
+      throw new Error('Group name is too long.');
+    }
+
+    const updates: Record<string, unknown> = {
+      [`/spaces/${groupId}/name`]: trimmedName,
+    };
+
+    const memberSnapshot = await get(ref(this.db, `space_members/${groupId}`));
+    if (memberSnapshot.exists()) {
+      const memberIds = Object.keys(memberSnapshot.val() || {});
+      await Promise.all(
+        memberIds.map(async (memberId) => {
+          const profile = await this.userDataService.fetchUserProfile(memberId);
+          if (profile?.currentSpaceId === groupId) {
+            updates[`/users/${memberId}/currentSpaceName`] = trimmedName;
+          }
+        }),
+      );
+    }
+
+    await update(ref(this.db), updates);
+  }
+
+  async deleteGroup(groupId: string, actorId: string): Promise<void> {
+    const spaceSnapshot = await get(ref(this.db, `spaces/${groupId}`));
+    if (!spaceSnapshot.exists()) {
+      throw new Error('Group not found.');
+    }
+
+    const space = spaceSnapshot.val() as Space;
+    if (space.ownerId !== actorId) {
+      throw new Error('Only the group owner can delete this space.');
+    }
+
+    const memberSnapshot = await get(ref(this.db, `space_members/${groupId}`));
+    const members = memberSnapshot.exists() ? (memberSnapshot.val() as Record<string, { role: string }>) : {};
+    const otherMemberIds = Object.keys(members).filter((memberId) => memberId !== actorId);
+
+    if (otherMemberIds.length > 0) {
+      throw new Error('Remove all other members before deleting this space.');
+    }
+
+    const invitationSnapshot = await get(
+      query(ref(this.db, 'invitations'), orderByChild('groupId'), equalTo(groupId)),
+    );
+    const invitations = invitationSnapshot.exists()
+      ? (invitationSnapshot.val() as Record<string, { status?: string }>)
+      : {};
+    const pendingInvitationIds = Object.entries(invitations)
+      .filter(([, invitation]) => invitation?.status === 'pending')
+      .map(([inviteId]) => inviteId);
+
+    if (pendingInvitationIds.length > 0) {
+      throw new Error('Revoke all pending invitations before deleting this space.');
+    }
+
+    const actorProfile = await this.userDataService.fetchUserProfile(actorId);
+    if (!actorProfile) {
+      throw new Error('User profile not found.');
+    }
+
+    const personalSpaceId =
+      actorProfile.personalSpaceId ||
+      (await this.spaceContextService.ensurePersonalSpace(actorId));
+
+    const updates: Record<string, unknown> = {
+      [`/spaces/${groupId}`]: null,
+      [`/space_members/${groupId}`]: null,
+      [`/group_data/${groupId}`]: null,
+      [`/users/${actorId}/accountType`]: 'personal',
+      [`/users/${actorId}/currentSpaceId`]: personalSpaceId,
+      [`/users/${actorId}/currentSpaceType`]: 'personal',
+      [`/users/${actorId}/currentSpaceRole`]: 'owner',
+      [`/users/${actorId}/currentSpaceName`]: 'My Personal',
+      [`/users/${actorId}/spaceMemberships/${groupId}`]: null,
+    };
+
+    for (const inviteId of Object.keys(invitations)) {
+      updates[`/invitations/${inviteId}`] = null;
+    }
+
+    await update(ref(this.db), updates);
+  }
 
   async acceptGroupInvitation(inviteCode: string, userId: string): Promise<void> {
     const inviteRef = ref(this.db, `invitations/${inviteCode}`);
@@ -58,52 +221,36 @@ export class DataManagerService {
     const groupId = invitation.groupId;
     const role = 'member'; // Default role for new members
 
-    const groupDetails = await this.getGroupDetails(groupId);
-    const existingProfile = await firstValueFrom(this.userDataService.getUserProfile(userId));
-    const legacyUpdates: { [key: string]: any } = {};
+    const space = await firstValueFrom(this.spaceContextService.getSpace(groupId));
 
-    legacyUpdates[`/group_members/${groupId}/${userId}`] = { role };
-    legacyUpdates[`/users/${userId}/accountType`] = 'group';
-    legacyUpdates[`/users/${userId}/currentSpaceId`] = groupId;
-    legacyUpdates[`/users/${userId}/currentSpaceType`] = 'group';
-    legacyUpdates[`/users/${userId}/currentSpaceName`] = groupDetails?.groupName || 'Group';
-    legacyUpdates[`/users/${userId}/currentSpaceRole`] = role;
-    legacyUpdates[`/users/${userId}/roles/${groupId}`] = role;
-    legacyUpdates[`/users/${userId}/spaceMemberships/${groupId}`] = role;
+    const updates: { [key: string]: any } = {};
+    updates[`/space_members/${groupId}/${userId}`] = { role };
+    updates[`/users/${userId}/accountType`] = 'group';
+    updates[`/users/${userId}/currentSpaceId`] = groupId;
+    updates[`/users/${userId}/currentSpaceType`] = 'group';
+    updates[`/users/${userId}/currentSpaceName`] = space?.name || 'Group';
+    updates[`/users/${userId}/currentSpaceRole`] = role;
+    updates[`/users/${userId}/spaceMemberships/${groupId}`] = role;
+    updates[`/invitations/${inviteCode}/status`] = 'accepted';
+    updates[`/invitations/${inviteCode}/acceptedBy`] = userId;
+    updates[`/invitations/${inviteCode}/acceptedAt`] = new Date().toISOString();
 
-    if (!existingProfile?.groupId) {
-      legacyUpdates[`/users/${userId}/groupId`] = groupId;
-    }
-    legacyUpdates[`/invitations/${inviteCode}/status`] = 'accepted';
-    legacyUpdates[`/invitations/${inviteCode}/acceptedBy`] = userId;
-    legacyUpdates[`/invitations/${inviteCode}/acceptedAt`] = new Date().toISOString();
-
-    await update(ref(this.db), legacyUpdates);
-
-    try {
-      await update(ref(this.db), {
-        [`/space_members/${groupId}/${userId}`]: { role },
-      });
-    } catch (error: any) {
-      if (!isPermissionDenied(error)) {
-        throw error;
-      }
-    }
+    await update(ref(this.db), updates);
   }
 
-  getGroupMembersWithProfile(groupId: string): Observable<IGroupMemberDetails[]> {
-    const membersRef = ref(this.db, `group_members/${groupId}`);
+  getSpaceMembersWithProfile(spaceId: string): Observable<IGroupMemberDetails[]> {
+    const membersRef = ref(this.db, `space_members/${spaceId}`);
     return listVal<any>(membersRef, { keyField: 'uid' }).pipe(
       switchMap(members => {
         if (!members || members.length === 0) {
           return of([]);
         }
-        const memberProfiles$ = members.map(member => 
+        const memberProfiles$ = members.map(member =>
           this.userDataService.getUserProfile(member.uid).pipe(
             rxMap(profile => ({
               ...profile,
               uid: member.uid, // ensure uid is carried over
-              role: member.role // combine role from group_members
+              role: member.role // combine role from space_members
             } as IGroupMemberDetails))
           )
         );
@@ -118,56 +265,19 @@ export class DataManagerService {
       userProfile?.personalSpaceId ||
       `personal:${memberId}`;
 
-    const legacyUpdates: { [key:string]: any } = {};
+    const updates: { [key: string]: any } = {};
+    updates[`/space_members/${groupId}/${memberId}`] = null;
+    updates[`/users/${memberId}/spaceMemberships/${groupId}`] = null;
 
-    legacyUpdates[`/group_members/${groupId}/${memberId}`] = null;
-    legacyUpdates[`/users/${memberId}/spaceMemberships/${groupId}`] = null;
-    legacyUpdates[`/users/${memberId}/roles/${groupId}`] = null;
-
-    if (userProfile?.currentSpaceId === groupId || userProfile?.groupId === groupId) {
-      legacyUpdates[`/users/${memberId}/currentSpaceId`] = fallbackSpaceId;
-      legacyUpdates[`/users/${memberId}/currentSpaceType`] = 'personal';
-      legacyUpdates[`/users/${memberId}/currentSpaceName`] = 'My Personal';
-      legacyUpdates[`/users/${memberId}/currentSpaceRole`] = 'owner';
-      legacyUpdates[`/users/${memberId}/groupId`] = null;
-      legacyUpdates[`/users/${memberId}/accountType`] = 'personal';
+    if (userProfile?.currentSpaceId === groupId) {
+      updates[`/users/${memberId}/currentSpaceId`] = fallbackSpaceId;
+      updates[`/users/${memberId}/currentSpaceType`] = 'personal';
+      updates[`/users/${memberId}/currentSpaceName`] = 'My Personal';
+      updates[`/users/${memberId}/currentSpaceRole`] = 'owner';
+      updates[`/users/${memberId}/accountType`] = 'personal';
     }
 
-    await update(ref(this.db), legacyUpdates);
-
-    try {
-      await update(ref(this.db), {
-        [`/space_members/${groupId}/${memberId}`]: null,
-      });
-    } catch (error: any) {
-      if (!isPermissionDenied(error)) {
-        throw error;
-      }
-    }
-  }
-
-  getUserRoleInGroup(groupId: string, userId: string): Observable<string | null> {
-    if (!groupId || !userId) {
-      return of(null);
-    }
-    const roleRef = ref(this.db, `users/${userId}/roles/${groupId}`);
-    return from(get(roleRef)).pipe(
-      rxMap(snapshot => (snapshot.exists() ? snapshot.val() : null))
-    );
-  }
-
-  // --- Member, Group & Invitation Management ---
-
-  // This function is now much simpler. It reads denormalized data directly.
-  getGroupMembers(groupId: string): Observable<IGroupMember[]> {
-    const membersRef = ref(this.db, `group_members/${groupId}`);
-    return listVal<IGroupMember>(membersRef, { keyField: 'uid' });
-  }
-
-  async getGroupDetails(groupId: string): Promise<IGroupDetails | null> {
-      const groupRef = ref(this.db, `groups/${groupId}`);
-      const snapshot = await get(groupRef);
-      return snapshot.exists() ? snapshot.val() as IGroupDetails : null;
+    await update(ref(this.db), updates);
   }
 
   getPendingInvitations(groupId: string): Observable<IInvitation[]> {
@@ -184,26 +294,5 @@ export class DataManagerService {
   async revokeGroupInvitation(inviteKey: string): Promise<void> {
     const inviteRef = ref(this.db, `invitations/${inviteKey}`);
     return remove(inviteRef);
-  }
-
-  private getDataPath(
-    dataType: 'categories' | 'expenses'
-  ): Observable<string | null> {
-    return this.authService.currentUser$.pipe(
-      switchMap(user => {
-        if (!user) return of(null);
-        return this.userDataService.getUserProfile(user.uid).pipe(
-          switchMap(userProfile => {
-            const activeGroupId = getActiveGroupId(userProfile);
-            if (activeGroupId) {
-              return of(`group_data/${activeGroupId}/${dataType}`);
-            } else if (userProfile?.uid) {
-              return of(`users/${user.uid}/${dataType}`);
-            }
-            return of(null);
-          })
-        );
-      })
-    );
   }
 }

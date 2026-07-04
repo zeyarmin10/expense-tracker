@@ -4,10 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { LucideAngularModule, UserPlus, Mail, Inbox, Trash2, UserX, User, Send, Users, Crown } from 'lucide-angular';
 import { IUserProfile, IInvitation } from '../../core/models/data';
-import { Observable, of, firstValueFrom, from } from 'rxjs';
+import { Observable, of, firstValueFrom, combineLatest } from 'rxjs';
 import { switchMap, shareReplay, map } from 'rxjs/operators';
 import { AuthService } from '../../services/auth';
-import { DataManagerService, IGroupDetails, IGroupMemberDetails } from '../../services/data-manager';
+import { DataManagerService, IGroupMemberDetails } from '../../services/data-manager';
+import { SpaceContextService } from '../../services/space-context.service';
 import { InvitationService } from '../../services/invitation.service';
 import Swal from 'sweetalert2';
 import { getActiveGroupId } from '../../services/user-data';
@@ -38,6 +39,7 @@ const Toast = Swal.mixin({
 export class MemberManagementComponent implements OnInit {
   private authService = inject(AuthService);
   private dataManager = inject(DataManagerService);
+  private spaceContextService = inject(SpaceContextService);
   private invitationService = inject(InvitationService);
   private translate = inject(TranslateService);
   private router = inject(Router);
@@ -80,7 +82,7 @@ export class MemberManagementComponent implements OnInit {
       switchMap(profile => {
         const activeGroupId = getActiveGroupId(profile);
         return profile && activeGroupId
-          ? this.dataManager.getGroupMembersWithProfile(activeGroupId)
+          ? this.dataManager.getSpaceMembersWithProfile(activeGroupId)
           : of([])
       })
     );
@@ -94,37 +96,23 @@ export class MemberManagementComponent implements OnInit {
       })
     );
 
-    this.groupOwnerId$ = this.userProfile$.pipe(
+    const activeSpace$ = this.userProfile$.pipe(
       switchMap(profile => {
         const activeGroupId = getActiveGroupId(profile);
-        return profile && activeGroupId
-          ? from(this.dataManager.getGroupDetails(activeGroupId)).pipe(
-            map((details: IGroupDetails | null) => details ? details.ownerId : null)
-          )
-          : of(null);
+        return activeGroupId ? this.spaceContextService.getSpace(activeGroupId) : of(null);
       })
     );
 
-    this.spaceName$ = this.userProfile$.pipe(
-      switchMap(profile => {
-        const activeGroupId = getActiveGroupId(profile);
-        return profile && activeGroupId
-          ? from(this.dataManager.getGroupDetails(activeGroupId)).pipe(
-            map((details: IGroupDetails | null) => details ? details.groupName : null)
-          )
-          : of(profile?.currentSpaceName || null);
-      })
+    this.groupOwnerId$ = activeSpace$.pipe(
+      map(space => space?.ownerId ?? null)
     );
 
-    this.spaceImageUrl$ = this.userProfile$.pipe(
-      switchMap(profile => {
-        const activeGroupId = getActiveGroupId(profile);
-        return profile && activeGroupId
-          ? from(this.dataManager.getGroupDetails(activeGroupId)).pipe(
-            map((details: IGroupDetails | null) => details?.imageUrl ?? null)
-          )
-          : of(null);
-      })
+    this.spaceName$ = combineLatest([activeSpace$, this.userProfile$]).pipe(
+      map(([space, profile]) => space?.name ?? profile?.currentSpaceName ?? null)
+    );
+
+    this.spaceImageUrl$ = activeSpace$.pipe(
+      map(space => space?.imageUrl ?? null)
     );
   }
 
@@ -177,8 +165,8 @@ export class MemberManagementComponent implements OnInit {
           return;
         }
 
-        const groupDetails = await this.dataManager.getGroupDetails(activeGroupId);
-        if (!groupDetails) {
+        const space = await firstValueFrom(this.spaceContextService.getSpace(activeGroupId));
+        if (!space) {
           throw new Error('Group details not found');
         }
 
@@ -188,7 +176,7 @@ export class MemberManagementComponent implements OnInit {
         this.invitationService.sendInvitationEmail(
           this.newMemberEmail,
           inviterName,
-          groupDetails.groupName,
+          space.name,
           userLanguage,
           activeGroupId
         ).subscribe({

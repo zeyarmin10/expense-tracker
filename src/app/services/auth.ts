@@ -23,7 +23,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { Observable, Subject, of, from, firstValueFrom, shareReplay } from 'rxjs';
 import { switchMap, map } from 'rxjs/operators';
 import { UserDataService, UserProfile } from './user-data';
-import { GroupService } from './group.service';
+import { DataManagerService } from './data-manager';
 import { SessionManagementService } from './session-management';
 import { SpaceContextService } from './space-context.service';
 import Swal from 'sweetalert2';
@@ -65,7 +65,6 @@ export class AuthService {
           return of(null);
         }
         const userDataService = this.injector.get(UserDataService);
-        const groupService = this.injector.get(GroupService);
         const spaceContextService = this.injector.get(SpaceContextService);
 
         return userDataService.getUserProfile(user.uid).pipe(
@@ -90,29 +89,24 @@ export class AuthService {
                 }
 
                 if (space.type === 'group') {
-                  return groupService.getGroupSettings(activeSpaceId).pipe(
-                    map((groupSettings) =>
-                      ({
-                        ...profile,
-                        currentSpaceId: activeSpaceId,
-                        currentSpaceType: 'group',
-                        currentSpaceName: space.name,
-                        currentSpaceRole:
-                          profile.spaceMemberships?.[activeSpaceId] ||
-                          (profile.roles?.[activeSpaceId] as UserProfile['currentSpaceRole']) ||
-                          'member',
-                        accountType: 'group',
-                        groupId: activeSpaceId,
-                        currency: groupSettings?.currency || profile.currency,
-                        budgetPeriod: (groupSettings?.budgetPeriod ||
-                          null) as UserProfile['budgetPeriod'],
-                        budgetStartDate: groupSettings?.budgetStartDate || null,
-                        budgetEndDate: groupSettings?.budgetEndDate || null,
-                        selectedBudgetPeriodId:
-                          groupSettings?.selectedBudgetPeriodId || null,
-                      }) as UserProfile,
-                    ),
-                  );
+                  return of({
+                    ...profile,
+                    currentSpaceId: activeSpaceId,
+                    currentSpaceType: 'group',
+                    currentSpaceName: space.name,
+                    currentSpaceRole:
+                      profile.spaceMemberships?.[activeSpaceId] ||
+                      'member',
+                    accountType: 'group',
+                    groupId: activeSpaceId,
+                    currency: space.currency || profile.currency,
+                    budgetPeriod: (space.budgetPeriod ||
+                      null) as UserProfile['budgetPeriod'],
+                    budgetStartDate: space.budgetStartDate || null,
+                    budgetEndDate: space.budgetEndDate || null,
+                    selectedBudgetPeriodId:
+                      space.selectedBudgetPeriodId || null,
+                  } as UserProfile);
                 }
 
                 return of({
@@ -257,34 +251,28 @@ export class AuthService {
         const inviteData = inviteSnap.val();
         if (inviteData.status === 'pending') {
           const userDataService = this.injector.get(UserDataService);
+          const spaceContextService = this.injector.get(SpaceContextService);
           const role = 'member';
           const existingProfile = await firstValueFrom(
             userDataService.getUserProfile(user.uid),
           );
           await this.db
-            .object(`group_members/${inviteData.groupId}/${user.uid}`)
-            .set({ role: role });
-          await this.db
             .object(`space_members/${inviteData.groupId}/${user.uid}`)
             .set({ role: role });
+
+          const space = await firstValueFrom(spaceContextService.getSpace(inviteData.groupId));
 
           const nextProfile: Partial<UserProfile> = {
             accountType: 'group',
             currentSpaceId: inviteData.groupId,
             currentSpaceType: 'group',
-            roles: {
-              ...(existingProfile?.roles || {}),
-              [inviteData.groupId]: role,
-            },
+            currentSpaceName: space?.name || 'Group',
+            currentSpaceRole: role,
             spaceMemberships: {
               ...(existingProfile?.spaceMemberships || {}),
               [inviteData.groupId]: role,
             },
           };
-
-          if (!existingProfile?.groupId) {
-            nextProfile.groupId = inviteData.groupId;
-          }
 
           await userDataService.updateUserProfile(user.uid, {
             ...nextProfile,
@@ -342,25 +330,25 @@ export class AuthService {
 
     const uid = currentUser.uid;
     const userDataService = this.injector.get(UserDataService);
-    const groupService = this.injector.get(GroupService);
+    const dataManagerService = this.injector.get(DataManagerService);
 
     const profile = await firstValueFrom(userDataService.getUserProfile(uid));
     if (!profile) throw new Error('User profile not found');
 
     const personalSpaceId = profile.personalSpaceId;
-    const allMemberships = { ...(profile.spaceMemberships || {}), ...(profile.roles || {}) };
+    const allMemberships = { ...(profile.spaceMemberships || {}) };
     const groupIds = Object.keys(allMemberships).filter(id => id !== personalSpaceId);
 
     // Block deletion if user owns a group that still has other members
     for (const groupId of groupIds) {
       const role = allMemberships[groupId];
       if (role === 'owner' || role === 'admin') {
-        const memberSnap = await this.db.database.ref(`group_members/${groupId}`).get();
+        const memberSnap = await this.db.database.ref(`space_members/${groupId}`).get();
         if (memberSnap.exists()) {
           const otherMembers = Object.keys(memberSnap.val() || {}).filter(id => id !== uid);
           if (otherMembers.length > 0) {
-            const groupSnap = await this.db.database.ref(`groups/${groupId}/groupName`).get();
-            const groupName = groupSnap.exists() ? groupSnap.val() : '';
+            const spaceSnap = await this.db.database.ref(`spaces/${groupId}/name`).get();
+            const groupName = spaceSnap.exists() ? spaceSnap.val() : '';
             throw new Error(`HAS_MEMBERS:${groupName}`);
           }
         }
@@ -410,9 +398,9 @@ export class AuthService {
               .map(([inviteId]) => this.db.database.ref(`invitations/${inviteId}`).remove()),
           );
         }
-        await groupService.deleteGroup(groupId, uid);
+        await dataManagerService.deleteGroup(groupId, uid);
       } else {
-        await groupService.removeMember(groupId, uid);
+        await dataManagerService.removeGroupMember(groupId, uid);
       }
     }
 

@@ -9,11 +9,8 @@ import {
   remove
 } from '@angular/fire/database';
 import { Observable } from 'rxjs';
-import { GroupService } from './group.service';
-import { Group } from './group.model'; // Import Group from the new model file
-import { SpaceRole, SpaceType } from './space.model';
-
-export type Role = 'admin' | 'member' | 'owner';
+import { DataManagerService } from './data-manager';
+import { Space, SpaceRole, SpaceType } from './space.model';
 
 export interface UserProfile {
   uid: string;
@@ -22,10 +19,9 @@ export interface UserProfile {
   photoURL?: string | null;
   currency: string;
   language: string;
-  createdAt: number; 
+  createdAt: number;
   accountType?: 'personal' | 'group';
   groupId?: string | null;
-  roles?: { [key: string]: Role }; 
   personalSpaceId?: string;
   currentSpaceId?: string;
   currentSpaceType?: SpaceType;
@@ -70,7 +66,6 @@ export function getCurrentSpaceRole(profile: UserProfile | null | undefined): Sp
     return (
       profile.currentSpaceRole ||
       profile.spaceMemberships?.[profile.currentSpaceId] ||
-      (profile.roles?.[profile.currentSpaceId] as SpaceRole | undefined) ||
       null
     );
   }
@@ -82,7 +77,6 @@ export function getCurrentSpaceRole(profile: UserProfile | null | undefined): Sp
 
   return (
     profile.spaceMemberships?.[activeGroupId] ||
-    (profile.roles?.[activeGroupId] as SpaceRole | undefined) ||
     profile.currentSpaceRole ||
     null
   );
@@ -106,15 +100,15 @@ export function canManageSharedSpace(profile: UserProfile | null | undefined): b
 })
 export class UserDataService {
   private db: Database = inject(Database);
-  private groupService!: GroupService;
+  private dataManagerService!: DataManagerService;
 
   constructor(private injector: Injector) {}
 
-  private getGroupService(): GroupService {
-    if (!this.groupService) {
-      this.groupService = this.injector.get(GroupService);
+  private getDataManagerService(): DataManagerService {
+    if (!this.dataManagerService) {
+      this.dataManagerService = this.injector.get(DataManagerService);
     }
-    return this.groupService;
+    return this.dataManagerService;
   }
 
   getUserProfile(userId: string): Observable<UserProfile | null> {
@@ -142,11 +136,11 @@ export class UserDataService {
       ? userProfile.currentSpaceId
       : userProfile?.groupId;
     const activeRole = activeGroupId
-      ? userProfile?.spaceMemberships?.[activeGroupId] || userProfile?.roles?.[activeGroupId]
+      ? userProfile?.spaceMemberships?.[activeGroupId]
       : null;
 
     if (activeGroupId && (activeRole === 'admin' || activeRole === 'owner')) {
-      const groupSettings: Partial<Group> = {};
+      const groupSettings: Partial<Space> = {};
       if (data.currency) {
         groupSettings.currency = data.currency;
       }
@@ -154,7 +148,7 @@ export class UserDataService {
         groupSettings.budgetPeriod = data.budgetPeriod;
       }
       if (Object.keys(groupSettings).length > 0) {
-        await this.getGroupService().updateGroupSettings(activeGroupId, groupSettings);
+        await this.getDataManagerService().updateGroupSettings(activeGroupId, groupSettings);
       }
     }
   }

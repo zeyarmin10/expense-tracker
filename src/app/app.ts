@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, NavigationEnd, RouterOutlet, RouterModule, ActivatedRoute } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
-import { Observable, combineLatest, of, from, firstValueFrom } from 'rxjs';
+import { Observable, combineLatest, of, firstValueFrom } from 'rxjs';
 import { map, filter, startWith, switchMap, distinctUntilChanged, debounceTime, take } from 'rxjs/operators';
 import { AuthService } from './services/auth';
 import { User } from '@angular/fire/auth';
@@ -12,7 +12,6 @@ import { LucideAngularModule, LogOut, Users as LucideUsers, User as LucideUserIc
 import { InvitationService } from './services/invitation.service';
 import { DataManagerService } from './services/data-manager';
 import { ToastService } from './services/toast';
-import { GroupService } from './services/group.service';
 import { NetworkService } from './services/network.service';
 import { ThemeService } from './services/theme.service';
 import { NotificationService } from './services/notification.service';
@@ -99,7 +98,6 @@ export class App implements OnInit, AfterViewInit {
   private invitationService = inject(InvitationService);
   private dataManager = inject(DataManagerService);
   private toastService = inject(ToastService);
-  private groupService = inject(GroupService);
   private networkService = inject(NetworkService);
   private spaceContextService = inject(SpaceContextService);
   private spaceSwitchLoadingService = inject(SpaceSwitchLoadingService);
@@ -155,7 +153,7 @@ export class App implements OnInit, AfterViewInit {
       switchMap(profile => {
         const activeGroupId = getActiveGroupId(profile);
         if (profile && activeGroupId) {
-          return this.groupService.getGroupMembers(activeGroupId);
+          return this.dataManager.getSpaceMembersWithProfile(activeGroupId);
         }
         return of([]);
       })
@@ -165,8 +163,8 @@ export class App implements OnInit, AfterViewInit {
       switchMap(profile => {
         const activeGroupId = getActiveGroupId(profile);
         if (activeGroupId) {
-          return from(this.dataManager.getGroupDetails(activeGroupId)).pipe(
-            map(details => details?.groupName || null)
+          return this.spaceContextService.getSpace(activeGroupId).pipe(
+            map(space => space?.name || null)
           );
         }
         return of(null);

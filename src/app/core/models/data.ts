@@ -1,13 +1,4 @@
 
-export type Role = 'admin' | 'member' | 'owner';
-
-export interface IGroupMember {
-  uid: string;
-  displayName: string | null;
-  email: string | null;
-  role: Role;
-}
-
 export interface IUserProfile {
   uid: string;
   email?: string | null;
@@ -16,7 +7,6 @@ export interface IUserProfile {
   currency: string;
   defaultBudgetPeriod?: 'monthly' | 'quarterly' | 'yearly' | 'custom';
   groupId?: string | null;
-  roles?: { [key: string]: Role };
   personalSpaceId?: string | null;
   currentSpaceId?: string | null;
   currentSpaceType?: 'personal' | 'group';

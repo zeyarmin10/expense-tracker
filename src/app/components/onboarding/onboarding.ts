@@ -7,9 +7,7 @@ import { Observable, firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../../services/auth';
 import { UserDataService, UserProfile } from '../../services/user-data';
-import { GroupService } from '../../services/group.service';
-import { MAX_SPACE_NAME_LENGTH } from '../../services/group.service';
-import { DataManagerService } from '../../services/data-manager';
+import { DataManagerService, MAX_SPACE_NAME_LENGTH } from '../../services/data-manager';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { InvitationService } from '../../services/invitation.service';
 import { SpaceContextService } from '../../services/space-context.service';
@@ -28,7 +26,6 @@ import { CurrentSpaceTitleComponent } from '../common/current-space-title/curren
 export class OnboardingComponent implements OnInit {
   private authService = inject(AuthService);
   private userDataService = inject(UserDataService);
-  private groupService = inject(GroupService);
   private http = inject(HttpClient);
   private dataManager = inject(DataManagerService);
   private router = inject(Router);
@@ -291,10 +288,10 @@ export class OnboardingComponent implements OnInit {
     try {
       const { name, imageUrl, photoChanged } = result.value;
       if (name !== space.name.trim()) {
-        await this.groupService.renameGroup(space.id!, name);
+        await this.dataManager.renameGroup(space.id!, name);
       }
       if (photoChanged && imageUrl) {
-        await this.groupService.updateGroupSettings(space.id!, { imageUrl });
+        await this.dataManager.updateGroupSettings(space.id!, { imageUrl });
       }
       const SavedToast = Swal.mixin({
         toast: true, position: 'top-end',
@@ -352,7 +349,7 @@ export class OnboardingComponent implements OnInit {
     }
 
     try {
-      await this.groupService.deleteGroup(space.id, user.uid);
+      await this.dataManager.deleteGroup(space.id, user.uid);
       await Swal.fire({
         icon: 'success',
         title: this.translate.instant('SUCCESS_TITLE'),
@@ -494,7 +491,7 @@ export class OnboardingComponent implements OnInit {
 
     try {
       const lang = this.translate.currentLang || 'my';
-      await this.groupService.createGroup(result.value.name, lang, result.value.imageUrl);
+      await this.dataManager.createGroup(result.value.name, lang, result.value.imageUrl);
       this.router.navigate(['/dashboard']);
     } catch (error) {
       console.error('Error creating group:', error);

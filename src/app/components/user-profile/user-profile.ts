@@ -9,7 +9,7 @@ import {
 import { Observable, of, map, firstValueFrom, combineLatest, Subscription, BehaviorSubject, Subject } from 'rxjs';
 import { switchMap, tap, catchError, distinctUntilChanged, takeUntil, take } from 'rxjs/operators';
 import { AuthService } from '../../services/auth';
-import { getActiveGroupId, UserDataService, UserProfile } from '../../services/user-data';
+import { getActiveGroupId, getCurrentSpaceRole, UserDataService, UserProfile } from '../../services/user-data';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { LucideAngularModule, Save, Trash2, Plus, ChevronDown, ChevronUp, X, Bell, BellOff, Clock, Camera as LucideCamera, Images, Moon, Monitor, Sun, CalendarRange, Pencil, PencilLine, Settings2, ShieldAlert } from 'lucide-angular';
 import { updateProfile } from '@angular/fire/auth';
@@ -21,7 +21,8 @@ import { FormsModule } from '@angular/forms';
 import { AVAILABLE_CURRENCIES } from '../../core/constants/app.constants';
 import { CustomBudgetPeriodModalComponent } from '../common/custom-budget-period-modal/custom-budget-period-modal.component';
 import { CustomBudgetPeriod, CustomBudgetPeriodService } from '../../services/custom-budget-period.service';
-import { GroupService } from '../../services/group.service';
+import { DataManagerService } from '../../services/data-manager';
+import { SpaceContextService } from '../../services/space-context.service';
 import { SpaceDataService } from '../../services/space-data.service';
 import { FormatService } from '../../services/format.service';
 import { AppTheme, ThemeService } from '../../services/theme.service';
@@ -77,7 +78,8 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   private translate = inject(TranslateService);
   private datePipe = inject(DatePipe);
   private customBudgetPeriodService = inject(CustomBudgetPeriodService);
-  private groupService = inject(GroupService);
+  private dataManager = inject(DataManagerService);
+  private spaceContextService = inject(SpaceContextService);
   private spaceDataService = inject(SpaceDataService);
   private themeService = inject(ThemeService);
   private notificationService = inject(NotificationService);
@@ -208,16 +210,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
         return 'N/A';
       }
 
-      if (profile.currentSpaceRole) {
-        return profile.currentSpaceRole;
-      }
-
-      const activeGroupId = getActiveGroupId(profile);
-      if (activeGroupId) {
-        return profile.spaceMemberships?.[activeGroupId] || profile.roles?.[activeGroupId] || 'member';
-      }
-
-      return 'owner';
+      return getCurrentSpaceRole(profile) || 'owner';
     };
 
     this.userDisplayData$ = this.authService.currentUser$.pipe(
@@ -245,7 +238,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
               // Fetch group name if accountType is 'group'
               const activeGroupId = getActiveGroupId(profile);
               const groupName$ = (profile.currentSpaceType === 'group' || profile.accountType === 'group') && activeGroupId
-                ? this.groupService.getGroupName(activeGroupId)
+                ? this.spaceContextService.getSpace(activeGroupId).pipe(map(space => space?.name ?? null))
                 : of(null);
 
               return combineLatest([groupName$, this.authService.userProfile$]).pipe(
@@ -495,7 +488,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
       await this.userDataService.updateUserProfile(currentUser.uid, userProfileData);
 
       if (this.canEditSettings && isGroup) {
-        await this.groupService.updateGroupSettings(this.groupId!, {
+        await this.dataManager.updateGroupSettings(this.groupId!, {
           currency: formValues.currency,
           ...budgetFields,
         });
@@ -924,7 +917,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
           await this.userDataService.updateUserProfile(currentUser.uid, userProfileData);
 
           if (this.canEditSettings && isGroup) {
-            await this.groupService.updateGroupSettings(this.groupId!, {
+            await this.dataManager.updateGroupSettings(this.groupId!, {
               currency: formValues.currency,
               ...budgetFields,
             });
@@ -984,7 +977,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
       await this.userDataService.updateUserProfile(currentUser.uid, userProfileData);
 
       if (isGroup) {
-        await this.groupService.updateGroupSettings(this.groupId!, {
+        await this.dataManager.updateGroupSettings(this.groupId!, {
           currency: formValues.currency,
           ...budgetFields,
         });

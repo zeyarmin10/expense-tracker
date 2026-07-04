@@ -7,7 +7,7 @@ import {
   ref,
   update,
 } from '@angular/fire/database';
-import { Observable, combineLatest, map, of, switchMap } from 'rxjs';
+import { Observable, combineLatest, map, of, switchMap, catchError } from 'rxjs';
 import { CategoryService } from './category';
 import { Space, UserSpaceSummary } from './space.model';
 import { UserDataService } from './user-data';
@@ -154,6 +154,10 @@ export class SpaceContextService {
                     }
                   : null,
               ),
+              // A stale/orphaned membership entry (e.g. permission denied on a
+              // space that no longer has valid member data) must not take down
+              // the whole list — drop just that entry instead.
+              catchError(() => of(null)),
             ),
           )],
         ).pipe(
@@ -321,10 +325,14 @@ export class SpaceContextService {
     }
 
     const isGroup = space.type === 'group';
+    const role = isGroup
+      ? profile?.spaceMemberships?.[spaceId] || 'member'
+      : 'owner';
 
     await update(ref(this.db, `users/${userId}`), {
       currentSpaceId: spaceId,
       currentSpaceType: isGroup ? 'group' : 'personal',
+      currentSpaceRole: role,
       accountType: isGroup ? 'group' : 'personal',
       groupId: isGroup ? spaceId : null,
     });
