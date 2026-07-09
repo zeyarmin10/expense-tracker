@@ -480,8 +480,9 @@
       <div class="exp-voucher-collapse-body" [class.open]="isSavedVoucherListOpen">
       <div>
       <ng-container *ngIf="displayedVouchers$ | async as vouchers">
-        <div *ngIf="vouchers.length === 0" class="exp-empty">
-          {{ "VOUCHER_EMPTY_HINT" | translate }}
+        <div *ngIf="vouchers.length === 0" class="exp-empty-state">
+          <lucide-icon [img]="iconReceipt" [size]="34" class="exp-empty-state-icon"></lucide-icon>
+          <p>{{ "VOUCHER_EMPTY_HINT" | translate }}</p>
         </div>
 
         <div class="exp-voucher-list exp-voucher-list-standalone" *ngIf="vouchers.length > 0">
@@ -548,7 +549,11 @@
               <div
                 *ngIf="userProfile?.accountType === 'group' && voucher.userDisplayName"
                 class="exp-avatar-btn"
+                role="button"
+                tabindex="0"
                 (click)="toggleVoucherAvatarName(voucher.id!, $event)"
+                (keydown.enter)="toggleVoucherAvatarName(voucher.id!, $event)"
+                (keydown.space)="toggleVoucherAvatarName(voucher.id!, $event); $event.preventDefault()"
               >
                 <app-user-avatar
                   [name]="voucher.userDisplayName || voucher.createdByName || 'Former Member'"
@@ -691,13 +696,21 @@
                         [img]="iconInfo"
                         [size]="16"
                         class="exp-info-icon"
+                        role="button"
+                        tabindex="0"
                         (click)="showExpenseInfo(expense)"
+                        (keydown.enter)="showExpenseInfo(expense)"
+                        (keydown.space)="showExpenseInfo(expense); $event.preventDefault()"
                         [title]="'EXPENSE_INFO_TITLE' | translate"
                       ></lucide-icon>
                       <div
                         *ngIf="userProfile?.accountType === 'group' && expense.userDisplayName"
                         class="exp-avatar-btn"
+                        role="button"
+                        tabindex="0"
                         (click)="toggleAvatarName(expense.id!, $event)"
+                        (keydown.enter)="toggleAvatarName(expense.id!, $event)"
+                        (keydown.space)="toggleAvatarName(expense.id!, $event); $event.preventDefault()"
                       >
                         <app-user-avatar
                           [name]="expense.userDisplayName || expense.createdByName || 'Former Member'"

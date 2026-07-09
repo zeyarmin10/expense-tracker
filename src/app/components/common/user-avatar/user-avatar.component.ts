@@ -11,6 +11,9 @@ import { LightboxComponent } from '../lightbox/lightbox.component';
       class="user-avatar"
       [class.user-avatar-clickable]="clickable && shouldShowImage"
       [attr.title]="title || displayName"
+      [attr.role]="clickable && shouldShowImage ? 'button' : null"
+      [attr.tabindex]="clickable && shouldShowImage ? 0 : null"
+      [attr.aria-label]="clickable && shouldShowImage ? (title || displayName) : null"
       [style.width.px]="size"
       [style.height.px]="size"
       [style.font-size.px]="fontSize"
@@ -19,6 +22,8 @@ import { LightboxComponent } from '../lightbox/lightbox.component';
       [style.color]="avatarTextColor"
       [class.user-avatar-has-image]="shouldShowImage"
       (click)="onClick($event)"
+      (keydown.enter)="onClick($event)"
+      (keydown.space)="onClick($event)"
     >
       <img
         *ngIf="shouldShowImage"
@@ -99,7 +104,7 @@ export class UserAvatarComponent implements OnChanges {
     this.imageFailed = false;
   }
 
-  onClick(event: MouseEvent): void {
+  onClick(event: Event): void {
     if (!this.clickable || !this.shouldShowImage) {
       return;
     }

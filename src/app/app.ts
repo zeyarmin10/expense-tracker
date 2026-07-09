@@ -7,7 +7,6 @@ import { Observable, combineLatest, of, firstValueFrom } from 'rxjs';
 import { map, filter, startWith, switchMap, distinctUntilChanged, debounceTime, take } from 'rxjs/operators';
 import { AuthService } from './services/auth';
 import { User } from '@angular/fire/auth';
-import { Toast } from './components/toast/toast';
 import { LucideAngularModule, LogOut, Users as LucideUsers, User as LucideUserIcon, ChevronDown, Sun, Moon, PiggyBank, ShoppingCart, Tags, ArrowDown, RotateCw } from 'lucide-angular';
 import { InvitationService } from './services/invitation.service';
 import { DataManagerService } from './services/data-manager';
@@ -37,7 +36,6 @@ import { UserAvatarComponent } from './components/common/user-avatar/user-avatar
     RouterOutlet,
     RouterModule,
     TranslateModule,
-    Toast,
     LucideAngularModule,
     CurrentSpaceTitleComponent,
     UserAvatarComponent,
@@ -656,17 +654,7 @@ export class App implements OnInit, AfterViewInit {
       ? 'အင်တာနက် ချိတ်ဆက်မှု ပြန်ရပြီ 🌐'
       : 'Internet connection restored 🌐';
 
-    const Toast = Swal.mixin({
-      toast: true,
-      position: 'top-end',
-      showConfirmButton: false,
-      timer: 3000,
-      timerProgressBar: true,
-      background: '#07162f',
-      color: '#ffffff',
-      iconColor: '#0b74ff',
-    });
-    Toast.fire({ icon: 'success', title: msg });
+    this.toastService.showSuccess(msg);
   }
   // ────────────────────────────────────────────────────────────────
 

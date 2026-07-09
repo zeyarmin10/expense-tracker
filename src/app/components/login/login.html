@@ -174,9 +174,9 @@
     <div class="lgn-footer-card">
       <p class="lgn-footer-link">
         {{ (isLoginMode ? 'NO_ACCOUNT_QUESTION' : 'HAVE_ACCOUNT_QUESTION') | translate }}
-        <a class="lgn-toggle-link" (click)="toggleMode()">
+        <button type="button" class="lgn-toggle-link" (click)="toggleMode()">
           {{ (isLoginMode ? 'REGISTER_HERE_LINK' : 'LOGIN_HERE_LINK') | translate }}
-        </a>
+        </button>
       </p>
       <p class="lgn-footer-link lgn-privacy-link">
         <a class="lgn-toggle-link lgn-privacy-anchor" routerLink="/privacy-policy">

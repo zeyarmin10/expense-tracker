@@ -1,29 +1,32 @@
 import { Injectable } from '@angular/core';
-import { Subject, Observable } from 'rxjs';
+import Swal from 'sweetalert2';
 
-// Make absolutely sure this interface definition is correct
-export interface ServiceIToast {
-  message: string;
-  type: 'success' | 'error';
-  id: number; // Unique ID for each toast
-}
+// Canonical toast styling — matches the pattern already used across the app
+// (category, expense, budget, profit, member-management, user-profile,
+// category-modal). Centralized here so app.ts/login.ts/current-space-title
+// don't need their own copy, and any future theming change is one place.
+const SwalToast = Swal.mixin({
+  toast: true,
+  position: 'top-end',
+  showConfirmButton: false,
+  timer: 3000,
+  timerProgressBar: true,
+  customClass: { popup: 'colored-toast' },
+  didOpen: (toast) => {
+    toast.addEventListener('mouseenter', Swal.stopTimer);
+    toast.addEventListener('mouseleave', Swal.resumeTimer);
+  },
+});
 
 @Injectable({
   providedIn: 'root'
 })
 export class ToastService {
-  private toastSubject: Subject<ServiceIToast> = new Subject<ServiceIToast>();
-  private toastIdCounter = 0;
-
-  getToastEvents(): Observable<ServiceIToast> {
-    return this.toastSubject.asObservable();
-  }
-
   showSuccess(message: string): void {
-    this.toastSubject.next({ message, type: 'success', id: this.toastIdCounter++ });
+    SwalToast.fire({ icon: 'success', title: message });
   }
 
   showError(message: string): void {
-    this.toastSubject.next({ message, type: 'error', id: this.toastIdCounter++ });
+    SwalToast.fire({ icon: 'error', title: message });
   }
 }

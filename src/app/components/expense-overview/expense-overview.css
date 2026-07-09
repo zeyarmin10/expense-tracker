@@ -455,6 +455,11 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+.ov-bar-row:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 .ov-bar-row:active,
 .ov-bar-active {
   background: var(--surface-2, rgba(255,255,255,0.05));

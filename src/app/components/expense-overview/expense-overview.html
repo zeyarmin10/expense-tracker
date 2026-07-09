@@ -83,7 +83,11 @@
           <div class="ov-bar-list">
             <!-- All Categories row -->
             <div class="ov-bar-row ov-bar-row-all"
+                 role="button"
+                 tabindex="0"
                  (click)="filterByCategory('')"
+                 (keydown.enter)="filterByCategory('')"
+                 (keydown.space)="filterByCategory(''); $event.preventDefault()"
                  [class.ov-bar-active]="!(_selectedCategory$ | async)">
               <div class="ov-bar-meta">
                 <span class="ov-bar-dot ov-bar-dot-all"></span>
@@ -97,7 +101,11 @@
             <!-- Per-category rows -->
             <div class="ov-bar-row"
                  *ngFor="let cat of categoryTotals; let i = index"
+                 role="button"
+                 tabindex="0"
                  (click)="filterByCategory(cat.category)"
+                 (keydown.enter)="filterByCategory(cat.category)"
+                 (keydown.space)="filterByCategory(cat.category); $event.preventDefault()"
                  [class.ov-bar-active]="cat.category === (_selectedCategory$ | async)">
               <div class="ov-bar-meta">
                 <lucide-icon [img]="getIconForCategory(cat.category)" [size]="16" class="ov-bar-cat-icon" [style.color]="getCategoryColor(cat.category)"></lucide-icon>

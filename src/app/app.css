@@ -136,32 +136,6 @@ body.light-mode .space-switch-loading-overlay {
   background: rgba(255, 255, 255, 0.86);
 }
 
-/* =====================
-   CSS Variables
-   ===================== */
-:root {
-  --color-primary-accent: #0b74ff;
-  --color-bg-primary: #020817;
-  --color-bg-secondary: #07162f;
-  --color-text-primary: #f0f2f7;
-  --color-border: rgba(148, 190, 255, 0.15);
-
-  --color-success: #34d399;
-  --color-warning: #f4b11a;
-  --color-danger: #f87171;
-  --color-info: #60a5fa;
-}
-
-/* Keep light mode support if needed */
-body.light-mode {
-  --color-bg-primary: #ffffff;
-  --color-bg-secondary: #f8f9fa;
-  --color-text-primary: #212529;
-  --color-border: #dee2e6;
-  background-color: #f4f8ff;
-  color: #1a2b4a;
-}
-
 .app-navbar {
   /* font-family: 'Syne', sans-serif; */
   background: var(--nav-bg);

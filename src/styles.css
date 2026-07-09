@@ -842,6 +842,11 @@ body.light-mode .ov-bar-fill {
   border-radius: 12px !important;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
   font-family: inherit !important;
+  /* Was a hardcoded 307.875px on every child below — overflowed the
+     viewport on narrow phones (e.g. iPhone SE). Cap at the original
+     design width but let it shrink on anything narrower. */
+  width: min(307.875px, calc(100vw - 2rem)) !important;
+  max-width: 100% !important;
 }
 
 .flatpickr-calendar.inline {
@@ -865,7 +870,7 @@ body.light-mode .ov-bar-fill {
   display: flex !important;
   position: relative !important;
   padding: 0.25rem 0;
-  width: 307.875px;
+  width: 100%;
 }
 
 .flatpickr-months .flatpickr-prev-month,
@@ -932,7 +937,7 @@ body.light-mode .ov-bar-fill {
 .flatpickr-weekdays {
   background: transparent !important;
   display: flex !important;
-  width: 307.875px !important;
+  width: 100% !important;
 }
 
 .flatpickr-weekdays .flatpickr-weekdaycontainer {
@@ -950,15 +955,15 @@ span.flatpickr-weekday {
 .flatpickr-days {
   border: none !important;
   display: flex !important;
-  width: 307.875px !important;
+  width: 100% !important;
 }
 
 .dayContainer {
   display: flex !important;
   flex-wrap: wrap !important;
-  width: 307.875px !important;
-  min-width: 307.875px !important;
-  max-width: 307.875px !important;
+  width: 100% !important;
+  min-width: 100% !important;
+  max-width: 100% !important;
 }
 
 .flatpickr-day {

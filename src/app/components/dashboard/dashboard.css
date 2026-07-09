@@ -431,6 +431,7 @@ body.light-mode .dash-loading-cover {
 .dash-card-link {
   cursor: pointer;
   text-decoration: none;
+  color: inherit;
 }
 
 .dash-card-link:hover {

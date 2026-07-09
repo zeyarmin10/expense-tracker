@@ -1,6 +1,6 @@
 <div class="prof-wrapper">
   <div class="prof-container mb-5">
-    <ng-container *ngIf="userDisplayData$ | async as userData">
+    <ng-container *ngIf="userDisplayData$ | async as userData; else profileLoading">
       <form [formGroup]="userProfileForm" (ngSubmit)="onSubmit()">
 
         <!-- ── Hero Card ── -->
@@ -279,6 +279,9 @@
       </div>
 
     </ng-container>
+    <ng-template #profileLoading>
+      <div class="exp-loading"><span class="exp-spinner-sm"></span></div>
+    </ng-template>
   </div>
 </div>
 

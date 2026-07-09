@@ -6,7 +6,7 @@
   min-height: 100vh;
   min-height: 100dvh;
   background: var(--bg, #0d1117);
-  color: var(--text, #f0f2f7);
+  color: var(--text, var(--text));
   position: relative;
   overflow: hidden;
   display: flex;
@@ -93,7 +93,7 @@
 .ob-brand-name {
   font-size: 1rem;
   font-weight: 800;
-  color: var(--text, #f0f2f7);
+  color: var(--text, var(--text));
   letter-spacing: -0.02em;
 }
 
@@ -101,7 +101,7 @@
   font-size: 0.6rem;
   font-weight: 700;
   letter-spacing: 0.15em;
-  color: var(--accent, #0b74ff);
+  color: var(--accent, var(--accent));
 }
 
 .lgn-logo-img {
@@ -128,14 +128,14 @@
 
 .ob-hero-sub {
   font-size: 1rem;
-  color: var(--accent, #0b74ff);
+  color: var(--accent, var(--accent));
   font-weight: 500;
   margin: 0;
 }
 
 .ob-hero-hint {
   font-size: 0.85rem;
-  color: var(--text-muted, #6b7280);
+  color: var(--text-muted, var(--text-muted));
   margin: 0;
 }
 
@@ -178,7 +178,7 @@
 }
 
 .ob-card-personal::before {
-  background: linear-gradient(90deg, var(--accent, #0b74ff), transparent);
+  background: linear-gradient(90deg, var(--accent, var(--accent)), transparent);
   opacity: 1;
 }
 
@@ -188,7 +188,7 @@
 
 /* Group card */
 .ob-card-group::before {
-  background: linear-gradient(90deg, #60a5fa, transparent);
+  background: linear-gradient(90deg, var(--info), transparent);
 }
 
 .ob-card-group:hover { border-color: rgba(96,165,250,0.3); }
@@ -263,7 +263,7 @@
 .ob-card-title {
   font-size: 0.92rem;
   font-weight: 700;
-  color: var(--text, #f0f2f7);
+  color: var(--text, var(--text));
   margin: 0 0 0.2rem;
   max-width: 100%;
   overflow: hidden;
@@ -273,7 +273,7 @@
 
 .ob-card-desc {
   font-size: 0.78rem;
-  color: var(--text-muted, #6b7280);
+  color: var(--text-muted, var(--text-muted));
   margin: 0;
   line-height: 1.4;
   max-width: 100%;
@@ -289,7 +289,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--accent, #0b74ff);
+  color: var(--accent, var(--accent));
   font-weight: 700;
 }
 
@@ -335,7 +335,7 @@
   border-radius: 12px;
   border: 1px solid rgba(255,255,255,0.07);
   background: rgba(255,255,255,0.03);
-  color: var(--text, #f0f2f7);
+  color: var(--text, var(--text));
   padding: 0.75rem 0.95rem;
   text-align: left;
   cursor: pointer;
@@ -393,7 +393,7 @@
   border-radius: 999px;
   background: rgba(11,116,255,0.14);
   border: 1px solid rgba(11,116,255,0.24);
-  color: var(--accent, #0b74ff);
+  color: var(--accent, var(--accent));
   font-size: 0.64rem;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -446,7 +446,7 @@
 
 .ob-space-action-trigger:hover,
 .ob-space-action-trigger-open {
-  color: var(--text, #f0f2f7);
+  color: var(--text, var(--text));
   background: rgba(255,255,255,0.07);
   border-color: rgba(255,255,255,0.08);
 }
@@ -518,7 +518,7 @@
 }
 
 .ob-dropdown-item-danger fa-icon {
-  color: #f87171;
+  color: var(--danger);
 }
 
 .ob-dropdown-item-danger:hover {
@@ -621,7 +621,7 @@
   margin-top: -0.1rem;
   font-size: 0.72rem;
   line-height: 1.35;
-  color: var(--text-muted, #6b7280);
+  color: var(--text-muted, var(--text-muted));
 }
 
 /* ── Floating label ── */
@@ -635,7 +635,7 @@
   background: var(--surface-2, #1c2230);
   border: 1px solid rgba(255,255,255,0.08);
   border-radius: 10px;
-  color: var(--text, #f0f2f7);
+  color: var(--text, var(--text));
   font-size: 0.88rem;
   padding: 1.2rem 0.9rem 0.35rem;
   outline: none;
@@ -645,7 +645,7 @@
 }
 
 .ob-fl-input:focus {
-  border-color: var(--accent, #0b74ff);
+  border-color: var(--accent, var(--accent));
   box-shadow: 0 0 0 3px rgba(11,116,255,0.1);
 }
 
@@ -661,7 +661,7 @@
   transform: translateY(-50%);
   font-size: 0.84rem;
   font-weight: 500;
-  color: var(--text-muted, #6b7280);
+  color: var(--text-muted, var(--text-muted));
   pointer-events: none;
   line-height: 1;
   transition: top 0.15s ease, transform 0.15s ease,
@@ -676,7 +676,7 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--accent, #0b74ff);
+  color: var(--accent, var(--accent));
 }
 
 /* ── Buttons ── */
@@ -699,7 +699,7 @@
 .ob-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 
 .ob-btn-primary {
-  background: var(--accent, #0b74ff);
+  background: var(--accent, var(--accent));
   color: #0a0c10;
   animation: ob-glow 2.5s ease-in-out infinite;
 }
@@ -713,12 +713,12 @@
 
 .ob-btn-accent {
   background: rgba(96,165,250,0.2);
-  color: #60a5fa;
+  color: var(--info);
   border: 1px solid rgba(96,165,250,0.3);
 }
 
 .ob-btn-accent:not(:disabled):hover {
-  background: #60a5fa;
+  background: var(--info);
   color: #0a0c10;
 }
 
@@ -761,6 +761,6 @@
   font-weight: 500;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--text-muted, #6b7280);
+  color: var(--text-muted, var(--text-muted));
 }
 

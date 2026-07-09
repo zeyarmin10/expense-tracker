@@ -1241,6 +1241,13 @@ body.light-mode .exp-item {
   opacity: 1;
 }
 
+.exp-info-icon:focus-visible,
+.exp-avatar-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
 .exp-avatar-btn {
   position: relative;
   display: inline-flex;
@@ -1456,13 +1463,6 @@ body.light-mode .exp-item {
 }
 
 /* ── Empty / Loading ── */
-.exp-empty {
-  text-align: center;
-  color: var(--text-muted);
-  font-size: 0.88rem;
-  padding: 2.5rem 1.5rem;
-}
-
 .exp-empty-state {
   display: flex;
   flex-direction: column;
