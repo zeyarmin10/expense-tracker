@@ -70,8 +70,12 @@ export class SpaceContextService {
     return objectVal<Space | null>(spaceRef).pipe(
       switchMap((space) => {
         if (space) {
-          // If imageUrl is already set, no extra read needed
-          if (space.imageUrl) {
+          // If imageUrl is already set, no extra read needed. Personal
+          // spaces also never have a /groups counterpart to backfill from —
+          // only pre-image-support GROUP spaces do — so skip the legacy
+          // read entirely for anything that isn't a group (it would only
+          // ever be denied, since personal spaces have no /group_members).
+          if (space.imageUrl || space.type !== 'group') {
             return of({ ...space, id: spaceId });
           }
           // Backfill imageUrl from groups node for spaces that predate image support
@@ -298,11 +302,18 @@ export class SpaceContextService {
     }
 
     const spaceSnapshot = await get(ref(this.db, `spaces/${spaceId}`));
-    const legacyGroupSnapshot = await get(ref(this.db, `groups/${spaceId}`));
+
+    // Only fall back to the legacy path when the canonical one truly has
+    // nothing — personal spaces (and any space fully migrated to /spaces)
+    // never have a /group_members entry, so this read would otherwise be
+    // denied every time for them, even though it's never actually needed.
+    const legacyGroupSnapshot = spaceSnapshot.exists()
+      ? null
+      : await get(ref(this.db, `groups/${spaceId}`));
 
     const space = (spaceSnapshot.exists()
       ? spaceSnapshot.val()
-      : legacyGroupSnapshot.exists()
+      : legacyGroupSnapshot?.exists()
         ? {
             ...legacyGroupSnapshot.val(),
             type: 'group',

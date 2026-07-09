@@ -11,7 +11,7 @@ import {
   equalTo,
   update,
 } from '@angular/fire/database';
-import { Observable, switchMap, firstValueFrom, of, combineLatest, map as rxMap } from 'rxjs';
+import { Observable, switchMap, firstValueFrom, of, combineLatest, map as rxMap, catchError } from 'rxjs';
 import { AuthService } from './auth';
 import { CategoryService } from './category';
 import { IUserProfile, IInvitation } from '../core/models/data';
@@ -246,12 +246,22 @@ export class DataManagerService {
           return of([]);
         }
         const memberProfiles$ = members.map(member =>
-          this.userDataService.getUserProfile(member.uid).pipe(
-            rxMap(profile => ({
-              ...profile,
+          // The public mirror (name + photo) is always readable and is the
+          // reliable source for display identity. The full profile is
+          // best-effort on top of that, purely to enrich with fields like
+          // email when the reader legitimately shares a space with them —
+          // if that read fails, the member still shows up correctly.
+          combineLatest([
+            this.userDataService.getPublicProfile(member.uid).pipe(catchError(() => of(null))),
+            this.userDataService.getUserProfile(member.uid).pipe(catchError(() => of(null))),
+          ]).pipe(
+            rxMap(([publicProfile, fullProfile]) => ({
+              ...fullProfile,
+              ...publicProfile,
               uid: member.uid, // ensure uid is carried over
-              role: member.role // combine role from space_members
-            } as IGroupMemberDetails))
+              role: member.role, // combine role from space_members
+              displayName: publicProfile?.displayName || fullProfile?.displayName || 'Unknown Member',
+            } as IGroupMemberDetails)),
           )
         );
         return combineLatest(memberProfiles$);

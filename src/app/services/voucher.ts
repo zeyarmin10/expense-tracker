@@ -15,7 +15,7 @@ import { DataIVoucher as IVoucher } from '../core/models/data';
 import { AuthService } from './auth';
 import { SpaceDataService } from './space-data.service';
 import { SpaceSwitchLoadingService } from './space-switch-loading.service';
-import { UserDataService, UserProfile, getActiveGroupId } from './user-data';
+import { UserDataService, UserProfile, PublicUserProfile, getActiveGroupId } from './user-data';
 import { environment } from '../../environments/environment';
 
 export type ServiceIVoucher = IVoucher & {
@@ -49,7 +49,7 @@ export class VoucherService {
   private spaceDataService = inject(SpaceDataService);
   private spaceSwitchLoadingService = inject(SpaceSwitchLoadingService);
 
-  private getProfilePhotoURL(profile: Partial<UserProfile> | null | undefined): string | null {
+  private getProfilePhotoURL(profile: { photoURL?: string | null } | null | undefined): string | null {
     if (!profile) return null;
     const p = profile as any;
     return p.photoURL || p.avatarUrl || p.imageUrl || p.profileImageUrl || p.picture || null;
@@ -171,10 +171,12 @@ export class VoucherService {
                   if (v.userId) userIds.add(v.userId);
                 });
 
+                // Public mirror (name + photo only) — readable regardless of
+                // shared-space state on either side, unlike the full profile.
                 const userProfilesArray = await Promise.all(
                   [...userIds].map(async userId => {
                     try {
-                      const profile = await firstValueFrom(this.userDataService.getUserProfile(userId));
+                      const profile = await firstValueFrom(this.userDataService.getPublicProfile(userId));
                       return { userId, profile };
                     } catch {
                       return { userId, profile: null };
@@ -185,7 +187,7 @@ export class VoucherService {
                 const userProfiles = userProfilesArray.reduce((acc, { userId, profile }) => {
                   if (profile) acc[userId] = profile;
                   return acc;
-                }, {} as { [userId: string]: UserProfile });
+                }, {} as { [userId: string]: PublicUserProfile });
 
                 return Object.keys(vouchersData)
                   .map(key => {
@@ -194,7 +196,7 @@ export class VoucherService {
                     let createdByPhotoURL = voucher.createdByPhotoURL || null;
 
                     if (voucher.userId && !createdByName) {
-                      createdByName = userProfiles[voucher.userId]?.displayName;
+                      createdByName = userProfiles[voucher.userId]?.displayName ?? undefined;
                     }
                     if (voucher.userId && !createdByPhotoURL) {
                       createdByPhotoURL = this.getProfilePhotoURL(userProfiles[voucher.userId]);

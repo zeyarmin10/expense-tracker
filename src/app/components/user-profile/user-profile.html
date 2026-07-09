@@ -13,7 +13,8 @@
             <app-user-avatar
               [name]="userProfileForm.get('displayName')?.value || 'User'"
               [photoUrl]="userPhotoUrl$ | async"
-              [size]="88">
+              [size]="88"
+              [clickable]="true">
             </app-user-avatar>
 
             <!-- Upload spinner overlay -->

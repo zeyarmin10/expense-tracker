@@ -1253,6 +1253,9 @@ body.light-mode .exp-item {
   position: absolute;
   bottom: calc(100% + 9px);
   right: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
   transform: translateY(5px) scale(0.9);
   transform-origin: bottom right;
   background: var(--surface-2);
@@ -1261,13 +1264,17 @@ body.light-mode .exp-item {
   font-size: 0.75rem;
   font-weight: 500;
   white-space: nowrap;
-  padding: 5px 12px;
+  padding: 5px 10px 5px 5px;
   border-radius: 8px 8px 2px 8px;
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.15s ease, transform 0.15s ease;
   z-index: 20;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.exp-avatar-name-bubble-text {
+  line-height: 1.2;
 }
 
 .exp-avatar-name-bubble::after {

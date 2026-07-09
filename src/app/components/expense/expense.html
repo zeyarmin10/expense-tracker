@@ -558,7 +558,14 @@
                 <span
                   class="exp-avatar-name-bubble"
                   [class.visible]="activeAvatarVoucherId === voucher.id"
-                >{{ voucher.userDisplayName || voucher.createdByName || 'Former Member' }}</span>
+                >
+                  <app-user-avatar
+                    [name]="voucher.userDisplayName || voucher.createdByName || 'Former Member'"
+                    [photoUrl]="voucher.userPhotoURL || voucher.createdByPhotoURL"
+                    [size]="20"
+                  ></app-user-avatar>
+                  <span class="exp-avatar-name-bubble-text">{{ voucher.userDisplayName || voucher.createdByName || 'Former Member' }}</span>
+                </span>
               </div>
             </div>
           </div>
@@ -700,7 +707,14 @@
                         <span
                           class="exp-avatar-name-bubble"
                           [class.visible]="activeAvatarExpenseId === expense.id"
-                        >{{ expense.userDisplayName || expense.createdByName || 'Former Member' }}</span>
+                        >
+                          <app-user-avatar
+                            [name]="expense.userDisplayName || expense.createdByName || 'Former Member'"
+                            [photoUrl]="expense.userPhotoURL || expense.createdByPhotoURL"
+                            [size]="20"
+                          ></app-user-avatar>
+                          <span class="exp-avatar-name-bubble-text">{{ expense.userDisplayName || expense.createdByName || 'Former Member' }}</span>
+                        </span>
                       </div>
                     </div>
                   </div>

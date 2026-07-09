@@ -72,6 +72,10 @@ export class AuthService {
             if (!profile) {
               return of(null);
             }
+            // Self-healing backfill: keep this account's public directory
+            // entry (display name + photo, readable by any signed-in user)
+            // in sync, so older accounts get one automatically on login.
+            userDataService.mirrorPublicProfile(user.uid, profile.displayName, profile.photoURL);
             const activeSpaceId = profile.currentSpaceId || profile.groupId || profile.personalSpaceId || null;
 
             if (!activeSpaceId) {

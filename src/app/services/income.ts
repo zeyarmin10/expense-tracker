@@ -17,7 +17,7 @@ import {
   get,
 } from '@angular/fire/database';
 import { AuthService } from './auth';
-import { getActiveGroupId, UserDataService, UserProfile } from './user-data';
+import { getActiveGroupId, UserDataService, UserProfile, PublicUserProfile } from './user-data';
 import { SpaceDataService } from './space-data.service';
 import { SpaceSwitchLoadingService } from './space-switch-loading.service';
 
@@ -127,12 +127,18 @@ export class IncomeService {
               }
             });
 
-            const userProfiles: Record<string, UserProfile> = {};
+            // Reads the public display-identity mirror (name + photo only) —
+            // all a "created by" join needs, and unlike the full profile it's
+            // readable regardless of shared-space state on either side.
+            const userProfiles: Record<string, PublicUserProfile> = {};
             if (missingNameIds.size > 0) {
               const results = await Promise.all(
                 [...missingNameIds].map(uid =>
-                  firstValueFrom(this.userDataService.getUserProfile(uid))
+                  firstValueFrom(this.userDataService.getPublicProfile(uid))
                     .then(p => ({ uid, profile: p }))
+                    // A denied/failed profile lookup (e.g. permission gap for
+                    // a former member) must not take down the whole income list.
+                    .catch(() => ({ uid, profile: null }))
                 )
               );
               results.forEach(({ uid, profile }) => {

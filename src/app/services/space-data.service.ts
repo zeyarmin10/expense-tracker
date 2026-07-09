@@ -61,12 +61,21 @@ export class SpaceDataService {
     const legacyRef = this.getLegacyCollectionRef(profile, collection);
     const canonicalRef = this.getCanonicalCollectionRef(spaceId, collection);
 
+    // A denied legacy read just means "no legacy data to backfill from" (the
+    // normal case for any space that was always canonical-only) — it must
+    // not be treated the same as a denied CANONICAL read, which is the only
+    // one that should actually block using space_data.
     const [legacySnapshot, canonicalSnapshot] = await Promise.all([
-      get(legacyRef),
+      get(legacyRef).catch((error: any) => {
+        if (this.isPermissionDenied(error)) {
+          return null;
+        }
+        throw error;
+      }),
       get(canonicalRef),
     ]);
 
-    if (!legacySnapshot.exists()) {
+    if (!legacySnapshot || !legacySnapshot.exists()) {
       return;
     }
 
@@ -112,6 +121,16 @@ export class SpaceDataService {
       if (!this.isPermissionDenied(error)) {
         throw error;
       }
+      // Silently falling back to the (likely empty) legacy path here would
+      // otherwise look exactly like "no data" with no error anywhere —
+      // surface it so a space/user with a real membership mismatch is
+      // diagnosable instead of silently showing empty.
+      console.warn(
+        `[SpaceDataService] Canonical space_data read denied for space ${spaceId} — ` +
+        `falling back to legacy path, which is likely empty. This usually means ` +
+        `/space_members/${spaceId}/{uid} is missing despite the user's own ` +
+        `spaceMemberships entry claiming access.`,
+      );
     }
   }
 
@@ -159,6 +178,14 @@ export class SpaceDataService {
         if (!this.isPermissionDenied(error)) {
           throw error;
         }
+        // See the matching warning in ensureSpecificSpaceData — this is the
+        // per-collection variant actually used by getActiveCollectionContext.
+        console.warn(
+          `[SpaceDataService] Canonical space_data/${collection} read denied for space ${spaceId} — ` +
+          `falling back to legacy path, which is likely empty. This usually means ` +
+          `/space_members/${spaceId}/{uid} is missing despite the user's own ` +
+          `spaceMemberships entry claiming access.`,
+        );
       })
       .finally(() => {
         this.ensuringCollections.delete(cacheKey);

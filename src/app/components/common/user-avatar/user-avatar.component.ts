@@ -1,13 +1,15 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, OnChanges } from '@angular/core';
+import { Component, Input, OnChanges, ViewChild } from '@angular/core';
+import { LightboxComponent } from '../lightbox/lightbox.component';
 
 @Component({
   selector: 'app-user-avatar',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, LightboxComponent],
   template: `
     <span
       class="user-avatar"
+      [class.user-avatar-clickable]="clickable && shouldShowImage"
       [attr.title]="title || displayName"
       [style.width.px]="size"
       [style.height.px]="size"
@@ -16,6 +18,7 @@ import { Component, Input, OnChanges } from '@angular/core';
       [style.border-color]="avatarBorder"
       [style.color]="avatarTextColor"
       [class.user-avatar-has-image]="shouldShowImage"
+      (click)="onClick($event)"
     >
       <img
         *ngIf="shouldShowImage"
@@ -28,6 +31,7 @@ import { Component, Input, OnChanges } from '@angular/core';
         {{ initials }}
       </span>
     </span>
+    <app-lightbox *ngIf="clickable"></app-lightbox>
   `,
   styles: [`
     :host {
@@ -74,6 +78,10 @@ import { Component, Input, OnChanges } from '@angular/core';
       max-width: 100%;
       white-space: nowrap;
     }
+
+    .user-avatar-clickable {
+      cursor: pointer;
+    }
   `],
 })
 export class UserAvatarComponent implements OnChanges {
@@ -81,11 +89,22 @@ export class UserAvatarComponent implements OnChanges {
   @Input() photoUrl: string | null | undefined = null;
   @Input() size = 22;
   @Input() title = '';
+  @Input() clickable = false;
+
+  @ViewChild(LightboxComponent) private lightbox?: LightboxComponent;
 
   imageFailed = false;
 
   ngOnChanges(): void {
     this.imageFailed = false;
+  }
+
+  onClick(event: MouseEvent): void {
+    if (!this.clickable || !this.shouldShowImage) {
+      return;
+    }
+    event.stopPropagation();
+    this.lightbox?.show([this.photoUrl!], 0);
   }
 
   get displayName(): string {

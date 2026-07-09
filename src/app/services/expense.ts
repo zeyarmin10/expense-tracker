@@ -20,7 +20,7 @@ import { map, switchMap, catchError, filter } from 'rxjs/operators';
 import { DataIExpense as IExpense } from '../core/models/data';
 import { AuthService } from './auth';
 import { UAParser } from 'ua-parser-js';
-import { getActiveGroupId, UserDataService, UserProfile } from './user-data';
+import { getActiveGroupId, UserDataService, UserProfile, PublicUserProfile } from './user-data';
 import { SpaceContextService } from './space-context.service';
 import { SpaceDataService } from './space-data.service';
 import { SpaceSwitchLoadingService } from './space-switch-loading.service';
@@ -66,12 +66,25 @@ export class ExpenseService {
     return ref(this.db, `group_data/${groupId}/expenses/${expenseId}`);
   }
 
-  private getProfilePhotoURL(profile: Partial<UserProfile> | null | undefined): string | null {
+  // Reads the public display-identity mirror (name + photo only) rather
+  // than the full profile — this is all a "created by" join ever needs,
+  // and unlike the full profile it's readable regardless of shared-space
+  // state, so it can't be broken by space-switching or permission gaps.
+  private async safeGetUserProfile(uid: string): Promise<PublicUserProfile | null> {
+    try {
+      return await firstValueFrom(this.userDataService.getPublicProfile(uid));
+    } catch {
+      return null;
+    }
+  }
+
+  private getProfilePhotoURL(profile: { photoURL?: string | null } | null | undefined): string | null {
     if (!profile) {
       return null;
     }
 
-    const profileWithImages = profile as Partial<UserProfile> & {
+    const profileWithImages = profile as {
+      photoURL?: string | null;
       avatarUrl?: string | null;
       imageUrl?: string | null;
       profileImageUrl?: string | null;
@@ -128,7 +141,7 @@ export class ExpenseService {
             });
 
             const userProfilePromises = [...userIds].map(userId =>
-              firstValueFrom(this.userDataService.getUserProfile(userId)).then(profile => ({ userId, profile }))
+              this.safeGetUserProfile(userId).then(profile => ({ userId, profile }))
             );
 
             const userProfilesArray = await Promise.all(userProfilePromises);
@@ -137,19 +150,19 @@ export class ExpenseService {
                 acc[userId] = profile;
               }
               return acc;
-            }, {} as { [userId: string]: UserProfile });
+            }, {} as { [userId: string]: PublicUserProfile });
 
             const expenses = Object.keys(expensesData).map((key) => {
               const expense = expensesData[key] as IExpense;
               let createdByName = expense.createdByName;
               let createdByPhotoURL = expense.createdByPhotoURL || null;
               if(expense.userId && !createdByName) {
-                 createdByName = userProfiles[expense.userId]?.displayName;
+                 createdByName = userProfiles[expense.userId]?.displayName ?? undefined;
               }
               if (expense.userId && !createdByPhotoURL) {
                 createdByPhotoURL = this.getProfilePhotoURL(userProfiles[expense.userId]);
               }
-              const updatedByName = expense.updatedBy ? userProfiles[expense.updatedBy]?.displayName : undefined;
+              const updatedByName = expense.updatedBy ? (userProfiles[expense.updatedBy]?.displayName ?? undefined) : undefined;
               const updatedByPhotoURL = expense.updatedBy
                 ? (expense.updatedByPhotoURL || this.getProfilePhotoURL(userProfiles[expense.updatedBy]))
                 : null;
@@ -359,17 +372,17 @@ export class ExpenseService {
                   let createdByPhotoURL = expense.createdByPhotoURL || null;
 
                   if (expense.updatedBy) {
-                    const userProfile = await firstValueFrom(this.userDataService.getUserProfile(expense.updatedBy));
+                    const userProfile = await this.safeGetUserProfile(expense.updatedBy);
                     updatedByName = userProfile?.displayName || 'Unknown User';
                     updatedByPhotoURL = updatedByPhotoURL || this.getProfilePhotoURL(userProfile);
                   }
 
                   if (expense.userId && !createdByName) {
-                    const userProfile = await firstValueFrom(this.userDataService.getUserProfile(expense.userId));
-                    createdByName = userProfile?.displayName;
+                    const userProfile = await this.safeGetUserProfile(expense.userId);
+                    createdByName = userProfile?.displayName ?? undefined;
                     createdByPhotoURL = createdByPhotoURL || this.getProfilePhotoURL(userProfile);
                   } else if (expense.userId && !createdByPhotoURL) {
-                    const userProfile = await firstValueFrom(this.userDataService.getUserProfile(expense.userId));
+                    const userProfile = await this.safeGetUserProfile(expense.userId);
                     createdByPhotoURL = this.getProfilePhotoURL(userProfile);
                   }
 

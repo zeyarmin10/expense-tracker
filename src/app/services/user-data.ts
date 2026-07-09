@@ -12,6 +12,14 @@ import { Observable } from 'rxjs';
 import { DataManagerService } from './data-manager';
 import { Space, SpaceRole, SpaceType } from './space.model';
 
+// Publicly-readable subset of a profile (see `user_public/{uid}` in the DB
+// rules) — anyone signed in may read this, so it must never carry anything
+// beyond display identity (no email, currency, space membership, etc).
+export interface PublicUserProfile {
+  displayName?: string | null;
+  photoURL?: string | null;
+}
+
 export interface UserProfile {
   uid: string;
   email: string;
@@ -122,8 +130,36 @@ export class UserDataService {
     return snapshot.exists() ? snapshot.val() as UserProfile : null;
   }
 
+  // The public mirror — readable by any signed-in user, regardless of
+  // shared space membership. This is what cross-user display (member
+  // lists, "created by" badges) should read instead of the full profile.
+  getPublicProfile(userId: string): Observable<PublicUserProfile | null> {
+    const publicRef = ref(this.db, `user_public/${userId}`);
+    return objectVal<PublicUserProfile>(publicRef);
+  }
+
+  private lastMirroredSignature = new Map<string, string>();
+
+  // Best-effort, deduped mirror of the display-identity fields into
+  // `user_public/{uid}`. Safe to call on every profile emission — it only
+  // actually writes when displayName/photoURL have changed since last call.
+  mirrorPublicProfile(userId: string, displayName: string | null | undefined, photoURL: string | null | undefined): void {
+    const signature = `${displayName || ''}|${photoURL || ''}`;
+    if (this.lastMirroredSignature.get(userId) === signature) {
+      return;
+    }
+    this.lastMirroredSignature.set(userId, signature);
+    update(ref(this.db, `user_public/${userId}`), {
+      displayName: displayName || null,
+      photoURL: photoURL || null,
+    }).catch(() => {
+      this.lastMirroredSignature.delete(userId);
+    });
+  }
+
   createUserProfile(profile: UserProfile): Promise<void> {
       const userRef = ref(this.db, `users/${profile.uid}`);
+      this.mirrorPublicProfile(profile.uid, profile.displayName, profile.photoURL);
       return set(userRef, profile);
   }
 
@@ -132,6 +168,11 @@ export class UserDataService {
     await update(userRef, data);
 
     const userProfile = await this.fetchUserProfile(userId);
+
+    if (data.displayName !== undefined || data.photoURL !== undefined) {
+      this.mirrorPublicProfile(userId, userProfile?.displayName, userProfile?.photoURL);
+    }
+
     const activeGroupId = userProfile?.currentSpaceType === 'group'
       ? userProfile.currentSpaceId
       : userProfile?.groupId;
