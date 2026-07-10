@@ -120,10 +120,10 @@ export class IncomeService {
               return [];
             }
 
-            const missingNameIds = new Set<string>();
+            const userIds = new Set<string>();
             Object.values(incomesData).forEach((income: any) => {
-              if (income.userId && !income.createdByName) {
-                missingNameIds.add(income.userId);
+              if (income.userId) {
+                userIds.add(income.userId);
               }
             });
 
@@ -131,9 +131,9 @@ export class IncomeService {
             // all a "created by" join needs, and unlike the full profile it's
             // readable regardless of shared-space state on either side.
             const userProfiles: Record<string, PublicUserProfile> = {};
-            if (missingNameIds.size > 0) {
+            if (userIds.size > 0) {
               const results = await Promise.all(
-                [...missingNameIds].map(uid =>
+                [...userIds].map(uid =>
                   firstValueFrom(this.userDataService.getPublicProfile(uid))
                     .then(p => ({ uid, profile: p }))
                     // A denied/failed profile lookup (e.g. permission gap for
@@ -148,14 +148,20 @@ export class IncomeService {
 
             return Object.keys(incomesData).map(key => {
               const income = incomesData[key] as ServiceIIncome;
-              const createdByName = income.createdByName ||
-                (income.userId ? userProfiles[income.userId]?.displayName : undefined);
-              const createdByPhotoURL = income.createdByPhotoURL ??
-                (income.userId ? userProfiles[income.userId]?.photoURL || null : null);
+              // Prefer the live profile over the snapshot stored at creation
+              // time, so a member's name/photo update reaches past records —
+              // fall back to the snapshot only if the live lookup found nothing.
+              const creatorProfile = income.userId ? userProfiles[income.userId] : undefined;
+              const createdByName = creatorProfile
+                ? (creatorProfile.displayName || 'Former Member')
+                : (income.createdByName || 'Former Member');
+              const createdByPhotoURL = creatorProfile
+                ? (creatorProfile.photoURL || null)
+                : (income.createdByPhotoURL ?? null);
               return {
                 id: key,
                 ...income,
-                createdByName: createdByName || 'Former Member',
+                createdByName,
                 createdByPhotoURL,
               } as ServiceIIncome;
             });

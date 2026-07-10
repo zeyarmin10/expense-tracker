@@ -154,28 +154,33 @@ export class ExpenseService {
 
             const expenses = Object.keys(expensesData).map((key) => {
               const expense = expensesData[key] as IExpense;
-              let createdByName = expense.createdByName;
-              let createdByPhotoURL = expense.createdByPhotoURL || null;
-              if(expense.userId && !createdByName) {
-                 createdByName = userProfiles[expense.userId]?.displayName ?? undefined;
-              }
-              if (expense.userId && !createdByPhotoURL) {
-                createdByPhotoURL = this.getProfilePhotoURL(userProfiles[expense.userId]);
-              }
-              const updatedByName = expense.updatedBy ? (userProfiles[expense.updatedBy]?.displayName ?? undefined) : undefined;
+              // Prefer the live profile (kept current by the member) over the
+              // snapshot stored on the record at creation time — the snapshot
+              // is only a fallback for members whose profile can no longer be
+              // read (e.g. removed from the space).
+              const creatorProfile = expense.userId ? userProfiles[expense.userId] : undefined;
+              const createdByName = creatorProfile
+                ? (creatorProfile.displayName || 'Former Member')
+                : (expense.createdByName || 'Former Member');
+              const createdByPhotoURL = creatorProfile
+                ? this.getProfilePhotoURL(creatorProfile)
+                : (expense.createdByPhotoURL || null);
+
+              const updaterProfile = expense.updatedBy ? userProfiles[expense.updatedBy] : undefined;
+              const updatedByName = expense.updatedBy ? (updaterProfile?.displayName ?? undefined) : undefined;
               const updatedByPhotoURL = expense.updatedBy
-                ? (expense.updatedByPhotoURL || this.getProfilePhotoURL(userProfiles[expense.updatedBy]))
+                ? (updaterProfile ? this.getProfilePhotoURL(updaterProfile) : (expense.updatedByPhotoURL || null))
                 : null;
 
               return {
                 id: key,
                 ...expense,
                 totalCost: expense.quantity * expense.price,
-                createdByName: createdByName || 'Former Member',
+                createdByName,
                 createdByPhotoURL,
                 updatedByName: updatedByName,
                 updatedByPhotoURL,
-                userDisplayName: createdByName || 'Former Member',
+                userDisplayName: createdByName,
                 userPhotoURL: createdByPhotoURL,
               } as ServiceIExpense;
             });
@@ -374,16 +379,18 @@ export class ExpenseService {
                   if (expense.updatedBy) {
                     const userProfile = await this.safeGetUserProfile(expense.updatedBy);
                     updatedByName = userProfile?.displayName || 'Unknown User';
-                    updatedByPhotoURL = updatedByPhotoURL || this.getProfilePhotoURL(userProfile);
+                    updatedByPhotoURL = userProfile ? this.getProfilePhotoURL(userProfile) : updatedByPhotoURL;
                   }
 
-                  if (expense.userId && !createdByName) {
+                  // Always re-fetch the live profile rather than trusting the
+                  // stored snapshot — otherwise a member's name/photo update
+                  // never reaches records they created before the update.
+                  if (expense.userId) {
                     const userProfile = await this.safeGetUserProfile(expense.userId);
-                    createdByName = userProfile?.displayName ?? undefined;
-                    createdByPhotoURL = createdByPhotoURL || this.getProfilePhotoURL(userProfile);
-                  } else if (expense.userId && !createdByPhotoURL) {
-                    const userProfile = await this.safeGetUserProfile(expense.userId);
-                    createdByPhotoURL = this.getProfilePhotoURL(userProfile);
+                    if (userProfile) {
+                      createdByName = userProfile.displayName ?? createdByName;
+                      createdByPhotoURL = this.getProfilePhotoURL(userProfile);
+                    }
                   }
 
                   resolve({

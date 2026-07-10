@@ -192,22 +192,24 @@ export class VoucherService {
                 return Object.keys(vouchersData)
                   .map(key => {
                     const voucher = vouchersData[key] as IVoucher;
-                    let createdByName = voucher.createdByName;
-                    let createdByPhotoURL = voucher.createdByPhotoURL || null;
-
-                    if (voucher.userId && !createdByName) {
-                      createdByName = userProfiles[voucher.userId]?.displayName ?? undefined;
-                    }
-                    if (voucher.userId && !createdByPhotoURL) {
-                      createdByPhotoURL = this.getProfilePhotoURL(userProfiles[voucher.userId]);
-                    }
+                    // Prefer the live profile over the snapshot stored at
+                    // creation time, so a member's name/photo update reaches
+                    // past records — fall back to the snapshot only if the
+                    // live lookup found nothing (e.g. former member).
+                    const creatorProfile = voucher.userId ? userProfiles[voucher.userId] : undefined;
+                    const createdByName = creatorProfile
+                      ? (creatorProfile.displayName || 'Former Member')
+                      : (voucher.createdByName || 'Former Member');
+                    const createdByPhotoURL = creatorProfile
+                      ? this.getProfilePhotoURL(creatorProfile)
+                      : (voucher.createdByPhotoURL || null);
 
                     return {
                       id: key,
                       ...voucher,
-                      createdByName: createdByName || 'Former Member',
+                      createdByName,
                       createdByPhotoURL,
-                      userDisplayName: createdByName || 'Former Member',
+                      userDisplayName: createdByName,
                       userPhotoURL: createdByPhotoURL,
                     } as ServiceIVoucher;
                   })
