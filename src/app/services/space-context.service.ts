@@ -9,7 +9,7 @@ import {
 } from '@angular/fire/database';
 import { Observable, combineLatest, map, of, switchMap, catchError } from 'rxjs';
 import { CategoryService } from './category';
-import { Space, UserSpaceSummary } from './space.model';
+import { Space, SpaceRole, UserSpaceSummary } from './space.model';
 import { UserDataService } from './user-data';
 
 @Injectable({
@@ -34,6 +34,37 @@ export class SpaceContextService {
       error?.code === 'PERMISSION_DENIED' ||
       error?.message === 'permission_denied'
     );
+  }
+
+  // Accounts whose space predates the /space_members backfill (or that hit
+  // the permission-denied fallback in ensurePersonalSpace) never got a
+  // /space_members/{spaceId}/{uid} entry written, even though their own
+  // profile (spaceMemberships / personalSpaceId) claims access. Since the
+  // deployed database rules authorize /spaces and /space_data reads off of
+  // /space_members, that mismatch shows up as "permission denied" when
+  // switching back into a space the user legitimately owns. Self-heal by
+  // writing the missing entry (best-effort) before the read that depends on it.
+  private async ensureOwnSpaceMembership(
+    userId: string,
+    spaceId: string,
+    role: SpaceRole,
+  ): Promise<void> {
+    try {
+      const memberSnapshot = await get(ref(this.db, `space_members/${spaceId}/${userId}`));
+      if (!memberSnapshot.exists()) {
+        await update(ref(this.db), {
+          [`/space_members/${spaceId}/${userId}`]: { role },
+        });
+      }
+    } catch (error: any) {
+      if (!this.isPermissionDenied(error)) {
+        throw error;
+      }
+      console.warn(
+        `[SpaceContextService] Could not self-heal space_members/${spaceId}/${userId} — ` +
+        `the current database rules don't allow this account to backfill its own membership record.`,
+      );
+    }
   }
 
   getSpace(spaceId: string | null | undefined): Observable<Space | null> {
@@ -191,6 +222,7 @@ export class SpaceContextService {
     }
 
     if (profile.personalSpaceId) {
+      await this.ensureOwnSpaceMembership(userId, profile.personalSpaceId, 'owner');
       const currentSpaceId = profile.currentSpaceId || profile.personalSpaceId;
       if (!profile.currentSpaceId) {
         await this.switchSpace(userId, currentSpaceId);
@@ -297,9 +329,17 @@ export class SpaceContextService {
     }
 
     const profile = await this.userDataService.fetchUserProfile(userId);
-    if (!profile?.spaceMemberships?.[spaceId] && profile?.personalSpaceId !== spaceId) {
+    const membershipRole = profile?.spaceMemberships?.[spaceId];
+    const isOwnPersonalSpace = profile?.personalSpaceId === spaceId;
+    if (!membershipRole && !isOwnPersonalSpace) {
       throw new Error('Space access denied.');
     }
+
+    await this.ensureOwnSpaceMembership(
+      userId,
+      spaceId,
+      isOwnPersonalSpace ? 'owner' : membershipRole!,
+    );
 
     const spaceSnapshot = await get(ref(this.db, `spaces/${spaceId}`));
 
