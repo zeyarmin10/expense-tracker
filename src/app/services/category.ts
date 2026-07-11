@@ -336,7 +336,7 @@ export class CategoryService {
     ];
 
     const targetRef = categoriesRef || this.getCategoriesRef(userId);
-    for (const categoryData of defaultCategories) {
+    await Promise.all(defaultCategories.map((categoryData) => {
       const categoryName =
         language === 'my' ? categoryData.my : categoryData.en;
       const newCategory: Omit<ServiceICategory, 'id'> = {
@@ -345,8 +345,8 @@ export class CategoryService {
         userId: userId,
         createdAt: new Date().toISOString(),
       };
-      await push(targetRef, newCategory);
-    }
+      return push(targetRef, newCategory);
+    }));
   }
 
   async addDefaultGroupCategories(groupId: string, language: string): Promise<void> {
@@ -359,7 +359,7 @@ export class CategoryService {
     ];
 
     const groupCategoriesRef = this.getGroupCategoriesRef(groupId);
-    for (const categoryData of defaultCategories) {
+    await Promise.all(defaultCategories.map((categoryData) => {
       const categoryName =
         language === 'my' ? categoryData.my : categoryData.en;
       const newCategory: Omit<ServiceICategory, 'id'> = {
@@ -368,7 +368,7 @@ export class CategoryService {
         groupId: groupId,
         createdAt: new Date().toISOString(),
       };
-      await push(groupCategoriesRef, newCategory);
-    }
+      return push(groupCategoriesRef, newCategory);
+    }));
   }
 }

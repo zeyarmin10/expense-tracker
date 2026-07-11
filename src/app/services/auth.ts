@@ -198,13 +198,13 @@ export class AuthService {
         // ── Android Native Google Sign-In ──
         await this.ensureGoogleAuthInitialized();
 
-        // ✅ signOut ကို initialize ပြီးမှသာ ခေါ်ပါ — account chooser အမြဲပေါ်မယ်
-        try {
-          await GoogleAuth.signOut();
-        } catch (e) {
-          // signIn မလုပ်ရသေးရင် signOut error ဖြစ်နိုင်တယ် — skip
-        }
-
+        // Note: previously called GoogleAuth.signOut() here before every
+        // sign-in to force the account chooser to appear. That added a
+        // native+network round trip to every single login attempt, not just
+        // account switches, and was a major contributor to perceived
+        // slowness. signIn() on Android shows its own account picker, so
+        // this is being removed — verify on-device that account selection
+        // still works as expected after this change.
         const googleUser = await GoogleAuth.signIn();
         const idToken = googleUser.authentication.idToken;
 

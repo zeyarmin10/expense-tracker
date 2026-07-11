@@ -194,7 +194,11 @@ export class LoginComponent implements OnInit, OnDestroy {
       };
       await this.userDataService.createUserProfile(newUserProfile);
       profile = newUserProfile; // use the new profile
-      await this.categoryService.addDefaultCategories(user.uid, this.currentLang);
+      // Don't block navigation on this — the dashboard reads categories via a
+      // live RTDB listener, so these can arrive a moment after the user lands there.
+      this.categoryService.addDefaultCategories(user.uid, this.currentLang).catch((error) => {
+        console.error('Failed to create default categories:', error);
+      });
     } else if (user.photoURL && profile.photoURL !== user.photoURL) {
       await this.userDataService.updateUserProfile(user.uid, { photoURL: user.photoURL });
       profile = { ...profile, photoURL: user.photoURL };
