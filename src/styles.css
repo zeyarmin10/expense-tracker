@@ -807,6 +807,8 @@ body.light-mode .swal-avatar-pick-remove {
   font-size: 1.4rem !important;
   top: 0.6rem !important;
   right: 0.75rem !important;
+  margin-top: -1.25rem !important;
+  margin-right: -1.25rem !important;
 }
 
 body.light-mode .swal-fulltext-popup {

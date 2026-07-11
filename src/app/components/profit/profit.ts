@@ -88,6 +88,13 @@ type DailyCashFlowChartItem = DailyCashFlowData & {
   cashOutPercent: number;
 };
 
+interface IncomeDateGroup {
+  date: string;
+  incomes: ServiceIIncome[];
+  totalsByCurrency: CurrencyMap;
+  count: number;
+}
+
 @Component({
   selector: 'app-profit',
   standalone: true,
@@ -144,6 +151,7 @@ export class Profit implements OnInit, OnDestroy {
 
   // Observables for filtered data (likely provided by ProfitLossService)
   incomes$!: Observable<ServiceIIncome[]>;
+  groupedIncomes$!: Observable<IncomeDateGroup[]>;
   dailyCashFlow$!: Observable<DailyCashFlowData[]>;
   dailyCashFlowSummary$!: Observable<DailyCashFlowSummary>;
   dailyCashFlowChart$!: Observable<DailyCashFlowChartItem[]>;
@@ -286,6 +294,9 @@ export class Profit implements OnInit, OnDestroy {
         [...data.incomes]
           .sort((a, b) => (new Date(b.date ?? 0).getTime()) - (new Date(a.date ?? 0).getTime()))
       )
+    );
+    this.groupedIncomes$ = this.incomes$.pipe(
+      map((incomes) => this.groupIncomesByDate(incomes))
     );
     const dailyCashFlowData$ = profitLossData$.pipe(
       map((data) => data.dailyCashFlow)
@@ -722,6 +733,40 @@ export class Profit implements OnInit, OnDestroy {
 
   trackByIncomeId(index: number, income: ServiceIIncome): string {
     return income.id ?? String(index);
+  }
+
+  trackByIncomeGroupDate(index: number, group: IncomeDateGroup): string {
+    return group.date;
+  }
+
+  getDateHue(dateStr: string): number {
+    return getCategoryHue(dateStr);
+  }
+
+  formatCount(n: number): string {
+    if (this.translate.currentLang !== 'my') return String(n);
+    const mm = ['၀', '၁', '၂', '၃', '၄', '၅', '၆', '၇', '၈', '၉'];
+    return String(n).replace(/\d/g, d => mm[+d]);
+  }
+
+  private groupIncomesByDate(incomes: ServiceIIncome[]): IncomeDateGroup[] {
+    const groups = new Map<string, IncomeDateGroup>();
+
+    incomes.forEach(income => {
+      const date = income.date || '';
+      if (!groups.has(date)) {
+        groups.set(date, { date, incomes: [], totalsByCurrency: {}, count: 0 });
+      }
+      const group = groups.get(date)!;
+      group.incomes.push(income);
+      group.count += 1;
+      if (income.currency) {
+        group.totalsByCurrency[income.currency] =
+          (group.totalsByCurrency[income.currency] || 0) + income.amount;
+      }
+    });
+
+    return [...groups.values()].sort((a, b) => b.date.localeCompare(a.date));
   }
 
   trackByDailyCashFlow(index: number, flow: DailyCashFlowData): string {

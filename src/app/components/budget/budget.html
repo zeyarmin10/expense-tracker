@@ -123,7 +123,10 @@
       </h5>
       <div class="bgt-chart-container">
         <canvas id="budgetChart"></canvas>
-        <div *ngIf="!hasChartData" class="bgt-no-chart-data">
+        <div *ngIf="!isChartDataLoaded" class="bgt-no-chart-data">
+          <div class="exp-loading"><span class="exp-spinner-sm"></span></div>
+        </div>
+        <div *ngIf="isChartDataLoaded && !hasChartData" class="bgt-no-chart-data">
           <div class="bgt-no-chart-inner">
             <lucide-icon [img]="iconChartColumn" class="bgt-no-chart-icon-fa"></lucide-icon>
             <p class="bgt-no-chart-msg">{{ 'NO_BUDGET_CHART_DATA' | translate }}</p>
@@ -225,47 +228,71 @@
       <div class="bgt-panel-body" [class.open]="isRecordedOpen">
         <div class="bgt-panel-inner">
           <div class="bgt-budget-list">
-            <ng-container *ngIf="filteredBudgets$ | async as budgets; else loadingBudget">
-              <ng-container *ngIf="budgets.length > 0; else noBudgetsTemplate">
-                <div *ngFor="let budget of budgets; trackBy: trackByBudgetId" class="bgt-budget-card">
-                  <div class="bgt-budget-card-icon-wrap"
-                    [class.bgt-budget-card-icon-cat]="budget.category && budget.category !== 'all'"
-                    [style.--cat-hue]="budget.category && budget.category !== 'all' ? getIconHueForCategory(budget.category) : null">
-                    <lucide-icon
-                      [img]="budget.category && budget.category !== 'all' ? getIconForCategory(budget.category) : iconPiggyBank"
-                      [size]="16">
-                    </lucide-icon>
-                  </div>
-                  <div class="bgt-budget-card-body">
-                    <div class="bgt-budget-card-top">
-                      <span class="bgt-budget-card-amount">
-                        {{ formatService.formatAmountWithSymbol(budget.amount, budget.currency) }}
+            <ng-container *ngIf="groupedBudgets$ | async as dateGroups; else loadingBudget">
+              <ng-container *ngIf="dateGroups.length > 0; else noBudgetsTemplate">
+                <div class="bgt-date-list">
+                  <section
+                    *ngFor="let group of dateGroups; trackBy: trackByBudgetGroupPeriod"
+                    class="bgt-date-group"
+                    [style.--date-hue]="getDateHue(group.period)"
+                  >
+                    <div class="bgt-date-group-header">
+                      <span class="bgt-date-label">
+                        {{ formatBudgetPeriodLabel(group) }}
                       </span>
-                      <div class="bgt-budget-card-badges">
-                        <span class="bgt-row-badge bgt-badge-monthly" *ngIf="budget.type === 'monthly'">
-                          {{ 'MONTHLY' | translate }}
-                        </span>
-                        <span class="bgt-row-badge bgt-badge-yearly" *ngIf="budget.type === 'yearly'">
-                          {{ 'YEARLY' | translate }}
-                        </span>
-                        <span class="bgt-row-badge bgt-badge-cat" *ngIf="budget.category && budget.category !== 'all'"
-                          [style.--cat-hue]="getIconHueForCategory(budget.category)">
-                          <lucide-icon [img]="getIconForCategory(budget.category)" [size]="11" style="flex-shrink:0"></lucide-icon>
-                          {{ budget.category }}
+                      <span class="bgt-date-count">
+                        {{ "EXPENSE_GROUP_COUNT" | translate: { count: formatCount(group.count) } }}
+                      </span>
+                      <div class="bgt-date-totals">
+                        <span
+                          class="bgt-date-total"
+                          *ngFor="let total of group.totalsByCurrency | keyvalue; trackBy: trackByKey"
+                        >
+                          {{ formatService.formatAmountShort(total.value, total.key) }}
                         </span>
                       </div>
                     </div>
-                    <div class="bgt-budget-card-meta">
-                      <span class="bgt-budget-card-date">
-                        {{ budget.type === "monthly" ? formatService.formatLocalizedDate(budget.period) : budget.period || "" }}
-                      </span>
-                      <span class="bgt-budget-card-desc" *ngIf="budget.description" appShowFullText>· {{ budget.description }}</span>
+
+                    <div class="bgt-budget-group-list">
+                      <div *ngFor="let budget of group.budgets; trackBy: trackByBudgetId" class="bgt-budget-card" [style.--date-hue]="getDateHue(group.period)">
+                        <div class="bgt-budget-card-icon-wrap"
+                          [class.bgt-budget-card-icon-cat]="budget.category && budget.category !== 'all'"
+                          [style.--cat-hue]="budget.category && budget.category !== 'all' ? getIconHueForCategory(budget.category) : null">
+                          <lucide-icon
+                            [img]="budget.category && budget.category !== 'all' ? getIconForCategory(budget.category) : iconPiggyBank"
+                            [size]="16">
+                          </lucide-icon>
+                        </div>
+                        <div class="bgt-budget-card-body">
+                          <div class="bgt-budget-card-top">
+                            <span class="bgt-budget-card-amount">
+                              {{ formatService.formatAmountWithSymbol(budget.amount, budget.currency) }}
+                            </span>
+                            <div class="bgt-budget-card-badges">
+                              <span class="bgt-row-badge bgt-badge-monthly" *ngIf="budget.type === 'monthly'">
+                                {{ 'MONTHLY' | translate }}
+                              </span>
+                              <span class="bgt-row-badge bgt-badge-yearly" *ngIf="budget.type === 'yearly'">
+                                {{ 'YEARLY' | translate }}
+                              </span>
+                              <span class="bgt-row-badge bgt-badge-cat" *ngIf="budget.category && budget.category !== 'all'"
+                                [style.--cat-hue]="getIconHueForCategory(budget.category)">
+                                <lucide-icon [img]="getIconForCategory(budget.category)" [size]="11" style="flex-shrink:0"></lucide-icon>
+                                {{ budget.category }}
+                              </span>
+                            </div>
+                          </div>
+                          <div class="bgt-budget-card-meta" *ngIf="budget.description">
+                            <span class="bgt-budget-card-desc" appShowFullText>{{ budget.description }}</span>
+                          </div>
+                        </div>
+                        <button *ngIf="canDeleteBudgets"
+                          class="bgt-delete-btn" type="button" (click)="confirmDeleteBudget(budget.id)">
+                          <lucide-icon [img]="iconTrash2" [size]="15"></lucide-icon>
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                  <button *ngIf="canDeleteBudgets"
-                    class="bgt-delete-btn" type="button" (click)="confirmDeleteBudget(budget.id)">
-                    <lucide-icon [img]="iconTrash2" [size]="15"></lucide-icon>
-                  </button>
+                  </section>
                 </div>
               </ng-container>
               <ng-template #noBudgetsTemplate>

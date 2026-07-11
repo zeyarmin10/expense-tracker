@@ -45,7 +45,7 @@ import {
   DateRange,
 } from '../../services/date-filter.service';
 import { CategoryService, ServiceICategory } from '../../services/category';
-import { getIconData, getIconHue } from '../../utils/category-icons';
+import { getIconData, getIconHue, getCategoryHue } from '../../utils/category-icons';
 import { CustomSelectComponent, SelectOption } from '../common/custom-select/custom-select.component';
 import { DateInputComponent } from '../common/date-input/date-input.component';
 import { DateRangeInputComponent } from '../common/date-range-input/date-range-input.component';
@@ -100,6 +100,13 @@ interface SpendingMonitorItem {
     percentage: number;
     hasBudget: boolean;
   }>;
+}
+
+interface BudgetPeriodGroup {
+  period: string;
+  budgets: ServiceIBudget[];
+  totalsByCurrency: { [currency: string]: number };
+  count: number;
 }
 
 @Component({
@@ -158,6 +165,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
   monthlySummary$: Observable<MonthlySummaryItem[]>;
 
   filteredBudgets$: Observable<ServiceIBudget[]>;
+  groupedBudgets$: Observable<BudgetPeriodGroup[]>;
   spendingMonitorData$: Observable<SpendingMonitorItem[]>;
 
   readonly iconTrash2 = Trash2;
@@ -174,6 +182,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
 
   isBudgetFormCollapsed: boolean = true;
   hasChartData: boolean = false;
+  isChartDataLoaded: boolean = false;
   amountDisplayValue: string = '';
   isRecordedBudgetsCollapsed: boolean = true;
   isSpendingMonitorCollapsed: boolean = false;
@@ -304,6 +313,9 @@ export class BudgetComponent implements OnInit, OnDestroy {
     );
 
     this.filteredBudgets$ = filteredData$.pipe(map((data) => data.budgets));
+    this.groupedBudgets$ = this.filteredBudgets$.pipe(
+      map((budgets) => this.groupBudgetsByPeriod(budgets))
+    );
 
     this.monthlySummary$ = filteredData$.pipe(
       map(({ budgets, expenses }) => {
@@ -849,6 +861,47 @@ export class BudgetComponent implements OnInit, OnDestroy {
     return budget.id ?? String(index);
   }
 
+  trackByBudgetGroupPeriod(index: number, group: BudgetPeriodGroup): string {
+    return group.period;
+  }
+
+  getDateHue(dateStr: string): number {
+    return getCategoryHue(dateStr);
+  }
+
+  formatCount(n: number): string {
+    if (this.translate.currentLang !== 'my') return String(n);
+    const mm = ['၀', '၁', '၂', '၃', '၄', '၅', '၆', '၇', '၈', '၉'];
+    return String(n).replace(/\d/g, d => mm[+d]);
+  }
+
+  formatBudgetPeriodLabel(group: BudgetPeriodGroup): string {
+    const sample = group.budgets[0];
+    return sample?.type === 'monthly'
+      ? this.formatService.formatLocalizedDate(group.period)
+      : group.period;
+  }
+
+  private groupBudgetsByPeriod(budgets: ServiceIBudget[]): BudgetPeriodGroup[] {
+    const groups = new Map<string, BudgetPeriodGroup>();
+
+    budgets.forEach(budget => {
+      const period = budget.period || '';
+      if (!groups.has(period)) {
+        groups.set(period, { period, budgets: [], totalsByCurrency: {}, count: 0 });
+      }
+      const group = groups.get(period)!;
+      group.budgets.push(budget);
+      group.count += 1;
+      if (budget.currency) {
+        group.totalsByCurrency[budget.currency] =
+          (group.totalsByCurrency[budget.currency] || 0) + budget.amount;
+      }
+    });
+
+    return [...groups.values()].sort((a, b) => b.period.localeCompare(a.period));
+  }
+
   trackByMonthCurrency(index: number, item: SpendingMonitorItem): string {
     return `${item.month}_${item.currency}`;
   }
@@ -1194,10 +1247,12 @@ export class BudgetComponent implements OnInit, OnDestroy {
   // ─────────────────────────────────────────────────────────────
 
   renderChart(data: any): void {
+    this.isChartDataLoaded = true;
     const canvas = document.getElementById('budgetChart') as HTMLCanvasElement;
 
     if (!canvas) {
       console.warn('Canvas element not found');
+      this.cdr.markForCheck();
       return;
     }
 
