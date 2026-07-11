@@ -20,8 +20,9 @@ import {
 import { ServiceIExpense as IExpense, ExpenseService } from '../../services/expense';
 import { ServiceIVoucher, VoucherService } from '../../services/voucher';
 import { ServiceICategory, CategoryService } from '../../services/category';
-import { CustomSelectComponent, SelectOption } from '../common/custom-select/custom-select.component';
-import { DateInputComponent } from '../common/date-input/date-input.component';
+import flatpickr from 'flatpickr';
+import type { Instance as FlatpickrInstance } from 'flatpickr/dist/types/instance';
+import { Burmese } from 'flatpickr/dist/l10n/my';
 import {
   Observable,
   BehaviorSubject,
@@ -40,8 +41,9 @@ import Swal from 'sweetalert2';
 import {
   LucideAngularModule,
   Plus, Pencil, Trash2, Save, X, RotateCcw, Info, Wallet, ListChecks,
-  Coins, ChevronDown, ChevronUp, Calendar, RotateCw, Receipt,
+  Coins, ChevronDown, ChevronUp, Calendar, CalendarDays, RotateCw, Receipt,
   Image, Images, Eye, Camera as LucideCamera, Zap, List, Archive,
+  Search, Check,
 } from 'lucide-angular';
 
 import { CategoryModalComponent } from '../common/category-modal/category-modal';
@@ -96,8 +98,6 @@ interface ExpenseDateGroup {
     CurrentSpaceTitleComponent,
     UserAvatarComponent,
     ShowFullTextDirective,
-    CustomSelectComponent,
-    DateInputComponent,
     DateRangeInputComponent,
   ],
   providers: [DatePipe],
@@ -117,8 +117,6 @@ export class Expense implements OnInit, OnDestroy {
   expenses$!: Observable<IExpense[]>;
   vouchers$!: Observable<ServiceIVoucher[]>;
   categories$!: Observable<ServiceICategory[]>;
-  categorySelectOptions$!: Observable<SelectOption[]>;
-  voucherCategorySelectOptions$!: Observable<SelectOption[]>;
   categoryList: ServiceICategory[] = [];
   getIconForCategory(categoryName: string) {
     return getIconData(this.categoryList.find(c => c.name === categoryName)?.icon);
@@ -148,8 +146,8 @@ export class Expense implements OnInit, OnDestroy {
 
   public userRole: string | null = null;
   isSaving = false;
-  isFormOpen = false;
-  isVoucherPanelOpen = false;
+  isAddModalOpen = false;
+  addModalTab: 'expense' | 'voucher' = 'expense';
   isVoucherSaving = false;
   isSavedVoucherListOpen = false;
   isQuickMode = true;
@@ -224,6 +222,7 @@ export class Expense implements OnInit, OnDestroy {
   readonly iconX = X;
   readonly iconRotateCcw = RotateCcw;
   readonly iconCalendar = Calendar;
+  readonly iconCalendarDays = CalendarDays;
   readonly iconInfo = Info;
   readonly iconWallet = Wallet;
   readonly iconListChecks = ListChecks;
@@ -240,6 +239,8 @@ export class Expense implements OnInit, OnDestroy {
   readonly iconZap = Zap;
   readonly iconList = List;
   readonly iconArchive = Archive;
+  readonly iconSearch = Search;
+  readonly iconCheck = Check;
 
   activeAvatarExpenseId: string | null = null;
   activeAvatarVoucherId: string | null = null;
@@ -316,7 +317,7 @@ export class Expense implements OnInit, OnDestroy {
         this._activeCurrencyFilter$.next(null);
         this._activeCategoryFilter$.next(null);
         this.clearAllVoucherFiles();
-        this.isVoucherPanelOpen = false;
+        this.closeAddModal();
         if (isActualSpaceSwitch) {
           this.dateFilterMode = 'today';
           this.showCustomDatePicker = false;
@@ -335,14 +336,128 @@ export class Expense implements OnInit, OnDestroy {
     this.destroy$.next();
     this.destroy$.complete();
     this.clearAllVoucherFiles();
+    this.destroyDatePickerFlatpickr();
+    document.body.classList.remove('exp-add-modal-open');
   }
 
-  toggleForm(): void {
-    this.isFormOpen = !this.isFormOpen;
+  openAddModal(tab: 'expense' | 'voucher' = 'expense'): void {
+    this.addModalTab = tab;
+    this.isAddModalOpen = true;
+    this.isCategoryPickerOpen = false;
+    this.closeDatePicker();
+    document.body.classList.add('exp-add-modal-open');
   }
 
-  toggleVoucherPanel(): void {
-    this.isVoucherPanelOpen = !this.isVoucherPanelOpen;
+  closeAddModal(): void {
+    this.isAddModalOpen = false;
+    this.isCategoryPickerOpen = false;
+    this.closeDatePicker();
+    document.body.classList.remove('exp-add-modal-open');
+  }
+
+  setAddModalTab(tab: 'expense' | 'voucher'): void {
+    this.addModalTab = tab;
+  }
+
+  // ── Category picker (drill-down within the Add-Expense/Voucher modal) ──
+  // Not using app-custom-select's own bottom-sheet here: that component
+  // manages its own history-based close on mobile, and nesting it inside
+  // this modal left the picker/backdrop stuck open after selecting an item.
+  // A picker that simply swaps this modal's own content sidesteps that
+  // entirely — there's only ever one sheet/backdrop on screen.
+  isCategoryPickerOpen = false;
+  categoryPickerTarget: 'expense' | 'voucher' = 'expense';
+  categoryPickerSearch = '';
+
+  openCategoryPicker(target: 'expense' | 'voucher'): void {
+    this.categoryPickerTarget = target;
+    this.categoryPickerSearch = '';
+    this.isCategoryPickerOpen = true;
+    this.closeDatePicker();
+  }
+
+  closeCategoryPicker(): void {
+    this.isCategoryPickerOpen = false;
+  }
+
+  selectCategory(name: string): void {
+    const form = this.categoryPickerTarget === 'voucher' ? this.voucherForm : this.newExpenseForm;
+    form.get('category')?.setValue(name);
+    this.closeCategoryPicker();
+  }
+
+  get filteredPickerCategories(): ServiceICategory[] {
+    const q = this.categoryPickerSearch.trim().toLowerCase();
+    if (!q) return this.categoryList;
+    return this.categoryList.filter(c => c.name.toLowerCase().includes(q));
+  }
+
+  // ── Date picker (drill-down within the Add-Expense/Voucher modal) ──
+  // Same reasoning as the category picker above: app-date-input's own
+  // sheet manages its close state via history.back()/popstate, and that
+  // round trip wasn't reliably resolving once nested inside this modal —
+  // isOpen got stuck true, leaving the backdrop stuck on screen with
+  // nothing closing it. This uses flatpickr directly (same library, same
+  // global flatpickr theme in styles.css) with no separate backdrop/sheet
+  // and no history manipulation of its own.
+  isDatePickerOpen = false;
+  datePickerTarget: 'expense' | 'voucher' = 'expense';
+  private datePickerFp: FlatpickrInstance | null = null;
+
+  openDatePicker(target: 'expense' | 'voucher'): void {
+    this.datePickerTarget = target;
+    this.isCategoryPickerOpen = false;
+    this.isDatePickerOpen = true;
+    setTimeout(() => this.initDatePickerFlatpickr(), 0);
+  }
+
+  closeDatePicker(): void {
+    this.isDatePickerOpen = false;
+    this.destroyDatePickerFlatpickr();
+  }
+
+  private initDatePickerFlatpickr(): void {
+    this.destroyDatePickerFlatpickr();
+    const container = document.getElementById('exp-date-picker-container');
+    if (!container) return;
+
+    const hiddenInput = document.createElement('input');
+    hiddenInput.type = 'text';
+    hiddenInput.style.display = 'none';
+    container.appendChild(hiddenInput);
+
+    const form = this.datePickerTarget === 'voucher' ? this.voucherForm : this.newExpenseForm;
+    const currentValue = form.get('date')?.value;
+    const lang = this.translate.currentLang || this.translate.getDefaultLang();
+    const isMy = lang === 'my';
+    const myDigits = '၀၁၂၃၄၅၆၇၈၉';
+
+    this.datePickerFp = flatpickr(hiddenInput, {
+      inline: true,
+      defaultDate: currentValue || undefined,
+      minDate: this.expenseDateMin || undefined,
+      maxDate: this.expenseDateMax || undefined,
+      disableMobile: true,
+      locale: isMy ? Burmese : undefined,
+      onDayCreate: (_dates, _dateStr, _fp, dayElem) => {
+        if (!isMy) return;
+        dayElem.textContent = (dayElem.textContent ?? '').replace(/\d/g, (d: string) => myDigits[+d]);
+      },
+      onChange: (dates) => {
+        if (!dates[0]) return;
+        const d = dates[0];
+        const str = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        form.get('date')?.setValue(str);
+        this.closeDatePicker();
+      },
+    }) as unknown as FlatpickrInstance;
+  }
+
+  private destroyDatePickerFlatpickr(): void {
+    if (this.datePickerFp) {
+      this.datePickerFp.destroy();
+      this.datePickerFp = null;
+    }
   }
 
   toggleQuickMode(): void {
@@ -455,15 +570,6 @@ export class Expense implements OnInit, OnDestroy {
 
   loadCategories(): void {
     this.categories$ = this.categoryService.getCategories();
-    this.categorySelectOptions$ = this.categories$.pipe(
-      map(cats => cats.map(c => ({ value: c.name, label: c.name, icon: c.icon })))
-    );
-    this.voucherCategorySelectOptions$ = this.categories$.pipe(
-      map(cats => [
-        { value: '', label: this.translate.instant('VOUCHER_NO_CATEGORY') },
-        ...cats.map(c => ({ value: c.name, label: c.name, icon: c.icon })),
-      ])
-    );
     this.categories$.pipe(takeUntil(this.destroy$)).subscribe(cats => { this.categoryList = cats; this.cdr.markForCheck(); });
   }
 
@@ -473,6 +579,10 @@ export class Expense implements OnInit, OnDestroy {
 
   trackByIndex(index: number): number {
     return index;
+  }
+
+  trackByCategoryId(index: number, category: ServiceICategory): string {
+    return category.id ?? category.name;
   }
 
   trackByKey(index: number, item: { key: string }): string {
@@ -524,6 +634,7 @@ export class Expense implements OnInit, OnDestroy {
       });
       this.priceDisplayValue = '';
       this.refreshExpenses$.next();
+      this.closeAddModal();
     } catch (error: any) {
       Toast.fire({ icon: 'error', title: error.message || this.translate.instant('EXPENSE_ERROR_ADD') });
     } finally {

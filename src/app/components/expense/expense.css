@@ -38,6 +38,394 @@
   gap: 1rem;
 }
 
+/* ── Add FAB + Bottom-sheet Modal ── */
+.exp-add-fab {
+  position: fixed;
+  right: 1rem;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 68px + 1rem);
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: none;
+  background: var(--accent, #0b74ff);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 20px rgba(11, 116, 255, 0.4);
+  z-index: 900;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.exp-add-fab:active {
+  transform: scale(0.94);
+}
+
+@media (min-width: 992px) {
+  .exp-add-fab {
+    bottom: 2rem;
+  }
+}
+
+body.exp-add-modal-open {
+  overflow: hidden;
+}
+
+.exp-add-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 1010;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+  backdrop-filter: blur(2px);
+}
+
+.exp-add-modal-backdrop.open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* Always a centered dialog — on phone and desktop alike (no bottom-sheet slide-up).
+   Uses the standalone `translate`/`scale` CSS properties instead of `transform`:
+   `transform` on an ancestor creates a new containing block for descendant
+   `position: fixed` elements, which broke the nested date/category picker
+   sheets (they render as position:fixed and expect to be relative to the
+   viewport, not this dialog). translate/scale don't have that side effect. */
+.exp-add-modal-sheet {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 92%;
+  max-width: 480px;
+  max-height: 85vh;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface, #12151c);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.45);
+  z-index: 1020;
+  translate: -50% -50%;
+  scale: 0.96;
+  opacity: 0;
+  pointer-events: none;
+  transition: scale 0.2s ease, opacity 0.2s ease;
+}
+
+.exp-add-modal-sheet.open {
+  scale: 1;
+  opacity: 1;
+  pointer-events: all;
+}
+
+.exp-add-modal-handle {
+  display: none;
+}
+
+.exp-add-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 0.6rem 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+/* Reuses the app's existing sliding segmented-control style (.exp-seg-*,
+   also used by the date filter bar) for a cohesive, modern tab look
+   instead of two loose pill buttons. */
+.exp-add-modal-tabs {
+  flex: 1;
+  min-width: 0;
+}
+
+.exp-add-modal-tabs .exp-seg-indicator {
+  width: 50%;
+}
+
+.exp-add-modal-tabs .exp-seg-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.32rem;
+  font-size: 0.76rem;
+}
+
+.exp-add-modal-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.exp-add-modal-close:hover {
+  background: var(--border);
+}
+
+.exp-add-modal-body {
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+/* Back button + title shown in the header while the category picker is drilled in */
+.exp-add-modal-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.exp-add-modal-back:hover {
+  background: var(--border);
+}
+
+.exp-add-modal-back-icon {
+  transform: rotate(90deg);
+}
+
+.exp-add-modal-header-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* Category select trigger — replaces app-custom-select for the category
+   field inside this modal (see expense.ts for why: nesting that component's
+   own bottom-sheet picker here left it stuck open on mobile). */
+.exp-cat-select-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  height: 52px;
+  padding: 0 0.9rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s;
+}
+
+.exp-cat-select-trigger:hover,
+.exp-cat-select-trigger:focus-visible {
+  border-color: var(--accent);
+}
+
+.exp-float-group > .exp-cat-select-trigger {
+  flex: 1;
+  min-width: 0;
+  border-radius: 10px 0 0 10px;
+}
+
+.exp-cat-select-trigger-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  background: hsl(var(--cat-hue, 220) 80% 55% / 0.15);
+  color: hsl(var(--cat-hue, 220) 80% 70%);
+}
+
+.exp-cat-select-trigger-value {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.88rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.exp-cat-select-trigger-placeholder {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+}
+
+.exp-cat-select-trigger-chevron {
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+/* Category picker — search + list, swapped into the modal body in place
+   of the form while drilled in */
+.exp-cat-picker-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: 320px;
+}
+
+.exp-cat-picker-search {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 0.85rem;
+  height: 46px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.exp-cat-picker-search-icon {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.exp-cat-picker-search-input {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-size: 0.88rem;
+}
+
+.exp-cat-picker-search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.exp-cat-picker-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  overflow-y: auto;
+}
+
+.exp-cat-picker-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.65rem 0.7rem;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+  width: 100%;
+}
+
+.exp-cat-picker-item:hover {
+  background: var(--surface-2);
+}
+
+.exp-cat-picker-item-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  background: hsl(var(--cat-hue, 220) 80% 55% / 0.15);
+  color: hsl(var(--cat-hue, 220) 80% 70%);
+}
+
+.exp-cat-picker-item-label {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.88rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.exp-cat-picker-item-check {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.exp-cat-picker-empty {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  padding: 2rem 1rem;
+}
+
+/* The form itself had padding tuned for the old accordion-panel wrapper;
+   the modal body already pads its content, so drop the duplicate padding
+   and tighten field spacing a bit for a more compact feel. */
+.exp-add-modal-body .exp-form {
+  padding: 0;
+  gap: 0.75rem;
+}
+
+.exp-add-modal-body .exp-form-row {
+  gap: 0.65rem;
+}
+
+/* Date picker body — inline flatpickr calendar, swapped into the modal body
+   in place of the form. flatpickr's own visual theme is already defined
+   globally (styles.css, shared with the rest of the app), so this just
+   needs to center/contain the calendar it renders into. */
+.exp-date-picker-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 320px;
+}
+
+/* Amount — prominent hero field, quick mode only.
+   Placeholder and typed value share the same large size (no floating label). */
+.exp-amount-hero {
+  margin-bottom: 0.5rem;
+}
+
+.exp-amount-hero-currency {
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 0.5rem 0.8rem;
+  height: 4rem !important;
+}
+
+.exp-amount-hero-input {
+  font-size: 2rem !important;
+  font-weight: 800;
+  padding: 0.5rem 0.9rem !important;
+  height: 4rem !important;
+}
+
+/* At this size/weight, the placeholder reads almost like real content —
+   dim it further than the normal muted-text placeholder color.
+   (!important: this rule and .exp-float-input::placeholder have equal
+   specificity, and the general one sits later in this file and would win
+   the tie otherwise.) */
+.exp-amount-hero-input::placeholder {
+  color: var(--text-muted) !important;
+  opacity: 0.4 !important;
+}
+
 /* ── Overlay / Spinner ── */
 .exp-overlay {
   position: fixed;
@@ -75,20 +463,6 @@
   margin: 2rem auto;
 }
 
-/* ── Panel (collapsible add form) ── */
-.exp-panel {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.35);
-  transition: box-shadow 0.25s ease;
-}
-
-.exp-panel:has(.exp-panel-body.open) {
-  box-shadow: 0 4px 32px rgba(11, 116, 255, 0.1), 0 2px 20px rgba(0, 0, 0, 0.35);
-}
-
 .exp-icon-badge {
   display: inline-flex;
   align-items: center;
@@ -113,68 +487,6 @@
 .exp-icon-badge-success {
   background: rgba(52, 211, 153, 0.1);
   color: var(--success);
-}
-
-.exp-panel-toggle {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.85rem 1rem 0.85rem 1.4rem;
-  background: none;
-  border: none;
-  border-radius: 16px;
-  cursor: pointer;
-  color: var(--text);
-  /* font-family: 'Syne', sans-serif; */
-  font-size: 0.95rem;
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  transition: background 0.15s;
-}
-
-.exp-panel-toggle:hover {
-  background: var(--surface-2);
-}
-
-.exp-panel-toggle-left {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-}
-
-.exp-chevron {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  flex-shrink: 0;
-  transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.exp-panel-body {
-  display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows 0.38s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.exp-panel-inner {
-  overflow: hidden;
-  min-height: 0;
-  opacity: 0;
-  transition: opacity 0.18s ease;
-}
-
-.exp-panel-body.open .exp-panel-inner {
-  overflow: visible;
-}
-
-.exp-panel-body.open {
-  grid-template-rows: 1fr;
-  border-top: 1px solid var(--border);
-}
-
-.exp-panel-body.open .exp-panel-inner {
-  opacity: 1;
-  transition: opacity 0.3s ease 0.14s;
 }
 
 .exp-voucher-collapse-body > * {
@@ -353,27 +665,12 @@
   padding-top: 0.25rem;
 }
 
-.exp-textarea {
+.exp-float-input.exp-textarea {
   min-height: 68px;
   height: auto;
   resize: vertical;
   line-height: 1.35;
-  padding-top: 1.5rem;
-}
-
-.exp-float-input.exp-textarea ~ .exp-float-label {
-  top: 1rem;
-  transform: translateY(0);
-}
-
-.exp-float-input.exp-textarea:focus ~ .exp-float-label,
-.exp-float-input.exp-textarea.exp-has-val ~ .exp-float-label {
-  top: 0.6rem;
-  transform: translateY(0);
-  font-size: 0.68rem;
-  color: var(--accent);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  padding: 0.85rem 0.9rem;
 }
 
 .exp-file-input {
@@ -775,10 +1072,6 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-}
-
-.exp-chevron.open {
-  transform: rotate(180deg);
 }
 
 .exp-collapse-chevron {
@@ -1526,13 +1819,18 @@ body.light-mode .exp-item {
   color: var(--text);
   /* font-family: 'Syne', sans-serif; */
   font-size: 0.9rem;
-  padding: 1.35rem 0.9rem 0.45rem;
+  padding: 0 0.9rem;
   outline: none;
   width: 100%;
   transition: border-color 0.15s;
   -webkit-appearance: none;
   appearance: none;
-  height: 56px;
+  height: 52px;
+}
+
+.exp-float-input::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
 }
 
 .exp-float-input:focus {
@@ -1569,43 +1867,6 @@ body.light-mode .exp-item {
   /* border-left: none; */
 }
 
-/* Floating Label */
-.exp-float-label {
-  position: absolute;
-  left: 0.9rem;
-  top: 50%;
-  transform: translateY(-50%);
-  /* font-family: 'Syne', sans-serif; */
-  font-size: 0.88rem;
-  font-weight: 500;
-  color: var(--text-muted);
-  pointer-events: none;
-  transition: top 0.18s ease, font-size 0.18s ease, color 0.18s ease, transform 0.18s ease;
-  white-space: nowrap;
-  line-height: 1;
-}
-
-/* Float up: when input has value (not placeholder-shown) or is focused */
-.exp-float-input:not(:placeholder-shown)~.exp-float-label,
-.exp-float-input:focus~.exp-float-label {
-  top: 0.6rem;
-  transform: translateY(0);
-  font-size: 0.68rem;
-  color: var(--accent);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-/* For select: always float (since it always has a value shown) */
-.exp-float-select~.exp-float-label {
-  top: 0.6rem;
-  transform: translateY(0);
-  font-size: 0.68rem;
-  color: var(--accent);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
 /* Currency badge in float group */
 .exp-float-group .exp-currency-badge {
   display: flex;
@@ -1621,7 +1882,7 @@ body.light-mode .exp-item {
   color: var(--text-muted);
   white-space: nowrap;
   flex-shrink: 0;
-  height: 56px;
+  height: 52px;
 }
 
 /* Addon button in float group */
@@ -1629,27 +1890,27 @@ body.light-mode .exp-item {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--info-dim);
+  background: var(--accent-dim);
   border: 1px solid var(--border);
   border-left: none;
   border-radius: 0 10px 10px 0;
   padding: 0 0.95rem;
   font-size: 0.85rem;
-  color: var(--info);
+  color: #fff;
+  background: var(--info);
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
-  height: 60px;
+  /* height: 60px; */
   flex-shrink: 0;
 }
 
 .exp-float-group .exp-addon-btn:hover {
-  background: var(--info);
+  background: var(--accent);
   color: #fff;
 }
 
-/* Left part of float group (select wrapper or custom-select component) */
-.exp-float-group>.exp-float-field,
-.exp-float-group>app-custom-select {
+/* Left part of float group */
+.exp-float-group>.exp-float-field {
   flex: 1;
   min-width: 0;
 }
@@ -1657,7 +1918,7 @@ body.light-mode .exp-item {
 .exp-float-group>.exp-float-field>.exp-float-input {
   border-radius: 10px 0 0 10px;
   /* border-right: none; */
-  height: 56px;
+  height: 52px;
 }
 
 /* For price field: left side is currency badge, so input loses left radius */
@@ -1669,16 +1930,6 @@ body.light-mode .exp-item {
 /* ══════════════════════════════════════════════
    QUICK MODE TOGGLE
    ══════════════════════════════════════════════ */
-
-.exp-panel-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.exp-panel-header .exp-panel-toggle {
-  flex: 1;
-}
 
 .exp-quick-toggle {
   display: flex;
@@ -1694,7 +1945,7 @@ body.light-mode .exp-item {
   cursor: pointer;
   transition: all 0.15s;
   white-space: nowrap;
-  margin: 0 0.75rem 0 0.25rem;
+  margin: 0 0 0.85rem;
   flex-shrink: 0;
 }
 
@@ -1708,16 +1959,6 @@ body.light-mode .exp-item {
   background: rgba(96, 165, 250, 0.1);
   border-color: rgba(96, 165, 250, 0.3);
   color: #60a5fa;
-}
-
-/* Optional hint label */
-.exp-optional-hint {
-  font-size: 0.6rem;
-  font-weight: 500;
-  opacity: 0.55;
-  margin-left: 0.3rem;
-  text-transform: lowercase;
-  letter-spacing: 0;
 }
 
 

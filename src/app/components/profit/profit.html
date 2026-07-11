@@ -148,8 +148,7 @@
           <form [formGroup]="incomeForm" (ngSubmit)="onSubmitIncome()" class="pnl-form">
             <div class="pnl-form-row">
               <div class="pnl-float-field">
-                <app-date-input formControlName="date" inputId="incomeDate"
-                  [label]="'DATE' | translate">
+                <app-date-input formControlName="date" inputId="incomeDate">
                 </app-date-input>
               </div>
               <div class="pnl-float-field pnl-float-group">

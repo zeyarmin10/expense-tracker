@@ -1,5 +1,5 @@
 import {
-  Component, Input, Self, Optional,
+  Component, Input, Output, EventEmitter, Self, Optional,
   HostListener, ElementRef, OnDestroy, inject,
 } from '@angular/core';
 import { ControlValueAccessor, NgControl } from '@angular/forms';
@@ -32,9 +32,20 @@ export class DateInputComponent implements ControlValueAccessor, OnDestroy {
   @Input() min = '';
   @Input() max = '';
 
+  /** Fires whenever the date picker opens/closes — lets an ancestor (e.g. a
+   *  parent modal) react without depending on CSS :has() browser support. */
+  @Output() openedChange = new EventEmitter<boolean>();
+
   value = '';
-  isOpen = false;
   isDisabled = false;
+
+  private _isOpen = false;
+  get isOpen(): boolean { return this._isOpen; }
+  set isOpen(val: boolean) {
+    if (this._isOpen === val) return;
+    this._isOpen = val;
+    this.openedChange.emit(val);
+  }
   isMobile = typeof window !== 'undefined' ? window.innerWidth < MOBILE_BP : true;
 
   panelTop = 0;
@@ -71,7 +82,11 @@ export class DateInputComponent implements ControlValueAccessor, OnDestroy {
   }
 
   open(): void {
-    if (this.isDisabled) return;
+    // Guard against a repeat tap re-entering open() before the sheet has
+    // rendered — that pushed a second history entry per tap, and closing
+    // (which pops exactly one entry per close()) could never fully unwind
+    // it, leaving isOpen effectively stuck open.
+    if (this.isDisabled || this.isOpen) return;
     if (!this.isMobile) this.calcPanelPos();
     else history.pushState(null, '');
     this.isOpen = true;
@@ -81,8 +96,19 @@ export class DateInputComponent implements ControlValueAccessor, OnDestroy {
   close(): void {
     if (!this.isOpen) return;
     this.destroyFlatpickr();
-    if (this.isMobile) history.back();
-    else { this.isOpen = false; this.onTouched(); }
+    // Set isOpen synchronously here rather than waiting on the popstate
+    // that history.back() below is expected to trigger — that round trip
+    // wasn't always resolving (e.g. when nested inside another component
+    // that also reacts to popstate/history), leaving isOpen stuck true
+    // and the sheet/backdrop stuck on screen with nothing closing it.
+    this.isOpen = false;
+    this.onTouched();
+    if (this.isMobile) {
+      // Pop the entry pushed in open() purely for history-stack hygiene
+      // (so the device back button/gesture doesn't later land on a stale,
+      // do-nothing entry) — correctness no longer depends on this firing.
+      history.back();
+    }
   }
 
   private initFlatpickr(): void {

@@ -5,63 +5,180 @@
 
 <div class="exp-wrapper">
   <div class="exp-container mb-5">
-    <!-- ── ADD EXPENSE PANEL ── -->
-    <div class="exp-panel">
-      <div class="exp-panel-header">
-        <button
-          class="exp-panel-toggle"
-          type="button"
-          (click)="toggleForm()"
-          [attr.aria-expanded]="isFormOpen"
-        >
-          <span class="exp-panel-toggle-left">
-            <span class="exp-icon-badge exp-icon-badge-accent">
-              <lucide-icon [img]="iconWallet" [size]="16"></lucide-icon>
-            </span>
-            <span>{{ "EXPENSE_ADD_TITLE" | translate }}</span>
-          </span>
-          <lucide-icon [img]="iconChevronDown" [size]="16" class="exp-chevron" [class.open]="isFormOpen"></lucide-icon>
-        </button>
-        <!-- Quick/Full toggle — personal account -->
-        <button
-          type="button"
-          class="exp-quick-toggle"
-          (click)="toggleQuickMode()"
-          [class.active]="!isQuickMode"
-          [title]="isQuickMode ? ('SWITCH_TO_FULL_FORM' | translate) : ('SWITCH_TO_QUICK_ADD' | translate)"
-        >
-          <span *ngIf="isQuickMode"><lucide-icon [img]="iconZap" [size]="14"></lucide-icon> {{ 'QUICK' | translate }}</span>
-          <span *ngIf="!isQuickMode"><lucide-icon [img]="iconList" [size]="14"></lucide-icon> {{ 'FULL' | translate }}</span>
+    <!-- ── ADD (FAB + Bottom-sheet Modal) ── -->
+    <button type="button" class="exp-add-fab" (click)="openAddModal('expense')" [title]="'EXPENSE_ADD_TITLE' | translate">
+      <lucide-icon [img]="iconPlus" [size]="24"></lucide-icon>
+    </button>
+
+    <div class="exp-add-modal-backdrop" [class.open]="isAddModalOpen" (click)="closeAddModal()"></div>
+    <div class="exp-add-modal-sheet" [class.open]="isAddModalOpen">
+      <div class="exp-add-modal-handle"></div>
+      <div class="exp-add-modal-header" *ngIf="!isCategoryPickerOpen && !isDatePickerOpen">
+        <div class="exp-seg-ctrl exp-add-modal-tabs">
+          <div class="exp-seg-track">
+            <span
+              class="exp-seg-indicator"
+              [style.transform]="'translateX(calc(' + (addModalTab === 'voucher' ? 1 : 0) + ' * 100%))'"
+              aria-hidden="true"
+            ></span>
+            <button type="button" class="exp-seg-btn" [class.active]="addModalTab === 'expense'" (click)="setAddModalTab('expense')">
+              <lucide-icon [img]="iconWallet" [size]="13"></lucide-icon>
+              {{ "EXPENSE_ADD_TITLE" | translate }}
+            </button>
+            <button type="button" class="exp-seg-btn" [class.active]="addModalTab === 'voucher'" (click)="setAddModalTab('voucher')">
+              <lucide-icon [img]="iconReceipt" [size]="13"></lucide-icon>
+              {{ "VOUCHER_ADD_TITLE" | translate }}
+            </button>
+          </div>
+        </div>
+        <button type="button" class="exp-add-modal-close" (click)="closeAddModal()" [title]="'CANCEL_BUTTON_LABEL' | translate">
+          <lucide-icon [img]="iconX" [size]="18"></lucide-icon>
         </button>
       </div>
 
-      <div class="exp-panel-body" [class.open]="isFormOpen">
-        <div class="exp-panel-inner">
+      <!-- Category picker header — replaces the tabs while drilled in -->
+      <div class="exp-add-modal-header" *ngIf="isCategoryPickerOpen">
+        <button type="button" class="exp-add-modal-back" (click)="closeCategoryPicker()">
+          <lucide-icon [img]="iconChevronDown" [size]="18" class="exp-add-modal-back-icon"></lucide-icon>
+        </button>
+        <span class="exp-add-modal-header-title">{{ 'EXPENSE_CATEGORY_LABEL' | translate }}</span>
+        <button type="button" class="exp-add-modal-close" (click)="closeCategoryPicker()" [title]="'BACK_BUTTON' | translate">
+          <lucide-icon [img]="iconX" [size]="18"></lucide-icon>
+        </button>
+      </div>
+
+      <!-- Date picker header — replaces the tabs while drilled in -->
+      <div class="exp-add-modal-header" *ngIf="isDatePickerOpen">
+        <button type="button" class="exp-add-modal-back" (click)="closeDatePicker()">
+          <lucide-icon [img]="iconChevronDown" [size]="18" class="exp-add-modal-back-icon"></lucide-icon>
+        </button>
+        <span class="exp-add-modal-header-title">{{ 'EXPENSE_DATE_LABEL' | translate }}</span>
+        <button type="button" class="exp-add-modal-close" (click)="closeDatePicker()" [title]="'BACK_BUTTON' | translate">
+          <lucide-icon [img]="iconX" [size]="18"></lucide-icon>
+        </button>
+      </div>
+
+      <!-- Date picker body — inline flatpickr calendar, swaps in place of the form.
+           Uses flatpickr directly (same as the shared app-date-input component)
+           but with no separate backdrop/sheet/history-based close of its own —
+           it just swaps into this modal's own body, same pattern as the
+           category picker above. -->
+      <div class="exp-add-modal-body exp-date-picker-body" *ngIf="isDatePickerOpen">
+        <div id="exp-date-picker-container"></div>
+      </div>
+
+      <!-- Category picker body — search + list, swaps in place of the form -->
+      <div class="exp-add-modal-body exp-cat-picker-body" *ngIf="isCategoryPickerOpen">
+        <div class="exp-cat-picker-search">
+          <lucide-icon [img]="iconSearch" [size]="15" class="exp-cat-picker-search-icon"></lucide-icon>
+          <input
+            type="text"
+            [(ngModel)]="categoryPickerSearch"
+            [ngModelOptions]="{standalone: true}"
+            [placeholder]="'CUSTOM_SELECT_SEARCH' | translate"
+            class="exp-cat-picker-search-input"
+          />
+        </div>
+        <div class="exp-cat-picker-list">
+          <button
+            type="button"
+            class="exp-cat-picker-item"
+            *ngIf="categoryPickerTarget === 'voucher' && !categoryPickerSearch"
+            (click)="selectCategory('')"
+          >
+            <span class="exp-cat-picker-item-label">{{ 'VOUCHER_NO_CATEGORY' | translate }}</span>
+            <lucide-icon
+              *ngIf="!voucherForm.get('category')?.value"
+              [img]="iconCheck" [size]="16" class="exp-cat-picker-item-check">
+            </lucide-icon>
+          </button>
+          <p class="exp-cat-picker-empty" *ngIf="filteredPickerCategories.length === 0">
+            {{ 'CUSTOM_SELECT_NO_RESULTS' | translate }}
+          </p>
+          <button
+            type="button"
+            class="exp-cat-picker-item"
+            *ngFor="let cat of filteredPickerCategories; trackBy: trackByCategoryId"
+            [style.--cat-hue]="getIconHueForCategory(cat.name)"
+            (click)="selectCategory(cat.name)"
+          >
+            <span class="exp-cat-picker-item-icon">
+              <lucide-icon [img]="getIconForCategory(cat.name)" [size]="15"></lucide-icon>
+            </span>
+            <span class="exp-cat-picker-item-label">{{ cat.name }}</span>
+            <lucide-icon
+              *ngIf="(categoryPickerTarget === 'voucher' ? voucherForm : newExpenseForm).get('category')?.value === cat.name"
+              [img]="iconCheck" [size]="16" class="exp-cat-picker-item-check">
+            </lucide-icon>
+          </button>
+        </div>
+      </div>
+
+      <div class="exp-add-modal-body" *ngIf="!isCategoryPickerOpen && !isDatePickerOpen">
+        <ng-container *ngIf="addModalTab === 'expense'">
+          <!-- Quick/Full toggle — personal account -->
+          <button
+            type="button"
+            class="exp-quick-toggle"
+            (click)="toggleQuickMode()"
+            [class.active]="!isQuickMode"
+            [title]="isQuickMode ? ('SWITCH_TO_FULL_FORM' | translate) : ('SWITCH_TO_QUICK_ADD' | translate)"
+          >
+            <!-- Shows the mode you'll switch TO (like a light/dark toggle), not the current one -->
+            <span *ngIf="isQuickMode"><lucide-icon [img]="iconList" [size]="14"></lucide-icon> {{ 'FULL' | translate }}</span>
+            <span *ngIf="!isQuickMode"><lucide-icon [img]="iconZap" [size]="14"></lucide-icon> {{ 'QUICK' | translate }}</span>
+          </button>
+
         <form
           [formGroup]="newExpenseForm"
           (ngSubmit)="onSubmitNewExpense()"
           class="exp-form"
         >
-          <!-- ── Quick Mode: Category + ItemName + Price ── -->
+          <!-- ── Quick Mode: Amount (hero) + Date/Category + ItemName ── -->
           <ng-container
             *ngIf="isQuickMode"
           >
+            <!-- Amount — prominent, first -->
+            <div class="exp-amount-hero exp-float-field exp-float-group">
+              <span class="exp-currency-badge exp-amount-hero-currency"
+                >{{ userProfile?.currency || 'MMK' }}</span
+              >
+              <div class="exp-float-field" style="flex: 1; min-width: 0">
+                <input
+                  type="text"
+                  inputmode="decimal"
+                  class="exp-float-input exp-float-input-joined exp-amount-hero-input"
+                  id="price-quick"
+                  [value]="priceDisplayValue"
+                  (input)="onPriceInput($event, newExpenseForm, 'price')"
+                  (focus)="priceDisplayValue = (newExpenseForm.get('price')?.value > 0 ? formatWithCommas(newExpenseForm.get('price')?.value) : ''); newExpenseForm.get('price')?.markAsTouched()"
+                  placeholder="10,000"
+                  [class.is-invalid]="newExpenseForm.controls['price'].invalid && newExpenseForm.controls['price'].touched"
+                />
+              </div>
+            </div>
+
             <!-- Category + Date row -->
             <div class="exp-form-row">
               <div class="exp-float-field">
-                <app-date-input formControlName="date" inputId="date-quick"
-                  [label]="'EXPENSE_DATE_LABEL' | translate"
-                  [min]="expenseDateMin" [max]="expenseDateMax">
-                </app-date-input>
+                <button type="button" class="exp-cat-select-trigger" (click)="openDatePicker('expense')">
+                  <span class="exp-cat-select-trigger-value">{{ formatService.formatLocalizedDate(newExpenseForm.get('date')?.value) }}</span>
+                  <lucide-icon [img]="iconCalendarDays" [size]="15" class="exp-cat-select-trigger-chevron"></lucide-icon>
+                </button>
               </div>
               <div class="exp-float-field exp-float-group">
-                <app-custom-select
-                  formControlName="category"
-                  [options]="categorySelectOptions$ | async"
-                  [label]="'EXPENSE_CATEGORY_LABEL' | translate"
-                  [showIcons]="true"
-                  [hasAddon]="true">
-                </app-custom-select>
+                <button type="button" class="exp-cat-select-trigger" (click)="openCategoryPicker('expense')">
+                  <ng-container *ngIf="newExpenseForm.get('category')?.value as catVal; else catQuickPlaceholder">
+                    <span class="exp-cat-select-trigger-icon" [style.--cat-hue]="getIconHueForCategory(catVal)">
+                      <lucide-icon [img]="getIconForCategory(catVal)" [size]="14"></lucide-icon>
+                    </span>
+                    <span class="exp-cat-select-trigger-value">{{ catVal }}</span>
+                  </ng-container>
+                  <ng-template #catQuickPlaceholder>
+                    <span class="exp-cat-select-trigger-placeholder">{{ 'EXPENSE_CATEGORY_LABEL' | translate }}</span>
+                  </ng-template>
+                  <lucide-icon [img]="iconChevronDown" [size]="14" class="exp-cat-select-trigger-chevron"></lucide-icon>
+                </button>
                 <button
                   type="button"
                   class="exp-addon-btn"
@@ -80,38 +197,9 @@
                 class="exp-float-input"
                 id="itemName-quick"
                 formControlName="itemName"
-                placeholder=" "
+                [placeholder]="('EXPENSE_ITEM_NAME_LABEL' | translate) + ' (' + ('OPTIONAL' | translate) + ')'"
                 maxlength="50"
               />
-              <label class="exp-float-label" for="itemName-quick">
-                {{ "EXPENSE_ITEM_NAME_LABEL" | translate }}
-                <span class="exp-optional-hint"
-                  >({{ 'OPTIONAL' | translate }})</span
-                >
-              </label>
-            </div>
-
-            <!-- Price only -->
-            <div class="exp-float-field exp-float-group">
-              <span class="exp-currency-badge"
-                >{{ userProfile?.currency || 'MMK' }}</span
-              >
-              <div class="exp-float-field" style="flex: 1; min-width: 0">
-                <input
-                  type="text"
-                  inputmode="decimal"
-                  class="exp-float-input exp-float-input-joined"
-                  id="price-quick"
-                  [value]="priceDisplayValue"
-                  (input)="onPriceInput($event, newExpenseForm, 'price')"
-                  (focus)="priceDisplayValue = (newExpenseForm.get('price')?.value > 0 ? formatWithCommas(newExpenseForm.get('price')?.value) : ''); newExpenseForm.get('price')?.markAsTouched()"
-                  placeholder=" "
-                  [class.is-invalid]="newExpenseForm.controls['price'].invalid && newExpenseForm.controls['price'].touched"
-                />
-                <label class="exp-float-label" for="price-quick"
-                  >{{ "PRICE_LABEL" | translate }}</label
-                >
-              </div>
             </div>
           </ng-container>
 
@@ -122,20 +210,25 @@
             <div class="exp-form-row">
               <!-- Date -->
               <div class="exp-float-field">
-                <app-date-input formControlName="date" inputId="date"
-                  [label]="'EXPENSE_DATE_LABEL' | translate"
-                  [min]="expenseDateMin" [max]="expenseDateMax">
-                </app-date-input>
+                <button type="button" class="exp-cat-select-trigger" (click)="openDatePicker('expense')">
+                  <span class="exp-cat-select-trigger-value">{{ formatService.formatLocalizedDate(newExpenseForm.get('date')?.value) }}</span>
+                  <lucide-icon [img]="iconCalendarDays" [size]="15" class="exp-cat-select-trigger-chevron"></lucide-icon>
+                </button>
               </div>
               <!-- Category -->
               <div class="exp-float-field exp-float-group">
-                <app-custom-select
-                  formControlName="category"
-                  [options]="categorySelectOptions$ | async"
-                  [label]="'EXPENSE_CATEGORY_LABEL' | translate"
-                  [showIcons]="true"
-                  [hasAddon]="true">
-                </app-custom-select>
+                <button type="button" class="exp-cat-select-trigger" (click)="openCategoryPicker('expense')">
+                  <ng-container *ngIf="newExpenseForm.get('category')?.value as catVal; else catFullPlaceholder">
+                    <span class="exp-cat-select-trigger-icon" [style.--cat-hue]="getIconHueForCategory(catVal)">
+                      <lucide-icon [img]="getIconForCategory(catVal)" [size]="14"></lucide-icon>
+                    </span>
+                    <span class="exp-cat-select-trigger-value">{{ catVal }}</span>
+                  </ng-container>
+                  <ng-template #catFullPlaceholder>
+                    <span class="exp-cat-select-trigger-placeholder">{{ 'EXPENSE_CATEGORY_LABEL' | translate }}</span>
+                  </ng-template>
+                  <lucide-icon [img]="iconChevronDown" [size]="14" class="exp-cat-select-trigger-chevron"></lucide-icon>
+                </button>
                 <button
                   type="button"
                   class="exp-addon-btn"
@@ -154,13 +247,10 @@
                 class="exp-float-input"
                 id="itemName"
                 formControlName="itemName"
-                placeholder=" "
+                [placeholder]="'EXPENSE_ITEM_NAME_LABEL' | translate"
                 maxlength="50"
                 [class.is-invalid]="newExpenseForm.controls['itemName'].invalid && newExpenseForm.controls['itemName'].touched"
               />
-              <label class="exp-float-label" for="itemName"
-                >{{ "EXPENSE_ITEM_NAME_LABEL" | translate }}</label
-              >
             </div>
 
             <div class="exp-form-row exp-form-row-3">
@@ -174,12 +264,9 @@
                   min="0.01"
                   max="99999"
                   step="0.01"
-                  placeholder=" "
+                  [placeholder]="'QUANTITY_LABEL' | translate"
                   [class.is-invalid]="newExpenseForm.controls['quantity'].invalid && newExpenseForm.controls['quantity'].touched"
                 />
-                <label class="exp-float-label" for="quantity"
-                  >{{ "QUANTITY_LABEL" | translate }}</label
-                >
               </div>
               <!-- Unit -->
               <div class="exp-float-field">
@@ -188,12 +275,9 @@
                   class="exp-float-input"
                   id="unit"
                   formControlName="unit"
-                  placeholder=" "
+                  [placeholder]="'EXPENSE_UNIT_LABEL' | translate"
                   maxlength="20"
                 />
-                <label class="exp-float-label" for="unit"
-                  >{{ "EXPENSE_UNIT_LABEL" | translate }}</label
-                >
               </div>
               <!-- Price -->
               <div class="exp-float-field exp-float-group">
@@ -209,12 +293,9 @@
                     [value]="priceDisplayValue"
                     (input)="onPriceInput($event, newExpenseForm, 'price')"
                     (focus)="priceDisplayValue = (newExpenseForm.get('price')?.value > 0 ? formatWithCommas(newExpenseForm.get('price')?.value) : ''); newExpenseForm.get('price')?.markAsTouched()"
-                    placeholder=" "
+                    [placeholder]="'PRICE_LABEL' | translate"
                     [class.is-invalid]="newExpenseForm.controls['price'].invalid && newExpenseForm.controls['price'].touched"
                   />
-                  <label class="exp-float-label" for="price"
-                    >{{ "PRICE_LABEL" | translate }}</label
-                  >
                 </div>
               </div>
             </div>
@@ -231,32 +312,9 @@
             </button>
           </div>
         </form>
-        </div>
-      </div>
-    </div>
-    <!-- ── END ADD EXPENSE PANEL ── -->
+        </ng-container>
 
-    <!-- ── ADD VOUCHER PANEL ── -->
-    <div class="exp-panel exp-voucher-panel">
-      <div class="exp-panel-header">
-        <button
-          class="exp-panel-toggle"
-          type="button"
-          (click)="toggleVoucherPanel()"
-          [attr.aria-expanded]="isVoucherPanelOpen"
-        >
-          <span class="exp-panel-toggle-left">
-            <span class="exp-icon-badge exp-icon-badge-warning">
-              <lucide-icon [img]="iconReceipt" [size]="16"></lucide-icon>
-            </span>
-            <span>{{ "VOUCHER_ADD_TITLE" | translate }}</span>
-          </span>
-          <lucide-icon [img]="iconChevronDown" [size]="16" class="exp-chevron" [class.open]="isVoucherPanelOpen"></lucide-icon>
-        </button>
-      </div>
-
-      <div class="exp-panel-body" [class.open]="isVoucherPanelOpen">
-        <div class="exp-panel-inner">
+        <ng-container *ngIf="addModalTab === 'voucher'">
         <form
           [formGroup]="voucherForm"
           (ngSubmit)="onSubmitVoucher()"
@@ -264,19 +322,25 @@
         >
           <div class="exp-form-row">
             <div class="exp-float-field">
-              <app-date-input formControlName="date" inputId="voucher-date"
-                [label]="'EXPENSE_DATE_LABEL' | translate"
-                [min]="expenseDateMin" [max]="expenseDateMax">
-              </app-date-input>
+              <button type="button" class="exp-cat-select-trigger" (click)="openDatePicker('voucher')">
+                <span class="exp-cat-select-trigger-value">{{ formatService.formatLocalizedDate(voucherForm.get('date')?.value) }}</span>
+                <lucide-icon [img]="iconCalendarDays" [size]="15" class="exp-cat-select-trigger-chevron"></lucide-icon>
+              </button>
             </div>
 
             <div class="exp-float-field">
-              <app-custom-select
-                formControlName="category"
-                [options]="voucherCategorySelectOptions$ | async"
-                [label]="'EXPENSE_CATEGORY_LABEL' | translate"
-                [showIcons]="true">
-              </app-custom-select>
+              <button type="button" class="exp-cat-select-trigger" (click)="openCategoryPicker('voucher')">
+                <ng-container *ngIf="voucherForm.get('category')?.value as catVal; else catVoucherPlaceholder">
+                  <span class="exp-cat-select-trigger-icon" [style.--cat-hue]="getIconHueForCategory(catVal)">
+                    <lucide-icon [img]="getIconForCategory(catVal)" [size]="14"></lucide-icon>
+                  </span>
+                  <span class="exp-cat-select-trigger-value">{{ catVal }}</span>
+                </ng-container>
+                <ng-template #catVoucherPlaceholder>
+                  <span class="exp-cat-select-trigger-placeholder">{{ 'VOUCHER_NO_CATEGORY' | translate }}</span>
+                </ng-template>
+                <lucide-icon [img]="iconChevronDown" [size]="14" class="exp-cat-select-trigger-chevron"></lucide-icon>
+              </button>
             </div>
           </div>
 
@@ -287,28 +351,19 @@
               class="exp-float-input"
               id="voucher-title"
               formControlName="title"
-              placeholder=" "
+              [placeholder]="('VOUCHER_TITLE_LABEL' | translate) + ' (' + ('OPTIONAL' | translate) + ')'"
               maxlength="50"
             />
-            <label class="exp-float-label" for="voucher-title">
-              {{ "VOUCHER_TITLE_LABEL" | translate }}
-              <span class="exp-optional-hint">({{ 'OPTIONAL' | translate }})</span>
-            </label>
           </div>
 
           <div class="exp-float-field">
             <textarea
               class="exp-float-input exp-textarea"
-              [class.exp-has-val]="voucherForm.get('note')?.value"
               id="voucher-note"
               formControlName="note"
-              placeholder=" "
+              [placeholder]="('DESCRIPTION' | translate) + ' (' + ('OPTIONAL' | translate) + ')'"
               maxlength="200"
             ></textarea>
-            <label class="exp-float-label" for="voucher-note">
-              {{ "DESCRIPTION" | translate }}
-              <span class="exp-optional-hint">({{ 'OPTIONAL' | translate }})</span>
-            </label>
           </div>
 
           <!-- Hidden gallery file input -->
@@ -391,10 +446,10 @@
             </button>
           </div>
         </form>
-        </div>
+        </ng-container>
       </div>
     </div>
-    <!-- ── END ADD VOUCHER PANEL ── -->
+    <!-- ── END ADD (FAB + Bottom-sheet Modal) ── -->
 
     <!-- ── SHARED DATE FILTER BAR ── -->
     <div class="exp-filter-bar" [class.exp-filter-bar-expanded]="showCustomDatePicker">

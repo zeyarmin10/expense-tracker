@@ -310,6 +310,16 @@
   gap: 0.85rem;
 }
 
+/* app-date-input's own trigger padding/alignment was tuned to leave room for
+   its floating [label] above the value; we don't pass a label here (the field
+   always has a value — defaults to today), so re-center the date text instead
+   of leaving it pushed to the bottom of a tall, mostly-empty box. */
+app-date-input .di-trigger {
+  align-items: center !important;
+  padding: 0 2.4rem 0 0.9rem !important;
+  height: 56px !important;
+}
+
 @media (max-width: 576px) {
   .bgt-form-row {
     grid-template-columns: 1fr;

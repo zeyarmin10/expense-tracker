@@ -1,5 +1,5 @@
 import {
-  Component, Input, Self, Optional, HostListener, HostBinding, ElementRef,
+  Component, Input, Output, EventEmitter, Self, Optional, HostListener, HostBinding, ElementRef,
 } from '@angular/core';
 import { ControlValueAccessor, NgControl, FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -44,8 +44,19 @@ export class CustomSelectComponent implements ControlValueAccessor {
   @HostBinding('class.csl-expand-list') get isExpandList() { return this.expandList; }
   @HostBinding('class.csl-no-label') get isNoLabel() { return !this.label; }
 
+  /** Fires whenever the dropdown opens/closes — lets an ancestor (e.g. a
+   *  parent modal) react without depending on CSS :has() browser support. */
+  @Output() openedChange = new EventEmitter<boolean>();
+
+  private _isOpen = false;
+  get isOpen(): boolean { return this._isOpen; }
+  set isOpen(val: boolean) {
+    if (this._isOpen === val) return;
+    this._isOpen = val;
+    this.openedChange.emit(val);
+  }
+
   value = '';
-  isOpen = false;
   isMobile = typeof window !== 'undefined' ? window.innerWidth < MOBILE_BREAKPOINT : true;
   isDisabled = false;
   searchQuery = '';
@@ -96,7 +107,11 @@ export class CustomSelectComponent implements ControlValueAccessor {
   }
 
   open(): void {
-    if (this.isDisabled) return;
+    // Guard against a repeat tap re-entering open() before the sheet has
+    // rendered — that pushed a second history entry per tap, and closing
+    // (which pops exactly one entry per close()) could never fully unwind
+    // it, leaving isOpen effectively stuck open.
+    if (this.isDisabled || this.isOpen) return;
     this.searchQuery = '';
 
     if (this.isMobile) {
@@ -109,11 +124,18 @@ export class CustomSelectComponent implements ControlValueAccessor {
 
   close(): void {
     if (!this.isOpen) return;
+    // Set isOpen synchronously here rather than waiting on the popstate
+    // that history.back() below is expected to trigger — that round trip
+    // wasn't always resolving (e.g. when nested inside another component
+    // that also reacts to popstate/history), leaving isOpen stuck true
+    // and the sheet/backdrop stuck on screen with nothing closing it.
+    this.isOpen = false;
+    this.onTouched();
     if (this.isMobile) {
-      history.back(); // triggers popstate → sets isOpen = false
-    } else {
-      this.isOpen = false;
-      this.onTouched();
+      // Pop the entry pushed in open() purely for history-stack hygiene
+      // (so the device back button/gesture doesn't later land on a stale,
+      // do-nothing entry) — correctness no longer depends on this firing.
+      history.back();
     }
   }
 
