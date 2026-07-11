@@ -483,6 +483,9 @@ export class App implements OnInit, AfterViewInit {
       const earlyStyle = this.themeService.isDarkMode ? Style.Dark : Style.Light;
       StatusBar.setStyle({ style: earlyStyle }).catch(() => {});
       Camera.requestPermissions({ permissions: ['camera'] }).catch(() => {});
+      // Warm up the native Google Sign-In plugin now so the login screen's
+      // first tap doesn't pay for the bridge/Play-Services init cost.
+      void this.authService.preloadGoogleAuth();
     }
     this.initTheme();
     this.initKeyboardDetection();

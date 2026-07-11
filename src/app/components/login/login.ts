@@ -76,6 +76,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   successMessage: string | null = null;
   isLoginMode: boolean = true;
   showEmailForm: boolean = false;
+  isSigningIn: boolean = false;
 
   translate = inject(TranslateService);
   private cdr = inject(ChangeDetectorRef);
@@ -157,6 +158,11 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   async signInWithGoogle(): Promise<void> {
+    // Guard against repeat taps while a sign-in is already in flight —
+    // without this, an impatient user re-tapping produces stacked Google
+    // popups/intents and a confusing "login problem" error.
+    if (this.isSigningIn) return;
+    this.isSigningIn = true;
     this.errorMessage = null;
     this.successMessage = null;
     try {
@@ -166,6 +172,8 @@ export class LoginComponent implements OnInit, OnDestroy {
       console.error('Google sign-in error:', error);
       const translatedErrorMessage = this.authService.getFirebaseErrorMessage(error);
       this.showErrorModal(translatedErrorMessage);
+    } finally {
+      this.isSigningIn = false;
     }
   }
 

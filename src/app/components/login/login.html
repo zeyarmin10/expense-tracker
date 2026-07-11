@@ -53,9 +53,11 @@
       <!-- LOGIN MODE: Google first, email collapsible -->
       <ng-container *ngIf="isLoginMode">
         <!-- Google (primary) -->
-        <button type="button" class="lgn-google-btn lgn-google-primary" (click)="signInWithGoogle()">
-          <img src="assets/icons/google-g.svg" class="lgn-google-icon" alt="Google" />
-          {{ 'SIGN_IN_GOOGLE' | translate }}
+        <button type="button" class="lgn-google-btn lgn-google-primary" [disabled]="isSigningIn"
+          [class.lgn-btn-loading]="isSigningIn" (click)="signInWithGoogle()">
+          <span *ngIf="isSigningIn" class="lgn-google-spinner"></span>
+          <img *ngIf="!isSigningIn" src="assets/icons/google-g.svg" class="lgn-google-icon" alt="Google" />
+          {{ (isSigningIn ? 'SIGNING_IN' : 'SIGN_IN_GOOGLE') | translate }}
         </button>
 
         <!-- Divider -->

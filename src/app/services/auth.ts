@@ -168,21 +168,35 @@ export class AuthService {
     }
   }
 
+  // ✅ initialize() ကို တစ်ကြိမ်တည်းသာ ခေါ်ပါ — ထပ်ခေါ်ရင် crash ဖြစ်တယ်
+  private async ensureGoogleAuthInitialized(): Promise<void> {
+    if (this.isGoogleAuthInitialized) return;
+    await GoogleAuth.initialize({
+      clientId:
+        '114245767214-70122qvh2g7qor3cc4udhghkk4h2s179.apps.googleusercontent.com',
+      scopes: ['profile', 'email'],
+      grantOfflineAccess: true,
+    });
+    this.isGoogleAuthInitialized = true;
+  }
+
+  // ✅ Native GoogleAuth plugin ကို login page ရောက်တာနဲ့ warm up လုပ်ထားရန် —
+  // sign-in ခလုတ်ကို ပထမဆုံးအကြိမ်နှိပ်တဲ့အခါ initialize() ရဲ့ bridge/Play-Services
+  // ကြန့်ကြာမှုကို ခံစားစရာမလိုအောင် ကြိုတင်ခေါ်ထားသည်
+  async preloadGoogleAuth(): Promise<void> {
+    if (!Capacitor.isNativePlatform()) return;
+    try {
+      await this.ensureGoogleAuthInitialized();
+    } catch (e) {
+      console.warn('Google Auth preload failed:', e);
+    }
+  }
+
   async signInWithGoogle(): Promise<User> {
     try {
       if (Capacitor.isNativePlatform()) {
         // ── Android Native Google Sign-In ──
-
-        // ✅ initialize() ကို တစ်ကြိမ်တည်းသာ ခေါ်ပါ — ထပ်ခေါ်ရင် crash ဖြစ်တယ်
-        if (!this.isGoogleAuthInitialized) {
-          await GoogleAuth.initialize({
-            clientId:
-              '114245767214-70122qvh2g7qor3cc4udhghkk4h2s179.apps.googleusercontent.com',
-            scopes: ['profile', 'email'],
-            grantOfflineAccess: true,
-          });
-          this.isGoogleAuthInitialized = true;
-        }
+        await this.ensureGoogleAuthInitialized();
 
         // ✅ signOut ကို initialize ပြီးမှသာ ခေါ်ပါ — account chooser အမြဲပေါ်မယ်
         try {
@@ -364,14 +378,7 @@ export class AuthService {
 
     if (providerId === 'google.com') {
       if (Capacitor.isNativePlatform()) {
-        if (!this.isGoogleAuthInitialized) {
-          await GoogleAuth.initialize({
-            clientId: '114245767214-70122qvh2g7qor3cc4udhghkk4h2s179.apps.googleusercontent.com',
-            scopes: ['profile', 'email'],
-            grantOfflineAccess: true,
-          });
-          this.isGoogleAuthInitialized = true;
-        }
+        await this.ensureGoogleAuthInitialized();
         try { await GoogleAuth.signOut(); } catch {}
         const googleUser = await GoogleAuth.signIn();
         const credential = GoogleAuthProvider.credential(googleUser.authentication.idToken);

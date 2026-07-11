@@ -558,6 +558,21 @@
   flex-shrink: 0;
 }
 
+.lgn-google-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.lgn-google-spinner {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  border: 2px solid rgba(148, 190, 255, 0.25);
+  border-top-color: var(--accent, #0b74ff);
+  border-radius: 50%;
+  animation: exp-spin 0.8s linear infinite;
+}
+
 /* ── Email expand toggle button ── */
 .lgn-email-toggle-btn {
   width: 100%;
