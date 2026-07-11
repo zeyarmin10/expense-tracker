@@ -49,7 +49,7 @@ export default async function handler(
     return response.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  if (!requireSecret(request, response, process.env.CRON_SECRET, 'CRON_SECRET')) {
+  if (!requireSecret(request, response, process.env['CRON_SECRET'], 'CRON_SECRET')) {
     return;
   }
 
@@ -69,19 +69,19 @@ export default async function handler(
 
     const { english, myanmar } = splitTokensByLanguage(tokens);
     const results: ReminderSendResult[] = [];
-    const sharedLink = process.env.DAILY_REMINDER_LINK || '/expense';
+    const sharedLink = process.env['DAILY_REMINDER_LINK'] || '/expense';
 
     if (myanmar.length > 0) {
       results.push(
         await sendToTokens(accessToken, myanmar, {
           title:
-            process.env.DAILY_REMINDER_TITLE_MY ||
+            process.env['DAILY_REMINDER_TITLE_MY'] ||
             'Kyat Wise သတိပေးချက်',
           body:
-            process.env.DAILY_REMINDER_BODY_MY ||
+            process.env['DAILY_REMINDER_BODY_MY'] ||
             'ဒီနေ့ အသုံးစရိတ်ထည့်ဖို့ မမေ့ပါနဲ့။',
           link:
-            process.env.DAILY_REMINDER_LINK_MY ||
+            process.env['DAILY_REMINDER_LINK_MY'] ||
             sharedLink,
           type: 'daily_expense_reminder',
         }),
@@ -92,13 +92,13 @@ export default async function handler(
       results.push(
         await sendToTokens(accessToken, english, {
           title:
-            process.env.DAILY_REMINDER_TITLE_EN ||
+            process.env['DAILY_REMINDER_TITLE_EN'] ||
             'Kyat Wise reminder',
           body:
-            process.env.DAILY_REMINDER_BODY_EN ||
+            process.env['DAILY_REMINDER_BODY_EN'] ||
             'Do not forget to add today\'s expenses.',
           link:
-            process.env.DAILY_REMINDER_LINK_EN ||
+            process.env['DAILY_REMINDER_LINK_EN'] ||
             sharedLink,
           type: 'daily_expense_reminder',
         }),

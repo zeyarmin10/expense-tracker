@@ -25,7 +25,7 @@ export default async function handler(
     !requireSecret(
       request,
       response,
-      process.env.NOTIFICATION_ADMIN_SECRET,
+      process.env['NOTIFICATION_ADMIN_SECRET'],
       'NOTIFICATION_ADMIN_SECRET',
     )
   ) {

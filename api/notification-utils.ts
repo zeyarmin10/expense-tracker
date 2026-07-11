@@ -25,13 +25,13 @@ export interface NotificationSendPayload {
 }
 
 const FIREBASE_PROJECT_ID =
-  process.env.FIREBASE_PROJECT_ID || 'expense-tracker-c94e8';
+  process.env['FIREBASE_PROJECT_ID'] || 'expense-tracker-c94e8';
 const FIREBASE_DATABASE_URL =
-  process.env.FIREBASE_DATABASE_URL ||
+  process.env['FIREBASE_DATABASE_URL'] ||
   'https://expense-tracker-c94e8-default-rtdb.asia-southeast1.firebasedatabase.app';
 const APP_ORIGIN =
-  process.env.APP_ORIGIN ||
-  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '');
+  process.env['APP_ORIGIN'] ||
+  (process.env['VERCEL_URL'] ? `https://${process.env['VERCEL_URL']}` : '');
 
 export function applyCors(response: VercelResponse): void {
   response.setHeader('Access-Control-Allow-Origin', '*');
@@ -95,13 +95,13 @@ export function requireSecret(
 
 export async function getFirebaseAccessToken(): Promise<string> {
   const clientEmail = (
-    process.env.FIREBASE_SERVICE_ACCOUNT_EMAIL ||
-    process.env.FIREBASE_CLIENT_EMAIL ||
+    process.env['FIREBASE_SERVICE_ACCOUNT_EMAIL'] ||
+    process.env['FIREBASE_CLIENT_EMAIL'] ||
     ''
   ).trim();
   const privateKey = (
-    process.env.FIREBASE_PRIVATE_KEY ||
-    process.env.FIREBASE_SERVICE_ACCOUNT_PRIVATE_KEY ||
+    process.env['FIREBASE_PRIVATE_KEY'] ||
+    process.env['FIREBASE_SERVICE_ACCOUNT_PRIVATE_KEY'] ||
     ''
   ).replace(/\\n/g, '\n');
 
