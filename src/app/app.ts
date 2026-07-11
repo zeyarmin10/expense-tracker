@@ -14,6 +14,7 @@ import { ToastService } from './services/toast';
 import { NetworkService } from './services/network.service';
 import { ThemeService } from './services/theme.service';
 import { NotificationService } from './services/notification.service';
+import { AppUpdateService } from './services/app-update.service';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { Capacitor } from '@capacitor/core';
@@ -102,6 +103,7 @@ export class App implements OnInit, AfterViewInit {
   private spaceSwitchLoadingService = inject(SpaceSwitchLoadingService);
   private themeService = inject(ThemeService);
   private notificationService = inject(NotificationService);
+  private appUpdateService = inject(AppUpdateService);
   private documentTitle = inject(Title);
 
   constructor(private translate: TranslateService) {
@@ -487,6 +489,7 @@ export class App implements OnInit, AfterViewInit {
       // Warm up the native Google Sign-In plugin now so the login screen's
       // first tap doesn't pay for the bridge/Play-Services init cost.
       void this.authService.preloadGoogleAuth();
+      void this.checkForAppUpdate();
     }
     this.initTheme();
     this.initKeyboardDetection();
@@ -597,6 +600,76 @@ export class App implements OnInit, AfterViewInit {
         void this.notificationService.refreshCurrentRegistration();
         // wasOffline = false ဆိုရင် (online ဖြစ်နေဆဲ foreground ပြန်လာ)
         // → ဘာမှမပြဘူး ✓
+      }
+    });
+  }
+
+  private async checkForAppUpdate(): Promise<void> {
+    try {
+      await firstValueFrom(
+        this.authService.currentUser$.pipe(filter((u): u is User => !!u), take(1))
+      );
+      const status = await this.appUpdateService.checkForUpdate();
+      if (status.updateAvailable) {
+        this.showAppUpdateAlert(status.latestVersionName);
+      }
+    } catch {
+      // Update check is best-effort — never block app startup on it.
+    }
+  }
+
+  private showAppUpdateAlert(latestVersionName?: string): void {
+    if (Swal.isVisible()) return;
+
+    const lang = this.translate.currentLang || this.translate.getDefaultLang();
+    const isMy = lang === 'my';
+
+    const isDark = document.body.classList.contains('light-mode') === false;
+    const bgColor = isDark ? '#07162f' : '#ffffff';
+    const titleColor = isDark ? '#ffffff' : '#111827';
+    const textColor = isDark ? '#9ca3af' : '#4b5563';
+
+    const updateIcon = `
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64"
+          fill="none" stroke="#0b74ff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M32 8 L32 38" />
+        <path d="M20 26 L32 38 L44 26" />
+        <path d="M14 48 L50 48" stroke-width="4.5"/>
+      </svg>`;
+
+    const title = isMy ? 'App အသစ်တစ်ခု ရနိုင်ပါပြီ' : 'A New Update is Available';
+    const versionLine = latestVersionName
+      ? (isMy ? `\nဗားရှင်း ${latestVersionName} ရရှိနိုင်ပါပြီ` : `\nVersion ${latestVersionName} is now available`)
+      : '';
+    const text = isMy
+      ? `App ကို နောက်ဆုံးဗားရှင်းအသစ်သို့ အပ်ဒိတ်လုပ်ပြီး အသုံးပြုပါ${versionLine}`
+      : `Update to the latest version for the best experience.${versionLine}`;
+
+    const updateBtnText = isMy ? 'အခုပဲ အပ်ဒိတ်လုပ်မယ်' : 'Update Now';
+    const laterBtnText = isMy ? 'နောက်မှ' : 'Later';
+
+    Swal.fire({
+      html: `
+        <div style="display:flex;flex-direction:column;align-items:center;gap:12px;">
+          ${updateIcon}
+          <div style="font-size:1rem;font-weight:700;color:${titleColor};">${title}</div>
+          <div style="font-size:0.82rem;color:${textColor};white-space:pre-line;text-align:center;">${text}</div>
+        </div>`,
+      confirmButtonText: updateBtnText,
+      confirmButtonColor: '#0b74ff',
+      showCancelButton: true,
+      cancelButtonText: laterBtnText,
+      reverseButtons: true,
+      background: bgColor,
+      color: titleColor,
+      allowOutsideClick: true,
+      showClass: { popup: 'swal2-show' },
+      customClass: {
+        popup: isDark ? 'swal-dark' : 'swal-light',
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.appUpdateService.openPlayStore();
       }
     });
   }
