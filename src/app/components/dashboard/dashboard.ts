@@ -3,6 +3,7 @@ import {
   inject,
   OnInit,
   ChangeDetectorRef,
+  ChangeDetectionStrategy,
   OnDestroy,
   ViewChild,
   ElementRef,
@@ -76,6 +77,7 @@ type DashboardDataState = DashboardData & {
   providers: [DatePipe],
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   animations: [
     trigger('titleRollAnimation', [
       transition('* => roll', [
@@ -179,7 +181,10 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   refreshData(): void {
     this.refresh$.next(this.refresh$.getValue() + 1);
     this.titleAnimTrigger = 'roll';
-    setTimeout(() => (this.titleAnimTrigger = 'initial'), 200);
+    setTimeout(() => {
+      this.titleAnimTrigger = 'initial';
+      this.cdr.markForCheck();
+    }, 200);
   }
 
   private initializeLanguage(): void {
@@ -214,6 +219,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
           endDate: this._endDate$.getValue(),
         });
         this.updateSummaryTitle(userProfile);
+        this.cdr.markForCheck();
       });
   }
 

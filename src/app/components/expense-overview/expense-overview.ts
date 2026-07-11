@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ExpenseService, ServiceIExpense as IExpense } from '../../services/expense';
@@ -52,6 +52,7 @@ interface CategoryTotal {
   providers: [DatePipe],
   templateUrl: './expense-overview.html',
   styleUrls: ['./expense-overview.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ExpenseOverview implements OnInit, OnDestroy {
   expenseService = inject(ExpenseService);
@@ -118,6 +119,7 @@ export class ExpenseOverview implements OnInit, OnDestroy {
 
   public formatService = inject(FormatService);
   router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
 
   ngOnInit(): void {
     this.translate.stream([
@@ -134,6 +136,7 @@ export class ExpenseOverview implements OnInit, OnDestroy {
         { value: 'lastYear',      label: t['LAST_YEAR']          },
         { value: 'custom',        label: t['CUSTOM_DATE']        },
       ];
+      this.cdr.markForCheck();
     });
 
     const now = new Date();
@@ -146,7 +149,7 @@ export class ExpenseOverview implements OnInit, OnDestroy {
     // Fix #4: takeUntil to prevent memory leak
     this.categoryService.getCategories()
       .pipe(takeUntil(this.destroy$))
-      .subscribe(cats => { this.categoryList = cats; });
+      .subscribe(cats => { this.categoryList = cats; this.cdr.markForCheck(); });
 
     // Fix #4 + #8: takeUntil + setInitialDateFilter only on space change
     this.userProfile$.pipe(takeUntil(this.destroy$)).subscribe((profile) => {
@@ -163,6 +166,7 @@ export class ExpenseOverview implements OnInit, OnDestroy {
       } else {
         this.setDateFilter('currentMonth');
       }
+      this.cdr.markForCheck();
     });
 
     this.filteredExpenses$ = combineLatest([

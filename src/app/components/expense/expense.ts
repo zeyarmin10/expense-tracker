@@ -6,6 +6,8 @@ import {
   ViewChild,
   ElementRef,
   HostListener,
+  ChangeDetectorRef,
+  ChangeDetectionStrategy,
 } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import {
@@ -99,6 +101,7 @@ interface ExpenseDateGroup {
     DateRangeInputComponent,
   ],
   providers: [DatePipe],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './expense.html',
   styleUrls: ['./expense.css'],
 })
@@ -128,6 +131,7 @@ export class Expense implements OnInit, OnDestroy {
   private _activeCategoryFilter$ = new BehaviorSubject<string | null>(null);
 
   private authService = inject(AuthService);
+  private cdr = inject(ChangeDetectorRef);
   public formatService = inject(FormatService);
   private destroy$ = new Subject<void>();
 
@@ -298,6 +302,7 @@ export class Expense implements OnInit, OnDestroy {
       }
       this.refreshExpenses$.next();
       this.refreshVouchers$.next();
+      this.cdr.markForCheck();
     });
 
     this.authService.userProfile$.pipe(takeUntil(this.destroy$)).subscribe(profile => {
@@ -321,6 +326,7 @@ export class Expense implements OnInit, OnDestroy {
         this.refreshExpenses$.next();
         this.refreshVouchers$.next();
       }
+      this.cdr.markForCheck();
     });
     this.loadCategories();
   }
@@ -458,7 +464,7 @@ export class Expense implements OnInit, OnDestroy {
         ...cats.map(c => ({ value: c.name, label: c.name, icon: c.icon })),
       ])
     );
-    this.categories$.pipe(takeUntil(this.destroy$)).subscribe(cats => { this.categoryList = cats; });
+    this.categories$.pipe(takeUntil(this.destroy$)).subscribe(cats => { this.categoryList = cats; this.cdr.markForCheck(); });
   }
 
   openCategoryModal(): void {
@@ -493,6 +499,7 @@ export class Expense implements OnInit, OnDestroy {
     }
 
     this.isSaving = true;
+    this.cdr.markForCheck();
     const fv = this.newExpenseForm.value;
     if (this.isQuickMode && !fv.itemName) {
       fv.itemName = fv.category || '-';
@@ -521,6 +528,7 @@ export class Expense implements OnInit, OnDestroy {
       Toast.fire({ icon: 'error', title: error.message || this.translate.instant('EXPENSE_ERROR_ADD') });
     } finally {
       this.isSaving = false;
+      this.cdr.markForCheck();
     }
   }
 
@@ -588,6 +596,7 @@ export class Expense implements OnInit, OnDestroy {
     }
 
     this.isSaving = true;
+    this.cdr.markForCheck();
     this.isVoucherSaving = true;
     const fv = this.voucherForm.value;
 
@@ -614,6 +623,7 @@ export class Expense implements OnInit, OnDestroy {
     } finally {
       this.isVoucherSaving = false;
       this.isSaving = false;
+      this.cdr.markForCheck();
     }
   }
 
@@ -637,6 +647,7 @@ export class Expense implements OnInit, OnDestroy {
     }).then(async result => {
       if (result.isConfirmed) {
         this.isSaving = true;
+        this.cdr.markForCheck();
         try {
           await this.voucherService.deleteVoucher(voucher);
           Toast.fire({ icon: 'success', title: this.translate.instant('VOUCHER_SUCCESS_DELETED') });
@@ -645,6 +656,7 @@ export class Expense implements OnInit, OnDestroy {
           Toast.fire({ icon: 'error', title: this.getVoucherErrorTitle(error, 'VOUCHER_ERROR_DELETE') });
         } finally {
           this.isSaving = false;
+          this.cdr.markForCheck();
         }
       }
     });
@@ -1024,6 +1036,7 @@ export class Expense implements OnInit, OnDestroy {
     if (!formValues) return;
 
     this.isSaving = true;
+    this.cdr.markForCheck();
     try {
       const updated: any = {
         date: formValues.date,
@@ -1045,6 +1058,7 @@ export class Expense implements OnInit, OnDestroy {
       Toast.fire({ icon: 'error', title: error.message || this.translate.instant('EXPENSE_ERROR_UPDATE') });
     } finally {
       this.isSaving = false;
+      this.cdr.markForCheck();
     }
   }
   // ─────────────────────────────────────────────────────────────────────────
@@ -1064,6 +1078,7 @@ export class Expense implements OnInit, OnDestroy {
     }).then(async result => {
       if (result.isConfirmed) {
         this.isSaving = true;
+        this.cdr.markForCheck();
         try {
           await this.expenseService.deleteExpense(expenseId);
           Toast.fire({ icon: 'success', title: this.translate.instant('EXPENSE_DELETED_SUCCESS') });
@@ -1072,6 +1087,7 @@ export class Expense implements OnInit, OnDestroy {
           Toast.fire({ icon: 'error', title: error.message || this.translate.instant('DATA_DELETE_ERROR') });
         } finally {
           this.isSaving = false;
+          this.cdr.markForCheck();
         }
       }
     });

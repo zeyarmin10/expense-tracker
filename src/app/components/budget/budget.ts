@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, OnDestroy } from '@angular/core';
+import { Component, OnInit, inject, OnDestroy, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import {
   FormBuilder,
@@ -120,6 +120,7 @@ interface SpendingMonitorItem {
   providers: [DatePipe],
   templateUrl: './budget.html',
   styleUrls: ['./budget.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BudgetComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
@@ -220,6 +221,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
   private _selectedDateRange$ = new BehaviorSubject<string>('currentMonth');
 
   private authService = inject(AuthService);
+  private cdr = inject(ChangeDetectorRef);
   private activeSpaceModeKey: string | null = null;
   userProfile$: Observable<UserProfile | null> = of(null);
 
@@ -779,6 +781,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
           { value: 'lastYear',      label: t['LAST_YEAR'] },
           { value: 'custom',        label: t['CUSTOM_DATE'] },
         ];
+        this.cdr.markForCheck();
       })
     );
     this.setDateFilter(this.selectedDateFilter);
@@ -804,6 +807,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
 
         this.userRole = getCurrentSpaceRole(profile);
       }
+      this.cdr.markForCheck();
     });
     this.subscriptions.add(profileSubscription);
 
@@ -823,6 +827,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
       this.categories$.subscribe((categories) => {
         this.categories = categories;
         this.categoryList = categories.filter(c => c.id !== 'all') as ServiceICategory[];
+        this.cdr.markForCheck();
       })
     );
   }
@@ -1074,6 +1079,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
       period: this.datePipe.transform(currentDate, 'yyyy-MM-dd'),
       description: '',
     });
+    this.cdr.markForCheck();
   }
 
   toggleVisibility(section: 'budgetForm' | 'recordedBudgets'): void {
@@ -1205,6 +1211,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
       ds.data?.some((v: number) => v > 0)
     ) ?? false;
     this.hasChartData = hasData;
+    this.cdr.markForCheck();
 
     if (!this.hasChartData) return;
 

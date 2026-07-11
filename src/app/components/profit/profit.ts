@@ -6,6 +6,7 @@ import {
   OnDestroy,
   ElementRef,
   ChangeDetectorRef,
+  ChangeDetectionStrategy,
 } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import {
@@ -105,6 +106,7 @@ type DailyCashFlowChartItem = DailyCashFlowData & {
   providers: [DatePipe],
   templateUrl: './profit.html',
   styleUrls: ['./profit.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Profit implements OnInit, OnDestroy {
   // --- Dependency Injection ---
@@ -368,7 +370,7 @@ export class Profit implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.subscriptions.add(
-      this.categoryService.getCategories().subscribe(cats => { this.categoryList = cats; })
+      this.categoryService.getCategories().subscribe(cats => { this.categoryList = cats; this.cdr.markForCheck(); })
     );
     this.subscriptions.add(
       this.translate.stream([
@@ -385,6 +387,7 @@ export class Profit implements OnInit, OnDestroy {
           { value: 'lastYear',      label: t['LAST_YEAR'] },
           { value: 'custom',        label: t['CUSTOM_DATE'] },
         ];
+        this.cdr.markForCheck();
       })
     );
     // Disable form control for currency as it's set from user profile
@@ -468,6 +471,7 @@ export class Profit implements OnInit, OnDestroy {
 
           this.userRole = getCurrentSpaceRole(profile);
       }
+      this.cdr.markForCheck();
     });
     this.subscriptions.add(profileSubscription);
   }
@@ -608,6 +612,7 @@ export class Profit implements OnInit, OnDestroy {
       currency: defaultCurrency,
       date: this.datePipe.transform(new Date(), 'yyyy-MM-dd'),
     });
+    this.cdr.markForCheck();
   }
 
   toggleVisibility(section: 'incomeForm' | 'dailyCashFlow' | 'recordedIncomes'): void {
