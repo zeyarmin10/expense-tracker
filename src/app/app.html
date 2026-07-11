@@ -37,6 +37,9 @@
           }}</a></li>
       <li><a routerLink="/profit" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_PROFIT' | translate
           }}</a></li>
+      <li><a routerLink="/cash-flow" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_CASH_FLOW' |
+          translate
+          }}</a></li>
       <li><a routerLink="/category" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_CATEGORY' |
           translate
           }}</a></li>
@@ -341,6 +344,13 @@
         </svg>
       </span>
       <span>{{ 'NAV_PROFIT' | translate }}</span>
+    </a>
+
+    <a class="mob-drawer-link" routerLink="/cash-flow" routerLinkActive="mob-drawer-active" (click)="closeNavbarMenu()">
+      <span class="mob-drawer-link-icon">
+        <lucide-icon [img]="iconTrendingUp" [size]="16"></lucide-icon>
+      </span>
+      <span>{{ 'NAV_CASH_FLOW' | translate }}</span>
     </a>
 
     <a class="mob-drawer-link" routerLink="/category" routerLinkActive="mob-drawer-active" (click)="closeNavbarMenu()">

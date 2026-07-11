@@ -1,0 +1,156 @@
+<div class="cfw-wrapper">
+  <div class="cfw-container mb-5">
+
+    <!-- Date Filter Bar -->
+    <div class="cfw-filter-bar" [class.cfw-filter-bar-custom]="selectedDateFilter === 'custom'">
+      <app-custom-select
+        [(ngModel)]="selectedDateFilter"
+        (ngModelChange)="setDateFilter($event)"
+        [options]="dateFilterOptions"
+        [label]="'DATE_FILTER' | translate"
+        [fitContent]="true"
+        [showSearch]="false">
+      </app-custom-select>
+
+      <div class="cfw-date-row" *ngIf="selectedDateFilter === 'custom'">
+        <app-date-range-input
+          [fitContent]="true"
+          [(startDate)]="startDate"
+          [(endDate)]="endDate"
+          (rangeChange)="setDateFilter('custom')"
+          [startLabel]="'START_DATE' | translate"
+          [endLabel]="'END_DATE' | translate">
+        </app-date-range-input>
+      </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="cfw-summary-grid">
+      <div class="cfw-card cfw-card-income">
+        <div class="cfw-card-left">
+          <span class="cfw-card-label">{{ 'CASH_IN' | translate }}</span>
+          <ng-container *ngIf="dailyCashFlowSummary$ | async as cashSummary; else cfwCardLoading">
+            <ng-container *ngIf="(cashSummary.cashIn | keyvalue).length > 0; else cfwNoData">
+              <span *ngFor="let item of cashSummary.cashIn | keyvalue; trackBy: trackByKey" class="cfw-card-amount cfw-amount-income">
+                {{ formatService.formatAmountShort(item.value, item.key) }}
+              </span>
+            </ng-container>
+          </ng-container>
+        </div>
+        <div class="cfw-card-right">
+          <span class="cfw-card-icon cfw-icon-income"><lucide-icon [img]="iconBanknote" [size]="30"></lucide-icon></span>
+        </div>
+      </div>
+
+      <div class="cfw-card cfw-card-expense">
+        <div class="cfw-card-left">
+          <span class="cfw-card-label">{{ 'CASH_OUT' | translate }}</span>
+          <ng-container *ngIf="dailyCashFlowSummary$ | async as cashSummary; else cfwCardLoading">
+            <ng-container *ngIf="(cashSummary.cashOut | keyvalue).length > 0; else cfwNoData">
+              <span *ngFor="let item of cashSummary.cashOut | keyvalue; trackBy: trackByKey" class="cfw-card-amount cfw-amount-expense">
+                {{ formatService.formatAmountShort(item.value, item.key) }}
+              </span>
+            </ng-container>
+          </ng-container>
+        </div>
+        <div class="cfw-card-right">
+          <span class="cfw-card-icon cfw-icon-expense"><lucide-icon [img]="iconShoppingCart" [size]="30"></lucide-icon></span>
+        </div>
+      </div>
+
+      <div class="cfw-card" [ngClass]="getNetCashFlowCardClass((dailyCashFlowSummary$ | async)?.netCashFlow)">
+        <ng-container *ngIf="dailyCashFlowSummary$ | async as cashSummary; else cfwCardLoading">
+          <ng-container *ngIf="(cashSummary.netCashFlow | keyvalue).length > 0; else cfwNoData">
+            <div class="cfw-card-left" *ngFor="let item of cashSummary.netCashFlow | keyvalue; trackBy: trackByKey">
+              <span class="cfw-card-label">{{ 'NET_CASH_FLOW' | translate }}</span>
+              <span class="cfw-card-amount" [ngClass]="item.value >= 0 ? 'cfw-amount-profit' : 'cfw-amount-loss'">
+                {{ formatService.formatAmountShort(item.value, item.key) }}
+              </span>
+            </div>
+            <div class="cfw-card-right">
+              <span class="cfw-card-icon" [ngClass]="getNetCashFlowIconClass(cashSummary.netCashFlow)">
+                <lucide-icon [img]="getNetCashFlowIcon(cashSummary.netCashFlow)" [size]="30"></lucide-icon>
+              </span>
+            </div>
+          </ng-container>
+        </ng-container>
+      </div>
+    </div>
+
+    <ng-template #cfwCardLoading>
+      <div class="cfw-card-spinner" aria-hidden="true"><div class="exp-spinner-sm"></div></div>
+    </ng-template>
+    <ng-template #cfwNoData><span class="cfw-card-empty-hint">{{ 'NO_DATA_YET' | translate }}</span></ng-template>
+
+    <!-- Line Chart -->
+    <div class="cfw-chart-panel">
+      <h5 class="cfw-chart-title">
+        <lucide-icon [img]="iconTrendingUp" [size]="15"></lucide-icon>
+        {{ 'DAILY_CASH_FLOW' | translate }}
+      </h5>
+      <div class="cfw-chart-container">
+        <canvas #cashFlowChartCanvas></canvas>
+        <div class="cfw-no-chart-data" *ngIf="(hasCashFlowData$ | async) === false">
+          <div class="cfw-no-chart-inner">
+            <lucide-icon [img]="iconWallet" [size]="30" class="cfw-no-chart-icon"></lucide-icon>
+            <p class="cfw-no-chart-msg">{{ 'NO_DAILY_CASH_FLOW' | translate }}</p>
+          </div>
+        </div>
+        <div class="cfw-no-chart-data" *ngIf="(hasCashFlowData$ | async) === null">
+          <div class="exp-spinner-sm"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Daily Cash Flow List -->
+    <div class="cfw-list">
+      <ng-container *ngIf="dailyCashFlow$ | async as cashFlows; else cfwListLoading">
+        <ng-container *ngIf="cashFlows.length > 0; else cfwListEmpty">
+          <div *ngFor="let flow of cashFlows; trackBy: trackByDailyCashFlow" class="cfw-day-card"
+            [class.cfw-day-card-negative]="flow.netCashFlow < 0">
+            <div class="cfw-card-head">
+              <div class="cfw-date">
+                <span>{{ formatService.formatLocalizedDate(flow.date) }}</span>
+                <span class="cfw-currency">{{ flow.currency }}</span>
+              </div>
+              <span class="cfw-net-badge" [class.cfw-net-badge-negative]="flow.netCashFlow < 0">
+                {{ formatService.formatAmountShort(flow.netCashFlow, flow.currency) }}
+              </span>
+            </div>
+            <div class="cfw-metrics">
+              <div class="cfw-metric">
+                <span class="cfw-label">{{ 'CASH_IN' | translate }}</span>
+                <span class="cfw-amount cfw-amount-income">
+                  {{ formatService.formatAmountWithSymbol(flow.cashIn, flow.currency) }}
+                </span>
+              </div>
+              <div class="cfw-metric">
+                <span class="cfw-label">{{ 'CASH_OUT' | translate }}</span>
+                <span class="cfw-amount cfw-amount-expense">
+                  {{ formatService.formatAmountWithSymbol(flow.cashOut, flow.currency) }}
+                </span>
+              </div>
+              <div class="cfw-metric">
+                <span class="cfw-label">{{ 'SPENDING_RATIO' | translate }}</span>
+                <span class="cfw-amount cfw-ratio">
+                  {{ getSpendingRatio(flow) }}%
+                </span>
+              </div>
+            </div>
+            <div class="cfw-progress">
+              <span [style.width.%]="getCashFlowProgressWidth(flow)"
+                [class.cfw-progress-negative]="flow.netCashFlow < 0"></span>
+            </div>
+          </div>
+        </ng-container>
+      </ng-container>
+      <ng-template #cfwListEmpty>
+        <p class="cfw-empty">{{ 'NO_DAILY_CASH_FLOW' | translate }}</p>
+      </ng-template>
+      <ng-template #cfwListLoading>
+        <div class="exp-loading"><span class="exp-spinner-sm"></span></div>
+      </ng-template>
+    </div>
+
+  </div>
+</div>

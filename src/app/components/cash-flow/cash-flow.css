@@ -1,0 +1,461 @@
+/* ============================================================
+   Cash Flow — Dark Theme (matches full app design)
+   ============================================================ */
+
+:host {
+  display: block;
+}
+
+.cfw-wrapper {
+  background: var(--bg);
+  min-height: 100vh;
+  /* Extra bottom padding to clear fixed bottom nav (~72px) + safe area */
+  padding: 2rem 1rem calc(6rem + env(safe-area-inset-bottom, 0px));
+  color: var(--text);
+}
+
+@media (max-width: 991px) {
+  .cfw-wrapper {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 4.5rem);
+  }
+}
+
+.cfw-container {
+  max-width: 960px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* ── Filter Bar ── */
+.cfw-filter-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .cfw-filter-bar {
+    flex-direction: row;
+    align-items: flex-end;
+    width: auto;
+  }
+
+  .cfw-filter-bar .cfw-date-row {
+    display: contents;
+  }
+}
+
+@media (max-width: 639px) {
+  .cfw-filter-bar-custom {
+    flex-direction: row;
+    align-items: stretch;
+    flex-wrap: nowrap;
+    gap: 0.25rem;
+  }
+
+  .cfw-filter-bar-custom app-custom-select {
+    flex: 0 0 auto;
+    width: fit-content;
+    max-width: 44%;
+    min-width: 0;
+  }
+
+  .cfw-filter-bar-custom .cfw-date-row {
+    flex: 1;
+    min-width: 0;
+    width: auto;
+  }
+
+  .cfw-filter-bar-custom .cfw-date-row app-date-range-input {
+    width: 100% !important;
+    flex: 1 1 auto !important;
+  }
+}
+
+.cfw-date-row {
+  display: flex;
+  flex-direction: row;
+  gap: 0.75rem;
+  align-items: flex-start;
+  width: 100%;
+}
+
+/* ── Summary Cards (matches Profit/Budget card design) ── */
+.cfw-summary-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.85rem;
+}
+
+@media (min-width: 576px) {
+  .cfw-summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 768px) {
+  .cfw-summary-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.cfw-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.1rem 1.2rem;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.18s;
+}
+
+.cfw-card:hover {
+  transform: translateY(-2px);
+}
+
+.cfw-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+}
+
+.cfw-card-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.cfw-card-right {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cfw-card-label {
+  font-size: clamp(0.9rem, 1.2vw, 1.1rem);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cfw-card-amount {
+  font-size: clamp(1.25rem, 2vw, 1.5rem);
+  font-weight: 500;
+  display: block;
+  line-height: 1.3;
+}
+
+.cfw-card-icon {
+  font-size: 1.75rem;
+  opacity: 0.85;
+  line-height: 1;
+}
+
+.cfw-card-spinner {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.8rem;
+}
+
+.cfw-card-spinner .exp-spinner-sm {
+  display: block;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  border-width: 2px;
+}
+
+.cfw-card-empty-hint {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-style: italic;
+  opacity: 0.7;
+}
+
+/* Card variants */
+.cfw-card-income {
+  border-color: var(--income-border);
+  background: linear-gradient(145deg, var(--surface), var(--income-dim));
+}
+
+.cfw-card-income::before {
+  background: linear-gradient(90deg, var(--income-color), transparent);
+}
+
+.cfw-card-expense {
+  border-color: var(--expense-border);
+  background: linear-gradient(145deg, var(--surface), var(--expense-dim));
+}
+
+.cfw-card-expense::before {
+  background: linear-gradient(90deg, var(--expense-color), transparent);
+}
+
+.cfw-card-profit {
+  border-color: var(--profit-border);
+  background: linear-gradient(145deg, var(--surface), var(--profit-dim));
+}
+
+.cfw-card-profit::before {
+  background: linear-gradient(90deg, var(--profit-color), transparent);
+}
+
+.cfw-card-loss {
+  border-color: var(--loss-border);
+  background: linear-gradient(145deg, var(--surface), var(--loss-dim));
+}
+
+.cfw-card-loss::before {
+  background: linear-gradient(90deg, var(--loss-color), transparent);
+}
+
+/* ── Amount / icon colors ── */
+.cfw-amount-income,
+.cfw-icon-income {
+  color: var(--income-color);
+}
+
+.cfw-amount-expense,
+.cfw-icon-expense {
+  color: var(--expense-color);
+}
+
+.cfw-amount-profit {
+  color: var(--profit-color);
+}
+
+.cfw-amount-loss {
+  color: var(--loss-color);
+}
+
+/* ── Chart Panel ── */
+.cfw-chart-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.cfw-chart-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-sub);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cfw-chart-container {
+  position: relative;
+  height: 320px;
+  width: 100%;
+}
+
+.cfw-no-chart-data {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cfw-no-chart-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  text-align: center;
+  padding: 1rem;
+}
+
+.cfw-no-chart-icon {
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+
+.cfw-no-chart-msg {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* ── Daily Cash Flow List ── */
+.cfw-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.cfw-day-card {
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: var(--surface);
+  padding: 0.95rem 0.95rem 0.75rem;
+  overflow: hidden;
+}
+
+.cfw-day-card-negative {
+  border-color: rgba(248, 113, 113, 0.3);
+}
+
+.cfw-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+.cfw-date {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  color: var(--text);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.cfw-date > span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cfw-currency {
+  flex-shrink: 0;
+  border: 1px solid rgba(11, 116, 255, 0.2);
+  border-radius: 6px;
+  background: rgba(11, 116, 255, 0.08);
+  color: var(--accent);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  padding: 0.25rem 0.45rem;
+}
+
+.cfw-net-badge {
+  flex-shrink: 0;
+  border-radius: 4px;
+  background: var(--income-dim);
+  color: var(--income-color);
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1;
+  padding: 0.42rem 0.5rem;
+}
+
+.cfw-net-badge-negative {
+  background: rgba(248, 113, 113, 0.16);
+  color: var(--loss-color);
+}
+
+.cfw-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.cfw-metric {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  border-right: 1px solid var(--border);
+  padding-right: 0.75rem;
+}
+
+.cfw-metric:last-child {
+  border-right: none;
+  padding-right: 0;
+}
+
+.cfw-label {
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.cfw-amount {
+  font-size: 0.95rem;
+  font-weight: 800;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.cfw-ratio {
+  color: var(--text);
+}
+
+.cfw-progress {
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  overflow: hidden;
+  margin-top: 0.9rem;
+}
+
+.cfw-progress span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--income-color), rgba(52, 211, 153, 0.65));
+}
+
+.cfw-progress span.cfw-progress-negative {
+  background: linear-gradient(90deg, var(--loss-color), rgba(248, 113, 113, 0.65));
+}
+
+.cfw-empty {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  padding: 1.5rem;
+  margin: 0;
+}
+
+@media (max-width: 520px) {
+  .cfw-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .cfw-metric {
+    border-right: none;
+    border-top: 1px solid var(--border);
+    padding: 0.65rem 0 0;
+  }
+
+  .cfw-metric:first-child {
+    border-top: none;
+    padding-top: 0;
+  }
+}

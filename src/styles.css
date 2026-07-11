@@ -1079,7 +1079,8 @@ body.light-mode .flatpickr-day.nextMonthDay {
   /* Custom-select: no minimum width so HOST shrinks to fit-content */
   .ov-filter-row-custom app-custom-select .csl-trigger,
   .bgt-filter-bar-custom app-custom-select .csl-trigger,
-  .pnl-filter-bar-custom app-custom-select .csl-trigger {
+  .pnl-filter-bar-custom app-custom-select .csl-trigger,
+  .cfw-filter-bar-custom app-custom-select .csl-trigger {
     min-width: 0 !important;
     width: 100% !important;
   }
@@ -1087,14 +1088,16 @@ body.light-mode .flatpickr-day.nextMonthDay {
   /* Date-range-input: fill remaining space */
   .ov-filter-row-custom app-date-range-input .dri-trigger,
   .bgt-filter-bar-custom app-date-range-input .dri-trigger,
-  .pnl-filter-bar-custom app-date-range-input .dri-trigger {
+  .pnl-filter-bar-custom app-date-range-input .dri-trigger,
+  .cfw-filter-bar-custom app-date-range-input .dri-trigger {
     width: 100% !important;
   }
 
   /* Compact value font for custom-select */
   .ov-filter-row-custom app-custom-select .csl-value,
   .bgt-filter-bar-custom app-custom-select .csl-value,
-  .pnl-filter-bar-custom app-custom-select .csl-value {
+  .pnl-filter-bar-custom app-custom-select .csl-value,
+  .cfw-filter-bar-custom app-custom-select .csl-value {
     font-size: 0.8rem !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
@@ -1110,7 +1113,10 @@ body.light-mode .flatpickr-day.nextMonthDay {
   .bgt-filter-bar-custom app-date-range-input .dri-tv-sep,
   .pnl-filter-bar-custom app-date-range-input .dri-tv-start,
   .pnl-filter-bar-custom app-date-range-input .dri-tv-end,
-  .pnl-filter-bar-custom app-date-range-input .dri-tv-sep {
+  .pnl-filter-bar-custom app-date-range-input .dri-tv-sep,
+  .cfw-filter-bar-custom app-date-range-input .dri-tv-start,
+  .cfw-filter-bar-custom app-date-range-input .dri-tv-end,
+  .cfw-filter-bar-custom app-date-range-input .dri-tv-sep {
     font-size: 0.8rem !important;
   }
 }

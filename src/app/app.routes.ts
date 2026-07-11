@@ -28,6 +28,11 @@ export const routes: Routes = [
         data: { titleKey: 'PROFIT_LOSS_TITLE' },
       },
       {
+        path: 'cash-flow',
+        loadComponent: () => import('./components/cash-flow/cash-flow').then((m) => m.CashFlow),
+        data: { titleKey: 'CASH_FLOW_TITLE' },
+      },
+      {
         path: 'expense/:date',
         loadComponent: () => import('./components/expense/expense').then((m) => m.Expense),
         data: { titleKey: 'EXPENSE_ADD_TITLE' },

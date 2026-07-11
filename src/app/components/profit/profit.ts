@@ -9,6 +9,7 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import {
   FormBuilder,
   FormGroup,
@@ -48,10 +49,7 @@ import { AVAILABLE_CURRENCIES } from '../../core/constants/app.constants';
 import { FormatService } from '../../services/format.service';
 import { DateFilterService } from '../../services/date-filter.service';
 import { ExpenseService } from '../../services/expense'; // Added missing import
-import {
-  DailyCashFlowData,
-  ProfitLossService,
-} from '../../services/profit-loss.service';
+import { ProfitLossService } from '../../services/profit-loss.service';
 import Swal from 'sweetalert2';
 import { UserAvatarComponent } from '../common/user-avatar/user-avatar.component';
 import { ShowFullTextDirective } from '../../directives/show-full-text.directive';
@@ -77,17 +75,6 @@ const Toast = Swal.mixin({
 // Type alias for clarity
 type CurrencyMap = { [currency: string]: number };
 
-interface DailyCashFlowSummary {
-  cashIn: CurrencyMap;
-  cashOut: CurrencyMap;
-  netCashFlow: CurrencyMap;
-}
-
-type DailyCashFlowChartItem = DailyCashFlowData & {
-  cashInPercent: number;
-  cashOutPercent: number;
-};
-
 interface IncomeDateGroup {
   date: string;
   incomes: ServiceIIncome[];
@@ -100,6 +87,7 @@ interface IncomeDateGroup {
   standalone: true,
   imports: [
     CommonModule,
+    RouterLink,
     ReactiveFormsModule,
     TranslateModule,
     FormsModule,
@@ -152,9 +140,6 @@ export class Profit implements OnInit, OnDestroy {
   // Observables for filtered data (likely provided by ProfitLossService)
   incomes$!: Observable<ServiceIIncome[]>;
   groupedIncomes$!: Observable<IncomeDateGroup[]>;
-  dailyCashFlow$!: Observable<DailyCashFlowData[]>;
-  dailyCashFlowSummary$!: Observable<DailyCashFlowSummary>;
-  dailyCashFlowChart$!: Observable<DailyCashFlowChartItem[]>;
 
   // Observables for calculated totals (likely provided by ProfitLossService)
   totalExpensesByCurrency$!: Observable<CurrencyMap>;
@@ -182,7 +167,6 @@ export class Profit implements OnInit, OnDestroy {
   private subscriptions: Subscription = new Subscription();
 
   isIncomeFormCollapsed: boolean = true;
-  isDailyCashFlowCollapsed: boolean = true;
   isRecordedIncomesCollapsed: boolean = true;
   get canManageProfitActions(): boolean {
     if (!this.userProfile) return false;
@@ -297,16 +281,6 @@ export class Profit implements OnInit, OnDestroy {
     );
     this.groupedIncomes$ = this.incomes$.pipe(
       map((incomes) => this.groupIncomesByDate(incomes))
-    );
-    const dailyCashFlowData$ = profitLossData$.pipe(
-      map((data) => data.dailyCashFlow)
-    );
-    this.dailyCashFlow$ = dailyCashFlowData$;
-    this.dailyCashFlowSummary$ = dailyCashFlowData$.pipe(
-      map((cashFlows) => this.buildDailyCashFlowSummary(cashFlows))
-    );
-    this.dailyCashFlowChart$ = dailyCashFlowData$.pipe(
-      map((cashFlows) => this.buildDailyCashFlowChart(cashFlows))
     );
     this.totalExpensesByCurrency$ = profitLossData$.pipe(
       map((data) => data.totalExpenses)
@@ -626,11 +600,9 @@ export class Profit implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
-  toggleVisibility(section: 'incomeForm' | 'dailyCashFlow' | 'recordedIncomes'): void {
+  toggleVisibility(section: 'incomeForm' | 'recordedIncomes'): void {
     if (section === 'incomeForm') {
       this.isIncomeFormCollapsed = !this.isIncomeFormCollapsed;
-    } else if (section === 'dailyCashFlow') {
-      this.isDailyCashFlowCollapsed = !this.isDailyCashFlowCollapsed;
     } else if (section === 'recordedIncomes') {
       this.isRecordedIncomesCollapsed = !this.isRecordedIncomesCollapsed;
     }
@@ -767,80 +739,6 @@ export class Profit implements OnInit, OnDestroy {
     });
 
     return [...groups.values()].sort((a, b) => b.date.localeCompare(a.date));
-  }
-
-  trackByDailyCashFlow(index: number, flow: DailyCashFlowData): string {
-    return `${flow.date}_${flow.currency}_${index}`;
-  }
-
-  getCashFlowProgressWidth(flow: DailyCashFlowData): number {
-    const totalMovement = flow.cashIn + flow.cashOut;
-    if (totalMovement <= 0) {
-      return 0;
-    }
-
-    return Math.round((flow.cashIn / totalMovement) * 100);
-  }
-
-  getSpendingRatio(flow: DailyCashFlowData): number {
-    if (flow.cashIn <= 0) {
-      return flow.cashOut > 0 ? 100 : 0;
-    }
-
-    return Math.round((flow.cashOut / flow.cashIn) * 100);
-  }
-
-  private buildDailyCashFlowSummary(
-    cashFlows: DailyCashFlowData[]
-  ): DailyCashFlowSummary {
-    return cashFlows.reduce(
-      (summary, flow) => {
-        summary.cashIn[flow.currency] =
-          (summary.cashIn[flow.currency] || 0) + flow.cashIn;
-        summary.cashOut[flow.currency] =
-          (summary.cashOut[flow.currency] || 0) + flow.cashOut;
-        summary.netCashFlow[flow.currency] =
-          (summary.netCashFlow[flow.currency] || 0) + flow.netCashFlow;
-        return summary;
-      },
-      {
-        cashIn: {},
-        cashOut: {},
-        netCashFlow: {},
-      } as DailyCashFlowSummary
-    );
-  }
-
-  private buildDailyCashFlowChart(
-    cashFlows: DailyCashFlowData[]
-  ): DailyCashFlowChartItem[] {
-    const latestFlows = [...cashFlows]
-      .sort(
-        (a, b) =>
-          b.date.localeCompare(a.date) || a.currency.localeCompare(b.currency)
-      )
-      .slice(0, 7)
-      .sort(
-        (a, b) =>
-          a.date.localeCompare(b.date) || a.currency.localeCompare(b.currency)
-      );
-
-    const maxAmount = Math.max(
-      1,
-      ...latestFlows.flatMap((flow) => [flow.cashIn, flow.cashOut])
-    );
-
-    return latestFlows.map((flow) => ({
-      ...flow,
-      cashInPercent:
-        flow.cashIn > 0
-          ? Math.min(Math.max((flow.cashIn / maxAmount) * 100, 8), 100)
-          : 0,
-      cashOutPercent:
-        flow.cashOut > 0
-          ? Math.min(Math.max((flow.cashOut / maxAmount) * 100, 8), 100)
-          : 0,
-    }));
   }
 
 }
