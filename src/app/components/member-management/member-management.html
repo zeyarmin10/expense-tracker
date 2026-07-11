@@ -79,7 +79,7 @@
         <span class="mm-badge mm-badge-warning">{{ (pendingInvites$ | async)?.length }}</span>
       </div>
       <div class="mm-list">
-        <div *ngFor="let invite of pendingInvites$ | async" class="mm-item">
+        <div *ngFor="let invite of pendingInvites$ | async; trackBy: trackByInviteKey" class="mm-item">
           <div class="mm-item-left">
             <div class="mm-avatar mm-avatar-pending">
               <lucide-icon [img]="iconMail" [size]="15"></lucide-icon>
@@ -107,7 +107,7 @@
         <span class="mm-badge mm-badge-success">{{ (members$ | async)?.length }}</span>
       </div>
       <div class="mm-list">
-        <div *ngFor="let member of members$ | async" class="mm-item">
+        <div *ngFor="let member of members$ | async; trackBy: trackByMemberUid" class="mm-item">
           <div class="mm-item-left">
             <app-user-avatar
               [name]="member.displayName || '?'"

@@ -39,7 +39,7 @@
               <span class="bgt-card-label">{{ 'TOTAL_BUDGET' | translate }}</span>
               <ng-container *ngIf="totalBudgetByCurrency$ | async as totals; else cardLoading">
                 <ng-container *ngIf="totals && (totals | keyvalue).length > 0; else cardNoData">
-                  <span *ngFor="let total of totals | keyvalue" class="bgt-card-amount bgt-amount-budget">
+                  <span *ngFor="let total of totals | keyvalue; trackBy: trackByKey" class="bgt-card-amount bgt-amount-budget">
                     {{ formatService.formatAmountShort(total.value, total.key) }}
                   </span>
                 </ng-container>
@@ -55,7 +55,7 @@
               <span class="bgt-card-label">{{ 'TOTAL_EXPENSES' | translate }}</span>
               <ng-container *ngIf="totalExpensesByCurrency$ | async as totals; else cardLoading">
                 <ng-container *ngIf="totals && (totals | keyvalue).length > 0; else cardNoData">
-                  <span *ngFor="let total of totals | keyvalue" class="bgt-card-amount bgt-amount-expense">
+                  <span *ngFor="let total of totals | keyvalue; trackBy: trackByKey" class="bgt-card-amount bgt-amount-expense">
                     {{ formatService.formatAmountShort(total.value, total.key) }}
                   </span>
                 </ng-container>
@@ -69,7 +69,7 @@
           <div class="bgt-card" [ngClass]="getBalanceCardClass(remainingBalanceByCurrency$ | async)">
             <ng-container *ngIf="remainingBalanceByCurrency$ | async as balances; else cardLoading">
               <ng-container *ngIf="(balances | keyvalue).length > 0; else cardNoData">
-                <div class="bgt-card-left" *ngFor="let balance of balances | keyvalue">
+                <div class="bgt-card-left" *ngFor="let balance of balances | keyvalue; trackBy: trackByKey">
                   <span class="bgt-card-label">
                     {{ balance.value >= 0 ? ("REMAINING_BALANCE" | translate) : ("BALANCE_DEFICIT" | translate) }}
                   </span>
@@ -227,7 +227,7 @@
           <div class="bgt-budget-list">
             <ng-container *ngIf="filteredBudgets$ | async as budgets; else loadingBudget">
               <ng-container *ngIf="budgets.length > 0; else noBudgetsTemplate">
-                <div *ngFor="let budget of budgets" class="bgt-budget-card">
+                <div *ngFor="let budget of budgets; trackBy: trackByBudgetId" class="bgt-budget-card">
                   <div class="bgt-budget-card-icon-wrap"
                     [class.bgt-budget-card-icon-cat]="budget.category && budget.category !== 'all'"
                     [style.--cat-hue]="budget.category && budget.category !== 'all' ? getIconHueForCategory(budget.category) : null">
@@ -299,7 +299,7 @@
           <div class="bgt-spending-body">
             <div *ngIf="spendingMonitorData$ | async as monitorData; else loadingMonitor">
               <ng-container *ngIf="monitorData.length > 0; else noMonitorData">
-                <div *ngFor="let monthData of monitorData" class="bgt-month-block">
+                <div *ngFor="let monthData of monitorData; trackBy: trackByMonthCurrency" class="bgt-month-block">
                   <h5 class="bgt-month-title">{{ monthData.month }}</h5>
 
                   <ng-container *ngIf="monthData.total.budget === 0 && monthData.total.spent > 0; else hasBudgetTemplate">
@@ -358,7 +358,7 @@
                     </div>
 
                     <div *ngIf="monthData.total.budgetType === 'category'">
-                      <div *ngFor="let category of monthData.categories">
+                      <div *ngFor="let category of monthData.categories; trackBy: trackByCategoryName">
                         <ng-container *ngIf="category.budget === 0 && category.spent > 0 && monthData.total.budgetType === 'category'; else hasCategoryBudgetTemplate">
                           <div class="bgt-no-budget-card bgt-no-budget-card-sm">
                             <span class="bgt-no-budget-title">{{ category.name }} - {{ "NO_BUDGET" | translate }}</span>

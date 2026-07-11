@@ -118,6 +118,14 @@ export class MemberManagementComponent implements OnInit {
 
   ngOnInit(): void {}
 
+  trackByInviteKey(index: number, invite: IInvitation): string {
+    return invite.key ?? String(index);
+  }
+
+  trackByMemberUid(index: number, member: IGroupMemberDetails): string {
+    return member.uid ?? String(index);
+  }
+
   isValidEmail(email: string): boolean {
     const re = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
     return re.test(email?.trim() || '');

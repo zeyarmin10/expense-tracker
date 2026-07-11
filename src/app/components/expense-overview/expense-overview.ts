@@ -380,6 +380,18 @@ export class ExpenseOverview implements OnInit, OnDestroy {
     this.mostExpenseCategory = this.categoryTotals[0]?.category || 'N/A';
   }
 
+  trackByCurrency(index: number, item: { currency: string }): string {
+    return item.currency;
+  }
+
+  trackByCategory(index: number, cat: CategoryTotal): string {
+    return cat.category;
+  }
+
+  trackByExpenseId(index: number, expense: IExpense): string {
+    return expense.id ?? String(index);
+  }
+
   onRowClick(expense: IExpense): void {
     this.router.navigate(['/expense', expense.date]);
   }

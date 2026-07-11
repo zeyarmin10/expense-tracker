@@ -78,6 +78,14 @@ export class CategoryModalComponent implements OnInit, OnDestroy {
     this.showIconPicker = false;
   }
 
+  trackByIconName(index: number, opt: { name: string }): string {
+    return opt.name;
+  }
+
+  trackByCategoryId(index: number, category: ServiceICategory): string {
+    return category.id ?? String(index);
+  }
+
   toggleMenu(id: string, event: MouseEvent): void {
     event.stopPropagation();
     if (this.openMenuId === id) {

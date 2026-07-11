@@ -765,6 +765,14 @@ export class App implements OnInit, AfterViewInit {
     }
   }
 
+  trackBySpaceId(index: number, space: UserSpaceSummary): string {
+    return space.id ?? String(index);
+  }
+
+  trackByMemberUid(index: number, member: any): string {
+    return member?.uid ?? String(index);
+  }
+
   getDisplaySpaceName(space: Pick<UserSpaceSummary, 'type' | 'name'>): string {
     const isPersonal =
       space.type === 'personal' ||

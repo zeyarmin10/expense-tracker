@@ -62,7 +62,7 @@
           <!-- Icon Picker Grid -->
           <div class="cat-icon-picker" *ngIf="showIconPicker">
             <button type="button" class="cat-icon-opt"
-                    *ngFor="let opt of categoryIcons"
+                    *ngFor="let opt of categoryIcons; trackBy: trackByIconName"
                     [class.cat-icon-opt-selected]="opt.name === selectedIcon"
                     [style.--cat-hue]="getIconHue(opt.name)"
                     (click)="selectIcon(opt.name)">
@@ -83,7 +83,7 @@
           </div>
 
           <ul class="cat-list">
-            <li *ngFor="let category of categories" class="cat-item"
+            <li *ngFor="let category of categories; trackBy: trackByCategoryId" class="cat-item"
                 [class.cat-item-editing]="editingCategoryId === category.id">
               <div class="cat-item-avatar" [style.--cat-hue]="getIconHue(category.icon)">
                 <lucide-icon [img]="getIconData(category.icon)" [size]="20"></lucide-icon>

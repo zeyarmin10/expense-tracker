@@ -74,6 +74,10 @@ export class LightboxComponent implements AfterViewInit, OnDestroy {
     this.restoreScroll();
   }
 
+  trackByIndex(index: number): number {
+    return index;
+  }
+
   onOverlayClick(e: MouseEvent): void {
     if (e.target === e.currentTarget) this.hide();
   }

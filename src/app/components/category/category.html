@@ -38,7 +38,7 @@
         <!-- Icon Picker Grid -->
         <div class="cat-icon-picker" *ngIf="showAddIconPicker">
           <button type="button" class="cat-icon-opt"
-                  *ngFor="let opt of categoryIcons"
+                  *ngFor="let opt of categoryIcons; trackBy: trackByIconName"
                   [class.cat-icon-opt-selected]="opt.name === selectedAddIcon"
                   [style.--cat-hue]="getIconHue(opt.name)"
                   (click)="selectAddIcon(opt.name)">
@@ -88,7 +88,7 @@
 
       <!-- List -->
       <div class="cat-list">
-        <div *ngFor="let category of categories$ | async" class="cat-item">
+        <div *ngFor="let category of categories$ | async; trackBy: trackByCategoryId" class="cat-item">
 
           <!-- View mode -->
           <ng-container *ngIf="editingCategoryId !== category.id; else editMode">
@@ -142,7 +142,7 @@
               </div>
               <div class="cat-icon-picker" *ngIf="showEditIconPicker">
                 <button type="button" class="cat-icon-opt"
-                        *ngFor="let opt of categoryIcons"
+                        *ngFor="let opt of categoryIcons; trackBy: trackByIconName"
                         [class.cat-icon-opt-selected]="opt.name === selectedEditIcon"
                         [style.--cat-hue]="getIconHue(opt.name)"
                         (click)="selectEditIcon(opt.name)">

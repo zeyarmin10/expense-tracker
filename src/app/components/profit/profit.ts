@@ -711,6 +711,14 @@ export class Profit implements OnInit, OnDestroy {
     return value >= 0 ? 'text-success' : 'text-danger';
   }
 
+  trackByKey(index: number, item: { key: string }): string {
+    return item.key;
+  }
+
+  trackByIncomeId(index: number, income: ServiceIIncome): string {
+    return income.id ?? String(index);
+  }
+
   trackByDailyCashFlow(index: number, flow: DailyCashFlowData): string {
     return `${flow.date}_${flow.currency}_${index}`;
   }

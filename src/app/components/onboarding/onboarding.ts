@@ -70,6 +70,10 @@ export class OnboardingComponent implements OnInit {
     });
   }
 
+  trackBySpaceId(index: number, space: UserSpaceSummary): string {
+    return space.id ?? String(index);
+  }
+
   getDisplaySpaceName(space: Pick<UserSpaceSummary, 'type' | 'name'>): string {
     const isPersonal =
       space.type === 'personal' ||

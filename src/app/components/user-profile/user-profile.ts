@@ -389,6 +389,10 @@ export class UserProfileComponent implements OnInit, OnDestroy {
     this.themeSubscription.unsubscribe();
   }
 
+  trackByPeriodId(index: number, period: CustomBudgetPeriod): string {
+    return period.id ?? String(index);
+  }
+
   translateCurrencyNames() {
     const currentCurrency = this.userProfileForm.get('currency')?.value;
     this.translatedCurrencies = this.availableCurrencies.map((currency) => ({

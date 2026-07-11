@@ -58,7 +58,7 @@
         </a>
         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="spaceDropdown">
           <li class="dropdown-space-title">{{ 'SPACE_SECTION_TITLE' | translate }}</li>
-          <li *ngFor="let space of spaces">
+          <li *ngFor="let space of spaces; trackBy: trackBySpaceId">
             <button class="dropdown-item dropdown-space-item" type="button" (click)="switchSpace(space.id!)"
               [class.dropdown-space-item-active]="(currentSpaceId$ | async) === space.id">
               <span class="dropdown-space-main">
@@ -103,7 +103,7 @@
           <li>
             <hr class="dropdown-divider my-1">
           </li>
-          <li *ngFor="let member of groupMembers$ | async">
+          <li *ngFor="let member of groupMembers$ | async; trackBy: trackByMemberUid">
             <span class="dropdown-item" [class.text-info]="member.uid === user.uid">
               {{ member.displayName }} ({{ member.role === 'admin' ? ('NAV_ADMIN' | translate) : ('NAV_MEMBER' |
               translate) }})
@@ -304,7 +304,7 @@
     </ng-container>
     <a class="mob-drawer-members-row" routerLink="/member-management" (click)="closeNavbarMenu()">
       <div class="mob-drawer-avatar-stack">
-        <ng-container *ngFor="let member of (groupMembers$ | async)?.slice(0, 5); let i = index">
+        <ng-container *ngFor="let member of (groupMembers$ | async)?.slice(0, 5); let i = index; trackBy: trackByMemberUid">
           <app-user-avatar
             [name]="member.displayName"
             [photoUrl]="member.photoURL"

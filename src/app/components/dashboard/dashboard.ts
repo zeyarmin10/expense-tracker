@@ -598,6 +598,10 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
+  trackByKey(index: number, item: { key: string }): string {
+    return item.key;
+  }
+
   goToExpensePage(expenseId: string): void {
     this.router.navigate(['/expense', expenseId]);
   }

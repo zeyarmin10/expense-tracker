@@ -5,7 +5,7 @@ import {
   // provideZonelessChangeDetection,
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { provideRouter } from '@angular/router';
+import { provideRouter, withPreloading, PreloadAllModules } from '@angular/router';
 import { AngularFireModule } from '@angular/fire/compat';
 import { AngularFireDatabaseModule } from '@angular/fire/compat/database';
 
@@ -30,7 +30,7 @@ export const appConfig: ApplicationConfig = {
     DatePipe,
     // provideBrowserGlobalErrorListeners(),
     // provideZonelessChangeDetection(),
-    provideRouter(routes),
+    provideRouter(routes, withPreloading(PreloadAllModules)),
     provideHttpClient(),
     provideAnimationsAsync(),
     provideFirebaseApp(() => initializeApp(environment.firebaseConfig)),

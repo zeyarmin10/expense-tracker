@@ -81,6 +81,10 @@ export class CustomSelectComponent implements ControlValueAccessor {
     return this._options.find(o => o.value === this.value);
   }
 
+  trackByOptionValue(index: number, opt: SelectOption): string {
+    return opt.value;
+  }
+
   get filteredOptions(): SelectOption[] {
     if (!this.searchQuery.trim()) return this._options;
     const q = this.searchQuery.toLowerCase();

@@ -836,6 +836,22 @@ export class BudgetComponent implements OnInit, OnDestroy {
     this.themeObserver?.disconnect();
   }
 
+  trackByKey(index: number, item: { key: string }): string {
+    return item.key;
+  }
+
+  trackByBudgetId(index: number, budget: ServiceIBudget): string {
+    return budget.id ?? String(index);
+  }
+
+  trackByMonthCurrency(index: number, item: SpendingMonitorItem): string {
+    return `${item.month}_${item.currency}`;
+  }
+
+  trackByCategoryName(index: number, category: { name: string }): string {
+    return category.name;
+  }
+
   onBudgetTypeChange(type: string): void {
     const periodControl = this.budgetForm.get('period');
     const currentDate = new Date();

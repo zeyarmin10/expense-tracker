@@ -158,6 +158,14 @@ export class Category implements OnInit {
     return `${type}:${id}`;
   }
 
+  trackByIconName(index: number, opt: { name: string }): string {
+    return opt.name;
+  }
+
+  trackByCategoryId(index: number, category: ServiceICategory): string {
+    return category.id ?? String(index);
+  }
+
   public async loadCategories(): Promise<void> {
     try {
       const categories = await firstValueFrom(

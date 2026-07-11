@@ -54,7 +54,7 @@
 
         <!-- Summary Cards -->
         <div class="summary-grid">
-          <div class="summary-card highlight" *ngFor="let summary of currencySummaries">
+          <div class="summary-card highlight" *ngFor="let summary of currencySummaries; trackBy: trackByCurrency">
             <div class="summary-label">{{ "TOTAL_EXPENSES" | translate }} · {{ summary.currency }}</div>
             <span class="summary-amount">
               {{ formatService.formatAmountShort(summary.totalExpenses, summary.currency) }}
@@ -92,7 +92,7 @@
               <div class="ov-bar-meta">
                 <span class="ov-bar-dot ov-bar-dot-all"></span>
                 <span class="ov-bar-name">{{ 'ALL_CATEGORIES' | translate }}</span>
-                <span class="ov-bar-amount" *ngFor="let t of allCategoriesTotal">
+                <span class="ov-bar-amount" *ngFor="let t of allCategoriesTotal; trackBy: trackByCurrency">
                   {{ formatService.formatAmountShort(t.amount, t.currency) }}
                 </span>
               </div>
@@ -100,7 +100,7 @@
             <div class="ov-bar-divider"></div>
             <!-- Per-category rows -->
             <div class="ov-bar-row"
-                 *ngFor="let cat of categoryTotals; let i = index"
+                 *ngFor="let cat of categoryTotals; let i = index; trackBy: trackByCategory"
                  role="button"
                  tabindex="0"
                  (click)="filterByCategory(cat.category)"
@@ -145,7 +145,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr *ngFor="let expense of expenses" (click)="onRowClick(expense)">
+                <tr *ngFor="let expense of expenses; trackBy: trackByExpenseId" (click)="onRowClick(expense)">
                   <td class="td-date pe-1">
                     <span class="d-none d-md-inline">{{ this.formatService.formatLocalizedDate(expense.date) }}</span>
                     <span class="d-md-none">{{ this.formatService.formatMobileDate(expense.date) }}</span>

@@ -337,7 +337,7 @@
 
           <!-- Image grid -->
           <div class="exp-image-grid" *ngIf="selectedVoucherFiles.length > 0">
-            <div class="exp-image-thumb" *ngFor="let url of voucherPreviewUrls; let i = index">
+            <div class="exp-image-thumb" *ngFor="let url of voucherPreviewUrls; let i = index; trackBy: trackByIndex">
               <img
                 [src]="url"
                 [alt]="'VOUCHER_IMAGE_ALT' | translate"
@@ -486,7 +486,7 @@
         </div>
 
         <div class="exp-voucher-list exp-voucher-list-standalone" *ngIf="vouchers.length > 0">
-          <div class="exp-voucher-item" *ngFor="let voucher of vouchers">
+          <div class="exp-voucher-item" *ngFor="let voucher of vouchers; trackBy: trackByVoucherId">
             <button
               type="button"
               class="exp-voucher-thumb"
@@ -603,7 +603,7 @@
             <button
               type="button"
               class="exp-total-chip"
-              *ngFor="let total of totals | keyvalue"
+              *ngFor="let total of totals | keyvalue; trackBy: trackByKey"
               (click)="filterByCurrency(total.key)"
             >
               {{ "TOTAL_FOR_CURRENCY" | translate : { currency: total.key } }}:
@@ -625,7 +625,7 @@
 
         <div class="exp-date-list" *ngIf="dateGroups.length > 0">
           <section
-            *ngFor="let group of dateGroups"
+            *ngFor="let group of dateGroups; trackBy: trackByGroupDate"
             class="exp-date-group"
           >
             <div class="exp-date-group-header">
@@ -638,7 +638,7 @@
               <div class="exp-date-totals">
                 <span
                   class="exp-date-total"
-                  *ngFor="let total of group.totalsByCurrency | keyvalue"
+                  *ngFor="let total of group.totalsByCurrency | keyvalue; trackBy: trackByKey"
                 >
                   {{ formatService.formatAmountShort(total.value, total.key) }}
                 </span>
@@ -646,7 +646,7 @@
             </div>
 
             <div class="exp-list">
-              <div *ngFor="let expense of group.expenses" class="exp-item" [style.--cat-hue]="getIconHueForCategory(expense.category)">
+              <div *ngFor="let expense of group.expenses; trackBy: trackByExpenseId" class="exp-item" [style.--cat-hue]="getIconHueForCategory(expense.category)">
                 <div class="exp-item-inner">
                   <div class="exp-item-top">
                     <span class="exp-item-name" appShowFullText>{{ expense.itemName }}</span>

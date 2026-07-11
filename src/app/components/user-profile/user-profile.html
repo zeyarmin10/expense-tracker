@@ -126,7 +126,7 @@
               <lucide-icon [img]="isCustomBudgetListCollapsed ? iconChevronDown : iconChevronUp" [size]="15" class="prof-chevron"></lucide-icon>
             </button>
             <div class="prof-custom-list-body" [class.open]="!isCustomBudgetListCollapsed">
-              <div *ngFor="let period of customBudgetPeriods" class="prof-custom-period-item">
+              <div *ngFor="let period of customBudgetPeriods; trackBy: trackByPeriodId" class="prof-custom-period-item">
                 <div class="prof-custom-period-info">
                   <span class="prof-custom-period-name">{{ period.name }}</span>
                   <span class="prof-custom-period-range">

@@ -465,6 +465,26 @@ export class Expense implements OnInit, OnDestroy {
     this.categoryModal.open();
   }
 
+  trackByIndex(index: number): number {
+    return index;
+  }
+
+  trackByKey(index: number, item: { key: string }): string {
+    return item.key;
+  }
+
+  trackByVoucherId(index: number, voucher: ServiceIVoucher): string {
+    return voucher.id ?? String(index);
+  }
+
+  trackByGroupDate(index: number, group: ExpenseDateGroup): string {
+    return group.date;
+  }
+
+  trackByExpenseId(index: number, expense: IExpense): string {
+    return expense.id ?? String(index);
+  }
+
   async onSubmitNewExpense(): Promise<void> {
     this.newExpenseForm.markAllAsTouched();
     if (this.newExpenseForm.invalid) {

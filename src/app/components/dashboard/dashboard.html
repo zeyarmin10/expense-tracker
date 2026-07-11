@@ -22,7 +22,7 @@
           <span class="dash-card-label">{{ 'TOTAL_INCOMES' | translate }}</span>
           <ng-container *ngIf="totalIncomesByCurrency$ | async as totals; else cardLoading">
             <ng-container *ngIf="totals && (totals | keyvalue).length > 0; else cardNoData">
-              <span *ngFor="let total of totals | keyvalue" class="dash-card-amount dash-amount-income">
+              <span *ngFor="let total of totals | keyvalue; trackBy: trackByKey" class="dash-card-amount dash-amount-income">
                 {{ formatService.formatAmountShort(total.value, total.key) }}
               </span>
             </ng-container>
@@ -41,7 +41,7 @@
           <span class="dash-card-label">{{ 'TOTAL_BUDGET' | translate }}</span>
           <ng-container *ngIf="totalBudgetsByCurrency$ | async as totals; else cardLoading">
             <ng-container *ngIf="totals && (totals | keyvalue).length > 0; else cardNoData">
-              <span *ngFor="let total of totals | keyvalue" class="dash-card-amount dash-amount-budget">
+              <span *ngFor="let total of totals | keyvalue; trackBy: trackByKey" class="dash-card-amount dash-amount-budget">
                 {{ formatService.formatAmountShort(total.value, total.key) }}
               </span>
             </ng-container>
@@ -60,7 +60,7 @@
           <span class="dash-card-label">{{ 'TOTAL_EXPENSES' | translate }}</span>
           <ng-container *ngIf="totalExpensesByCurrency$ | async as totals; else cardLoading">
             <ng-container *ngIf="totals && (totals | keyvalue).length > 0; else cardNoData">
-              <span *ngFor="let total of totals | keyvalue" class="dash-card-amount dash-amount-expense">
+              <span *ngFor="let total of totals | keyvalue; trackBy: trackByKey" class="dash-card-amount dash-amount-expense">
                 {{ formatService.formatAmountShort(total.value, total.key) }}
               </span>
             </ng-container>
@@ -77,7 +77,7 @@
       <a class="dash-card dash-card-link" [ngClass]="getProfitLossCardClass(totalProfitLossByCurrency$ | async)" routerLink="/profit">
         <ng-container *ngIf="totalProfitLossByCurrency$ | async as profitLosses; else cardLoading">
           <ng-container *ngIf="(profitLosses | keyvalue).length > 0; else cardNoData">
-            <div class="dash-card-left" *ngFor="let profit of profitLosses | keyvalue">
+            <div class="dash-card-left" *ngFor="let profit of profitLosses | keyvalue; trackBy: trackByKey">
               <span class="dash-card-label">
                 {{ ($any(profit).value >= 0 ? 'BALANCE_LABEL' : 'EXPENSE_DEFICIT') | translate }}
               </span>

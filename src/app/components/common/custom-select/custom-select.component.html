@@ -61,7 +61,7 @@
       </p>
       <button type="button" class="csl-item"
               [class.csl-item-selected]="opt.value === value"
-              *ngFor="let opt of filteredOptions"
+              *ngFor="let opt of filteredOptions; trackBy: trackByOptionValue"
               (click)="select(opt)">
         <span class="csl-item-icon" *ngIf="showIcons && opt.icon"
               [style.--cat-hue]="getCategoryHue(opt.label)">
@@ -106,7 +106,7 @@
       </p>
       <button type="button" class="csl-item csl-panel-item"
               [class.csl-item-selected]="opt.value === value"
-              *ngFor="let opt of filteredOptions"
+              *ngFor="let opt of filteredOptions; trackBy: trackByOptionValue"
               (click)="select(opt)">
         <span class="csl-item-icon csl-panel-icon" *ngIf="showIcons && opt.icon"
               [style.--cat-hue]="getCategoryHue(opt.label)">

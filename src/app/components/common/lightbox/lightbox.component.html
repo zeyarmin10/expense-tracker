@@ -68,7 +68,7 @@
     <div class="lb-filmstrip-inner">
       <button
         class="lb-thumb"
-        *ngFor="let img of images; let i = index"
+        *ngFor="let img of images; let i = index; trackBy: trackByIndex"
         [class.lb-thumb-active]="i === idx"
         (click)="goTo(i); $event.stopPropagation()"
       >

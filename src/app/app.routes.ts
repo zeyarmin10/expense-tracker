@@ -1,37 +1,77 @@
 import { Routes } from '@angular/router';
-import { Expense } from './components/expense/expense';
-import { Profit } from './components/profit/profit';
-import { Category } from './components/category/category';
-import { LoginComponent } from './components/login/login';
-import { DashboardComponent } from './components/dashboard/dashboard';
 import { AuthGuard } from './guards/auth-guard';
-import { UserProfileComponent } from './components/user-profile/user-profile';
-import { ExpenseOverview } from './components/expense-overview/expense-overview';
-import { BudgetComponent } from './components/budget/budget';
-import { OnboardingComponent } from './components/onboarding/onboarding';
-import { MemberManagementComponent } from './components/member-management/member-management';
-import { PrivacyPolicyComponent } from './components/privacy-policy/privacy-policy';
-import { NotificationAdminComponent } from './components/notification-admin/notification-admin';
 
 export const routes: Routes = [
-  { path: 'login', component: LoginComponent, data: { titleKey: 'LOGIN_TITLE' } },
-  { path: 'privacy-policy', component: PrivacyPolicyComponent, data: { titleKey: 'PRIVACY_POLICY_TITLE' } },
+  {
+    path: 'login',
+    loadComponent: () => import('./components/login/login').then((m) => m.LoginComponent),
+    data: { titleKey: 'LOGIN_TITLE' },
+  },
+  {
+    path: 'privacy-policy',
+    loadComponent: () => import('./components/privacy-policy/privacy-policy').then((m) => m.PrivacyPolicyComponent),
+    data: { titleKey: 'PRIVACY_POLICY_TITLE' },
+  },
   {
     path: '',
     canActivate: [AuthGuard],
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-      { path: 'dashboard', component: DashboardComponent, data: { titleKey: 'DASHBOARD_WELCOME' } },
-      { path: 'profit', component: Profit, data: { titleKey: 'PROFIT_LOSS_TITLE' } },
-      { path: 'expense/:date', component: Expense, data: { titleKey: 'EXPENSE_ADD_TITLE' } },
-      { path: 'expense', component: Expense, data: { titleKey: 'EXPENSE_ADD_TITLE' } },
-      { path: 'expense-overview', component: ExpenseOverview, data: { titleKey: 'EXPENSE_OVERVIEW_TITLE' } },
-      { path: 'budget', component: BudgetComponent, data: { titleKey: 'BUDGET_TITLE' } },
-      { path: 'profile', component: UserProfileComponent, data: { titleKey: 'USER_PROFILE_TITLE' } },
-      { path: 'category', component: Category, data: { titleKey: 'CREATE_CATEGORY_TITLE' } },
-      { path: 'onboarding', component: OnboardingComponent, data: { titleKey: 'SPACE_SECTION_TITLE' } },
-      { path: 'member-management', component: MemberManagementComponent, data: { titleKey: 'MEMBER_MANAGEMENT_TITLE' } },
-      { path: 'notification-admin', component: NotificationAdminComponent, data: { titleKey: 'NOTI_ADMIN_TITLE' } },
+      {
+        path: 'dashboard',
+        loadComponent: () => import('./components/dashboard/dashboard').then((m) => m.DashboardComponent),
+        data: { titleKey: 'DASHBOARD_WELCOME' },
+      },
+      {
+        path: 'profit',
+        loadComponent: () => import('./components/profit/profit').then((m) => m.Profit),
+        data: { titleKey: 'PROFIT_LOSS_TITLE' },
+      },
+      {
+        path: 'expense/:date',
+        loadComponent: () => import('./components/expense/expense').then((m) => m.Expense),
+        data: { titleKey: 'EXPENSE_ADD_TITLE' },
+      },
+      {
+        path: 'expense',
+        loadComponent: () => import('./components/expense/expense').then((m) => m.Expense),
+        data: { titleKey: 'EXPENSE_ADD_TITLE' },
+      },
+      {
+        path: 'expense-overview',
+        loadComponent: () => import('./components/expense-overview/expense-overview').then((m) => m.ExpenseOverview),
+        data: { titleKey: 'EXPENSE_OVERVIEW_TITLE' },
+      },
+      {
+        path: 'budget',
+        loadComponent: () => import('./components/budget/budget').then((m) => m.BudgetComponent),
+        data: { titleKey: 'BUDGET_TITLE' },
+      },
+      {
+        path: 'profile',
+        loadComponent: () => import('./components/user-profile/user-profile').then((m) => m.UserProfileComponent),
+        data: { titleKey: 'USER_PROFILE_TITLE' },
+      },
+      {
+        path: 'category',
+        loadComponent: () => import('./components/category/category').then((m) => m.Category),
+        data: { titleKey: 'CREATE_CATEGORY_TITLE' },
+      },
+      {
+        path: 'onboarding',
+        loadComponent: () => import('./components/onboarding/onboarding').then((m) => m.OnboardingComponent),
+        data: { titleKey: 'SPACE_SECTION_TITLE' },
+      },
+      {
+        path: 'member-management',
+        loadComponent: () => import('./components/member-management/member-management').then((m) => m.MemberManagementComponent),
+        data: { titleKey: 'MEMBER_MANAGEMENT_TITLE' },
+      },
+      {
+        path: 'notification-admin',
+        loadComponent: () => import('./components/notification-admin/notification-admin').then((m) => m.NotificationAdminComponent),
+        data: { titleKey: 'NOTI_ADMIN_TITLE' },
+      },
     ]
   },
   { path: '**', redirectTo: '/dashboard' },
