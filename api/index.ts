@@ -1,8 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-
-// Use CommonJS require syntax instead of import
-const nodemailer = require('nodemailer');
-const { google } = require('googleapis');
+import * as nodemailer from 'nodemailer';
+import { google } from 'googleapis';
 
 const OAuth2 = google.auth.OAuth2;
 
@@ -46,8 +44,7 @@ async function createTransporter() {
     }
 }
 
-// Use module.exports instead of export default
-module.exports = async function handler(
+export default async function handler(
     request: VercelRequest,
     response: VercelResponse,
 ) {
