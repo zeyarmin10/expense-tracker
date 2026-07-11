@@ -449,6 +449,12 @@ export class Expense implements OnInit, OnDestroy {
         const str = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
         form.get('date')?.setValue(str);
         this.closeDatePicker();
+        // flatpickr's day click is a native DOM event, not an Angular
+        // (click) binding — under OnPush that doesn't automatically mark
+        // this component dirty, so closeDatePicker()'s isDatePickerOpen
+        // flip was never reflected in the view (stuck on an empty picker
+        // body). Force it explicitly.
+        this.cdr.markForCheck();
       },
     }) as unknown as FlatpickrInstance;
   }

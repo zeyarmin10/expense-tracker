@@ -1,4 +1,4 @@
-import { Component, ElementRef, EventEmitter, OnInit, OnDestroy, Output, ViewChild, inject, HostListener } from '@angular/core';
+import { Component, ElementRef, EventEmitter, OnInit, OnDestroy, Output, ViewChild, inject, HostListener, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CategoryService } from '../../../services/category';
 import { CommonModule } from '@angular/common';
@@ -40,6 +40,7 @@ export class CategoryModalComponent implements OnInit, OnDestroy {
   categoryForm: FormGroup;
   categoryService = inject(CategoryService);
   translateService = inject(TranslateService);
+  private cdr = inject(ChangeDetectorRef);
 
   categories: ServiceICategory[] = [];
   isEditMode = false;
@@ -120,6 +121,12 @@ export class CategoryModalComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.categories$.subscribe(categories => {
       this.categories = categories;
+      // CategoryService.getCategories() is backed by AngularFire's listVal(),
+      // which emits outside Angular's zone — without this, the very first
+      // emission (right as the modal opens) updates this.categories but
+      // never triggers a repaint, so the list shows empty ("no category")
+      // until some unrelated click happens to trigger change detection.
+      this.cdr.detectChanges();
     });
   }
 
