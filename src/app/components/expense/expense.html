@@ -497,8 +497,14 @@
       </div>
 
       <div class="exp-filter-label">
-        <lucide-icon [img]="iconCalendar" [size]="16" class="exp-filter-label-icon"></lucide-icon>
-        <span>{{ getFilterLabel() }}</span>
+        <span class="exp-filter-label-date">
+          <lucide-icon [img]="iconCalendar" [size]="16" class="exp-filter-label-icon"></lucide-icon>
+          <span>{{ getFilterLabel() }}</span>
+        </span>
+        <button type="button" class="exp-add-toolbar-btn" (click)="openAddModal('expense')">
+          <lucide-icon [img]="iconPlus" [size]="15"></lucide-icon>
+          {{ 'EXPENSE_ADD_TITLE' | translate }}
+        </button>
       </div>
     </div>
     <!-- ── END SHARED DATE FILTER BAR ── -->

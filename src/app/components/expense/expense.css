@@ -64,7 +64,7 @@
 
 @media (min-width: 992px) {
   .exp-add-fab {
-    bottom: 2rem;
+    display: none;
   }
 }
 
@@ -2195,12 +2195,50 @@ body.light-mode .exp-daterange-input::-webkit-calendar-picker-indicator {
 .exp-filter-label {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.35rem;
   padding: 0 4px 2px;
   color: var(--text-muted);
   font-size: 0.7rem;
   font-weight: 600;
   letter-spacing: 0.04em;
+}
+
+.exp-filter-label-date {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.exp-add-toolbar-btn {
+  display: none;
+}
+
+@media (min-width: 992px) {
+  .exp-add-toolbar-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    border: none;
+    border-radius: 999px;
+    padding: 0.45rem 1rem;
+    background: var(--accent, #0b74ff);
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: normal;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(11, 116, 255, 0.35);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+
+  .exp-add-toolbar-btn:hover {
+    box-shadow: 0 6px 18px rgba(11, 116, 255, 0.45);
+  }
+
+  .exp-add-toolbar-btn:active {
+    transform: scale(0.96);
+  }
 }
 
 .exp-filter-label-icon {
