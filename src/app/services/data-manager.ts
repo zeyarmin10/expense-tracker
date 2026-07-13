@@ -37,14 +37,14 @@ export class DataManagerService {
   private spaceContextService: SpaceContextService = inject(SpaceContextService);
   private categoryService: CategoryService = inject(CategoryService);
 
-  async createGroup(groupName: string, language: string, imageUrl?: string | null): Promise<string> {
-    const userId = (await firstValueFrom(
-      this.authService.currentUser$.pipe(rxMap((user) => user?.uid))
-    ))!;
-    if (!userId) {
-      throw new Error('User not authenticated.');
-    }
-
+  /**
+   * Validates a candidate group name (required, max length, per-account
+   * space limit, no duplicate among groups this user owns) and returns the
+   * trimmed name. Shared by createGroup() and by the create-group modal's
+   * own pre-submit validation, so a duplicate-name rejection surfaces
+   * inline in the still-open modal instead of only after it has closed.
+   */
+  async validateNewGroupName(groupName: string, userId: string): Promise<string> {
     const trimmedName = groupName.trim();
     if (!trimmedName) {
       throw new Error('Group name is required.');
@@ -75,6 +75,20 @@ export class DataManagerService {
     if (existingNames.some(name => name === trimmedName.toLowerCase())) {
       throw new Error('Duplicate group name.');
     }
+
+    return trimmedName;
+  }
+
+  async createGroup(groupName: string, language: string, imageUrl?: string | null): Promise<string> {
+    const userId = (await firstValueFrom(
+      this.authService.currentUser$.pipe(rxMap((user) => user?.uid))
+    ))!;
+    if (!userId) {
+      throw new Error('User not authenticated.');
+    }
+
+    const trimmedName = await this.validateNewGroupName(groupName, userId);
+    const userProfile = await firstValueFrom(this.userDataService.getUserProfile(userId));
 
     const spaceRef = push(ref(this.db, 'spaces'));
     const newGroupId = spaceRef.key!;
@@ -185,27 +199,45 @@ export class DataManagerService {
       actorProfile.personalSpaceId ||
       (await this.spaceContextService.ensurePersonalSpace(actorId));
 
-    const updates: Record<string, unknown> = {
-      [`/spaces/${groupId}`]: null,
-      [`/space_members/${groupId}`]: null,
-      [`/group_data/${groupId}`]: null,
-      // Canonical storage SpaceDataService migrates expense/income/budget/
-      // category/voucher data into once the group is actively used — missing
-      // this left orphaned data behind after group deletion.
-      [`/space_data/${groupId}`]: null,
-      [`/users/${actorId}/accountType`]: 'personal',
-      [`/users/${actorId}/currentSpaceId`]: personalSpaceId,
-      [`/users/${actorId}/currentSpaceType`]: 'personal',
-      [`/users/${actorId}/currentSpaceRole`]: 'owner',
-      [`/users/${actorId}/currentSpaceName`]: 'My Personal',
-      [`/users/${actorId}/spaceMemberships/${groupId}`]: null,
-    };
-
-    for (const inviteId of Object.keys(invitations)) {
-      updates[`/invitations/${inviteId}`] = null;
+    // Each removal below is its own independent request (not one atomic
+    // multi-location update()) so that a rule denial on any single path is
+    // both visible (logged with exactly which path failed, instead of an
+    // opaque "update at /" for the whole batch) and doesn't block the
+    // others from going through. group_data/space_data are auxiliary child
+    // collections — best-effort, a denial there shouldn't stop the group
+    // itself and the actor's membership from being removed.
+    const auxiliaryPaths = [`group_data/${groupId}`, `space_data/${groupId}`];
+    for (const path of auxiliaryPaths) {
+      try {
+        await remove(ref(this.db, path));
+      } catch (error) {
+        console.warn(`[DataManagerService] Failed to remove /${path} while deleting group ${groupId}:`, error);
+      }
     }
 
-    await update(ref(this.db), updates);
+    await remove(ref(this.db, `spaces/${groupId}`));
+
+    await update(ref(this.db, `users/${actorId}`), {
+      accountType: 'personal',
+      currentSpaceId: personalSpaceId,
+      currentSpaceType: 'personal',
+      currentSpaceRole: 'owner',
+      currentSpaceName: 'My Personal',
+      [`spaceMemberships/${groupId}`]: null,
+    });
+
+    for (const inviteId of Object.keys(invitations)) {
+      try {
+        await remove(ref(this.db, `invitations/${inviteId}`));
+      } catch (error) {
+        console.warn(`[DataManagerService] Failed to remove invitation ${inviteId}:`, error);
+      }
+    }
+
+    // Remove the membership entry last: spaces/group_data/space_data write
+    // rules are gated on the actor still being a member of this group, so
+    // removing it any earlier risks invalidating those checks mid-flight.
+    await remove(ref(this.db, `space_members/${groupId}`));
   }
 
   async acceptGroupInvitation(inviteCode: string, userId: string): Promise<void> {

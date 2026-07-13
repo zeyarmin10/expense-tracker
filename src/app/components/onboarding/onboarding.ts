@@ -379,6 +379,16 @@ export class OnboardingComponent implements OnInit {
     const max = this.maxSpaceNameLength;
     const counterHint = this.translate.instant('SPACE_NAME_LIMIT_HINT', { max }) || `Max ${max} chars`;
 
+    const user = await firstValueFrom(this.authService.currentUser$);
+    if (!user) {
+      Swal.fire({
+        icon: 'error',
+        title: this.translate.instant('ERROR_TITLE'),
+        text: this.translate.instant('ONBOARDING_MUST_BE_LOGGED_IN'),
+      });
+      return;
+    }
+
     const result = await Swal.fire<{ name: string; imageUrl: string | null }>({
       title: this.translate.instant('ONBOARDING.CREATE_NEW_GROUP'),
       position: 'top',
@@ -459,6 +469,17 @@ export class OnboardingComponent implements OnInit {
         }
         if (name.length > this.maxSpaceNameLength) {
           Swal.showValidationMessage(maxErrMsg);
+          return false;
+        }
+
+        // Catch duplicate-name / space-limit rejections here, while the
+        // modal (and the user's typed name/photo) is still open, instead of
+        // letting them close the modal only to see a separate error dialog
+        // afterward with everything they entered lost.
+        try {
+          await this.dataManager.validateNewGroupName(name, user.uid);
+        } catch (error) {
+          Swal.showValidationMessage(this.getCreateGroupErrorMessage(error));
           return false;
         }
 

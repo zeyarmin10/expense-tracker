@@ -440,6 +440,11 @@ export class AuthService {
           .ref(`space_members/${finalPersonalSpaceId}/${uid}`)
           .get();
         if (memberSnap.exists()) {
+          // Their write rules are gated on this membership entry still
+          // existing, and each .remove() here is validated independently
+          // (not one atomic transaction) — so remove space_members last,
+          // once everything that depends on it is already gone, instead of
+          // racing it in parallel and risking an intermittent denial.
           await Promise.all([
             // Legacy group-style storage (rarely populated for a personal
             // space, but harmless to clear) plus the canonical space_data
@@ -448,8 +453,8 @@ export class AuthService {
             this.db.database.ref(`group_data/${finalPersonalSpaceId}`).remove(),
             this.db.database.ref(`space_data/${finalPersonalSpaceId}`).remove(),
             this.db.database.ref(`spaces/${finalPersonalSpaceId}`).remove(),
-            this.db.database.ref(`space_members/${finalPersonalSpaceId}`).remove(),
           ]);
+          await this.db.database.ref(`space_members/${finalPersonalSpaceId}`).remove();
         }
       } catch (error) {
         console.warn('Personal space cleanup skipped:', error);

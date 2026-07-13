@@ -57,10 +57,6 @@ export class CategoryService {
     return ref(this.db, `users/${userId}/categories`);
   }
 
-  private getGroupCategoriesRef(groupId: string): DatabaseReference {
-    return ref(this.db, `group_data/${groupId}/categories`);
-  }
-
   private getExpensesRef(userId: string): DatabaseReference {
     return ref(this.db, `users/${userId}/expenses`);
   }
@@ -358,7 +354,10 @@ export class CategoryService {
       { en: 'Shopping',       my: 'စျေးဝယ်',               icon: 'shopping-bag' },
     ];
 
-    const groupCategoriesRef = this.getGroupCategoriesRef(groupId);
+    // Write straight to the canonical space_data path — group_data is legacy
+    // (read-only-for-backfill at this point per SpaceDataService), and a
+    // brand-new group has no legacy data to justify writing there anyway.
+    const groupCategoriesRef = ref(this.db, `space_data/${groupId}/categories`);
     await Promise.all(defaultCategories.map((categoryData) => {
       const categoryName =
         language === 'my' ? categoryData.my : categoryData.en;
