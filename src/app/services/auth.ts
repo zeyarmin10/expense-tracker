@@ -419,13 +419,41 @@ export class AuthService {
       }
     }
 
-    // Clean up personal space data
-    if (personalSpaceId) {
-      await Promise.all([
-        this.db.database.ref(`group_data/${personalSpaceId}`).remove(),
-        this.db.database.ref(`spaces/${personalSpaceId}`).remove(),
-        this.db.database.ref(`space_members/${personalSpaceId}`).remove(),
-      ]);
+    // Clean up personal space data. Re-read personalSpaceId instead of using
+    // the value captured at the top of this method: deleteGroup() above can
+    // lazily materialize a real personal space as a side effect (via
+    // SpaceContextService.ensurePersonalSpace) for an account that didn't
+    // have one yet, and using the stale value here would leave that
+    // freshly-created space orphaned in the database.
+    //
+    // A personal space can also still be "virtual" (see
+    // SpaceContextService.buildVirtualPersonalSpaceId) — referenced from the
+    // user's profile but never actually materialized under spaces/
+    // space_members/group_data. Security rules only allow removing a space
+    // to its own members, so check membership first instead of always
+    // attempting the remove and tripping permission_denied for those accounts.
+    const finalProfile = await userDataService.fetchUserProfile(uid);
+    const finalPersonalSpaceId = finalProfile?.personalSpaceId || personalSpaceId;
+    if (finalPersonalSpaceId) {
+      try {
+        const memberSnap = await this.db.database
+          .ref(`space_members/${finalPersonalSpaceId}/${uid}`)
+          .get();
+        if (memberSnap.exists()) {
+          await Promise.all([
+            // Legacy group-style storage (rarely populated for a personal
+            // space, but harmless to clear) plus the canonical space_data
+            // path that SpaceDataService migrates real expense/income/
+            // budget/category/voucher data into once the space is used.
+            this.db.database.ref(`group_data/${finalPersonalSpaceId}`).remove(),
+            this.db.database.ref(`space_data/${finalPersonalSpaceId}`).remove(),
+            this.db.database.ref(`spaces/${finalPersonalSpaceId}`).remove(),
+            this.db.database.ref(`space_members/${finalPersonalSpaceId}`).remove(),
+          ]);
+        }
+      } catch (error) {
+        console.warn('Personal space cleanup skipped:', error);
+      }
     }
 
     // Delete user profile node

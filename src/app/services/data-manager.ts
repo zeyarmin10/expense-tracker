@@ -189,6 +189,10 @@ export class DataManagerService {
       [`/spaces/${groupId}`]: null,
       [`/space_members/${groupId}`]: null,
       [`/group_data/${groupId}`]: null,
+      // Canonical storage SpaceDataService migrates expense/income/budget/
+      // category/voucher data into once the group is actively used — missing
+      // this left orphaned data behind after group deletion.
+      [`/space_data/${groupId}`]: null,
       [`/users/${actorId}/accountType`]: 'personal',
       [`/users/${actorId}/currentSpaceId`]: personalSpaceId,
       [`/users/${actorId}/currentSpaceType`]: 'personal',
