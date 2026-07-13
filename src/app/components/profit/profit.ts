@@ -35,7 +35,7 @@ import { LucideAngularModule } from 'lucide-angular';
 import { getIconData, getCategoryHue } from '../../utils/category-icons';
 import {
   TrendingUp, TrendingDown, Banknote, ShoppingCart, ChartLine,
-  ChartColumn, ChevronDown, Save, Trash2,
+  ChartColumn, ChevronDown, ChevronRight, Save, Trash2,
   LucideIconData,
 } from 'lucide-angular';
 import { AuthService } from '../../services/auth';
@@ -185,6 +185,7 @@ export class Profit implements OnInit, OnDestroy {
   readonly iconBanknote = Banknote;
   readonly iconShoppingCart = ShoppingCart;
   readonly iconChevronDown = ChevronDown;
+  readonly iconChevronRight = ChevronRight;
   readonly iconSave = Save;
   readonly iconTrash2 = Trash2;
   readonly iconChartColumn = ChartColumn;

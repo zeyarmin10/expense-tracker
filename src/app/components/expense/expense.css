@@ -43,23 +43,36 @@
   position: fixed;
   right: 1rem;
   bottom: calc(env(safe-area-inset-bottom, 0px) + 68px + 1rem);
-  width: 52px;
-  height: 52px;
+  width: 58px;
+  height: 58px;
   border-radius: 50%;
-  border: none;
-  background: var(--accent, #0b74ff);
+  border: 2.5px solid rgba(255, 255, 255, 0.55);
+  background: linear-gradient(150deg, #2e93ff, var(--accent, #0b74ff));
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 6px 20px rgba(11, 116, 255, 0.4);
+  box-shadow: 0 8px 22px rgba(11, 116, 255, 0.5), 0 0 0 0 rgba(11, 116, 255, 0.35);
   z-index: 900;
   cursor: pointer;
   transition: transform 0.15s, box-shadow 0.15s;
+  animation: exp-fab-pulse 2.6s ease-in-out infinite;
 }
 
 .exp-add-fab:active {
   transform: scale(0.94);
+  animation-play-state: paused;
+}
+
+/* Gentle expanding-ring pulse so the primary "add expense" action is easy to
+   spot at a glance in both light and dark mode, not just a static flat dot. */
+@keyframes exp-fab-pulse {
+  0%, 100% {
+    box-shadow: 0 8px 22px rgba(11, 116, 255, 0.5), 0 0 0 0 rgba(11, 116, 255, 0.35);
+  }
+  50% {
+    box-shadow: 0 8px 26px rgba(11, 116, 255, 0.6), 0 0 0 10px rgba(11, 116, 255, 0);
+  }
 }
 
 @media (min-width: 992px) {

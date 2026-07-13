@@ -5,6 +5,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
+  updateProfile,
   User,
   onAuthStateChanged,
   GoogleAuthProvider,
@@ -132,13 +133,16 @@ export class AuthService {
     );
   }
 
-  async register(email: string, password: string): Promise<User> {
+  async register(email: string, password: string, name?: string): Promise<User> {
     try {
       const userCredential = await createUserWithEmailAndPassword(
         this.auth,
         email,
         password,
       );
+      if (name) {
+        await updateProfile(userCredential.user, { displayName: name });
+      }
       this.newUserRegisteredSource.next(userCredential.user.uid);
       await this.handleInvite(userCredential.user);
       return userCredential.user;

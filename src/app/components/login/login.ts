@@ -83,6 +83,9 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   currentLang: string;
   private inviteCode: string | null = null; // Variable to store invite code
+  // Captured at submit time so the very first profile write doesn't race
+  // AuthService.register()'s async updateProfile() call — see handlePostLogin.
+  private pendingDisplayName: string | null = null;
 
   constructor(private fb: FormBuilder) {
     this.loginForm = this.fb.group({
@@ -163,6 +166,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     // popups/intents and a confusing "login problem" error.
     if (this.isSigningIn) return;
     this.isSigningIn = true;
+    this.pendingDisplayName = null; // don't leak a stale name from a prior failed email registration attempt
     this.errorMessage = null;
     this.successMessage = null;
     try {
@@ -186,7 +190,10 @@ export class LoginComponent implements OnInit, OnDestroy {
       const newUserProfile: UserProfile = {
         uid: user.uid,
         email: user.email || '',
-        displayName: user.displayName || 'New User',
+        // pendingDisplayName wins over user.displayName: onAuthStateChanged
+        // can fire (and land us here) before AuthService.register()'s
+        // updateProfile() call has finished mutating the Auth user object.
+        displayName: this.pendingDisplayName || user.displayName || 'New User',
         photoURL: user.photoURL || null,
         currency: currency,
         language: this.currentLang,
@@ -199,10 +206,23 @@ export class LoginComponent implements OnInit, OnDestroy {
       this.categoryService.addDefaultCategories(user.uid, this.currentLang).catch((error) => {
         console.error('Failed to create default categories:', error);
       });
-    } else if (user.photoURL && profile.photoURL !== user.photoURL) {
-      await this.userDataService.updateUserProfile(user.uid, { photoURL: user.photoURL });
-      profile = { ...profile, photoURL: user.photoURL };
+    } else {
+      // Self-heal: bring the RTDB profile back in sync with Firebase Auth if
+      // they've drifted apart (e.g. an older account hit the race above and
+      // got stuck with 'New User' despite Auth having the real name).
+      const updates: Partial<UserProfile> = {};
+      if (user.photoURL && profile.photoURL !== user.photoURL) {
+        updates.photoURL = user.photoURL;
+      }
+      if (user.displayName && profile.displayName !== user.displayName) {
+        updates.displayName = user.displayName;
+      }
+      if (Object.keys(updates).length > 0) {
+        await this.userDataService.updateUserProfile(user.uid, updates);
+        profile = { ...profile, ...updates };
+      }
     }
+    this.pendingDisplayName = null;
 
     // If an invite code is present in the URL
     if (this.inviteCode) {
@@ -277,13 +297,15 @@ export class LoginComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const { email, password } = this.loginForm.value;
+    const { email, password, name } = this.loginForm.value;
 
     try {
       if (this.isLoginMode) {
+        this.pendingDisplayName = null; // don't leak a stale name from a prior failed registration attempt
         await this.authService.login(email, password);
       } else {
-        await this.authService.register(email, password);
+        this.pendingDisplayName = (name || '').trim() || null;
+        await this.authService.register(email, password, name);
       }
       // The currentUser$ subscription in ngOnInit will handle post-login actions
     } catch (error: any) {

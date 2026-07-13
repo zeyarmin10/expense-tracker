@@ -268,13 +268,35 @@
 
     <!-- Cash Flow (now its own page) -->
     <a class="pnl-panel pnl-cash-flow-link" routerLink="/cash-flow">
-      <span class="pnl-panel-toggle-left">
-        <span class="pnl-toggle-pill pnl-toggle-pill-accent">
-          <lucide-icon [img]="iconChartColumn" [size]="13"></lucide-icon>
+      <div class="pnl-cash-flow-link-head">
+        <span class="pnl-panel-toggle-left">
+          <span class="pnl-toggle-pill pnl-toggle-pill-accent">
+            <lucide-icon [img]="iconChartColumn" [size]="13"></lucide-icon>
+          </span>
+          {{ 'DAILY_CASH_FLOW' | translate }}
         </span>
-        {{ 'DAILY_CASH_FLOW' | translate }}
-      </span>
-      <lucide-icon [img]="iconChevronDown" [size]="15" class="pnl-chevron pnl-cash-flow-link-arrow"></lucide-icon>
+        <lucide-icon [img]="iconChevronRight" [size]="16" class="pnl-cash-flow-link-arrow"></lucide-icon>
+      </div>
+      <div class="pnl-cash-flow-link-preview">
+        <span class="pnl-cash-flow-preview-label">{{ 'NET_CASH_FLOW' | translate }}</span>
+        <span class="pnl-cash-flow-preview-amounts">
+          <ng-container *ngIf="totalProfitLossByCurrency$ | async as totals; else cfwPreviewLoading">
+            <ng-container *ngIf="(totals | keyvalue).length > 0; else cfwPreviewEmpty">
+              <span *ngFor="let t of totals | keyvalue; trackBy: trackByKey"
+                class="pnl-cash-flow-preview-amount"
+                [ngClass]="getProfitLossAmountClass($any(t).value)">
+                {{ formatService.formatAmountShort($any(t).value, $any(t).key) }}
+              </span>
+            </ng-container>
+            <ng-template #cfwPreviewEmpty>
+              <span class="pnl-card-empty-hint">{{ 'NO_DATA_YET' | translate }}</span>
+            </ng-template>
+          </ng-container>
+          <ng-template #cfwPreviewLoading>
+            <div class="exp-spinner-sm"></div>
+          </ng-template>
+        </span>
+      </div>
     </a>
 
   </div>
