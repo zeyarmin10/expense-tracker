@@ -324,6 +324,10 @@
   "ENGLISH_LANGUAGE": "English",
   "MYANMAR_LANGUAGE": "Burmese",
   "CURRENCY_LABEL": "Currency",
+  "LANGUAGE_LABEL": "Language",
+  "CONTINUE_BUTTON": "Continue",
+  "PREFERENCES_STEP_TITLE": "Set up your preferences",
+  "PREFERENCES_STEP_SUBTITLE": "Choose the language and currency you'd like to use on your dashboard. You can change these anytime in your profile.",
   "BALANCE_SUFFIX": "(Budget-Expense)",
   "CURRENCY_NAMES": {
     "MMK": "Myanmar Kyat",

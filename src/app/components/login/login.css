@@ -136,7 +136,11 @@
   flex-direction: column;
   align-items: center;
   gap: 1.5rem;
-  animation: lgn-fadein 0.5s ease both;
+  /* No fill-mode: a lingering `transform` from a "both"/"forwards" fill would
+     turn this into a containing block for `position: fixed` descendants
+     (e.g. the currency dropdown's mobile bottom-sheet), stranding them
+     relative to this card instead of the real viewport. */
+  animation: lgn-fadein 0.5s ease;
 }
 
 @keyframes lgn-fadein {
@@ -496,6 +500,63 @@
 
 .lgn-submit-btn:hover:not(:disabled) .lgn-btn-arrow {
   transform: translateX(4px);
+}
+
+/* ── First-run Language/Currency Step ── */
+.lgn-pref-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text);
+  margin: 0;
+}
+
+.lgn-pref-subtitle {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin: -0.75rem 0 0;
+  line-height: 1.4;
+}
+
+.lgn-pref-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.lgn-pref-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.lgn-pref-lang-row {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.lgn-pref-lang-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.lgn-pref-lang-btn.active {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  color: var(--accent);
 }
 
 /* ── Divider ── */

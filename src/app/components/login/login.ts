@@ -12,6 +12,7 @@ import {
   FormGroup,
   Validators,
   ReactiveFormsModule,
+  FormsModule,
 } from '@angular/forms';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth';
@@ -27,6 +28,8 @@ import { ToastService } from '../../services/toast'; // Import ToastService
 import { InvitationService } from '../../services/invitation.service';
 import { SpaceContextService } from '../../services/space-context.service';
 import { ThemeService } from '../../services/theme.service';
+import { AVAILABLE_CURRENCIES } from '../../core/constants/app.constants';
+import { CustomSelectComponent, SelectOption } from '../common/custom-select/custom-select.component';
 import Swal from 'sweetalert2';
 import { getRedirectResult } from '@angular/fire/auth';
 import { Auth } from '@angular/fire/auth';
@@ -38,9 +41,11 @@ import { Capacitor } from '@capacitor/core';
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    FormsModule,
     TranslateModule,
     LucideAngularModule,
     RouterModule,
+    CustomSelectComponent,
   ],
   templateUrl: './login.html',
   styleUrls: ['./login.css'],
@@ -86,6 +91,17 @@ export class LoginComponent implements OnInit, OnDestroy {
   // Captured at submit time so the very first profile write doesn't race
   // AuthService.register()'s async updateProfile() call — see handlePostLogin.
   private pendingDisplayName: string | null = null;
+
+  // First-run language/currency step — shown once for brand-new profiles so
+  // they don't inherit a guessed currency (see handlePostLogin) before ever
+  // seeing the dashboard.
+  showPreferencesStep = false;
+  isSavingPreferences = false;
+  preferencesLang: string = 'my';
+  preferencesCurrency: string = 'MMK';
+  availableCurrencies = AVAILABLE_CURRENCIES;
+  currencySelectOptions: SelectOption[] = [];
+  private pendingPreferencesUser: User | null = null;
 
   constructor(private fb: FormBuilder) {
     this.loginForm = this.fb.group({
@@ -182,10 +198,17 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   private async handlePostLogin(user: User): Promise<void> {
+    // A duplicate emission while the first-run preferences step is already
+    // open (see openPreferencesStep) would otherwise re-enter this method
+    // and navigate away before the user finishes picking language/currency.
+    if (this.showPreferencesStep) return;
+
     let profile = await this.userDataService.fetchUserProfile(user.uid);
+    let isNewUser = false;
 
     // Always create a profile if one doesn't exist
     if (!profile) {
+      isNewUser = true;
       const currency = this.currentLang === 'my' ? 'MMK' : 'USD';
       const newUserProfile: UserProfile = {
         uid: user.uid,
@@ -224,6 +247,64 @@ export class LoginComponent implements OnInit, OnDestroy {
     }
     this.pendingDisplayName = null;
 
+    if (isNewUser) {
+      // Ask new users which language/currency they actually want before they
+      // ever see the dashboard, instead of silently guessing currency from
+      // the current UI language.
+      this.openPreferencesStep(user);
+      return;
+    }
+
+    await this.continueAfterProfileReady(user);
+  }
+
+  private openPreferencesStep(user: User): void {
+    this.pendingPreferencesUser = user;
+    this.preferencesLang = this.currentLang === 'en' ? 'en' : 'my';
+    this.preferencesCurrency = this.preferencesLang === 'my' ? 'MMK' : 'USD';
+    this.refreshPreferencesCurrencyOptions();
+    this.showPreferencesStep = true;
+  }
+
+  private refreshPreferencesCurrencyOptions(): void {
+    this.currencySelectOptions = this.availableCurrencies.map((currency) => ({
+      value: currency.code,
+      label: `${this.translate.instant('CURRENCY_NAMES.' + currency.code)} (${currency.symbol})`,
+    }));
+  }
+
+  selectPreferencesLanguage(lang: string): void {
+    if (this.preferencesLang === lang) return;
+    this.preferencesLang = lang;
+    this.translate.use(lang).subscribe(() => {
+      this.currentLang = lang;
+      localStorage.setItem('selectedLanguage', lang);
+      this.refreshPreferencesCurrencyOptions();
+      this.cdr.detectChanges();
+    });
+  }
+
+  async confirmPreferences(): Promise<void> {
+    const user = this.pendingPreferencesUser;
+    if (!user || this.isSavingPreferences) return;
+
+    this.isSavingPreferences = true;
+    try {
+      await this.userDataService.updateUserProfile(user.uid, {
+        language: this.preferencesLang,
+        currency: this.preferencesCurrency,
+      });
+    } catch (error) {
+      console.error('Failed to save initial language/currency preferences:', error);
+    }
+    this.isSavingPreferences = false;
+    this.showPreferencesStep = false;
+    this.pendingPreferencesUser = null;
+
+    await this.continueAfterProfileReady(user);
+  }
+
+  private async continueAfterProfileReady(user: User): Promise<void> {
     // If an invite code is present in the URL
     if (this.inviteCode) {
       const code = this.inviteCode;

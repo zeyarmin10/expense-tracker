@@ -14,7 +14,7 @@
     </button>
 
     <!-- Language toggle -->
-    <button class="lgn-lang-btn" (click)="toggleLanguage()" [attr.aria-label]="'Toggle language'">
+    <button class="lgn-lang-btn" *ngIf="!showPreferencesStep" (click)="toggleLanguage()" [attr.aria-label]="'Toggle language'">
       <img [src]="'assets/flags/' + (currentLang === 'my' ? 'en' : 'mm') + '.png'"
         alt="{{ currentLang === 'my' ? 'English' : 'Myanmar' }}" class="lgn-lang-flag" />
       <!-- <span class="lgn-lang-label">{{ currentLang === 'my' ? 'EN' : 'MM' }}</span> -->
@@ -37,8 +37,44 @@
       </div>
     </div>
 
+    <!-- First-run language/currency step for brand-new accounts -->
+    <div class="lgn-card lgn-pref-card" *ngIf="showPreferencesStep">
+      <h2 class="lgn-pref-title">{{ 'PREFERENCES_STEP_TITLE' | translate }}</h2>
+      <p class="lgn-pref-subtitle">{{ 'PREFERENCES_STEP_SUBTITLE' | translate }}</p>
+
+      <div class="lgn-pref-field">
+        <span class="lgn-pref-label">{{ 'LANGUAGE_LABEL' | translate }}</span>
+        <div class="lgn-pref-lang-row">
+          <button type="button" class="lgn-pref-lang-btn" [class.active]="preferencesLang === 'my'"
+            (click)="selectPreferencesLanguage('my')">
+            <img src="assets/flags/mm.png" alt="Myanmar" class="lgn-lang-flag" />
+            {{ 'MYANMAR_LANGUAGE' | translate }}
+          </button>
+          <button type="button" class="lgn-pref-lang-btn" [class.active]="preferencesLang === 'en'"
+            (click)="selectPreferencesLanguage('en')">
+            <img src="assets/flags/en.png" alt="English" class="lgn-lang-flag" />
+            {{ 'ENGLISH_LANGUAGE' | translate }}
+          </button>
+        </div>
+      </div>
+
+      <div class="lgn-pref-field">
+        <span class="lgn-pref-label">{{ 'CURRENCY_LABEL' | translate }}</span>
+        <app-custom-select
+          [(ngModel)]="preferencesCurrency"
+          [options]="currencySelectOptions"
+          [showSearch]="true">
+        </app-custom-select>
+      </div>
+
+      <button type="button" class="lgn-submit-btn" [disabled]="isSavingPreferences" (click)="confirmPreferences()">
+        <span class="lgn-btn-text">{{ 'CONTINUE_BUTTON' | translate }}</span>
+        <span class="lgn-btn-arrow">→</span>
+      </button>
+    </div>
+
     <!-- Card -->
-    <div class="lgn-card">
+    <div class="lgn-card" *ngIf="!showPreferencesStep">
       <!-- Tab switcher -->
       <div class="lgn-tabs">
         <button class="lgn-tab" [class.active]="isLoginMode" type="button" (click)="isLoginMode || toggleMode()">
@@ -173,7 +209,7 @@
     <!-- END card -->
 
     <!-- Footer card -->
-    <div class="lgn-footer-card">
+    <div class="lgn-footer-card" *ngIf="!showPreferencesStep">
       <p class="lgn-footer-link">
         {{ (isLoginMode ? 'NO_ACCOUNT_QUESTION' : 'HAVE_ACCOUNT_QUESTION') | translate }}
         <button type="button" class="lgn-toggle-link" (click)="toggleMode()">

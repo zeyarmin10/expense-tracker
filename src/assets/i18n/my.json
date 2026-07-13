@@ -324,6 +324,10 @@
   "ENGLISH_LANGUAGE": "အင်္ဂလိပ်",
   "MYANMAR_LANGUAGE": "ဗမာ",
   "CURRENCY_LABEL": "ငွေကြေး",
+  "LANGUAGE_LABEL": "ဘာသာစကား",
+  "CONTINUE_BUTTON": "ဆက်လုပ်ရန်",
+  "PREFERENCES_STEP_TITLE": "သင့်ရဲ့ဦးစားပေးချက်များ သတ်မှတ်ပါ",
+  "PREFERENCES_STEP_SUBTITLE": "Dashboard မှာ သုံးမည့် ဘာသာစကားနှင့် ငွေကြေးကို ရွေးချယ်ပါ။ နောက်ပိုင်းတွင် Profile ထဲမှ အချိန်မရွေး ပြောင်းလဲနိုင်ပါသည်။",
   "BALANCE_SUFFIX": "(ဘတ်ဂျက်-အသုံးစရိတ်)",
   "CURRENCY_NAMES": {
     "USD": "အမေရိကန်ဒေါ်လာ",
