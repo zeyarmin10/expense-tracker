@@ -264,7 +264,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
         this.datePipe.transform(new Date(), 'yyyy-MM-dd'), // Full date format
         Validators.required,
       ],
-      description: ['', Validators.maxLength(200)],
+      description: ['', Validators.maxLength(250)],
     });
     this.budgets$ = this.refreshBudgets$.pipe(
       switchMap(() => this.budgetService.getBudgets())

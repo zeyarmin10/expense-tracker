@@ -256,7 +256,7 @@ export class Expense implements OnInit, OnDestroy {
     this.newExpenseForm = this.fb.group({
       date: [todayFormatted, Validators.required],
       category: ['', Validators.required],
-      itemName: ['', [Validators.required, Validators.maxLength(50)]],
+      itemName: ['', Validators.maxLength(50)],
       quantity: [1, [Validators.required, Validators.min(0.01), Validators.max(99999)]],
       unit: ['', Validators.maxLength(20)],
       price: ['', [Validators.required, Validators.min(0.01), Validators.max(999999999)]],
@@ -266,7 +266,7 @@ export class Expense implements OnInit, OnDestroy {
       date: [todayFormatted, Validators.required],
       title: ['', [Validators.maxLength(50)]],
       category: [''],
-      note: ['', [Validators.maxLength(240)]],
+      note: ['', [Validators.maxLength(250)]],
       imageFile: ['', Validators.required],
     });
 
@@ -482,14 +482,14 @@ export class Expense implements OnInit, OnDestroy {
 
   private setQuickMode(isQuickMode: boolean): void {
     this.isQuickMode = isQuickMode;
+    // Item name is optional in both quick and full mode — a blank name
+    // falls back to the category name on submit (see onSubmitNewExpense).
     const itemNameCtrl = this.newExpenseForm.get('itemName');
+    itemNameCtrl?.clearValidators();
+    itemNameCtrl?.setValidators(Validators.maxLength(50));
+    itemNameCtrl?.updateValueAndValidity();
     if (this.isQuickMode) {
-      itemNameCtrl?.clearValidators();
-      itemNameCtrl?.updateValueAndValidity();
       this.newExpenseForm.patchValue({ quantity: 1, unit: '' });
-    } else {
-      itemNameCtrl?.setValidators(Validators.required);
-      itemNameCtrl?.updateValueAndValidity();
     }
   }
 
@@ -617,7 +617,7 @@ export class Expense implements OnInit, OnDestroy {
     this.isSaving = true;
     this.cdr.markForCheck();
     const fv = this.newExpenseForm.value;
-    if (this.isQuickMode && !fv.itemName) {
+    if (!fv.itemName) {
       fv.itemName = fv.category || '-';
     }
     const newExpense: Omit<IExpense, 'id'> = {

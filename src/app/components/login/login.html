@@ -159,7 +159,7 @@
           <!-- Name -->
           <div class="lgn-field">
             <div class="lgn-float-wrap">
-              <input type="text" id="lgn-name" class="lgn-input" formControlName="name" placeholder=" "
+              <input type="text" id="lgn-name" class="lgn-input" formControlName="name" placeholder=" " maxlength="50"
                 [class.err]="loginForm.controls['name'].invalid && loginForm.controls['name'].touched" />
               <label class="lgn-label" for="lgn-name">{{ 'NAME_LABEL' | translate }}</label>
             </div>

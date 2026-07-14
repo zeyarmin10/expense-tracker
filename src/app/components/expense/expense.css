@@ -522,7 +522,7 @@ body.exp-add-modal-open {
 }
 
 .exp-form-row-3 {
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr 2fr;
 }
 
 @media (max-width: 576px) {
@@ -536,6 +536,14 @@ body.exp-add-modal-open {
 
   .exp-form-row-3 .exp-float-field:last-child {
     grid-column: 1 / -1;
+  }
+
+  .full-form-item-name, .full-form-quantity, .full-form-unit {
+    height: 2.5rem !important;
+  }
+  
+  .full-form-price {
+    font-size: 1.75rem !important;
   }
 
   .exp-upload-card,
@@ -1840,6 +1848,8 @@ body.light-mode .exp-item {
   appearance: none;
   height: 52px;
 }
+
+
 
 .exp-float-input::placeholder {
   color: var(--text-muted);

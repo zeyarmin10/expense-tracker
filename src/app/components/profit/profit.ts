@@ -220,7 +220,7 @@ export class Profit implements OnInit, OnDestroy {
 
   constructor() {
     this.incomeForm = this.fb.group({
-      description: ['', Validators.maxLength(200)],
+      description: ['', Validators.maxLength(250)],
       amount: ['', [Validators.required, Validators.min(0.01), Validators.max(999999999)]],
       currency: ['MMK', Validators.required],
       date: [

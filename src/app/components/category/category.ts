@@ -133,7 +133,7 @@ export class Category implements OnInit {
 
   constructor(private fb: FormBuilder) {
     this.addCategoryForm = this.fb.group({
-      name: ['', [Validators.required, Validators.maxLength(30)]],
+      name: ['', [Validators.required, Validators.maxLength(50)]],
     });
   }
 
@@ -238,7 +238,7 @@ export class Category implements OnInit {
     this.editingCategoryId = category.id!;
     this.editingCategoryFormControl = new FormControl(
       category.name,
-      [Validators.required, Validators.maxLength(30)]
+      [Validators.required, Validators.maxLength(50)]
     );
     this.selectedEditIcon = category.icon || 'tag';
     this.selectedEditIconData = this.getIconData(category.icon);

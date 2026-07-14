@@ -107,7 +107,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
-      name: [''],
+      name: ['', Validators.maxLength(50)],
     });
 
     this.currentLang =
@@ -362,9 +362,9 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.loginForm.reset();
 
     if (!this.isLoginMode) {
-      this.loginForm.controls['name'].setValidators(Validators.required);
+      this.loginForm.controls['name'].setValidators([Validators.required, Validators.maxLength(50)]);
     } else {
-      this.loginForm.controls['name'].clearValidators();
+      this.loginForm.controls['name'].setValidators(Validators.maxLength(50));
     }
     this.loginForm.controls['name'].updateValueAndValidity();
   }
