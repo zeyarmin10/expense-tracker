@@ -14,14 +14,16 @@ interface TourStep {
 }
 
 interface SpotlightRect {
-  shape: 'circle' | 'rect';
-  cx: number;
-  cy: number;
-  r: number;
   x: number;
   y: number;
   width: number;
   height: number;
+  // Corner radius — equal to half of width/height for a "circle" step, or a
+  // fixed value for a "rect" step. Always rendered as a single persistent
+  // <rect rx> (never swapped for a <circle>) so consecutive steps — even
+  // ones that change shape, like a circular FAB into a rounded nav item —
+  // morph their corner radius smoothly instead of the shape snapping.
+  rx: number;
 }
 
 @Component({
@@ -151,17 +153,14 @@ export class WelcomeTourComponent implements OnInit, OnDestroy {
       const cx = rect.left + rect.width / 2;
       const cy = rect.top + rect.height / 2;
       const r = Math.max(rect.width, rect.height) / 2 + pad;
-      this.spotlight = { shape: 'circle', cx, cy, r, x: cx - r, y: cy - r, width: r * 2, height: r * 2 };
+      this.spotlight = { x: cx - r, y: cy - r, width: r * 2, height: r * 2, rx: r };
     } else {
       this.spotlight = {
-        shape: 'rect',
         x: rect.left - pad,
         y: rect.top - pad,
         width: rect.width + pad * 2,
         height: rect.height + pad * 2,
-        cx: rect.left + rect.width / 2,
-        cy: rect.top + rect.height / 2,
-        r: 0,
+        rx: 14,
       };
     }
 

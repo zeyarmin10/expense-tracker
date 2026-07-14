@@ -15,6 +15,18 @@
   fill: rgba(0, 0, 0, 0.6);
 }
 
+/* Animate the cutout hole itself in step with .wt-ring's transition below —
+   without this the mask snapped to the new spot instantly while the ring
+   border eased into place, so the highlight looked out of sync. It's always
+   a single persistent <rect rx>, even for "circle" steps (rx = half of
+   width/height), so rx also transitions smoothly on steps that change
+   shape (e.g. the circular FAB into a rounded-rect nav item) instead of
+   snapping the way separate <circle>/<rect> elements would. */
+.wt-spotlight-shape {
+  transition: x 0.3s ease, y 0.3s ease, width 0.3s ease, height 0.3s ease,
+    rx 0.3s ease, ry 0.3s ease;
+}
+
 .wt-backdrop-fallback {
   position: fixed;
   inset: 0;
@@ -28,12 +40,9 @@
   border: 2.5px solid var(--accent, #0b74ff);
   border-radius: 14px;
   pointer-events: none;
-  transition: top 0.3s ease, left 0.3s ease, width 0.3s ease, height 0.3s ease;
+  transition: top 0.3s ease, left 0.3s ease, width 0.3s ease, height 0.3s ease,
+    border-radius 0.3s ease;
   animation: wt-ring-pulse 1.8s ease-in-out infinite;
-}
-
-.wt-ring-circle {
-  border-radius: 50%;
 }
 
 @keyframes wt-ring-pulse {

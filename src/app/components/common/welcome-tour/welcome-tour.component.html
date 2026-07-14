@@ -2,20 +2,14 @@
   <defs>
     <mask id="wt-mask">
       <rect x="0" y="0" width="100%" height="100%" fill="white"></rect>
-      <circle
-        *ngIf="spotlight.shape === 'circle'"
-        [attr.cx]="spotlight.cx"
-        [attr.cy]="spotlight.cy"
-        [attr.r]="spotlight.r"
-        fill="black"
-      ></circle>
       <rect
-        *ngIf="spotlight.shape === 'rect'"
+        class="wt-spotlight-shape"
         [attr.x]="spotlight.x"
         [attr.y]="spotlight.y"
         [attr.width]="spotlight.width"
         [attr.height]="spotlight.height"
-        rx="14"
+        [attr.rx]="spotlight.rx"
+        [attr.ry]="spotlight.rx"
         fill="black"
       ></rect>
     </mask>
@@ -29,11 +23,11 @@
 <div
   class="wt-ring"
   *ngIf="spotlight"
-  [class.wt-ring-circle]="spotlight.shape === 'circle'"
   [style.top.px]="spotlight.y"
   [style.left.px]="spotlight.x"
   [style.width.px]="spotlight.width"
   [style.height.px]="spotlight.height"
+  [style.border-radius.px]="spotlight.rx"
 ></div>
 
 <div
