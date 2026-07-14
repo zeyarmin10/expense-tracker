@@ -164,7 +164,7 @@
 <nav class="mob-bottom-nav" *ngIf="showNavbar$ | async">
 
   <!-- Dashboard -->
-  <a class="mob-nav-item" routerLink="/dashboard" routerLinkActive="mob-nav-active">
+  <a id="tour-nav-dashboard" class="mob-nav-item" routerLink="/dashboard" routerLinkActive="mob-nav-active">
     <span class="mob-nav-icon">
       <!-- Grid / Dashboard icon -->
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -179,7 +179,7 @@
   </a>
 
   <!-- Expense Overview -->
-  <a class="mob-nav-item" routerLink="/expense-overview" routerLinkActive="mob-nav-active">
+  <a id="tour-nav-overview" class="mob-nav-item" routerLink="/expense-overview" routerLinkActive="mob-nav-active">
     <span class="mob-nav-icon">
       <!-- Chart / trend icon -->
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -191,7 +191,7 @@
   </a>
 
   <!-- FAB Center: Expense -->
-  <a class="mob-nav-item mob-nav-fab" routerLink="/expense" routerLinkActive="mob-nav-fab-active">
+  <a id="tour-nav-add" class="mob-nav-item mob-nav-fab" routerLink="/expense" routerLinkActive="mob-nav-fab-active">
     <ng-container *ngIf="showFab$ | async; else expenseActiveIcon">
       <!-- Plus FAB: တခြား page မှာ ပြ -->
       <span class="mob-fab-circle">
@@ -218,7 +218,7 @@
   </a>
 
   <!-- Budget -->
-  <a class="mob-nav-item" routerLink="/budget" routerLinkActive="mob-nav-active">
+  <a id="tour-nav-budget" class="mob-nav-item" routerLink="/budget" routerLinkActive="mob-nav-active">
     <span class="mob-nav-icon">
       <!-- Wallet / budget icon -->
       <!-- <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -232,7 +232,7 @@
   </a>
 
   <!-- More -->
-  <button class="mob-nav-item mob-nav-more-btn" type="button" (click)="toggleMobileMenu()"
+  <button id="tour-nav-more" class="mob-nav-item mob-nav-more-btn" type="button" (click)="toggleMobileMenu()"
     [class.mob-nav-active]="mobileMenuOpen || (isDrawerRouteActive$ | async)">
     <span class="mob-nav-icon">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
@@ -412,3 +412,5 @@
 </div>
 
 <router-outlet />
+
+<app-welcome-tour *ngIf="showWelcomeTour" (closed)="showWelcomeTour = false"></app-welcome-tour>

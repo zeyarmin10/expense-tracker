@@ -1,13 +1,52 @@
-<div class="wt-backdrop"></div>
+<svg class="wt-overlay" *ngIf="spotlight">
+  <defs>
+    <mask id="wt-mask">
+      <rect x="0" y="0" width="100%" height="100%" fill="white"></rect>
+      <circle
+        *ngIf="spotlight.shape === 'circle'"
+        [attr.cx]="spotlight.cx"
+        [attr.cy]="spotlight.cy"
+        [attr.r]="spotlight.r"
+        fill="black"
+      ></circle>
+      <rect
+        *ngIf="spotlight.shape === 'rect'"
+        [attr.x]="spotlight.x"
+        [attr.y]="spotlight.y"
+        [attr.width]="spotlight.width"
+        [attr.height]="spotlight.height"
+        rx="14"
+        fill="black"
+      ></rect>
+    </mask>
+  </defs>
+  <rect x="0" y="0" width="100%" height="100%" class="wt-scrim" mask="url(#wt-mask)"></rect>
+</svg>
 
-<div class="wt-card">
+<!-- Full backdrop fallback for the rare case a target never resolves -->
+<div class="wt-backdrop-fallback" *ngIf="!spotlight"></div>
+
+<div
+  class="wt-ring"
+  *ngIf="spotlight"
+  [class.wt-ring-circle]="spotlight.shape === 'circle'"
+  [style.top.px]="spotlight.y"
+  [style.left.px]="spotlight.x"
+  [style.width.px]="spotlight.width"
+  [style.height.px]="spotlight.height"
+></div>
+
+<div
+  class="wt-tooltip"
+  [style.width.px]="tooltipWidth"
+  [style.top]="tooltipStyle['top']"
+  [style.bottom]="tooltipStyle['bottom']"
+  [style.left]="tooltipStyle['left']"
+  [style.transform]="tooltipStyle['transform']"
+>
   <button type="button" class="wt-skip" (click)="skip()">
     {{ 'TOUR_SKIP' | translate }}
   </button>
-
-  <div class="wt-icon-wrap" [ngClass]="steps[currentStep].accent">
-    <lucide-icon [img]="steps[currentStep].icon" [size]="34"></lucide-icon>
-  </div>
 
   <h3 class="wt-title">{{ steps[currentStep].titleKey | translate }}</h3>
   <p class="wt-desc">{{ steps[currentStep].descKey | translate }}</p>

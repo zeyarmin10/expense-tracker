@@ -42,6 +42,7 @@ type SpaceImageSource = {
     <div class="space-title-switcher" *ngIf="viewModel$ | async as vm">
       <span class="space-title-label" [class.space-title-label-visible]="showLabel">{{ vm.currentName }}</span>
       <button
+        id="tour-space-switcher"
         class="space-title-trigger"
         type="button"
         *ngIf="vm.currentName"

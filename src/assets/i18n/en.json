@@ -165,6 +165,8 @@
   "TOUR_SKIP": "Skip",
   "TOUR_NEXT": "Next",
   "TOUR_GET_STARTED": "Get Started",
+  "TOUR_SPACE_TITLE": "Switch Space",
+  "TOUR_SPACE_DESC": "Tap here anytime to switch between your personal account and any group you belong to.",
   "TOUR_DASHBOARD_TITLE": "Your Dashboard",
   "TOUR_DASHBOARD_DESC": "See your income, expenses, and balance at a glance, all in one place.",
   "TOUR_OVERVIEW_TITLE": "Expense Overview",

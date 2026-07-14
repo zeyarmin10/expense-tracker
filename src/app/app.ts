@@ -28,6 +28,7 @@ import { UserSpaceSummary } from './services/space.model';
 import { getActiveGroupId, UserProfile } from './services/user-data';
 import { CurrentSpaceTitleComponent } from './components/common/current-space-title/current-space-title.component';
 import { UserAvatarComponent } from './components/common/user-avatar/user-avatar.component';
+import { WelcomeTourComponent } from './components/common/welcome-tour/welcome-tour.component';
 
 @Component({
   selector: 'app-root',
@@ -40,6 +41,7 @@ import { UserAvatarComponent } from './components/common/user-avatar/user-avatar
     LucideAngularModule,
     CurrentSpaceTitleComponent,
     UserAvatarComponent,
+    WelcomeTourComponent,
   ],
   templateUrl: './app.html',
   styleUrls: ['./app.css'],
@@ -64,6 +66,8 @@ export class App implements OnInit, AfterViewInit {
   isDrawerRouteActive$!: Observable<boolean>;
   spaceSwitchLoading$: Observable<boolean>;
   currentGroupImageUrl$: Observable<string | null>;
+  // Shown once for brand-new accounts (see UserProfile.hasSeenWelcomeTour).
+  showWelcomeTour = false;
   readonly iconLogOut = LogOut;
   readonly iconUsers = LucideUsers;
   readonly iconUser = LucideUserIcon;
@@ -493,6 +497,20 @@ export class App implements OnInit, AfterViewInit {
     }
     this.initTheme();
     this.initKeyboardDetection();
+
+    // Strict `=== false` (not just falsy) so pre-existing accounts — whose
+    // profiles predate this field and so have it `undefined` — never see
+    // the tour, only brand-new ones seeded with it (see login.ts). Also
+    // gated on showNavbar$: a brand-new profile exists (and this fires)
+    // while the user is still on /login's post-registration preferences
+    // step or on /onboarding, long before the real nav bar / space-switcher
+    // the tour spotlights are even in the DOM — showing it there traps the
+    // user behind a backdrop with nothing visible to dismiss it.
+    combineLatest([this.authService.userProfile$, this.showNavbar$]).subscribe(([profile, showNavbar]) => {
+      if (showNavbar && profile?.hasSeenWelcomeTour === false && !this.showWelcomeTour) {
+        this.showWelcomeTour = true;
+      }
+    });
 
     this.initBackButton();
     void this.notificationService.startForegroundListener();
