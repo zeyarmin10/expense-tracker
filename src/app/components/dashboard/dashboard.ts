@@ -58,6 +58,7 @@ import {
 import { LucideAngularModule, TrendingUp, TrendingDown, Banknote, PiggyBank, ShoppingCart, ChartColumn, ChartPie, RotateCw, LucideIconData } from 'lucide-angular';
 import { FormatService } from '../../services/format.service';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
+import { WelcomeTourComponent } from '../common/welcome-tour/welcome-tour.component';
 
 Chart.register(...registerables);
 type CurrencyMap = { [currency: string]: number };
@@ -73,7 +74,7 @@ type DashboardDataState = DashboardData & {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, LucideAngularModule, RouterModule, CurrentSpaceTitleComponent],
+  imports: [CommonModule, FormsModule, TranslateModule, LucideAngularModule, RouterModule, CurrentSpaceTitleComponent, WelcomeTourComponent],
   providers: [DatePipe],
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.css'],
@@ -154,6 +155,9 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   private activeSpaceModeKey: string | null = null;
   get canManageBudgetActions(): boolean { return canManageSharedSpace(this.userProfile); }
 
+  // Shown once for brand-new accounts (see UserProfile.hasSeenWelcomeTour).
+  showWelcomeTour = false;
+
   constructor(private cdr: ChangeDetectorRef, private datePipe: DatePipe) {
     this._startDate$ = new BehaviorSubject<string | null>(null);
     this._endDate$ = new BehaviorSubject<string | null>(null);
@@ -208,6 +212,12 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       )
       .subscribe((userProfile) => {
         this.userProfile = userProfile;
+        // Strict `=== false` (not just falsy) so pre-existing accounts —
+        // whose profiles predate this field and so have it `undefined` —
+        // never see the tour, only brand-new ones that were seeded with it.
+        if (userProfile.hasSeenWelcomeTour === false && !this.showWelcomeTour) {
+          this.showWelcomeTour = true;
+        }
         const key = this.getSpaceModeKey(userProfile);
         if (key !== this.activeSpaceModeKey) {
           this.activeSpaceModeKey = key;

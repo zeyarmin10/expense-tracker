@@ -1,0 +1,36 @@
+<div class="wt-backdrop"></div>
+
+<div class="wt-card">
+  <button type="button" class="wt-skip" (click)="skip()">
+    {{ 'TOUR_SKIP' | translate }}
+  </button>
+
+  <div class="wt-icon-wrap" [ngClass]="steps[currentStep].accent">
+    <lucide-icon [img]="steps[currentStep].icon" [size]="34"></lucide-icon>
+  </div>
+
+  <h3 class="wt-title">{{ steps[currentStep].titleKey | translate }}</h3>
+  <p class="wt-desc">{{ steps[currentStep].descKey | translate }}</p>
+
+  <div class="wt-dots">
+    <button
+      type="button"
+      class="wt-dot"
+      *ngFor="let step of steps; let i = index; trackBy: trackByStep"
+      [class.active]="i === currentStep"
+      (click)="goToStep(i)"
+      [attr.aria-label]="'Step ' + (i + 1)"
+    ></button>
+  </div>
+
+  <div class="wt-actions">
+    <button type="button" class="wt-back-btn" *ngIf="currentStep > 0" (click)="back()">
+      {{ 'BACK_BUTTON' | translate }}
+    </button>
+    <button type="button" class="wt-next-btn" (click)="next()">
+      <span>{{ (isLastStep ? 'TOUR_GET_STARTED' : 'TOUR_NEXT') | translate }}</span>
+      <lucide-icon *ngIf="!isLastStep" [img]="iconArrowRight" [size]="16"></lucide-icon>
+      <lucide-icon *ngIf="isLastStep" [img]="iconCheck" [size]="16"></lucide-icon>
+    </button>
+  </div>
+</div>

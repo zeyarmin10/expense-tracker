@@ -31,7 +31,21 @@ export interface ServiceICategory {
 
 interface ServiceIExpense {
   id?: string;
-  categoryId: string; 
+  categoryId: string;
+}
+
+/**
+ * Maps an Error thrown by CategoryService to a translation key, for the
+ * add/edit call sites (category page + the shared category-modal) to show
+ * a friendly message instead of the raw thrown text.
+ */
+export function getCategoryErrorMessage(error: any): string | null {
+  switch (error?.message) {
+    case 'Category name already exists.':
+      return 'CATEGORY_ALREADY_EXISTS';
+    default:
+      return null;
+  }
 }
 
 @Injectable({
@@ -130,14 +144,39 @@ export class CategoryService {
     }
   }
 
+  /**
+   * Throws if another category (excluding `excludeCategoryId`, used when
+   * renaming) already has this name, case-insensitively. Centralized here
+   * so every entry point (the categories page's add/edit, and the shared
+   * category-modal's add/edit) is protected the same way, rather than each
+   * UI re-implementing its own check and some quietly missing it.
+   */
+  private async assertCategoryNameAvailable(
+    trimmedName: string,
+    excludeCategoryId?: string,
+  ): Promise<void> {
+    const existingCategories = await firstValueFrom(this.getCategories());
+    const isDuplicate = existingCategories.some(
+      (category) =>
+        category.id !== excludeCategoryId &&
+        category.name.trim().toLowerCase() === trimmedName.toLowerCase(),
+    );
+    if (isDuplicate) {
+      throw new Error('Category name already exists.');
+    }
+  }
+
   async addCategory(categoryName: string, icon?: string): Promise<void> {
     const profile = await firstValueFrom(this.authService.userProfile$) as UserProfile | null;
     if (!profile?.uid) {
       throw new Error('User not authenticated.');
     }
 
+    const trimmedName = categoryName.trim();
+    await this.assertCategoryNameAvailable(trimmedName);
+
     const newCategory: Omit<ServiceICategory, 'id'> = {
-      name: categoryName.trim(),
+      name: trimmedName,
       ...(icon ? { icon } : {}),
       createdAt: new Date().toISOString(),
     };
@@ -183,13 +222,18 @@ export class CategoryService {
     const oldCategoryName = oldCategoryData?.name;
     const oldIcon = oldCategoryData?.icon;
 
-    const nameUnchanged = oldCategoryName?.trim() === newCategoryName.trim();
+    const trimmedNewName = newCategoryName.trim();
+    const nameUnchanged = oldCategoryName?.trim() === trimmedNewName;
     const iconUnchanged = icon === undefined || icon === oldIcon;
     if (nameUnchanged && iconUnchanged) {
       return;
     }
 
-    const updateData: { name: string; icon?: string } = { name: newCategoryName.trim() };
+    if (!nameUnchanged) {
+      await this.assertCategoryNameAvailable(trimmedNewName, categoryId);
+    }
+
+    const updateData: { name: string; icon?: string } = { name: trimmedNewName };
     if (icon !== undefined) updateData.icon = icon;
     await update(categoryRef, updateData);
 
@@ -197,13 +241,13 @@ export class CategoryService {
       // ✅ Expense တွေမှာ category name ကိုပါ တပြိုင်နက် update လုပ်မည်
       await this.updateExpensesByCategory(
         oldCategoryName,
-        newCategoryName.trim(),
+        trimmedNewName,
         profile
       );
 
       this.categoryUpdatedSource.next({
         oldName: oldCategoryName,
-        newName: newCategoryName,
+        newName: trimmedNewName,
         userId: profile.uid,
       });
     }

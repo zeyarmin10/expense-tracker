@@ -41,6 +41,10 @@ export interface UserProfile {
   budgetEndDate?: string | null;
   selectedBudgetPeriodId?: string | null;
   lastAvatarUploadAt?: number | null;
+  // Explicitly `false` (not merely absent) for brand-new accounts so the
+  // welcome tour shows once for them without also showing for pre-existing
+  // accounts that predate this field — see WelcomeTourComponent.
+  hasSeenWelcomeTour?: boolean;
 }
 
 type SpaceContextLike = {

@@ -12,7 +12,7 @@ import {
   ReactiveFormsModule,
   FormControl,
 } from '@angular/forms';
-import { ServiceICategory, CategoryService } from '../../services/category';
+import { ServiceICategory, CategoryService, getCategoryErrorMessage } from '../../services/category';
 import { Observable, BehaviorSubject, firstValueFrom } from 'rxjs';
 import { AuthService } from '../../services/auth';
 import { UserProfile } from '../../services/user-data';
@@ -223,9 +223,10 @@ export class Category implements OnInit {
       this.showAddIconPicker = false;
       await this.loadCategories();
     } catch (error: any) {
+      const key = getCategoryErrorMessage(error) || 'DATA_SAVE_ERROR';
       this.showErrorModal(
         this.translateService.instant('ERROR_TITLE'),
-        error.message || this.translateService.instant('DATA_SAVE_ERROR')
+        this.translateService.instant(key)
       );
       console.error('Category add error:', error);
     }
@@ -283,9 +284,10 @@ export class Category implements OnInit {
       this.cancelEdit();
       this.loadCategories(); // Reload to reflect changes
     } catch (error: any) {
+      const key = getCategoryErrorMessage(error) || 'CATEGORY_ERROR_UPDATE';
       this.showErrorModal(
         this.translateService.instant('ERROR_TITLE'),
-        error.message || this.translateService.instant('CATEGORY_ERROR_UPDATE')
+        this.translateService.instant(key)
       );
       console.error('Error updating category:', error);
     }

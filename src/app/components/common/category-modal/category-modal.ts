@@ -1,6 +1,6 @@
 import { Component, ElementRef, EventEmitter, OnInit, OnDestroy, Output, ViewChild, inject, HostListener, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { CategoryService } from '../../../services/category';
+import { CategoryService, getCategoryErrorMessage } from '../../../services/category';
 import { CommonModule } from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import {
@@ -243,7 +243,12 @@ export class CategoryModalComponent implements OnInit, OnDestroy {
       this.categoryAdded.emit();
       this.resetForm();
       this.closeModal();
-    } catch (error) {
+    } catch (error: any) {
+      const key = getCategoryErrorMessage(error) || 'DATA_SAVE_ERROR';
+      this.showErrorModal(
+        this.translateService.instant('ERROR_TITLE'),
+        this.translateService.instant(key)
+      );
       console.error('Error saving category:', error);
     }
   }

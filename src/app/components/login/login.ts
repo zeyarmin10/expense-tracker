@@ -221,6 +221,7 @@ export class LoginComponent implements OnInit, OnDestroy {
         currency: currency,
         language: this.currentLang,
         createdAt: Date.now(),
+        hasSeenWelcomeTour: false,
       };
       await this.userDataService.createUserProfile(newUserProfile);
       profile = newUserProfile; // use the new profile
