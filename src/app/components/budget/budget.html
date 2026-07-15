@@ -150,6 +150,7 @@
         [(ngModel)]="selectedDateFilter"
         (ngModelChange)="setDateFilter($event)"
         [options]="dateFilterOptions"
+        [sheetTitle]="'DATE_FILTER' | translate"
         [fitContent]="true"
         [showSearch]="false">
       </app-custom-select>

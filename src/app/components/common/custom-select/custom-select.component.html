@@ -43,7 +43,7 @@
     <div class="csl-handle"></div>
 
     <div class="csl-sheet-header">
-      <span class="csl-sheet-title">{{ label }}</span>
+      <span class="csl-sheet-title">{{ sheetTitle || label }}</span>
       <button type="button" class="csl-sheet-close" (click)="close()">
         <lucide-icon [img]="iconX" [size]="18"></lucide-icon>
       </button>
@@ -55,7 +55,7 @@
              [placeholder]="'CUSTOM_SELECT_SEARCH' | translate" autocomplete="off" />
     </div>
 
-    <div class="csl-list">
+    <div class="csl-list mb-5">
       <p class="csl-empty" *ngIf="filteredOptions.length === 0">
         {{ 'CUSTOM_SELECT_NO_RESULTS' | translate }}
       </p>

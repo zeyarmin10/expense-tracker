@@ -1074,6 +1074,21 @@ body.light-mode .flatpickr-day.nextMonthDay {
   color: #a0aec0 !important;
 }
 
+/* Mobile default (non-custom) date-filter row — the select's own
+   [fitContent] mode only sets the HOST to width: auto, but each filter
+   bar lays its children out with align-items: stretch on mobile, which
+   stretches a flex item's auto cross-size to fill the row regardless.
+   Force the visible trigger box itself to size to its content instead. */
+@media (max-width: 639px) {
+  .ov-filter-row:not(.ov-filter-row-custom) app-custom-select .csl-trigger,
+  .bgt-filter-bar:not(.bgt-filter-bar-custom) app-custom-select .csl-trigger,
+  .pnl-filter-bar:not(.pnl-filter-bar-custom) app-custom-select .csl-trigger,
+  .cfw-filter-bar:not(.cfw-filter-bar-custom) app-custom-select .csl-trigger {
+    width: fit-content !important;
+    min-width: 7rem !important;
+  }
+}
+
 /* Mobile custom filter rows — side-by-side layout */
 @media (max-width: 639px) {
   /* Custom-select: no minimum width so HOST shrinks to fit-content */

@@ -34,6 +34,11 @@ export class CustomSelectComponent implements ControlValueAccessor {
   get options(): SelectOption[] { return this._options; }
 
   @Input() label = '';
+  // Title shown in the mobile bottom sheet's header. Falls back to `label`
+  // when not set — kept separate so callers using [fitContent] to hide the
+  // floating label above the closed trigger (e.g. compact date filters)
+  // can still give the slide-up sheet a proper title instead of a blank one.
+  @Input() sheetTitle = '';
   @Input() showIcons = false;
   @Input() hasAddon = false;
   @Input() fitContent = false;

@@ -366,6 +366,17 @@ body.bgt-add-modal-open {
   width: 100%;
 }
 
+/* align-items: stretch above stretches the date-filter select to the full
+   row width on mobile even in [fitContent] mode — width: auto on the
+   select itself doesn't override a flex container's cross-axis stretch,
+   only align-self does. Keep it out of the >=640px row layout, where the
+   container switches to align-items: flex-end and this isn't needed. */
+@media (max-width: 639px) {
+  .bgt-filter-bar > app-custom-select {
+    align-self: flex-start;
+  }
+}
+
 /* PC: select + date pickers တစ်ကြောင်းတည်း */
 @media (min-width: 640px) {
   .bgt-filter-bar {
