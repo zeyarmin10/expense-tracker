@@ -10,7 +10,7 @@
   /* font-family: 'Syne', sans-serif; */
   background: var(--bg);
   min-height: 100vh;
-  padding: 2rem 1rem 5rem;
+  padding: 2rem 1rem calc(7rem + env(safe-area-inset-bottom, 0px));
   color: var(--text);
 }
 
@@ -26,6 +26,323 @@
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+}
+
+/* ── Add FAB + Bottom-sheet Modal (mirrors expense.css) ── */
+.bgt-add-fab {
+  position: fixed;
+  right: 1rem;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 68px + 1rem);
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  border: 2.5px solid rgba(255, 255, 255, 0.55);
+  background: linear-gradient(150deg, #2e93ff, var(--accent, #0b74ff));
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 22px rgba(11, 116, 255, 0.5), 0 0 0 0 rgba(11, 116, 255, 0.35);
+  z-index: 900;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  animation: bgt-fab-pulse 2.6s ease-in-out infinite;
+}
+
+.bgt-add-fab:active {
+  transform: scale(0.94);
+  animation-play-state: paused;
+}
+
+@keyframes bgt-fab-pulse {
+  0%, 100% {
+    box-shadow: 0 8px 22px rgba(11, 116, 255, 0.5), 0 0 0 0 rgba(11, 116, 255, 0.35);
+  }
+  50% {
+    box-shadow: 0 8px 26px rgba(11, 116, 255, 0.6), 0 0 0 10px rgba(11, 116, 255, 0);
+  }
+}
+
+@media (min-width: 992px) {
+  .bgt-add-fab {
+    display: none;
+  }
+}
+
+body.bgt-add-modal-open {
+  overflow: hidden;
+}
+
+.bgt-add-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 1010;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+  backdrop-filter: blur(2px);
+}
+
+.bgt-add-modal-backdrop.open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.bgt-add-modal-sheet {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 92%;
+  max-width: 480px;
+  max-height: 85vh;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface, #12151c);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.45);
+  z-index: 1020;
+  translate: -50% -50%;
+  scale: 0.96;
+  opacity: 0;
+  pointer-events: none;
+  transition: scale 0.2s ease, opacity 0.2s ease;
+}
+
+.bgt-add-modal-sheet.open {
+  scale: 1;
+  opacity: 1;
+  pointer-events: all;
+}
+
+.bgt-add-modal-handle {
+  display: none;
+}
+
+.bgt-add-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 0.6rem 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.bgt-add-modal-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.bgt-add-modal-close:hover {
+  background: var(--border);
+}
+
+.bgt-add-modal-body {
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+.bgt-add-modal-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.bgt-add-modal-back:hover {
+  background: var(--border);
+}
+
+.bgt-add-modal-back-icon {
+  transform: rotate(90deg);
+}
+
+.bgt-add-modal-header-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.bgt-add-modal-body .bgt-form {
+  padding: 0;
+}
+
+/* Category select trigger — replaces app-custom-select for the category
+   field inside this modal (see budget.ts for why: nesting that component's
+   own bottom-sheet picker here left it stuck open on mobile). */
+.bgt-cat-select-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  height: 52px;
+  padding: 0 0.9rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s;
+}
+
+.bgt-cat-select-trigger:hover,
+.bgt-cat-select-trigger:focus-visible {
+  border-color: var(--accent);
+}
+
+.bgt-cat-select-trigger-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  background: hsl(var(--cat-hue, 220) 80% 55% / 0.15);
+  color: hsl(var(--cat-hue, 220) 80% 70%);
+}
+
+.bgt-cat-select-trigger-value {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.88rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bgt-cat-select-trigger-chevron {
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+/* Category picker — search + list, swapped into the modal body in place
+   of the form while drilled in */
+.bgt-cat-picker-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: 320px;
+}
+
+.bgt-cat-picker-search {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 0.85rem;
+  height: 46px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.bgt-cat-picker-search-icon {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.bgt-cat-picker-search-input {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-size: 0.88rem;
+}
+
+.bgt-cat-picker-search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.bgt-cat-picker-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  overflow-y: auto;
+}
+
+.bgt-cat-picker-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.65rem 0.7rem;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+  width: 100%;
+}
+
+.bgt-cat-picker-item:hover {
+  background: var(--surface-2);
+}
+
+.bgt-cat-picker-item-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  background: hsl(var(--cat-hue, 220) 80% 55% / 0.15);
+  color: hsl(var(--cat-hue, 220) 80% 70%);
+}
+
+.bgt-cat-picker-item-label {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.88rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bgt-cat-picker-item-check {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.bgt-cat-picker-empty {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  padding: 2rem 1rem;
+}
+
+.bgt-date-picker-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 320px;
 }
 
 /* ── Page Header ── */
@@ -59,6 +376,45 @@
 
   .bgt-filter-bar-custom .bgt-date-row {
     display: contents;
+  }
+}
+
+/* Desktop-only "Add Budget" toolbar button — the FAB (.bgt-add-fab) is
+   hidden at this breakpoint since there's no bottom nav to float above, so
+   this is the only entry point to the add modal on desktop. */
+.bgt-add-toolbar-btn {
+  display: none;
+}
+
+@media (min-width: 992px) {
+  .bgt-filter-bar {
+    width: 100%;
+  }
+
+  .bgt-add-toolbar-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    border: none;
+    border-radius: 999px;
+    padding: 0.45rem 1rem;
+    background: var(--accent, #0b74ff);
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(11, 116, 255, 0.35);
+    transition: transform 0.15s, box-shadow 0.15s;
+    margin-left: auto;
+    white-space: nowrap;
+  }
+
+  .bgt-add-toolbar-btn:hover {
+    box-shadow: 0 6px 18px rgba(11, 116, 255, 0.45);
+  }
+
+  .bgt-add-toolbar-btn:active {
+    transform: scale(0.96);
   }
 }
 

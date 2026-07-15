@@ -7,7 +7,6 @@
         [(ngModel)]="selectedDateFilter"
         (ngModelChange)="setDateFilter($event)"
         [options]="dateFilterOptions"
-        [label]="'DATE_FILTER' | translate"
         [fitContent]="true"
         [showSearch]="false">
       </app-custom-select>
@@ -18,6 +17,7 @@
           [(startDate)]="startDate"
           [(endDate)]="endDate"
           (rangeChange)="setDateFilter('custom')"
+          [showLabel]="false"
           [startLabel]="'START_DATE' | translate"
           [endLabel]="'END_DATE' | translate">
         </app-date-range-input>

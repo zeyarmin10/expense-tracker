@@ -13,6 +13,19 @@
   width: max-content;
 }
 
+/* No-label mode: compact trigger, no floating label reserved above the value —
+   mirrors app-custom-select's .csl-no-label behavior. */
+:host.dri-no-label .dri-trigger {
+  padding-top: 0;
+  padding-bottom: 0;
+  align-items: center;
+  height: 48px;
+}
+
+:host.dri-no-label .dri-label {
+  display: none;
+}
+
 
 /* ── Range validation error (inside sheet / panel) ── */
 .dri-range-error {

@@ -47,8 +47,14 @@ export class DateRangeInputComponent implements OnChanges, OnDestroy {
   @Input() min = '';
   @Input() max = '';
   @Input() fitContent = false;
+  // Hides only the floating label above the closed trigger — startLabel/
+  // endLabel are still used for the mobile sheet's header and the "picking
+  // the end date" hint while the panel is open, so they stay required even
+  // when the static label is turned off.
+  @Input() showLabel = true;
 
   @HostBinding('class.dri-fit-content') get isFitContent() { return this.fitContent; }
+  @HostBinding('class.dri-no-label') get isNoLabel() { return !this.showLabel; }
 
   @Output() startDateChange = new EventEmitter<string>();
   @Output() endDateChange = new EventEmitter<string>();

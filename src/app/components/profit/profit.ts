@@ -36,6 +36,7 @@ import { getIconData, getCategoryHue } from '../../utils/category-icons';
 import {
   TrendingUp, TrendingDown, Banknote, ShoppingCart, ChartLine,
   ChartColumn, ChevronDown, ChevronRight, Save, Trash2,
+  Plus, X, CalendarDays,
   LucideIconData,
 } from 'lucide-angular';
 import { AuthService } from '../../services/auth';
@@ -54,8 +55,10 @@ import Swal from 'sweetalert2';
 import { UserAvatarComponent } from '../common/user-avatar/user-avatar.component';
 import { ShowFullTextDirective } from '../../directives/show-full-text.directive';
 import { CustomSelectComponent, SelectOption } from '../common/custom-select/custom-select.component';
-import { DateInputComponent } from '../common/date-input/date-input.component';
 import { DateRangeInputComponent } from '../common/date-range-input/date-range-input.component';
+import flatpickr from 'flatpickr';
+import type { Instance as FlatpickrInstance } from 'flatpickr/dist/types/instance';
+import { Burmese } from 'flatpickr/dist/l10n/my';
 
 Chart.register(...registerables);
 
@@ -95,7 +98,6 @@ interface IncomeDateGroup {
     ShowFullTextDirective,
     LucideAngularModule,
     CustomSelectComponent,
-    DateInputComponent,
     DateRangeInputComponent,
   ],
   providers: [DatePipe],
@@ -166,8 +168,12 @@ export class Profit implements OnInit, OnDestroy {
   // --- State for Modals/Visibility ---
   private subscriptions: Subscription = new Subscription();
 
-  isIncomeFormCollapsed: boolean = true;
   isRecordedIncomesCollapsed: boolean = true;
+
+  // ── Add Income FAB + Bottom-sheet Modal ──
+  isAddModalOpen = false;
+  isDatePickerOpen = false;
+  private datePickerFp: FlatpickrInstance | null = null;
   get canManageProfitActions(): boolean {
     if (!this.userProfile) return false;
     if (this.userProfile.accountType === 'personal') return true;
@@ -189,6 +195,9 @@ export class Profit implements OnInit, OnDestroy {
   readonly iconSave = Save;
   readonly iconTrash2 = Trash2;
   readonly iconChartColumn = ChartColumn;
+  readonly iconPlus = Plus;
+  readonly iconX = X;
+  readonly iconCalendarDays = CalendarDays;
   readonly iconTrendingUp = TrendingUp;
   readonly iconTrendingDown = TrendingDown;
 
@@ -403,6 +412,8 @@ export class Profit implements OnInit, OnDestroy {
       this.profitChartInstance = undefined;
     }
     this.themeObserver?.disconnect();
+    this.destroyDatePickerFlatpickr();
+    document.body.classList.remove('pnl-add-modal-open');
   }
 
   // --- Initialization Methods ---
@@ -536,6 +547,7 @@ export class Profit implements OnInit, OnDestroy {
           Toast.fire({ icon: 'success', title: this.translate.instant('INCOME_SAVE_SUCCESS') });
           this.resetForm();
           this.refreshIncomes$.next();
+          this.closeAddModal();
         })
         .catch((error) => {
           console.error('Error adding income:', error);
@@ -601,28 +613,87 @@ export class Profit implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
-  toggleVisibility(section: 'incomeForm' | 'recordedIncomes'): void {
-    if (section === 'incomeForm') {
-      this.isIncomeFormCollapsed = !this.isIncomeFormCollapsed;
-    } else if (section === 'recordedIncomes') {
+  toggleVisibility(section: 'recordedIncomes'): void {
+    if (section === 'recordedIncomes') {
       this.isRecordedIncomesCollapsed = !this.isRecordedIncomesCollapsed;
     }
   }
 
   openIncomeFormAndFocus(): void {
+    this.openAddModal();
+  }
+
+  openAddModal(): void {
     if (!this.canManageProfitActions) {
       return;
     }
-    this.isIncomeFormCollapsed = false;
-    setTimeout(() => {
-      const el = document.getElementById('pnl-add-panel');
-      if (el) {
-        const topbar = document.querySelector('.mob-topbar') as HTMLElement;
-        const offset = (topbar ? topbar.offsetHeight : 64) + 8;
-        const y = el.getBoundingClientRect().top + window.scrollY - offset;
-        window.scrollTo({ top: y, behavior: 'smooth' });
-      }
-    }, 320);
+    this.isAddModalOpen = true;
+    this.closeDatePicker();
+    document.body.classList.add('pnl-add-modal-open');
+  }
+
+  closeAddModal(): void {
+    this.isAddModalOpen = false;
+    this.closeDatePicker();
+    document.body.classList.remove('pnl-add-modal-open');
+  }
+
+  // ── Date picker (drill-down within the Add-Income modal) ──
+  // Not using app-date-input's own bottom-sheet here: that component
+  // manages its own history-based close on mobile, and nesting it inside
+  // this modal left the picker/backdrop stuck open after selecting a date
+  // (same issue documented in expense.ts). This uses flatpickr directly
+  // instead, with no separate backdrop/sheet/history of its own.
+  openDatePicker(): void {
+    this.isDatePickerOpen = true;
+    setTimeout(() => this.initDatePickerFlatpickr(), 0);
+  }
+
+  closeDatePicker(): void {
+    this.isDatePickerOpen = false;
+    this.destroyDatePickerFlatpickr();
+  }
+
+  private initDatePickerFlatpickr(): void {
+    this.destroyDatePickerFlatpickr();
+    const container = document.getElementById('pnl-date-picker-container');
+    if (!container) return;
+
+    const hiddenInput = document.createElement('input');
+    hiddenInput.type = 'text';
+    hiddenInput.style.display = 'none';
+    container.appendChild(hiddenInput);
+
+    const currentValue = this.incomeForm.get('date')?.value;
+    const lang = this.translate.currentLang || this.translate.getDefaultLang();
+    const isMy = lang === 'my';
+    const myDigits = '၀၁၂၃၄၅၆၇၈၉';
+
+    this.datePickerFp = flatpickr(hiddenInput, {
+      inline: true,
+      defaultDate: currentValue || undefined,
+      disableMobile: true,
+      locale: isMy ? Burmese : undefined,
+      onDayCreate: (_dates, _dateStr, _fp, dayElem) => {
+        if (!isMy) return;
+        dayElem.textContent = (dayElem.textContent ?? '').replace(/\d/g, (d: string) => myDigits[+d]);
+      },
+      onChange: (dates) => {
+        if (!dates[0]) return;
+        const d = dates[0];
+        const str = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        this.incomeForm.get('date')?.setValue(str);
+        this.closeDatePicker();
+        this.cdr.markForCheck();
+      },
+    }) as unknown as FlatpickrInstance;
+  }
+
+  private destroyDatePickerFlatpickr(): void {
+    if (this.datePickerFp) {
+      this.datePickerFp.destroy();
+      this.datePickerFp = null;
+    }
   }
 
   // --- Formatting and Chart Rendering ---

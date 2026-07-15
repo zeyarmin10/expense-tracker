@@ -270,8 +270,14 @@ export class VoucherService {
       );
       imageUrls = results.map(r => r.url);
       storagePaths = results.map(r => r.publicId);
-    } catch {
-      throw new Error('VOUCHER_STORAGE_SETUP_ERROR');
+    } catch (error) {
+      // Uploads go straight from the browser to Cloudinary (not Firebase
+      // Storage) — log the real cause here since it's swallowed into a
+      // generic translated message below (usually a network/connectivity
+      // issue reaching api.cloudinary.com, e.g. an ISP or VPN exit node
+      // blocking/throttling the request, rather than an app misconfiguration).
+      console.error('Voucher image upload to Cloudinary failed:', error);
+      throw new Error('VOUCHER_UPLOAD_ERROR');
     }
 
     const safeFileName = this.sanitizeFileName(files[0].name);

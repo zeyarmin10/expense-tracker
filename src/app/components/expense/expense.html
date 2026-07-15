@@ -516,6 +516,7 @@
         [(startDate)]="customStartDate"
         [(endDate)]="customEndDate"
         (rangeChange)="onCustomDateChange()"
+        [showLabel]="false"
         [startLabel]="'DATE_FROM' | translate"
         [endLabel]="'DATE_TO' | translate">
       </app-date-range-input>

@@ -24,7 +24,7 @@ import {
   LucideAngularModule, LucideIconData,
   Trash2, Save, ChevronDown, TriangleAlert, CircleCheck,
   PiggyBank, ShoppingCart, ChartLine, ListChecks,
-  ChartColumn, Wallet,
+  ChartColumn, Wallet, Plus, X, Search, Check, CalendarDays,
 } from 'lucide-angular';
 import { Chart, registerables } from 'chart.js';
 import { AuthService } from '../../services/auth';
@@ -47,11 +47,13 @@ import {
 import { CategoryService, ServiceICategory } from '../../services/category';
 import { getIconData, getIconHue, getCategoryHue } from '../../utils/category-icons';
 import { CustomSelectComponent, SelectOption } from '../common/custom-select/custom-select.component';
-import { DateInputComponent } from '../common/date-input/date-input.component';
 import { DateRangeInputComponent } from '../common/date-range-input/date-range-input.component';
 import Swal from 'sweetalert2';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
 import { ShowFullTextDirective } from '../../directives/show-full-text.directive';
+import flatpickr from 'flatpickr';
+import type { Instance as FlatpickrInstance } from 'flatpickr/dist/types/instance';
+import { Burmese } from 'flatpickr/dist/l10n/my';
 
 Chart.register(...registerables);
 
@@ -121,7 +123,6 @@ interface BudgetPeriodGroup {
     CurrentSpaceTitleComponent,
     ShowFullTextDirective,
     CustomSelectComponent,
-    DateInputComponent,
     DateRangeInputComponent,
   ],
   providers: [DatePipe],
@@ -179,16 +180,25 @@ export class BudgetComponent implements OnInit, OnDestroy {
   readonly iconListChecks = ListChecks;
   readonly iconChartColumn = ChartColumn;
   readonly iconWallet = Wallet;
+  readonly iconPlus = Plus;
+  readonly iconX = X;
+  readonly iconSearch = Search;
+  readonly iconCheck = Check;
+  readonly iconCalendarDays = CalendarDays;
 
-  isBudgetFormCollapsed: boolean = true;
   hasChartData: boolean = false;
   isChartDataLoaded: boolean = false;
   amountDisplayValue: string = '';
   isRecordedBudgetsCollapsed: boolean = true;
   isSpendingMonitorCollapsed: boolean = false;
 
-  // UI state for dark-theme panels
-  get isAddFormOpen(): boolean { return !this.isBudgetFormCollapsed; }
+  // ── Add Budget FAB + Bottom-sheet Modal ──
+  isAddModalOpen = false;
+  isCategoryPickerOpen = false;
+  categoryPickerSearch = '';
+  isDatePickerOpen = false;
+  private datePickerFp: FlatpickrInstance | null = null;
+
   get isRecordedOpen(): boolean { return !this.isRecordedBudgetsCollapsed; }
   get canManageBudgets(): boolean {
     if (!this.userProfile) return false;
@@ -202,9 +212,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
     const role = getCurrentSpaceRole(this.userProfile);
     return role === 'admin' || role === 'owner';
   }
-  toggleAddForm(): void {
-    this.isBudgetFormCollapsed = !this.isBudgetFormCollapsed;
-  }
   toggleRecordedList(): void { this.isRecordedBudgetsCollapsed = !this.isRecordedBudgetsCollapsed; }
   toggleSpendingMonitor(): void { this.isSpendingMonitorCollapsed = !this.isSpendingMonitorCollapsed; }
 
@@ -212,17 +219,124 @@ export class BudgetComponent implements OnInit, OnDestroy {
     if (!this.canManageBudgets) {
       return;
     }
-    this.isBudgetFormCollapsed = false;
-    setTimeout(() => {
-      const el = document.getElementById('bgt-add-panel');
-      if (el) {
-        const topbar = document.querySelector('.mob-topbar') as HTMLElement;
-        const offset = (topbar ? topbar.offsetHeight : 64) + 8;
-        const y = el.getBoundingClientRect().top + window.scrollY - offset;
-        window.scrollTo({ top: y, behavior: 'smooth' });
-      }
-    }, 320);
+    this.openAddModal();
   }
+
+  openAddModal(): void {
+    if (!this.canManageBudgets) {
+      return;
+    }
+    this.isAddModalOpen = true;
+    this.isCategoryPickerOpen = false;
+    this.closeDatePicker();
+    document.body.classList.add('bgt-add-modal-open');
+  }
+
+  closeAddModal(): void {
+    this.isAddModalOpen = false;
+    this.isCategoryPickerOpen = false;
+    this.closeDatePicker();
+    document.body.classList.remove('bgt-add-modal-open');
+  }
+
+  // ── Category picker (drill-down within the Add-Budget modal) ──
+  // Not using app-custom-select's own bottom-sheet here: that component
+  // manages its own history-based close on mobile, and nesting it inside
+  // this modal left the picker/backdrop stuck open after selecting an item
+  // (same issue documented in expense.ts).
+  openCategoryPicker(): void {
+    this.categoryPickerSearch = '';
+    this.isCategoryPickerOpen = true;
+    this.closeDatePicker();
+  }
+
+  closeCategoryPicker(): void {
+    this.isCategoryPickerOpen = false;
+  }
+
+  selectBudgetCategory(categoryId: string): void {
+    this.budgetForm.get('category')?.setValue(categoryId);
+    this.closeCategoryPicker();
+  }
+
+  get filteredPickerCategories(): { id?: string; name: string; icon?: string }[] {
+    const q = this.categoryPickerSearch.trim().toLowerCase();
+    if (!q) return this.categories;
+    return this.categories.filter(c => c.name.toLowerCase().includes(q));
+  }
+
+  get selectedCategoryName(): string {
+    const id = this.budgetForm.get('category')?.value;
+    return this.categories.find(c => c.id === id)?.name || '';
+  }
+
+  getIconForCategoryId(categoryId: string | undefined): LucideIconData {
+    if (!categoryId || categoryId === 'all') return this.iconPiggyBank;
+    return getIconData(this.categories.find(c => c.id === categoryId)?.icon);
+  }
+
+  getIconHueForCategoryId(categoryId: string | undefined): number {
+    return getIconHue(this.categories.find(c => c.id === categoryId)?.icon);
+  }
+
+  // ── Date picker (drill-down within the Add-Budget modal) ──
+  // Same reasoning as the category picker above: app-date-input's own
+  // sheet manages its close state via history.back()/popstate, which got
+  // stuck once nested inside this modal. This uses flatpickr directly
+  // instead, with no separate backdrop/sheet/history of its own.
+  openDatePicker(): void {
+    this.isCategoryPickerOpen = false;
+    this.isDatePickerOpen = true;
+    setTimeout(() => this.initDatePickerFlatpickr(), 0);
+  }
+
+  closeDatePicker(): void {
+    this.isDatePickerOpen = false;
+    this.destroyDatePickerFlatpickr();
+  }
+
+  private initDatePickerFlatpickr(): void {
+    this.destroyDatePickerFlatpickr();
+    const container = document.getElementById('bgt-date-picker-container');
+    if (!container) return;
+
+    const hiddenInput = document.createElement('input');
+    hiddenInput.type = 'text';
+    hiddenInput.style.display = 'none';
+    container.appendChild(hiddenInput);
+
+    const currentValue = this.budgetForm.get('period')?.value;
+    const lang = this.translate.currentLang || this.translate.getDefaultLang();
+    const isMy = lang === 'my';
+    const myDigits = '၀၁၂၃၄၅၆၇၈၉';
+
+    this.datePickerFp = flatpickr(hiddenInput, {
+      inline: true,
+      defaultDate: currentValue || undefined,
+      disableMobile: true,
+      locale: isMy ? Burmese : undefined,
+      onDayCreate: (_dates, _dateStr, _fp, dayElem) => {
+        if (!isMy) return;
+        dayElem.textContent = (dayElem.textContent ?? '').replace(/\d/g, (d: string) => myDigits[+d]);
+      },
+      onChange: (dates) => {
+        if (!dates[0]) return;
+        const d = dates[0];
+        const str = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        this.budgetForm.get('period')?.setValue(str);
+        this.closeDatePicker();
+        this.cdr.markForCheck();
+      },
+    }) as unknown as FlatpickrInstance;
+  }
+
+  private destroyDatePickerFlatpickr(): void {
+    if (this.datePickerFp) {
+      this.datePickerFp.destroy();
+      this.datePickerFp = null;
+    }
+  }
+
   private refreshBudgets$ = new BehaviorSubject<void>(undefined);
 
   private _startDate$ = new BehaviorSubject<string>('');
@@ -807,7 +921,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
         if (key !== this.activeSpaceModeKey) {
           this.activeSpaceModeKey = key;
           this.resetForm();
-          this.isBudgetFormCollapsed = true;
+          this.closeAddModal();
           this.refreshBudgets$.next();
           // B3: only reset date filter on space change, not every profile emit
           this.setInitialDateFilter(profile);
@@ -851,6 +965,8 @@ export class BudgetComponent implements OnInit, OnDestroy {
       this.chartInstance = undefined;
     }
     this.themeObserver?.disconnect();
+    this.destroyDatePickerFlatpickr();
+    document.body.classList.remove('bgt-add-modal-open');
   }
 
   trackByKey(index: number, item: { key: string }): string {
@@ -1036,6 +1152,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
               Toast.fire({ icon: 'success', title: this.translate.instant('BUDGET_SAVE_SUCCESS') });
               this.resetForm();
               this.refreshBudgets$.next();
+              this.closeAddModal();
             })
             .catch((error) => {
               console.error('Error adding budget:', error);
@@ -1135,13 +1252,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
-  toggleVisibility(section: 'budgetForm' | 'recordedBudgets'): void {
-    if (section === 'budgetForm') {
-      this.isBudgetFormCollapsed = !this.isBudgetFormCollapsed;
-    } else if (section === 'recordedBudgets') {
-      this.isRecordedBudgetsCollapsed = !this.isRecordedBudgetsCollapsed;
-    }
-  }
 
   setInitialDateFilter(profile: UserProfile | null): void {
     const budgetPeriod = profile?.budgetPeriod;

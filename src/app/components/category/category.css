@@ -10,7 +10,7 @@
   /* font-family: 'Syne', sans-serif; */
   background: var(--bg);
   min-height: 100vh;
-  padding: 2rem 1rem 5rem;
+  padding: 2rem 1rem calc(7rem + env(safe-area-inset-bottom, 0px));
   color: var(--text);
 }
 

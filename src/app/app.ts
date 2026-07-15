@@ -218,6 +218,7 @@ export class App implements OnInit, AfterViewInit {
       '/expense-overview':   'NAV_EXPENSE_OVERVIEW',
       '/budget':             'NAV_BUDGET',
       '/profit':             'NAV_PROFIT',
+      '/cash-flow':          'NAV_CASH_FLOW',
       '/category':           'NAV_CATEGORY',
       '/member-management':  'NAV_MEMBER_MANAGEMENT',
       '/profile':            'NAV_PROFILE_AND_SETTING',

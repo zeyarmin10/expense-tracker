@@ -1,6 +1,148 @@
 <div class="bgt-wrapper">
   <div class="bgt-container mb-5">
 
+    <!-- ── ADD (FAB + Bottom-sheet Modal) ── -->
+    <button *ngIf="canManageBudgets" type="button" class="bgt-add-fab" (click)="openAddModal()" [title]="'ADD_BUDGET' | translate">
+      <lucide-icon [img]="iconPlus" [size]="26"></lucide-icon>
+    </button>
+
+    <div class="bgt-add-modal-backdrop" [class.open]="isAddModalOpen" (click)="closeAddModal()"></div>
+    <div class="bgt-add-modal-sheet" [class.open]="isAddModalOpen">
+      <div class="bgt-add-modal-handle"></div>
+
+      <div class="bgt-add-modal-header" *ngIf="!isCategoryPickerOpen && !isDatePickerOpen">
+        <span class="bgt-add-modal-header-title">{{ 'ADD_BUDGET' | translate }}</span>
+        <button type="button" class="bgt-add-modal-close" (click)="closeAddModal()" [title]="'CANCEL_BUTTON_LABEL' | translate">
+          <lucide-icon [img]="iconX" [size]="18"></lucide-icon>
+        </button>
+      </div>
+
+      <!-- Category picker header — replaces the title while drilled in -->
+      <div class="bgt-add-modal-header" *ngIf="isCategoryPickerOpen">
+        <button type="button" class="bgt-add-modal-back" (click)="closeCategoryPicker()">
+          <lucide-icon [img]="iconChevronDown" [size]="18" class="bgt-add-modal-back-icon"></lucide-icon>
+        </button>
+        <span class="bgt-add-modal-header-title">{{ 'CATEGORY' | translate }}</span>
+        <button type="button" class="bgt-add-modal-close" (click)="closeCategoryPicker()" [title]="'BACK_BUTTON' | translate">
+          <lucide-icon [img]="iconX" [size]="18"></lucide-icon>
+        </button>
+      </div>
+
+      <!-- Date picker header — replaces the title while drilled in -->
+      <div class="bgt-add-modal-header" *ngIf="isDatePickerOpen">
+        <button type="button" class="bgt-add-modal-back" (click)="closeDatePicker()">
+          <lucide-icon [img]="iconChevronDown" [size]="18" class="bgt-add-modal-back-icon"></lucide-icon>
+        </button>
+        <span class="bgt-add-modal-header-title">{{ 'BUDGET_PERIOD' | translate }}</span>
+        <button type="button" class="bgt-add-modal-close" (click)="closeDatePicker()" [title]="'BACK_BUTTON' | translate">
+          <lucide-icon [img]="iconX" [size]="18"></lucide-icon>
+        </button>
+      </div>
+
+      <!-- Date picker body — inline flatpickr calendar, swaps in place of the form -->
+      <div class="bgt-add-modal-body bgt-date-picker-body" *ngIf="isDatePickerOpen">
+        <div id="bgt-date-picker-container"></div>
+      </div>
+
+      <!-- Category picker body — search + list, swaps in place of the form -->
+      <div class="bgt-add-modal-body bgt-cat-picker-body" *ngIf="isCategoryPickerOpen">
+        <div class="bgt-cat-picker-search">
+          <lucide-icon [img]="iconSearch" [size]="15" class="bgt-cat-picker-search-icon"></lucide-icon>
+          <input
+            type="text"
+            [(ngModel)]="categoryPickerSearch"
+            [ngModelOptions]="{standalone: true}"
+            [placeholder]="'CUSTOM_SELECT_SEARCH' | translate"
+            class="bgt-cat-picker-search-input"
+          />
+        </div>
+        <div class="bgt-cat-picker-list">
+          <p class="bgt-cat-picker-empty" *ngIf="filteredPickerCategories.length === 0">
+            {{ 'CUSTOM_SELECT_NO_RESULTS' | translate }}
+          </p>
+          <button
+            type="button"
+            class="bgt-cat-picker-item"
+            *ngFor="let cat of filteredPickerCategories; trackBy: trackByCategoryName"
+            [style.--cat-hue]="cat.id === 'all' ? null : getIconHueForCategoryId(cat.id)"
+            (click)="selectBudgetCategory(cat.id || '')"
+          >
+            <span class="bgt-cat-picker-item-icon">
+              <lucide-icon [img]="getIconForCategoryId(cat.id)" [size]="15"></lucide-icon>
+            </span>
+            <span class="bgt-cat-picker-item-label">{{ cat.name }}</span>
+            <lucide-icon
+              *ngIf="budgetForm.get('category')?.value === cat.id"
+              [img]="iconCheck" [size]="16" class="bgt-cat-picker-item-check">
+            </lucide-icon>
+          </button>
+        </div>
+      </div>
+
+      <div class="bgt-add-modal-body" *ngIf="!isCategoryPickerOpen && !isDatePickerOpen">
+        <form [formGroup]="budgetForm" (ngSubmit)="onSubmitBudget()" class="bgt-form">
+
+          <div class="bgt-form-row">
+            <div class="bgt-float-field">
+              <select id="type" formControlName="type" class="bgt-input bgt-select-field"
+                (change)="onBudgetTypeChange(budgetForm.value.type)" placeholder=" "
+                [class.is-invalid]="budgetForm.controls['type'].invalid && budgetForm.controls['type'].touched">
+                <option value="" disabled></option>
+                <option value="monthly">{{ "MONTHLY_BUDGET" | translate }}</option>
+                <option value="yearly">{{ "YEARLY_BUDGET" | translate }}</option>
+              </select>
+              <label class="bgt-float-label" for="type">{{ "BUDGET_TYPE" | translate }}</label>
+            </div>
+            <div class="bgt-float-field">
+              <button type="button" class="bgt-cat-select-trigger" (click)="openCategoryPicker()">
+                <span class="bgt-cat-select-trigger-icon" [style.--cat-hue]="getIconHueForCategoryId(budgetForm.get('category')?.value)">
+                  <lucide-icon [img]="getIconForCategoryId(budgetForm.get('category')?.value)" [size]="14"></lucide-icon>
+                </span>
+                <span class="bgt-cat-select-trigger-value">{{ selectedCategoryName }}</span>
+                <lucide-icon [img]="iconChevronDown" [size]="14" class="bgt-cat-select-trigger-chevron"></lucide-icon>
+              </button>
+            </div>
+          </div>
+
+          <div class="bgt-form-row">
+            <div class="bgt-float-field">
+              <button type="button" class="bgt-cat-select-trigger" (click)="openDatePicker()">
+                <span class="bgt-cat-select-trigger-value">{{ formatService.formatLocalizedDate(budgetForm.get('period')?.value) }}</span>
+                <lucide-icon [img]="iconCalendarDays" [size]="15" class="bgt-cat-select-trigger-chevron"></lucide-icon>
+              </button>
+            </div>
+            <div class="bgt-float-field bgt-float-group">
+              <span class="bgt-currency-badge">{{ budgetForm.get("currency")?.value || userProfile?.currency || "MMK" }}</span>
+              <div class="bgt-float-field" style="flex:1; min-width:0;">
+                <input type="text" inputmode="decimal" id="amount" class="bgt-input bgt-input-joined"
+                  [value]="amountDisplayValue"
+                  (input)="onAmountInput($event)"
+                  (focus)="amountDisplayValue = (budgetForm.get('amount')?.value > 0 ? formatWithCommas(budgetForm.get('amount')?.value) : '')"
+                  placeholder=" "
+                  [class.bgt-has-val]="amountDisplayValue !== ''"
+                  [class.is-invalid]="budgetForm.controls['amount'].invalid && budgetForm.controls['amount'].touched" />
+                <label class="bgt-float-label" for="amount">{{ "AMOUNT" | translate }}</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="bgt-float-field">
+            <textarea id="description" formControlName="description" class="bgt-input bgt-textarea" placeholder=" "
+              maxlength="250"
+              [class.bgt-has-val]="budgetForm.get('description')?.value"></textarea>
+            <label class="bgt-float-label" for="description">{{ "DESCRIPTION" | translate }}</label>
+          </div>
+
+          <div class="bgt-form-footer">
+            <button type="submit" class="bgt-btn bgt-btn-primary" [disabled]="budgetForm.invalid">
+              <lucide-icon [img]="iconSave" [size]="16"></lucide-icon>
+              {{ "SAVE_BUTTON_LABEL" | translate }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <!-- ── Date Filter Bar ── -->
     <div class="bgt-filter-bar" [class.bgt-filter-bar-custom]="selectedDateFilter === 'custom'">
 
@@ -8,7 +150,6 @@
         [(ngModel)]="selectedDateFilter"
         (ngModelChange)="setDateFilter($event)"
         [options]="dateFilterOptions"
-        [label]="'DATE_FILTER' | translate"
         [fitContent]="true"
         [showSearch]="false">
       </app-custom-select>
@@ -22,11 +163,18 @@
             [endDate]="endDate ?? ''"
             (endDateChange)="endDate = $event"
             (rangeChange)="setDateFilter('custom')"
+            [showLabel]="false"
             [startLabel]="'START_DATE' | translate"
             [endLabel]="'END_DATE' | translate">
           </app-date-range-input>
         </div>
       </ng-container>
+
+      <!-- Desktop only — the FAB is hidden at this breakpoint (see .bgt-add-fab) -->
+      <button *ngIf="canManageBudgets" type="button" class="bgt-add-toolbar-btn" (click)="openAddModal()">
+        <lucide-icon [img]="iconPlus" [size]="15"></lucide-icon>
+        {{ 'ADD_BUDGET' | translate }}
+      </button>
     </div>
 
     <!-- ── Summary Cards — data ရှိမှသာ ── -->
@@ -134,80 +282,6 @@
               + {{ 'SET_BUDGET' | translate }}
             </button>
           </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ── Add Budget Panel ── -->
-    <div class="bgt-panel" id="bgt-add-panel" *ngIf="canManageBudgets">
-      <button class="bgt-panel-toggle" type="button" (click)="toggleAddForm()" [attr.aria-expanded]="isAddFormOpen">
-        <span class="bgt-panel-toggle-left">
-          <span class="bgt-toggle-pill bgt-toggle-pill-budget">
-            <lucide-icon [img]="iconPiggyBank" [size]="13"></lucide-icon>
-          </span>
-          {{ "ADD_BUDGET" | translate }}
-        </span>
-        <lucide-icon [img]="iconChevronDown" class="bgt-chevron" [class.open]="isAddFormOpen"></lucide-icon>
-      </button>
-      <div class="bgt-panel-body" [class.open]="isAddFormOpen">
-        <div class="bgt-panel-inner">
-          <form [formGroup]="budgetForm" (ngSubmit)="onSubmitBudget()" class="bgt-form">
-
-            <div class="bgt-form-row">
-              <div class="bgt-float-field">
-                <select id="type" formControlName="type" class="bgt-input bgt-select-field"
-                  (change)="onBudgetTypeChange(budgetForm.value.type)" placeholder=" "
-                  [class.is-invalid]="budgetForm.controls['type'].invalid && budgetForm.controls['type'].touched">
-                  <option value="" disabled></option>
-                  <option value="monthly">{{ "MONTHLY_BUDGET" | translate }}</option>
-                  <option value="yearly">{{ "YEARLY_BUDGET" | translate }}</option>
-                </select>
-                <label class="bgt-float-label" for="type">{{ "BUDGET_TYPE" | translate }}</label>
-              </div>
-              <div class="bgt-float-field">
-                <app-custom-select
-                  formControlName="category"
-                  [options]="categorySelectOptions$ | async"
-                  [label]="'CATEGORY' | translate"
-                  [showIcons]="true">
-                </app-custom-select>
-              </div>
-            </div>
-
-            <div class="bgt-form-row">
-              <div class="bgt-float-field">
-                <app-date-input formControlName="period" inputId="period">
-                </app-date-input>
-              </div>
-              <div class="bgt-float-field bgt-float-group">
-                <span class="bgt-currency-badge">{{ budgetForm.get("currency")?.value || userProfile?.currency || "MMK" }}</span>
-                <div class="bgt-float-field" style="flex:1; min-width:0;">
-                  <input type="text" inputmode="decimal" id="amount" class="bgt-input bgt-input-joined"
-                    [value]="amountDisplayValue"
-                    (input)="onAmountInput($event)"
-                    (focus)="amountDisplayValue = (budgetForm.get('amount')?.value > 0 ? formatWithCommas(budgetForm.get('amount')?.value) : '')"
-                    placeholder=" "
-                    [class.bgt-has-val]="amountDisplayValue !== ''"
-                    [class.is-invalid]="budgetForm.controls['amount'].invalid && budgetForm.controls['amount'].touched" />
-                  <label class="bgt-float-label" for="amount">{{ "AMOUNT" | translate }}</label>
-                </div>
-              </div>
-            </div>
-
-            <div class="bgt-float-field">
-              <textarea id="description" formControlName="description" class="bgt-input bgt-textarea" placeholder=" "
-                maxlength="250"
-                [class.bgt-has-val]="budgetForm.get('description')?.value"></textarea>
-              <label class="bgt-float-label" for="description">{{ "DESCRIPTION" | translate }}</label>
-            </div>
-
-            <div class="bgt-form-footer">
-              <button type="submit" class="bgt-btn bgt-btn-primary" [disabled]="budgetForm.invalid">
-                <lucide-icon [img]="iconSave" [size]="16"></lucide-icon>
-                {{ "SAVE_BUTTON_LABEL" | translate }}
-              </button>
-            </div>
-          </form>
         </div>
       </div>
     </div>

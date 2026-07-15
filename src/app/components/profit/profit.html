@@ -1,6 +1,77 @@
 <div class="pnl-wrapper">
   <div class="pnl-container mb-5">
 
+    <!-- ── ADD (FAB + Bottom-sheet Modal) ── -->
+    <button *ngIf="canManageProfitActions" type="button" class="pnl-add-fab" (click)="openAddModal()" [title]="'ADD_INCOME' | translate">
+      <lucide-icon [img]="iconPlus" [size]="26"></lucide-icon>
+    </button>
+
+    <div class="pnl-add-modal-backdrop" [class.open]="isAddModalOpen" (click)="closeAddModal()"></div>
+    <div class="pnl-add-modal-sheet" [class.open]="isAddModalOpen">
+      <div class="pnl-add-modal-handle"></div>
+
+      <div class="pnl-add-modal-header" *ngIf="!isDatePickerOpen">
+        <span class="pnl-add-modal-header-title">{{ 'ADD_INCOME' | translate }}</span>
+        <button type="button" class="pnl-add-modal-close" (click)="closeAddModal()" [title]="'CANCEL_BUTTON_LABEL' | translate">
+          <lucide-icon [img]="iconX" [size]="18"></lucide-icon>
+        </button>
+      </div>
+
+      <!-- Date picker header — replaces the title while drilled in -->
+      <div class="pnl-add-modal-header" *ngIf="isDatePickerOpen">
+        <button type="button" class="pnl-add-modal-back" (click)="closeDatePicker()">
+          <lucide-icon [img]="iconChevronDown" [size]="18" class="pnl-add-modal-back-icon"></lucide-icon>
+        </button>
+        <span class="pnl-add-modal-header-title">{{ 'INCOME_DATE_LABEL' | translate }}</span>
+        <button type="button" class="pnl-add-modal-close" (click)="closeDatePicker()" [title]="'BACK_BUTTON' | translate">
+          <lucide-icon [img]="iconX" [size]="18"></lucide-icon>
+        </button>
+      </div>
+
+      <!-- Date picker body — inline flatpickr calendar, swaps in place of the form -->
+      <div class="pnl-add-modal-body pnl-date-picker-body" *ngIf="isDatePickerOpen">
+        <div id="pnl-date-picker-container"></div>
+      </div>
+
+      <div class="pnl-add-modal-body" *ngIf="!isDatePickerOpen">
+        <form [formGroup]="incomeForm" (ngSubmit)="onSubmitIncome()" class="pnl-form">
+          <div class="pnl-form-row">
+            <div class="pnl-float-field">
+              <button type="button" class="pnl-cat-select-trigger" (click)="openDatePicker()">
+                <span class="pnl-cat-select-trigger-value">{{ formatService.formatLocalizedDate(incomeForm.get('date')?.value) }}</span>
+                <lucide-icon [img]="iconCalendarDays" [size]="15" class="pnl-cat-select-trigger-chevron"></lucide-icon>
+              </button>
+            </div>
+            <div class="pnl-float-field pnl-float-group">
+              <span class="pnl-currency-badge">{{ userProfile?.currency || 'MMK' }}</span>
+              <div class="pnl-float-field" style="flex:1; min-width:0;">
+                <input type="text" inputmode="decimal" id="incomeAmount"
+                  class="pnl-input pnl-input-field pnl-input-joined"
+                  [value]="incomeAmountDisplay"
+                  (input)="onIncomeAmountInput($event)"
+                  (focus)="incomeAmountDisplay = (incomeForm.get('amount')?.value > 0 ? formatWithCommas(incomeForm.get('amount')?.value) : '')"
+                  placeholder=" "
+                  [class.pnl-has-val]="incomeAmountDisplay !== ''"
+                  [class.is-invalid]="incomeForm.controls['amount'].invalid && incomeForm.controls['amount'].touched" />
+                <label class="pnl-float-label" for="incomeAmount">{{ 'AMOUNT' | translate }}</label>
+              </div>
+            </div>
+          </div>
+          <div class="pnl-float-field">
+            <textarea id="incomeDesc" formControlName="description" class="pnl-input pnl-input-field pnl-textarea"
+              placeholder=" " maxlength="250" [class.pnl-has-val]="incomeForm.get('description')?.value"></textarea>
+            <label class="pnl-float-label" for="incomeDesc">{{ 'DESCRIPTION' | translate }}</label>
+          </div>
+          <div class="pnl-form-footer">
+            <button type="submit" class="pnl-btn pnl-btn-primary" [disabled]="incomeForm.invalid">
+              <lucide-icon [img]="iconSave" [size]="15"></lucide-icon>
+              {{ 'SAVE_BUTTON_LABEL' | translate }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <!-- Date Filter Bar -->
     <div class="pnl-filter-bar" [class.pnl-filter-bar-custom]="selectedDateFilter === 'custom'">
 
@@ -8,7 +79,6 @@
         [(ngModel)]="selectedDateFilter"
         (ngModelChange)="setDateFilter($event)"
         [options]="dateFilterOptions"
-        [label]="'DATE_FILTER' | translate"
         [fitContent]="true"
         [showSearch]="false">
       </app-custom-select>
@@ -19,11 +89,17 @@
           [(startDate)]="startDate"
           [(endDate)]="endDate"
           (rangeChange)="setDateFilter('custom')"
+          [showLabel]="false"
           [startLabel]="'START_DATE' | translate"
           [endLabel]="'END_DATE' | translate">
         </app-date-range-input>
       </div>
 
+      <!-- Desktop only — the FAB is hidden at this breakpoint (see .pnl-add-fab) -->
+      <button *ngIf="canManageProfitActions" type="button" class="pnl-add-toolbar-btn" (click)="openAddModal()">
+        <lucide-icon [img]="iconPlus" [size]="15"></lucide-icon>
+        {{ 'ADD_INCOME' | translate }}
+      </button>
     </div>
 
     <!-- Summary Cards -->
@@ -128,56 +204,6 @@
               + {{ 'ADD_INCOME' | translate }}
             </button>
           </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Add Income Panel -->
-    <div class="pnl-panel" id="pnl-add-panel" *ngIf="canManageProfitActions">
-      <button class="pnl-panel-toggle" type="button" (click)="toggleVisibility('incomeForm')">
-        <span class="pnl-panel-toggle-left">
-          <span class="pnl-toggle-pill pnl-toggle-pill-income">
-            <lucide-icon [img]="iconBanknote" [size]="13"></lucide-icon>
-          </span>
-          {{ 'ADD_INCOME' | translate }}
-        </span>
-        <lucide-icon [img]="iconChevronDown" [size]="15" class="pnl-chevron" [class.open]="!isIncomeFormCollapsed"></lucide-icon>
-      </button>
-      <div class="pnl-panel-body" [class.open]="!isIncomeFormCollapsed">
-        <div class="pnl-panel-inner">
-          <form [formGroup]="incomeForm" (ngSubmit)="onSubmitIncome()" class="pnl-form">
-            <div class="pnl-form-row">
-              <div class="pnl-float-field">
-                <app-date-input formControlName="date" inputId="incomeDate">
-                </app-date-input>
-              </div>
-              <div class="pnl-float-field pnl-float-group">
-                <span class="pnl-currency-badge">{{ userProfile?.currency || 'MMK' }}</span>
-                <div class="pnl-float-field" style="flex:1; min-width:0;">
-                  <input type="text" inputmode="decimal" id="incomeAmount"
-                    class="pnl-input pnl-input-field pnl-input-joined"
-                    [value]="incomeAmountDisplay"
-                    (input)="onIncomeAmountInput($event)"
-                    (focus)="incomeAmountDisplay = (incomeForm.get('amount')?.value > 0 ? formatWithCommas(incomeForm.get('amount')?.value) : '')"
-                    placeholder=" "
-                    [class.pnl-has-val]="incomeAmountDisplay !== ''"
-                    [class.is-invalid]="incomeForm.controls['amount'].invalid && incomeForm.controls['amount'].touched" />
-                  <label class="pnl-float-label" for="incomeAmount">{{ 'AMOUNT' | translate }}</label>
-                </div>
-              </div>
-            </div>
-            <div class="pnl-float-field">
-              <textarea id="incomeDesc" formControlName="description" class="pnl-input pnl-input-field pnl-textarea"
-                placeholder=" " maxlength="250" [class.pnl-has-val]="incomeForm.get('description')?.value"></textarea>
-              <label class="pnl-float-label" for="incomeDesc">{{ 'DESCRIPTION' | translate }}</label>
-            </div>
-            <div class="pnl-form-footer">
-              <button type="submit" class="pnl-btn pnl-btn-primary" [disabled]="incomeForm.invalid">
-                <lucide-icon [img]="iconSave" [size]="15"></lucide-icon>
-                {{ 'SAVE_BUTTON_LABEL' | translate }}
-              </button>
-            </div>
-          </form>
         </div>
       </div>
     </div>
