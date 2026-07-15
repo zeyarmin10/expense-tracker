@@ -24,12 +24,20 @@
         <form [formGroup]="budgetPeriodForm">
 
           <!-- Period Name -->
-          <div class="cbp-fl-wrap mb-3">
+          <div class="cbp-fl-wrap">
             <input type="text" class="cbp-fl-input" id="budgetName" formControlName="name" placeholder=" "
               maxlength="50" autocomplete="off" />
             <label class="cbp-fl-label" for="budgetName">
               {{ 'BUDGET_PERIOD_NAME' | translate }}
             </label>
+          </div>
+          <div class="cbp-char-row mb-3" *ngIf="(budgetPeriodForm.get('name')?.value?.length ?? 0) > 0">
+            <span class="cbp-char-hint" *ngIf="(budgetPeriodForm.get('name')?.value?.length ?? 0) >= 50">
+              {{ 'BUDGET_PERIOD_NAME_MAX_LENGTH_ERROR' | translate }}
+            </span>
+            <span class="cbp-char-count" [class.cbp-char-at-limit]="(budgetPeriodForm.get('name')?.value?.length ?? 0) >= 50">
+              {{ budgetPeriodForm.get('name')?.value?.length ?? 0 }} / 50
+            </span>
           </div>
 
           <!-- Date Row -->

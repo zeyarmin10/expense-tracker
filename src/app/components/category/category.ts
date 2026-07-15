@@ -1,6 +1,7 @@
 import {
   Component,
   OnInit,
+  OnDestroy,
   inject,
   ChangeDetectorRef,
 } from '@angular/core';
@@ -53,10 +54,13 @@ const Toast = Swal.mixin({
   templateUrl: './category.html',
   styleUrls: ['./category.css'],
 })
-export class Category implements OnInit {
+export class Category implements OnInit, OnDestroy {
   addCategoryForm: FormGroup;
   editingCategoryFormControl: FormControl | null = null;
   editingCategoryId: string | null = null;
+
+  // ── Add Category FAB + Bottom-sheet Modal ──
+  isAddModalOpen = false;
 
   private _categoriesSubject: BehaviorSubject<ServiceICategory[]> =
     new BehaviorSubject<ServiceICategory[]>([]);
@@ -147,8 +151,24 @@ export class Category implements OnInit {
         this.editingCategoryFormControl = null;
         this.addCategoryForm.reset();
         this.loadCategories();
+        this.closeAddModal();
       }
     });
+  }
+
+  ngOnDestroy(): void {
+    document.body.classList.remove('cat-add-modal-open');
+  }
+
+  openAddModal(): void {
+    this.isAddModalOpen = true;
+    document.body.classList.add('cat-add-modal-open');
+  }
+
+  closeAddModal(): void {
+    this.isAddModalOpen = false;
+    this.showAddIconPicker = false;
+    document.body.classList.remove('cat-add-modal-open');
   }
 
   private getSpaceModeKey(profile: UserProfile | null): string {
@@ -221,6 +241,7 @@ export class Category implements OnInit {
       this.selectedAddIcon = 'tag';
       this.selectedAddIconData = Tag;
       this.showAddIconPicker = false;
+      this.closeAddModal();
       await this.loadCategories();
     } catch (error: any) {
       const key = getCategoryErrorMessage(error) || 'DATA_SAVE_ERROR';

@@ -150,6 +150,30 @@
   color: var(--accent, #0b74ff);
 }
 
+/* ── Name char count / max-length hint ── */
+.cbp-char-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 0.15rem;
+  margin-top: -0.5rem;
+}
+
+.cbp-char-hint {
+  font-size: 0.7rem;
+  color: var(--danger, #f87171);
+}
+
+.cbp-char-count {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-left: auto;
+}
+
+.cbp-char-at-limit {
+  color: var(--danger, #f87171);
+}
+
 /* ── Date row: side by side ── */
 .cbp-date-row {
   display: grid;

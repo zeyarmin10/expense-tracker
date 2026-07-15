@@ -5,7 +5,7 @@
     <div class="dash-header">
       <div class="dash-header-left">
         <h2 class="dash-title">
-          <span class="dash-title-text">{{ currentSummaryTitle$ | async }}</span>
+          <span class="dash-title-text" [title]="currentSummaryTitle$ | async">{{ currentSummaryTitle$ | async }}</span>
         </h2>
         <span class="dash-date-range">{{ currentSummaryDateRange$ | async }}</span>
       </div>

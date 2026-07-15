@@ -58,6 +58,8 @@ import {
 import { LucideAngularModule, TrendingUp, TrendingDown, Banknote, PiggyBank, ShoppingCart, ChartColumn, ChartPie, RotateCw, LucideIconData } from 'lucide-angular';
 import { FormatService } from '../../services/format.service';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
+import { CustomBudgetPeriod, CustomBudgetPeriodService } from '../../services/custom-budget-period.service';
+import { SpaceDataService } from '../../services/space-data.service';
 
 Chart.register(...registerables);
 type CurrencyMap = { [currency: string]: number };
@@ -105,6 +107,9 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   private destroy$ = new Subject<void>();
   public formatService = inject(FormatService);
   private categoryService = inject(CategoryService);
+  private customBudgetPeriodService = inject(CustomBudgetPeriodService);
+  private spaceDataService = inject(SpaceDataService);
+  private customBudgetPeriods: CustomBudgetPeriod[] = [];
 
   @ViewChild('expenseChartCanvas')
   private expenseChartCanvas!: ElementRef<HTMLCanvasElement>;
@@ -221,6 +226,28 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         this.updateSummaryTitle(userProfile);
         this.cdr.markForCheck();
       });
+
+    // Custom-named budget periods (set up in the profile page) so the
+    // dashboard title can show the user's chosen period name instead of a
+    // generic "Custom Summary" label when budgetPeriod === 'custom'.
+    this.authService.userProfile$
+      .pipe(
+        filter((profile): profile is UserProfile => !!profile),
+        map((profile) => ({
+          uid: profile.uid,
+          spaceId: this.spaceDataService.getCurrentSpaceId(profile),
+        })),
+        distinctUntilChanged((a, b) => a.uid === b.uid && a.spaceId === b.spaceId),
+        switchMap(({ uid, spaceId }) =>
+          this.customBudgetPeriodService.getCustomBudgetPeriods(uid, spaceId)
+        ),
+        takeUntil(this.destroy$)
+      )
+      .subscribe((periods) => {
+        this.customBudgetPeriods = periods;
+        this.updateSummaryTitle(this.userProfile);
+        this.cdr.markForCheck();
+      });
   }
 
   private getSpaceModeKey(profile: UserProfile | null): string {
@@ -308,7 +335,14 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     }
 
-    this.currentSummaryTitle$ = of(`${this.translate.instant(titleKey)}`);
+    // A custom period picked from the profile page carries its own name
+    // (e.g. "Trip to Japan") — show that instead of the generic
+    // "Custom Summary" label whenever selectedBudgetPeriodId resolves.
+    const selectedPeriod = budgetPeriod === 'custom' && userProfile?.selectedBudgetPeriodId
+      ? this.customBudgetPeriods.find((p) => p.id === userProfile.selectedBudgetPeriodId)
+      : undefined;
+
+    this.currentSummaryTitle$ = of(selectedPeriod ? selectedPeriod.name : `${this.translate.instant(titleKey)}`);
     this.currentSummaryDateRange$ = of(`${summaryDateRange}`);
   }
 

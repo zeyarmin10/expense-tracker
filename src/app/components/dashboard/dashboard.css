@@ -54,15 +54,23 @@
   line-height: 1;
   /* padding-block: 0.28rem 0.12rem; */
   max-width: 100%;
+  min-width: 0;
   overflow: visible;
-  overflow-wrap: anywhere;
 }
 
+/* Standard titles (Weekly/Monthly/Yearly/Custom Summary) are short
+   translated strings, but a user-named custom budget period is free text
+   up to 50 chars — clip it to one line with an ellipsis instead of
+   wrapping/overflowing on narrow mobile widths. Full text is still
+   available via the native title tooltip in the markup. */
 .dash-title-text {
   display: block;
+  max-width: 100%;
   line-height: 1.5;
   padding-block: 0.14rem;
-  overflow: visible;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .dash-date-range {

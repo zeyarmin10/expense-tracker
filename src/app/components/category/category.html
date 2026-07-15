@@ -7,65 +7,87 @@
         <lucide-icon [img]="iconTags" [size]="25" class="cat-icon-accent"></lucide-icon>
         {{ "CREATE_CATEGORY_TITLE" | translate }}
       </h2>
+
+      <!-- Desktop only — the FAB is hidden at this breakpoint -->
+      <button type="button" class="cat-add-toolbar-btn" (click)="openAddModal()">
+        <lucide-icon [img]="iconPlus" [size]="15"></lucide-icon>
+        {{ "ADD_CATEGORY" | translate }}
+      </button>
     </div>
 
-    <!-- ── Add Category Panel ── -->
-    <div class="cat-panel">
-      <form [formGroup]="addCategoryForm" (ngSubmit)="onAddSubmit()" class="cat-add-form">
-        <div class="cat-icon-row">
-          <button type="button" class="cat-icon-trigger"
-                  [class.cat-icon-trigger-open]="showAddIconPicker"
-                  [style.--cat-hue]="getIconHue(selectedAddIcon)"
-                  (click)="toggleAddIconPicker($event)">
-            <lucide-icon [img]="selectedAddIconData" [size]="22"></lucide-icon>
-          </button>
-          <div class="cat-fl-wrap cat-fl-name">
-            <input
-              type="text"
-              id="newCategoryName"
-              class="cat-fl-input"
-              formControlName="name"
-              placeholder=" "
-              maxlength="50"
-              [class.err]="(addCategoryForm.get('name')?.value?.length ?? 0) >= 50"
-            />
-            <label class="cat-fl-label" for="newCategoryName">
-              {{ "CATEGORY_NAME_LABEL" | translate }}
-            </label>
+    <!-- ── ADD (FAB + Bottom-sheet Modal) ── -->
+    <button type="button" class="cat-add-fab" (click)="openAddModal()" [title]="'ADD_CATEGORY' | translate">
+      <lucide-icon [img]="iconPlus" [size]="26"></lucide-icon>
+    </button>
+
+    <div class="cat-add-modal-backdrop" [class.open]="isAddModalOpen" (click)="closeAddModal()"></div>
+    <div class="cat-add-modal-sheet" [class.open]="isAddModalOpen">
+      <div class="cat-add-modal-handle"></div>
+
+      <div class="cat-add-modal-header">
+        <span class="cat-add-modal-header-title">{{ "CREATE_CATEGORY_TITLE" | translate }}</span>
+        <button type="button" class="cat-add-modal-close" (click)="closeAddModal()" [title]="'CANCEL_BUTTON_LABEL' | translate">
+          <lucide-icon [img]="iconTimes" [size]="18"></lucide-icon>
+        </button>
+      </div>
+
+      <div class="cat-add-modal-body">
+        <form [formGroup]="addCategoryForm" (ngSubmit)="onAddSubmit()" class="cat-add-form">
+          <div class="cat-icon-row">
+            <button type="button" class="cat-icon-trigger"
+                    [class.cat-icon-trigger-open]="showAddIconPicker"
+                    [style.--cat-hue]="getIconHue(selectedAddIcon)"
+                    (click)="toggleAddIconPicker($event)">
+              <lucide-icon [img]="selectedAddIconData" [size]="22"></lucide-icon>
+            </button>
+            <div class="cat-fl-wrap cat-fl-name">
+              <input
+                type="text"
+                id="newCategoryName"
+                class="cat-fl-input"
+                formControlName="name"
+                placeholder=" "
+                maxlength="50"
+                [class.err]="(addCategoryForm.get('name')?.value?.length ?? 0) >= 50"
+              />
+              <label class="cat-fl-label" for="newCategoryName">
+                {{ "CATEGORY_NAME_LABEL" | translate }}
+              </label>
+            </div>
           </div>
-        </div>
 
-        <!-- Icon Picker Grid -->
-        <div class="cat-icon-picker" *ngIf="showAddIconPicker">
-          <button type="button" class="cat-icon-opt"
-                  *ngFor="let opt of categoryIcons; trackBy: trackByIconName"
-                  [class.cat-icon-opt-selected]="opt.name === selectedAddIcon"
-                  [style.--cat-hue]="getIconHue(opt.name)"
-                  (click)="selectAddIcon(opt.name)">
-            <lucide-icon [img]="opt.icon" [size]="20"></lucide-icon>
-          </button>
-        </div>
+          <!-- Icon Picker Grid -->
+          <div class="cat-icon-picker" *ngIf="showAddIconPicker">
+            <button type="button" class="cat-icon-opt"
+                    *ngFor="let opt of categoryIcons; trackBy: trackByIconName"
+                    [class.cat-icon-opt-selected]="opt.name === selectedAddIcon"
+                    [style.--cat-hue]="getIconHue(opt.name)"
+                    (click)="selectAddIcon(opt.name)">
+              <lucide-icon [img]="opt.icon" [size]="20"></lucide-icon>
+            </button>
+          </div>
 
-        <div class="cat-char-row" *ngIf="(addCategoryForm.get('name')?.value?.length ?? 0) > 0">
-          <span class="cat-char-hint" *ngIf="(addCategoryForm.get('name')?.value?.length ?? 0) >= 50">
-            {{ 'CATEGORY_NAME_MAX_LENGTH_ERROR' | translate }}
-          </span>
-          <span class="cat-char-count" [class.cat-char-at-limit]="(addCategoryForm.get('name')?.value?.length ?? 0) >= 50">
-            {{ addCategoryForm.get('name')?.value?.length ?? 0 }} / 50
-          </span>
-        </div>
-        <div *ngIf="addCategoryForm.controls['name'].touched && addCategoryForm.controls['name'].errors?.['required']"
-          class="cat-error">
-          {{ 'CATEGORY_NAME_REQUIRED' | translate }}
-        </div>
-        <div class="cat-add-footer">
-          <button type="submit" class="cat-btn cat-btn-primary"
-            [disabled]="addCategoryForm.invalid">
-            <lucide-icon [img]="iconSave" [size]="15"></lucide-icon>
-            {{ "SAVE_BUTTON_LABEL" | translate }}
-          </button>
-        </div>
-      </form>
+          <div class="cat-char-row" *ngIf="(addCategoryForm.get('name')?.value?.length ?? 0) > 0">
+            <span class="cat-char-hint" *ngIf="(addCategoryForm.get('name')?.value?.length ?? 0) >= 50">
+              {{ 'CATEGORY_NAME_MAX_LENGTH_ERROR' | translate }}
+            </span>
+            <span class="cat-char-count" [class.cat-char-at-limit]="(addCategoryForm.get('name')?.value?.length ?? 0) >= 50">
+              {{ addCategoryForm.get('name')?.value?.length ?? 0 }} / 50
+            </span>
+          </div>
+          <div *ngIf="addCategoryForm.controls['name'].touched && addCategoryForm.controls['name'].errors?.['required']"
+            class="cat-error">
+            {{ 'CATEGORY_NAME_REQUIRED' | translate }}
+          </div>
+          <div class="cat-add-footer">
+            <button type="submit" class="cat-btn cat-btn-primary"
+              [disabled]="addCategoryForm.invalid">
+              <lucide-icon [img]="iconSave" [size]="15"></lucide-icon>
+              {{ "SAVE_BUTTON_LABEL" | translate }}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
 
     <!-- ── Category List ── -->
