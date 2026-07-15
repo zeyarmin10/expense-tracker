@@ -704,6 +704,18 @@
   animation: ob-glow 2.5s ease-in-out infinite;
 }
 
+/* Disabled primary button was only dimmed via opacity while keeping the
+   same vivid accent background, so it still read as "active" at a glance.
+   Flip to a flat muted surface color instead so enabled vs. disabled is
+   unmistakable regardless of the accent hue or background contrast. */
+.ob-btn-primary:disabled {
+  background: var(--surface-2);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  opacity: 1;
+  animation: none;
+}
+
 @keyframes ob-glow {
   0%, 100% { box-shadow: 0 0 8px rgba(11,116,255,0.25); }
   50%       { box-shadow: 0 0 22px rgba(11,116,255,0.5); }

@@ -41,6 +41,7 @@
   "EXPENSE_ADD_TITLE": "New Expense",
   "EXPENSE_DATE_LABEL": "Date",
   "EXPENSE_CATEGORY_LABEL": "Category",
+  "INCOME_DATE_LABEL": "Date",
   "EXPENSE_SELECT_CATEGORY": "---Select a category---",
   "EXPENSE_ADD_CATEGORY_BTN": "Add new category",
   "EXPENSE_NO_CATEGORY_HINT": "No categories available. Please add some on the Category page.",

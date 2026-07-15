@@ -212,7 +212,16 @@ export class BudgetComponent implements OnInit, OnDestroy {
     const role = getCurrentSpaceRole(this.userProfile);
     return role === 'admin' || role === 'owner';
   }
-  toggleRecordedList(): void { this.isRecordedBudgetsCollapsed = !this.isRecordedBudgetsCollapsed; }
+  toggleRecordedList(event: MouseEvent): void {
+    this.isRecordedBudgetsCollapsed = !this.isRecordedBudgetsCollapsed;
+    if (!this.isRecordedBudgetsCollapsed) {
+      // Wait for the panel's grid-template-rows expand transition (0.38s)
+      // to finish before scrolling — otherwise scrollIntoView clamps against
+      // the still-collapsed (shorter) document and can stop short.
+      const toggleEl = event.currentTarget as HTMLElement;
+      setTimeout(() => toggleEl.scrollIntoView({ behavior: 'smooth', block: 'start' }), 400);
+    }
+  }
   toggleSpendingMonitor(): void { this.isSpendingMonitorCollapsed = !this.isSpendingMonitorCollapsed; }
 
   openBudgetFormAndFocus(): void {

@@ -76,12 +76,11 @@ body.bgt-add-modal-open {
 .bgt-add-modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(0, 0, 0, 0.6);
   z-index: 1010;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.25s;
-  backdrop-filter: blur(2px);
 }
 
 .bgt-add-modal-backdrop.open {
@@ -605,6 +604,9 @@ body.bgt-add-modal-open {
   font-weight: 700;
   cursor: pointer;
   transition: background 0.15s;
+  /* So scrollIntoView() (triggered on expand) stops below the fixed
+     mobile topbar instead of tucking the title underneath it. */
+  scroll-margin-top: calc(env(safe-area-inset-top, 0px) + 58px + 12px);
 }
 
 .bgt-panel-toggle:hover {
@@ -833,6 +835,18 @@ app-date-input .di-trigger {
   background: var(--accent);
   color: #fff;
   border-color: var(--accent);
+}
+
+/* Disabled primary button was only dimmed via opacity while keeping the
+   same vivid accent background, so it still read as "active" at a glance.
+   Flip to a flat muted surface color instead so enabled vs. disabled is
+   unmistakable regardless of the accent hue or background contrast. */
+.bgt-btn-primary:disabled {
+  background: var(--surface-2);
+  color: var(--text-muted);
+  border-color: var(--border);
+  box-shadow: none;
+  opacity: 1;
 }
 
 .bgt-btn-primary:not(:disabled) {

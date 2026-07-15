@@ -41,6 +41,7 @@
   "EXPENSE_ADD_TITLE": "အသုံးစရိတ်",
   "EXPENSE_DATE_LABEL": "ရက်စွဲ",
   "EXPENSE_CATEGORY_LABEL": "အမျိုးအစား",
+  "INCOME_DATE_LABEL": "ရက်စွဲ",
   "EXPENSE_SELECT_CATEGORY": "---အမျိုးအစားတစ်ခုရွေးပါ---",
   "EXPENSE_ADD_CATEGORY_BTN": "အမျိုးအစားအသစ်ထည့်မည်",
   "EXPENSE_NO_CATEGORY_HINT": "အမျိုးအစားများမရှိပါ။ ကျေးဇူးပြု၍ Categories စာမျက်နှာတွင် ထည့်သွင်းပါ။",

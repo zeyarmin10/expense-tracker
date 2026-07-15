@@ -417,9 +417,9 @@ export class OnboardingComponent implements OnInit {
                    style="margin:0;width:100%;">
             <div id="swal-grp-counter"
                  style="display:flex;justify-content:space-between;align-items:center;
-                        margin-top:0.35rem;padding:0 0.1rem;">
+                        margin-top:0.35rem;padding:0 0.1rem;gap:0.5rem;">
               <span id="swal-grp-hint" style="font-size:0.7rem;color:#f87171;display:none;">${counterHint}</span>
-              <span id="swal-grp-count" style="font-size:0.7rem;color:#6b7280;">0 / ${max}</span>
+              <span id="swal-grp-count" style="font-size:0.7rem;color:#6b7280;min-width:2.5rem;">0 / ${max}</span>
             </div>
           </div>
         </div>

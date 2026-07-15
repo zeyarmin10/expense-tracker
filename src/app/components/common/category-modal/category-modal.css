@@ -283,7 +283,10 @@
 }
 
 .cat-save-btn:disabled {
-  opacity: 0.35;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  opacity: 1;
   cursor: not-allowed;
   animation: none;
 }

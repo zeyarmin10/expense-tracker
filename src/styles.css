@@ -1164,3 +1164,12 @@ body.dri-scroll-locked {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
+
+/* Bootstrap's default modal backdrop (used by custom-budget-period-modal
+   and category-modal) is a lighter 0.5 opacity with no blur — unify it
+   with the app's other full-screen dialog backdrops (welcome tour,
+   add-expense/budget/income/category modals), which all use a flat
+   rgba(0,0,0,0.6) with no blur. */
+.modal-backdrop.show {
+  opacity: 0.6 !important;
+}

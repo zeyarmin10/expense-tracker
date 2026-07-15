@@ -67,7 +67,7 @@
             </button>
           </div>
 
-          <div class="cat-char-row" *ngIf="(addCategoryForm.get('name')?.value?.length ?? 0) > 0">
+          <div class="cat-char-row">
             <span class="cat-char-hint" *ngIf="(addCategoryForm.get('name')?.value?.length ?? 0) >= 50">
               {{ 'CATEGORY_NAME_MAX_LENGTH_ERROR' | translate }}
             </span>

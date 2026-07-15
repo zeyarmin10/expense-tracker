@@ -33,7 +33,7 @@
         <button type="button" class="bgt-add-modal-back" (click)="closeDatePicker()">
           <lucide-icon [img]="iconChevronDown" [size]="18" class="bgt-add-modal-back-icon"></lucide-icon>
         </button>
-        <span class="bgt-add-modal-header-title">{{ 'BUDGET_PERIOD' | translate }}</span>
+        <span class="bgt-add-modal-header-title">{{ 'BUDGET_PERIOD_LABEL' | translate }}</span>
         <button type="button" class="bgt-add-modal-close" (click)="closeDatePicker()" [title]="'BACK_BUTTON' | translate">
           <lucide-icon [img]="iconX" [size]="18"></lucide-icon>
         </button>
@@ -289,7 +289,7 @@
 
     <!-- ── Recorded Budgets Panel ── -->
     <div class="bgt-panel">
-      <button class="bgt-panel-toggle" type="button" (click)="toggleRecordedList()"
+      <button class="bgt-panel-toggle" type="button" (click)="toggleRecordedList($event)"
         [attr.aria-expanded]="isRecordedOpen">
         <span class="bgt-panel-toggle-left">
           <span class="bgt-toggle-pill bgt-toggle-pill-budget">

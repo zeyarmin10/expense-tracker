@@ -88,12 +88,11 @@ body.exp-add-modal-open {
 .exp-add-modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(0, 0, 0, 0.6);
   z-index: 1010;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.25s;
-  backdrop-filter: blur(2px);
 }
 
 .exp-add-modal-backdrop.open {
@@ -434,7 +433,7 @@ body.exp-add-modal-open {
    (!important: this rule and .exp-float-input::placeholder have equal
    specificity, and the general one sits later in this file and would win
    the tie otherwise.) */
-.exp-amount-hero-input::placeholder {
+.exp-amount-hero-input::placeholder, .full-form-price::placeholder {
   color: var(--text-muted) !important;
   opacity: 0.4 !important;
 }
@@ -1002,6 +1001,18 @@ body.exp-add-modal-open {
   background: var(--accent);
   color: #fff;
   border-color: var(--accent);
+}
+
+/* Disabled primary button was only dimmed via opacity while keeping the
+   same vivid accent background, so it still read as "active" at a glance.
+   Flip to a flat muted surface color instead so enabled vs. disabled is
+   unmistakable regardless of the accent hue or background contrast. */
+.exp-btn-primary:disabled {
+  background: var(--surface-2);
+  color: var(--text-muted);
+  border-color: var(--border);
+  box-shadow: none;
+  opacity: 1;
 }
 
 .exp-btn-primary:hover:not(:disabled) {
