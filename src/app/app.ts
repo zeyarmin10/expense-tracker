@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, AfterViewInit, HostListener } from '@angular/core';
+import { Component, inject, OnInit, AfterViewInit, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, NavigationEnd, RouterOutlet, RouterModule, ActivatedRoute } from '@angular/router';
 import { Title } from '@angular/platform-browser';
@@ -109,6 +109,7 @@ export class App implements OnInit, AfterViewInit {
   private notificationService = inject(NotificationService);
   private appUpdateService = inject(AppUpdateService);
   private documentTitle = inject(Title);
+  private ngZone = inject(NgZone);
 
   constructor(private translate: TranslateService) {
     this.translate.setDefaultLang('en');
@@ -319,8 +320,16 @@ export class App implements OnInit, AfterViewInit {
     return Math.min(this.pullDistance, 82);
   }
 
-  @HostListener('window:touchstart', ['$event'])
-  onPullTouchStart(event: TouchEvent): void {
+  // Registered manually via ngZone.runOutsideAngular() in initPullToRefreshTouchHandlers()
+  // instead of @HostListener('window:touch*') — see that method for why: an
+  // Angular-zone-patched window-level touch listener triggers a full
+  // app-wide change detection tick after *every* touchmove event anywhere
+  // in the app (regardless of what the handler body does), which was
+  // making ordinary taps elsewhere (e.g. voucher thumbnails) occasionally
+  // get lost mid-gesture and need a second tap. Only the branches that
+  // actually mutate template-bound pull-refresh state re-enter the zone
+  // (via ngZone.run()), and only while a pull gesture is genuinely active.
+  private onPullTouchStart(event: TouchEvent): void {
     if (!this.canStartPullRefresh(event.target)) {
       return;
     }
@@ -329,12 +338,13 @@ export class App implements OnInit, AfterViewInit {
     this.pullStartY = touch.clientY;
     this.pullStartX = touch.clientX;
     this.pullTracking = true;
-    this.pullReadyToRefresh = false;
-    this.pullDistance = 0;
+    this.ngZone.run(() => {
+      this.pullReadyToRefresh = false;
+      this.pullDistance = 0;
+    });
   }
 
-  @HostListener('window:touchmove', ['$event'])
-  onPullTouchMove(event: TouchEvent): void {
+  private onPullTouchMove(event: TouchEvent): void {
     if (
       !this.pullTracking ||
       this.isPullRefreshing ||
@@ -353,26 +363,37 @@ export class App implements OnInit, AfterViewInit {
     }
 
     event.preventDefault();
-    this.pullDistance = Math.min(
+    const distance = Math.min(
       this.pullRefreshMaxDistance,
       Math.round(deltaY * 0.58)
     );
-    this.pullReadyToRefresh = this.pullDistance >= this.pullRefreshThreshold;
+    const ready = distance >= this.pullRefreshThreshold;
+    this.ngZone.run(() => {
+      this.pullDistance = distance;
+      this.pullReadyToRefresh = ready;
+    });
   }
 
-  @HostListener('window:touchend')
-  @HostListener('window:touchcancel')
-  onPullTouchEnd(): void {
+  private onPullTouchEnd(): void {
     if (!this.pullTracking) {
       return;
     }
 
     if (this.pullReadyToRefresh) {
-      this.triggerPullRefresh();
+      this.ngZone.run(() => this.triggerPullRefresh());
       return;
     }
 
     this.resetPullRefresh();
+  }
+
+  private initPullToRefreshTouchHandlers(): void {
+    this.ngZone.runOutsideAngular(() => {
+      window.addEventListener('touchstart', (e) => this.onPullTouchStart(e as TouchEvent), { passive: true });
+      window.addEventListener('touchmove', (e) => this.onPullTouchMove(e as TouchEvent), { passive: false });
+      window.addEventListener('touchend', () => this.onPullTouchEnd());
+      window.addEventListener('touchcancel', () => this.onPullTouchEnd());
+    });
   }
 
   private triggerPullRefresh(): void {
@@ -394,8 +415,10 @@ export class App implements OnInit, AfterViewInit {
 
   private resetPullRefresh(): void {
     this.pullTracking = false;
-    this.pullReadyToRefresh = false;
-    this.pullDistance = 0;
+    this.ngZone.run(() => {
+      this.pullReadyToRefresh = false;
+      this.pullDistance = 0;
+    });
   }
 
   private initDocumentTitleUpdates(): void {
@@ -483,6 +506,7 @@ export class App implements OnInit, AfterViewInit {
   }
 
   async ngOnInit(): Promise<void> {
+    this.initPullToRefreshTouchHandlers();
     if (Capacitor.isNativePlatform()) {
       // Configure status bar early — splash hide is deferred to ngAfterViewInit
       StatusBar.setOverlaysWebView({ overlay: true }).catch(() => {});

@@ -129,8 +129,9 @@
   box-shadow: 0 8px 48px rgba(0,0,0,0.7), 0 2px 12px rgba(0,0,0,0.5);
 }
 
-/* ── Zoom badge ── */
+/* ── Zoom badge (visibility/text set imperatively from TS) ── */
 .lb-zoom-badge {
+  display: none;
   position: absolute;
   bottom: 80px;
   left: 50%;
@@ -146,6 +147,8 @@
   pointer-events: none;
   backdrop-filter: blur(6px);
   letter-spacing: 0.04em;
+  align-items: center;
+  justify-content: center;
 }
 
 /* ── Nav arrows (desktop only) ── */
@@ -206,6 +209,13 @@
   padding: 6px 4px;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  /* Default "auto" touch-action lets the browser spend a beat deciding
+     whether a touch is the start of a scroll or a tap, which on a
+     horizontally-scrollable row often swallows the first tap on a thumb
+     button entirely (had to tap twice to select one). Declaring only
+     horizontal panning as the native gesture lets it resolve taps
+     immediately instead. */
+  touch-action: pan-x;
 }
 
 .lb-filmstrip-inner::-webkit-scrollbar { display: none; }
@@ -223,6 +233,7 @@
   transition: border-color 0.15s, transform 0.15s, opacity 0.15s;
   opacity: 0.5;
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 .lb-thumb img {

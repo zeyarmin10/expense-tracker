@@ -39,20 +39,18 @@
     (touchend)="onEnd($event)"
     (click)="hide()"
   >
-    <div class="lb-img-wrap" [class.lb-img-fade]="fading" (click)="$event.stopPropagation()">
+    <div #imgWrap class="lb-img-wrap" [class.lb-img-fade]="fading" (click)="$event.stopPropagation()">
       <img
+        #img
         class="lb-img"
         [src]="images[idx]"
-        [style.transform]="imgTransform"
         alt=""
         draggable="false"
       />
     </div>
 
-    <!-- Zoom badge -->
-    <div class="lb-zoom-badge" *ngIf="scale > 1.05">
-      {{ (scale * 100) | number:'1.0-0' }}%
-    </div>
+    <!-- Zoom badge (shown/updated imperatively from TS — see applyZoomBadge) -->
+    <div #zoomBadge class="lb-zoom-badge"></div>
   </div>
 
   <!-- Prev / Next -->
@@ -65,7 +63,7 @@
 
   <!-- Thumbnail filmstrip -->
   <div class="lb-filmstrip" *ngIf="images.length > 1">
-    <div class="lb-filmstrip-inner">
+    <div #filmstrip class="lb-filmstrip-inner">
       <button
         class="lb-thumb"
         *ngFor="let img of images; let i = index; trackBy: trackByIndex"

@@ -90,6 +90,19 @@ body {
   margin: 0;
 }
 
+/* Without this, mobile browsers hold every tap on an interactive element
+   for ~300ms waiting to see whether a second tap follows (native
+   double-tap-to-zoom disambiguation). Combined with any redraw mid-wait,
+   that occasionally drops the tap outright, so the button appeared to
+   need a second tap to respond. touch-action: manipulation permits panning
+   and a single-tap click, but opts the element out of that double-tap-zoom
+   gesture entirely, so its click fires immediately and reliably. */
+button,
+a,
+[role="button"] {
+  touch-action: manipulation;
+}
+
 app-root {
   display: block;
   width: 100%;
