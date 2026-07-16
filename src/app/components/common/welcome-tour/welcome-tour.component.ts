@@ -52,9 +52,9 @@ export class WelcomeTourComponent implements OnInit, OnDestroy {
   readonly steps: TourStep[] = [
     { targetId: 'tour-space-switcher', shape: 'circle', titleKey: 'TOUR_SPACE_TITLE', descKey: 'TOUR_SPACE_DESC' },
     { targetId: 'tour-nav-dashboard', shape: 'rect', titleKey: 'TOUR_DASHBOARD_TITLE', descKey: 'TOUR_DASHBOARD_DESC' },
-    { targetId: 'tour-nav-overview', shape: 'rect', titleKey: 'TOUR_OVERVIEW_TITLE', descKey: 'TOUR_OVERVIEW_DESC' },
-    { targetId: 'tour-nav-add', shape: 'circle', titleKey: 'TOUR_ADD_TITLE', descKey: 'TOUR_ADD_DESC' },
     { targetId: 'tour-nav-budget', shape: 'rect', titleKey: 'TOUR_BUDGET_TITLE', descKey: 'TOUR_BUDGET_DESC' },
+    { targetId: 'tour-nav-add', shape: 'circle', titleKey: 'TOUR_ADD_TITLE', descKey: 'TOUR_ADD_DESC' },
+    { targetId: 'tour-nav-income', shape: 'rect', titleKey: 'TOUR_INCOME_TITLE', descKey: 'TOUR_INCOME_DESC' },
     { targetId: 'tour-nav-more', shape: 'rect', titleKey: 'TOUR_MORE_TITLE', descKey: 'TOUR_MORE_DESC' },
   ];
 

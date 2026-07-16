@@ -178,16 +178,18 @@
     <span class="mob-nav-label">{{ 'NAV_DASHBOARD' | translate }}</span>
   </a>
 
-  <!-- Expense Overview -->
-  <a id="tour-nav-overview" class="mob-nav-item" routerLink="/expense-overview" routerLinkActive="mob-nav-active">
+  <!-- Budget -->
+  <a id="tour-nav-budget" class="mob-nav-item" routerLink="/budget" routerLinkActive="mob-nav-active">
     <span class="mob-nav-icon">
-      <!-- Chart / trend icon -->
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-        stroke-linejoin="round">
-        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-      </svg>
+      <!-- Wallet / budget icon -->
+      <!-- <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 12V8H6a2 2 0 0 1 0-4h14v4"/>
+        <path d="M20 12a2 2 0 0 1 0 4H6a2 2 0 0 1-2-2v-1"/>
+        <circle cx="17" cy="12" r="1" fill="currentColor"/>
+      </svg> -->
+      <lucide-icon [img]="iconPiggyBank" [size]="24"></lucide-icon>
     </span>
-    <span class="mob-nav-label">{{ 'NAV_EXPENSE_OVERVIEW' | translate }}</span>
+    <span class="mob-nav-label">{{ 'NAV_BUDGET' | translate }}</span>
   </a>
 
   <!-- FAB Center: Expense -->
@@ -217,18 +219,12 @@
     <span class="mob-nav-label">{{ 'NAV_EXPENSE' | translate }}</span>
   </a>
 
-  <!-- Budget -->
-  <a id="tour-nav-budget" class="mob-nav-item" routerLink="/budget" routerLinkActive="mob-nav-active">
+  <!-- Income (formerly labeled "Profit") -->
+  <a id="tour-nav-income" class="mob-nav-item" routerLink="/profit" routerLinkActive="mob-nav-active">
     <span class="mob-nav-icon">
-      <!-- Wallet / budget icon -->
-      <!-- <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M20 12V8H6a2 2 0 0 1 0-4h14v4"/>
-        <path d="M20 12a2 2 0 0 1 0 4H6a2 2 0 0 1-2-2v-1"/>
-        <circle cx="17" cy="12" r="1" fill="currentColor"/>
-      </svg> -->
-      <lucide-icon [img]="iconPiggyBank" [size]="24"></lucide-icon>
+      <lucide-icon [img]="iconBanknote" [size]="24"></lucide-icon>
     </span>
-    <span class="mob-nav-label">{{ 'NAV_BUDGET' | translate }}</span>
+    <span class="mob-nav-label">{{ 'NAV_PROFIT' | translate }}</span>
   </a>
 
   <!-- More -->
@@ -335,15 +331,14 @@
 
   <!-- Nav links in drawer -->
   <div class="mob-drawer-links">
-    <a class="mob-drawer-link" routerLink="/profit" routerLinkActive="mob-drawer-active" (click)="closeNavbarMenu()">
+    <a class="mob-drawer-link" routerLink="/expense-overview" routerLinkActive="mob-drawer-active" (click)="closeNavbarMenu()">
       <span class="mob-drawer-link-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
           stroke-linejoin="round">
-          <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
-          <polyline points="16 7 22 7 22 13" />
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
         </svg>
       </span>
-      <span>{{ 'NAV_PROFIT' | translate }}</span>
+      <span>{{ 'NAV_EXPENSE_OVERVIEW' | translate }}</span>
     </a>
 
     <a class="mob-drawer-link" routerLink="/cash-flow" routerLinkActive="mob-drawer-active" (click)="closeNavbarMenu()">

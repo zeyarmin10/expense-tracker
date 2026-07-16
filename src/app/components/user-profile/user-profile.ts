@@ -97,6 +97,9 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   selectedLanguage: string = 'my';
   selectedCurrency: string = 'MMK';
   selectedBudgetPeriod: string | null = null;
+  // Tracks the last-confirmed currency so a cancelled change can be
+  // reverted (see the currency valueChanges subscription in the constructor).
+  private previousCurrency: string | null = null;
   appTheme: AppTheme = 'system';
   private readonly themeSubscription = new Subscription();
   private readonly destroy$ = new Subject<void>();
@@ -234,6 +237,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
                 currency: profile.currency || 'MMK',
               }, { emitEvent: false });
               this.selectedCurrency = profile.currency || 'MMK';
+              this.previousCurrency = this.selectedCurrency;
 
               // Fetch group name if accountType is 'group'
               const activeGroupId = getActiveGroupId(profile);
@@ -256,6 +260,8 @@ export class UserProfileComponent implements OnInit, OnDestroy {
                   this.userProfileForm.patchValue({
                     currency: effectiveCurrency
                   }, { emitEvent: false });
+                  this.selectedCurrency = effectiveCurrency;
+                  this.previousCurrency = effectiveCurrency;
 
                   return ({
                     email: profile.email || user.email || 'N/A',
@@ -308,10 +314,21 @@ export class UserProfileComponent implements OnInit, OnDestroy {
 
     this.userProfileForm.get('currency')?.valueChanges
       .pipe(takeUntil(this.destroy$))
-      .subscribe((currency) => {
-        if (this.isFormReady && currency) {
-          this.autoSaveField('currency');
+      .subscribe(async (currency) => {
+        if (!this.isFormReady || !currency || currency === this.previousCurrency) {
+          return;
         }
+
+        const confirmed = await this.confirmCurrencyChange(this.previousCurrency, currency);
+        if (!confirmed) {
+          // Revert the select back without re-triggering this subscription.
+          this.userProfileForm.get('currency')?.setValue(this.previousCurrency, { emitEvent: false });
+          return;
+        }
+
+        this.previousCurrency = currency;
+        this.selectedCurrency = currency;
+        this.autoSaveField('currency');
       });
 
   }
@@ -504,6 +521,26 @@ export class UserProfileComponent implements OnInit, OnDestroy {
       // U8: show error toast so user knows the save failed
       Toast.fire({ icon: 'error', title: this.translate.instant('PROFILE_UPDATE_ERROR') });
     }
+  }
+
+  // Changing currency re-filters every expense/budget/income view by the
+  // new currency (see e.g. dashboard.ts's `profile.currency` filter), so
+  // entries recorded in the old currency effectively disappear from view —
+  // warn before committing the change, naming both currencies so it's
+  // concrete rather than a generic notice.
+  private async confirmCurrencyChange(fromCode: string | null, toCode: string): Promise<boolean> {
+    const fromName = fromCode ? this.translate.instant('CURRENCY_NAMES.' + fromCode) : toCode;
+    const toName = this.translate.instant('CURRENCY_NAMES.' + toCode);
+    const result = await Swal.fire({
+      icon: 'warning',
+      title: this.translate.instant('CURRENCY_CHANGE_CONFIRM_TITLE'),
+      text: this.translate.instant('CURRENCY_CHANGE_CONFIRM_TEXT', { from: fromName, to: toName }),
+      showCancelButton: true,
+      confirmButtonText: this.translate.instant('CONTINUE_BUTTON'),
+      cancelButtonText: this.translate.instant('CANCEL_BUTTON_LABEL'),
+      reverseButtons: true,
+    });
+    return result.isConfirmed;
   }
 
   // ✅ Display name: edit mode toggle
