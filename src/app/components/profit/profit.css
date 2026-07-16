@@ -1185,6 +1185,16 @@ app-date-input .di-trigger {
   /* white-space: nowrap; */
   flex-shrink: 0;
   height: 56px;
+  transition: border-color 0.15s;
+}
+
+/* The badge and the joined input meet at a borderless seam (each has the
+   touching side's border removed so they read as one pill) — without this,
+   focusing the input only turned *its own* border blue, leaving the badge's
+   left/top/bottom border stuck at the muted default and the pill's left
+   edge looking unhighlighted. */
+.pnl-float-group:focus-within .pnl-currency-badge {
+  border-color: var(--accent);
 }
 
 .pnl-float-group>.pnl-float-field {
@@ -1194,7 +1204,7 @@ app-date-input .di-trigger {
 
 .pnl-input.pnl-input-joined {
   border-radius: 0 10px 10px 0 !important;
-  border-left: none !important;
+  /* border-left: none !important; */
 }
 
 .pnl-form-footer {

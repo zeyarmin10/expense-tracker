@@ -1912,6 +1912,16 @@ body.light-mode .exp-item {
   white-space: nowrap;
   flex-shrink: 0;
   height: 52px;
+  transition: border-color 0.15s;
+}
+
+/* The badge and the joined input meet at a borderless seam (badge's right
+   border is removed so they read as one pill) — without this, focusing the
+   input only turned *its own* border blue, leaving the badge's left/top/
+   bottom border stuck at the muted default and the pill's left edge
+   looking unhighlighted. */
+.exp-float-group:focus-within .exp-currency-badge {
+  border-color: var(--accent);
 }
 
 /* Addon button in float group */

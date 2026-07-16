@@ -815,6 +815,16 @@ app-date-input .di-trigger {
   white-space: nowrap;
   flex-shrink: 0;
   height: 56px;
+  transition: border-color 0.15s;
+}
+
+/* The badge and the joined input meet at a borderless seam (each has the
+   touching side's border removed so they read as one pill) — without this,
+   focusing the input only turned *its own* border blue, leaving the badge's
+   left/top/bottom border stuck at the muted default and the pill's left
+   edge looking unhighlighted. */
+.bgt-float-group:focus-within .bgt-currency-badge {
+  border-color: var(--accent);
 }
 
 .bgt-float-group>.bgt-float-field {
@@ -824,7 +834,7 @@ app-date-input .di-trigger {
 
 .bgt-input.bgt-input-joined {
   border-radius: 0 10px 10px 0;
-  border-left: none;
+  /* border-left: none; */
 }
 
 .bgt-form-footer {
