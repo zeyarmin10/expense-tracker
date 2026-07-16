@@ -28,7 +28,13 @@
   gap: 1.25rem;
 }
 
-/* ── Add FAB + Bottom-sheet Modal (mirrors expense.css) ── */
+/* ── Add FAB + Bottom-sheet Modal ──
+   The bottom nav's own Add-Expense button is a plain blue circle with a
+   "+" glyph, and this FAB used to look identical to it, leaving users
+   unsure which button added what. Using the piggy-bank icon (instead of
+   a bare "+") plus a distinct budget-blue tint makes the icon itself say
+   "budget", with a small "+" badge overlapping its corner — like a
+   messaging app's "new chat" icon — to still read as an add action. */
 .bgt-add-fab {
   position: fixed;
   right: 1rem;
@@ -36,17 +42,32 @@
   width: 58px;
   height: 58px;
   border-radius: 50%;
-  border: 2.5px solid rgba(255, 255, 255, 0.55);
-  background: linear-gradient(150deg, #2e93ff, var(--accent, #0b74ff));
-  color: #fff;
+  border: 2.5px solid rgba(255, 255, 255, 0.5);
+  background: linear-gradient(150deg, #7cb4ff, var(--budget-color, #60a5fa));
+  color: #0a1120;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 22px rgba(11, 116, 255, 0.5), 0 0 0 0 rgba(11, 116, 255, 0.35);
+  box-shadow: 0 8px 22px rgba(96, 165, 250, 0.45), 0 0 0 0 rgba(96, 165, 250, 0.35);
   z-index: 900;
   cursor: pointer;
   transition: transform 0.15s, box-shadow 0.15s;
   animation: bgt-fab-pulse 2.6s ease-in-out infinite;
+}
+
+.bgt-add-fab-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--accent, #0b74ff);
+  border: 2.5px solid var(--bg, #020817);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .bgt-add-fab:active {
@@ -56,10 +77,10 @@
 
 @keyframes bgt-fab-pulse {
   0%, 100% {
-    box-shadow: 0 8px 22px rgba(11, 116, 255, 0.5), 0 0 0 0 rgba(11, 116, 255, 0.35);
+    box-shadow: 0 8px 22px rgba(96, 165, 250, 0.45), 0 0 0 0 rgba(96, 165, 250, 0.35);
   }
   50% {
-    box-shadow: 0 8px 26px rgba(11, 116, 255, 0.6), 0 0 0 10px rgba(11, 116, 255, 0);
+    box-shadow: 0 8px 26px rgba(96, 165, 250, 0.55), 0 0 0 10px rgba(96, 165, 250, 0);
   }
 }
 
@@ -809,6 +830,60 @@ app-date-input .di-trigger {
 .bgt-form-footer {
   display: flex;
   justify-content: flex-end;
+}
+
+/* ── Date pill (pinned top-right, like Add Expense's mode-toggle row) ── */
+.bgt-date-pill-row {
+  display: flex;
+  justify-content: flex-end;
+  /* margin: 0 0 0.85rem; */
+}
+
+.bgt-date-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-sub);
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.bgt-date-pill:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+/* ── Amount — prominent hero field, matching Add Expense's price field.
+   Placeholder and typed value share the same large size (no floating label). */
+.bgt-amount-hero {
+  /* margin-bottom: 0.5rem; */
+}
+
+.bgt-amount-hero-currency {
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 0.5rem 0.8rem;
+  height: 4rem !important;
+}
+
+.bgt-amount-hero-input {
+  font-size: 2rem !important;
+  font-weight: 800;
+  padding: 0.5rem 0.9rem !important;
+  height: 4rem !important;
+}
+
+.bgt-amount-hero-input::placeholder {
+  color: var(--text-muted) !important;
+  opacity: 0.4 !important;
 }
 
 /* ── Buttons ── */

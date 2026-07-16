@@ -9,9 +9,9 @@
       </h2>
       <div class="mm-space-name-row" *ngIf="spaceName$ | async as spaceName">
         <ng-container *ngIf="spaceImageUrl$ | async as imgUrl">
-          <span class="mm-group-avatar">
+          <button type="button" class="mm-group-avatar mm-group-avatar-clickable" (click)="openSpacePhoto(imgUrl)">
             <img [src]="imgUrl" alt="">
-          </span>
+          </button>
         </ng-container>
         <span class="mm-space-name">{{ spaceName }}</span>
       </div>
@@ -136,4 +136,6 @@
 
   </div>
 </div>
+
+<app-lightbox></app-lightbox>
 

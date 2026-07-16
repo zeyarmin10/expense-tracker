@@ -1165,9 +1165,9 @@ body.dri-scroll-locked {
   width: 100%;
   height: 100dvh;
   z-index: 9005;
-  background: rgba(0, 0, 0, 0.48);
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
+  /* Matches the welcome tour / other full-screen dialog backdrops
+     (rgba(0,0,0,0.6), no blur) instead of its own lighter, blurred look. */
+  background: rgba(0, 0, 0, 0.6);
   animation: dri-body-fade-in 0.2s ease;
   touch-action: none;
   overscroll-behavior: none;

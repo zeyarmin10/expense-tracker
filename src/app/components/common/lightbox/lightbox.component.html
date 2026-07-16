@@ -39,10 +39,12 @@
     (touchend)="onEnd($event)"
     (click)="hide()"
   >
-    <div #imgWrap class="lb-img-wrap" [class.lb-img-fade]="fading" (click)="$event.stopPropagation()">
+    <div #imgWrap class="lb-img-wrap" [class.lb-img-fade]="fading" [class.lb-img-wrap-shaped]="!!shapeBorderRadius" (click)="$event.stopPropagation()">
       <img
         #img
         class="lb-img"
+        [class.lb-img-shaped]="!!shapeBorderRadius"
+        [style.border-radius]="shapeBorderRadius"
         [src]="images[idx]"
         alt=""
         draggable="false"

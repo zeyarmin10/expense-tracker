@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -15,6 +15,7 @@ import { getActiveGroupId } from '../../services/user-data';
 import { Router } from '@angular/router';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
 import { UserAvatarComponent } from '../common/user-avatar/user-avatar.component';
+import { LightboxComponent } from '../common/lightbox/lightbox.component';
 
 const Toast = Swal.mixin({
   toast: true,
@@ -32,7 +33,7 @@ const Toast = Swal.mixin({
 @Component({
   selector: 'app-member-management',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, LucideAngularModule, CurrentSpaceTitleComponent, UserAvatarComponent],
+  imports: [CommonModule, FormsModule, TranslateModule, LucideAngularModule, CurrentSpaceTitleComponent, UserAvatarComponent, LightboxComponent],
   templateUrl: './member-management.html',
   styleUrls: ['./member-management.css']
 })
@@ -54,6 +55,7 @@ export class MemberManagementComponent implements OnInit {
   readonly iconTrash2 = Trash2;
   readonly iconCrown = Crown;
 
+  @ViewChild(LightboxComponent) private lightbox?: LightboxComponent;
 
   userProfile$: Observable<IUserProfile | null>;
   isAdmin$!: Observable<boolean>;
@@ -117,6 +119,12 @@ export class MemberManagementComponent implements OnInit {
   }
 
   ngOnInit(): void {}
+
+  openSpacePhoto(imgUrl: string): void {
+    // '20%' matches .mm-group-avatar's own border-radius so the viewer
+    // opens showing the same rounded-square crop it's displayed as here.
+    this.lightbox?.show([imgUrl], 0, '20%');
+  }
 
   trackByInviteKey(index: number, invite: IInvitation): string {
     return invite.key ?? String(index);

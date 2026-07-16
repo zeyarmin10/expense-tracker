@@ -3,7 +3,10 @@
 
     <!-- ── ADD (FAB + Bottom-sheet Modal) ── -->
     <button *ngIf="canManageBudgets" type="button" class="bgt-add-fab" (click)="openAddModal()" [title]="'ADD_BUDGET' | translate">
-      <lucide-icon [img]="iconPlus" [size]="26"></lucide-icon>
+      <lucide-icon [img]="iconPiggyBank" [size]="26"></lucide-icon>
+      <span class="bgt-add-fab-badge">
+        <lucide-icon [img]="iconPlus" [size]="12"></lucide-icon>
+      </span>
     </button>
 
     <div class="bgt-add-modal-backdrop" [class.open]="isAddModalOpen" (click)="closeAddModal()"></div>
@@ -82,6 +85,14 @@
       <div class="bgt-add-modal-body" *ngIf="!isCategoryPickerOpen && !isDatePickerOpen">
         <form [formGroup]="budgetForm" (ngSubmit)="onSubmitBudget()" class="bgt-form">
 
+          <!-- Date — pinned to the top-right corner as a compact pill -->
+          <div class="bgt-date-pill-row">
+            <button type="button" class="bgt-date-pill" (click)="openDatePicker()">
+              <lucide-icon [img]="iconCalendarDays" [size]="13"></lucide-icon>
+              <span>{{ formatService.formatLocalizedDate(budgetForm.get('period')?.value) }}</span>
+            </button>
+          </div>
+
           <div class="bgt-form-row">
             <div class="bgt-float-field">
               <select id="type" formControlName="type" class="bgt-input bgt-select-field"
@@ -104,25 +115,16 @@
             </div>
           </div>
 
-          <div class="bgt-form-row">
-            <div class="bgt-float-field">
-              <button type="button" class="bgt-cat-select-trigger" (click)="openDatePicker()">
-                <span class="bgt-cat-select-trigger-value">{{ formatService.formatLocalizedDate(budgetForm.get('period')?.value) }}</span>
-                <lucide-icon [img]="iconCalendarDays" [size]="15" class="bgt-cat-select-trigger-chevron"></lucide-icon>
-              </button>
-            </div>
-            <div class="bgt-float-field bgt-float-group">
-              <span class="bgt-currency-badge">{{ budgetForm.get("currency")?.value || userProfile?.currency || "MMK" }}</span>
-              <div class="bgt-float-field" style="flex:1; min-width:0;">
-                <input type="text" inputmode="decimal" id="amount" class="bgt-input bgt-input-joined"
-                  [value]="amountDisplayValue"
-                  (input)="onAmountInput($event)"
-                  (focus)="amountDisplayValue = (budgetForm.get('amount')?.value > 0 ? formatWithCommas(budgetForm.get('amount')?.value) : '')"
-                  placeholder=" "
-                  [class.bgt-has-val]="amountDisplayValue !== ''"
-                  [class.is-invalid]="budgetForm.controls['amount'].invalid && budgetForm.controls['amount'].touched" />
-                <label class="bgt-float-label" for="amount">{{ "AMOUNT" | translate }}</label>
-              </div>
+          <!-- Amount — same prominent hero style as Add Expense's price field -->
+          <div class="bgt-amount-hero bgt-float-field bgt-float-group">
+            <span class="bgt-currency-badge bgt-amount-hero-currency">{{ budgetForm.get("currency")?.value || userProfile?.currency || "MMK" }}</span>
+            <div class="bgt-float-field" style="flex:1; min-width:0;">
+              <input type="text" inputmode="decimal" id="amount" class="bgt-input bgt-input-joined bgt-amount-hero-input"
+                [value]="amountDisplayValue"
+                (input)="onAmountInput($event)"
+                (focus)="amountDisplayValue = (budgetForm.get('amount')?.value > 0 ? formatWithCommas(budgetForm.get('amount')?.value) : '')"
+                placeholder="10,000"
+                [class.is-invalid]="budgetForm.controls['amount'].invalid && budgetForm.controls['amount'].touched" />
             </div>
           </div>
 

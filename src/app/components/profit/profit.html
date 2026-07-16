@@ -3,7 +3,10 @@
 
     <!-- ── ADD (FAB + Bottom-sheet Modal) ── -->
     <button *ngIf="canManageProfitActions" type="button" class="pnl-add-fab" (click)="openAddModal()" [title]="'ADD_INCOME' | translate">
-      <lucide-icon [img]="iconPlus" [size]="26"></lucide-icon>
+      <lucide-icon [img]="iconBanknote" [size]="26"></lucide-icon>
+      <span class="pnl-add-fab-badge">
+        <lucide-icon [img]="iconPlus" [size]="12"></lucide-icon>
+      </span>
     </button>
 
     <div class="pnl-add-modal-backdrop" [class.open]="isAddModalOpen" (click)="closeAddModal()"></div>
@@ -35,26 +38,25 @@
 
       <div class="pnl-add-modal-body" *ngIf="!isDatePickerOpen">
         <form [formGroup]="incomeForm" (ngSubmit)="onSubmitIncome()" class="pnl-form">
-          <div class="pnl-form-row">
-            <div class="pnl-float-field">
-              <button type="button" class="pnl-cat-select-trigger" (click)="openDatePicker()">
-                <span class="pnl-cat-select-trigger-value">{{ formatService.formatLocalizedDate(incomeForm.get('date')?.value) }}</span>
-                <lucide-icon [img]="iconCalendarDays" [size]="15" class="pnl-cat-select-trigger-chevron"></lucide-icon>
-              </button>
-            </div>
-            <div class="pnl-float-field pnl-float-group">
-              <span class="pnl-currency-badge">{{ userProfile?.currency || 'MMK' }}</span>
-              <div class="pnl-float-field" style="flex:1; min-width:0;">
-                <input type="text" inputmode="decimal" id="incomeAmount"
-                  class="pnl-input pnl-input-field pnl-input-joined"
-                  [value]="incomeAmountDisplay"
-                  (input)="onIncomeAmountInput($event)"
-                  (focus)="incomeAmountDisplay = (incomeForm.get('amount')?.value > 0 ? formatWithCommas(incomeForm.get('amount')?.value) : '')"
-                  placeholder=" "
-                  [class.pnl-has-val]="incomeAmountDisplay !== ''"
-                  [class.is-invalid]="incomeForm.controls['amount'].invalid && incomeForm.controls['amount'].touched" />
-                <label class="pnl-float-label" for="incomeAmount">{{ 'AMOUNT' | translate }}</label>
-              </div>
+          <!-- Date — pinned to the top-right corner as a compact pill -->
+          <div class="pnl-date-pill-row">
+            <button type="button" class="pnl-date-pill" (click)="openDatePicker()">
+              <lucide-icon [img]="iconCalendarDays" [size]="13"></lucide-icon>
+              <span>{{ formatService.formatLocalizedDate(incomeForm.get('date')?.value) }}</span>
+            </button>
+          </div>
+
+          <!-- Amount — same prominent hero style as Add Expense's price field -->
+          <div class="pnl-amount-hero pnl-float-field pnl-float-group">
+            <span class="pnl-currency-badge pnl-amount-hero-currency">{{ userProfile?.currency || 'MMK' }}</span>
+            <div class="pnl-float-field" style="flex:1; min-width:0;">
+              <input type="text" inputmode="decimal" id="incomeAmount"
+                class="pnl-input pnl-input-field pnl-input-joined pnl-amount-hero-input"
+                [value]="incomeAmountDisplay"
+                (input)="onIncomeAmountInput($event)"
+                (focus)="incomeAmountDisplay = (incomeForm.get('amount')?.value > 0 ? formatWithCommas(incomeForm.get('amount')?.value) : '')"
+                placeholder="10,000"
+                [class.is-invalid]="incomeForm.controls['amount'].invalid && incomeForm.controls['amount'].touched" />
             </div>
           </div>
           <div class="pnl-float-field">

@@ -109,7 +109,10 @@ export class UserAvatarComponent implements OnChanges {
       return;
     }
     event.stopPropagation();
-    this.lightbox?.show([this.photoUrl!], 0);
+    // '50%' matches this avatar's own border-radius (see .user-avatar
+    // below) so the viewer opens showing the same circular crop, not the
+    // full uncropped rectangular photo.
+    this.lightbox?.show([this.photoUrl!], 0, '50%');
   }
 
   get displayName(): string {

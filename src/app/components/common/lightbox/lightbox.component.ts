@@ -29,6 +29,11 @@ export class LightboxComponent implements AfterViewInit, OnDestroy {
   scale = 1;
   tx = 0;
   ty = 0;
+  // When set (e.g. '50%' for a round avatar, '20%' for a rounded-square
+  // group photo), the image is shown clipped to that same shape instead
+  // of the default free-aspect rectangle — so a profile picture opens
+  // looking like the avatar it was clicked from, not a generic photo.
+  shapeBorderRadius: string | null = null;
 
   @ViewChild('vp') vp!: ElementRef<HTMLElement>;
   @ViewChild('imgWrap') imgWrapEl!: ElementRef<HTMLElement>;
@@ -78,9 +83,10 @@ export class LightboxComponent implements AfterViewInit, OnDestroy {
     this.restoreScroll();
   }
 
-  show(images: string[], startIdx = 0): void {
+  show(images: string[], startIdx = 0, shapeBorderRadius: string | null = null): void {
     this.images = images;
     this.idx = Math.max(0, Math.min(startIdx, images.length - 1));
+    this.shapeBorderRadius = shapeBorderRadius;
     this.resetZoom();
     this.clearDragInlineStyles();
     this.fading = false;
