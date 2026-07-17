@@ -392,7 +392,7 @@ export class CashFlow implements OnInit, OnDestroy {
           },
           tooltip: {
             callbacks: {
-              label: (ctx) => ` ${ctx.dataset.label}: ${component.formatService.formatAmountShort(ctx.parsed.y as number)}`,
+              label: (ctx) => ` ${ctx.dataset.label}: ${component.formatService.formatAmountShort(ctx.parsed.y as number, component.userProfile?.currency, false)}`,
             },
           },
         },
@@ -412,7 +412,7 @@ export class CashFlow implements OnInit, OnDestroy {
             ticks: {
               color: tickColor,
               font: { family: 'MyanmarUIFont, Arial, sans-serif', size: 11 },
-              callback: (value) => component.formatService.formatAmountShort(value as number),
+              callback: (value) => component.formatService.formatAmountShort(value as number, component.userProfile?.currency, false),
             },
           },
         },

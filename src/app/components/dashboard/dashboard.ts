@@ -711,7 +711,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
           },
           tooltip: {
             callbacks: {
-              label: (ctx: any) => ` ${ctx.dataset.label}: ${this.formatService.formatAmountShort(ctx.parsed.y)}`,
+              label: (ctx: any) => ` ${ctx.dataset.label}: ${this.formatService.formatAmountShort(ctx.parsed.y, this.userProfile?.currency, false)}`,
             },
           },
         },
@@ -727,7 +727,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
             ticks: {
               color: tickColor,
               font: { family: 'MyanmarUIFont, Arial, sans-serif', size: 11 },
-              callback: (value: any) => this.formatService.formatAmountShort(value),
+              callback: (value: any) => this.formatService.formatAmountShort(value, this.userProfile?.currency, false),
             },
           },
         },

@@ -1416,7 +1416,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
               grid: { color: gridColor },
               ticks: {
                 color: tickColor,
-                callback: (value: any) => this.formatService.formatAmountShort(value),
+                callback: (value: any) => this.formatService.formatAmountShort(value, this.userProfile?.currency, false),
               },
             },
           },

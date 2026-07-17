@@ -98,3 +98,28 @@ export const BURMESE_LOCALE_CODE = 'my';
 
 export const THAI_CURRENCY_SYMBOL = 'ဘတ်';
 export const THB_CURRENCY_CODE = 'THB';
+
+// Currencies whose per-unit value is so low that everyday amounts already
+// start in the thousands (a meal can cost several thousand MMK/VND/KHR) —
+// abbreviating right at 1,000 the way "K" does for currencies like USD
+// would flatten away the precision that actually matters day-to-day, so
+// the "K" tier is skipped for these.
+export const HIGH_DENOMINATION_CURRENCIES = new Set([
+  MMK_CURRENCY_CODE,
+  'VND',
+  'IDR',
+  'KHR',
+  'LAK',
+]);
+
+// Currencies conventionally written without decimal places.
+export const ZERO_DECIMAL_CURRENCIES = new Set([
+  MMK_CURRENCY_CODE,
+  THB_CURRENCY_CODE,
+  'VND',
+  'IDR',
+  'KHR',
+  'LAK',
+  'JPY',
+  'KRW',
+]);

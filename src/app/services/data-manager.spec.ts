@@ -1,13 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 
-import { DataManager } from './data-manager';
+import { DataManagerService } from './data-manager';
 
-describe('DataManager', () => {
-  let service: DataManager;
+describe('DataManagerService', () => {
+  let service: DataManagerService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
-    service = TestBed.inject(DataManager);
+    service = TestBed.inject(DataManagerService);
   });
 
   it('should be created', () => {

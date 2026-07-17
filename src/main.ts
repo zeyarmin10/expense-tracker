@@ -10,4 +10,4 @@ import localeMyExtra from '@angular/common/locales/extra/my';
 registerLocaleData(localeMy, 'my', localeMyExtra);
 
 bootstrapApplication(App, appConfig)
-  .catch((err) => console.error(err));
+  .catch((err: unknown) => console.error(err));
