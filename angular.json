@@ -64,6 +64,17 @@
                   "with": "src/environments/environment.development.ts"
                 }
               ]
+            },
+            "emulator": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.emulator.ts"
+                }
+              ]
             }
           },
           "defaultConfiguration": "production"
@@ -76,6 +87,9 @@
             },
             "development": {
               "buildTarget": "spendwise:build:development"
+            },
+            "emulator": {
+              "buildTarget": "spendwise:build:emulator"
             }
           },
           "defaultConfiguration": "development"

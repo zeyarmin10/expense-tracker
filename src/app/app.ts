@@ -662,10 +662,22 @@ export class App implements OnInit, AfterViewInit {
     }
   }
 
+  // Alerts can fire before the i18n JSON finishes loading (e.g. slow
+  // networks right after startup), when translate.currentLang is still
+  // unset and would fall back to the English default — so read the
+  // persisted language choice directly.
+  private getActiveLang(): string {
+    return (
+      localStorage.getItem('selectedLanguage') ||
+      this.translate.currentLang ||
+      this.translate.getDefaultLang()
+    );
+  }
+
   private showAppUpdateAlert(latestVersionName?: string): void {
     if (Swal.isVisible()) return;
 
-    const lang = this.translate.currentLang || this.translate.getDefaultLang();
+    const lang = this.getActiveLang();
     const isMy = lang === 'my';
 
     const isDark = document.body.classList.contains('light-mode') === false;
@@ -721,7 +733,7 @@ export class App implements OnInit, AfterViewInit {
   private showNoNetworkAlert(): void {
     if (Swal.isVisible()) return;
 
-    const lang = this.translate.currentLang || this.translate.getDefaultLang();
+    const lang = this.getActiveLang();
     const isMy = lang === 'my';
 
     // ✅ Theme detect — isDarkMode property သို့မဟုတ် body class စစ်တယ်
@@ -769,7 +781,7 @@ export class App implements OnInit, AfterViewInit {
   }
 
   private showNetworkRestoredToast(): void {
-    const lang = this.translate.currentLang || this.translate.getDefaultLang();
+    const lang = this.getActiveLang();
     const isMy = lang === 'my';
     const msg = isMy
       ? 'အင်တာနက် ချိတ်ဆက်မှု ပြန်ရပြီ 🌐'

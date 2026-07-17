@@ -48,3 +48,10 @@ Thumbs.db
 .vercel
 .claude/worktrees/agent-a7158f2936d99b985
 .claude/worktrees/agent-a778bd02ad91ef4b3
+
+# Firebase emulator persisted data (npm run emulators)
+emulator-data/
+firebase-debug.log
+database-debug.log
+firestore-debug.log
+ui-debug.log

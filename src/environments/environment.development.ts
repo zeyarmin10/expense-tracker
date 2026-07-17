@@ -1,5 +1,6 @@
 export const environment = {
     production: false,
+    useEmulators: false,
     apiBaseUrl: "",
     firebaseVapidKey: "BIKVaPoRrIS7Jnz6mWcT7p6KTSTVdImDfvhFIS-DblGuKZ0X-tCC9Q9XJcWm0HUscqIS1kLUSwnMFuBsuPRUBrA",
     firebaseConfig: {
