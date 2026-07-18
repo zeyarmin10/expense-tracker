@@ -229,7 +229,26 @@ export class SpaceContextService {
     );
   }
 
-  async ensurePersonalSpace(userId: string): Promise<string> {
+  // Several callers can race here in one session (signup flow, login
+  // self-heal, app-start self-heal) — without single-flighting, two
+  // concurrent runs would each push a fresh /spaces record and the loser's
+  // space would be orphaned.
+  private readonly ensuringPersonalSpaces = new Map<string, Promise<string>>();
+
+  ensurePersonalSpace(userId: string): Promise<string> {
+    const inFlight = this.ensuringPersonalSpaces.get(userId);
+    if (inFlight) {
+      return inFlight;
+    }
+
+    const promise = this.doEnsurePersonalSpace(userId).finally(() => {
+      this.ensuringPersonalSpaces.delete(userId);
+    });
+    this.ensuringPersonalSpaces.set(userId, promise);
+    return promise;
+  }
+
+  private async doEnsurePersonalSpace(userId: string): Promise<string> {
     const profile = await this.userDataService.fetchUserProfile(userId);
     if (!profile) {
       throw new Error('User profile not found.');
@@ -237,9 +256,11 @@ export class SpaceContextService {
 
     if (profile.personalSpaceId) {
       await this.ensureOwnSpaceMembership(userId, profile.personalSpaceId, 'owner');
-      const currentSpaceId = profile.currentSpaceId || profile.personalSpaceId;
-      if (!profile.currentSpaceId) {
-        await this.switchSpace(userId, currentSpaceId);
+      // A virtual current-space id is just a placeholder for "my personal
+      // space" — upgrade it to the real one now that it exists, so data
+      // access moves off the legacy users/{uid} paths.
+      if (!profile.currentSpaceId || this.isVirtualPersonalSpaceId(profile.currentSpaceId)) {
+        await this.switchSpace(userId, profile.personalSpaceId);
       }
       return profile.personalSpaceId;
     }
@@ -265,11 +286,17 @@ export class SpaceContextService {
       createdAt: Date.now(),
     };
 
+    // Same virtual-id upgrade as in the early-return branch above: a
+    // 'personal:{uid}' current space should become the real one we create.
+    const preservedCurrentSpaceId = this.isVirtualPersonalSpaceId(profile.currentSpaceId)
+      ? null
+      : profile.currentSpaceId;
+
     const updates: Record<string, unknown> = {
       [`/space_members/${personalSpaceId}/${userId}`]: { role: 'owner' },
       [`/users/${userId}/personalSpaceId`]: personalSpaceId,
       [`/users/${userId}/currentSpaceId`]:
-        profile.currentSpaceId || profile.groupId || personalSpaceId,
+        preservedCurrentSpaceId || profile.groupId || personalSpaceId,
       [`/users/${userId}/currentSpaceType`]:
         profile.currentSpaceType || (profile.groupId ? 'group' : 'personal'),
       [`/users/${userId}/spaceMemberships/${personalSpaceId}`]: 'owner',

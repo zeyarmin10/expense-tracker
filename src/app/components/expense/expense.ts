@@ -193,6 +193,17 @@ export class Expense implements OnInit, OnDestroy {
     return parseFloat(cleaned) || 0;
   }
 
+  // Live quantity × price total shown under the full-mode price field —
+  // matches the totalCost that onSubmit will actually save.
+  get fullFormTotal(): number | null {
+    const quantity = Number(this.newExpenseForm?.get('quantity')?.value);
+    const price = Number(this.newExpenseForm?.get('price')?.value);
+    if (!(quantity > 0) || !(price > 0)) {
+      return null;
+    }
+    return Math.round(quantity * price * 100) / 100;
+  }
+
   onPriceInput(event: Event, formGroup: FormGroup, controlName: string = 'price'): void {
     const input = event.target as HTMLInputElement;
     let raw = input.value.replace(/[^\d.]/g, '');

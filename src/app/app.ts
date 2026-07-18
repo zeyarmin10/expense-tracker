@@ -68,6 +68,8 @@ export class App implements OnInit, AfterViewInit {
   currentGroupImageUrl$: Observable<string | null>;
   // Shown once for brand-new accounts (see UserProfile.hasSeenWelcomeTour).
   showWelcomeTour = false;
+  // One-shot per session guard for the personal-space self-heal below.
+  private personalSpaceBackfillStarted = false;
   readonly iconLogOut = LogOut;
   readonly iconUsers = LucideUsers;
   readonly iconUser = LucideUserIcon;
@@ -541,6 +543,22 @@ export class App implements OnInit, AfterViewInit {
     combineLatest([this.authService.userProfile$, this.showNavbar$]).subscribe(([profile, showNavbar]) => {
       if (showNavbar && profile?.hasSeenWelcomeTour === false && !this.showWelcomeTour && window.innerWidth < 992) {
         this.showWelcomeTour = true;
+      }
+    });
+
+    // Self-heal for sessions that never pass through the login flow again:
+    // accounts predating signup-time personal-space creation have no
+    // personalSpaceId — materialize a real personal space once, so their
+    // legacy users/{uid} data starts migrating into space_data (see
+    // SpaceDataService's backfill). ensurePersonalSpace single-flights
+    // internally, so racing the login-flow call is safe. Non-fatal on
+    // failure: everything falls back to the virtual personal space.
+    combineLatest([this.authService.currentUser$, this.authService.userProfile$]).subscribe(([user, profile]) => {
+      if (user && profile && !profile.personalSpaceId && !this.personalSpaceBackfillStarted) {
+        this.personalSpaceBackfillStarted = true;
+        this.spaceContextService.ensurePersonalSpace(user.uid).catch((error) => {
+          console.error('Failed to backfill personal space:', error);
+        });
       }
     });
 

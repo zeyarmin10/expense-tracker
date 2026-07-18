@@ -255,6 +255,16 @@ export class LoginComponent implements OnInit, OnDestroy {
         await this.userDataService.updateUserProfile(user.uid, updates);
         profile = { ...profile, ...updates };
       }
+      // Self-heal: accounts that predate signup-time personal-space creation
+      // (or that only ever had the virtual personal:{uid} placeholder) get a
+      // real personal space materialized in the background. Their legacy
+      // users/{uid} data then migrates lazily via SpaceDataService's
+      // backfill the next time the personal space is used.
+      if (!profile.personalSpaceId) {
+        this.spaceContextService.ensurePersonalSpace(user.uid).catch((error) => {
+          console.error('Failed to backfill personal space at login:', error);
+        });
+      }
     }
     this.pendingDisplayName = null;
 

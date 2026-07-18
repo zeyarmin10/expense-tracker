@@ -442,6 +442,19 @@ body.exp-add-modal-open {
   opacity: 0.4 !important;
 }
 
+/* Live quantity × price total under the full-mode price field */
+.exp-total-hint {
+  /* margin-top: 0.35rem; */
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  text-align: right;
+}
+
+.exp-total-hint-amount {
+  font-weight: 700;
+  color: var(--warning);
+}
+
 /* ── Overlay / Spinner ── */
 .exp-overlay {
   position: fixed;

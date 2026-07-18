@@ -291,6 +291,12 @@
                 />
               </div>
             </div>
+
+            <!-- Live total (quantity × price) -->
+            <div class="exp-total-hint" *ngIf="fullFormTotal !== null">
+              {{ 'TOTAL_COST_LABEL' | translate }}:
+              <span class="exp-total-hint-amount">{{ formatWithCommas(fullFormTotal) }} {{ userProfile?.currency || 'MMK' }}</span>
+            </div>
           </ng-container>
 
           <div class="exp-form-footer">
