@@ -632,6 +632,29 @@ body.light-mode .dash-loading-cover {
   opacity: 0.7;
 }
 
+/* Empty-card CTA — same visual language as .dash-no-chart-cta, sized for
+   the summary cards. A styled span, not an <a>: the whole card is already
+   the link to the right page. */
+.dash-card-empty-cta {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  padding: 0.32rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  background: rgba(11, 116, 255, 0.1);
+  color: var(--accent);
+  border: 1px solid rgba(11, 116, 255, 0.2);
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+
+.dash-card-link:hover .dash-card-empty-cta {
+  background: rgba(11, 116, 255, 0.18);
+}
+
 /* ── Chart Empty State ── */
 .dash-no-chart-data {
   position: absolute;

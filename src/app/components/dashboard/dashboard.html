@@ -21,12 +21,17 @@
         <div class="dash-card-left">
           <span class="dash-card-label">{{ 'TOTAL_INCOMES' | translate }}</span>
           <ng-container *ngIf="totalIncomesByCurrency$ | async as totals; else cardLoading">
-            <ng-container *ngIf="totals && (totals | keyvalue).length > 0; else cardNoData">
+            <ng-container *ngIf="totals && (totals | keyvalue).length > 0; else incomeEmptyCta">
               <span *ngFor="let total of totals | keyvalue; trackBy: trackByKey" class="dash-card-amount dash-amount-income">
                 {{ formatService.formatAmountShort(total.value, total.key) }}
               </span>
             </ng-container>
           </ng-container>
+          <!-- Visual button only — the whole card already links to /profit,
+               where incomes are entered, so a nested <a> isn't needed. -->
+          <ng-template #incomeEmptyCta>
+            <span class="dash-card-empty-cta">+ {{ 'ADD_INCOME' | translate }}</span>
+          </ng-template>
           </div>
         <div class="dash-card-right">
           <span class="dash-card-icon dash-icon-income">
@@ -40,12 +45,17 @@
         <div class="dash-card-left">
           <span class="dash-card-label">{{ 'TOTAL_BUDGET' | translate }}</span>
           <ng-container *ngIf="totalBudgetsByCurrency$ | async as totals; else cardLoading">
-            <ng-container *ngIf="totals && (totals | keyvalue).length > 0; else cardNoData">
+            <ng-container *ngIf="totals && (totals | keyvalue).length > 0; else budgetEmptyCta">
               <span *ngFor="let total of totals | keyvalue; trackBy: trackByKey" class="dash-card-amount dash-amount-budget">
                 {{ formatService.formatAmountShort(total.value, total.key) }}
               </span>
             </ng-container>
           </ng-container>
+          <!-- Visual button only — the whole card already links to /budget.
+               Members without budget-manage permission just get the hint. -->
+          <ng-template #budgetEmptyCta>
+            <span class="dash-card-empty-cta" *ngIf="canManageBudgetActions; else cardNoData">+ {{ 'SET_BUDGET' | translate }}</span>
+          </ng-template>
           </div>
         <div class="dash-card-right">
           <span class="dash-card-icon dash-icon-budget">
