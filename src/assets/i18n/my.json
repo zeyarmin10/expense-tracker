@@ -114,6 +114,8 @@
   "NO_CATEGORIES_FOUND": "အမျိုးအစားမရှိသေးပါ။ အပေါ်မှာထည့်ပါ။",
   "EDIT_BUTTON_LABEL": "ပြင်ဆင်ရန်",
   "DELETE_BUTTON_LABEL": "ဖျက်ရန်",
+  "CROP_IMAGE_TITLE": "ပုံညှိရန်",
+  "CATEGORY_UPLOAD_ICON": "ပုံတင်၍ icon ပြုလုပ်ရန်",
   "CATEGORY_ADDED_SUCCESS": "အမျိုးအစားကို အောင်မြင်စွာထည့်သွင်းပြီးပါပြီ။",
   "CATEGORY_UPDATED_SUCCESS": "အမျိုးအစားကို အောင်မြင်စွာအပ်ဒိတ်လုပ်ပြီးပါပြီ။",
   "CATEGORY_DELETED_SUCCESS": "အမျိုးအစားကို အောင်မြင်စွာဖျက်ပစ်ပြီးပါပြီ။",

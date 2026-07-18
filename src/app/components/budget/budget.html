@@ -71,7 +71,8 @@
             (click)="selectBudgetCategory(cat.id || '')"
           >
             <span class="bgt-cat-picker-item-icon">
-              <lucide-icon [img]="getIconForCategoryId(cat.id)" [size]="15"></lucide-icon>
+              <img *ngIf="getIconUrlForCategoryId(cat.id)" [src]="getIconUrlForCategoryId(cat.id)!" alt="" class="cat-img-icon" style="width:15px;height:15px" />
+              <lucide-icon *ngIf="!getIconUrlForCategoryId(cat.id)" [img]="getIconForCategoryId(cat.id)" [size]="15"></lucide-icon>
             </span>
             <span class="bgt-cat-picker-item-label">{{ cat.name }}</span>
             <lucide-icon
@@ -107,7 +108,8 @@
             <div class="bgt-float-field">
               <button type="button" class="bgt-cat-select-trigger" (click)="openCategoryPicker()">
                 <span class="bgt-cat-select-trigger-icon" [style.--cat-hue]="getIconHueForCategoryId(budgetForm.get('category')?.value)">
-                  <lucide-icon [img]="getIconForCategoryId(budgetForm.get('category')?.value)" [size]="14"></lucide-icon>
+                  <img *ngIf="getIconUrlForCategoryId(budgetForm.get('category')?.value)" [src]="getIconUrlForCategoryId(budgetForm.get('category')?.value)!" alt="" class="cat-img-icon" style="width:100%;height:100%" />
+                  <lucide-icon *ngIf="!getIconUrlForCategoryId(budgetForm.get('category')?.value)" [img]="getIconForCategoryId(budgetForm.get('category')?.value)" [size]="14"></lucide-icon>
                 </span>
                 <span class="bgt-cat-select-trigger-value">{{ selectedCategoryName }}</span>
                 <lucide-icon [img]="iconChevronDown" [size]="14" class="bgt-cat-select-trigger-chevron"></lucide-icon>
@@ -334,7 +336,10 @@
                         <div class="bgt-budget-card-icon-wrap"
                           [class.bgt-budget-card-icon-cat]="budget.category && budget.category !== 'all'"
                           [style.--cat-hue]="budget.category && budget.category !== 'all' ? getIconHueForCategory(budget.category) : null">
+                          <img *ngIf="budget.category && budget.category !== 'all' && getIconUrlForCategory(budget.category)"
+                            [src]="getIconUrlForCategory(budget.category)!" alt="" class="cat-img-icon" style="width:16px;height:16px" />
                           <lucide-icon
+                            *ngIf="!(budget.category && budget.category !== 'all' && getIconUrlForCategory(budget.category))"
                             [img]="budget.category && budget.category !== 'all' ? getIconForCategory(budget.category) : iconPiggyBank"
                             [size]="16">
                           </lucide-icon>
@@ -353,7 +358,8 @@
                               </span>
                               <span class="bgt-row-badge bgt-badge-cat" *ngIf="budget.category && budget.category !== 'all'"
                                 [style.--cat-hue]="getIconHueForCategory(budget.category)">
-                                <lucide-icon [img]="getIconForCategory(budget.category)" [size]="11" style="flex-shrink:0"></lucide-icon>
+                                <img *ngIf="getIconUrlForCategory(budget.category)" [src]="getIconUrlForCategory(budget.category)!" alt="" class="cat-img-icon" style="width:11px;height:11px" />
+                                <lucide-icon *ngIf="!getIconUrlForCategory(budget.category)" [img]="getIconForCategory(budget.category)" [size]="11" style="flex-shrink:0"></lucide-icon>
                                 {{ budget.category }}
                               </span>
                             </div>
@@ -479,7 +485,8 @@
                             }">
                             <div class="bgt-progress-header">
                               <small class="bgt-cat-name" [style.--cat-hue]="getIconHueForCategory(category.name)">
-                                <lucide-icon [img]="getIconForCategory(category.name)" [size]="12" style="flex-shrink:0"></lucide-icon>
+                                <img *ngIf="getIconUrlForCategory(category.name)" [src]="getIconUrlForCategory(category.name)!" alt="" class="cat-img-icon" style="width:12px;height:12px" />
+                                <lucide-icon *ngIf="!getIconUrlForCategory(category.name)" [img]="getIconForCategory(category.name)" [size]="12" style="flex-shrink:0"></lucide-icon>
                                 {{ category.name }}
                               </small>
                               <small [ngClass]="{

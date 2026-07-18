@@ -356,6 +356,45 @@ body.cat-add-modal-open {
   background: hsl(var(--cat-hue, 220) 80% 55% / 0.15);
   color: hsl(var(--cat-hue, 220) 80% 68%);
   flex-shrink: 0;
+  overflow: hidden;
+}
+
+/* Custom uploaded image icon — fills its tile (trigger, picker, list row) */
+.cat-icon-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+
+/* No padding/overflow leaks — the uploaded image must fill the 1:1 tile */
+.cat-icon-trigger {
+  overflow: hidden;
+  padding: 0;
+}
+
+.cat-icon-trigger .cat-icon-img {
+  border-radius: 10px;
+}
+
+/* Upload tile at the head of the picker grid */
+.cat-icon-opt-upload {
+  border-style: dashed;
+  border-color: hsl(200 80% 60% / 0.45);
+  color: hsl(200 80% 62%);
+}
+
+.cat-icon-upload-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid hsl(200 80% 62% / 0.3);
+  border-top-color: hsl(200 80% 62%);
+  border-radius: 50%;
+  animation: cat-icon-upload-spin 0.8s linear infinite;
+}
+
+@keyframes cat-icon-upload-spin {
+  to { transform: rotate(360deg); }
 }
 
 /* Floating Label */

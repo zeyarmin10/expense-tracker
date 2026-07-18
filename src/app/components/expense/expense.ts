@@ -122,6 +122,10 @@ export class Expense implements OnInit, OnDestroy {
     return getIconData(this.categoryList.find(c => c.name === categoryName)?.icon);
   }
 
+  getIconUrlForCategory(categoryName: string): string | null {
+    return this.categoryList.find(c => c.name === categoryName)?.iconUrl ?? null;
+  }
+
   private refreshExpenses$ = new BehaviorSubject<void>(undefined);
   private refreshVouchers$ = new BehaviorSubject<void>(undefined);
   public _selectedDate$ = new BehaviorSubject<string>('');

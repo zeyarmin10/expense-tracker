@@ -5,9 +5,11 @@ import { CommonModule } from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import {
   LucideAngularModule, LucideIconData, Tag,
-  Save, X, Plus, Tags, Pencil, Trash2, MoreVertical,
+  Save, X, Plus, Tags, Pencil, Trash2, MoreVertical, ImagePlus,
 } from 'lucide-angular';
 import { CATEGORY_ICONS, getIconData, getIconHue } from '../../../utils/category-icons';
+import { ImageUploadService } from '../../../services/image-upload.service';
+import { ImageCropperComponent } from '../image-cropper/image-cropper.component';
 import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import { ServiceICategory } from '../../../services/category';
 import Swal from 'sweetalert2';
@@ -30,7 +32,7 @@ const Toast = Swal.mixin({
 @Component({
   selector: 'app-category-modal',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslateModule, LucideAngularModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslateModule, LucideAngularModule, ImageCropperComponent],
   templateUrl: './category-modal.html',
   styleUrls: ['./category-modal.css']
 })
@@ -59,6 +61,7 @@ export class CategoryModalComponent implements OnInit, OnDestroy {
   readonly iconPen = Pencil;
   readonly iconTrash2 = Trash2;
   readonly iconMoreVertical = MoreVertical;
+  readonly iconImagePlus = ImagePlus;
 
   openMenuId: string | null = null;
   menuX = 0;
@@ -68,15 +71,55 @@ export class CategoryModalComponent implements OnInit, OnDestroy {
 
   selectedIcon = 'tag';
   selectedIconData: LucideIconData = Tag;
+  selectedIconUrl: string | null = null;
+  isUploadingIcon = false;
   showIconPicker = false;
 
   getIconData = getIconData;
   getIconHue = getIconHue;
 
+  private imageUploadService = inject(ImageUploadService);
+
   selectIcon(name: string): void {
     this.selectedIcon = name;
     this.selectedIconData = getIconData(name);
+    this.selectedIconUrl = null;
     this.showIconPicker = false;
+  }
+
+  // File picked → open the 1:1 cropper first; upload happens on confirm.
+  pendingCropFile: File | null = null;
+
+  onIconFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    this.pendingCropFile = file;
+  }
+
+  onCropCancelled(): void {
+    this.pendingCropFile = null;
+    this.cdr.detectChanges();
+  }
+
+  async onCropped(file: File): Promise<void> {
+    this.pendingCropFile = null;
+    this.isUploadingIcon = true;
+    try {
+      // Cropper already exports a square 256px JPEG — upload it as-is.
+      this.selectedIconUrl = await this.imageUploadService.upload(file, 'category-icons');
+      this.showIconPicker = false;
+    } catch (error) {
+      console.error('Category icon upload failed:', error);
+      this.showErrorModal(
+        this.translateService.instant('ERROR_TITLE'),
+        this.translateService.instant('AVATAR_UPLOAD_ERROR'),
+      );
+    } finally {
+      this.isUploadingIcon = false;
+      this.cdr.detectChanges();
+    }
   }
 
   trackByIconName(index: number, opt: { name: string }): string {
@@ -208,6 +251,7 @@ export class CategoryModalComponent implements OnInit, OnDestroy {
     this.categoryForm.setValue({ name: category.name });
     this.selectedIcon = category.icon || 'tag';
     this.selectedIconData = this.getIconData(category.icon);
+    this.selectedIconUrl = category.iconUrl ?? null;
     this.showIconPicker = false;
   }
 
@@ -217,6 +261,7 @@ export class CategoryModalComponent implements OnInit, OnDestroy {
     this.categoryForm.reset();
     this.selectedIcon = 'tag';
     this.selectedIconData = Tag;
+    this.selectedIconUrl = null;
     this.showIconPicker = false;
   }
 
@@ -233,10 +278,10 @@ export class CategoryModalComponent implements OnInit, OnDestroy {
 
     try {
       if (this.isEditMode && this.editingCategoryId) {
-        await this.categoryService.updateCategory(this.editingCategoryId, categoryName, this.selectedIcon);
+        await this.categoryService.updateCategory(this.editingCategoryId, categoryName, this.selectedIcon, this.selectedIconUrl);
         Toast.fire({ icon: 'success', title: this.translateService.instant('CATEGORY_SUCCESS_UPDATED') });
       } else {
-        await this.categoryService.addCategory(categoryName, this.selectedIcon);
+        await this.categoryService.addCategory(categoryName, this.selectedIcon, this.selectedIconUrl);
         Toast.fire({ icon: 'success', title: this.translateService.instant('CATEGORY_ADDED_SUCCESS') });
       }
       await this.loadCategories();

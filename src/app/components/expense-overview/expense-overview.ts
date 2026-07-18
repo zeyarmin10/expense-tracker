@@ -72,6 +72,10 @@ export class ExpenseOverview implements OnInit, OnDestroy {
     return getIconData(this.categoryList.find(c => c.name === categoryName)?.icon);
   }
 
+  getIconUrlForCategory(categoryName: string): string | null {
+    return this.categoryList.find(c => c.name === categoryName)?.iconUrl ?? null;
+  }
+
   readonly iconSearch = Search;
   readonly iconChartColumn = ChartColumn;
   readonly iconList = List;

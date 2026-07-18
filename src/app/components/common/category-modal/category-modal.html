@@ -26,7 +26,8 @@
                     [class.cat-icon-trigger-open]="showIconPicker"
                     [style.--cat-hue]="getIconHue(selectedIcon)"
                     (click)="showIconPicker = !showIconPicker">
-              <lucide-icon [img]="selectedIconData" [size]="20"></lucide-icon>
+              <img *ngIf="selectedIconUrl" [src]="selectedIconUrl" alt="" class="cat-icon-img" />
+              <lucide-icon *ngIf="!selectedIconUrl" [img]="selectedIconData" [size]="20"></lucide-icon>
             </button>
             <div class="cat-fl-wrap">
               <input
@@ -61,9 +62,18 @@
 
           <!-- Icon Picker Grid -->
           <div class="cat-icon-picker" *ngIf="showIconPicker">
+            <label class="cat-icon-opt cat-icon-opt-upload"
+                   [class.cat-icon-opt-selected]="!!selectedIconUrl"
+                   [title]="'CATEGORY_UPLOAD_ICON' | translate">
+              <span *ngIf="isUploadingIcon" class="cat-icon-upload-spinner"></span>
+              <lucide-icon *ngIf="!isUploadingIcon" [img]="iconImagePlus" [size]="18"></lucide-icon>
+              <input type="file" accept="image/*" hidden
+                     [disabled]="isUploadingIcon"
+                     (change)="onIconFileSelected($event)" />
+            </label>
             <button type="button" class="cat-icon-opt"
                     *ngFor="let opt of categoryIcons; trackBy: trackByIconName"
-                    [class.cat-icon-opt-selected]="opt.name === selectedIcon"
+                    [class.cat-icon-opt-selected]="opt.name === selectedIcon && !selectedIconUrl"
                     [style.--cat-hue]="getIconHue(opt.name)"
                     (click)="selectIcon(opt.name)">
               <lucide-icon [img]="opt.icon" [size]="18"></lucide-icon>
@@ -86,7 +96,8 @@
             <li *ngFor="let category of categories; trackBy: trackByCategoryId" class="cat-item"
                 [class.cat-item-editing]="editingCategoryId === category.id">
               <div class="cat-item-avatar" [style.--cat-hue]="getIconHue(category.icon)">
-                <lucide-icon [img]="getIconData(category.icon)" [size]="20"></lucide-icon>
+                <img *ngIf="category.iconUrl" [src]="category.iconUrl" alt="" class="cat-icon-img" />
+                <lucide-icon *ngIf="!category.iconUrl" [img]="getIconData(category.icon)" [size]="20"></lucide-icon>
               </div>
               <span class="cat-item-name">{{ category.name }}</span>
               <div class="cat-item-actions">
@@ -121,3 +132,12 @@
     </div>
   </div>
 </div>
+
+<!-- 1:1 crop dialog for custom icon uploads. Kept OUTSIDE #categoryModal:
+     bootstrap's .modal transform would trap this position:fixed overlay. -->
+<app-image-cropper
+  *ngIf="pendingCropFile"
+  [file]="pendingCropFile"
+  (cropped)="onCropped($event)"
+  (cancelled)="onCropCancelled()">
+</app-image-cropper>

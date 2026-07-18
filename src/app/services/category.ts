@@ -24,6 +24,8 @@ export interface ServiceICategory {
   id?: string;
   name: string;
   icon?: string;
+  /** Custom uploaded image icon — wins over `icon` when set. */
+  iconUrl?: string | null;
   userId?: string;
   groupId?: string;
   createdAt?: string;
@@ -166,7 +168,7 @@ export class CategoryService {
     }
   }
 
-  async addCategory(categoryName: string, icon?: string): Promise<void> {
+  async addCategory(categoryName: string, icon?: string, iconUrl?: string | null): Promise<void> {
     const profile = await firstValueFrom(this.authService.userProfile$) as UserProfile | null;
     if (!profile?.uid) {
       throw new Error('User not authenticated.');
@@ -178,6 +180,7 @@ export class CategoryService {
     const newCategory: Omit<ServiceICategory, 'id'> = {
       name: trimmedName,
       ...(icon ? { icon } : {}),
+      ...(iconUrl ? { iconUrl } : {}),
       createdAt: new Date().toISOString(),
     };
 
@@ -196,7 +199,13 @@ export class CategoryService {
     await push(categoriesRef, newCategory);
   }
 
-  async updateCategory(categoryId: string, newCategoryName: string, icon?: string): Promise<void> {
+  async updateCategory(
+    categoryId: string,
+    newCategoryName: string,
+    icon?: string,
+    // undefined = leave as-is; null = remove the custom image icon
+    iconUrl?: string | null,
+  ): Promise<void> {
     const profile = await firstValueFrom(this.authService.userProfile$) as UserProfile | null;
     if (!profile?.uid) {
       throw new Error('User not authenticated.');
@@ -221,11 +230,13 @@ export class CategoryService {
     const oldCategoryData = oldCategorySnap.val();
     const oldCategoryName = oldCategoryData?.name;
     const oldIcon = oldCategoryData?.icon;
+    const oldIconUrl = oldCategoryData?.iconUrl ?? null;
 
     const trimmedNewName = newCategoryName.trim();
     const nameUnchanged = oldCategoryName?.trim() === trimmedNewName;
     const iconUnchanged = icon === undefined || icon === oldIcon;
-    if (nameUnchanged && iconUnchanged) {
+    const iconUrlUnchanged = iconUrl === undefined || (iconUrl ?? null) === oldIconUrl;
+    if (nameUnchanged && iconUnchanged && iconUrlUnchanged) {
       return;
     }
 
@@ -233,8 +244,9 @@ export class CategoryService {
       await this.assertCategoryNameAvailable(trimmedNewName, categoryId);
     }
 
-    const updateData: { name: string; icon?: string } = { name: trimmedNewName };
+    const updateData: { name: string; icon?: string; iconUrl?: string | null } = { name: trimmedNewName };
     if (icon !== undefined) updateData.icon = icon;
+    if (iconUrl !== undefined) updateData.iconUrl = iconUrl;
     await update(categoryRef, updateData);
 
     if (oldCategoryName) {

@@ -13,9 +13,10 @@
 
     <span class="csl-trigger-content">
       <span class="csl-icon-pill"
-            *ngIf="showIcons && selectedOption?.icon"
+            *ngIf="showIcons && (selectedOption?.icon || selectedOption?.iconUrl)"
             [style.--cat-hue]="getCategoryHue(selectedOption!.label)">
-        <lucide-icon [img]="getIconData(selectedOption!.icon)" [size]="15"></lucide-icon>
+        <img *ngIf="selectedOption!.iconUrl" [src]="selectedOption!.iconUrl!" alt="" class="cat-img-icon" style="width:15px;height:15px" />
+        <lucide-icon *ngIf="!selectedOption!.iconUrl" [img]="getIconData(selectedOption!.icon)" [size]="15"></lucide-icon>
       </span>
       <span class="csl-value" *ngIf="selectedOption">{{ selectedOption.label }}</span>
     </span>
@@ -63,9 +64,10 @@
               [class.csl-item-selected]="opt.value === value"
               *ngFor="let opt of filteredOptions; trackBy: trackByOptionValue"
               (click)="select(opt)">
-        <span class="csl-item-icon" *ngIf="showIcons && opt.icon"
+        <span class="csl-item-icon" *ngIf="showIcons && (opt.icon || opt.iconUrl)"
               [style.--cat-hue]="getCategoryHue(opt.label)">
-          <lucide-icon [img]="getIconData(opt.icon)" [size]="18"></lucide-icon>
+          <img *ngIf="opt.iconUrl" [src]="opt.iconUrl" alt="" class="cat-img-icon" style="width:18px;height:18px" />
+          <lucide-icon *ngIf="!opt.iconUrl" [img]="getIconData(opt.icon)" [size]="18"></lucide-icon>
         </span>
         <span class="csl-item-label">{{ opt.label }}</span>
         <lucide-icon *ngIf="opt.value === value" [img]="iconCheck" [size]="16"
@@ -108,9 +110,10 @@
               [class.csl-item-selected]="opt.value === value"
               *ngFor="let opt of filteredOptions; trackBy: trackByOptionValue"
               (click)="select(opt)">
-        <span class="csl-item-icon csl-panel-icon" *ngIf="showIcons && opt.icon"
+        <span class="csl-item-icon csl-panel-icon" *ngIf="showIcons && (opt.icon || opt.iconUrl)"
               [style.--cat-hue]="getCategoryHue(opt.label)">
-          <lucide-icon [img]="getIconData(opt.icon)" [size]="15"></lucide-icon>
+          <img *ngIf="opt.iconUrl" [src]="opt.iconUrl" alt="" class="cat-img-icon" style="width:15px;height:15px" />
+          <lucide-icon *ngIf="!opt.iconUrl" [img]="getIconData(opt.icon)" [size]="15"></lucide-icon>
         </span>
         <span class="csl-item-label">{{ opt.label }}</span>
         <lucide-icon *ngIf="opt.value === value" [img]="iconCheck" [size]="14"

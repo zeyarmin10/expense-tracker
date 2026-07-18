@@ -20,9 +20,11 @@ import { UserProfile } from '../../services/user-data';
 
 import {
   LucideAngularModule, LucideIconData,
-  Plus, Tags, Save, Pencil, Trash2, X, Tag,
+  Plus, Tags, Save, Pencil, Trash2, X, Tag, ImagePlus,
 } from 'lucide-angular';
 import { CATEGORY_ICONS, getIconData, getIconHue } from '../../utils/category-icons';
+import { ImageUploadService } from '../../services/image-upload.service';
+import { ImageCropperComponent } from '../common/image-cropper/image-cropper.component';
 
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import Swal from 'sweetalert2';
@@ -50,6 +52,7 @@ const Toast = Swal.mixin({
     TranslateModule,
     CurrentSpaceTitleComponent,
     LucideAngularModule,
+    ImageCropperComponent,
   ],
   templateUrl: './category.html',
   styleUrls: ['./category.css'],
@@ -79,31 +82,87 @@ export class Category implements OnInit, OnDestroy {
   readonly iconPen = Pencil;
   readonly iconTrash2 = Trash2;
   readonly iconTimes = X;
+  readonly iconImagePlus = ImagePlus;
 
   readonly categoryIcons = CATEGORY_ICONS;
   readonly defaultIcon = Tag;
 
   selectedAddIcon = 'tag';
   selectedAddIconData: LucideIconData = Tag;
+  selectedAddIconUrl: string | null = null;
+  isUploadingAddIcon = false;
   showAddIconPicker = false;
 
   selectedEditIcon = 'tag';
   selectedEditIconData: LucideIconData = Tag;
+  selectedEditIconUrl: string | null = null;
+  isUploadingEditIcon = false;
   showEditIconPicker = false;
 
   getIconData = getIconData;
   getIconHue = getIconHue;
 
+  private imageUploadService = inject(ImageUploadService);
+
   selectAddIcon(name: string): void {
     this.selectedAddIcon = name;
     this.selectedAddIconData = getIconData(name);
+    this.selectedAddIconUrl = null;
     this.showAddIconPicker = false;
   }
 
   selectEditIcon(name: string): void {
     this.selectedEditIcon = name;
     this.selectedEditIconData = getIconData(name);
+    this.selectedEditIconUrl = null;
     this.showEditIconPicker = false;
+  }
+
+  // File picked → open the 1:1 cropper first; upload happens on confirm.
+  pendingCropFile: File | null = null;
+  private pendingCropMode: 'add' | 'edit' = 'add';
+
+  onIconFileSelected(event: Event, mode: 'add' | 'edit'): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = ''; // allow re-picking the same file later
+    if (!file) return;
+    this.pendingCropMode = mode;
+    this.pendingCropFile = file;
+  }
+
+  onCropCancelled(): void {
+    this.pendingCropFile = null;
+  }
+
+  async onCropped(file: File): Promise<void> {
+    const mode = this.pendingCropMode;
+    this.pendingCropFile = null;
+
+    if (mode === 'add') this.isUploadingAddIcon = true;
+    else this.isUploadingEditIcon = true;
+
+    try {
+      // Cropper already exports a square 256px JPEG — upload it as-is.
+      const url = await this.imageUploadService.upload(file, 'category-icons');
+      if (mode === 'add') {
+        this.selectedAddIconUrl = url;
+        this.showAddIconPicker = false;
+      } else {
+        this.selectedEditIconUrl = url;
+        this.showEditIconPicker = false;
+      }
+    } catch (error) {
+      console.error('Category icon upload failed:', error);
+      this.showErrorModal(
+        this.translateService.instant('ERROR_TITLE'),
+        this.translateService.instant('AVATAR_UPLOAD_ERROR'),
+      );
+    } finally {
+      this.isUploadingAddIcon = false;
+      this.isUploadingEditIcon = false;
+      this.cdr.detectChanges();
+    }
   }
 
   toggleAddIconPicker(event: MouseEvent): void {
@@ -235,11 +294,12 @@ export class Category implements OnInit, OnDestroy {
     }
 
     try {
-      await this.categoryService.addCategory(categoryName, this.selectedAddIcon);
+      await this.categoryService.addCategory(categoryName, this.selectedAddIcon, this.selectedAddIconUrl);
       Toast.fire({ icon: 'success', title: this.translateService.instant('CATEGORY_ADDED_SUCCESS') });
       this.addCategoryForm.reset();
       this.selectedAddIcon = 'tag';
       this.selectedAddIconData = Tag;
+      this.selectedAddIconUrl = null;
       this.showAddIconPicker = false;
       this.closeAddModal();
       await this.loadCategories();
@@ -264,6 +324,7 @@ export class Category implements OnInit, OnDestroy {
     );
     this.selectedEditIcon = category.icon || 'tag';
     this.selectedEditIconData = this.getIconData(category.icon);
+    this.selectedEditIconUrl = category.iconUrl ?? null;
     this.showEditIconPicker = false;
   }
 
@@ -299,7 +360,8 @@ export class Category implements OnInit, OnDestroy {
       await this.categoryService.updateCategory(
         categoryId,
         newCategoryName,
-        this.selectedEditIcon
+        this.selectedEditIcon,
+        this.selectedEditIconUrl
       );
       Toast.fire({ icon: 'success', title: this.translateService.instant('CATEGORY_SUCCESS_UPDATED') });
       this.cancelEdit();

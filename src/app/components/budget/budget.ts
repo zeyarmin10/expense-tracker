@@ -150,6 +150,10 @@ export class BudgetComponent implements OnInit, OnDestroy {
     return getIconData(this.categoryList.find(c => c.name === categoryName)?.icon);
   }
 
+  getIconUrlForCategory(categoryName: string): string | null {
+    return this.categoryList.find(c => c.name === categoryName)?.iconUrl ?? null;
+  }
+
   budgetForm: FormGroup;
 
   budgets$: Observable<ServiceIBudget[]>;
@@ -286,6 +290,11 @@ export class BudgetComponent implements OnInit, OnDestroy {
 
   getIconHueForCategoryId(categoryId: string | undefined): number {
     return getIconHue(this.categories.find(c => c.id === categoryId)?.icon);
+  }
+
+  getIconUrlForCategoryId(categoryId: string | undefined): string | null {
+    if (!categoryId || categoryId === 'all') return null;
+    return this.categories.find(c => c.id === categoryId)?.iconUrl ?? null;
   }
 
   // ── Date picker (drill-down within the Add-Budget modal) ──
@@ -956,7 +965,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
         ])
       );
     this.categorySelectOptions$ = this.categories$.pipe(
-      map(cats => cats.map(c => ({ value: c.id ?? '', label: c.name, icon: c.icon })))
+      map(cats => cats.map(c => ({ value: c.id ?? '', label: c.name, icon: c.icon, iconUrl: c.iconUrl ?? null })))
     );
     this.subscriptions.add(
       this.categories$.subscribe((categories) => {

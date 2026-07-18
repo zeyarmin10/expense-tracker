@@ -109,7 +109,8 @@
                  (keydown.space)="filterByCategory(cat.category); $event.preventDefault()"
                  [class.ov-bar-active]="cat.category === (_selectedCategory$ | async)">
               <div class="ov-bar-meta">
-                <lucide-icon [img]="getIconForCategory(cat.category)" [size]="16" class="ov-bar-cat-icon" [style.color]="getCategoryColor(cat.category)"></lucide-icon>
+                <img *ngIf="getIconUrlForCategory(cat.category)" [src]="getIconUrlForCategory(cat.category)!" alt="" class="cat-img-icon ov-bar-cat-icon" style="width:16px;height:16px" />
+                <lucide-icon *ngIf="!getIconUrlForCategory(cat.category)" [img]="getIconForCategory(cat.category)" [size]="16" class="ov-bar-cat-icon" [style.color]="getCategoryColor(cat.category)"></lucide-icon>
                 <span class="ov-bar-name">{{ cat.category }}</span>
                 <span class="ov-bar-amount">{{ formatService.formatAmountShort(cat.total, cat.currency) }}</span>
               </div>
@@ -160,7 +161,8 @@
                   </td>
                   <td class="td-category">
                     <span class="category-badge" [style.--cat-hue]="getIconHueForCategory(expense.category)">
-                      <lucide-icon [img]="getIconForCategory(expense.category)" [size]="11" style="flex-shrink:0"></lucide-icon>
+                      <img *ngIf="getIconUrlForCategory(expense.category)" [src]="getIconUrlForCategory(expense.category)!" alt="" class="cat-img-icon" style="width:11px;height:11px" />
+                      <lucide-icon *ngIf="!getIconUrlForCategory(expense.category)" [img]="getIconForCategory(expense.category)" [size]="11" style="flex-shrink:0"></lucide-icon>
                       {{ expense.category }}
                     </span>
                   </td>

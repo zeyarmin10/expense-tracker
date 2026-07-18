@@ -114,6 +114,8 @@
   "NO_CATEGORIES_FOUND": "No categories found. Add one above!",
   "EDIT_BUTTON_LABEL": "Edit",
   "DELETE_BUTTON_LABEL": "Delete",
+  "CROP_IMAGE_TITLE": "Adjust image",
+  "CATEGORY_UPLOAD_ICON": "Upload image icon",
   "CATEGORY_ADDED_SUCCESS": "Category added successfully!",
   "CATEGORY_UPDATED_SUCCESS": "Category updated successfully!",
   "CATEGORY_DELETED_SUCCESS": "Category deleted successfully!",

@@ -1186,3 +1186,13 @@ body.dri-scroll-locked {
 .modal-backdrop.show {
   opacity: 0.6 !important;
 }
+
+/* Custom uploaded category image icons — used anywhere a category's
+   lucide icon would render (pickers, list rows, selects). Size is set
+   per-site inline to match the lucide [size] it replaces. */
+.cat-img-icon {
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+  display: inline-block;
+}

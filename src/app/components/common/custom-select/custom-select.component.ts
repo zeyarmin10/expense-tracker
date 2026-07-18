@@ -14,6 +14,8 @@ export interface SelectOption {
   value: string;
   label: string;
   icon?: string;
+  /** Custom uploaded image icon — wins over `icon` when set. */
+  iconUrl?: string | null;
 }
 
 const MOBILE_BREAKPOINT = 768;

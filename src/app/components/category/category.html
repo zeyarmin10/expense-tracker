@@ -41,7 +41,8 @@
                     [class.cat-icon-trigger-open]="showAddIconPicker"
                     [style.--cat-hue]="getIconHue(selectedAddIcon)"
                     (click)="toggleAddIconPicker($event)">
-              <lucide-icon [img]="selectedAddIconData" [size]="22"></lucide-icon>
+              <img *ngIf="selectedAddIconUrl" [src]="selectedAddIconUrl" alt="" class="cat-icon-img" />
+              <lucide-icon *ngIf="!selectedAddIconUrl" [img]="selectedAddIconData" [size]="22"></lucide-icon>
             </button>
             <div class="cat-fl-wrap cat-fl-name">
               <input
@@ -61,12 +62,21 @@
 
           <!-- Icon Picker Grid -->
           <div class="cat-icon-picker" *ngIf="showAddIconPicker">
+            <label class="cat-icon-opt cat-icon-opt-upload"
+                   [class.cat-icon-opt-selected]="!!selectedAddIconUrl"
+                   [title]="'CATEGORY_UPLOAD_ICON' | translate">
+              <span *ngIf="isUploadingAddIcon" class="cat-icon-upload-spinner"></span>
+              <lucide-icon *ngIf="!isUploadingAddIcon" [img]="iconImagePlus" [size]="20"></lucide-icon>
+              <input type="file" accept="image/*" hidden
+                     [disabled]="isUploadingAddIcon"
+                     (change)="onIconFileSelected($event, 'add')" />
+            </label>
             <button type="button" class="cat-icon-opt"
                     *ngFor="let opt of categoryIcons; trackBy: trackByIconName"
-                    [class.cat-icon-opt-selected]="opt.name === selectedAddIcon"
+                    [class.cat-icon-opt-selected]="opt.name === selectedAddIcon && !selectedAddIconUrl"
                     [style.--cat-hue]="getIconHue(opt.name)"
                     (click)="selectAddIcon(opt.name)">
-              <lucide-icon [img]="opt.icon" [size]="20"></lucide-icon>
+              <lucide-icon [img]="opt.icon" [size]="22"></lucide-icon>
             </button>
           </div>
 
@@ -119,7 +129,8 @@
           <ng-container *ngIf="editingCategoryId !== category.id; else editMode">
             <div class="cat-item-inner">
               <span class="cat-item-icon" [style.--cat-hue]="getIconHue(category.icon)">
-                <lucide-icon [img]="getIconData(category.icon)" [size]="20"></lucide-icon>
+                <img *ngIf="category.iconUrl" [src]="category.iconUrl" alt="" class="cat-icon-img" />
+                <lucide-icon *ngIf="!category.iconUrl" [img]="getIconData(category.icon)" [size]="20"></lucide-icon>
               </span>
               <span class="cat-item-name">{{ category.name }}</span>
               <div class="cat-item-actions">
@@ -147,7 +158,8 @@
                         [class.cat-icon-trigger-open]="showEditIconPicker"
                         [style.--cat-hue]="getIconHue(selectedEditIcon)"
                         (click)="toggleEditIconPicker($event)">
-                  <lucide-icon [img]="selectedEditIconData" [size]="22"></lucide-icon>
+                  <img *ngIf="selectedEditIconUrl" [src]="selectedEditIconUrl" alt="" class="cat-icon-img" />
+                  <lucide-icon *ngIf="!selectedEditIconUrl" [img]="selectedEditIconData" [size]="22"></lucide-icon>
                 </button>
                 <div class="cat-fl-wrap cat-fl-name">
                   <input
@@ -166,12 +178,21 @@
                 </div>
               </div>
               <div class="cat-icon-picker" *ngIf="showEditIconPicker">
+                <label class="cat-icon-opt cat-icon-opt-upload"
+                       [class.cat-icon-opt-selected]="!!selectedEditIconUrl"
+                       [title]="'CATEGORY_UPLOAD_ICON' | translate">
+                  <span *ngIf="isUploadingEditIcon" class="cat-icon-upload-spinner"></span>
+                  <lucide-icon *ngIf="!isUploadingEditIcon" [img]="iconImagePlus" [size]="20"></lucide-icon>
+                  <input type="file" accept="image/*" hidden
+                         [disabled]="isUploadingEditIcon"
+                         (change)="onIconFileSelected($event, 'edit')" />
+                </label>
                 <button type="button" class="cat-icon-opt"
                         *ngFor="let opt of categoryIcons; trackBy: trackByIconName"
-                        [class.cat-icon-opt-selected]="opt.name === selectedEditIcon"
+                        [class.cat-icon-opt-selected]="opt.name === selectedEditIcon && !selectedEditIconUrl"
                         [style.--cat-hue]="getIconHue(opt.name)"
                         (click)="selectEditIcon(opt.name)">
-                  <lucide-icon [img]="opt.icon" [size]="20"></lucide-icon>
+                  <lucide-icon [img]="opt.icon" [size]="22"></lucide-icon>
                 </button>
               </div>
               <div class="cat-char-row" *ngIf="(editingCategoryFormControl?.value?.length ?? 0) > 0">
@@ -206,6 +227,14 @@
 
     </div>
     <!-- ── END list panel ── -->
+
+    <!-- 1:1 crop dialog for custom icon uploads -->
+    <app-image-cropper
+      *ngIf="pendingCropFile"
+      [file]="pendingCropFile"
+      (cropped)="onCropped($event)"
+      (cancelled)="onCropCancelled()">
+    </app-image-cropper>
 
   </div>
 </div>

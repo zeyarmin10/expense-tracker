@@ -103,7 +103,8 @@
             (click)="selectCategory(cat.name)"
           >
             <span class="exp-cat-picker-item-icon">
-              <lucide-icon [img]="getIconForCategory(cat.name)" [size]="15"></lucide-icon>
+              <img *ngIf="getIconUrlForCategory(cat.name)" [src]="getIconUrlForCategory(cat.name)!" alt="" class="cat-img-icon" style="width:15px;height:15px" />
+              <lucide-icon *ngIf="!getIconUrlForCategory(cat.name)" [img]="getIconForCategory(cat.name)" [size]="15"></lucide-icon>
             </span>
             <span class="exp-cat-picker-item-label">{{ cat.name }}</span>
             <lucide-icon
@@ -171,7 +172,8 @@
               <button type="button" class="exp-cat-select-trigger" (click)="openCategoryPicker('expense')">
                 <ng-container *ngIf="newExpenseForm.get('category')?.value as catVal; else catQuickPlaceholder">
                   <span class="exp-cat-select-trigger-icon" [style.--cat-hue]="getIconHueForCategory(catVal)">
-                    <lucide-icon [img]="getIconForCategory(catVal)" [size]="14"></lucide-icon>
+                    <img *ngIf="getIconUrlForCategory(catVal)" [src]="getIconUrlForCategory(catVal)!" alt="" class="cat-img-icon" style="width:100%;height:100%" />
+                    <lucide-icon *ngIf="!getIconUrlForCategory(catVal)" [img]="getIconForCategory(catVal)" [size]="14"></lucide-icon>
                   </span>
                   <span class="exp-cat-select-trigger-value">{{ catVal }}</span>
                 </ng-container>
@@ -212,7 +214,8 @@
               <button type="button" class="exp-cat-select-trigger" (click)="openCategoryPicker('expense')">
                 <ng-container *ngIf="newExpenseForm.get('category')?.value as catVal; else catFullPlaceholder">
                   <span class="exp-cat-select-trigger-icon" [style.--cat-hue]="getIconHueForCategory(catVal)">
-                    <lucide-icon [img]="getIconForCategory(catVal)" [size]="14"></lucide-icon>
+                    <img *ngIf="getIconUrlForCategory(catVal)" [src]="getIconUrlForCategory(catVal)!" alt="" class="cat-img-icon" style="width:100%;height:100%" />
+                    <lucide-icon *ngIf="!getIconUrlForCategory(catVal)" [img]="getIconForCategory(catVal)" [size]="14"></lucide-icon>
                   </span>
                   <span class="exp-cat-select-trigger-value">{{ catVal }}</span>
                 </ng-container>
@@ -330,7 +333,8 @@
             <button type="button" class="exp-cat-select-trigger" (click)="openCategoryPicker('voucher')">
               <ng-container *ngIf="voucherForm.get('category')?.value as catVal; else catVoucherPlaceholder">
                 <span class="exp-cat-select-trigger-icon" [style.--cat-hue]="getIconHueForCategory(catVal)">
-                  <lucide-icon [img]="getIconForCategory(catVal)" [size]="14"></lucide-icon>
+                  <img *ngIf="getIconUrlForCategory(catVal)" [src]="getIconUrlForCategory(catVal)!" alt="" class="cat-img-icon" style="width:100%;height:100%" />
+                  <lucide-icon *ngIf="!getIconUrlForCategory(catVal)" [img]="getIconForCategory(catVal)" [size]="14"></lucide-icon>
                 </span>
                 <span class="exp-cat-select-trigger-value">{{ catVal }}</span>
               </ng-container>
@@ -570,7 +574,8 @@
               </div>
               <div class="exp-item-meta">
                 <span *ngIf="voucher.category" class="exp-cat-badge" [style.--cat-hue]="getIconHueForCategory(voucher.category)">
-                  <lucide-icon [img]="getIconForCategory(voucher.category)" [size]="11" style="flex-shrink:0"></lucide-icon>
+                  <img *ngIf="getIconUrlForCategory(voucher.category)" [src]="getIconUrlForCategory(voucher.category)!" alt="" class="cat-img-icon" style="width:11px;height:11px" />
+                  <lucide-icon *ngIf="!getIconUrlForCategory(voucher.category)" [img]="getIconForCategory(voucher.category)" [size]="11" style="flex-shrink:0"></lucide-icon>
                   <span class="exp-cat-badge-text">{{ voucher.category }}</span>
                 </span>
                 <span *ngIf="voucher.category" class="exp-meta-dot">·</span>
@@ -716,7 +721,8 @@
 
                   <div class="exp-item-meta">
                     <span class="exp-cat-badge" [style.--cat-hue]="getIconHueForCategory(expense.category)">
-                      <lucide-icon [img]="getIconForCategory(expense.category)" [size]="11" style="flex-shrink:0"></lucide-icon>
+                      <img *ngIf="getIconUrlForCategory(expense.category)" [src]="getIconUrlForCategory(expense.category)!" alt="" class="cat-img-icon" style="width:11px;height:11px" />
+                      <lucide-icon *ngIf="!getIconUrlForCategory(expense.category)" [img]="getIconForCategory(expense.category)" [size]="11" style="flex-shrink:0"></lucide-icon>
                       <span class="exp-cat-badge-text">{{ expense.category }}</span>
                     </span>
                     <span
