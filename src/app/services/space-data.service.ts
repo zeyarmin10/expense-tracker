@@ -29,7 +29,14 @@ export class SpaceDataService {
   private readonly virtualPersonalPrefix = 'personal:';
 
   private isPermissionDenied(error: any): boolean {
-    return error?.code === 'PERMISSION_DENIED' || error?.message === 'permission_denied';
+    // The SDK reports denials in several shapes: listener cancellations
+    // carry code 'PERMISSION_DENIED' / message 'permission_denied at ...',
+    // while a one-shot get() throws a plain Error('Permission denied') with
+    // no code at all — match all of them.
+    return (
+      String(error?.code || '').toUpperCase() === 'PERMISSION_DENIED' ||
+      /^permission[ _]denied/i.test(String(error?.message || ''))
+    );
   }
 
   private isVirtualPersonalSpaceId(spaceId: string | null | undefined): boolean {

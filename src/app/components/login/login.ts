@@ -225,11 +225,21 @@ export class LoginComponent implements OnInit, OnDestroy {
       };
       await this.userDataService.createUserProfile(newUserProfile);
       profile = newUserProfile; // use the new profile
-      // Don't block navigation on this — the dashboard reads categories via a
-      // live RTDB listener, so these can arrive a moment after the user lands there.
-      this.categoryService.addDefaultCategories(user.uid, this.currentLang).catch((error) => {
-        console.error('Failed to create default categories:', error);
-      });
+      // Don't block navigation on these — the dashboard reads categories via a
+      // live RTDB listener, so they can arrive a moment after the user lands
+      // there. Sequenced (not parallel) because ensurePersonalSpace also
+      // seeds default categories when none exist yet — racing the two would
+      // write the defaults twice.
+      this.categoryService.addDefaultCategories(user.uid, this.currentLang)
+        .catch((error) => {
+          console.error('Failed to create default categories:', error);
+        })
+        .then(() => this.spaceContextService.ensurePersonalSpace(user.uid))
+        .catch((error) => {
+          // Non-fatal: every consumer falls back to the virtual personal
+          // space (personal:{uid}) until a real one exists.
+          console.error('Failed to create personal space at signup:', error);
+        });
     } else {
       // Self-heal: bring the RTDB profile back in sync with Firebase Auth if
       // they've drifted apart (e.g. an older account hit the race above and

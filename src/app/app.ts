@@ -532,8 +532,14 @@ export class App implements OnInit, AfterViewInit {
     // step or on /onboarding, long before the real nav bar / space-switcher
     // the tour spotlights are even in the DOM — showing it there traps the
     // user behind a backdrop with nothing visible to dismiss it.
+    // Mobile-only (< 992px, matching app.css's breakpoint): every tour
+    // target lives in the mob-topbar / mob-bottom-nav, which are
+    // display:none on desktop — their rects collapse to 0,0 and the
+    // tooltip renders detached in the top-left corner. Deliberately not
+    // marking hasSeenWelcomeTour here, so a desktop-first user still gets
+    // the tour on their first mobile visit.
     combineLatest([this.authService.userProfile$, this.showNavbar$]).subscribe(([profile, showNavbar]) => {
-      if (showNavbar && profile?.hasSeenWelcomeTour === false && !this.showWelcomeTour) {
+      if (showNavbar && profile?.hasSeenWelcomeTour === false && !this.showWelcomeTour && window.innerWidth < 992) {
         this.showWelcomeTour = true;
       }
     });

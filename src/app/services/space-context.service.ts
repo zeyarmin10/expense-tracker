@@ -31,9 +31,13 @@ export class SpaceContextService {
   }
 
   private isPermissionDenied(error: any): boolean {
+    // The SDK reports denials in several shapes: listener cancellations
+    // carry code 'PERMISSION_DENIED' / message 'permission_denied at ...',
+    // while a one-shot get() throws a plain Error('Permission denied') with
+    // no code at all — match all of them.
     return (
-      error?.code === 'PERMISSION_DENIED' ||
-      error?.message === 'permission_denied'
+      String(error?.code || '').toUpperCase() === 'PERMISSION_DENIED' ||
+      /^permission[ _]denied/i.test(String(error?.message || ''))
     );
   }
 
@@ -98,6 +102,15 @@ export class SpaceContextService {
 
     const spaceRef = ref(this.db, `spaces/${spaceId}`);
     const legacyGroupRef = ref(this.db, `groups/${spaceId}`);
+    // The /groups read is denied for spaces that never had a legacy record
+    // (anything created directly under /spaces has no /group_members entry,
+    // which the /groups read rule requires). A denied legacy read must mean
+    // "no legacy data", never an error — otherwise it kills the whole
+    // stream it's embedded in (userProfile$ has no catchError, and
+    // getUserSpaces would silently drop the space from the list).
+    const legacyGroup$ = objectVal<any>(legacyGroupRef).pipe(
+      catchError(() => of(null)),
+    );
 
     return objectVal<Space | null>(spaceRef).pipe(
       switchMap((space) => {
@@ -111,7 +124,7 @@ export class SpaceContextService {
             return of({ ...space, id: spaceId });
           }
           // Backfill imageUrl from groups node for spaces that predate image support
-          return objectVal<any>(legacyGroupRef).pipe(
+          return legacyGroup$.pipe(
             map((group) => ({
               ...space,
               id: spaceId,
@@ -120,7 +133,7 @@ export class SpaceContextService {
           );
         }
 
-        return objectVal<any>(legacyGroupRef).pipe(
+        return legacyGroup$.pipe(
           map((group) => {
             if (!group) {
               return null;
@@ -352,9 +365,17 @@ export class SpaceContextService {
     // nothing — personal spaces (and any space fully migrated to /spaces)
     // never have a /group_members entry, so this read would otherwise be
     // denied every time for them, even though it's never actually needed.
-    const legacyGroupSnapshot = spaceSnapshot.exists()
-      ? null
-      : await get(ref(this.db, `groups/${spaceId}`));
+    // A denied legacy read means "no legacy data", not a failed switch.
+    let legacyGroupSnapshot = null;
+    if (!spaceSnapshot.exists()) {
+      try {
+        legacyGroupSnapshot = await get(ref(this.db, `groups/${spaceId}`));
+      } catch (error: any) {
+        if (!this.isPermissionDenied(error)) {
+          throw error;
+        }
+      }
+    }
 
     const space = (spaceSnapshot.exists()
       ? spaceSnapshot.val()

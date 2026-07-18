@@ -81,6 +81,14 @@ export class WelcomeTourComponent implements OnInit, OnDestroy {
 
   @HostListener('window:resize')
   onResize(): void {
+    // The tour only targets the mobile topbar / bottom-nav; crossing into
+    // the desktop layout (≥ 992px) hides them all, so close rather than
+    // spotlight collapsed rects. Not marked as seen — the next mobile
+    // visit shows the tour again.
+    if (window.innerWidth >= 992) {
+      this.closed.emit();
+      return;
+    }
     this.locate();
   }
 
