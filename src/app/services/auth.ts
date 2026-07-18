@@ -278,9 +278,11 @@ export class AuthService {
           const existingProfile = await firstValueFrom(
             userDataService.getUserProfile(user.uid),
           );
+          // inviteCode is stored on the membership record so security rules
+          // can verify the join against a matching pending invitation.
           await this.db
             .object(`space_members/${inviteData.groupId}/${user.uid}`)
-            .set({ role: role });
+            .set({ role: role, inviteCode });
 
           const space = await firstValueFrom(spaceContextService.getSpace(inviteData.groupId));
 

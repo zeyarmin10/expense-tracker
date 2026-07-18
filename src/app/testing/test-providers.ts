@@ -32,7 +32,9 @@ const TEST_FIREBASE_CONFIG = {
   authDomain: `${EMULATOR_HOST}`,
   projectId: 'demo-expense-tracker',
   appId: 'demo-app-id',
-  databaseURL: `http://${EMULATOR_HOST}:${DATABASE_EMULATOR_PORT}?ns=demo-expense-tracker`,
+  // The "-default-rtdb" namespace is the one the emulator loads
+  // database.rules.json into — other namespaces get allow-all rules.
+  databaseURL: `http://${EMULATOR_HOST}:${DATABASE_EMULATOR_PORT}?ns=demo-expense-tracker-default-rtdb`,
 };
 
 // TranslateModule.forRoot() runs with the default (empty) loader, so

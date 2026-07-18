@@ -5,6 +5,7 @@ import {
   objectVal,
   push,
   ref,
+  set,
   update,
 } from '@angular/fire/database';
 import { Observable, combineLatest, map, of, switchMap, catchError } from 'rxjs';
@@ -252,7 +253,6 @@ export class SpaceContextService {
     };
 
     const updates: Record<string, unknown> = {
-      [`/spaces/${personalSpaceId}`]: personalSpace,
       [`/space_members/${personalSpaceId}/${userId}`]: { role: 'owner' },
       [`/users/${userId}/personalSpaceId`]: personalSpaceId,
       [`/users/${userId}/currentSpaceId`]:
@@ -266,6 +266,11 @@ export class SpaceContextService {
     };
 
     try {
+      // The space record must exist before the owner membership write —
+      // security rules verify spaces/$spaceId/ownerId === auth.uid for the
+      // owner's self-membership, and a single multi-path update would be
+      // evaluated against the pre-write state where the space doesn't exist.
+      await set(personalSpaceRef, personalSpace);
       await update(ref(this.db), updates);
     } catch (error: any) {
       if (!this.isPermissionDenied(error)) {

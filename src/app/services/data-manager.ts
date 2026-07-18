@@ -9,6 +9,7 @@ import {
   query,
   orderByChild,
   equalTo,
+  set,
   update,
 } from '@angular/fire/database';
 import { Observable, switchMap, firstValueFrom, of, combineLatest, map as rxMap, catchError } from 'rxjs';
@@ -96,8 +97,11 @@ export class DataManagerService {
       throw new Error('Failed to create new space ID.');
     }
 
-    const updates: { [key: string]: any } = {};
-    updates[`/spaces/${newGroupId}`] = {
+    // The space record must exist before the owner membership write —
+    // security rules verify spaces/$spaceId/ownerId === auth.uid for the
+    // owner's self-membership, and a single multi-path update would be
+    // evaluated against the pre-write state where the space doesn't exist.
+    await set(spaceRef, {
       type: 'group',
       name: trimmedName,
       ownerId: userId,
@@ -108,7 +112,9 @@ export class DataManagerService {
       selectedBudgetPeriodId: userProfile?.selectedBudgetPeriodId || null,
       createdAt: Date.now(),
       ...(imageUrl ? { imageUrl } : {}),
-    };
+    });
+
+    const updates: { [key: string]: any } = {};
     updates[`/space_members/${newGroupId}/${userId}`] = { role: 'owner' };
     updates[`/users/${userId}/accountType`] = 'group';
     updates[`/users/${userId}/currentSpaceId`] = newGroupId;
@@ -260,7 +266,9 @@ export class DataManagerService {
     const space = await firstValueFrom(this.spaceContextService.getSpace(groupId));
 
     const updates: { [key: string]: any } = {};
-    updates[`/space_members/${groupId}/${userId}`] = { role };
+    // inviteCode is stored on the membership record so security rules can
+    // verify the join against a matching pending invitation.
+    updates[`/space_members/${groupId}/${userId}`] = { role, inviteCode };
     updates[`/users/${userId}/accountType`] = 'group';
     updates[`/users/${userId}/currentSpaceId`] = groupId;
     updates[`/users/${userId}/currentSpaceType`] = 'group';

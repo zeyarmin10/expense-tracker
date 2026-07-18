@@ -1,0 +1,241 @@
+{
+  "rules": {
+    "users": {
+      "$uid": {
+        ".read": "$uid === auth.uid || (root.child('users').child(auth.uid).child('currentSpaceId').exists() && ((root.child('space_members').child(root.child('users').child(auth.uid).child('currentSpaceId').val()).child(auth.uid).exists() && root.child('space_members').child(root.child('users').child(auth.uid).child('currentSpaceId').val()).child($uid).exists()) || (root.child('group_members').child(root.child('users').child(auth.uid).child('currentSpaceId').val()).child(auth.uid).exists() && root.child('group_members').child(root.child('users').child(auth.uid).child('currentSpaceId').val()).child($uid).exists())))",
+        ".write": "$uid === auth.uid || (data.exists() && data.child('groupId').exists() && (root.child('group_members').child(data.child('groupId').val()).child(auth.uid).child('role').val() === 'admin' || root.child('group_members').child(data.child('groupId').val()).child(auth.uid).child('role').val() === 'owner')) || (data.exists() && data.child('currentSpaceId').exists() && (root.child('space_members').child(data.child('currentSpaceId').val()).child(auth.uid).child('role').val() === 'admin' || root.child('space_members').child(data.child('currentSpaceId').val()).child(auth.uid).child('role').val() === 'owner' || root.child('group_members').child(data.child('currentSpaceId').val()).child(auth.uid).child('role').val() === 'admin' || root.child('group_members').child(data.child('currentSpaceId').val()).child(auth.uid).child('role').val() === 'owner'))",
+
+        "groupId": {
+          ".write": "$uid === auth.uid || (data.parent().child('groupId').exists() && (root.child('group_members').child(data.parent().child('groupId').val()).child(auth.uid).child('role').val() === 'admin' || root.child('group_members').child(data.parent().child('groupId').val()).child(auth.uid).child('role').val() === 'owner')) || (data.parent().child('currentSpaceId').exists() && (root.child('space_members').child(data.parent().child('currentSpaceId').val()).child(auth.uid).child('role').val() === 'admin' || root.child('space_members').child(data.parent().child('currentSpaceId').val()).child(auth.uid).child('role').val() === 'owner' || root.child('group_members').child(data.parent().child('currentSpaceId').val()).child(auth.uid).child('role').val() === 'admin' || root.child('group_members').child(data.parent().child('currentSpaceId').val()).child(auth.uid).child('role').val() === 'owner'))",
+          ".validate": "newData.val() === null || newData.isString()"
+        },
+
+        "accountType": {
+          ".write": "$uid === auth.uid || (data.parent().child('groupId').exists() && (root.child('group_members').child(data.parent().child('groupId').val()).child(auth.uid).child('role').val() === 'admin' || root.child('group_members').child(data.parent().child('groupId').val()).child(auth.uid).child('role').val() === 'owner')) || (data.parent().child('currentSpaceId').exists() && (root.child('space_members').child(data.parent().child('currentSpaceId').val()).child(auth.uid).child('role').val() === 'admin' || root.child('space_members').child(data.parent().child('currentSpaceId').val()).child(auth.uid).child('role').val() === 'owner' || root.child('group_members').child(data.parent().child('currentSpaceId').val()).child(auth.uid).child('role').val() === 'admin' || root.child('group_members').child(data.parent().child('currentSpaceId').val()).child(auth.uid).child('role').val() === 'owner'))"
+        },
+
+        "currentSpaceId": {
+          ".write": "$uid === auth.uid || (data.parent().child('groupId').exists() && (root.child('group_members').child(data.parent().child('groupId').val()).child(auth.uid).child('role').val() === 'admin' || root.child('group_members').child(data.parent().child('groupId').val()).child(auth.uid).child('role').val() === 'owner')) || (data.parent().child('currentSpaceId').exists() && (root.child('space_members').child(data.parent().child('currentSpaceId').val()).child(auth.uid).child('role').val() === 'admin' || root.child('space_members').child(data.parent().child('currentSpaceId').val()).child(auth.uid).child('role').val() === 'owner' || root.child('group_members').child(data.parent().child('currentSpaceId').val()).child(auth.uid).child('role').val() === 'admin' || root.child('group_members').child(data.parent().child('currentSpaceId').val()).child(auth.uid).child('role').val() === 'owner'))"
+        },
+
+        "currentSpaceType": {
+          ".write": "$uid === auth.uid || (data.parent().child('groupId').exists() && (root.child('group_members').child(data.parent().child('groupId').val()).child(auth.uid).child('role').val() === 'admin' || root.child('group_members').child(data.parent().child('groupId').val()).child(auth.uid).child('role').val() === 'owner')) || (data.parent().child('currentSpaceId').exists() && (root.child('space_members').child(data.parent().child('currentSpaceId').val()).child(auth.uid).child('role').val() === 'admin' || root.child('space_members').child(data.parent().child('currentSpaceId').val()).child(auth.uid).child('role').val() === 'owner' || root.child('group_members').child(data.parent().child('currentSpaceId').val()).child(auth.uid).child('role').val() === 'admin' || root.child('group_members').child(data.parent().child('currentSpaceId').val()).child(auth.uid).child('role').val() === 'owner'))"
+        },
+
+        "currentSpaceName": {
+          ".write": "$uid === auth.uid || (data.parent().child('groupId').exists() && (root.child('group_members').child(data.parent().child('groupId').val()).child(auth.uid).child('role').val() === 'admin' || root.child('group_members').child(data.parent().child('groupId').val()).child(auth.uid).child('role').val() === 'owner')) || (data.parent().child('currentSpaceId').exists() && (root.child('space_members').child(data.parent().child('currentSpaceId').val()).child(auth.uid).child('role').val() === 'admin' || root.child('space_members').child(data.parent().child('currentSpaceId').val()).child(auth.uid).child('role').val() === 'owner' || root.child('group_members').child(data.parent().child('currentSpaceId').val()).child(auth.uid).child('role').val() === 'admin' || root.child('group_members').child(data.parent().child('currentSpaceId').val()).child(auth.uid).child('role').val() === 'owner'))"
+        },
+
+        "currentSpaceRole": {
+          ".write": "$uid === auth.uid || (data.parent().child('groupId').exists() && (root.child('group_members').child(data.parent().child('groupId').val()).child(auth.uid).child('role').val() === 'admin' || root.child('group_members').child(data.parent().child('groupId').val()).child(auth.uid).child('role').val() === 'owner')) || (data.parent().child('currentSpaceId').exists() && (root.child('space_members').child(data.parent().child('currentSpaceId').val()).child(auth.uid).child('role').val() === 'admin' || root.child('space_members').child(data.parent().child('currentSpaceId').val()).child(auth.uid).child('role').val() === 'owner' || root.child('group_members').child(data.parent().child('currentSpaceId').val()).child(auth.uid).child('role').val() === 'admin' || root.child('group_members').child(data.parent().child('currentSpaceId').val()).child(auth.uid).child('role').val() === 'owner'))"
+        },
+
+        "spaceMemberships": {
+          "$spaceId": {
+            ".write": "$uid === auth.uid || root.child('space_members').child($spaceId).child(auth.uid).child('role').val() === 'owner' || root.child('space_members').child($spaceId).child(auth.uid).child('role').val() === 'admin' || root.child('group_members').child($spaceId).child(auth.uid).child('role').val() === 'admin' || root.child('group_members').child($spaceId).child(auth.uid).child('role').val() === 'owner'"
+          }
+        },
+
+        "roles": {
+          "$groupId": {
+            ".write": "$uid === auth.uid || root.child('group_members').child($groupId).child(auth.uid).child('role').val() === 'admin' || root.child('group_members').child($groupId).child(auth.uid).child('role').val() === 'owner' || root.child('space_members').child($groupId).child(auth.uid).child('role').val() === 'admin' || root.child('space_members').child($groupId).child(auth.uid).child('role').val() === 'owner'"
+          }
+        },
+
+        "email": {
+          ".validate": "!data.exists() || newData.val() === data.val()"
+        },
+
+        "expenses": {
+          ".indexOn": ["date", "category"],
+          ".write": "$uid === auth.uid",
+          "$expenseId": {
+            "editHistory": {
+              "$entryKey": {
+                ".validate": "newData.hasChildren(['editedAt', 'editedBy', 'editedByName', 'changes'])"
+              }
+            }
+          }
+        },
+
+        "incomes": {
+          ".indexOn": "date",
+          ".write": "$uid === auth.uid"
+        },
+
+        "budgets": {
+          ".indexOn": "period",
+          ".write": "$uid === auth.uid"
+        },
+
+        "categories": {
+          ".indexOn": "category",
+          ".write": "$uid === auth.uid"
+        }
+      }
+    },
+
+    "user_public": {
+      "$uid": {
+        ".read": "auth != null",
+        ".write": "$uid === auth.uid",
+        ".validate": "!newData.hasChild('email') && !newData.hasChild('currentSpaceId') && !newData.hasChild('spaceMemberships')"
+      }
+    },
+
+    "notification_settings": {
+      "$uid": {
+        ".read": "$uid === auth.uid",
+        ".write": "$uid === auth.uid"
+      }
+    },
+
+    "notification_tokens": {
+      "$uid": {
+        ".read": "$uid === auth.uid",
+        ".write": "$uid === auth.uid"
+      }
+    },
+
+    "groups": {
+      "$groupId": {
+        ".read": "root.child('group_members').child($groupId).child(auth.uid).exists()",
+        ".write": "(!data.exists() && newData.child('ownerId').val() === auth.uid) || (data.exists() && (data.child('ownerId').val() === auth.uid || root.child('group_members').child($groupId).child(auth.uid).exists()))",
+        ".validate": "!newData.exists() || newData.hasChildren(['groupName', 'ownerId'])"
+      }
+    },
+
+    "group_members": {
+      "$groupId": {
+        ".read": "root.child('group_members').child($groupId).child(auth.uid).exists()",
+        ".write": "data.child(auth.uid).child('role').val() === 'admin' || data.child(auth.uid).child('role').val() === 'owner' || root.child('group_members').child($groupId).child(auth.uid).child('role').val() === 'admin' || root.child('group_members').child($groupId).child(auth.uid).child('role').val() === 'owner'",
+        "$uid": {
+          ".write": "($uid === auth.uid && !newData.exists()) || root.child('group_members').child($groupId).child(auth.uid).child('role').val() === 'admin' || root.child('group_members').child($groupId).child(auth.uid).child('role').val() === 'owner'"
+        }
+      }
+    },
+
+    "spaces": {
+      "$spaceId": {
+        ".read": "root.child('space_members').child($spaceId).child(auth.uid).exists() || root.child('group_members').child($spaceId).child(auth.uid).exists()",
+        ".write": "(!data.exists() && newData.child('ownerId').val() === auth.uid) || (data.exists() && (data.child('ownerId').val() === auth.uid || root.child('space_members').child($spaceId).child(auth.uid).child('role').val() === 'owner' || root.child('space_members').child($spaceId).child(auth.uid).child('role').val() === 'admin' || root.child('group_members').child($spaceId).child(auth.uid).child('role').val() === 'admin' || root.child('group_members').child($spaceId).child(auth.uid).child('role').val() === 'owner'))",
+        ".validate": "!newData.exists() || newData.hasChildren(['type', 'name', 'ownerId', 'currency'])"
+      }
+    },
+
+    "space_members": {
+      "$spaceId": {
+        ".read": "root.child('space_members').child($spaceId).child(auth.uid).exists() || root.child('group_members').child($spaceId).child(auth.uid).exists()",
+        ".write": "data.child(auth.uid).child('role').val() === 'owner' || data.child(auth.uid).child('role').val() === 'admin' || root.child('space_members').child($spaceId).child(auth.uid).child('role').val() === 'owner' || root.child('space_members').child($spaceId).child(auth.uid).child('role').val() === 'admin' || root.child('group_members').child($spaceId).child(auth.uid).child('role').val() === 'admin' || root.child('group_members').child($spaceId).child(auth.uid).child('role').val() === 'owner'",
+        "$uid": {
+          ".write": "root.child('space_members').child($spaceId).child(auth.uid).child('role').val() === 'owner' || root.child('space_members').child($spaceId).child(auth.uid).child('role').val() === 'admin' || root.child('group_members').child($spaceId).child(auth.uid).child('role').val() === 'admin' || root.child('group_members').child($spaceId).child(auth.uid).child('role').val() === 'owner' || ($uid === auth.uid && !newData.exists()) || ($uid === auth.uid && newData.child('role').val() === 'owner' && root.child('spaces').child($spaceId).child('ownerId').val() === auth.uid) || ($uid === auth.uid && newData.child('role').val() === 'member' && root.child('invitations').child(newData.child('inviteCode').val()).child('groupId').val() === $spaceId && root.child('invitations').child(newData.child('inviteCode').val()).child('status').val() === 'pending' && root.child('invitations').child(newData.child('inviteCode').val()).child('email').val().toLowerCase() === auth.token.email)"
+        }
+      }
+    },
+
+    "space_data": {
+      "$spaceId": {
+        ".read": "root.child('space_members').child($spaceId).child(auth.uid).exists() || root.child('group_members').child($spaceId).child(auth.uid).exists() || root.child('users').child(auth.uid).child('personalSpaceId').val() === $spaceId",
+        ".write": "root.child('space_members').child($spaceId).child(auth.uid).exists() || root.child('group_members').child($spaceId).child(auth.uid).exists() || root.child('users').child(auth.uid).child('personalSpaceId').val() === $spaceId",
+
+        "expenses": {
+          ".indexOn": ["date", "category"],
+          "$expenseId": {
+            "editHistory": {
+              "$entryKey": {
+                ".validate": "newData.hasChildren(['editedAt', 'editedBy', 'editedByName', 'changes'])"
+              }
+            }
+          }
+        },
+
+        "incomes": {
+          ".indexOn": "date"
+        },
+
+        "budgets": {
+          ".indexOn": "period"
+        },
+
+        "categories": {
+          ".indexOn": "name"
+        }
+      }
+    },
+
+    "invitations": {
+      ".indexOn": ["groupId"],
+      ".read": "auth != null && query.orderByChild === 'groupId' && query.equalTo !== null && (root.child('group_members').child(query.equalTo).child(auth.uid).exists() || root.child('space_members').child(query.equalTo).child(auth.uid).exists())",
+      "$inviteCode": {
+        ".read": "auth != null",
+        ".write": "(root.child('group_members').child(data.exists() ? data.child('groupId').val() : newData.child('groupId').val()).child(auth.uid).child('role').val() === 'admin') || (root.child('group_members').child(data.exists() ? data.child('groupId').val() : newData.child('groupId').val()).child(auth.uid).child('role').val() === 'owner') || (root.child('space_members').child(data.exists() ? data.child('groupId').val() : newData.child('groupId').val()).child(auth.uid).child('role').val() === 'admin') || (root.child('space_members').child(data.exists() ? data.child('groupId').val() : newData.child('groupId').val()).child(auth.uid).child('role').val() === 'owner') || (data.exists() && data.child('status').val() === 'pending' && newData.child('status').val() === 'accepted' && data.child('email').val() === auth.token.email)",
+        "email": {
+          ".validate": "newData.isString()"
+        },
+        "groupId": {
+          ".validate": "newData.isString()"
+        },
+        "status": {
+          ".validate": "newData.isString() && (newData.val() === 'pending' || newData.val() === 'accepted')"
+        },
+        "createdAt": {
+          ".validate": "newData.isString()"
+        },
+        "acceptedBy": {
+          ".validate": "!data.exists() || newData.isString()"
+        },
+        "acceptedAt": {
+          ".validate": "!data.exists() || newData.isString()"
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+
+    "group_data": {
+      "$groupId": {
+        ".read": "root.child('group_members').child($groupId).child(auth.uid).exists()",
+        ".write": "root.child('group_members').child($groupId).child(auth.uid).exists()",
+
+        "expenses": {
+          ".indexOn": ["date", "category"],
+          "$expenseId": {
+            "editHistory": {
+              "$entryKey": {
+                ".validate": "newData.hasChildren(['editedAt', 'editedBy', 'editedByName', 'changes'])"
+              }
+            }
+          }
+        },
+
+        "incomes": {
+          ".indexOn": "date"
+        },
+
+        "budgets": {
+          ".indexOn": "period"
+        },
+
+        "categories": {
+          ".indexOn": "name"
+        }
+      }
+    },
+
+    "appConfig": {
+      ".read": "auth != null",
+      "android": {
+        "latestVersionCode": {
+          ".validate": "newData.isNumber()"
+        },
+        "latestVersionName": {
+          ".validate": "newData.isString()"
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    }
+  }
+}

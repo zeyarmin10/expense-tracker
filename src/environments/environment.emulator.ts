@@ -10,7 +10,7 @@ export const environment = {
     firebaseConfig: {
         apiKey: "demo-api-key",
         authDomain: "127.0.0.1",
-        databaseURL: "http://127.0.0.1:9000?ns=demo-expense-tracker",
+        databaseURL: "http://127.0.0.1:9000?ns=demo-expense-tracker-default-rtdb",
         projectId: "demo-expense-tracker",
         storageBucket: "demo-expense-tracker.appspot.com",
         messagingSenderId: "demo-sender-id",
