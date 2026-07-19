@@ -152,6 +152,8 @@ export class Expense implements OnInit, OnDestroy {
   isSaving = false;
   isAddModalOpen = false;
   addModalTab: 'expense' | 'voucher' = 'expense';
+  // Non-null while the add modal is editing an existing record instead.
+  editingExpense: IExpense | null = null;
   isVoucherSaving = false;
   isSavedVoucherListOpen = false;
   isQuickMode = true;
@@ -368,6 +370,20 @@ export class Expense implements OnInit, OnDestroy {
     this.isCategoryPickerOpen = false;
     this.closeDatePicker();
     document.body.classList.remove('exp-add-modal-open');
+    // Leaving edit mode: clear the prefilled values so the next "add"
+    // starts from a clean form instead of the edited record's data.
+    if (this.editingExpense) {
+      this.editingExpense = null;
+      this.resetNewExpenseForm();
+    }
+  }
+
+  private resetNewExpenseForm(): void {
+    const today = this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
+    this.newExpenseForm.reset({
+      date: today, category: '', itemName: '', quantity: 1, unit: '', price: ''
+    });
+    this.priceDisplayValue = '';
   }
 
   setAddModalTab(tab: 'expense' | 'voucher'): void {
@@ -635,18 +651,38 @@ export class Expense implements OnInit, OnDestroy {
     if (!fv.itemName) {
       fv.itemName = fv.category || '-';
     }
-    const newExpense: Omit<IExpense, 'id'> = {
-      date: fv.date,
-      category: fv.category,
-      itemName: fv.itemName,
-      quantity: fv.quantity,
-      unit: fv.unit,
-      price: fv.price,
-      currency: this.userProfile?.currency || 'MMK',
-      totalCost: fv.quantity * fv.price,
-    };
 
     try {
+      if (this.editingExpense) {
+        const updated: any = {
+          date: fv.date,
+          category: fv.category,
+          itemName: fv.itemName,
+          quantity: fv.quantity,
+          unit: fv.unit,
+          price: fv.price,
+          totalCost: fv.quantity * fv.price,
+          updatedAt: new Date().toISOString(),
+          updatedByName: this.userProfile?.displayName,
+          editedDevice: 'Web Browser',
+        };
+        await this.expenseService.updateExpense(this.editingExpense.id!, updated);
+        Toast.fire({ icon: 'success', title: this.translate.instant('EXPENSE_SUCCESS_UPDATED') });
+        this.refreshExpenses$.next();
+        this.closeAddModal(); // also clears editingExpense + resets the form
+        return;
+      }
+
+      const newExpense: Omit<IExpense, 'id'> = {
+        date: fv.date,
+        category: fv.category,
+        itemName: fv.itemName,
+        quantity: fv.quantity,
+        unit: fv.unit,
+        price: fv.price,
+        currency: this.userProfile?.currency || 'MMK',
+        totalCost: fv.quantity * fv.price,
+      };
       await this.expenseService.addExpense(newExpense as any);
       Toast.fire({ icon: 'success', title: this.translate.instant('EXPENSE_SUCCESS_ADDED') });
       this.newExpenseForm.reset({
@@ -657,7 +693,8 @@ export class Expense implements OnInit, OnDestroy {
       this.refreshExpenses$.next();
       this.closeAddModal();
     } catch (error: any) {
-      Toast.fire({ icon: 'error', title: error.message || this.translate.instant('EXPENSE_ERROR_ADD') });
+      const fallbackKey = this.editingExpense ? 'EXPENSE_ERROR_UPDATE' : 'EXPENSE_ERROR_ADD';
+      Toast.fire({ icon: 'error', title: error.message || this.translate.instant(fallbackKey) });
     } finally {
       this.isSaving = false;
       this.cdr.markForCheck();
@@ -1027,171 +1064,28 @@ export class Expense implements OnInit, OnDestroy {
   }
 
   // ── Swal-based Edit ────────────────────────────────────────────────────────
-  async startEdit(expense: IExpense): Promise<void> {
-    const categories = await firstValueFrom(this.categories$);
+  // ── Edit — reuses the Add-Expense modal (same custom category/date
+  //    pickers as adding) instead of the old SweetAlert HTML form, so add
+  //    and edit share one look and behavior. ──
+  startEdit(expense: IExpense): void {
     const isPersonal = this.userProfile?.accountType === 'personal';
-    const currency = expense.currency || this.userProfile?.currency || 'MMK';
-    const hasQtyOrUnit = (expense.quantity != null && expense.quantity !== 1) || !!(expense.unit);
+    const hasQtyOrUnit = (expense.quantity != null && expense.quantity !== 1) || !!expense.unit;
     const showQtyUnit = !isPersonal || hasQtyOrUnit;
 
-    const categoryOptions = categories
-      .map(cat => `<option value="${cat.name}" ${cat.name === expense.category ? 'selected' : ''}>${cat.name}</option>`)
-      .join('');
-
-    const isDark = !document.body.classList.contains('light-mode');
-    const inputBg = isDark ? '#1c2230' : '#f0f4f8';
-    const inputClr = isDark ? '#f0f2f7' : '#1a202c';
-    const borderClr = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.12)';
-    const labelClr = isDark ? '#9ca3af' : '#6b7280';
-    const accentClr = '#0b74ff';
-
-    const inputStyle = `
-      width:100%; box-sizing:border-box;
-      background:${inputBg}; color:${inputClr};
-      border:1px solid ${borderClr}; border-radius:8px;
-      font-size:0.85rem; padding:0.4rem 0.75rem;
-      outline:none; margin-bottom:0.35rem;
-      font-family:inherit;
-      appearance: none;
-    `;
-    const labelStyle = `
-      display:block; font-size:0.6rem; font-weight:700;
-      letter-spacing:0.08em; text-transform:uppercase;
-      color:${labelClr}; margin-bottom:0.1rem;
-    `;
-
-    const { value: formValues } = await Swal.fire({
-      title: this.translate.instant('EDIT_BUTTON_LABEL'),
-      position: 'top',
-      html: `
-  <div style="text-align:left; display:flex; flex-direction:column; gap:0;">
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.4rem;">
-      <div>
-        <label style="${labelStyle}">${this.translate.instant('EXPENSE_DATE_LABEL')}</label>
-        <input id="swal-date" type="date" value="${expense.date}" style="${inputStyle}" />
-      </div>
-      <div>
-        <label style="${labelStyle}">${this.translate.instant('EXPENSE_CATEGORY_LABEL')}</label>
-        <select id="swal-category" style="${inputStyle} appearance:none; -webkit-appearance:none; cursor:pointer;">
-          ${categoryOptions}
-        </select>
-      </div>
-    </div>
-
-    <label style="${labelStyle}">${this.translate.instant('EXPENSE_ITEM_NAME_LABEL')}</label>
-    <input id="swal-itemName" type="text" value="${expense.itemName || ''}" style="${inputStyle}" />
-
-    ${showQtyUnit ? `
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.4rem;">
-        <div>
-          <label style="${labelStyle}">${this.translate.instant('QUANTITY_LABEL')}</label>
-          <input id="swal-quantity" type="number" min="0.01" step="0.01" value="${expense.quantity}" style="${inputStyle}" />
-        </div>
-        <div>
-          <label style="${labelStyle}">${this.translate.instant('EXPENSE_UNIT_LABEL')}</label>
-          <input id="swal-unit" type="text" value="${expense.unit || ''}" style="${inputStyle}" />
-        </div>
-      </div>
-    ` : ''}
-
-    <label style="${labelStyle}">${this.translate.instant('PRICE_LABEL')} (${currency})</label>
-    <input id="swal-price" type="text" inputmode="decimal"
-      value="${this.formatWithCommas(expense.price)}" style="${inputStyle}" />
-
-  </div>
-`,
-      showCancelButton: true,
-      confirmButtonText: this.translate.instant('SAVE_BUTTON_LABEL'),
-      cancelButtonText: this.translate.instant('CANCEL_BUTTON_LABEL'),
-      confirmButtonColor: accentClr,
-      focusConfirm: false,
-      width: '420px',
-      padding: '0.75rem',
-      customClass: {
-        popup: isDark ? '' : 'swal-light',
-      },
-      didOpen: () => {
-        const itemNameInput = document.getElementById('swal-itemName') as HTMLInputElement;
-        if (itemNameInput) {
-          itemNameInput.focus();
-          // selection မဟုတ်ဘဲ cursor ကို text အဆုံးမှာ ချမည်
-          const len = itemNameInput.value.length;
-          itemNameInput.setSelectionRange(len, len);
-        }
-
-        // ── Price comma formatting ──
-        const priceInput = document.getElementById('swal-price') as HTMLInputElement;
-        if (priceInput) {
-          priceInput.addEventListener('input', () => {
-            let raw = priceInput.value.replace(/[^\d.]/g, '');
-            const parts = raw.split('.');
-            if (parts.length > 2) raw = parts[0] + '.' + parts.slice(1).join('');
-            const intPart = (parts[0] || '').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-            const decPart = raw.includes('.') ? '.' + (raw.split('.')[1] || '') : '';
-            priceInput.value = intPart + decPart;
-          });
-        }
-      },
-      preConfirm: () => {
-        const date = (document.getElementById('swal-date') as HTMLInputElement)?.value?.trim();
-        const category = (document.getElementById('swal-category') as HTMLSelectElement)?.value?.trim();
-        const itemName = (document.getElementById('swal-itemName') as HTMLInputElement)?.value?.trim();
-
-        // ── comma ဖယ်ပြီး parse ──
-        const priceRaw = (document.getElementById('swal-price') as HTMLInputElement)?.value?.replace(/,/g, '') || '0';
-        const price = parseFloat(priceRaw);
-
-        const quantity = showQtyUnit
-          ? parseFloat((document.getElementById('swal-quantity') as HTMLInputElement)?.value || '1')
-          : (expense.quantity ?? 1);
-        const unit = showQtyUnit
-          ? ((document.getElementById('swal-unit') as HTMLInputElement)?.value?.trim() || '')
-          : (expense.unit || '');
-
-        if (!date) {
-          Swal.showValidationMessage(this.translate.instant('EXPENSE_DATE_LABEL') + ' ' + this.translate.instant('ERROR_FILL_ALL_FIELDS'));
-          return false;
-        }
-        if (!category) {
-          Swal.showValidationMessage(this.translate.instant('EXPENSE_CATEGORY_LABEL') + ' ' + this.translate.instant('ERROR_FILL_ALL_FIELDS'));
-          return false;
-        }
-        if (isNaN(price) || price <= 0) {
-          Swal.showValidationMessage(this.translate.instant('PRICE_LABEL') + ' ' + this.translate.instant('ERROR_FILL_ALL_FIELDS'));
-          return false;
-        }
-
-        return { date, category, itemName: itemName || category, quantity, unit, price };
-      }
+    this.editingExpense = expense;
+    // Full mode when quantity/unit matter for this record — set BEFORE
+    // patching, since entering quick mode resets quantity/unit.
+    this.setQuickMode(!showQtyUnit);
+    this.newExpenseForm.patchValue({
+      date: expense.date,
+      category: expense.category,
+      itemName: expense.itemName || '',
+      quantity: expense.quantity ?? 1,
+      unit: expense.unit || '',
+      price: expense.price,
     });
-
-    if (!formValues) return;
-
-    this.isSaving = true;
-    this.cdr.markForCheck();
-    try {
-      const updated: any = {
-        date: formValues.date,
-        category: formValues.category,
-        itemName: formValues.itemName,
-        quantity: formValues.quantity,
-        unit: formValues.unit,
-        price: formValues.price,
-        totalCost: formValues.quantity * formValues.price,
-        updatedAt: new Date().toISOString(),
-        updatedByName: this.userProfile?.displayName,
-        editedDevice: 'Web Browser',
-      };
-
-      await this.expenseService.updateExpense(expense.id!, updated);
-      Toast.fire({ icon: 'success', title: this.translate.instant('EXPENSE_SUCCESS_UPDATED') });
-      this.refreshExpenses$.next();
-    } catch (error: any) {
-      Toast.fire({ icon: 'error', title: error.message || this.translate.instant('EXPENSE_ERROR_UPDATE') });
-    } finally {
-      this.isSaving = false;
-      this.cdr.markForCheck();
-    }
+    this.priceDisplayValue = expense.price > 0 ? this.formatWithCommas(expense.price) : '';
+    this.openAddModal('expense');
   }
   // ─────────────────────────────────────────────────────────────────────────
 

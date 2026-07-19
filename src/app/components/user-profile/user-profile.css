@@ -474,7 +474,7 @@
   color: var(--text-muted);
 }
 
-.prof-period-range-text lucide-icon {
+.prof-period-range-text lucide-icon, .prof-period-range-text span {
   color: var(--accent, #0b74ff);
   flex-shrink: 0;
 }

@@ -111,11 +111,11 @@ body.bgt-add-modal-open {
 
 .bgt-add-modal-sheet {
   position: fixed;
-  top: 50%;
+  top: calc(env(safe-area-inset-top, 0px) + 0.85rem);
   left: 50%;
   width: 92%;
   max-width: 480px;
-  max-height: 85vh;
+  max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 1.7rem);
   margin: 0;
   display: flex;
   flex-direction: column;
@@ -124,7 +124,7 @@ body.bgt-add-modal-open {
   border-radius: 20px;
   box-shadow: 0 12px 48px rgba(0, 0, 0, 0.45);
   z-index: 1020;
-  translate: -50% -50%;
+  translate: -50% 0;
   scale: 0.96;
   opacity: 0;
   pointer-events: none;
@@ -252,6 +252,11 @@ body.bgt-add-modal-open {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* Budget-type trigger with nothing selected yet — label reads as placeholder */
+.bgt-type-trigger-placeholder {
+  color: var(--text-muted);
 }
 
 .bgt-cat-select-trigger-chevron {
@@ -845,8 +850,19 @@ app-date-input .di-trigger {
 /* ── Date pill (pinned top-right, like Add Expense's mode-toggle row) ── */
 .bgt-date-pill-row {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
   /* margin: 0 0 0.85rem; */
+}
+
+/* Budget-type pill — same compact look as the date pill, left-aligned */
+.bgt-type-pill.is-invalid {
+  border-color: var(--danger, #ef4444);
+}
+
+.bgt-type-pill-chevron {
+  opacity: 0.6;
 }
 
 .bgt-date-pill {

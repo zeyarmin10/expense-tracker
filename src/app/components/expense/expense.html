@@ -14,7 +14,11 @@
     <div class="exp-add-modal-sheet" [class.open]="isAddModalOpen">
       <div class="exp-add-modal-handle"></div>
       <div class="exp-add-modal-header" *ngIf="!isCategoryPickerOpen && !isDatePickerOpen">
-        <div class="exp-seg-ctrl exp-add-modal-tabs">
+        <!-- Edit mode: plain title instead of the add/voucher tabs -->
+        <span class="exp-add-modal-header-title" *ngIf="editingExpense">
+          {{ 'EDIT_BUTTON_LABEL' | translate }}
+        </span>
+        <div class="exp-seg-ctrl exp-add-modal-tabs" *ngIf="!editingExpense">
           <div class="exp-seg-track">
             <span
               class="exp-seg-indicator"

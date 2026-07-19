@@ -130,7 +130,7 @@
               </div>
             </div>
             <div class="ob-input-row">
-              <button class="ob-btn ob-btn-accent" (click)="openCreateGroupModal()">
+              <button class="ob-btn ob-btn-accent" (click)="openCreateSpaceModal()">
                 {{ 'ONBOARDING.CREATE_GROUP_BUTTON' | translate }}
               </button>
             </div>
@@ -171,6 +171,62 @@
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Create-space modal (replaces the old SweetAlert form) ── -->
+  <div class="ob-modal-backdrop" *ngIf="isCreateSpaceModalOpen" (click)="closeCreateSpaceModal()"></div>
+  <div class="ob-modal" *ngIf="isCreateSpaceModalOpen" role="dialog" aria-modal="true">
+    <div class="ob-modal-header">
+      <span class="ob-modal-title">{{ 'ONBOARDING.CREATE_NEW_GROUP' | translate }}</span>
+      <button type="button" class="ob-modal-close" (click)="closeCreateSpaceModal()"
+        [disabled]="isCreatingSpace" [title]="'CANCEL_BUTTON' | translate">
+        <lucide-icon [img]="iconX" [size]="18"></lucide-icon>
+      </button>
+    </div>
+
+    <div class="ob-modal-body">
+      <label class="ob-modal-photo" [class.ob-modal-photo-filled]="createSpaceImagePreview">
+        <img *ngIf="createSpaceImagePreview" [src]="createSpaceImagePreview" alt="" />
+        <lucide-icon *ngIf="!createSpaceImagePreview" [img]="iconUsers" [size]="30"></lucide-icon>
+        <span class="ob-modal-photo-badge">
+          <lucide-icon [img]="iconPencil" [size]="11"></lucide-icon>
+        </span>
+        <input type="file" accept="image/*" hidden
+          [disabled]="isCreatingSpace"
+          (change)="onCreateSpacePhotoSelected($event)" />
+      </label>
+      <div class="ob-modal-photo-hint">{{ 'OPTIONAL' | translate }}</div>
+
+      <input
+        id="ob-create-space-name"
+        type="text"
+        class="ob-modal-input"
+        [(ngModel)]="createSpaceName"
+        [attr.maxlength]="maxSpaceNameLength"
+        [placeholder]="'ONBOARDING.ENTER_GROUP_NAME' | translate"
+        [disabled]="isCreatingSpace"
+        (keyup.enter)="submitCreateSpace()"
+        autocomplete="off" />
+      <div class="ob-modal-meta-row">
+        <span class="ob-modal-error" *ngIf="createSpaceError">{{ createSpaceError }}</span>
+        <span class="ob-modal-count"
+          [class.ob-modal-count-limit]="createSpaceName.length >= maxSpaceNameLength">
+          {{ createSpaceName.length }} / {{ maxSpaceNameLength }}
+        </span>
+      </div>
+
+      <div class="ob-modal-actions">
+        <button type="button" class="ob-btn ob-btn-accent ob-modal-submit"
+          (click)="submitCreateSpace()" [disabled]="!canSubmitCreateSpace">
+          <span *ngIf="isCreatingSpace" class="ob-modal-spinner" aria-hidden="true"></span>
+          {{ 'ONBOARDING.CREATE_GROUP_BUTTON' | translate }}
+        </button>
+        <button type="button" class="ob-btn ob-btn-outline"
+          (click)="closeCreateSpaceModal()" [disabled]="isCreatingSpace">
+          {{ 'CANCEL_BUTTON' | translate }}
+        </button>
       </div>
     </div>
   </div>

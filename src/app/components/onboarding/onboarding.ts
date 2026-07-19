@@ -12,7 +12,7 @@ import { SpaceContextService } from '../../services/space-context.service';
 import { ImageUploadService } from '../../services/image-upload.service';
 import { UserSpaceSummary } from '../../services/space.model';
 import Swal from 'sweetalert2';
-import { LucideAngularModule, CircleCheck, Link, EllipsisVertical, Pencil, Trash2, User, Users } from 'lucide-angular';
+import { LucideAngularModule, CircleCheck, Link, EllipsisVertical, Pencil, Trash2, User, Users, X } from 'lucide-angular';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
 
 @Component({
@@ -39,6 +39,7 @@ export class OnboardingComponent implements OnInit {
   readonly iconEllipsisVertical = EllipsisVertical;
   readonly iconPencil = Pencil;
   readonly iconTrash2 = Trash2;
+  readonly iconX = X;
 
   userProfile$: Observable<UserProfile | null>;
   userSpaces$!: Observable<UserSpaceSummary[]>;
@@ -366,16 +367,16 @@ export class OnboardingComponent implements OnInit {
     }
   }
 
-  async openCreateGroupModal(): Promise<void> {
-    const namePlaceholder = this.translate.instant('ONBOARDING.ENTER_GROUP_NAME');
-    const optionalLabel  = this.translate.instant('OPTIONAL') || 'Optional';
-    const uploadErrMsg   = this.translate.instant('AVATAR_UPLOAD_ERROR');
-    const emptyErrMsg    = this.translate.instant('SPACE_RENAME_EMPTY_ERROR');
-    const maxErrMsg      = this.translate.instant('SPACE_NAME_MAX_LENGTH_ERROR', { max: this.maxSpaceNameLength });
+  // ── Create-space modal (component modal — replaces the old SweetAlert
+  //    HTML form, matching the app's other custom modal sheets) ──
+  isCreateSpaceModalOpen = false;
+  isCreatingSpace = false;
+  createSpaceName = '';
+  createSpaceError: string | null = null;
+  createSpaceImageFile: File | null = null;
+  createSpaceImagePreview: string | null = null;
 
-    const max = this.maxSpaceNameLength;
-    const counterHint = this.translate.instant('SPACE_NAME_LIMIT_HINT', { max }) || `Max ${max} chars`;
-
+  async openCreateSpaceModal(): Promise<void> {
     const user = await firstValueFrom(this.authService.currentUser$);
     if (!user) {
       Swal.fire({
@@ -386,131 +387,81 @@ export class OnboardingComponent implements OnInit {
       return;
     }
 
-    const result = await Swal.fire<{ name: string; imageUrl: string | null }>({
-      title: this.translate.instant('ONBOARDING.CREATE_NEW_GROUP'),
-      position: 'top',
-      html: `
-        <div style="display:flex;flex-direction:column;align-items:center;gap:0.85rem;">
-          <div style="position:relative;cursor:pointer;"
-               onclick="document.getElementById('swal-grp-photo').click()">
-            <div id="swal-grp-preview"
-                 style="width:80px;height:80px;border-radius:50%;
-                        background:var(--swal-preview-bg,#1e2130);border:2px dashed var(--swal-preview-border,#2a2f3d);
-                        display:flex;align-items:center;justify-content:center;
-                        overflow:hidden;font-size:2rem;color:var(--text-muted,#6b7280);">
-              👥
-            </div>
-            <div style="position:absolute;bottom:0;right:0;width:22px;height:22px;
-                        border-radius:50%;background:#0b74ff;
-                        display:flex;align-items:center;justify-content:center;
-                        font-size:0.65rem;color:#fff;">✏️</div>
-          </div>
-          <small style="color:#6b7280;font-size:0.72rem;margin-top:-0.4rem;">${optionalLabel}</small>
-          <input type="file" id="swal-grp-photo" accept="image/*" style="display:none">
-          <div style="width:100%;">
-            <input id="swal-grp-name" class="swal2-input"
-                   type="text" placeholder="${namePlaceholder}"
-                   maxlength="${max}"
-                   style="margin:0;width:100%;">
-            <div id="swal-grp-counter"
-                 style="display:flex;justify-content:space-between;align-items:center;
-                        margin-top:0.35rem;padding:0 0.1rem;gap:0.5rem;">
-              <span id="swal-grp-hint" style="font-size:0.7rem;color:#f87171;display:none;">${counterHint}</span>
-              <span id="swal-grp-count" style="font-size:0.7rem;color:#6b7280;min-width:2.5rem;">0 / ${max}</span>
-            </div>
-          </div>
-        </div>
-      `,
-      showCancelButton: true,
-      confirmButtonText: this.translate.instant('ONBOARDING.CREATE_GROUP_BUTTON'),
-      cancelButtonText: this.translate.instant('CANCEL_BUTTON'),
-      didOpen: () => {
-        const fileInput  = document.getElementById('swal-grp-photo')  as HTMLInputElement;
-        const nameInput  = document.getElementById('swal-grp-name')   as HTMLInputElement;
-        const countEl    = document.getElementById('swal-grp-count')  as HTMLElement;
-        const hintEl     = document.getElementById('swal-grp-hint')   as HTMLElement;
+    this.createSpaceName = '';
+    this.createSpaceError = null;
+    this.clearCreateSpaceImage();
+    this.isCreateSpaceModalOpen = true;
+    setTimeout(() => {
+      (document.getElementById('ob-create-space-name') as HTMLInputElement | null)?.focus();
+    }, 80);
+  }
 
-        fileInput?.addEventListener('change', () => {
-          const file = fileInput.files?.[0];
-          if (!file) return;
-          const reader = new FileReader();
-          reader.onload = (ev) => {
-            const preview = document.getElementById('swal-grp-preview');
-            if (preview && ev.target?.result) {
-              preview.innerHTML = `<img src="${ev.target.result as string}"
-                style="width:100%;height:100%;object-fit:cover;">`;
-            }
-          };
-          reader.readAsDataURL(file);
-        });
+  closeCreateSpaceModal(): void {
+    if (this.isCreatingSpace) return;
+    this.isCreateSpaceModalOpen = false;
+    this.createSpaceError = null;
+    this.clearCreateSpaceImage();
+  }
 
-        nameInput?.addEventListener('input', () => {
-          const len = nameInput.value.length;
-          const atLimit = len >= max;
-          countEl.textContent = `${len} / ${max}`;
-          countEl.style.color = atLimit ? '#f87171' : '#6b7280';
-          nameInput.style.borderColor = atLimit ? '#f87171' : '';
-          if (hintEl) hintEl.style.display = atLimit ? 'block' : 'none';
-        });
+  private clearCreateSpaceImage(): void {
+    if (this.createSpaceImagePreview) {
+      URL.revokeObjectURL(this.createSpaceImagePreview);
+    }
+    this.createSpaceImagePreview = null;
+    this.createSpaceImageFile = null;
+  }
 
-        setTimeout(() => nameInput?.focus(), 80);
-      },
-      preConfirm: async () => {
-        const nameInput = document.getElementById('swal-grp-name') as HTMLInputElement;
-        const fileInput = document.getElementById('swal-grp-photo') as HTMLInputElement;
-        const name = nameInput?.value?.trim() ?? '';
+  onCreateSpacePhotoSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    if (this.createSpaceImagePreview) {
+      URL.revokeObjectURL(this.createSpaceImagePreview);
+    }
+    this.createSpaceImageFile = file;
+    this.createSpaceImagePreview = URL.createObjectURL(file);
+  }
 
-        if (!name) {
-          Swal.showValidationMessage(emptyErrMsg);
-          return false;
-        }
-        if (name.length > this.maxSpaceNameLength) {
-          Swal.showValidationMessage(maxErrMsg);
-          return false;
-        }
+  get canSubmitCreateSpace(): boolean {
+    const name = this.createSpaceName.trim();
+    return !this.isCreatingSpace && !!name && name.length <= this.maxSpaceNameLength;
+  }
 
-        // Catch duplicate-name / space-limit rejections here, while the
-        // modal (and the user's typed name/photo) is still open, instead of
-        // letting them close the modal only to see a separate error dialog
-        // afterward with everything they entered lost.
-        try {
-          await this.dataManager.validateNewGroupName(name, user.uid);
-        } catch (error) {
-          Swal.showValidationMessage(this.getCreateGroupErrorMessage(error));
-          return false;
-        }
+  async submitCreateSpace(): Promise<void> {
+    if (!this.canSubmitCreateSpace) return;
+    const user = await firstValueFrom(this.authService.currentUser$);
+    if (!user) return;
 
-        const file = fileInput?.files?.[0] ?? null;
-        let imageUrl: string | null = null;
-
-        if (file) {
-          Swal.showLoading();
-          try {
-            const compressed = await this.compressSpaceImage(file);
-            imageUrl = await this.imageUploadService.uploadSpaceImage(compressed);
-          } catch {
-            Swal.showValidationMessage(uploadErrMsg);
-            return false;
-          }
-        }
-
-        return { name, imageUrl };
-      },
-    });
-
-    if (!result.isConfirmed || !result.value) return;
-
+    const name = this.createSpaceName.trim();
+    this.isCreatingSpace = true;
+    this.createSpaceError = null;
     try {
+      // Validate up front (duplicate name / space limit) so the rejection
+      // surfaces inline while the typed name & photo are still in place.
+      await this.dataManager.validateNewGroupName(name, user.uid);
+
+      let imageUrl: string | null = null;
+      if (this.createSpaceImageFile) {
+        try {
+          const compressed = await this.compressSpaceImage(this.createSpaceImageFile);
+          imageUrl = await this.imageUploadService.uploadSpaceImage(compressed);
+        } catch {
+          this.createSpaceError = this.translate.instant('AVATAR_UPLOAD_ERROR');
+          return;
+        }
+      }
+
       const lang = this.translate.currentLang || 'my';
-      await this.dataManager.createGroup(result.value.name, lang, result.value.imageUrl);
+      await this.dataManager.createGroup(name, lang, imageUrl);
+      this.isCreatingSpace = false;
+      this.closeCreateSpaceModal();
       this.router.navigate(['/dashboard']);
     } catch (error) {
       console.error('Error creating group:', error);
-      Swal.fire({
-        icon: 'error',
-        title: this.translate.instant('ERROR_TITLE'),
-        text: this.getCreateGroupErrorMessage(error),
-      });
+      this.createSpaceError = this.getCreateGroupErrorMessage(error);
+    } finally {
+      this.isCreatingSpace = false;
     }
   }
 

@@ -105,10 +105,10 @@
 
           <div class="prof-period-range-text" *ngIf="showCustomDateRange">
             <lucide-icon [img]="iconCalendarRange" [size]="13"></lucide-icon>
-            <span>
+            <span *ngIf="userProfileForm.get('budgetStartDate')?.value && userProfileForm.get('budgetEndDate')?.value">
               {{ 'BUDGET_PERIOD_RANGE_TEXT' | translate: {
-                start: formatService.formatLocalizedDate(userProfileForm.get('budgetStartDate')?.value, 'shortDate'),
-                end: formatService.formatLocalizedDate(userProfileForm.get('budgetEndDate')?.value, 'shortDate')
+                start: formatService.formatLocalizedDate(userProfileForm.get('budgetStartDate')?.value, 'MMM d, yyyy'),
+                end: formatService.formatLocalizedDate(userProfileForm.get('budgetEndDate')?.value, 'MMM d, yyyy')
               } }}
             </span>
           </div>

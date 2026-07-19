@@ -23,6 +23,7 @@ import {
   Plus, Tags, Save, Pencil, Trash2, X, Tag, ImagePlus,
 } from 'lucide-angular';
 import { CATEGORY_ICONS, getIconData, getIconHue } from '../../utils/category-icons';
+import { meaningfulTextValidator } from '../../utils/form-validators';
 import { ImageUploadService } from '../../services/image-upload.service';
 import { ImageCropperComponent } from '../common/image-cropper/image-cropper.component';
 
@@ -196,7 +197,7 @@ export class Category implements OnInit, OnDestroy {
 
   constructor(private fb: FormBuilder) {
     this.addCategoryForm = this.fb.group({
-      name: ['', [Validators.required, Validators.maxLength(50)]],
+      name: ['', [Validators.required, Validators.maxLength(50), meaningfulTextValidator]],
     });
   }
 
@@ -320,7 +321,7 @@ export class Category implements OnInit, OnDestroy {
     this.editingCategoryId = category.id!;
     this.editingCategoryFormControl = new FormControl(
       category.name,
-      [Validators.required, Validators.maxLength(50)]
+      [Validators.required, Validators.maxLength(50), meaningfulTextValidator]
     );
     this.selectedEditIcon = category.icon || 'tag';
     this.selectedEditIconData = this.getIconData(category.icon);

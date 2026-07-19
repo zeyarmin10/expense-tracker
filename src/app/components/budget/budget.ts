@@ -24,7 +24,7 @@ import {
   LucideAngularModule, LucideIconData,
   Trash2, Save, ChevronDown, TriangleAlert, CircleCheck,
   PiggyBank, ShoppingCart, ChartLine, ListChecks,
-  ChartColumn, Wallet, Plus, X, Search, Check, CalendarDays,
+  ChartColumn, Wallet, Plus, X, Search, Check, CalendarDays, CalendarRange,
 } from 'lucide-angular';
 import { Chart, registerables } from 'chart.js';
 import { AuthService } from '../../services/auth';
@@ -189,6 +189,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
   readonly iconSearch = Search;
   readonly iconCheck = Check;
   readonly iconCalendarDays = CalendarDays;
+  readonly iconCalendarRange = CalendarRange;
 
   hasChartData: boolean = false;
   isChartDataLoaded: boolean = false;
@@ -201,6 +202,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
   isCategoryPickerOpen = false;
   categoryPickerSearch = '';
   isDatePickerOpen = false;
+  isTypePickerOpen = false;
   private datePickerFp: FlatpickrInstance | null = null;
 
   get isRecordedOpen(): boolean { return !this.isRecordedBudgetsCollapsed; }
@@ -241,6 +243,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
     }
     this.isAddModalOpen = true;
     this.isCategoryPickerOpen = false;
+    this.isTypePickerOpen = false;
     this.closeDatePicker();
     document.body.classList.add('bgt-add-modal-open');
   }
@@ -248,8 +251,39 @@ export class BudgetComponent implements OnInit, OnDestroy {
   closeAddModal(): void {
     this.isAddModalOpen = false;
     this.isCategoryPickerOpen = false;
+    this.isTypePickerOpen = false;
     this.closeDatePicker();
     document.body.classList.remove('bgt-add-modal-open');
+  }
+
+  // ── Budget-type picker (drill-down within the Add-Budget modal) ──
+  // Same pattern as the category picker below, replacing the old native
+  // <select> so both dropdowns in this form share one look and behavior.
+  readonly budgetTypeOptions: { value: 'monthly' | 'yearly'; labelKey: string }[] = [
+    { value: 'monthly', labelKey: 'MONTHLY_BUDGET' },
+    { value: 'yearly', labelKey: 'YEARLY_BUDGET' },
+  ];
+
+  openTypePicker(): void {
+    this.isTypePickerOpen = true;
+    this.isCategoryPickerOpen = false;
+    this.closeDatePicker();
+  }
+
+  closeTypePicker(): void {
+    this.isTypePickerOpen = false;
+  }
+
+  selectBudgetType(type: 'monthly' | 'yearly'): void {
+    this.budgetForm.get('type')?.setValue(type);
+    this.budgetForm.get('type')?.markAsTouched();
+    this.onBudgetTypeChange(type);
+    this.closeTypePicker();
+  }
+
+  get selectedTypeLabelKey(): string | null {
+    const type = this.budgetForm.get('type')?.value;
+    return this.budgetTypeOptions.find((option) => option.value === type)?.labelKey ?? null;
   }
 
   // ── Category picker (drill-down within the Add-Budget modal) ──
@@ -260,6 +294,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
   openCategoryPicker(): void {
     this.categoryPickerSearch = '';
     this.isCategoryPickerOpen = true;
+    this.isTypePickerOpen = false;
     this.closeDatePicker();
   }
 
@@ -304,6 +339,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
   // instead, with no separate backdrop/sheet/history of its own.
   openDatePicker(): void {
     this.isCategoryPickerOpen = false;
+    this.isTypePickerOpen = false;
     this.isDatePickerOpen = true;
     setTimeout(() => this.initDatePickerFlatpickr(), 0);
   }

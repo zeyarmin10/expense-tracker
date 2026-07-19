@@ -5,6 +5,7 @@ import {
   // provideZonelessChangeDetection,
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
+import { COMPOSITION_BUFFER_MODE } from '@angular/forms';
 import { provideRouter, withPreloading, PreloadAllModules } from '@angular/router';
 import { AngularFireModule } from '@angular/fire/compat';
 import {
@@ -35,6 +36,13 @@ export function HttpLoaderFactory(http: HttpClient) {
 export const appConfig: ApplicationConfig = {
   providers: [
     DatePipe,
+    // Update form-control values on every input DURING IME composition too.
+    // Burmese (and other complex-script) keyboards type via composition
+    // events, and Angular's default is to defer the value until composition
+    // ends — which in practice is blur/focus-out. That left buttons gated
+    // on form validity (e.g. add-category's save) disabled until the user
+    // tapped away from the input.
+    { provide: COMPOSITION_BUFFER_MODE, useValue: false },
     // provideBrowserGlobalErrorListeners(),
     // provideZonelessChangeDetection(),
     provideRouter(routes, withPreloading(PreloadAllModules)),

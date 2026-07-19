@@ -13,9 +13,20 @@
     <div class="bgt-add-modal-sheet" [class.open]="isAddModalOpen">
       <div class="bgt-add-modal-handle"></div>
 
-      <div class="bgt-add-modal-header" *ngIf="!isCategoryPickerOpen && !isDatePickerOpen">
+      <div class="bgt-add-modal-header" *ngIf="!isCategoryPickerOpen && !isDatePickerOpen && !isTypePickerOpen">
         <span class="bgt-add-modal-header-title">{{ 'ADD_BUDGET' | translate }}</span>
         <button type="button" class="bgt-add-modal-close" (click)="closeAddModal()" [title]="'CANCEL_BUTTON_LABEL' | translate">
+          <lucide-icon [img]="iconX" [size]="18"></lucide-icon>
+        </button>
+      </div>
+
+      <!-- Budget-type picker header — replaces the title while drilled in -->
+      <div class="bgt-add-modal-header" *ngIf="isTypePickerOpen">
+        <button type="button" class="bgt-add-modal-back" (click)="closeTypePicker()">
+          <lucide-icon [img]="iconChevronDown" [size]="18" class="bgt-add-modal-back-icon"></lucide-icon>
+        </button>
+        <span class="bgt-add-modal-header-title">{{ 'BUDGET_TYPE' | translate }}</span>
+        <button type="button" class="bgt-add-modal-close" (click)="closeTypePicker()" [title]="'BACK_BUTTON' | translate">
           <lucide-icon [img]="iconX" [size]="18"></lucide-icon>
         </button>
       </div>
@@ -83,38 +94,56 @@
         </div>
       </div>
 
-      <div class="bgt-add-modal-body" *ngIf="!isCategoryPickerOpen && !isDatePickerOpen">
+      <!-- Budget-type picker body — simple list, swaps in place of the form -->
+      <div class="bgt-add-modal-body bgt-cat-picker-body" *ngIf="isTypePickerOpen">
+        <div class="bgt-cat-picker-list">
+          <button
+            type="button"
+            class="bgt-cat-picker-item"
+            *ngFor="let option of budgetTypeOptions"
+            (click)="selectBudgetType(option.value)"
+          >
+            <span class="bgt-cat-picker-item-icon">
+              <lucide-icon [img]="option.value === 'monthly' ? iconCalendarDays : iconCalendarRange" [size]="15"></lucide-icon>
+            </span>
+            <span class="bgt-cat-picker-item-label">{{ option.labelKey | translate }}</span>
+            <lucide-icon
+              *ngIf="budgetForm.get('type')?.value === option.value"
+              [img]="iconCheck" [size]="16" class="bgt-cat-picker-item-check">
+            </lucide-icon>
+          </button>
+        </div>
+      </div>
+
+      <div class="bgt-add-modal-body" *ngIf="!isCategoryPickerOpen && !isDatePickerOpen && !isTypePickerOpen">
         <form [formGroup]="budgetForm" (ngSubmit)="onSubmitBudget()" class="bgt-form">
 
-          <!-- Date — pinned to the top-right corner as a compact pill -->
+          <!-- Budget type (left) + date (right) — one compact pill row -->
           <div class="bgt-date-pill-row">
+            <button type="button" class="bgt-date-pill bgt-type-pill"
+              [class.is-invalid]="budgetForm.controls['type'].invalid && budgetForm.controls['type'].touched"
+              (click)="openTypePicker()">
+              <lucide-icon [img]="budgetForm.get('type')?.value === 'yearly' ? iconCalendarRange : iconCalendarDays" [size]="13"></lucide-icon>
+              <span [class.bgt-type-trigger-placeholder]="!selectedTypeLabelKey">
+                {{ (selectedTypeLabelKey || 'BUDGET_TYPE') | translate }}
+              </span>
+              <lucide-icon [img]="iconChevronDown" [size]="12" class="bgt-type-pill-chevron"></lucide-icon>
+            </button>
             <button type="button" class="bgt-date-pill" (click)="openDatePicker()">
               <lucide-icon [img]="iconCalendarDays" [size]="13"></lucide-icon>
               <span>{{ formatService.formatLocalizedDate(budgetForm.get('period')?.value) }}</span>
             </button>
           </div>
 
-          <div class="bgt-form-row">
-            <div class="bgt-float-field">
-              <select id="type" formControlName="type" class="bgt-input bgt-select-field"
-                (change)="onBudgetTypeChange(budgetForm.value.type)" placeholder=" "
-                [class.is-invalid]="budgetForm.controls['type'].invalid && budgetForm.controls['type'].touched">
-                <option value="" disabled></option>
-                <option value="monthly">{{ "MONTHLY_BUDGET" | translate }}</option>
-                <option value="yearly">{{ "YEARLY_BUDGET" | translate }}</option>
-              </select>
-              <label class="bgt-float-label" for="type">{{ "BUDGET_TYPE" | translate }}</label>
-            </div>
-            <div class="bgt-float-field">
-              <button type="button" class="bgt-cat-select-trigger" (click)="openCategoryPicker()">
-                <span class="bgt-cat-select-trigger-icon" [style.--cat-hue]="getIconHueForCategoryId(budgetForm.get('category')?.value)">
-                  <img *ngIf="getIconUrlForCategoryId(budgetForm.get('category')?.value)" [src]="getIconUrlForCategoryId(budgetForm.get('category')?.value)!" alt="" class="cat-img-icon" style="width:100%;height:100%" />
-                  <lucide-icon *ngIf="!getIconUrlForCategoryId(budgetForm.get('category')?.value)" [img]="getIconForCategoryId(budgetForm.get('category')?.value)" [size]="14"></lucide-icon>
-                </span>
-                <span class="bgt-cat-select-trigger-value">{{ selectedCategoryName }}</span>
-                <lucide-icon [img]="iconChevronDown" [size]="14" class="bgt-cat-select-trigger-chevron"></lucide-icon>
-              </button>
-            </div>
+          <div class="bgt-float-field">
+            <button type="button" class="bgt-cat-select-trigger" (click)="openCategoryPicker()">
+              <span class="bgt-cat-select-trigger-icon" [style.--cat-hue]="getIconHueForCategoryId(budgetForm.get('category')?.value)">
+                <img *ngIf="getIconUrlForCategoryId(budgetForm.get('category')?.value)" [src]="getIconUrlForCategoryId(budgetForm.get('category')?.value)!" alt="" class="cat-img-icon" style="width:100%;height:100%" />
+                <lucide-icon *ngIf="!getIconUrlForCategoryId(budgetForm.get('category')?.value)" [img]="getIconForCategoryId(budgetForm.get('category')?.value)" [size]="14"></lucide-icon>
+              </span>
+              <span class="bgt-cat-select-trigger-value">{{ selectedCategoryName }}</span>
+              <lucide-icon [img]="iconChevronDown" [size]="14" class="bgt-cat-select-trigger-chevron"></lucide-icon>
+            </button>
           </div>
 
           <!-- Amount — same prominent hero style as Add Expense's price field -->

@@ -112,11 +112,11 @@ body.exp-add-modal-open {
    viewport, not this dialog). translate/scale don't have that side effect. */
 .exp-add-modal-sheet {
   position: fixed;
-  top: 50%;
+  top: calc(env(safe-area-inset-top, 0px) + 0.85rem);
   left: 50%;
   width: 92%;
   max-width: 480px;
-  max-height: 85vh;
+  max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 1.7rem);
   margin: 0;
   display: flex;
   flex-direction: column;
@@ -125,7 +125,7 @@ body.exp-add-modal-open {
   border-radius: 20px;
   box-shadow: 0 12px 48px rgba(0, 0, 0, 0.45);
   z-index: 1020;
-  translate: -50% -50%;
+  translate: -50% 0;
   scale: 0.96;
   opacity: 0;
   pointer-events: none;
@@ -2364,4 +2364,3 @@ body.light-mode .exp-seg-reset {
   from { opacity: 0; transform: translateY(-6px) scaleY(0.92); }
   to   { opacity: 1; transform: translateY(0) scaleY(1); }
 }
-

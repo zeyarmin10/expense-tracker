@@ -8,6 +8,7 @@ import {
   Save, X, Plus, Tags, Pencil, Trash2, MoreVertical, ImagePlus,
 } from 'lucide-angular';
 import { CATEGORY_ICONS, getIconData, getIconHue } from '../../../utils/category-icons';
+import { meaningfulTextValidator } from '../../../utils/form-validators';
 import { ImageUploadService } from '../../../services/image-upload.service';
 import { ImageCropperComponent } from '../image-cropper/image-cropper.component';
 import { BehaviorSubject, firstValueFrom } from 'rxjs';
@@ -157,7 +158,7 @@ export class CategoryModalComponent implements OnInit, OnDestroy {
 
   constructor(private fb: FormBuilder) {
     this.categoryForm = this.fb.group({
-      name: ['', [Validators.required, Validators.maxLength(50)]]
+      name: ['', [Validators.required, Validators.maxLength(50), meaningfulTextValidator]]
     });
   }
 
