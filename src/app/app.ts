@@ -16,6 +16,7 @@ import { ThemeService } from './services/theme.service';
 import { NotificationService } from './services/notification.service';
 import { AppUpdateService } from './services/app-update.service';
 import { StatusBar, Style } from '@capacitor/status-bar';
+import { APP_LANGUAGES } from './core/constants/app.constants';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { Capacitor } from '@capacitor/core';
 import { Camera } from '@capacitor/camera';
@@ -881,7 +882,9 @@ export class App implements OnInit, AfterViewInit {
   }
 
   toggleLanguage(): void {
-    const newLang = this.currentLang === 'en' ? 'my' : 'en';
+    // Cycle through every shipped language in APP_LANGUAGES order.
+    const codes = APP_LANGUAGES.map((language) => language.code);
+    const newLang = codes[(codes.indexOf(this.currentLang) + 1) % codes.length];
     this.translate.use(newLang);
     localStorage.setItem('selectedLanguage', newLang);
   }

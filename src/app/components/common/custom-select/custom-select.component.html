@@ -12,6 +12,9 @@
     (click)="open()">
 
     <span class="csl-trigger-content">
+      <span class="csl-prefix csl-trigger-prefix" *ngIf="selectedOption?.prefix" aria-hidden="true">
+        {{ selectedOption!.prefix }}
+      </span>
       <span class="csl-icon-pill"
             *ngIf="showIcons && (selectedOption?.icon || selectedOption?.iconUrl)"
             [style.--cat-hue]="getCategoryHue(selectedOption!.label)">
@@ -64,6 +67,7 @@
               [class.csl-item-selected]="opt.value === value"
               *ngFor="let opt of filteredOptions; trackBy: trackByOptionValue"
               (click)="select(opt)">
+        <span class="csl-prefix csl-item-prefix" *ngIf="opt.prefix" aria-hidden="true">{{ opt.prefix }}</span>
         <span class="csl-item-icon" *ngIf="showIcons && (opt.icon || opt.iconUrl)"
               [style.--cat-hue]="getCategoryHue(opt.label)">
           <img *ngIf="opt.iconUrl" [src]="opt.iconUrl" alt="" class="cat-img-icon" style="width:18px;height:18px" />
@@ -110,6 +114,7 @@
               [class.csl-item-selected]="opt.value === value"
               *ngFor="let opt of filteredOptions; trackBy: trackByOptionValue"
               (click)="select(opt)">
+        <span class="csl-prefix csl-item-prefix" *ngIf="opt.prefix" aria-hidden="true">{{ opt.prefix }}</span>
         <span class="csl-item-icon csl-panel-icon" *ngIf="showIcons && (opt.icon || opt.iconUrl)"
               [style.--cat-hue]="getCategoryHue(opt.label)">
           <img *ngIf="opt.iconUrl" [src]="opt.iconUrl" alt="" class="cat-img-icon" style="width:15px;height:15px" />

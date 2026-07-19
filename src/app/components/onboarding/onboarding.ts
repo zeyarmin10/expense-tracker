@@ -10,6 +10,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { InvitationService } from '../../services/invitation.service';
 import { SpaceContextService } from '../../services/space-context.service';
 import { ImageUploadService } from '../../services/image-upload.service';
+import { APP_LANGUAGE_CODES } from '../../core/constants/app.constants';
 import { UserSpaceSummary } from '../../services/space.model';
 import Swal from 'sweetalert2';
 import { LucideAngularModule, CircleCheck, Link, EllipsisVertical, Pencil, Trash2, User, Users, X } from 'lucide-angular';
@@ -58,7 +59,7 @@ export class OnboardingComponent implements OnInit {
       this.translate.use(storedLang);
     } else {
       const browserLang = this.translate.getBrowserLang();
-      const langToUse = browserLang && ['en', 'my'].includes(browserLang) ? browserLang : 'my';
+      const langToUse = browserLang && APP_LANGUAGE_CODES.includes(browserLang) ? browserLang : 'my';
       this.translate.use(langToUse);
     }
 

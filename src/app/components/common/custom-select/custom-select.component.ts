@@ -13,6 +13,8 @@ import { getIconData, getCategoryHue } from '../../../utils/category-icons';
 export interface SelectOption {
   value: string;
   label: string;
+  /** Short visual prefix such as a flag emoji or currency symbol. */
+  prefix?: string;
   icon?: string;
   /** Custom uploaded image icon — wins over `icon` when set. */
   iconUrl?: string | null;

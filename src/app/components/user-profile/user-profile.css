@@ -554,6 +554,10 @@
   gap: 2px;
 }
 
+.prof-language-select {
+  width: 100%;
+}
+
 .prof-segment-btn {
   flex: 1;
   padding: 0.48rem 0.4rem;

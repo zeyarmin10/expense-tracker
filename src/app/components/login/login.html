@@ -13,12 +13,31 @@
       </span> -->
     </button>
 
-    <!-- Language toggle -->
-    <button class="lgn-lang-btn" *ngIf="!showPreferencesStep" (click)="toggleLanguage()" [attr.aria-label]="'Toggle language'">
-      <img [src]="'assets/flags/' + (currentLang === 'my' ? 'en' : 'mm') + '.png'"
-        alt="{{ currentLang === 'my' ? 'English' : 'Myanmar' }}" class="lgn-lang-flag" />
-      <!-- <span class="lgn-lang-label">{{ currentLang === 'my' ? 'EN' : 'MM' }}</span> -->
-    </button>
+    <!-- Floating language dropdown -->
+    <div class="lgn-language-picker" *ngIf="!showPreferencesStep" (click)="$event.stopPropagation()">
+      <button class="lgn-lang-btn lgn-lang-btn-text" type="button" (click)="toggleLanguageMenu()"
+        aria-haspopup="listbox" [attr.aria-expanded]="isLanguageMenuOpen" aria-controls="lgn-language-menu"
+        [attr.aria-label]="'Language: ' + currentLanguageLabel">
+        <span class="lgn-lang-flag" aria-hidden="true">{{ currentLanguageFlag }}</span>
+        <span class="lgn-lang-label">{{ currentLanguageLabel }}</span>
+        <svg class="lgn-lang-chevron" [class.open]="isLanguageMenuOpen" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+          width="14" height="14" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+
+      <div id="lgn-language-menu" class="lgn-language-menu" *ngIf="isLanguageMenuOpen" role="listbox"
+        [attr.aria-label]="'Language'">
+        <button type="button" class="lgn-language-option" *ngFor="let language of appLanguages"
+          [class.active]="currentLang === language.code" [attr.aria-selected]="currentLang === language.code"
+          role="option" (click)="switchLanguage(language.code)">
+          <span class="lgn-language-option-flag" aria-hidden="true">{{ language.flag }}</span>
+          <span class="lgn-language-option-label">{{ language.label }}</span>
+          <svg *ngIf="currentLang === language.code" class="lgn-language-check" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+            width="16" height="16" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+        </button>
+      </div>
+    </div>
   </div>
 
   <div class="lgn-center">
@@ -44,16 +63,12 @@
 
       <div class="lgn-pref-field">
         <span class="lgn-pref-label">{{ 'LANGUAGE_LABEL' | translate }}</span>
-        <div class="lgn-pref-lang-row">
-          <button type="button" class="lgn-pref-lang-btn" [class.active]="preferencesLang === 'my'"
-            (click)="selectPreferencesLanguage('my')">
-            <img src="assets/flags/mm.png" alt="Myanmar" class="lgn-lang-flag" />
-            {{ 'MYANMAR_LANGUAGE' | translate }}
-          </button>
-          <button type="button" class="lgn-pref-lang-btn" [class.active]="preferencesLang === 'en'"
-            (click)="selectPreferencesLanguage('en')">
-            <img src="assets/flags/en.png" alt="English" class="lgn-lang-flag" />
-            {{ 'ENGLISH_LANGUAGE' | translate }}
+        <div class="lgn-pref-lang-row lgn-pref-lang-row-wrap">
+          <button type="button" class="lgn-pref-lang-btn"
+            *ngFor="let language of appLanguages"
+            [class.active]="preferencesLang === language.code"
+            (click)="selectPreferencesLanguage(language.code)">
+            {{ language.label }}
           </button>
         </div>
       </div>

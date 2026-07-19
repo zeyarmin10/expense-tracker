@@ -1,5 +1,33 @@
 import { Currency } from '../models/currency.model';
 
+// Every language the app ships with. Labels are the language's own native
+// name — shown as-is in pickers, never translated. Adding a language also
+// requires: assets/i18n/<code>.json + registerLocaleData in main.ts.
+export interface AppLanguage {
+  code: string;
+  label: string;
+  flag: string;
+}
+
+export const APP_LANGUAGES: AppLanguage[] = [
+  { code: 'en', label: 'English', flag: '🇬🇧' },
+  { code: 'my', label: 'မြန်မာ', flag: '🇲🇲' },
+  { code: 'th', label: 'ไทย', flag: '🇹🇭' },
+  { code: 'km', label: 'ខ្មែរ', flag: '🇰🇭' },
+  { code: 'ja', label: '日本語', flag: '🇯🇵' },
+];
+
+export const APP_LANGUAGE_CODES = APP_LANGUAGES.map((language) => language.code);
+
+// Currency preselected for brand-new accounts, by chosen language.
+export const LANGUAGE_DEFAULT_CURRENCY: Record<string, string> = {
+  en: 'USD',
+  my: 'MMK',
+  th: 'THB',
+  km: 'KHR',
+  ja: 'JPY',
+};
+
 export const AVAILABLE_CURRENCIES: Currency[] = [
   { code: 'USD', symbol: '$', name: 'US Dollar' },
   { code: 'CNY', symbol: '¥', name: 'Chinese Yuan' },

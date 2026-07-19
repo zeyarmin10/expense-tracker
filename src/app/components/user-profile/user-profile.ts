@@ -18,7 +18,7 @@ import { Camera } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
 import { environment } from '../../../environments/environment';
 import { FormsModule } from '@angular/forms';
-import { AVAILABLE_CURRENCIES } from '../../core/constants/app.constants';
+import { APP_LANGUAGES, APP_LANGUAGE_CODES, AVAILABLE_CURRENCIES } from '../../core/constants/app.constants';
 import { CustomBudgetPeriodModalComponent } from '../common/custom-budget-period-modal/custom-budget-period-modal.component';
 import { CustomBudgetPeriod, CustomBudgetPeriodService } from '../../services/custom-budget-period.service';
 import { DataManagerService } from '../../services/data-manager';
@@ -113,6 +113,11 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   translatedCurrencies: any[] = [];
   budgetPeriodSelectOptions: SelectOption[] = [];
   currencySelectOptions: SelectOption[] = [];
+  readonly languageSelectOptions: SelectOption[] = APP_LANGUAGES.map((language) => ({
+    value: language.code,
+    label: language.label,
+    prefix: language.flag,
+  }));
   customBudgetPeriods: CustomBudgetPeriod[] = [];
   showCustomDateRange = false;
   isCustomBudgetListCollapsed = true;
@@ -344,7 +349,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
       this.translate.use(storedLang);
     } else {
       const browserLang = this.translate.getBrowserLang();
-      this.selectedLanguage = browserLang && ['en', 'my'].includes(browserLang) ? browserLang : 'my';
+      this.selectedLanguage = browserLang && APP_LANGUAGE_CODES.includes(browserLang) ? browserLang : 'my';
       this.translate.use(this.selectedLanguage);
     }
 

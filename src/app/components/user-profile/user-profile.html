@@ -176,16 +176,14 @@
 
           <div class="prof-list-item prof-list-item-col">
             <span class="prof-list-title">{{ 'SYSTEM_LANGUAGE_LABEL' | translate }}</span>
-            <div class="prof-segment">
-              <button type="button" class="prof-segment-btn" [class.active]="selectedLanguage === 'en'"
-                (click)="onLanguageChange('en')">
-                English
-              </button>
-              <button type="button" class="prof-segment-btn" [class.active]="selectedLanguage === 'my'"
-                (click)="onLanguageChange('my')">
-                မြန်မာ
-              </button>
-            </div>
+            <app-custom-select class="prof-language-select"
+              [ngModel]="selectedLanguage"
+              (ngModelChange)="onLanguageChange($event)"
+              [ngModelOptions]="{ standalone: true }"
+              [options]="languageSelectOptions"
+              [showSearch]="false"
+              [sheetTitle]="'SYSTEM_LANGUAGE_LABEL' | translate">
+            </app-custom-select>
           </div>
         </div>
 

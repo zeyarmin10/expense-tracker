@@ -112,6 +112,36 @@
   overflow: hidden;
 }
 
+.csl-prefix {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.csl-trigger-prefix {
+  width: 24px;
+  height: 24px;
+  font-size: 1.15rem;
+}
+
+.csl-item-prefix {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-2);
+  font-size: 1.35rem;
+}
+
+.csl-panel-item .csl-item-prefix {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  font-size: 1.05rem;
+}
+
 /* Icon pill shown in trigger when value is selected */
 .csl-icon-pill {
   width: 22px;

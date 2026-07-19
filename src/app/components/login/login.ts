@@ -28,7 +28,7 @@ import { ToastService } from '../../services/toast'; // Import ToastService
 import { InvitationService } from '../../services/invitation.service';
 import { SpaceContextService } from '../../services/space-context.service';
 import { ThemeService } from '../../services/theme.service';
-import { AVAILABLE_CURRENCIES } from '../../core/constants/app.constants';
+import { APP_LANGUAGES, AVAILABLE_CURRENCIES, LANGUAGE_DEFAULT_CURRENCY } from '../../core/constants/app.constants';
 import { CustomSelectComponent, SelectOption } from '../common/custom-select/custom-select.component';
 import Swal from 'sweetalert2';
 import { getRedirectResult } from '@angular/fire/auth';
@@ -82,6 +82,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   isLoginMode: boolean = true;
   showEmailForm: boolean = false;
   isSigningIn: boolean = false;
+  isLanguageMenuOpen = false;
 
   translate = inject(TranslateService);
   private cdr = inject(ChangeDetectorRef);
@@ -100,6 +101,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   preferencesLang: string = 'my';
   preferencesCurrency: string = 'MMK';
   availableCurrencies = AVAILABLE_CURRENCIES;
+  readonly appLanguages = APP_LANGUAGES;
   currencySelectOptions: SelectOption[] = [];
   private pendingPreferencesUser: User | null = null;
 
@@ -111,7 +113,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     });
 
     this.currentLang =
-      this.translate.currentLang || this.translate.getDefaultLang();
+      this.translate.currentLang || this.translate.getDefaultLang() || 'my';
   }
 
   async ngOnInit(): Promise<void> {
@@ -172,6 +174,16 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.resizeSubject.next((event.target as Window).innerWidth);
   }
 
+  @HostListener('document:click')
+  closeLanguageMenu(): void {
+    this.isLanguageMenuOpen = false;
+  }
+
+  @HostListener('document:keydown.escape')
+  closeLanguageMenuOnEscape(): void {
+    this.isLanguageMenuOpen = false;
+  }
+
   private checkMobileView(width: number): void {
     this.isMobileView = width < this.MOBILE_BREAKPOINT;
   }
@@ -209,7 +221,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     // Always create a profile if one doesn't exist
     if (!profile) {
       isNewUser = true;
-      const currency = this.currentLang === 'my' ? 'MMK' : 'USD';
+      const currency = LANGUAGE_DEFAULT_CURRENCY[this.currentLang] || 'USD';
       const newUserProfile: UserProfile = {
         uid: user.uid,
         email: user.email || '',
@@ -281,8 +293,10 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   private openPreferencesStep(user: User): void {
     this.pendingPreferencesUser = user;
-    this.preferencesLang = this.currentLang === 'en' ? 'en' : 'my';
-    this.preferencesCurrency = this.preferencesLang === 'my' ? 'MMK' : 'USD';
+    this.preferencesLang = this.appLanguages.some((language) => language.code === this.currentLang)
+      ? this.currentLang
+      : 'my';
+    this.preferencesCurrency = LANGUAGE_DEFAULT_CURRENCY[this.preferencesLang] || 'USD';
     this.refreshPreferencesCurrencyOptions();
     this.showPreferencesStep = true;
   }
@@ -297,6 +311,9 @@ export class LoginComponent implements OnInit, OnDestroy {
   selectPreferencesLanguage(lang: string): void {
     if (this.preferencesLang === lang) return;
     this.preferencesLang = lang;
+    // Follow the language with its usual currency — still user-changeable
+    // in the currency select below before confirming.
+    this.preferencesCurrency = LANGUAGE_DEFAULT_CURRENCY[lang] || 'USD';
     this.translate.use(lang).subscribe(() => {
       this.currentLang = lang;
       localStorage.setItem('selectedLanguage', lang);
@@ -356,10 +373,18 @@ export class LoginComponent implements OnInit, OnDestroy {
     }
   }
 
-  switchLanguage(lang: string) {
-    this.translate.use(lang);
-    this.currentLang = lang;
-    localStorage.setItem('selectedLanguage', lang);
+  switchLanguage(lang: string): void {
+    if (lang === this.currentLang) {
+      this.isLanguageMenuOpen = false;
+      return;
+    }
+
+    this.translate.use(lang).subscribe(() => {
+      this.currentLang = lang;
+      localStorage.setItem('selectedLanguage', lang);
+      this.isLanguageMenuOpen = false;
+      this.cdr.detectChanges();
+    });
   }
 
   toggleEmailForm(): void {
@@ -422,13 +447,18 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.showPassword = !this.showPassword;
   }
 
-  toggleLanguage(): void {
-    const newLang = this.currentLang === 'my' ? 'en' : 'my';
-    this.translate.use(newLang).subscribe(() => {
-      this.currentLang = newLang;
-      localStorage.setItem('selectedLanguage', newLang);
-      this.cdr.detectChanges();
-    });
+  toggleLanguageMenu(): void {
+    this.isLanguageMenuOpen = !this.isLanguageMenuOpen;
+  }
+
+  get currentLanguageLabel(): string {
+    return this.appLanguages.find((language) => language.code === this.currentLang)?.label
+      || this.currentLang?.toUpperCase()
+      || 'Language';
+  }
+
+  get currentLanguageFlag(): string {
+    return this.appLanguages.find((language) => language.code === this.currentLang)?.flag || '🌐';
   }
 
   private showErrorModal(message: string): void {

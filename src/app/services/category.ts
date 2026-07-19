@@ -401,21 +401,11 @@ export class CategoryService {
   }
 
   async addDefaultCategories(userId: string, language: string, categoriesRef?: DatabaseReference): Promise<void> {
-    const defaultCategories = [
-      { en: 'Food',           my: 'အစားအသောက်',           icon: 'utensils'     },
-      { en: 'Transportation', my: 'သယ်ယူပို့ဆောင်ရေး',   icon: 'car'          },
-      { en: 'Utilities',      my: 'အသုံးစရိတ်',            icon: 'lightbulb'    },
-      { en: 'Entertainment',  my: 'ဖျော်ဖြေရေး',           icon: 'gamepad'      },
-      { en: 'Shopping',       my: 'စျေးဝယ်',               icon: 'shopping-bag' },
-    ];
-
     const targetRef = categoriesRef || this.getCategoriesRef(userId);
-    await Promise.all(defaultCategories.map((categoryData) => {
-      const categoryName =
-        language === 'my' ? categoryData.my : categoryData.en;
+    await Promise.all(DEFAULT_CATEGORY_SEEDS.map((seed) => {
       const newCategory: Omit<ServiceICategory, 'id'> = {
-        name: categoryName.trim(),
-        icon: categoryData.icon,
+        name: (seed.names[language] || seed.names['en']).trim(),
+        icon: seed.icon,
         userId: userId,
         createdAt: new Date().toISOString(),
       };
@@ -424,24 +414,14 @@ export class CategoryService {
   }
 
   async addDefaultGroupCategories(groupId: string, language: string): Promise<void> {
-    const defaultCategories = [
-      { en: 'Food',           my: 'အစားအသောက်',           icon: 'utensils'     },
-      { en: 'Transportation', my: 'သယ်ယူပို့ဆောင်ရေး',   icon: 'car'          },
-      { en: 'Utilities',      my: 'အသုံးစရိတ်',            icon: 'lightbulb'    },
-      { en: 'Entertainment',  my: 'ဖျော်ဖြေရေး',           icon: 'gamepad'      },
-      { en: 'Shopping',       my: 'စျေးဝယ်',               icon: 'shopping-bag' },
-    ];
-
     // Write straight to the canonical space_data path — group_data is legacy
     // (read-only-for-backfill at this point per SpaceDataService), and a
     // brand-new group has no legacy data to justify writing there anyway.
     const groupCategoriesRef = ref(this.db, `space_data/${groupId}/categories`);
-    await Promise.all(defaultCategories.map((categoryData) => {
-      const categoryName =
-        language === 'my' ? categoryData.my : categoryData.en;
+    await Promise.all(DEFAULT_CATEGORY_SEEDS.map((seed) => {
       const newCategory: Omit<ServiceICategory, 'id'> = {
-        name: categoryName.trim(),
-        icon: categoryData.icon,
+        name: (seed.names[language] || seed.names['en']).trim(),
+        icon: seed.icon,
         groupId: groupId,
         createdAt: new Date().toISOString(),
       };
@@ -449,3 +429,13 @@ export class CategoryService {
     }));
   }
 }
+
+// Starter categories seeded for brand-new accounts/spaces, in every shipped
+// app language (falls back to English for unknown codes).
+const DEFAULT_CATEGORY_SEEDS: { icon: string; names: Record<string, string> }[] = [
+  { icon: 'utensils',     names: { en: 'Food',           my: 'အစားအသောက်',         th: 'อาหาร',          km: 'អាហារ',          ja: '食費' } },
+  { icon: 'car',          names: { en: 'Transportation', my: 'သယ်ယူပို့ဆောင်ရေး', th: 'การเดินทาง',      km: 'ការធ្វើដំណើរ',    ja: '交通費' } },
+  { icon: 'lightbulb',    names: { en: 'Utilities',      my: 'အသုံးစရိတ်',          th: 'ค่าสาธารณูปโภค', km: 'សេវាសាធារណៈ',    ja: '光熱費' } },
+  { icon: 'gamepad',      names: { en: 'Entertainment',  my: 'ဖျော်ဖြေရေး',         th: 'ความบันเทิง',     km: 'ការកម្សាន្ត',      ja: '娯楽' } },
+  { icon: 'shopping-bag', names: { en: 'Shopping',       my: 'စျေးဝယ်',             th: 'ช้อปปิ้ง',         km: 'ការទិញទំនិញ',     ja: '買い物' } },
+];
