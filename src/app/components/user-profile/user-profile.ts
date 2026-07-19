@@ -30,6 +30,7 @@ import { NotificationService, NotificationSettingsState } from '../../services/n
 import Swal from 'sweetalert2';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
 import { UserAvatarComponent } from '../common/user-avatar/user-avatar.component';
+import { ImageCropperComponent } from '../common/image-cropper/image-cropper.component';
 import { CustomSelectComponent, SelectOption } from '../common/custom-select/custom-select.component';
 
 export const AVAILABLE_BUDGET_PERIODS = [
@@ -64,6 +65,7 @@ const Toast = Swal.mixin({
     CustomBudgetPeriodModalComponent,
     CurrentSpaceTitleComponent,
     UserAvatarComponent,
+    ImageCropperComponent,
     CustomSelectComponent,
   ],
   providers: [DatePipe],
@@ -823,7 +825,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
           const response = await fetch(photo.webPath);
           const blob = await response.blob();
           const file = new File([blob], `avatar_${Date.now()}.jpg`, { type: 'image/jpeg' });
-          await this.uploadAvatar(file);
+          this.pendingAvatarCropFile = file;
         }
       } catch (e: any) {
         if (!e?.message?.toLowerCase().includes('cancel')) {
@@ -856,11 +858,24 @@ export class UserProfileComponent implements OnInit, OnDestroy {
     }
   }
 
-  async onAvatarFileSelected(event: Event): Promise<void> {
-    const file = (event.target as HTMLInputElement).files?.[0];
+  // Picked photo (camera or gallery) → 1:1 cropper first; upload on confirm.
+  pendingAvatarCropFile: File | null = null;
+
+  onAvatarFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
     if (!file) return;
+    this.pendingAvatarCropFile = file;
+  }
+
+  onAvatarCropCancelled(): void {
+    this.pendingAvatarCropFile = null;
+  }
+
+  async onAvatarCropped(file: File): Promise<void> {
+    this.pendingAvatarCropFile = null;
     await this.uploadAvatar(file);
-    (event.target as HTMLInputElement).value = '';
   }
 
   async uploadAvatar(file: File): Promise<void> {

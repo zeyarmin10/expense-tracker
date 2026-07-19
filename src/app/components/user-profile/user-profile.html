@@ -286,3 +286,12 @@
 </div>
 
 <app-custom-budget-period-modal (periodSaved)="onPeriodSaved($event)"></app-custom-budget-period-modal>
+
+<!-- 1:1 crop dialog for profile photo uploads (camera + gallery) -->
+<app-image-cropper
+  *ngIf="pendingAvatarCropFile"
+  [file]="pendingAvatarCropFile"
+  [outputSize]="400"
+  (cropped)="onAvatarCropped($event)"
+  (cancelled)="onAvatarCropCancelled()">
+</app-image-cropper>

@@ -148,6 +148,8 @@ import { LucideAngularModule, Check, X } from 'lucide-angular';
   `],
 })
 export class ImageCropperComponent {
+  /** Edge length (px) of the exported square JPEG. */
+  @Input() outputSize = 256;
   @Output() cropped = new EventEmitter<File>();
   @Output() cancelled = new EventEmitter<void>();
 
@@ -258,7 +260,7 @@ export class ImageCropperComponent {
     const viewport = this.viewportSize;
     if (!img || !this.loaded || !viewport) return;
 
-    const outSize = 256;
+    const outSize = this.outputSize;
     // Visible region of the source image, in natural-image pixels.
     const sx = (-this.displayLeft) / this.scale;
     const sy = (-this.displayTop) / this.scale;
