@@ -16,6 +16,7 @@ import { AuthService } from './auth';
 import { SpaceDataService } from './space-data.service';
 import { SpaceSwitchLoadingService } from './space-switch-loading.service';
 import { UserDataService, UserProfile, PublicUserProfile, getActiveGroupId } from './user-data';
+import { ImageUploadService } from './image-upload.service';
 import { environment } from '../../environments/environment';
 
 export type ServiceIVoucher = IVoucher & {
@@ -48,6 +49,7 @@ export class VoucherService {
   private userDataService = inject(UserDataService);
   private spaceDataService = inject(SpaceDataService);
   private spaceSwitchLoadingService = inject(SpaceSwitchLoadingService);
+  private imageUploadService = inject(ImageUploadService);
 
   private getProfilePhotoURL(profile: { photoURL?: string | null } | null | undefined): string | null {
     if (!profile) return null;
@@ -325,5 +327,12 @@ export class VoucherService {
         : dbRef(this.db, `users/${profile.uid}/vouchers/${voucher.id}`);
 
     await remove(voucherRef);
+
+    // Permanently free the Cloudinary storage too — best-effort, after the
+    // record is gone (a cleanup failure must not resurrect the voucher).
+    const publicIds = voucher.storagePaths?.length
+      ? voucher.storagePaths
+      : [voucher.storagePath];
+    void this.imageUploadService.deleteImages(publicIds);
   }
 }

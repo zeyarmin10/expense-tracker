@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Auth } from '@angular/fire/auth';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../environments/environment';
 
@@ -10,6 +11,7 @@ import { environment } from '../../environments/environment';
 @Injectable({ providedIn: 'root' })
 export class ImageUploadService {
   private http = inject(HttpClient);
+  private auth = inject(Auth);
 
   /**
    * Downscales the image so its longest edge is `maxSize` px and re-encodes
@@ -62,5 +64,41 @@ export class ImageUploadService {
   async compressAndUpload(file: File, folder: string, maxSize = 400): Promise<string> {
     const compressed = await this.compressImage(file, maxSize);
     return this.upload(compressed, folder);
+  }
+
+  /**
+   * Extracts the Cloudinary public_id from a delivery URL, e.g.
+   * https://res.cloudinary.com/<cloud>/image/upload/v123/profiles/u1/a.jpg
+   * → "profiles/u1/a". Returns null for non-Cloudinary URLs (Google account
+   * photos etc.), so callers can pass any stored photo URL safely.
+   */
+  publicIdFromUrl(url: string | null | undefined): string | null {
+    if (!url || !url.includes('res.cloudinary.com')) return null;
+    const match = url.match(/\/upload\/(?:v\d+\/)?(.+?)(?:\.[a-zA-Z0-9]+)?(?:[?#].*)?$/);
+    return match ? decodeURIComponent(match[1]) : null;
+  }
+
+  /**
+   * Best-effort permanent deletion from Cloudinary via the authenticated
+   * backend endpoint. Never throws — the app record is already gone by the
+   * time this runs, so a cleanup failure must not break the user flow; it
+   * only means the asset lingers in storage.
+   */
+  async deleteImages(publicIds: (string | null | undefined)[]): Promise<void> {
+    const ids = [...new Set(publicIds.filter((id): id is string => !!id?.trim()))];
+    if (ids.length === 0) return;
+
+    try {
+      const idToken = await this.auth.currentUser?.getIdToken();
+      if (!idToken) return;
+      const baseUrl = (environment as { apiBaseUrl?: string }).apiBaseUrl || '';
+      await firstValueFrom(
+        this.http.post(`${baseUrl}/api/delete-images`, { publicIds: ids }, {
+          headers: { Authorization: `Bearer ${idToken}` },
+        }),
+      );
+    } catch (error) {
+      console.warn('Cloudinary cleanup failed (asset left in storage):', error);
+    }
   }
 }

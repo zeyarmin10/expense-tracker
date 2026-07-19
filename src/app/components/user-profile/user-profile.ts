@@ -31,6 +31,7 @@ import Swal from 'sweetalert2';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
 import { UserAvatarComponent } from '../common/user-avatar/user-avatar.component';
 import { ImageCropperComponent } from '../common/image-cropper/image-cropper.component';
+import { ImageUploadService } from '../../services/image-upload.service';
 import { CustomSelectComponent, SelectOption } from '../common/custom-select/custom-select.component';
 
 export const AVAILABLE_BUDGET_PERIODS = [
@@ -76,6 +77,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private userDataService = inject(UserDataService);
   private http = inject(HttpClient);
+  private imageUploadService = inject(ImageUploadService);
   private fb = inject(FormBuilder);
   private translate = inject(TranslateService);
   private datePipe = inject(DatePipe);
@@ -846,9 +848,15 @@ export class UserProfileComponent implements OnInit, OnDestroy {
 
     this.isUploadingAvatar = true;
     try {
+      const oldPhotoUrl = await firstValueFrom(this.userPhotoUrl$);
       await updateProfile(currentUser, { photoURL: null });
       await this.userDataService.updateUserProfile(currentUser.uid, { photoURL: null });
       this.photoUrlOverride.next('');
+      // Free the Cloudinary asset too (no-op for Google account photos) —
+      // best-effort, after the profile record no longer references it.
+      void this.imageUploadService.deleteImages([
+        this.imageUploadService.publicIdFromUrl(oldPhotoUrl),
+      ]);
       Toast.fire({ icon: 'success', title: this.translate.instant('AVATAR_REMOVE_SUCCESS') });
     } catch (e) {
       console.error('Avatar remove error:', e);
@@ -909,6 +917,14 @@ export class UserProfileComponent implements OnInit, OnDestroy {
         photoURL: resp.secure_url,
         lastAvatarUploadAt: Date.now(),
       });
+
+      // The replaced photo is now unreferenced — free its Cloudinary asset
+      // (no-op for Google account photos). Best-effort.
+      const oldPublicId = this.imageUploadService.publicIdFromUrl(profile?.photoURL);
+      const newPublicId = this.imageUploadService.publicIdFromUrl(resp.secure_url);
+      if (oldPublicId && oldPublicId !== newPublicId) {
+        void this.imageUploadService.deleteImages([oldPublicId]);
+      }
 
       this.photoUrlOverride.next(resp.secure_url);
       Toast.fire({ icon: 'success', title: this.translate.instant('AVATAR_UPLOAD_SUCCESS') });
