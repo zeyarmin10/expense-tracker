@@ -19,6 +19,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { getActiveGroupId, UserProfile } from './user-data'; // Import UserProfile
 import { SpaceDataService } from './space-data.service';
 import { SpaceSwitchLoadingService } from './space-switch-loading.service';
+import { ImageUploadService } from './image-upload.service';
 
 export interface ServiceICategory {
   id?: string;
@@ -59,6 +60,7 @@ export class CategoryService {
   private authService = inject(forwardRef(() => AuthService));
   private spaceDataService = inject(SpaceDataService);
   private spaceSwitchLoadingService = inject(SpaceSwitchLoadingService);
+  private imageUploadService = inject(ImageUploadService);
 
   private categoryUpdatedSource = new Subject<{
     oldName: string;
@@ -249,6 +251,14 @@ export class CategoryService {
     if (iconUrl !== undefined) updateData.iconUrl = iconUrl;
     await update(categoryRef, updateData);
 
+    // A replaced/removed custom image icon is now unreferenced — free the
+    // Cloudinary asset (best-effort, after the record no longer points at it).
+    if (iconUrl !== undefined && oldIconUrl && oldIconUrl !== iconUrl) {
+      void this.imageUploadService.deleteImages([
+        this.imageUploadService.publicIdFromUrl(oldIconUrl),
+      ]);
+    }
+
     if (oldCategoryName) {
       // ✅ Expense တွေမှာ category name ကိုပါ တပြိုင်နက် update လုပ်မည်
       await this.updateExpensesByCategory(
@@ -314,22 +324,34 @@ export class CategoryService {
     const currentSpaceId = this.spaceDataService.getCurrentSpaceId(profile);
     const { canonicalRef } = await this.spaceDataService.getActiveCollectionContext(profile, 'categories');
 
-    const deleteOps: Promise<void>[] = [];
+    const primaryPath = canonicalRef && currentSpaceId
+      ? `space_data/${currentSpaceId}/categories/${categoryId}`
+      : activeGroupId
+        ? `group_data/${activeGroupId}/categories/${categoryId}`
+        : `users/${profile.uid}/categories/${categoryId}`;
+
+    // Capture the custom image icon (if any) before the record disappears.
+    const iconUrl: string | null =
+      (await get(ref(this.db, primaryPath))).val()?.iconUrl ?? null;
+
+    const deleteOps: Promise<void>[] = [remove(ref(this.db, primaryPath))];
 
     if (canonicalRef && currentSpaceId) {
-      deleteOps.push(remove(ref(this.db, `space_data/${currentSpaceId}/categories/${categoryId}`)));
       // Also remove from legacy path so backfill doesn't restore on next reload
       const legacyPath = activeGroupId
         ? `group_data/${activeGroupId}/categories/${categoryId}`
         : `users/${profile.uid}/categories/${categoryId}`;
       deleteOps.push(remove(ref(this.db, legacyPath)).catch(() => {}));
-    } else if (activeGroupId) {
-      deleteOps.push(remove(ref(this.db, `group_data/${activeGroupId}/categories/${categoryId}`)));
-    } else {
-      deleteOps.push(remove(ref(this.db, `users/${profile.uid}/categories/${categoryId}`)));
     }
 
     await Promise.all(deleteOps);
+
+    // Free the Cloudinary asset too — best-effort, after the record is gone.
+    if (iconUrl) {
+      void this.imageUploadService.deleteImages([
+        this.imageUploadService.publicIdFromUrl(iconUrl),
+      ]);
+    }
   }
 
   async isCategoryUsedInExpenses(categoryId: string): Promise<boolean> {

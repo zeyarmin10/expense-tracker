@@ -67,6 +67,19 @@ export class ImageUploadService {
   }
 
   /**
+   * Uploads a custom category icon into the caller's own folder
+   * (category-icons/{uid}) — the per-user scoping is what lets the
+   * delete-images endpoint later authorize permanent deletion.
+   */
+  async uploadCategoryIcon(file: File): Promise<string> {
+    const uid = this.auth.currentUser?.uid;
+    if (!uid) {
+      throw new Error('User not authenticated.');
+    }
+    return this.upload(file, `category-icons/${uid}`);
+  }
+
+  /**
    * Extracts the Cloudinary public_id from a delivery URL, e.g.
    * https://res.cloudinary.com/<cloud>/image/upload/v123/profiles/u1/a.jpg
    * → "profiles/u1/a". Returns null for non-Cloudinary URLs (Google account

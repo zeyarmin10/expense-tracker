@@ -108,7 +108,7 @@ export class CategoryModalComponent implements OnInit, OnDestroy {
     this.isUploadingIcon = true;
     try {
       // Cropper already exports a square 256px JPEG — upload it as-is.
-      this.selectedIconUrl = await this.imageUploadService.upload(file, 'category-icons');
+      this.selectedIconUrl = await this.imageUploadService.uploadCategoryIcon(file);
       this.showIconPicker = false;
     } catch (error) {
       console.error('Category icon upload failed:', error);

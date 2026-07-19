@@ -144,7 +144,7 @@ export class Category implements OnInit, OnDestroy {
 
     try {
       // Cropper already exports a square 256px JPEG — upload it as-is.
-      const url = await this.imageUploadService.upload(file, 'category-icons');
+      const url = await this.imageUploadService.uploadCategoryIcon(file);
       if (mode === 'add') {
         this.selectedAddIconUrl = url;
         this.showAddIconPicker = false;
