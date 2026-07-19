@@ -80,6 +80,19 @@ export class ImageUploadService {
   }
 
   /**
+   * Uploads a space/group photo into the caller's own folder
+   * (space-images/{uid}) — same per-user scoping as category icons, so the
+   * delete-images endpoint can authorize permanent deletion later.
+   */
+  async uploadSpaceImage(file: File): Promise<string> {
+    const uid = this.auth.currentUser?.uid;
+    if (!uid) {
+      throw new Error('User not authenticated.');
+    }
+    return this.upload(file, `space-images/${uid}`);
+  }
+
+  /**
    * Extracts the Cloudinary public_id from a delivery URL, e.g.
    * https://res.cloudinary.com/<cloud>/image/upload/v123/profiles/u1/a.jpg
    * → "profiles/u1/a". Returns null for non-Cloudinary URLs (Google account

@@ -463,6 +463,22 @@
   border-top: 1px solid var(--border);
 }
 
+/* Single-line "from X to Y" summary under the budget-period dropdown */
+.prof-period-range-text {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.65rem 1rem 0.9rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.prof-period-range-text lucide-icon {
+  color: var(--accent, #0b74ff);
+  flex-shrink: 0;
+}
+
 /* ── List Items (preferences card) ── */
 .prof-list-item {
   display: flex;

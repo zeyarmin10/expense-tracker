@@ -19,6 +19,7 @@ import { IUserProfile, IInvitation } from '../core/models/data';
 import { UserDataService } from './user-data';
 import { Invitation } from './invitation.service';
 import { SpaceContextService } from './space-context.service';
+import { ImageUploadService } from './image-upload.service';
 import { Space } from './space.model';
 
 export const MAX_SPACE_NAME_LENGTH = 50;
@@ -37,6 +38,7 @@ export class DataManagerService {
   private userDataService: UserDataService = inject(UserDataService);
   private spaceContextService: SpaceContextService = inject(SpaceContextService);
   private categoryService: CategoryService = inject(CategoryService);
+  private imageUploadService: ImageUploadService = inject(ImageUploadService);
 
   /**
    * Validates a candidate group name (required, max length, per-account
@@ -205,6 +207,29 @@ export class DataManagerService {
       actorProfile.personalSpaceId ||
       (await this.spaceContextService.ensurePersonalSpace(actorId));
 
+    // Collect Cloudinary assets that die with this group — the space photo
+    // plus every voucher image stored under it — BEFORE their records are
+    // removed below. Best-effort: a failed read just means those assets
+    // linger in storage.
+    const orphanedPublicIds: (string | null)[] = [
+      this.imageUploadService.publicIdFromUrl(space.imageUrl),
+    ];
+    for (const vouchersPath of [`space_data/${groupId}/vouchers`, `group_data/${groupId}/vouchers`]) {
+      try {
+        const vouchersSnapshot = await get(ref(this.db, vouchersPath));
+        if (vouchersSnapshot.exists()) {
+          for (const voucher of Object.values(vouchersSnapshot.val() as Record<string, any>)) {
+            const paths: string[] = voucher?.storagePaths?.length
+              ? voucher.storagePaths
+              : [voucher?.storagePath];
+            orphanedPublicIds.push(...paths);
+          }
+        }
+      } catch {
+        // Read denied/failed — skip; the DB removal below is what matters.
+      }
+    }
+
     // Each removal below is its own independent request (not one atomic
     // multi-location update()) so that a rule denial on any single path is
     // both visible (logged with exactly which path failed, instead of an
@@ -239,6 +264,12 @@ export class DataManagerService {
         console.warn(`[DataManagerService] Failed to remove invitation ${inviteId}:`, error);
       }
     }
+
+    // Free the Cloudinary assets before the membership entry goes away —
+    // the delete-images endpoint authorizes vouchers/spaces/{id} paths via
+    // that same membership record. Awaited (deleteImages never throws) so
+    // the check can't race the removal below.
+    await this.imageUploadService.deleteImages(orphanedPublicIds);
 
     // Remove the membership entry last: spaces/group_data/space_data write
     // rules are gated on the actor still being a member of this group, so

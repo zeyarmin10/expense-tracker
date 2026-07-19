@@ -103,18 +103,14 @@
             </app-custom-select>
           </div>
 
-          <div class="prof-date-pad" *ngIf="showCustomDateRange">
-            <div class="prof-date-row">
-              <div class="prof-float-field">
-                <input type="date" id="budgetStartDate" class="prof-input prof-has-val prof-input-readonly" formControlName="budgetStartDate"
-                  placeholder=" " readonly>
-                <label class="prof-float-label" for="budgetStartDate">{{ 'START_DATE_LABEL' | translate }}</label>
-              </div>
-              <div class="prof-float-field">
-                <input type="date" id="budgetEndDate" class="prof-input prof-has-val prof-input-readonly" formControlName="budgetEndDate" placeholder=" " readonly>
-                <label class="prof-float-label" for="budgetEndDate">{{ 'END_DATE_LABEL' | translate }}</label>
-              </div>
-            </div>
+          <div class="prof-period-range-text" *ngIf="showCustomDateRange">
+            <lucide-icon [img]="iconCalendarRange" [size]="13"></lucide-icon>
+            <span>
+              {{ 'BUDGET_PERIOD_RANGE_TEXT' | translate: {
+                start: formatService.formatLocalizedDate(userProfileForm.get('budgetStartDate')?.value, 'shortDate'),
+                end: formatService.formatLocalizedDate(userProfileForm.get('budgetEndDate')?.value, 'shortDate')
+              } }}
+            </span>
           </div>
 
           <div class="prof-custom-list-panel" *ngIf="customBudgetPeriods.length > 0">

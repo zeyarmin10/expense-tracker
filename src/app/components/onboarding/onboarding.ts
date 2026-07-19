@@ -2,15 +2,14 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
 import { Observable, firstValueFrom } from 'rxjs';
-import { environment } from '../../../environments/environment';
 import { AuthService } from '../../services/auth';
 import { UserDataService, UserProfile } from '../../services/user-data';
 import { DataManagerService, MAX_SPACE_NAME_LENGTH } from '../../services/data-manager';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { InvitationService } from '../../services/invitation.service';
 import { SpaceContextService } from '../../services/space-context.service';
+import { ImageUploadService } from '../../services/image-upload.service';
 import { UserSpaceSummary } from '../../services/space.model';
 import Swal from 'sweetalert2';
 import { LucideAngularModule, CircleCheck, Link, EllipsisVertical, Pencil, Trash2, User, Users } from 'lucide-angular';
@@ -26,12 +25,12 @@ import { CurrentSpaceTitleComponent } from '../common/current-space-title/curren
 export class OnboardingComponent implements OnInit {
   private authService = inject(AuthService);
   private userDataService = inject(UserDataService);
-  private http = inject(HttpClient);
   private dataManager = inject(DataManagerService);
   private router = inject(Router);
   private translate = inject(TranslateService);
   private invitationService = inject(InvitationService);
   private spaceContextService = inject(SpaceContextService);
+  private imageUploadService = inject(ImageUploadService);
 
   readonly iconUser = User;
   readonly iconUsers = Users;
@@ -267,16 +266,7 @@ export class OnboardingComponent implements OnInit {
           Swal.showLoading();
           try {
             const compressed = await this.compressSpaceImage(file);
-            const { cloudName, uploadPreset } = environment.cloudinary;
-            const fd = new FormData();
-            fd.append('file', compressed);
-            fd.append('upload_preset', uploadPreset);
-            fd.append('folder', 'groups');
-            const resp = await firstValueFrom(
-              this.http.post<{ secure_url: string }>(
-                `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, fd)
-            );
-            imageUrl = resp.secure_url;
+            imageUrl = await this.imageUploadService.uploadSpaceImage(compressed);
           } catch {
             Swal.showValidationMessage(uploadErrMsg);
             return false;
@@ -296,6 +286,13 @@ export class OnboardingComponent implements OnInit {
       }
       if (photoChanged && imageUrl) {
         await this.dataManager.updateGroupSettings(space.id!, { imageUrl });
+        // The replaced photo is now unreferenced — free its Cloudinary
+        // asset (best-effort; legacy unscoped 'groups/…' uploads are
+        // refused by the endpoint and simply linger).
+        const oldPublicId = this.imageUploadService.publicIdFromUrl(space.imageUrl);
+        if (oldPublicId && oldPublicId !== this.imageUploadService.publicIdFromUrl(imageUrl)) {
+          void this.imageUploadService.deleteImages([oldPublicId]);
+        }
       }
       const SavedToast = Swal.mixin({
         toast: true, position: 'top-end',
@@ -490,18 +487,7 @@ export class OnboardingComponent implements OnInit {
           Swal.showLoading();
           try {
             const compressed = await this.compressSpaceImage(file);
-            const { cloudName, uploadPreset } = environment.cloudinary;
-            const formData = new FormData();
-            formData.append('file', compressed);
-            formData.append('upload_preset', uploadPreset);
-            formData.append('folder', 'groups');
-            const resp = await firstValueFrom(
-              this.http.post<{ secure_url: string }>(
-                `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-                formData
-              )
-            );
-            imageUrl = resp.secure_url;
+            imageUrl = await this.imageUploadService.uploadSpaceImage(compressed);
           } catch {
             Swal.showValidationMessage(uploadErrMsg);
             return false;

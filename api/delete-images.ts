@@ -15,6 +15,7 @@ import {
 //   profiles/{uid}/…          → only that user
 //   vouchers/users/{uid}/…    → only that user
 //   category-icons/{uid}/…    → only the user who uploaded it
+//   space-images/{uid}/…      → only the user who uploaded it
 //   vouchers/spaces/{id}/…    → any current member of that space
 //   vouchers/groups/{id}/…    → any current member of that group
 // Anything outside those folders is refused.
@@ -63,7 +64,7 @@ async function isAllowed(
   uid: string,
   getAccessToken: () => Promise<string>,
 ): Promise<boolean> {
-  const ownParticipantMatch = publicId.match(/^(?:profiles|vouchers\/users|category-icons)\/([^/]+)\//);
+  const ownParticipantMatch = publicId.match(/^(?:profiles|vouchers\/users|category-icons|space-images)\/([^/]+)\//);
   if (ownParticipantMatch) {
     return ownParticipantMatch[1] === uid;
   }

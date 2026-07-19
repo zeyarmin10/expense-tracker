@@ -114,6 +114,7 @@
   "NO_CATEGORIES_FOUND": "No categories found. Add one above!",
   "EDIT_BUTTON_LABEL": "Edit",
   "DELETE_BUTTON_LABEL": "Delete",
+  "BUDGET_PERIOD_RANGE_TEXT": "From {{start}} to {{end}}",
   "CROP_IMAGE_TITLE": "Adjust image",
   "CATEGORY_UPLOAD_ICON": "Upload image icon",
   "CATEGORY_ADDED_SUCCESS": "Category added successfully!",
