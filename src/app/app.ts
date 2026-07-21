@@ -496,7 +496,10 @@ export class App implements OnInit, AfterViewInit {
 
     const element = target as Element | null;
     return !element?.closest(
-      'input, textarea, select, button, a, .mob-bottom-nav, .mob-drawer, .swal2-container'
+      // .lb-overlay: the voucher/avatar image viewer (app-lightbox) —
+      // pinch-zoom-and-drag on the photo reads as a downward pull otherwise,
+      // triggering a reload that tears down and closes the viewer mid-gesture.
+      'input, textarea, select, button, a, .mob-bottom-nav, .mob-drawer, .swal2-container, .lb-overlay'
     );
   }
 
