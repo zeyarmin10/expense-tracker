@@ -158,6 +158,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   userProfile: UserProfile | null = null;
   private activeSpaceModeKey: string | null = null;
   get canManageBudgetActions(): boolean { return canManageSharedSpace(this.userProfile); }
+  get canManageExpenseActions(): boolean { return canManageSharedSpace(this.userProfile); }
 
   constructor(private cdr: ChangeDetectorRef, private datePipe: DatePipe) {
     this._startDate$ = new BehaviorSubject<string | null>(null);

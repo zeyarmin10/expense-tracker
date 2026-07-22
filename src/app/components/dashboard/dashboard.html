@@ -64,29 +64,55 @@
         </div>
         </a>
 
-      <!-- Expenses -->
-      <a class="dash-card dash-card-expense dash-card-link" routerLink="/expense-overview">
-        <div class="dash-card-left">
-          <span class="dash-card-label">{{ 'TOTAL_EXPENSES' | translate }}</span>
-          <ng-container *ngIf="totalExpensesByCurrency$ | async as totals; else cardLoading">
-            <ng-container *ngIf="totals && (totals | keyvalue).length > 0; else cardNoData">
+      <!-- Expenses — links to the overview once there's data to browse,
+           otherwise straight to /expense (where expenses are actually
+           added), matching the empty-state CTA below. -->
+      <ng-container *ngIf="totalExpensesByCurrency$ | async as totals; else expenseCardLoading">
+        <a class="dash-card dash-card-expense dash-card-link"
+          [routerLink]="(totals | keyvalue).length > 0 ? '/expense-overview' : '/expense'">
+          <div class="dash-card-left">
+            <span class="dash-card-label">{{ 'TOTAL_EXPENSES' | translate }}</span>
+            <ng-container *ngIf="(totals | keyvalue).length > 0; else expenseEmptyCta">
               <span *ngFor="let total of totals | keyvalue; trackBy: trackByKey" class="dash-card-amount dash-amount-expense">
                 {{ formatService.formatAmountShort(total.value, total.key) }}
               </span>
             </ng-container>
-          </ng-container>
+            <!-- Visual button only — the whole card already links to /expense
+                 when there's nothing to browse yet. -->
+            <ng-template #expenseEmptyCta>
+              <span class="dash-card-empty-cta" *ngIf="canManageExpenseActions; else cardNoData">+ {{ 'ADD_EXPENSE' | translate }}</span>
+            </ng-template>
           </div>
-        <div class="dash-card-right">
-          <span class="dash-card-icon dash-icon-expense">
-            <lucide-icon [img]="iconShoppingCart" [size]="30"></lucide-icon>
-          </span>
-        </div>
+          <div class="dash-card-right">
+            <span class="dash-card-icon dash-icon-expense">
+              <lucide-icon [img]="iconShoppingCart" [size]="30"></lucide-icon>
+            </span>
+          </div>
         </a>
+      </ng-container>
+      <ng-template #expenseCardLoading>
+        <a class="dash-card dash-card-expense dash-card-link" routerLink="/expense-overview">
+          <div class="dash-card-left">
+            <span class="dash-card-label">{{ 'TOTAL_EXPENSES' | translate }}</span>
+            <div class="dash-card-spinner" aria-hidden="true">
+              <div class="exp-spinner-sm"></div>
+            </div>
+          </div>
+          <div class="dash-card-right">
+            <span class="dash-card-icon dash-icon-expense">
+              <lucide-icon [img]="iconShoppingCart" [size]="30"></lucide-icon>
+            </span>
+          </div>
+        </a>
+      </ng-template>
 
-      <!-- Profit / Loss -->
+      <!-- Profit / Loss (Remaining Balance) — derived from income minus
+           expense, so there's nothing to "add" directly here; the empty
+           state points at /profit (where the underlying income is entered)
+           instead, same as the Income card above. -->
       <a class="dash-card dash-card-link" [ngClass]="getProfitLossCardClass(totalProfitLossByCurrency$ | async)" routerLink="/profit">
         <ng-container *ngIf="totalProfitLossByCurrency$ | async as profitLosses; else cardLoading">
-          <ng-container *ngIf="(profitLosses | keyvalue).length > 0; else cardNoData">
+          <ng-container *ngIf="(profitLosses | keyvalue).length > 0; else balanceEmptyCta">
             <div class="dash-card-left" *ngFor="let profit of profitLosses | keyvalue; trackBy: trackByKey">
               <span class="dash-card-label">
                 {{ ($any(profit).value >= 0 ? 'BALANCE_LABEL' : 'EXPENSE_DEFICIT') | translate }}
@@ -101,6 +127,17 @@
               </span>
             </div>
           </ng-container>
+          <ng-template #balanceEmptyCta>
+            <div class="dash-card-left">
+              <span class="dash-card-label">{{ 'BALANCE_LABEL' | translate }}</span>
+              <span class="dash-card-empty-cta">+ {{ 'ADD_INCOME' | translate }}</span>
+            </div>
+            <div class="dash-card-right">
+              <span class="dash-card-icon dash-icon-income">
+                <lucide-icon [img]="iconTrendingUp" [size]="30"></lucide-icon>
+              </span>
+            </div>
+          </ng-template>
         </ng-container>
       </a>
 

@@ -664,6 +664,80 @@ body.cat-add-modal-open {
   flex-shrink: 0;
 }
 
+/* Desktop: inline edit/delete buttons. Mobile: collapsed into a three-dot
+   menu instead (below) — same breakpoint the rest of the app uses to
+   split mobile/desktop chrome. */
+.cat-item-actions-mobile {
+  display: none;
+}
+
+@media (max-width: 991px) {
+  .cat-item-actions-desktop {
+    display: none;
+  }
+
+  .cat-item-actions-mobile {
+    display: flex;
+  }
+}
+
+.cat-menu-wrap {
+  position: relative;
+}
+
+.cat-more-btn {
+  color: var(--text-sub, var(--text-muted));
+}
+
+.cat-more-btn:hover:not(:disabled) {
+  background: var(--surface-2);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+/* Floating action menu — position: fixed escapes the list's own overflow clipping */
+.cat-float-menu {
+  position: fixed;
+  z-index: 9999;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  min-width: 128px;
+}
+
+.cat-float-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.6rem 0.85rem;
+  background: transparent;
+  border: none;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s, color 0.12s;
+}
+
+.cat-float-edit {
+  color: var(--info, #60a5fa);
+}
+
+.cat-float-edit:hover {
+  background: rgba(96, 165, 250, 0.1);
+}
+
+.cat-float-delete {
+  color: #f87171;
+}
+
+.cat-float-delete:hover {
+  background: rgba(248, 113, 113, 0.1);
+}
+
 /* Action icon buttons */
 .cat-action-btn {
   display: flex;

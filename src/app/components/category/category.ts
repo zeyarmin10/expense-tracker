@@ -4,6 +4,7 @@ import {
   OnDestroy,
   inject,
   ChangeDetectorRef,
+  HostListener,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -20,7 +21,7 @@ import { UserProfile } from '../../services/user-data';
 
 import {
   LucideAngularModule, LucideIconData,
-  Plus, Tags, Save, Pencil, Trash2, X, Tag, ImagePlus,
+  Plus, Tags, Save, Pencil, Trash2, X, Tag, ImagePlus, EllipsisVertical,
 } from 'lucide-angular';
 import { CATEGORY_ICONS, getIconData, getIconHue } from '../../utils/category-icons';
 import { meaningfulTextValidator } from '../../utils/form-validators';
@@ -84,6 +85,33 @@ export class Category implements OnInit, OnDestroy {
   readonly iconTrash2 = Trash2;
   readonly iconTimes = X;
   readonly iconImagePlus = ImagePlus;
+  readonly iconMoreVertical = EllipsisVertical;
+
+  // Mobile-only three-dot menu (desktop keeps the inline edit/delete
+  // buttons — see .cat-item-actions-desktop / .cat-item-actions-mobile in
+  // category.css). Same floating-menu pattern as the shared category
+  // modal's own list.
+  openMenuId: string | null = null;
+  menuX = 0;
+  menuY = 0;
+
+  toggleMenu(id: string, event: MouseEvent): void {
+    event.stopPropagation();
+    if (this.openMenuId === id) {
+      this.openMenuId = null;
+      return;
+    }
+    const btn = event.currentTarget as HTMLElement;
+    const rect = btn.getBoundingClientRect();
+    this.menuY = rect.bottom + 4;
+    this.menuX = rect.right - 128;
+    this.openMenuId = id;
+  }
+
+  @HostListener('document:click')
+  onDocumentClick(): void {
+    this.openMenuId = null;
+  }
 
   readonly categoryIcons = CATEGORY_ICONS;
   readonly defaultIcon = Tag;

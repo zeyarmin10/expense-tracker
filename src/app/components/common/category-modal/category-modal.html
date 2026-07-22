@@ -8,7 +8,7 @@
         <div class="cat-modal-title-wrap">
           <lucide-icon [img]="iconTags" [size]="20" class="cat-modal-icon"></lucide-icon>
           <h5 class="cat-modal-title" id="categoryModalLabel">
-            {{ (isEditMode ? 'EDIT_CATEGORY_TITLE' : 'CATEGORY_MODAL_TITLE') | translate }}
+            {{ 'CATEGORY_MODAL_TITLE' | translate }}
           </h5>
         </div>
         <button type="button" class="cat-close-btn" (click)="closeModal()">
@@ -44,7 +44,7 @@
               </label>
             </div>
             <button class="cat-save-btn" type="submit" [disabled]="categoryForm.invalid">
-              <lucide-icon [img]="isEditMode ? iconSave : iconPlus" [size]="20"></lucide-icon>
+              <lucide-icon [img]="iconPlus" [size]="20"></lucide-icon>
             </button>
           </div>
           <!-- Character counter -->
@@ -93,36 +93,19 @@
           </div>
 
           <ul class="cat-list">
-            <li *ngFor="let category of categories; trackBy: trackByCategoryId" class="cat-item"
-                [class.cat-item-editing]="editingCategoryId === category.id">
+            <li *ngFor="let category of categories; trackBy: trackByCategoryId" class="cat-item">
               <div class="cat-item-avatar" [style.--cat-hue]="getIconHue(category.icon)">
                 <img *ngIf="category.iconUrl" [src]="category.iconUrl" alt="" class="cat-icon-img" />
                 <lucide-icon *ngIf="!category.iconUrl" [img]="getIconData(category.icon)" [size]="20"></lucide-icon>
               </div>
               <span class="cat-item-name">{{ category.name }}</span>
               <div class="cat-item-actions">
-                <div class="cat-menu-wrap">
-                  <button class="cat-action-btn cat-more-btn" type="button"
-                    (click)="toggleMenu(category.id!, $event)" title="Options">
-                    <lucide-icon [img]="iconMoreVertical" [size]="16"></lucide-icon>
-                  </button>
-                  <div class="cat-float-menu"
-                    *ngIf="openMenuId === category.id"
-                    [style.top.px]="menuY"
-                    [style.left.px]="menuX">
-                    <button class="cat-float-item cat-float-edit" type="button"
-                      (click)="onEdit(category); openMenuId = null">
-                      <lucide-icon [img]="iconPen" [size]="14"></lucide-icon>
-                      <span>{{ 'EDIT_CATEGORY_TITLE' | translate }}</span>
-                    </button>
-                    <button class="cat-float-item cat-float-delete" type="button"
-                      (click)="onDelete(category.id!); openMenuId = null"
-                      [disabled]="isDeleting(category.id!)">
-                      <lucide-icon [img]="iconTrash2" [size]="14"></lucide-icon>
-                      <span>{{ 'DELETE_BUTTON' | translate }}</span>
-                    </button>
-                  </div>
-                </div>
+                <button class="cat-action-btn cat-action-delete" type="button"
+                  (click)="onDelete(category.id!)"
+                  [disabled]="isDeleting(category.id!)"
+                  [attr.aria-label]="'DELETE_BUTTON_LABEL' | translate">
+                  <lucide-icon [img]="iconTrash2" [size]="16"></lucide-icon>
+                </button>
               </div>
             </li>
           </ul>

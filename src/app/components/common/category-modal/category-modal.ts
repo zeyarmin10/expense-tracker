@@ -5,7 +5,7 @@ import { CommonModule } from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import {
   LucideAngularModule, LucideIconData, Tag,
-  Save, X, Plus, Tags, Pencil, Trash2, MoreVertical, ImagePlus,
+  X, Plus, Tags, Trash2, ImagePlus,
 } from 'lucide-angular';
 import { CATEGORY_ICONS, getIconData, getIconHue } from '../../../utils/category-icons';
 import { meaningfulTextValidator } from '../../../utils/form-validators';
@@ -46,8 +46,6 @@ export class CategoryModalComponent implements OnInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
 
   categories: ServiceICategory[] = [];
-  isEditMode = false;
-  editingCategoryId: string | null = null;
   isModalOpen = false;
   deletingStates: { [key: string]: boolean } = {};
 
@@ -55,18 +53,11 @@ export class CategoryModalComponent implements OnInit, OnDestroy {
 
   private categories$ = new BehaviorSubject<ServiceICategory[]>([]);
 
-  readonly iconSave = Save;
   readonly iconTimes = X;
   readonly iconPlus = Plus;
   readonly iconTags = Tags;
-  readonly iconPen = Pencil;
   readonly iconTrash2 = Trash2;
-  readonly iconMoreVertical = MoreVertical;
   readonly iconImagePlus = ImagePlus;
-
-  openMenuId: string | null = null;
-  menuX = 0;
-  menuY = 0;
 
   readonly categoryIcons = CATEGORY_ICONS;
 
@@ -129,24 +120,6 @@ export class CategoryModalComponent implements OnInit, OnDestroy {
 
   trackByCategoryId(index: number, category: ServiceICategory): string {
     return category.id ?? String(index);
-  }
-
-  toggleMenu(id: string, event: MouseEvent): void {
-    event.stopPropagation();
-    if (this.openMenuId === id) {
-      this.openMenuId = null;
-      return;
-    }
-    const btn = event.currentTarget as HTMLElement;
-    const rect = btn.getBoundingClientRect();
-    this.menuY = rect.bottom + 4;
-    this.menuX = rect.right - 128;
-    this.openMenuId = id;
-  }
-
-  @HostListener('document:click')
-  onDocumentClick(): void {
-    this.openMenuId = null;
   }
 
   @HostListener('window:popstate', ['$event'])
@@ -246,19 +219,7 @@ export class CategoryModalComponent implements OnInit, OnDestroy {
     }
   }
 
-  onEdit(category: ServiceICategory): void {
-    this.isEditMode = true;
-    this.editingCategoryId = category.id!;
-    this.categoryForm.setValue({ name: category.name });
-    this.selectedIcon = category.icon || 'tag';
-    this.selectedIconData = this.getIconData(category.icon);
-    this.selectedIconUrl = category.iconUrl ?? null;
-    this.showIconPicker = false;
-  }
-
   resetForm(): void {
-    this.isEditMode = false;
-    this.editingCategoryId = null;
     this.categoryForm.reset();
     this.selectedIcon = 'tag';
     this.selectedIconData = Tag;
@@ -278,13 +239,8 @@ export class CategoryModalComponent implements OnInit, OnDestroy {
     const categoryName = this.categoryForm.value.name;
 
     try {
-      if (this.isEditMode && this.editingCategoryId) {
-        await this.categoryService.updateCategory(this.editingCategoryId, categoryName, this.selectedIcon, this.selectedIconUrl);
-        Toast.fire({ icon: 'success', title: this.translateService.instant('CATEGORY_SUCCESS_UPDATED') });
-      } else {
-        await this.categoryService.addCategory(categoryName, this.selectedIcon, this.selectedIconUrl);
-        Toast.fire({ icon: 'success', title: this.translateService.instant('CATEGORY_ADDED_SUCCESS') });
-      }
+      await this.categoryService.addCategory(categoryName, this.selectedIcon, this.selectedIconUrl);
+      Toast.fire({ icon: 'success', title: this.translateService.instant('CATEGORY_ADDED_SUCCESS') });
       await this.loadCategories();
       this.categoryAdded.emit();
       this.resetForm();
@@ -330,9 +286,6 @@ export class CategoryModalComponent implements OnInit, OnDestroy {
           try {
             await this.categoryService.deleteCategory(categoryId);
             Toast.fire({ icon: 'success', title: this.translateService.instant('CATEGORY_DELETED_SUCCESS') });
-            if (this.editingCategoryId === categoryId) {
-              this.resetForm();
-            }
             await this.loadCategories();
           } catch (error: any) {
             this.showErrorModal(

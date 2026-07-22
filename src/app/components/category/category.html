@@ -133,7 +133,9 @@
                 <lucide-icon *ngIf="!category.iconUrl" [img]="getIconData(category.icon)" [size]="20"></lucide-icon>
               </span>
               <span class="cat-item-name">{{ category.name }}</span>
-              <div class="cat-item-actions">
+
+              <!-- Desktop: inline edit/delete buttons -->
+              <div class="cat-item-actions cat-item-actions-desktop">
                 <button class="cat-action-btn cat-action-edit"
                   (click)="startEdit(category)"
                   [disabled]="editingCategoryId !== null"
@@ -146,6 +148,31 @@
                   [attr.aria-label]="'DELETE_BUTTON_LABEL' | translate">
                   <lucide-icon [img]="iconTrash2" [size]="15" class="fa-delete-btn"></lucide-icon>
                 </button>
+              </div>
+
+              <!-- Mobile: three-dot menu -->
+              <div class="cat-item-actions cat-item-actions-mobile cat-menu-wrap">
+                <button class="cat-action-btn cat-more-btn" type="button"
+                  (click)="toggleMenu(category.id!, $event)"
+                  [disabled]="editingCategoryId !== null"
+                  [attr.aria-label]="'ACTIONS_LABEL' | translate">
+                  <lucide-icon [img]="iconMoreVertical" [size]="16"></lucide-icon>
+                </button>
+                <div class="cat-float-menu"
+                  *ngIf="openMenuId === category.id"
+                  [style.top.px]="menuY"
+                  [style.left.px]="menuX">
+                  <button class="cat-float-item cat-float-edit" type="button"
+                    (click)="startEdit(category); openMenuId = null">
+                    <lucide-icon [img]="iconPen" [size]="14"></lucide-icon>
+                    <span>{{ 'EDIT_BUTTON_LABEL' | translate }}</span>
+                  </button>
+                  <button class="cat-float-item cat-float-delete" type="button"
+                    (click)="onDelete(category.id!); openMenuId = null">
+                    <lucide-icon [img]="iconTrash2" [size]="14"></lucide-icon>
+                    <span>{{ 'DELETE_BUTTON_LABEL' | translate }}</span>
+                  </button>
+                </div>
               </div>
             </div>
           </ng-container>
