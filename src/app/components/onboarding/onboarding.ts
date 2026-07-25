@@ -298,7 +298,7 @@ export class OnboardingComponent implements OnInit {
       }
       const SavedToast = Swal.mixin({
         toast: true, position: 'top-end',
-        showConfirmButton: false, timer: 2500, timerProgressBar: true,
+        showConfirmButton: false, showCloseButton: true, timer: 2500, timerProgressBar: true,
       });
       SavedToast.fire({ icon: 'success', title: this.translate.instant('SPACE_RENAME_SUCCESS') });
     } catch (error) {

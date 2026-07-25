@@ -21,6 +21,7 @@ const Toast = Swal.mixin({
   toast: true,
   position: 'top-end',
   showConfirmButton: false,
+  showCloseButton: true,
   timer: 3000,
   timerProgressBar: true,
   customClass: { popup: 'colored-toast' },
@@ -167,7 +168,7 @@ export class MemberManagementComponent implements OnInit {
         const isAlreadyMember = members.some(member => member.email === this.newMemberEmail);
 
         if (isAlreadyMember) {
-          Swal.fire({ icon: 'error', title: this.translate.instant('MEMBER_ALREADY_EXISTS'), toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true });
+          Swal.fire({ icon: 'error', title: this.translate.instant('MEMBER_ALREADY_EXISTS'), toast: true, position: 'top-end', showConfirmButton: false, showCloseButton: true, timer: 3000, timerProgressBar: true });
           this.isSending = false;
           return;
         }
@@ -176,7 +177,7 @@ export class MemberManagementComponent implements OnInit {
         const hasPendingInvite = pendingInvites.some(invite => invite.email === this.newMemberEmail);
 
         if (hasPendingInvite) {
-          Swal.fire({ icon: 'error', title: this.translate.instant('MEMBER_ALREADY_EXISTS'), toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true });
+          Swal.fire({ icon: 'error', title: this.translate.instant('MEMBER_ALREADY_EXISTS'), toast: true, position: 'top-end', showConfirmButton: false, showCloseButton: true, timer: 3000, timerProgressBar: true });
           this.isSending = false;
           return;
         }
