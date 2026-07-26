@@ -32,7 +32,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ServiceIIncome, IncomeService } from '../../services/income';
 import { CategoryService, ServiceICategory } from '../../services/category';
 import { LucideAngularModule } from 'lucide-angular';
-import { getIconData, getCategoryHue } from '../../utils/category-icons';
+import { getIconData } from '../../utils/category-icons';
 import {
   TrendingUp, TrendingDown, Banknote, ShoppingCart, ChartLine,
   ChartColumn, ChevronDown, ChevronRight, Save, Trash2,
@@ -53,7 +53,6 @@ import { ExpenseService } from '../../services/expense'; // Added missing import
 import { ProfitLossService } from '../../services/profit-loss.service';
 import Swal from 'sweetalert2';
 import { UserAvatarComponent } from '../common/user-avatar/user-avatar.component';
-import { ShowFullTextDirective } from '../../directives/show-full-text.directive';
 import { CustomSelectComponent, SelectOption } from '../common/custom-select/custom-select.component';
 import { DateRangeInputComponent } from '../common/date-range-input/date-range-input.component';
 import flatpickr from 'flatpickr';
@@ -79,13 +78,6 @@ const Toast = Swal.mixin({
 // Type alias for clarity
 type CurrencyMap = { [currency: string]: number };
 
-interface IncomeDateGroup {
-  date: string;
-  incomes: ServiceIIncome[];
-  totalsByCurrency: CurrencyMap;
-  count: number;
-}
-
 @Component({
   selector: 'app-profit',
   standalone: true,
@@ -96,7 +88,6 @@ interface IncomeDateGroup {
     TranslateModule,
     FormsModule,
     UserAvatarComponent,
-    ShowFullTextDirective,
     LucideAngularModule,
     CustomSelectComponent,
     DateRangeInputComponent,
@@ -121,7 +112,6 @@ export class Profit implements OnInit, OnDestroy {
   private categoryService = inject(CategoryService);
 
   categoryList: ServiceICategory[] = [];
-  getCategoryHue = getCategoryHue;
 
   getIconForCategory(categoryName: string) {
     return getIconData(this.categoryList.find(c => c.name === categoryName)?.icon);
@@ -142,7 +132,6 @@ export class Profit implements OnInit, OnDestroy {
 
   // Observables for filtered data (likely provided by ProfitLossService)
   incomes$!: Observable<ServiceIIncome[]>;
-  groupedIncomes$!: Observable<IncomeDateGroup[]>;
 
   // Observables for calculated totals (likely provided by ProfitLossService)
   totalExpensesByCurrency$!: Observable<CurrencyMap>;
@@ -171,9 +160,12 @@ export class Profit implements OnInit, OnDestroy {
 
   isRecordedIncomesCollapsed: boolean = true;
 
-  // ── Add Income FAB + Bottom-sheet Modal ──
+  // ── Add/Edit Income FAB + Bottom-sheet Modal ──
   isAddModalOpen = false;
   isDatePickerOpen = false;
+  // Non-null while the modal is editing an existing record instead of
+  // adding a new one — same pattern as expense.ts's editingExpense.
+  editingIncome: ServiceIIncome | null = null;
   private datePickerFp: FlatpickrInstance | null = null;
   get canManageProfitActions(): boolean {
     if (!this.userProfile) return false;
@@ -186,6 +178,9 @@ export class Profit implements OnInit, OnDestroy {
     if (this.userProfile.accountType === 'personal') return true;
     const role = getCurrentSpaceRole(this.userProfile);
     return role === 'admin' || role === 'owner';
+  }
+  get isGroupUser(): boolean {
+    return this.userProfile?.accountType === 'group';
   }
 
   readonly iconChartLine = ChartLine;
@@ -227,6 +222,12 @@ export class Profit implements OnInit, OnDestroy {
     input.value = this.incomeAmountDisplay;
   }
   // ──────────────────────────────────────────────
+
+  formatCount(n: number): string {
+    if (this.translate.currentLang !== 'my') return String(n);
+    const mm = ['၀','၁','၂','၃','၄','၅','၆','၇','၈','၉'];
+    return String(n).replace(/\d/g, d => mm[+d]);
+  }
 
   constructor() {
     this.incomeForm = this.fb.group({
@@ -289,9 +290,6 @@ export class Profit implements OnInit, OnDestroy {
         [...data.incomes]
           .sort((a, b) => (new Date(b.date ?? 0).getTime()) - (new Date(a.date ?? 0).getTime()))
       )
-    );
-    this.groupedIncomes$ = this.incomes$.pipe(
-      map((incomes) => this.groupIncomesByDate(incomes))
     );
     this.totalExpensesByCurrency$ = profitLossData$.pipe(
       map((data) => data.totalExpenses)
@@ -534,30 +532,54 @@ export class Profit implements OnInit, OnDestroy {
     }
     const defaultCurrency = this.userProfile?.currency || 'MMK';
 
-    if (this.incomeForm.valid) {
-      const incomeData: Omit<ServiceIIncome, 'id' | 'userId' | 'createdAt' | 'device' | 'editedDevice'> = {
-        description: (this.incomeForm.value.description || '').trim(),
-        amount: this.incomeForm.value.amount,
-        currency: defaultCurrency,
-        date: this.incomeForm.value.date,
-      };
-
-      this.incomeService
-        .addIncome(incomeData)
-        .then(() => {
-          Toast.fire({ icon: 'success', title: this.translate.instant('INCOME_SAVE_SUCCESS') });
-          this.resetForm();
-          this.refreshIncomes$.next();
-          this.closeAddModal();
-        })
-        .catch((error) => {
-          console.error('Error adding income:', error);
-          Toast.fire({
-            icon: 'error',
-            title: error.message || this.translate.instant('INCOME_SAVE_ERROR')
-          });
-        });
+    if (!this.incomeForm.valid) {
+      return;
     }
+
+    const incomeData: Omit<ServiceIIncome, 'id' | 'userId' | 'createdAt' | 'device' | 'editedDevice'> = {
+      description: (this.incomeForm.value.description || '').trim(),
+      amount: this.incomeForm.value.amount,
+      currency: defaultCurrency,
+      date: this.incomeForm.value.date,
+    };
+
+    const editingId = this.editingIncome?.id;
+    const savePromise = editingId
+      ? this.incomeService.updateIncome(editingId, incomeData)
+      : this.incomeService.addIncome(incomeData);
+    const successKey = editingId ? 'INCOME_UPDATE_SUCCESS' : 'INCOME_SAVE_SUCCESS';
+
+    savePromise
+      .then(() => {
+        Toast.fire({ icon: 'success', title: this.translate.instant(successKey) });
+        this.refreshIncomes$.next();
+        this.closeAddModal(); // also clears editingIncome + resets the form
+      })
+      .catch((error) => {
+        console.error('Error saving income:', error);
+        Toast.fire({
+          icon: 'error',
+          title: error.message || this.translate.instant('INCOME_SAVE_ERROR')
+        });
+      });
+  }
+
+  // ── Edit — reuses the Add-Income modal (same pattern as expense.ts's
+  //    startEdit/editingExpense), instead of a separate dialog. ──
+  startEditIncome(income: ServiceIIncome): void {
+    if (!this.canManageProfitActions) {
+      return;
+    }
+    this.editingIncome = income;
+    this.incomeAmountDisplay = income.amount > 0 ? this.formatWithCommas(income.amount) : '';
+    this.incomeForm.patchValue({
+      description: income.description || '',
+      amount: income.amount,
+      date: income.date,
+    });
+    this.isAddModalOpen = true;
+    this.closeDatePicker();
+    document.body.classList.add('pnl-add-modal-open');
   }
 
   confirmDeleteIncome(incomeId: string | undefined): void {
@@ -604,6 +626,7 @@ export class Profit implements OnInit, OnDestroy {
 
   resetForm(): void {
     const defaultCurrency = this.userProfile?.currency || 'MMK';
+    this.editingIncome = null;
     this.incomeAmountDisplay = '';
     this.incomeForm.reset({
       description: '',
@@ -637,6 +660,7 @@ export class Profit implements OnInit, OnDestroy {
     if (!this.canManageProfitActions) {
       return;
     }
+    this.editingIncome = null;
     this.isAddModalOpen = true;
     this.closeDatePicker();
     document.body.classList.add('pnl-add-modal-open');
@@ -646,6 +670,11 @@ export class Profit implements OnInit, OnDestroy {
     this.isAddModalOpen = false;
     this.closeDatePicker();
     document.body.classList.remove('pnl-add-modal-open');
+    // Leaving edit mode: clear the prefilled values so the next "add"
+    // starts from a clean form instead of the edited record's data.
+    if (this.editingIncome) {
+      this.resetForm();
+    }
   }
 
   // ── Date picker (drill-down within the Add-Income modal) ──
@@ -787,40 +816,6 @@ export class Profit implements OnInit, OnDestroy {
 
   trackByIncomeId(index: number, income: ServiceIIncome): string {
     return income.id ?? String(index);
-  }
-
-  trackByIncomeGroupDate(index: number, group: IncomeDateGroup): string {
-    return group.date;
-  }
-
-  getDateHue(dateStr: string): number {
-    return getCategoryHue(dateStr);
-  }
-
-  formatCount(n: number): string {
-    if (this.translate.currentLang !== 'my') return String(n);
-    const mm = ['၀', '၁', '၂', '၃', '၄', '၅', '၆', '၇', '၈', '၉'];
-    return String(n).replace(/\d/g, d => mm[+d]);
-  }
-
-  private groupIncomesByDate(incomes: ServiceIIncome[]): IncomeDateGroup[] {
-    const groups = new Map<string, IncomeDateGroup>();
-
-    incomes.forEach(income => {
-      const date = income.date || '';
-      if (!groups.has(date)) {
-        groups.set(date, { date, incomes: [], totalsByCurrency: {}, count: 0 });
-      }
-      const group = groups.get(date)!;
-      group.incomes.push(income);
-      group.count += 1;
-      if (income.currency) {
-        group.totalsByCurrency[income.currency] =
-          (group.totalsByCurrency[income.currency] || 0) + income.amount;
-      }
-    });
-
-    return [...groups.values()].sort((a, b) => b.date.localeCompare(a.date));
   }
 
 }

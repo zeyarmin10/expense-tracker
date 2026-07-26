@@ -429,6 +429,7 @@
   "CUSTOM_BUDGET_PERIOD_DELETE_ERROR": "カスタム予算期間の削除中にエラーが発生しました。",
   "BUDGET_SAVE_SUCCESS": "予算を追加しました！",
   "BUDGET_DELETE_SUCCESS": "予算を削除しました！",
+  "INCOME_UPDATE_SUCCESS": "収入を更新しました！",
   "INCOME_SAVE_SUCCESS": "収入を追加しました！",
   "INCOME_DELETE_SUCCESS": "収入を削除しました！",
   "DELETE_ACTIVE_BUDGET_PERIOD_ERROR": "使用中の予算期間は削除できません。別の予算期間に切り替えてから削除してください。",

@@ -429,6 +429,7 @@
   "CUSTOM_BUDGET_PERIOD_DELETE_ERROR": "Error deleting custom budget period.",
   "BUDGET_SAVE_SUCCESS": "Budget added successfully!",
   "BUDGET_DELETE_SUCCESS": "Budget deleted successfully!",
+  "INCOME_UPDATE_SUCCESS": "Income updated successfully!",
   "INCOME_SAVE_SUCCESS": "Profit added successfully!",
   "INCOME_DELETE_SUCCESS": "Profit deleted successfully!",
   "DELETE_ACTIVE_BUDGET_PERIOD_ERROR": "Cannot delete an active budget period. Please switch to a different budget period before deleting.",

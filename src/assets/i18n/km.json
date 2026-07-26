@@ -429,6 +429,7 @@
   "CUSTOM_BUDGET_PERIOD_DELETE_ERROR": "មានបញ្ហាក្នុងការលុបរយៈពេលថវិកាផ្ទាល់ខ្លួន។",
   "BUDGET_SAVE_SUCCESS": "បានបន្ថែមថវិកាដោយជោគជ័យ!",
   "BUDGET_DELETE_SUCCESS": "បានលុបថវិកាដោយជោគជ័យ!",
+  "INCOME_UPDATE_SUCCESS": "បានកែប្រែចំណូលដោយជោគជ័យ!",
   "INCOME_SAVE_SUCCESS": "បានបន្ថែមចំណូលដោយជោគជ័យ!",
   "INCOME_DELETE_SUCCESS": "បានលុបចំណូលដោយជោគជ័យ!",
   "DELETE_ACTIVE_BUDGET_PERIOD_ERROR": "មិនអាចលុបរយៈពេលថវិកាដែលកំពុងប្រើបានទេ។ សូមប្តូរទៅរយៈពេលផ្សេងជាមុនសិន។",

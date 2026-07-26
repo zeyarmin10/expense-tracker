@@ -429,6 +429,7 @@
   "CUSTOM_BUDGET_PERIOD_DELETE_ERROR": "เกิดข้อผิดพลาดในการลบรอบงบประมาณแบบกำหนดเอง",
   "BUDGET_SAVE_SUCCESS": "เพิ่มงบประมาณเรียบร้อยแล้ว!",
   "BUDGET_DELETE_SUCCESS": "ลบงบประมาณเรียบร้อยแล้ว!",
+  "INCOME_UPDATE_SUCCESS": "แก้ไขรายรับเรียบร้อยแล้ว!",
   "INCOME_SAVE_SUCCESS": "เพิ่มรายรับเรียบร้อยแล้ว!",
   "INCOME_DELETE_SUCCESS": "ลบรายรับเรียบร้อยแล้ว!",
   "DELETE_ACTIVE_BUDGET_PERIOD_ERROR": "ไม่สามารถลบรอบงบประมาณที่กำลังใช้งานอยู่ได้ กรุณาเปลี่ยนไปใช้รอบอื่นก่อนลบ",
