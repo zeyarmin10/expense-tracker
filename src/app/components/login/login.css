@@ -125,14 +125,6 @@
   line-height: 1;
 }
 
-.lgn-lang-label {
-  /* font-family: 'DM Mono', monospace; */
-  font-size: 0.7rem;
-  font-weight: 500;
-  color: var(--text-sub);
-  letter-spacing: 0.06em;
-}
-
 .lgn-lang-chevron {
   color: var(--text-muted);
   transition: transform 0.18s ease, color 0.18s ease;

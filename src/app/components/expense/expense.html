@@ -4,7 +4,13 @@
 </div>
 
 <div class="exp-wrapper">
-  <div class="exp-container mb-5">
+  <div class="exp-container mb-12">
+    <div class="flex flex-row-reverse" *ngIf="isDesktopView">
+      <button type="button" class="exp-add-toolbar-btn" (click)="openAddModal('expense')">
+        <lucide-icon [img]="iconPlus" [size]="15"></lucide-icon>
+        {{ 'EXPENSE_ADD_TITLE' | translate }}
+      </button>
+    </div>
     <!-- ── ADD (FAB + Bottom-sheet Modal) ── -->
     <button type="button" class="exp-add-fab" (click)="openAddModal('expense')" [title]="'EXPENSE_ADD_TITLE' | translate">
       <lucide-icon [img]="iconPlus" [size]="26"></lucide-icon>
@@ -506,10 +512,6 @@
           <lucide-icon [img]="iconCalendar" [size]="16" class="exp-filter-label-icon"></lucide-icon>
           <span>{{ getFilterLabel() }}</span>
         </span>
-        <button type="button" class="exp-add-toolbar-btn" (click)="openAddModal('expense')">
-          <lucide-icon [img]="iconPlus" [size]="15"></lucide-icon>
-          {{ 'EXPENSE_ADD_TITLE' | translate }}
-        </button>
       </div>
     </div>
     <!-- ── END SHARED DATE FILTER BAR ── -->

@@ -20,7 +20,7 @@
   /* font-family: 'Syne', sans-serif; */
   background: var(--bg);
   min-height: 100vh;
-  padding: 3.5rem 1rem calc(7rem + env(safe-area-inset-bottom, 0px));
+  padding: 1.5rem 1rem calc(7rem + env(safe-area-inset-bottom, 0px));
   color: var(--text);
 }
 
@@ -2300,35 +2300,31 @@ body.light-mode .exp-daterange-input::-webkit-calendar-picker-indicator {
   gap: 0.35rem;
 }
 
+/* Only ever rendered on desktop — gated by *ngIf="isDesktopView" in the
+   template (matching this same 992px breakpoint), not just CSS-hidden. */
 .exp-add-toolbar-btn {
-  display: none;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: none;
+  border-radius: 999px;
+  padding: 0.45rem 1rem;
+  background: var(--accent, #0b74ff);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: normal;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(11, 116, 255, 0.35);
+  transition: transform 0.15s, box-shadow 0.15s;
 }
 
-@media (min-width: 992px) {
-  .exp-add-toolbar-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    border: none;
-    border-radius: 999px;
-    padding: 0.45rem 1rem;
-    background: var(--accent, #0b74ff);
-    color: #fff;
-    font-size: 0.8rem;
-    font-weight: 600;
-    letter-spacing: normal;
-    cursor: pointer;
-    box-shadow: 0 4px 14px rgba(11, 116, 255, 0.35);
-    transition: transform 0.15s, box-shadow 0.15s;
-  }
+.exp-add-toolbar-btn:hover {
+  box-shadow: 0 6px 18px rgba(11, 116, 255, 0.45);
+}
 
-  .exp-add-toolbar-btn:hover {
-    box-shadow: 0 6px 18px rgba(11, 116, 255, 0.45);
-  }
-
-  .exp-add-toolbar-btn:active {
-    transform: scale(0.96);
-  }
+.exp-add-toolbar-btn:active {
+  transform: scale(0.96);
 }
 
 .exp-filter-label-icon {

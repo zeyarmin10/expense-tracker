@@ -11,7 +11,7 @@
   background: var(--bg);
   min-height: 100vh;
   /* Extra bottom padding to clear fixed bottom nav (~72px) + safe area */
-  padding: 2rem 1rem calc(7rem + env(safe-area-inset-bottom, 0px));
+  padding: 1.5rem 1rem calc(7rem + env(safe-area-inset-bottom, 0px));
   color: var(--text);
 }
 
@@ -794,7 +794,7 @@ body.pnl-add-modal-open {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 1.3rem;
+  padding: 1rem 0.75rem;
   background: none;
   border: none;
   color: var(--text);
@@ -819,7 +819,7 @@ body.pnl-add-modal-open {
 }
 
 .pnl-chevron {
-  font-size: 0.7rem;
+  font-size: 1rem;
   color: var(--text-muted);
   transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1);
   flex-shrink: 0;
@@ -833,7 +833,7 @@ body.pnl-add-modal-open {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  padding: 1rem 1.3rem;
+  padding: 1rem 0.75rem;
   text-decoration: none;
   cursor: pointer;
   transition: background 0.15s;
@@ -915,19 +915,17 @@ body.pnl-add-modal-open {
 /* ── Recorded Incomes table — ported from expense-overview's .expense-table
    so both "list all records" screens in the app read the same way. Income
    has no category, so there's no category column/badge here. ── */
-.pnl-table-header {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  padding: 0.85rem 1.3rem 0;
-}
-
+/* Sits inline next to the "Recorded Incomes" toggle title rather than
+   the table itself — font-weight reset since it inherits the toggle
+   button's bold text otherwise. */
 .pnl-table-count {
   font-size: 0.72rem;
-  color: var(--text-muted);
-  background: var(--surface-2);
+  font-weight: 700;
+  color: var(--text);
+  background: var(--income-dim);
   padding: 0.2rem 0.6rem;
   border-radius: 100px;
+  flex-shrink: 0;
 }
 
 .pnl-table-responsive {
@@ -940,6 +938,36 @@ body.pnl-add-modal-open {
   width: 100%;
   min-width: 340px;
   border-collapse: collapse;
+}
+
+/* Mobile: no horizontal scroll — columns get fixed widths so the
+   description truncates with an ellipsis instead of overflowing.
+   Tapping truncated text (appShowFullText) shows the full value. */
+@media (max-width: 639.98px) {
+  .pnl-table-responsive {
+    overflow-x: hidden;
+  }
+
+  .pnl-income-table {
+    table-layout: fixed;
+    min-width: 0;
+  }
+
+  /* Scoped under .pnl-income-table (not just the bare class) so these
+     widths reliably beat the base .pnl-td-amount/.pnl-td-actions rules
+     further down the file — same specificity + later source order would
+     otherwise let those win regardless of this media query. */
+  .pnl-income-table .pnl-td-date {
+    width: 27%;
+  }
+
+  .pnl-income-table .pnl-td-amount {
+    width: 30%;
+  }
+
+  .pnl-income-table .pnl-td-actions {
+    width: 40px;
+  }
 }
 
 .pnl-income-table thead tr {
@@ -956,6 +984,8 @@ body.pnl-add-modal-open {
   text-align: left;
   border-bottom: 1px solid var(--border);
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 @media (min-width: 640px) {
@@ -969,7 +999,7 @@ body.pnl-add-modal-open {
    isn't actually the last cell once the delete button is shown. */
 
 .pnl-income-table td {
-  padding: 0.6rem 0.75rem;
+  padding: 0.6rem 0.25rem;
   font-size: 0.85rem;
   border-bottom: 1px solid var(--border);
   color: var(--text);
@@ -986,14 +1016,6 @@ body.pnl-add-modal-open {
   border-bottom: none;
 }
 
-.pnl-income-table tbody tr {
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-.pnl-income-table tbody tr:hover {
-  background: var(--surface-2);
-}
 
 .pnl-td-date {
   font-size: 0.8rem;
@@ -1504,25 +1526,75 @@ app-date-input .di-trigger {
   color: var(--text-muted);
 }
 
-.pnl-delete-btn {
+/* Row actions — three-dot button + floating menu (Edit/Delete), replacing
+   the old inline delete icon. position: fixed on the menu escapes the
+   table's own scroll/overflow clipping so it can't get cut off at the
+   viewport edge — same pattern as category.css's .cat-float-menu. */
+.pnl-menu-wrap {
+  position: relative;
+}
+
+.pnl-more-btn {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 32px;
   height: 32px;
   border-radius: 8px;
-  border: 1px solid rgba(248, 113, 113, 0.25);
-  background: rgba(248, 113, 113, 0.08);
-  color: var(--loss-color);
+  border: 1px solid transparent;
+  background: none;
+  color: var(--text-sub, var(--text-muted));
   cursor: pointer;
   transition: all 0.15s;
   flex-shrink: 0;
-  font-size: 1rem;
 }
 
-.pnl-delete-btn:hover {
-  background: var(--loss-color);
-  color: #0a0c10;
+.pnl-more-btn:hover {
+  background: var(--surface-2);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+.pnl-float-menu {
+  position: fixed;
+  z-index: 9999;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  min-width: 128px;
+}
+
+.pnl-float-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.6rem 0.85rem;
+  background: transparent;
+  border: none;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s, color 0.12s;
+}
+
+.pnl-float-edit {
+  color: var(--info, #60a5fa);
+}
+
+.pnl-float-edit:hover {
+  background: rgba(96, 165, 250, 0.1);
+}
+
+.pnl-float-delete {
+  color: #f87171;
+}
+
+.pnl-float-delete:hover {
+  background: rgba(248, 113, 113, 0.1);
 }
 
 .pnl-empty {

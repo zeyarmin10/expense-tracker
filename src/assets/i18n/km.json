@@ -137,6 +137,8 @@
   "MONTHLY_PROFIT_LOSS": "ចំណេញខាតប្រចាំខែ",
   "NET_PROFIT": "ចំណេញសុទ្ធ",
   "BALANCE_LABEL": "សមតុល្យនៅសល់",
+  "SHOW_BALANCE": "បង្ហាញសមតុល្យ",
+  "HIDE_BALANCE": "លាក់សមតុល្យ",
   "BALANCE_DEFICIT": "ឱនភាពថវិកា",
   "EXPENSE_DEFICIT": "ចំណាយលើស",
   "CUSTOM_SELECT_SEARCH": "ស្វែងរក...",

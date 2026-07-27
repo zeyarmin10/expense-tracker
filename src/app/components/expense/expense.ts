@@ -64,6 +64,10 @@ import { CurrentSpaceTitleComponent } from '../common/current-space-title/curren
 import { UserAvatarComponent } from '../common/user-avatar/user-avatar.component';
 import { ShowFullTextDirective } from '../../directives/show-full-text.directive';
 
+// Matches the existing `min-width: 992px` breakpoint in expense.css that
+// switches from the mobile FAB to the desktop toolbar "Add Expense" button.
+const DESKTOP_BREAKPOINT = 992;
+
 const Toast = Swal.mixin({
   toast: true,
   position: 'top-end',
@@ -150,6 +154,10 @@ export class Expense implements OnInit, OnDestroy {
   translate = inject(TranslateService);
 
   public userRole: string | null = null;
+  // Gates the desktop-only toolbar "Add Expense" button — kept out of the
+  // DOM entirely on mobile (not just CSS-hidden) so it can't add stray
+  // space above the filter bar; the mobile FAB covers the same action there.
+  isDesktopView = typeof window !== 'undefined' ? window.innerWidth >= DESKTOP_BREAKPOINT : false;
   isSaving = false;
   isAddModalOpen = false;
   addModalTab: 'expense' | 'voucher' = 'expense';
@@ -1176,6 +1184,11 @@ export class Expense implements OnInit, OnDestroy {
   closeAvatarBubbles(): void {
     this.activeAvatarExpenseId = null;
     this.activeAvatarVoucherId = null;
+  }
+
+  @HostListener('window:resize')
+  onWindowResize(): void {
+    this.isDesktopView = window.innerWidth >= DESKTOP_BREAKPOINT;
   }
 
   toggleAvatarName(expenseId: string, event: Event): void {

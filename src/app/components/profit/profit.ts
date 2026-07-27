@@ -7,6 +7,7 @@ import {
   ElementRef,
   ChangeDetectorRef,
   ChangeDetectionStrategy,
+  HostListener,
 } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -36,7 +37,7 @@ import { getIconData } from '../../utils/category-icons';
 import {
   TrendingUp, TrendingDown, Banknote, ShoppingCart, ChartLine,
   ChartColumn, ChevronDown, ChevronRight, Save, Trash2,
-  Plus, X, CalendarDays,
+  Plus, X, CalendarDays, EllipsisVertical, Pencil,
   LucideIconData,
 } from 'lucide-angular';
 import { AuthService } from '../../services/auth';
@@ -55,6 +56,7 @@ import Swal from 'sweetalert2';
 import { UserAvatarComponent } from '../common/user-avatar/user-avatar.component';
 import { CustomSelectComponent, SelectOption } from '../common/custom-select/custom-select.component';
 import { DateRangeInputComponent } from '../common/date-range-input/date-range-input.component';
+import { ShowFullTextDirective } from '../../directives/show-full-text.directive';
 import flatpickr from 'flatpickr';
 import type { Instance as FlatpickrInstance } from 'flatpickr/dist/types/instance';
 import { Burmese } from 'flatpickr/dist/l10n/my';
@@ -91,6 +93,7 @@ type CurrencyMap = { [currency: string]: number };
     LucideAngularModule,
     CustomSelectComponent,
     DateRangeInputComponent,
+    ShowFullTextDirective,
   ],
   providers: [DatePipe],
   templateUrl: './profit.html',
@@ -183,6 +186,31 @@ export class Profit implements OnInit, OnDestroy {
     return this.userProfile?.accountType === 'group';
   }
 
+  // Row actions — three-dot floating menu instead of row-click-to-edit,
+  // since the fixed-width mobile table columns left no room for a visible
+  // inline delete button. Same floating-menu pattern as category.ts.
+  openMenuId: string | null = null;
+  menuX = 0;
+  menuY = 0;
+
+  toggleIncomeMenu(id: string, event: MouseEvent): void {
+    event.stopPropagation();
+    if (this.openMenuId === id) {
+      this.openMenuId = null;
+      return;
+    }
+    const btn = event.currentTarget as HTMLElement;
+    const rect = btn.getBoundingClientRect();
+    this.menuY = rect.bottom + 4;
+    this.menuX = rect.right - 128;
+    this.openMenuId = id;
+  }
+
+  @HostListener('document:click')
+  onDocumentClick(): void {
+    this.openMenuId = null;
+  }
+
   readonly iconChartLine = ChartLine;
   readonly iconBanknote = Banknote;
   readonly iconShoppingCart = ShoppingCart;
@@ -190,6 +218,8 @@ export class Profit implements OnInit, OnDestroy {
   readonly iconChevronRight = ChevronRight;
   readonly iconSave = Save;
   readonly iconTrash2 = Trash2;
+  readonly iconMoreVertical = EllipsisVertical;
+  readonly iconPen = Pencil;
   readonly iconChartColumn = ChartColumn;
   readonly iconPlus = Plus;
   readonly iconX = X;

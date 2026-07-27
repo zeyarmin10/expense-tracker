@@ -55,7 +55,7 @@ import {
   UserDataService,
   canManageSharedSpace,
 } from '../../services/user-data';
-import { LucideAngularModule, TrendingUp, TrendingDown, Banknote, PiggyBank, ShoppingCart, ChartColumn, ChartPie, RotateCw, LucideIconData } from 'lucide-angular';
+import { LucideAngularModule, TrendingUp, TrendingDown, Banknote, PiggyBank, ShoppingCart, ChartColumn, ChartPie, RotateCw, Eye, EyeOff, LucideIconData } from 'lucide-angular';
 import { FormatService } from '../../services/format.service';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
 import { CustomBudgetPeriod, CustomBudgetPeriodService } from '../../services/custom-budget-period.service';
@@ -128,7 +128,6 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     incomes: ServiceIIncome[];
   }>;
   totalIncomesByCurrency$!: Observable<{ [currency: string]: number }>;
-  isDashboardDataLoading$!: Observable<boolean>;
 
   private dashboardAllData$!: Observable<DashboardData>;
   expenseFilterForm!: FormGroup;
@@ -147,6 +146,19 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly iconChartColumn = ChartColumn;
   readonly iconTrendingUp = TrendingUp;
   readonly iconTrendingDown = TrendingDown;
+  readonly iconEye = Eye;
+  readonly iconEyeOff = EyeOff;
+
+  // Remaining-balance visibility toggle (banking-app style) — persisted
+  // across visits so the user's show/hide choice sticks.
+  isBalanceHidden = localStorage.getItem('dashboardBalanceHidden') === 'true';
+
+  toggleBalanceVisibility(event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isBalanceHidden = !this.isBalanceHidden;
+    localStorage.setItem('dashboardBalanceHidden', String(this.isBalanceHidden));
+  }
 
   availableCurrencies = AVAILABLE_CURRENCIES;
   private expenseChartInstance: Chart | undefined;
@@ -422,11 +434,6 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         return of({ ...emptyData, loading: false });
       }),
       shareReplay(1)
-    );
-
-    this.isDashboardDataLoading$ = dataState$.pipe(
-      map((state) => state.loading),
-      distinctUntilChanged()
     );
 
     const data$ = dataState$.pipe(

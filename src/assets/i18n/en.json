@@ -137,6 +137,8 @@
   "MONTHLY_PROFIT_LOSS": "Monthly Profit and Loss",
   "NET_PROFIT": "Net Profit",
   "BALANCE_LABEL": "Remaining Balance",
+  "SHOW_BALANCE": "Show Balance",
+  "HIDE_BALANCE": "Hide Balance",
   "BALANCE_DEFICIT": "Budget Deficit",
   "EXPENSE_DEFICIT": "Expense Deficit",
   "CUSTOM_SELECT_SEARCH": "Search...",

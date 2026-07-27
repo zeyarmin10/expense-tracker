@@ -12,8 +12,66 @@
     </div>
 
     <!-- ── Summary Cards — data ရှိမှသာ ပြမည် ── -->
-    <div class="dash-data-shell" [class.dash-data-shell-loading]="isDashboardDataLoading$ | async">
+    <div class="dash-data-shell">
     <ng-container *ngIf="hasData$ | async">
+
+    <!-- Remaining Balance — hero card, shown above the other summary cards
+         and bigger than them so it's the first thing visible. The eye
+         toggle hides/shows the amount, banking/pay-app style (choice
+         persisted in localStorage — see isBalanceHidden). -->
+    <div class="dash-card dash-hero-card" [ngClass]="getProfitLossCardClass(totalProfitLossByCurrency$ | async)">
+      <ng-container *ngIf="totalProfitLossByCurrency$ | async as profitLosses; else balanceCardLoading">
+        <ng-container *ngIf="(profitLosses | keyvalue).length > 0; else balanceEmptyCta">
+          <div class="dash-card-left" *ngFor="let profit of profitLosses | keyvalue; trackBy: trackByKey; first as isFirst">
+            <span class="dash-card-label-row">
+              <span class="dash-card-label">
+                {{ ($any(profit).value >= 0 ? 'BALANCE_LABEL' : 'EXPENSE_DEFICIT') | translate }}
+              </span>
+              <button *ngIf="isFirst" type="button" class="dash-balance-eye-btn" (click)="toggleBalanceVisibility($event)"
+                [attr.aria-label]="(isBalanceHidden ? 'SHOW_BALANCE' : 'HIDE_BALANCE') | translate">
+                <lucide-icon [img]="isBalanceHidden ? iconEye : iconEyeOff" [size]="15"></lucide-icon>
+              </button>
+            </span>
+            <span class="dash-card-amount dash-hero-amount" [ngClass]="getProfitLossAmountClass($any(profit).value)">
+              <ng-container *ngIf="!isBalanceHidden; else hiddenBalanceAmount">
+                {{ formatService.formatAmountShort($any(profit).value, $any(profit).key) }}
+              </ng-container>
+              <ng-template #hiddenBalanceAmount>&bull;&bull;&bull;&bull;&bull;&bull;</ng-template>
+            </span>
+          </div>
+          <div class="dash-card-right dash-hero-right">
+            <span class="dash-card-icon dash-hero-icon" [ngClass]="getProfitLossIconClass(totalProfitLossByCurrency$ | async)">
+              <lucide-icon [img]="getProfitLossIcon(totalProfitLossByCurrency$ | async)" [size]="34"></lucide-icon>
+            </span>
+          </div>
+        </ng-container>
+        <ng-template #balanceEmptyCta>
+          <div class="dash-card-left">
+            <span class="dash-card-label">{{ 'BALANCE_LABEL' | translate }}</span>
+            <span class="dash-card-empty-cta">+ {{ 'ADD_INCOME' | translate }}</span>
+          </div>
+          <div class="dash-card-right">
+            <span class="dash-card-icon dash-icon-income dash-hero-icon">
+              <lucide-icon [img]="iconTrendingUp" [size]="34"></lucide-icon>
+            </span>
+          </div>
+        </ng-template>
+      </ng-container>
+      <ng-template #balanceCardLoading>
+        <div class="dash-card-left">
+          <span class="dash-card-label">{{ 'BALANCE_LABEL' | translate }}</span>
+          <div class="dash-card-spinner" aria-hidden="true">
+            <div class="exp-spinner-sm"></div>
+          </div>
+        </div>
+        <div class="dash-card-right">
+          <span class="dash-card-icon dash-hero-icon text-success">
+            <lucide-icon [img]="iconTrendingUp" [size]="34"></lucide-icon>
+          </span>
+        </div>
+      </ng-template>
+    </div>
+
     <div class="dash-summary-grid">
 
       <!-- Income -->
@@ -106,41 +164,6 @@
         </a>
       </ng-template>
 
-      <!-- Profit / Loss (Remaining Balance) — derived from income minus
-           expense, so there's nothing to "add" directly here; the empty
-           state points at /profit (where the underlying income is entered)
-           instead, same as the Income card above. -->
-      <a class="dash-card dash-card-link" [ngClass]="getProfitLossCardClass(totalProfitLossByCurrency$ | async)" routerLink="/profit">
-        <ng-container *ngIf="totalProfitLossByCurrency$ | async as profitLosses; else cardLoading">
-          <ng-container *ngIf="(profitLosses | keyvalue).length > 0; else balanceEmptyCta">
-            <div class="dash-card-left" *ngFor="let profit of profitLosses | keyvalue; trackBy: trackByKey">
-              <span class="dash-card-label">
-                {{ ($any(profit).value >= 0 ? 'BALANCE_LABEL' : 'EXPENSE_DEFICIT') | translate }}
-              </span>
-              <span class="dash-card-amount" [ngClass]="getProfitLossAmountClass($any(profit).value)">
-                {{ formatService.formatAmountShort($any(profit).value, $any(profit).key) }}
-              </span>
-              </div>
-              <div class="dash-card-right">
-              <span class="dash-card-icon" [ngClass]="getProfitLossIconClass(totalProfitLossByCurrency$ | async)">
-                <lucide-icon [img]="getProfitLossIcon(totalProfitLossByCurrency$ | async)" [size]="30"></lucide-icon>
-              </span>
-            </div>
-          </ng-container>
-          <ng-template #balanceEmptyCta>
-            <div class="dash-card-left">
-              <span class="dash-card-label">{{ 'BALANCE_LABEL' | translate }}</span>
-              <span class="dash-card-empty-cta">+ {{ 'ADD_INCOME' | translate }}</span>
-            </div>
-            <div class="dash-card-right">
-              <span class="dash-card-icon dash-icon-income">
-                <lucide-icon [img]="iconTrendingUp" [size]="30"></lucide-icon>
-              </span>
-            </div>
-          </ng-template>
-        </ng-container>
-      </a>
-
     </div>
     </ng-container>
     <!-- END Summary Cards -->
@@ -221,11 +244,6 @@
     <!-- </ng-container> -->
     <!-- END Charts -->
 
-    <div class="dash-loading-cover" *ngIf="isDashboardDataLoading$ | async">
-      <div class="exp-loading">
-        <div class="exp-spinner-sm"></div>
-      </div>
-    </div>
     </div>
 
   </div>

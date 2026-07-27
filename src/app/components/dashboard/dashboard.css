@@ -12,7 +12,7 @@
   /* font-family: 'Syne', sans-serif; */
   background: var(--bg);
   min-height: 100vh;
-  padding: 2rem 1rem 5rem;
+  padding: 1.5rem 1rem 5rem;
   color: var(--text);
   max-width: 100vw;
   overflow-x: hidden;
@@ -91,33 +91,6 @@
 }
 
 /* ── Summary Cards Grid ── */
-.dash-data-shell-loading > :not(.dash-loading-cover) {
-  opacity: 0;
-  pointer-events: none;
-}
-
-.dash-loading-cover {
-  position: fixed;
-  inset: 0;
-  z-index: 1200;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  padding: 0;
-  background: rgba(2, 8, 23, 0.88);
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
-}
-
-.dash-loading-cover .exp-loading {
-  padding: 0;
-}
-
-body.light-mode .dash-loading-cover {
-  background: rgba(255, 255, 255, 0.86);
-}
-
 .dash-summary-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -134,8 +107,64 @@ body.light-mode .dash-loading-cover {
 
 @media (min-width: 992px) {
   .dash-summary-grid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
   }
+}
+
+/* ── Remaining Balance (Hero Card) ──
+   Bigger + full-width, sits above .dash-summary-grid so it's the first
+   thing visible — same reasoning banking/pay apps lead with the balance.
+   Compound selectors throughout (not bare .dash-hero-* classes) so these
+   reliably beat the base .dash-card/.dash-card-amount/.dash-card-icon
+   rules further down the file regardless of source order — same class of
+   bug as the profit-page mobile column widths earlier in this app. */
+.dash-card.dash-hero-card {
+  padding: 1.5rem 1.4rem;
+  border-width: 1.5px;
+  margin-bottom: 0.85rem;
+}
+
+.dash-card-amount.dash-hero-amount {
+  font-size: clamp(1.9rem, 5vw, 2.6rem);
+  font-weight: 700;
+}
+
+.dash-card-icon.dash-hero-icon {
+  font-size: 2.4rem;
+}
+
+.dash-hero-right {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+/* Sits next to the "Remaining Balance" label rather than the icon on the
+   card's right side, so it reads as "toggle what this label describes". */
+.dash-card-label-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.dash-balance-eye-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.dash-balance-eye-btn:hover {
+  background: var(--border);
+  color: var(--text);
 }
 
 /* ── Summary Card Base ── */
