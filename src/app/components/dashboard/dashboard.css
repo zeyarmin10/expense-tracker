@@ -125,7 +125,7 @@
 }
 
 .dash-card-amount.dash-hero-amount {
-  font-size: clamp(1.9rem, 5vw, 2.6rem);
+  font-size: clamp(1.75rem, 5vw, 2.6rem);
   font-weight: 700;
 }
 

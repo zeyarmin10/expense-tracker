@@ -34,7 +34,7 @@
             </span>
             <span class="dash-card-amount dash-hero-amount" [ngClass]="getProfitLossAmountClass($any(profit).value)">
               <ng-container *ngIf="!isBalanceHidden; else hiddenBalanceAmount">
-                {{ formatService.formatAmountShort($any(profit).value, $any(profit).key) }}
+                {{ formatService.formatAmountWithSymbol($any(profit).value, $any(profit).key) }}
               </ng-container>
               <ng-template #hiddenBalanceAmount>&bull;&bull;&bull;&bull;&bull;&bull;</ng-template>
             </span>
