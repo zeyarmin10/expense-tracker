@@ -120,7 +120,6 @@ export const BURMESE_DAY_NAMES = [
   'စနေနေ့',        // 6 Saturday
 ];
 
-export const BURMESE_CURRENCY_SYMBOL = 'ကျပ်';
 export const MMK_CURRENCY_CODE = 'MMK';
 export const BURMESE_LOCALE_CODE = 'my';
 

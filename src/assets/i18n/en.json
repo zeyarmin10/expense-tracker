@@ -355,6 +355,7 @@
   "PREFERENCES_STEP_TITLE": "Set up your preferences",
   "PREFERENCES_STEP_SUBTITLE": "Choose the language and currency you'd like to use on your dashboard. You can change these anytime in your profile.",
   "BALANCE_SUFFIX": "(Budget-Expense)",
+  "MMK_CURRENCY_LABEL": "Kyat",
   "CURRENCY_NAMES": {
     "MMK": "Myanmar Kyat",
     "USD": "US Dollar",

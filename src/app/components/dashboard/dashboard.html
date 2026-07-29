@@ -33,9 +33,7 @@
               </button>
             </span>
             <span class="dash-card-amount dash-hero-amount" [ngClass]="getProfitLossAmountClass($any(profit).value)">
-              <ng-container *ngIf="!isBalanceHidden; else hiddenBalanceAmount">
-                {{ formatService.formatAmountWithSymbol($any(profit).value, $any(profit).key) }}
-              </ng-container>
+              <span *ngIf="!isBalanceHidden; else hiddenBalanceAmount" [innerHTML]="formatService.formatAmountWithSymbolHtml($any(profit).value, $any(profit).key)"></span>
               <ng-template #hiddenBalanceAmount>&bull;&bull;&bull;&bull;&bull;&bull;</ng-template>
             </span>
           </div>
@@ -80,9 +78,9 @@
           <span class="dash-card-label">{{ 'TOTAL_INCOMES' | translate }}</span>
           <ng-container *ngIf="totalIncomesByCurrency$ | async as totals; else cardLoading">
             <ng-container *ngIf="totals && (totals | keyvalue).length > 0; else incomeEmptyCta">
-              <span *ngFor="let total of totals | keyvalue; trackBy: trackByKey" class="dash-card-amount dash-amount-income">
-                {{ formatService.formatAmountShort(total.value, total.key) }}
-              </span>
+              <span *ngFor="let total of totals | keyvalue; trackBy: trackByKey" class="dash-card-amount dash-amount-income"
+                [innerHTML]="formatService.formatAmountShortHtml(total.value, total.key)"
+              ></span>
             </ng-container>
           </ng-container>
           <!-- Visual button only — the whole card already links to /profit,
@@ -104,9 +102,9 @@
           <span class="dash-card-label">{{ 'TOTAL_BUDGET' | translate }}</span>
           <ng-container *ngIf="totalBudgetsByCurrency$ | async as totals; else cardLoading">
             <ng-container *ngIf="totals && (totals | keyvalue).length > 0; else budgetEmptyCta">
-              <span *ngFor="let total of totals | keyvalue; trackBy: trackByKey" class="dash-card-amount dash-amount-budget">
-                {{ formatService.formatAmountShort(total.value, total.key) }}
-              </span>
+              <span *ngFor="let total of totals | keyvalue; trackBy: trackByKey" class="dash-card-amount dash-amount-budget"
+                [innerHTML]="formatService.formatAmountShortHtml(total.value, total.key)"
+              ></span>
             </ng-container>
           </ng-container>
           <!-- Visual button only — the whole card already links to /budget.
@@ -131,9 +129,9 @@
           <div class="dash-card-left">
             <span class="dash-card-label">{{ 'TOTAL_EXPENSES' | translate }}</span>
             <ng-container *ngIf="(totals | keyvalue).length > 0; else expenseEmptyCta">
-              <span *ngFor="let total of totals | keyvalue; trackBy: trackByKey" class="dash-card-amount dash-amount-expense">
-                {{ formatService.formatAmountShort(total.value, total.key) }}
-              </span>
+              <span *ngFor="let total of totals | keyvalue; trackBy: trackByKey" class="dash-card-amount dash-amount-expense"
+                [innerHTML]="formatService.formatAmountShortHtml(total.value, total.key)"
+              ></span>
             </ng-container>
             <!-- Visual button only — the whole card already links to /expense
                  when there's nothing to browse yet. -->

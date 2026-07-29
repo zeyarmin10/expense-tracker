@@ -221,9 +221,9 @@
               <span class="bgt-card-label">{{ 'TOTAL_BUDGET' | translate }}</span>
               <ng-container *ngIf="totalBudgetByCurrency$ | async as totals; else cardLoading">
                 <ng-container *ngIf="totals && (totals | keyvalue).length > 0; else cardNoData">
-                  <span *ngFor="let total of totals | keyvalue; trackBy: trackByKey" class="bgt-card-amount bgt-amount-budget">
-                    {{ formatService.formatAmountShort(total.value, total.key) }}
-                  </span>
+                  <span *ngFor="let total of totals | keyvalue; trackBy: trackByKey" class="bgt-card-amount bgt-amount-budget"
+                    [innerHTML]="formatService.formatAmountShortHtml(total.value, total.key)"
+                  ></span>
                 </ng-container>
               </ng-container>
             </div>
@@ -237,9 +237,9 @@
               <span class="bgt-card-label">{{ 'TOTAL_EXPENSES' | translate }}</span>
               <ng-container *ngIf="totalExpensesByCurrency$ | async as totals; else cardLoading">
                 <ng-container *ngIf="totals && (totals | keyvalue).length > 0; else cardNoData">
-                  <span *ngFor="let total of totals | keyvalue; trackBy: trackByKey" class="bgt-card-amount bgt-amount-expense">
-                    {{ formatService.formatAmountShort(total.value, total.key) }}
-                  </span>
+                  <span *ngFor="let total of totals | keyvalue; trackBy: trackByKey" class="bgt-card-amount bgt-amount-expense"
+                    [innerHTML]="formatService.formatAmountShortHtml(total.value, total.key)"
+                  ></span>
                 </ng-container>
               </ng-container>
             </div>
@@ -255,9 +255,9 @@
                   <span class="bgt-card-label">
                     {{ balance.value >= 0 ? ("REMAINING_BALANCE" | translate) : ("BALANCE_DEFICIT" | translate) }}
                   </span>
-                  <span class="bgt-card-amount" [ngClass]="getBalanceAmountClass(balance.value)">
-                    {{ formatService.formatAmountShort(getMath().abs(balance.value), balance.key) }}
-                  </span>
+                  <span class="bgt-card-amount" [ngClass]="getBalanceAmountClass(balance.value)"
+                    [innerHTML]="formatService.formatAmountShortHtml(getMath().abs(balance.value), balance.key)"
+                  ></span>
                 </div>
                 <div class="bgt-card-right">
                   <span class="bgt-card-icon" [ngClass]="getBalanceIconClass(remainingBalanceByCurrency$ | async)">
@@ -354,9 +354,8 @@
                         <span
                           class="bgt-date-total"
                           *ngFor="let total of group.totalsByCurrency | keyvalue; trackBy: trackByKey"
-                        >
-                          {{ formatService.formatAmountShort(total.value, total.key) }}
-                        </span>
+                          [innerHTML]="formatService.formatAmountShortHtml(total.value, total.key)"
+                        ></span>
                       </div>
                     </div>
 
@@ -375,9 +374,9 @@
                         </div>
                         <div class="bgt-budget-card-body">
                           <div class="bgt-budget-card-top">
-                            <span class="bgt-budget-card-amount">
-                              {{ formatService.formatAmountWithSymbol(budget.amount, budget.currency) }}
-                            </span>
+                            <span class="bgt-budget-card-amount"
+                              [innerHTML]="formatService.formatAmountWithSymbolHtml(budget.amount, budget.currency)"
+                            ></span>
                             <div class="bgt-budget-card-badges">
                               <span class="bgt-row-badge bgt-badge-monthly" *ngIf="budget.type === 'monthly'">
                                 {{ 'MONTHLY' | translate }}
@@ -445,9 +444,9 @@
                       <span class="bgt-no-budget-title">{{ "NO_BUDGET" | translate }}</span>
                       <div class="bgt-no-budget-row">
                         <span class="bgt-muted-text">{{ "EXPENSE_AMOUNT" | translate }}:</span>
-                        <span class="bgt-amount-expense ms-1">
-                          {{ formatService.formatAmountWithSymbol(monthData.total.spent, monthData.currency) }}
-                        </span>
+                        <span class="bgt-amount-expense ms-1"
+                          [innerHTML]="formatService.formatAmountWithSymbolHtml(monthData.total.spent, monthData.currency)"
+                        ></span>
                       </div>
                       <span class="bgt-muted-text">{{ "SET_BUDGET_MESSAGE" | translate }}</span>
                     </div>
@@ -470,9 +469,9 @@
                         </span>
                       </div>
                       <div class="bgt-progress-amounts">
-                        <span class="bgt-amount-expense">{{ formatService.formatAmountWithSymbol(monthData.total.spent, monthData.currency) }}</span>
+                        <span class="bgt-amount-expense" [innerHTML]="formatService.formatAmountWithSymbolHtml(monthData.total.spent, monthData.currency)"></span>
                         <span class="bgt-slash">/</span>
-                        <span class="bgt-amount-budget">{{ formatService.formatAmountWithSymbol(monthData.total.budget, monthData.currency) }}</span>
+                        <span class="bgt-amount-budget" [innerHTML]="formatService.formatAmountWithSymbolHtml(monthData.total.budget, monthData.currency)"></span>
                       </div>
                       <div class="bgt-progress-bar-wrap">
                         <div class="bgt-progress-bar" [ngClass]="{
@@ -489,7 +488,7 @@
                             'bgt-icon-danger-color':  monthData.total.percentage >= 100
                           }">{{ formatPercentage(monthData.total.percentage) }}</small>
                         <small [ngClass]="{'bgt-icon-success-color': monthData.total.remaining >= 0, 'bgt-icon-danger-color': monthData.total.remaining < 0}">
-                          {{ formatService.formatAmountWithSymbol(getMath().abs(monthData.total.remaining), monthData.currency) }}
+                          <span [innerHTML]="formatService.formatAmountWithSymbolHtml(getMath().abs(monthData.total.remaining), monthData.currency)"></span>
                           {{ monthData.total.remaining >= 0 ? ("REMAINING" | translate) : ("OVER" | translate) }}
                         </small>
                       </div>
@@ -502,7 +501,7 @@
                             <span class="bgt-no-budget-title">{{ category.name }} - {{ "NO_BUDGET" | translate }}</span>
                             <div class="bgt-no-budget-row">
                               <span class="bgt-muted-text">{{ "EXPENSE_AMOUNT" | translate }}:</span>
-                              <span class="bgt-amount-expense ms-1">{{ formatService.formatAmountWithSymbol(category.spent, monthData.currency) }}</span>
+                              <span class="bgt-amount-expense ms-1" [innerHTML]="formatService.formatAmountWithSymbolHtml(category.spent, monthData.currency)"></span>
                             </div>
                           </div>
                         </ng-container>
@@ -527,9 +526,9 @@
                               </small>
                             </div>
                             <div class="bgt-progress-amounts">
-                              <span class="bgt-amount-expense">{{ formatService.formatAmountWithSymbol(category.spent, monthData.currency) }}</span>
+                              <span class="bgt-amount-expense" [innerHTML]="formatService.formatAmountWithSymbolHtml(category.spent, monthData.currency)"></span>
                               <span class="bgt-slash">/</span>
-                              <span class="bgt-amount-budget">{{ formatService.formatAmountWithSymbol(category.budget, monthData.currency) }}</span>
+                              <span class="bgt-amount-budget" [innerHTML]="formatService.formatAmountWithSymbolHtml(category.budget, monthData.currency)"></span>
                             </div>
                             <div class="bgt-progress-bar-wrap">
                               <div class="bgt-progress-bar" [ngClass]="{
@@ -546,7 +545,7 @@
                                   'bgt-icon-danger-color':  category.percentage >= 100
                                 }">{{ formatPercentage(category.percentage) }}</small>
                               <small [ngClass]="{'bgt-icon-success-color': category.remaining >= 0, 'bgt-icon-danger-color': category.remaining < 0}">
-                                {{ formatService.formatAmountWithSymbol(getMath().abs(category.remaining), monthData.currency) }}
+                                <span [innerHTML]="formatService.formatAmountWithSymbolHtml(getMath().abs(category.remaining), monthData.currency)"></span>
                                 {{ category.remaining >= 0 ? ("REMAINING" | translate) : ("OVER" | translate) }}
                               </small>
                             </div>

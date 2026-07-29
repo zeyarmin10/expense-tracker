@@ -355,6 +355,7 @@
   "PREFERENCES_STEP_TITLE": "初期設定",
   "PREFERENCES_STEP_SUBTITLE": "ダッシュボードで使用する言語と通貨を選択してください。プロフィールからいつでも変更できます。",
   "BALANCE_SUFFIX": "（予算−支出）",
+  "MMK_CURRENCY_LABEL": "チャット",
   "CURRENCY_NAMES": {
     "MMK": "ミャンマー・チャット",
     "USD": "米ドル",

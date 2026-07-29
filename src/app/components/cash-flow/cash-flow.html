@@ -32,9 +32,9 @@
           <span class="cfw-card-label">{{ 'CASH_IN' | translate }}</span>
           <ng-container *ngIf="dailyCashFlowSummary$ | async as cashSummary; else cfwCardLoading">
             <ng-container *ngIf="(cashSummary.cashIn | keyvalue).length > 0; else cfwNoData">
-              <span *ngFor="let item of cashSummary.cashIn | keyvalue; trackBy: trackByKey" class="cfw-card-amount cfw-amount-income">
-                {{ formatService.formatAmountShort(item.value, item.key) }}
-              </span>
+              <span *ngFor="let item of cashSummary.cashIn | keyvalue; trackBy: trackByKey" class="cfw-card-amount cfw-amount-income"
+                [innerHTML]="formatService.formatAmountShortHtml(item.value, item.key)"
+              ></span>
             </ng-container>
           </ng-container>
         </div>
@@ -48,9 +48,9 @@
           <span class="cfw-card-label">{{ 'CASH_OUT' | translate }}</span>
           <ng-container *ngIf="dailyCashFlowSummary$ | async as cashSummary; else cfwCardLoading">
             <ng-container *ngIf="(cashSummary.cashOut | keyvalue).length > 0; else cfwNoData">
-              <span *ngFor="let item of cashSummary.cashOut | keyvalue; trackBy: trackByKey" class="cfw-card-amount cfw-amount-expense">
-                {{ formatService.formatAmountShort(item.value, item.key) }}
-              </span>
+              <span *ngFor="let item of cashSummary.cashOut | keyvalue; trackBy: trackByKey" class="cfw-card-amount cfw-amount-expense"
+                [innerHTML]="formatService.formatAmountShortHtml(item.value, item.key)"
+              ></span>
             </ng-container>
           </ng-container>
         </div>
@@ -64,9 +64,9 @@
           <ng-container *ngIf="(cashSummary.netCashFlow | keyvalue).length > 0; else cfwNoData">
             <div class="cfw-card-left" *ngFor="let item of cashSummary.netCashFlow | keyvalue; trackBy: trackByKey">
               <span class="cfw-card-label">{{ 'NET_CASH_FLOW' | translate }}</span>
-              <span class="cfw-card-amount" [ngClass]="item.value >= 0 ? 'cfw-amount-profit' : 'cfw-amount-loss'">
-                {{ formatService.formatAmountShort(item.value, item.key) }}
-              </span>
+              <span class="cfw-card-amount" [ngClass]="item.value >= 0 ? 'cfw-amount-profit' : 'cfw-amount-loss'"
+                [innerHTML]="formatService.formatAmountShortHtml(item.value, item.key)"
+              ></span>
             </div>
             <div class="cfw-card-right">
               <span class="cfw-card-icon" [ngClass]="getNetCashFlowIconClass(cashSummary.netCashFlow)">
@@ -114,22 +114,22 @@
                 <span>{{ formatService.formatLocalizedDate(flow.date) }}</span>
                 <span class="cfw-currency">{{ flow.currency }}</span>
               </div>
-              <span class="cfw-net-badge" [class.cfw-net-badge-negative]="flow.netCashFlow < 0">
-                {{ formatService.formatAmountShort(flow.netCashFlow, flow.currency) }}
-              </span>
+              <span class="cfw-net-badge" [class.cfw-net-badge-negative]="flow.netCashFlow < 0"
+                [innerHTML]="formatService.formatAmountShortHtml(flow.netCashFlow, flow.currency)"
+              ></span>
             </div>
             <div class="cfw-metrics">
               <div class="cfw-metric">
                 <span class="cfw-label">{{ 'CASH_IN' | translate }}</span>
-                <span class="cfw-amount cfw-amount-income">
-                  {{ formatService.formatAmountWithSymbol(flow.cashIn, flow.currency) }}
-                </span>
+                <span class="cfw-amount cfw-amount-income"
+                  [innerHTML]="formatService.formatAmountWithSymbolHtml(flow.cashIn, flow.currency)"
+                ></span>
               </div>
               <div class="cfw-metric">
                 <span class="cfw-label">{{ 'CASH_OUT' | translate }}</span>
-                <span class="cfw-amount cfw-amount-expense">
-                  {{ formatService.formatAmountWithSymbol(flow.cashOut, flow.currency) }}
-                </span>
+                <span class="cfw-amount cfw-amount-expense"
+                  [innerHTML]="formatService.formatAmountWithSymbolHtml(flow.cashOut, flow.currency)"
+                ></span>
               </div>
               <div class="cfw-metric">
                 <span class="cfw-label">{{ 'SPENDING_RATIO' | translate }}</span>

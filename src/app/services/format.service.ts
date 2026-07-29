@@ -1,7 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import {
-  BURMESE_CURRENCY_SYMBOL,
   BURMESE_MONTH_ABBREVIATIONS,
   BURMESE_DAY_NAMES,
   CURRENCY_SYMBOLS,
@@ -18,50 +17,70 @@ export class FormatService {
   private translate = inject(TranslateService);
   datePipe = inject(DatePipe);
 
-  formatAmountWithSymbol(amount: number, currencyCode: string): string {
+  private buildAmountWithSymbolParts(
+    amount: number,
+    currencyCode: string,
+  ): { amountText: string; label: string; labelFirst: boolean } {
     const locale = this.translate.currentLang;
     const currency = currencyCode.toUpperCase();
     const symbol = CURRENCY_SYMBOLS[currency] || currency;
+    const isMMK = currency === MMK_CURRENCY_CODE;
+    const isBurmese = locale === 'my';
 
     const minimumFractionDigits = ZERO_DECIMAL_CURRENCIES.has(currency)
       ? 0
       : 2;
 
-    let formattedAmount: string;
+    const amountText = isBurmese
+      ? new Intl.NumberFormat('my-MM', {
+          style: 'decimal',
+          minimumFractionDigits: minimumFractionDigits,
+          maximumFractionDigits: minimumFractionDigits,
+          numberingSystem: 'mymr',
+        }).format(amount)
+      : new Intl.NumberFormat(locale, {
+          style: 'decimal',
+          minimumFractionDigits: minimumFractionDigits,
+          maximumFractionDigits: minimumFractionDigits,
+        }).format(amount);
 
-    if (locale === 'my') {
-      formattedAmount = new Intl.NumberFormat('my-MM', {
-        style: 'decimal',
-        minimumFractionDigits: minimumFractionDigits,
-        maximumFractionDigits: minimumFractionDigits,
-        numberingSystem: 'mymr',
-      }).format(amount);
-    } else {
-      formattedAmount = new Intl.NumberFormat(locale, {
-        style: 'decimal',
-        minimumFractionDigits: minimumFractionDigits,
-        maximumFractionDigits: minimumFractionDigits,
-      }).format(amount);
+    // MMK has no compact symbol character, so it's always a translated
+    // word suffix ("ကျပ်"/"Kyat"/...) rather than a prefix symbol like
+    // other currencies — just following the app's display language now,
+    // same as the digits above.
+    if (isMMK) {
+      return { amountText, label: this.translate.instant('MMK_CURRENCY_LABEL'), labelFirst: false };
+    } else if (isBurmese) {
+      return { amountText, label: symbol, labelFirst: false };
     }
 
-    if (locale === 'my' && currency === MMK_CURRENCY_CODE) {
-      return `${formattedAmount} ${BURMESE_CURRENCY_SYMBOL}`;
-    } else if (locale === 'my' && currency !== MMK_CURRENCY_CODE) {
-      return `${formattedAmount} ${symbol}`;
-    }
-
-    return `${symbol}${formattedAmount}`;
+    return { amountText, label: symbol, labelFirst: true };
   }
 
-  formatAmountShort(
+  formatAmountWithSymbol(amount: number, currencyCode: string): string {
+    const { amountText, label, labelFirst } = this.buildAmountWithSymbolParts(amount, currencyCode);
+    return labelFirst ? `${label}${amountText}` : `${amountText} ${label}`;
+  }
+
+  // Same as formatAmountWithSymbol but wraps the currency name/symbol in a
+  // <span class="fmt-currency-unit"> so templates can render it smaller
+  // than the amount (via [innerHTML], not {{ }} interpolation). Kept
+  // separate from the plain-text version above because that one is also
+  // used in non-HTML contexts (Chart.js tooltips/axis labels) where an
+  // HTML tag would show up as literal text.
+  formatAmountWithSymbolHtml(amount: number, currencyCode: string): string {
+    const { amountText, label, labelFirst } = this.buildAmountWithSymbolParts(amount, currencyCode);
+    const labelHtml = `<span class="fmt-currency-unit">${label}</span>`;
+    return labelFirst ? `${labelHtml}${amountText}` : `${amountText} ${labelHtml}`;
+  }
+
+  private buildAmountShortParts(
     amount: number,
     currencyCode?: string,
     showSymbol = true,
-  ): string {
+  ): { shortAmount: string; label: string | null; labelFirst: boolean } {
     const locale = this.translate.currentLang;
     const isBurmese = locale === 'my';
-    const numberLocale = isBurmese ? 'my-MM' : locale;
-    const numberingSystem = isBurmese ? { numberingSystem: 'mymr' } : {};
 
     // Which abbreviation tier kicks in depends on the currency itself, not
     // the app's display language — a USD amount should read as "1.5K"
@@ -70,6 +89,9 @@ export class FormatService {
     const currency = currencyCode?.toUpperCase();
     const isHighDenomination =
       !!currency && HIGH_DENOMINATION_CURRENCIES.has(currency);
+    const isMMK = currency === MMK_CURRENCY_CODE;
+    const numberLocale = isBurmese ? 'my-MM' : locale;
+    const numberingSystem = isBurmese ? { numberingSystem: 'mymr' } : {};
 
     let value: number;
     let suffixKey: string;
@@ -77,7 +99,7 @@ export class FormatService {
     if (Math.abs(amount) >= 1e9) {
       value = amount / 1e9;
       suffixKey = 'ABBREVIATIONS.BILLION';
-    } else if (currency === MMK_CURRENCY_CODE && Math.abs(amount) >= 1e6) {
+    } else if (isMMK && Math.abs(amount) >= 1e6) {
       // MMK gets the "Lakh" (100,000) unit instead of "Million" — a
       // Myanmar-specific convention, kept regardless of app display
       // language (the ABBREVIATIONS.LAKH string itself is translated:
@@ -95,34 +117,20 @@ export class FormatService {
       suffixKey = '';
     }
 
-    // If rounding to display precision lands exactly on the next tier's
-    // boundary (e.g. 999,999 would render as "1,000K"), promote to that
-    // tier instead so it reads "1M".
-    const rounded = Math.round(value * 100) / 100;
-    if (suffixKey === 'ABBREVIATIONS.THOUSAND' && Math.abs(rounded) >= 1e3) {
-      value = rounded / 1e3;
-      suffixKey = 'ABBREVIATIONS.MILLION';
-    } else if (
-      suffixKey === 'ABBREVIATIONS.MILLION' &&
-      Math.abs(rounded) >= 1e3
-    ) {
-      value = rounded / 1e3;
-      suffixKey = 'ABBREVIATIONS.BILLION';
-    } else if (
-      suffixKey === 'ABBREVIATIONS.LAKH' &&
-      Math.abs(rounded) >= 1e4
-    ) {
-      value = rounded / 1e4;
-      suffixKey = 'ABBREVIATIONS.BILLION';
-    }
-
     const precision = value % 1 === 0 ? 0 : 2;
+
+    // Truncate rather than round — e.g. 1,261,800 MMK (12.618 Lakh) should
+    // read "12.61 Lakh", not "12.62 Lakh". Math.trunc cuts toward zero
+    // instead of Intl.NumberFormat's own round-half-away-from-zero.
+    const displayValue = precision > 0
+      ? Math.trunc(value * 10 ** precision) / 10 ** precision
+      : value;
 
     const formattedNumber = new Intl.NumberFormat(numberLocale, {
       minimumFractionDigits: precision,
       maximumFractionDigits: precision,
       ...numberingSystem,
-    }).format(value);
+    }).format(displayValue);
 
     const suffix = suffixKey ? this.translate.instant(suffixKey) : '';
     const shortAmount =
@@ -130,24 +138,47 @@ export class FormatService {
       suffixKey === 'ABBREVIATIONS.LAKH' &&
       value >= 20 &&
       value % 10 === 0
-        ? `${suffix}${formattedNumber}`
-        : `${formattedNumber}${suffix}`;
+        ? `${suffix} ${formattedNumber}`
+        : `${formattedNumber} ${suffix}`;
 
     if (!currency || !showSymbol) {
-      return shortAmount;
+      return { shortAmount, label: null, labelFirst: false };
     }
 
     const symbol = CURRENCY_SYMBOLS[currency] || currency;
 
-    if (isBurmese) {
-      if (currency === MMK_CURRENCY_CODE) {
-        return `${shortAmount} ${BURMESE_CURRENCY_SYMBOL}`;
-      }
-      return `${shortAmount} ${symbol}`;
+    if (isMMK) {
+      return { shortAmount, label: this.translate.instant('MMK_CURRENCY_LABEL'), labelFirst: false };
+    } else if (isBurmese) {
+      return { shortAmount, label: symbol, labelFirst: false };
     } else {
       // Symbol placement matches formatAmountWithSymbol: prefix, no space.
-      return `${symbol}${shortAmount}`;
+      return { shortAmount, label: symbol, labelFirst: true };
     }
+  }
+
+  formatAmountShort(
+    amount: number,
+    currencyCode?: string,
+    showSymbol = true,
+  ): string {
+    const { shortAmount, label, labelFirst } = this.buildAmountShortParts(amount, currencyCode, showSymbol);
+    if (label === null) return shortAmount;
+    return labelFirst ? `${label}${shortAmount}` : `${shortAmount} ${label}`;
+  }
+
+  // Same as formatAmountShort but wraps the currency name/symbol in a
+  // <span class="fmt-currency-unit"> — see formatAmountWithSymbolHtml for
+  // why this is a separate method rather than changing the plain one.
+  formatAmountShortHtml(
+    amount: number,
+    currencyCode?: string,
+    showSymbol = true,
+  ): string {
+    const { shortAmount, label, labelFirst } = this.buildAmountShortParts(amount, currencyCode, showSymbol);
+    if (label === null) return shortAmount;
+    const labelHtml = `<span class="fmt-currency-unit">${label}</span>`;
+    return labelFirst ? `${labelHtml}${shortAmount}` : `${shortAmount} ${labelHtml}`;
   }
 
   formatLocalizedDate(

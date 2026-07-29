@@ -999,7 +999,7 @@ body.pnl-add-modal-open {
    isn't actually the last cell once the delete button is shown. */
 
 .pnl-income-table td {
-  padding: 0.6rem 0.25rem;
+  padding: 0.6rem 0.25rem 0.6rem 0.5rem;
   font-size: 0.85rem;
   border-bottom: 1px solid var(--border);
   color: var(--text);

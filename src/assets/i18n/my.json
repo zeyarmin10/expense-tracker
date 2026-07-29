@@ -355,6 +355,7 @@
   "PREFERENCES_STEP_TITLE": "သင့်ရဲ့ဦးစားပေးချက်များ သတ်မှတ်ပါ",
   "PREFERENCES_STEP_SUBTITLE": "Dashboard မှာ သုံးမည့် ဘာသာစကားနှင့် ငွေကြေးကို ရွေးချယ်ပါ။ နောက်ပိုင်းတွင် Profile ထဲမှ အချိန်မရွေး ပြောင်းလဲနိုင်ပါသည်။",
   "BALANCE_SUFFIX": "(ဘတ်ဂျက်-အသုံးစရိတ်)",
+  "MMK_CURRENCY_LABEL": "ကျပ်",
   "CURRENCY_NAMES": {
     "USD": "အမေရိကန်ဒေါ်လာ",
     "CNY": "တရုတ် ယွမ်",

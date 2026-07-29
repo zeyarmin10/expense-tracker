@@ -13,6 +13,17 @@
   --color-t-border:   var(--border);
 }
 
+/* Currency name/symbol rendered smaller than the amount it follows —
+   used via [innerHTML] with FormatService's formatAmountShortHtml /
+   formatAmountWithSymbolHtml (the plain-text formatAmountShort /
+   formatAmountWithSymbol stay untouched since Chart.js tooltips/axis
+   labels need plain text, not HTML). */
+.fmt-currency-unit {
+  font-size: 0.68em;
+  font-weight: 500;
+  opacity: 0.85;
+}
+
 /* ── Global Design Tokens ── */
 :root {
   --bg: #020817;

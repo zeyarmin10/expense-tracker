@@ -57,12 +57,12 @@
         <div class="summary-grid">
           <div class="summary-card highlight" *ngFor="let summary of currencySummaries; trackBy: trackByCurrency">
             <div class="summary-label">{{ "TOTAL_EXPENSES" | translate }} · {{ summary.currency }}</div>
-            <span class="summary-amount">
-              {{ formatService.formatAmountShort(summary.totalExpenses, summary.currency) }}
-            </span>
+            <span class="summary-amount"
+              [innerHTML]="formatService.formatAmountShortHtml(summary.totalExpenses, summary.currency)"
+            ></span>
             <div class="summary-sub">
               {{ "DAILY_AVERAGE" | translate }}
-              <span>{{ formatService.formatAmountShort(summary.dailyAverage, summary.currency) }}</span>
+              <span [innerHTML]="formatService.formatAmountShortHtml(summary.dailyAverage, summary.currency)"></span>
             </div>
           </div>
 
@@ -93,9 +93,9 @@
               <div class="ov-bar-meta">
                 <span class="ov-bar-dot ov-bar-dot-all"></span>
                 <span class="ov-bar-name">{{ 'ALL_CATEGORIES' | translate }}</span>
-                <span class="ov-bar-amount" *ngFor="let t of allCategoriesTotal; trackBy: trackByCurrency">
-                  {{ formatService.formatAmountShort(t.amount, t.currency) }}
-                </span>
+                <span class="ov-bar-amount" *ngFor="let t of allCategoriesTotal; trackBy: trackByCurrency"
+                  [innerHTML]="formatService.formatAmountShortHtml(t.amount, t.currency)"
+                ></span>
               </div>
             </div>
             <div class="ov-bar-divider"></div>
@@ -112,7 +112,7 @@
                 <img *ngIf="getIconUrlForCategory(cat.category)" [src]="getIconUrlForCategory(cat.category)!" alt="" class="cat-img-icon ov-bar-cat-icon" style="width:16px;height:16px" />
                 <lucide-icon *ngIf="!getIconUrlForCategory(cat.category)" [img]="getIconForCategory(cat.category)" [size]="16" class="ov-bar-cat-icon" [style.color]="getCategoryColor(cat.category)"></lucide-icon>
                 <span class="ov-bar-name">{{ cat.category }}</span>
-                <span class="ov-bar-amount">{{ formatService.formatAmountShort(cat.total, cat.currency) }}</span>
+                <span class="ov-bar-amount" [innerHTML]="formatService.formatAmountShortHtml(cat.total, cat.currency)"></span>
               </div>
               <div class="ov-bar-footer">
                 <div class="ov-bar-track">
@@ -174,9 +174,9 @@
                       <span class="td-name-creator-text">{{ expense.createdByName || '' }}</span>
                     </span>
                   </td>
-                  <td class="td-amount">
-                    {{ formatService.formatAmountShort(expense.totalCost, expense.currency) }}
-                  </td>
+                  <td class="td-amount"
+                    [innerHTML]="formatService.formatAmountShortHtml(expense.totalCost, expense.currency)"
+                  ></td>
                 </tr>
               </tbody>
             </table>

@@ -114,9 +114,9 @@
             <span class="pnl-card-label">{{ 'TOTAL_INCOMES' | translate }}</span>
             <ng-container *ngIf="totalIncomesByCurrency$ | async as totals; else cardLoading">
               <ng-container *ngIf="(totals | keyvalue).length > 0; else cardNoData">
-                <span *ngFor="let t of totals | keyvalue; trackBy: trackByKey" class="pnl-card-amount pnl-amount-income">
-                  {{ formatService.formatAmountShort(t.value, t.key) }}
-                </span>
+                <span *ngFor="let t of totals | keyvalue; trackBy: trackByKey" class="pnl-card-amount pnl-amount-income"
+                  [innerHTML]="formatService.formatAmountShortHtml(t.value, t.key)"
+                ></span>
               </ng-container>
             </ng-container>
           </div>
@@ -130,9 +130,9 @@
             <span class="pnl-card-label">{{ 'TOTAL_EXPENSES' | translate }}</span>
             <ng-container *ngIf="totalExpensesByCurrency$ | async as totals; else cardLoading">
               <ng-container *ngIf="(totals | keyvalue).length > 0; else cardNoData">
-                <span *ngFor="let t of totals | keyvalue; trackBy: trackByKey" class="pnl-card-amount pnl-amount-expense">
-                  {{ formatService.formatAmountShort(t.value, t.key) }}
-                </span>
+                <span *ngFor="let t of totals | keyvalue; trackBy: trackByKey" class="pnl-card-amount pnl-amount-expense"
+                  [innerHTML]="formatService.formatAmountShortHtml(t.value, t.key)"
+                ></span>
               </ng-container>
             </ng-container>
           </div>
@@ -148,9 +148,9 @@
                 <span class="pnl-card-label">
                   {{ ($any(p).value >= 0 ? 'NET_PROFIT' : 'NET_LOSS') | translate }}
                 </span>
-                <span class="pnl-card-amount" [ngClass]="getProfitLossAmountClass($any(p).value)">
-                  {{ formatService.formatAmountShort($any(p).value, $any(p).key) }}
-                </span>
+                <span class="pnl-card-amount" [ngClass]="getProfitLossAmountClass($any(p).value)"
+                  [innerHTML]="formatService.formatAmountShortHtml($any(p).value, $any(p).key)"
+                ></span>
               </div>
               <div class="pnl-card-right">
                 <span class="pnl-card-icon" [ngClass]="getProfitLossIconClass(totalProfitLossByCurrency$ | async)">
@@ -261,9 +261,9 @@
                           <span class="pnl-td-name-creator-text">{{ income.createdByName || '' }}</span>
                         </span>
                       </td>
-                      <td class="pnl-td-amount pnl-amount-income">
-                        {{ formatService.formatAmountShort(income.amount, income.currency) }}
-                      </td>
+                      <td class="pnl-td-amount pnl-amount-income"
+                        [innerHTML]="formatService.formatAmountShortHtml(income.amount, income.currency)"
+                      ></td>
                       <td class="pnl-td-actions pnl-menu-wrap" *ngIf="canManageProfitActions">
                         <button class="pnl-more-btn" type="button"
                           (click)="toggleIncomeMenu(income.id!, $event)"
@@ -324,9 +324,9 @@
             <ng-container *ngIf="(totals | keyvalue).length > 0; else cfwPreviewEmpty">
               <span *ngFor="let t of totals | keyvalue; trackBy: trackByKey"
                 class="pnl-cash-flow-preview-amount"
-                [ngClass]="getProfitLossAmountClass($any(t).value)">
-                {{ formatService.formatAmountShort($any(t).value, $any(t).key) }}
-              </span>
+                [ngClass]="getProfitLossAmountClass($any(t).value)"
+                [innerHTML]="formatService.formatAmountShortHtml($any(t).value, $any(t).key)"
+              ></span>
             </ng-container>
             <ng-template #cfwPreviewEmpty>
               <span class="pnl-card-empty-hint">{{ 'NO_DATA_YET' | translate }}</span>

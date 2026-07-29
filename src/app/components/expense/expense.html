@@ -678,9 +678,8 @@
             >
               {{ "TOTAL_FOR_CURRENCY" | translate : { currency: total.key } }}:
               <span class="exp-total-amt"
-                >{{ formatService.formatAmountWithSymbol(total.value, total.key)
-                }}</span
-              >
+                [innerHTML]="formatService.formatAmountWithSymbolHtml(total.value, total.key)"
+              ></span>
             </button>
           </ng-container>
         </ng-container>
@@ -709,9 +708,8 @@
                 <span
                   class="exp-date-total"
                   *ngFor="let total of group.totalsByCurrency | keyvalue; trackBy: trackByKey"
-                >
-                  {{ formatService.formatAmountShort(total.value, total.key) }}
-                </span>
+                  [innerHTML]="formatService.formatAmountShortHtml(total.value, total.key)"
+                ></span>
               </div>
             </div>
 
@@ -720,9 +718,9 @@
                 <div class="exp-item-inner">
                   <div class="exp-item-top">
                     <span class="exp-item-name" appShowFullText>{{ expense.itemName }}</span>
-                    <span class="exp-item-amount">
-                      {{ formatService.formatAmountShort(expense.totalCost, expense.currency) }}
-                    </span>
+                    <span class="exp-item-amount"
+                      [innerHTML]="formatService.formatAmountShortHtml(expense.totalCost, expense.currency)"
+                    ></span>
                   </div>
 
                   <div class="exp-item-meta">
@@ -741,7 +739,7 @@
                       class="exp-item-qty"
                     >
                       {{ formatLocalizedNumber(expense.quantity) }} {{ expense.unit
-                      }} &#64; {{ formatService.formatAmountShort(expense.price, expense.currency) }}
+                      }} &#64; <span [innerHTML]="formatService.formatAmountShortHtml(expense.price, expense.currency)"></span>
                     </span>
                   </div>
 
