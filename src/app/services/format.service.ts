@@ -82,10 +82,11 @@ export class FormatService {
     const locale = this.translate.currentLang;
     const isBurmese = locale === 'my';
 
-    // Which abbreviation tier kicks in depends on the currency itself, not
-    // the app's display language — a USD amount should read as "1.5K"
-    // whether the UI is in English or Burmese, and an MMK amount should
-    // stay in full digits until it's genuinely large either way.
+    // Abbreviation is opt-in per currency now — only high-inflation/
+    // high-denomination currencies (MMK, VND, IDR, KHR, LAK) ever get
+    // shortened to K/M/B/Lakh, since those are the ones where everyday
+    // amounts routinely run into the millions. Everything else (USD, THB,
+    // ...) always shows the full raw value, same as formatAmountWithSymbol.
     const currency = currencyCode?.toUpperCase();
     const isHighDenomination =
       !!currency && HIGH_DENOMINATION_CURRENCIES.has(currency);
@@ -96,7 +97,10 @@ export class FormatService {
     let value: number;
     let suffixKey: string;
 
-    if (Math.abs(amount) >= 1e9) {
+    if (!isHighDenomination) {
+      value = amount;
+      suffixKey = '';
+    } else if (Math.abs(amount) >= 1e9) {
       value = amount / 1e9;
       suffixKey = 'ABBREVIATIONS.BILLION';
     } else if (isMMK && Math.abs(amount) >= 1e6) {
@@ -109,9 +113,6 @@ export class FormatService {
     } else if (Math.abs(amount) >= 1e6) {
       value = amount / 1e6;
       suffixKey = 'ABBREVIATIONS.MILLION';
-    } else if (!isHighDenomination && Math.abs(amount) >= 1e3) {
-      value = amount / 1e3;
-      suffixKey = 'ABBREVIATIONS.THOUSAND';
     } else {
       value = amount;
       suffixKey = '';

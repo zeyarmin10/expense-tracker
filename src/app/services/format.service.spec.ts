@@ -43,17 +43,22 @@ describe('FormatService', () => {
   // that follows the app's display language, rather than a fixed "K"
   // prefix or a Burmese-only suffix — see formatAmountWithSymbol/
   // formatAmountShort in format.service.ts for the reasoning.
+  // Abbreviation (K/M/B/Lakh) is now opt-in per currency — only
+  // HIGH_DENOMINATION_CURRENCIES (MMK, VND, IDR, KHR, LAK) ever shorten;
+  // every other currency (USD, THB, ...) always shows the full raw value.
   describe('formatAmountShort (en locale)', () => {
-    it('abbreviates thousands for low-denomination currencies', () => {
-      expect(service.formatAmountShort(1500, 'USD')).toBe('$1.50 K');
+    it('never abbreviates low-denomination currencies, even at large amounts', () => {
+      expect(service.formatAmountShort(1500, 'USD')).toBe('$1,500 ');
+      expect(service.formatAmountShort(2500000, 'USD')).toBe('$2,500,000 ');
+      expect(service.formatAmountShort(999999999, 'USD')).toBe('$999,999,999 ');
     });
 
     it('keeps small amounts unabbreviated', () => {
       expect(service.formatAmountShort(500, 'USD')).toBe('$500 ');
     });
 
-    it('abbreviates thousands when no currency is given', () => {
-      expect(service.formatAmountShort(2500)).toBe('2.50 K');
+    it('shows the raw value when no currency is given (treated as low-denomination)', () => {
+      expect(service.formatAmountShort(2500)).toBe('2,500 ');
     });
 
     it('skips the K tier for high-denomination currencies', () => {
@@ -65,8 +70,7 @@ describe('FormatService', () => {
       expect(service.formatAmountShort(1500000, 'MMK')).toBe('15 Lakh Kyat');
     });
 
-    it('uses Million for non-MMK currencies', () => {
-      expect(service.formatAmountShort(2500000, 'USD')).toBe('$2.50 M');
+    it('uses Million for other high-denomination currencies', () => {
       expect(service.formatAmountShort(2500000, 'VND')).toBe('₫2.50 M');
     });
 
@@ -75,13 +79,11 @@ describe('FormatService', () => {
     });
 
     // No boundary-promotion rounding anymore — the raw division result is
-    // shown as-is (e.g. "999.99 K" rather than snapping up to "1M"), and
-    // truncated rather than rounded — per an explicit request to stop
+    // shown as-is (e.g. "9,999.99 Lakh" rather than snapping up to "1B"),
+    // and truncated rather than rounded — per an explicit request to stop
     // rounding short amounts (1,261,800 MMK should read "12.61 Lakh", not
     // "12.62 Lakh").
     it('shows the raw truncated value at a tier boundary instead of promoting', () => {
-      expect(service.formatAmountShort(999999, 'USD')).toBe('$999.99 K');
-      expect(service.formatAmountShort(999999999, 'USD')).toBe('$999.99 M');
       expect(service.formatAmountShort(999999999, 'MMK')).toBe('9,999.99 Lakh Kyat');
     });
 
@@ -94,12 +96,12 @@ describe('FormatService', () => {
     });
 
     it('handles negative amounts', () => {
-      expect(service.formatAmountShort(-1500, 'USD')).toBe('$-1.50 K');
+      expect(service.formatAmountShort(-1500, 'USD')).toBe('$-1,500 ');
       expect(service.formatAmountShort(-1500000, 'MMK')).toBe('-15 Lakh Kyat');
     });
 
     it('omits the symbol when showSymbol is false', () => {
-      expect(service.formatAmountShort(1500, 'USD', false)).toBe('1.50 K');
+      expect(service.formatAmountShort(1500, 'USD', false)).toBe('1,500 ');
       expect(service.formatAmountShort(1500000, 'MMK', false)).toBe('15 Lakh');
     });
   });
@@ -117,8 +119,8 @@ describe('FormatService', () => {
       expect(service.formatAmountShort(2000000, 'MMK')).toBe('သိန်း ၂၀ ကျပ်');
     });
 
-    it('still abbreviates thousands for low-denomination currencies', () => {
-      expect(service.formatAmountShort(1500, 'USD')).toBe('၁.၅၀ K $');
+    it('never abbreviates low-denomination currencies even in Burmese', () => {
+      expect(service.formatAmountShort(1500, 'USD')).toBe('၁,၅၀၀  $');
     });
 
     it('keeps MMK amounts under 1 million unabbreviated', () => {
