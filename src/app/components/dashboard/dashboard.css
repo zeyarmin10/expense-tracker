@@ -125,7 +125,7 @@
 }
 
 .dash-card-amount.dash-hero-amount {
-  font-size: clamp(1.75rem, 5vw, 2.6rem);
+  font-size: clamp(1.9rem, 5vw, 2.6rem);
   font-weight: 700;
 }
 
@@ -139,8 +139,9 @@
   gap: 0.7rem;
 }
 
-/* Sits next to the "Remaining Balance" label rather than the icon on the
-   card's right side, so it reads as "toggle what this label describes". */
+/* Sits next to the card's label (Total Balance / Total Income) rather
+   than the icon on the card's right side, so it reads as "toggle what
+   this label describes". */
 .dash-card-label-row {
   display: flex;
   align-items: center;
@@ -148,6 +149,7 @@
 }
 
 .dash-balance-eye-btn {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -162,9 +164,31 @@
   flex-shrink: 0;
 }
 
+/* Invisible hit-area padding — the visible circle stays a compact 24px,
+   but the actual tappable zone grows to ~44px (the accepted minimum
+   touch target). Without this, a slightly-off tap on a phone lands on
+   the card underneath instead of the toggle — e.g. the Income card is
+   itself a link to /profit, so a missed tap would navigate away instead
+   of just hiding/showing the amount. */
+.dash-balance-eye-btn::before {
+  content: '';
+  position: absolute;
+  inset: -10px;
+}
+
 .dash-balance-eye-btn:hover {
   background: var(--border);
   color: var(--text);
+}
+
+/* Hidden amounts blur the real value in place instead of swapping it out
+   for placeholder dots — the actual digits stay laid out (no width jump)
+   and the effect reads more like a deliberate privacy screen. */
+.dash-amount-blurred {
+  display: inline-block;
+  filter: blur(8px);
+  user-select: none;
+  transition: filter 0.15s ease;
 }
 
 /* ── Summary Card Base ── */

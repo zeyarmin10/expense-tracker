@@ -15,10 +15,11 @@
     <div class="dash-data-shell">
     <ng-container *ngIf="hasData$ | async">
 
-    <!-- Remaining Balance — hero card, shown above the other summary cards
+    <!-- Total Balance — hero card, shown above the other summary cards
          and bigger than them so it's the first thing visible. The eye
-         toggle hides/shows the amount, banking/pay-app style (choice
-         persisted in localStorage — see isBalanceHidden). -->
+         toggle blurs/reveals the amount, banking/pay-app style (choice
+         persisted in localStorage — see isBalanceHidden). Total Income
+         below has its own independent toggle (isIncomeHidden). -->
     <div class="dash-card dash-hero-card" [ngClass]="getProfitLossCardClass(totalProfitLossByCurrency$ | async)">
       <ng-container *ngIf="totalProfitLossByCurrency$ | async as profitLosses; else balanceCardLoading">
         <ng-container *ngIf="(profitLosses | keyvalue).length > 0; else balanceEmptyCta">
@@ -33,8 +34,7 @@
               </button>
             </span>
             <span class="dash-card-amount dash-hero-amount" [ngClass]="getProfitLossAmountClass($any(profit).value)">
-              <span *ngIf="!isBalanceHidden; else hiddenBalanceAmount" [innerHTML]="formatService.formatAmountWithSymbolHtml($any(profit).value, $any(profit).key)"></span>
-              <ng-template #hiddenBalanceAmount>&bull;&bull;&bull;&bull;&bull;&bull;</ng-template>
+              <span [class.dash-amount-blurred]="isBalanceHidden" [innerHTML]="formatService.formatAmountWithSymbolHtml($any(profit).value, $any(profit).key)"></span>
             </span>
           </div>
           <div class="dash-card-right dash-hero-right">
@@ -75,12 +75,18 @@
       <!-- Income -->
       <a class="dash-card dash-card-income dash-card-link" routerLink="/profit">
         <div class="dash-card-left">
-          <span class="dash-card-label">{{ 'TOTAL_INCOMES' | translate }}</span>
+          <span class="dash-card-label-row">
+            <span class="dash-card-label">{{ 'TOTAL_INCOMES' | translate }}</span>
+            <button type="button" class="dash-balance-eye-btn" (click)="toggleIncomeVisibility($event)"
+              [attr.aria-label]="(isIncomeHidden ? 'SHOW_BALANCE' : 'HIDE_BALANCE') | translate">
+              <lucide-icon [img]="isIncomeHidden ? iconEye : iconEyeOff" [size]="15"></lucide-icon>
+            </button>
+          </span>
           <ng-container *ngIf="totalIncomesByCurrency$ | async as totals; else cardLoading">
             <ng-container *ngIf="totals && (totals | keyvalue).length > 0; else incomeEmptyCta">
-              <span *ngFor="let total of totals | keyvalue; trackBy: trackByKey" class="dash-card-amount dash-amount-income"
-                [innerHTML]="formatService.formatAmountShortHtml(total.value, total.key)"
-              ></span>
+              <span *ngFor="let total of totals | keyvalue; trackBy: trackByKey" class="dash-card-amount dash-amount-income">
+                <span [class.dash-amount-blurred]="isIncomeHidden" [innerHTML]="formatService.formatAmountShortHtml(total.value, total.key)"></span>
+              </span>
             </ng-container>
           </ng-container>
           <!-- Visual button only — the whole card already links to /profit,

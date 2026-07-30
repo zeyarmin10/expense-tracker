@@ -149,15 +149,24 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly iconEye = Eye;
   readonly iconEyeOff = EyeOff;
 
-  // Remaining-balance visibility toggle (banking-app style) — persisted
-  // across visits so the user's show/hide choice sticks.
+  // Remaining-balance / Total-income visibility toggles (banking-app
+  // style) — each persisted independently across visits so the user's
+  // show/hide choice sticks per card.
   isBalanceHidden = localStorage.getItem('dashboardBalanceHidden') === 'true';
+  isIncomeHidden = localStorage.getItem('dashboardIncomeHidden') === 'true';
 
   toggleBalanceVisibility(event: Event): void {
     event.preventDefault();
     event.stopPropagation();
     this.isBalanceHidden = !this.isBalanceHidden;
     localStorage.setItem('dashboardBalanceHidden', String(this.isBalanceHidden));
+  }
+
+  toggleIncomeVisibility(event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isIncomeHidden = !this.isIncomeHidden;
+    localStorage.setItem('dashboardIncomeHidden', String(this.isIncomeHidden));
   }
 
   availableCurrencies = AVAILABLE_CURRENCIES;
