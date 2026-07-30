@@ -102,6 +102,17 @@
 
       <!-- LOGIN MODE: Google first, email collapsible -->
       <ng-container *ngIf="isLoginMode">
+        <!-- Proactive heads-up for Myanmar-based users — some ISPs there
+             throttle/block Google's auth endpoints without a VPN. Shown
+             up front so a failed sign-in doesn't leave the user guessing. -->
+        <div class="lgn-vpn-notice" *ngIf="showVpnNotice">
+          <lucide-icon [img]="iconInfo" [size]="15" class="lgn-vpn-notice-icon"></lucide-icon>
+          <span class="lgn-vpn-notice-text">{{ 'VPN_NOTICE' | translate }}</span>
+          <button type="button" class="lgn-vpn-notice-close" (click)="dismissVpnNotice()" [attr.aria-label]="'CLOSE_BUTTON' | translate">
+            <lucide-icon [img]="iconX" [size]="14"></lucide-icon>
+          </button>
+        </div>
+
         <!-- Google (primary) -->
         <button type="button" class="lgn-google-btn lgn-google-primary" [disabled]="isSigningIn"
           [class.lgn-btn-loading]="isSigningIn" (click)="signInWithGoogle()">

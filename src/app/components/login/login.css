@@ -679,6 +679,52 @@
   color: var(--text-muted);
 }
 
+/* ── VPN Notice (Myanmar timezone only) ── */
+.lgn-vpn-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.65rem 0.75rem;
+  margin-bottom: 0.85rem;
+  border: 1px solid var(--warning-dim, rgba(244, 177, 26, 0.25));
+  background: var(--warning-dim, rgba(244, 177, 26, 0.1));
+  border-radius: 10px;
+}
+
+.lgn-vpn-notice-icon {
+  flex-shrink: 0;
+  color: var(--warning, #f4b11a);
+  margin-top: 0.1rem;
+}
+
+.lgn-vpn-notice-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--text-sub, var(--text));
+}
+
+.lgn-vpn-notice-close {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: 50%;
+  transition: background 0.15s, color 0.15s;
+}
+
+.lgn-vpn-notice-close:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
 /* ── Google Button ── */
 .lgn-google-btn {
   width: 100%;

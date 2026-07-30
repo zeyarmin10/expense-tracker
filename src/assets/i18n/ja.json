@@ -270,6 +270,8 @@
   "POPUP_CLOSED_BY_USER": "Googleログインのポップアップが閉じられました。",
   "CANCELLED_POPUP_REQUEST": "Googleログインのポップアップが既に開いています。",
   "NETWORK_REQUEST_FAILED": "ネットワーク接続の問題によりログアウトできませんでした。",
+  "SIGN_IN_TIMEOUT": "サインインがタイムアウトしました。インターネット接続を確認してください — お住まいの地域でGoogleサービスが制限されている場合は、VPNの使用をお試しください。",
+  "VPN_NOTICE": "ミャンマー国内のネットワークをご利用ですか?一部のISPはGoogleサービスを制限しています — サインインに失敗する場合はVPNをお試しください。",
   "INVALID_CREDENTIAL": "メールアドレスまたはパスワードが正しくありません。",
   "GENERIC": "アカウントのログインに問題が発生しました。",
   "TOTAL_INCOME": "収入合計",

@@ -22,7 +22,7 @@ import { CategoryService } from '../../services/category';
 import { debounceTime, Subject, takeUntil, firstValueFrom } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { SessionManagementService } from '../../services/session-management';
-import { LucideAngularModule, Eye, EyeOff, Sun, Moon, Mail } from 'lucide-angular';
+import { LucideAngularModule, Eye, EyeOff, Sun, Moon, Mail, Info, X } from 'lucide-angular';
 import { User } from '@angular/fire/auth';
 import { ToastService } from '../../services/toast'; // Import ToastService
 import { InvitationService } from '../../services/invitation.service';
@@ -63,6 +63,8 @@ export class LoginComponent implements OnInit, OnDestroy {
   readonly iconSun = Sun;
   readonly iconMoon = Moon;
   readonly iconMail = Mail;
+  readonly iconInfo = Info;
+  readonly iconX = X;
   isDarkMode = true;
 
   loginForm: FormGroup;
@@ -83,6 +85,20 @@ export class LoginComponent implements OnInit, OnDestroy {
   showEmailForm: boolean = false;
   isSigningIn: boolean = false;
   isLanguageMenuOpen = false;
+
+  // Proactive VPN heads-up for Myanmar — some ISPs there throttle/block
+  // Google's auth endpoints, which otherwise only surfaces as a confusing
+  // sign-in timeout after the user has already tried. Timezone is used
+  // instead of app language since a Myanmar-based user may still have
+  // picked English/Thai/etc. as their display language.
+  showVpnNotice =
+    Intl.DateTimeFormat().resolvedOptions().timeZone === 'Asia/Yangon' &&
+    localStorage.getItem('vpnNoticeDismissed') !== 'true';
+
+  dismissVpnNotice(): void {
+    this.showVpnNotice = false;
+    localStorage.setItem('vpnNoticeDismissed', 'true');
+  }
 
   translate = inject(TranslateService);
   private cdr = inject(ChangeDetectorRef);

@@ -217,9 +217,16 @@ export class AuthService {
         }
 
         const credential = GoogleAuthProvider.credential(idToken);
-        const userCredential = await signInWithCredential(
-          this.auth,
-          credential,
+        // The Google account picker has already resolved by this point, so
+        // whatever's left is a pure network call to Firebase — safe to
+        // bound with a timeout without risking cutting off a slow user
+        // still choosing an account. Some ISPs (e.g. in Myanmar, without a
+        // VPN) throttle/block Google auth endpoints, which otherwise left
+        // this hanging forever with no error and no way back to the login
+        // form.
+        const userCredential = await this.withTimeout(
+          signInWithCredential(this.auth, credential),
+          15000,
         );
 
         const additionalUserInfo = getAdditionalUserInfo(userCredential);
@@ -250,6 +257,18 @@ export class AuthService {
       console.error('Google sign-in error:', error);
       throw new Error(this.getFirebaseErrorMessage(error));
     }
+  }
+
+  private withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+    return new Promise<T>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        reject(Object.assign(new Error('Sign-in timed out'), { code: 'auth/timeout' }));
+      }, ms);
+      promise.then(
+        (value) => { clearTimeout(timer); resolve(value); },
+        (error) => { clearTimeout(timer); reject(error); },
+      );
+    });
   }
 
   private setLoginTime() {
@@ -499,6 +518,8 @@ export class AuthService {
           return this.translateService.instant('NETWORK_REQUEST_FAILED');
         case 'auth/invalid-credential':
           return this.translateService.instant('INVALID_CREDENTIAL');
+        case 'auth/timeout':
+          return this.translateService.instant('SIGN_IN_TIMEOUT');
         default:
           return this.translateService.instant('GENERIC', { code: error.code });
       }

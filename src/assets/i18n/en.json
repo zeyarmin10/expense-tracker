@@ -270,6 +270,8 @@
   "POPUP_CLOSED_BY_USER": "The Google sign-in popup was closed by the user.",
   "CANCELLED_POPUP_REQUEST": "A Google sign-in popup is already open.",
   "NETWORK_REQUEST_FAILED": "Unable to log out due to a network connection issue.",
+  "SIGN_IN_TIMEOUT": "Sign-in timed out. Check your internet connection — if Google services are restricted in your region, try using a VPN.",
+  "VPN_NOTICE": "Using a network in Myanmar? Some ISPs restrict Google services — if sign-in fails, try a VPN.",
   "INVALID_CREDENTIAL": "Invalid email or password.",
   "GENERIC": "An account login issue occurred.",
   "TOTAL_INCOME": "Total incomes",
