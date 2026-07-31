@@ -294,12 +294,18 @@ export class DataManagerService {
     const groupId = invitation.groupId;
     const role = 'member'; // Default role for new members
 
+    // Grant membership first, in its own write. The security rules only let
+    // /spaces/{groupId} be read by an existing member, so reading the space
+    // name (below) would be denied if it ran before this succeeds.
+    // inviteCode is stored on the membership record so security rules can
+    // verify the join against a matching pending invitation.
+    await update(ref(this.db), {
+      [`/space_members/${groupId}/${userId}`]: { role, inviteCode },
+    });
+
     const space = await firstValueFrom(this.spaceContextService.getSpace(groupId));
 
     const updates: { [key: string]: any } = {};
-    // inviteCode is stored on the membership record so security rules can
-    // verify the join against a matching pending invitation.
-    updates[`/space_members/${groupId}/${userId}`] = { role, inviteCode };
     updates[`/users/${userId}/accountType`] = 'group';
     updates[`/users/${userId}/currentSpaceId`] = groupId;
     updates[`/users/${userId}/currentSpaceType`] = 'group';
