@@ -88,16 +88,43 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   // Proactive VPN heads-up for Myanmar — some ISPs there throttle/block
   // Google's auth endpoints, which otherwise only surfaces as a confusing
-  // sign-in timeout after the user has already tried. Timezone is used
-  // instead of app language since a Myanmar-based user may still have
-  // picked English/Thai/etc. as their display language.
+  // sign-in timeout after the user has already tried. Layers several
+  // independent signals rather than one exact match, since each can miss
+  // on its own — see detectMyanmarDevice().
   showVpnNotice =
-    Intl.DateTimeFormat().resolvedOptions().timeZone === 'Asia/Yangon' &&
-    localStorage.getItem('vpnNoticeDismissed') !== 'true';
+    this.detectMyanmarDevice() && localStorage.getItem('vpnNoticeDismissed') !== 'true';
 
   dismissVpnNotice(): void {
     this.showVpnNotice = false;
     localStorage.setItem('vpnNoticeDismissed', 'true');
+  }
+
+  // Checks, in order, the strongest signal first:
+  //  - Timezone: Asia/Yangon, plus the pre-2018 IANA alias Asia/Rangoon
+  //    that some older Android ICU builds still report. This is the
+  //    clearest signal, but it's also the one that breaks the moment a
+  //    VPN is already active — many VPN apps, and phones with "set time
+  //    zone automatically" enabled, report the exit server's timezone
+  //    instead. That's exactly the case this banner exists to help with,
+  //    so it can't be the only check.
+  //  - Device/browser language (my/my-MM): unaffected by VPN, but plenty
+  //    of Myanmar users run their phone in English, so this alone would
+  //    miss most of them.
+  //  - Region subtag of the resolved locale (e.g. a phone set to
+  //    "English (Myanmar)" resolves to "en-MM"): catches the in-between
+  //    case of English language + Myanmar region, also unaffected by VPN.
+  private detectMyanmarDevice(): boolean {
+    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (timeZone === 'Asia/Yangon' || timeZone === 'Asia/Rangoon') return true;
+
+    const languages = navigator.languages?.length ? navigator.languages : [navigator.language];
+    if (languages.some((lang) => lang?.toLowerCase().startsWith('my'))) return true;
+
+    const locale = Intl.DateTimeFormat().resolvedOptions().locale;
+    const region = locale.match(/-([A-Za-z]{2})$/)?.[1];
+    if (region?.toUpperCase() === 'MM') return true;
+
+    return false;
   }
 
   translate = inject(TranslateService);
