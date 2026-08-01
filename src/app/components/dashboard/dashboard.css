@@ -111,6 +111,77 @@
   }
 }
 
+/* ── Summary Row (Hero + 3-Card Grid, side by side on desktop) ──
+   Below 992px this is a plain block wrapper — the hero card and
+   .dash-summary-grid just stack top to bottom as before. At ≥992px the
+   hero takes 40% of the row and the 3 cards run across the remaining
+   60% (~20% each) instead of the full 1100px container width each. */
+@media (min-width: 992px) {
+  /* Stretching the 3-card grid to match the hero's full height (previous
+     revision) left each compact card with a lot of empty padding-like
+     space around its small content. Centering instead means the row's
+     height is driven by the hero, and the 3 cards keep their own natural
+     (shorter) height — so the gap between the two is minimized directly
+     by shrinking the hero and growing the cards below, rather than papered
+     over with a forced stretch. */
+  .dash-summary-row {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    gap: 0.85rem;
+    align-items: end;
+  }
+
+  .dash-summary-row .dash-card.dash-hero-card {
+    margin-bottom: 0;
+    padding: 1.1rem 1.3rem;
+  }
+
+  .dash-summary-row .dash-hero-amount {
+    font-size: clamp(1.7rem, 3.5vw, 2.2rem);
+  }
+
+  .dash-summary-row .dash-summary-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.6rem;
+  }
+
+  /* The 3 cards now sit in ~20%-of-container columns instead of a full
+     3-across row spanning 1100px, so trim icon size and rebalance
+     label/amount to stay tidy at that width, and pad them a bit more
+     generously (up from the previous 0.85rem/0.9rem) to narrow the height
+     gap against the now-shorter hero above. Label goes down and amount
+     goes up from the shared base sizes so the amount reads as the primary
+     figure and the label as a small caption above it, instead of the
+     label (previously clamped near 1.1rem) outsizing the amount. */
+  .dash-summary-row .dash-summary-grid .dash-card {
+    padding: 1.1rem 1rem;
+  }
+
+  /* lucide-icon renders its svg with width/height *attributes* (from the
+     template's [size] input, e.g. 30) rather than CSS — those beat a
+     font-size rule outright, which is why sizing this via font-size did
+     nothing. Overriding width/height as CSS properties on the svg itself
+     is what actually shrinks it. ::ng-deep is needed because the svg is
+     injected via lucide-icon's own Renderer2, so it's stamped with that
+     component's view-encapsulation attribute rather than the dashboard
+     template's — without ::ng-deep, Angular's compiled selector would
+     require an attribute the real svg doesn't carry and silently never
+     match. Mobile is untouched since this whole block only applies at
+     ≥992px. */
+  .dash-summary-row .dash-summary-grid .dash-card-icon ::ng-deep svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .dash-summary-row .dash-summary-grid .dash-card-label {
+    font-size: 0.7rem;
+  }
+
+  .dash-summary-row .dash-summary-grid .dash-card-amount {
+    font-size: 1.2rem;
+  }
+}
+
 /* ── Remaining Balance (Hero Card) ──
    Bigger + full-width, sits above .dash-summary-grid so it's the first
    thing visible — same reasoning banking/pay apps lead with the balance.

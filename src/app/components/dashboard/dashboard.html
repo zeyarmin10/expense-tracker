@@ -15,6 +15,14 @@
     <div class="dash-data-shell">
     <ng-container *ngIf="hasData$ | async">
 
+    <!-- Wraps the hero card + the 3-card grid so desktop (≥992px) can lay
+         them out side by side — hero on the left, the 3 cards stacked in
+         a column on the right — instead of the hero spanning the full
+         1100px container width with a lone number in a lot of empty
+         space. Below that breakpoint this is just a plain block wrapper;
+         the two children stack top to bottom same as before. -->
+    <div class="dash-summary-row">
+
     <!-- Total Balance — hero card, shown above the other summary cards
          and bigger than them so it's the first thing visible. The eye
          toggle blurs/reveals the amount, banking/pay-app style (choice
@@ -168,6 +176,7 @@
         </a>
       </ng-template>
 
+    </div>
     </div>
     </ng-container>
     <!-- END Summary Cards -->

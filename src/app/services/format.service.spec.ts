@@ -48,61 +48,63 @@ describe('FormatService', () => {
   // every other currency (USD, THB, ...) always shows the full raw value.
   describe('formatAmountShort (en locale)', () => {
     it('never abbreviates low-denomination currencies, even at large amounts', () => {
-      expect(service.formatAmountShort(1500, 'USD')).toBe('$1,500 ');
-      expect(service.formatAmountShort(2500000, 'USD')).toBe('$2,500,000 ');
-      expect(service.formatAmountShort(999999999, 'USD')).toBe('$999,999,999 ');
+      expect(service.formatAmountShort(1500, 'USD')).toBe('$1,500');
+      expect(service.formatAmountShort(2500000, 'USD')).toBe('$2,500,000');
+      expect(service.formatAmountShort(999999999, 'USD')).toBe('$999,999,999');
     });
 
     it('keeps small amounts unabbreviated', () => {
-      expect(service.formatAmountShort(500, 'USD')).toBe('$500 ');
+      expect(service.formatAmountShort(500, 'USD')).toBe('$500');
     });
 
     it('shows the raw value when no currency is given (treated as low-denomination)', () => {
-      expect(service.formatAmountShort(2500)).toBe('2,500 ');
+      expect(service.formatAmountShort(2500)).toBe('2,500');
     });
 
     it('skips the K tier for high-denomination currencies', () => {
-      expect(service.formatAmountShort(5000, 'VND')).toBe('₫5,000 ');
-      expect(service.formatAmountShort(500000, 'MMK')).toBe('500,000  Kyat');
+      expect(service.formatAmountShort(5000, 'VND')).toBe('₫5,000');
+      expect(service.formatAmountShort(500000, 'MMK')).toBe('500,000 Kyat');
     });
 
+    // No space between the number and the abbreviation suffix — "15Lakh"
+    // reads as one unit, same as "1.5M"/"35K" conventions.
     it('uses Lakh for MMK from 1 million up', () => {
-      expect(service.formatAmountShort(1500000, 'MMK')).toBe('15 Lakh Kyat');
+      expect(service.formatAmountShort(1500000, 'MMK')).toBe('15Lakh Kyat');
     });
 
     it('uses Million for other high-denomination currencies', () => {
-      expect(service.formatAmountShort(2500000, 'VND')).toBe('₫2.50 M');
+      expect(service.formatAmountShort(2500000, 'VND')).toBe('₫2.50M');
     });
 
     it('uses Billion for MMK at 1e9 instead of thousands of Lakh', () => {
-      expect(service.formatAmountShort(1e9, 'MMK')).toBe('1 B Kyat');
+      expect(service.formatAmountShort(1e9, 'MMK')).toBe('1B Kyat');
     });
 
     // No boundary-promotion rounding anymore — the raw division result is
-    // shown as-is (e.g. "9,999.99 Lakh" rather than snapping up to "1B"),
+    // shown as-is (e.g. "9,999.99Lakh" rather than snapping up to "1B"),
     // and truncated rather than rounded — per an explicit request to stop
-    // rounding short amounts (1,261,800 MMK should read "12.61 Lakh", not
-    // "12.62 Lakh").
+    // rounding short amounts (1,261,800 MMK should read "12.61Lakh", not
+    // "12.62Lakh").
     it('shows the raw truncated value at a tier boundary instead of promoting', () => {
-      expect(service.formatAmountShort(999999999, 'MMK')).toBe('9,999.99 Lakh Kyat');
+      expect(service.formatAmountShort(999999999, 'MMK')).toBe('9,999.99Lakh Kyat');
     });
 
     it('truncates instead of rounding the decimal portion', () => {
-      expect(service.formatAmountShort(1261800, 'MMK')).toBe('12.61 Lakh Kyat');
+      expect(service.formatAmountShort(1261800, 'MMK')).toBe('12.61Lakh Kyat');
     });
 
     it('keeps Lakh below the billion boundary', () => {
-      expect(service.formatAmountShort(999950000, 'MMK')).toBe('9,999.50 Lakh Kyat');
+      expect(service.formatAmountShort(999950000, 'MMK')).toBe('9,999.50Lakh Kyat');
     });
 
     it('handles negative amounts', () => {
-      expect(service.formatAmountShort(-1500, 'USD')).toBe('$-1,500 ');
-      expect(service.formatAmountShort(-1500000, 'MMK')).toBe('-15 Lakh Kyat');
+      expect(service.formatAmountShort(-1500, 'USD')).toBe('$-1,500');
+      expect(service.formatAmountShort(-1500000, 'MMK')).toBe('-15Lakh Kyat');
     });
 
     it('omits the symbol when showSymbol is false', () => {
-      expect(service.formatAmountShort(1500, 'USD', false)).toBe('1,500 ');
-      expect(service.formatAmountShort(1500000, 'MMK', false)).toBe('15 Lakh');
+      expect(service.formatAmountShort(1500, 'USD', false)).toBe('1,500');
+      expect(service.formatAmountShort(1500000, 'MMK', false)).toBe('15Lakh');
     });
   });
 

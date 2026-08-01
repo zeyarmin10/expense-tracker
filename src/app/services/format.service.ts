@@ -133,14 +133,18 @@ export class FormatService {
       ...numberingSystem,
     }).format(displayValue);
 
+    // No space between the number and the abbreviation suffix — "35Lakh"
+    // / "၃၅သိန်း" reads as one unit, same as "1.5M"/"35K" conventions.
+    // The currency label appended after shortAmount (below) keeps its own
+    // space/joining rules untouched.
     const suffix = suffixKey ? this.translate.instant(suffixKey) : '';
     const shortAmount =
       isBurmese &&
       suffixKey === 'ABBREVIATIONS.LAKH' &&
       value >= 20 &&
       value % 10 === 0
-        ? `${suffix} ${formattedNumber}`
-        : `${formattedNumber} ${suffix}`;
+        ? `${suffix}${formattedNumber}`
+        : `${formattedNumber}${suffix}`;
 
     if (!currency || !showSymbol) {
       return { shortAmount, label: null, labelFirst: false };
