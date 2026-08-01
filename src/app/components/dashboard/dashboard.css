@@ -181,14 +181,48 @@
   color: var(--text);
 }
 
-/* Hidden amounts blur the real value in place instead of swapping it out
-   for placeholder dots — the actual digits stay laid out (no width jump)
-   and the effect reads more like a deliberate privacy screen. */
+/* Hidden amounts render as a soft-edged blurred pill sized to the real
+   value's own box (em-based inset, so it tracks the hero vs. summary-card
+   font size). Earlier revisions either blurred the digits directly (bold
+   colored text blurs into a muddy smudge) or drew a crisp flat rounded
+   rectangle (reads as a plain solid loading bar, not "hidden"). The fix:
+   apply filter: blur to a plain solid shape with no text/fine detail in
+   it — blurring a shape only softens its edges into a neat frosted blob,
+   with none of the smudge a blurred glyph produces. The real text stays
+   laid out and merely goes transparent, so there's still no width jump. */
 .dash-amount-blurred {
+  position: relative;
   display: inline-block;
-  filter: blur(8px);
+  color: transparent;
   user-select: none;
-  transition: filter 0.15s ease;
+}
+
+.dash-amount-blurred::after {
+  content: '';
+  position: absolute;
+  inset: 0.15em 0.08em;
+  border-radius: 0.4em;
+  /* Two backgrounds: the flat tint, plus a diagonal highlight band that
+     sweeps across on a loop — like light catching a glass surface. */
+  background:
+    linear-gradient(100deg, transparent 35%, rgba(255, 255, 255, 0.5) 50%, transparent 65%),
+    var(--text-muted);
+  background-size: 200% 100%, 100% 100%;
+  background-position: -60% 0, 0 0;
+  opacity: 0.4;
+  filter: blur(4px);
+  animation: dash-amount-shimmer 3s linear infinite;
+}
+
+@keyframes dash-amount-shimmer {
+  from { background-position: -60% 0, 0 0; }
+  to { background-position: 160% 0, 0 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dash-amount-blurred::after {
+    animation: none;
+  }
 }
 
 /* ── Summary Card Base ── */
