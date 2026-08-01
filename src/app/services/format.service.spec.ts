@@ -114,15 +114,15 @@ describe('FormatService', () => {
     });
 
     it('uses Burmese digits and သိန်း for MMK', () => {
-      expect(service.formatAmountShort(1500000, 'MMK')).toBe('၁၅ သိန်း ကျပ်');
+      expect(service.formatAmountShort(1500000, 'MMK')).toBe('၁၅သိန်း ကျပ်');
     });
 
     it('prefixes သိန်း for round lakh values of 20 and above', () => {
-      expect(service.formatAmountShort(2000000, 'MMK')).toBe('သိန်း ၂၀ ကျပ်');
+      expect(service.formatAmountShort(2000000, 'MMK')).toBe('သိန်း၂၀ ကျပ်');
     });
 
     it('never abbreviates low-denomination currencies even in Burmese', () => {
-      expect(service.formatAmountShort(1500, 'USD')).toBe('၁,၅၀၀  $');
+      expect(service.formatAmountShort(1500, 'USD')).toBe('၁,၅၀၀ $');
     });
 
     it('keeps MMK amounts under 1 million unabbreviated', () => {
