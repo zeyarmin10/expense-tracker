@@ -928,6 +928,34 @@ body.pnl-add-modal-open {
   flex-shrink: 0;
 }
 
+/* Sum of the list right below it — same source data as the "Total
+   Incomes" summary card up top, just surfaced at the list itself so it's
+   visible without scrolling back up. */
+.pnl-list-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.6rem;
+  padding: 0.65rem 0.75rem;
+  margin: 0.75rem 0.75rem 0.85rem;
+  background: var(--income-dim);
+  border-radius: 10px;
+}
+
+.pnl-list-total-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.pnl-list-total-amount {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
 .pnl-table-responsive {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;

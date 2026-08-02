@@ -540,7 +540,7 @@
         </h3>
         <div class="exp-list-header-right">
           <span class="exp-voucher-count" *ngIf="displayedVouchers$ | async as vl">
-            {{ vl.length }}
+            {{ formatCount(vl.length) }}
           </span>
           <svg class="exp-collapse-chevron" [class.open]="isSavedVoucherListOpen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="6 9 12 15 18 9"/></svg>
         </div>

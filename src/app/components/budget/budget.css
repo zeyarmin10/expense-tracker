@@ -624,6 +624,13 @@ body.bgt-add-modal-open {
   padding: 1rem 1.3rem;
   background: none;
   border: none;
+  /* Sits flush against .bgt-panel's own rounded top corners (14px) —
+     .bgt-panel's overflow: hidden clips this in theory, but border-radius
+     clipping on a parent is unreliable for a child's hover/focus paint in
+     some browsers (square corners can visibly peek out past the rounded
+     edge). Matching the radius here means the hover background and focus
+     outline are rounded on their own, not dependent on the parent's clip. */
+  border-radius: 14px;
   color: var(--text);
   /* font-family: 'Syne', sans-serif; */
   font-size: 0.88rem;
@@ -637,6 +644,16 @@ body.bgt-add-modal-open {
 
 .bgt-panel-toggle:hover {
   background: var(--surface-2);
+}
+
+.bgt-panel-toggle:focus-visible {
+  background: var(--surface-2);
+  /* Inset (negative offset) so the ring can't extend past the button's own
+     box no matter what — the previous default outline sat right on the
+     edge and, combined with the clipping issue above, is what read as
+     "color escaping past the border". */
+  outline: 2px solid var(--accent, #0b74ff);
+  outline-offset: -2px;
 }
 
 .bgt-panel-toggle-left {

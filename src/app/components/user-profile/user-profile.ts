@@ -511,12 +511,19 @@ export class UserProfileComponent implements OnInit, OnDestroy {
       selectedBudgetPeriodId: isCustom ? formValues.budgetPeriod : null,
     };
 
-    // budget period fields are space-specific — only write to user profile for personal spaces
-    const userProfileData: Partial<UserProfile> = { currency: formValues.currency };
-    if (!isGroup) Object.assign(userProfileData, budgetFields);
+    // Currency and budget-period fields are both space-specific — a group
+    // member's change belongs on the group's own space record (below), not
+    // on their personal user profile. Writing it to the profile too (the
+    // previous behavior) leaked a group's currency into "My Personal"
+    // the next time that user switched back to their personal space, since
+    // the personal space reads its currency straight from the profile.
+    const userProfileData: Partial<UserProfile> = {};
+    if (!isGroup) Object.assign(userProfileData, budgetFields, { currency: formValues.currency });
 
     try {
-      await this.userDataService.updateUserProfile(currentUser.uid, userProfileData);
+      if (Object.keys(userProfileData).length > 0) {
+        await this.userDataService.updateUserProfile(currentUser.uid, userProfileData);
+      }
 
       if (this.canEditSettings && isGroup) {
         await this.dataManager.updateGroupSettings(this.groupId!, {
@@ -982,11 +989,14 @@ export class UserProfileComponent implements OnInit, OnDestroy {
         };
 
         const trimmedDisplayName = (formValues.displayName || '').trim();
+        // Currency/budget-period fields are space-specific — see
+        // autoSaveField's comment for why a group member's change must not
+        // also land on their personal user profile. displayName is
+        // genuinely user-level, so it's always included.
         const userProfileData: Partial<UserProfile> = {
           displayName: trimmedDisplayName,
-          currency: formValues.currency,
         };
-        if (!isGroup) Object.assign(userProfileData, budgetFields);
+        if (!isGroup) Object.assign(userProfileData, budgetFields, { currency: formValues.currency });
 
         try {
           if (currentUser.displayName !== trimmedDisplayName) {
@@ -1050,9 +1060,13 @@ export class UserProfileComponent implements OnInit, OnDestroy {
         selectedBudgetPeriodId: newPeriodRef.key,
       };
 
-      const userProfileData: Partial<UserProfile> = { currency: formValues.currency };
-      if (!isGroup) Object.assign(userProfileData, budgetFields);
-      await this.userDataService.updateUserProfile(currentUser.uid, userProfileData);
+      // See autoSaveField's comment — currency is space-specific and must
+      // not be written to the personal profile for a group member.
+      const userProfileData: Partial<UserProfile> = {};
+      if (!isGroup) Object.assign(userProfileData, budgetFields, { currency: formValues.currency });
+      if (Object.keys(userProfileData).length > 0) {
+        await this.userDataService.updateUserProfile(currentUser.uid, userProfileData);
+      }
 
       if (isGroup) {
         await this.dataManager.updateGroupSettings(this.groupId!, {
