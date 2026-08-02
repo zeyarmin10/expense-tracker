@@ -2,8 +2,10 @@ import { createHash } from 'node:crypto';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import {
   applyCors,
+  getBearerToken,
   getFirebaseAccessToken,
   handleOptions,
+  verifyIdToken,
 } from './notification-utils.js';
 
 // Permanently deletes Cloudinary assets after their app record is removed
@@ -20,8 +22,6 @@ import {
 //   vouchers/groups/{id}/…    → any current member of that group
 // Anything outside those folders is refused.
 
-const FIREBASE_WEB_API_KEY =
-  process.env['FIREBASE_WEB_API_KEY'] || 'AIzaSyDJJXDNDCIweU0FzYIZJCMErKHcSLbzvS8';
 const FIREBASE_DATABASE_URL = (
   process.env['FIREBASE_DATABASE_URL'] ||
   'https://expense-tracker-c94e8-default-rtdb.asia-southeast1.firebasedatabase.app'
@@ -29,20 +29,6 @@ const FIREBASE_DATABASE_URL = (
 const CLOUDINARY_CLOUD_NAME = process.env['CLOUDINARY_CLOUD_NAME'] || 'da0zqvrps';
 
 const MAX_IDS_PER_REQUEST = 30;
-
-async function verifyIdToken(idToken: string): Promise<string | null> {
-  const response = await fetch(
-    `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${FIREBASE_WEB_API_KEY}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ idToken }),
-    },
-  );
-  if (!response.ok) return null;
-  const data = (await response.json()) as { users?: { localId?: string }[] };
-  return data.users?.[0]?.localId || null;
-}
 
 async function isMember(
   accessToken: string,
@@ -120,7 +106,7 @@ export default async function handler(
     return response.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  const idToken = (request.headers.authorization || '').replace(/^Bearer\s+/i, '').trim();
+  const idToken = getBearerToken(request);
   if (!idToken) {
     return response.status(401).json({ error: 'Missing Authorization bearer token' });
   }

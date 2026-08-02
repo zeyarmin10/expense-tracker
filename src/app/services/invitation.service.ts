@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { AngularFireDatabase } from '@angular/fire/compat/database';
+import { Auth } from '@angular/fire/auth';
 import { Observable, from } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { Capacitor } from '@capacitor/core';
@@ -20,6 +21,8 @@ const VERCEL_URL = 'https://kyatwise.vercel.app';
   providedIn: 'root'
 })
 export class InvitationService {
+
+  private auth = inject(Auth);
 
   constructor(private http: HttpClient, private db: AngularFireDatabase) { }
 
@@ -115,10 +118,22 @@ export class InvitationService {
 
     const emailPayload = { to: recipientEmail, subject, html: htmlBody };
 
-    return this.http.post(this.apiUrl, emailPayload).pipe(
+    // The send endpoint now requires a signed-in caller (it used to accept
+    // anonymous requests, which made it an open relay for arbitrary email —
+    // see api/index.ts), so the current user's ID token has to be attached.
+    return from(this.auth.currentUser!.getIdToken()).pipe(
+      switchMap((idToken) =>
+        this.http.post(this.apiUrl, emailPayload, {
+          headers: { Authorization: `Bearer ${idToken}` },
+        }),
+      ),
       switchMap(() => {
         const invitation: Omit<Invitation, 'acceptedBy' | 'acceptedAt'> = {
-          email: recipientEmail,
+          // Stored lowercased/trimmed — the security-rule checks that match
+          // this against auth.token.email on accept also lowercase both
+          // sides, but normalizing here too means existing rows stay
+          // consistent and the intent is obvious from the write site.
+          email: recipientEmail.trim().toLowerCase(),
           groupId,
           status: 'pending',
           createdAt: new Date().toISOString()

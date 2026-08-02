@@ -70,6 +70,24 @@ await req('attacker cannot join with member invite', false, 'PUT', `/space_membe
 await req('invited member joins with inviteCode', true, 'PUT', `/space_members/${s1}/${M.uid}.json`, { role: 'member', inviteCode: inv }, M);
 await req('member accepts invitation', true, 'PATCH', `/invitations/${inv}.json`, { status: 'accepted', acceptedBy: M.uid, acceptedAt: new Date().toISOString() }, M);
 
+console.log('--- Invitation email case-sensitivity (regression test) ---');
+// Reproduces the real bug: the Auth emulator (like real Firebase in
+// practice) always normalizes auth.token.email to lowercase, but an
+// inviter's *typed* email — what actually lands in the invitation record —
+// can be any casing. The rules must lowercase both sides of the comparison,
+// or a legitimate join fails with permission_denied whenever the inviter
+// didn't happen to type all-lowercase.
+const rawEmail = `MixedCase-${Date.now()}@Example.COM`;
+const C = await signUp(rawEmail); // C.email comes back normalized/lowercased
+const s2 = `space2-${Date.now()}`;
+const inv2 = `inv2-${Date.now()}`;
+await req('owner creates 2nd space', true, 'PUT', `/spaces/${s2}.json`, { type: 'group', name: 'Case Test Group', ownerId: O.uid, currency: 'MMK' }, O);
+await req('owner self-membership in 2nd space', true, 'PUT', `/space_members/${s2}/${O.uid}.json`, { role: 'owner' }, O);
+await req('owner creates invitation with mixed-case typed email', true, 'PUT', `/invitations/${inv2}.json`, { email: rawEmail, groupId: s2, status: 'pending', createdAt: new Date().toISOString() }, O);
+await req('member joins despite invite email casing mismatch', true, 'PUT', `/space_members/${s2}/${C.uid}.json`, { role: 'member', inviteCode: inv2 }, C);
+await req('member accepts invitation despite casing mismatch', true, 'PATCH', `/invitations/${inv2}.json`, { status: 'accepted', acceptedBy: C.uid, acceptedAt: new Date().toISOString() }, C);
+await req('attacker still cannot join 2nd space with unrelated email', false, 'PUT', `/space_members/${s2}/${A.uid}.json`, { role: 'member', inviteCode: inv2 }, A);
+
 console.log('--- Root / collection reads ---');
 await req('attacker reads root', false, 'GET', '/.json', undefined, A);
 await req('attacker reads /users', false, 'GET', '/users.json', undefined, A);

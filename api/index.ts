@@ -1,6 +1,12 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import * as nodemailer from 'nodemailer';
 import { google } from 'googleapis';
+import {
+  applyCors,
+  getBearerToken,
+  handleOptions,
+  verifyIdToken,
+} from './notification-utils.js';
 
 const OAuth2 = google.auth.OAuth2;
 
@@ -44,29 +50,44 @@ async function createTransporter() {
     }
 }
 
+// Basic shape check, not full RFC 5322 validation — just enough to reject
+// obvious junk (multiple/blank addresses) before it reaches nodemailer.
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export default async function handler(
     request: VercelRequest,
     response: VercelResponse,
 ) {
-    // Handle CORS preflight
-    if (request.method === 'OPTIONS') {
-        response.setHeader('Access-Control-Allow-Origin', '*');
-        response.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-        response.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-        return response.status(200).end();
+    applyCors(response);
+    if (handleOptions(request, response)) {
+        return;
     }
-
-    response.setHeader('Access-Control-Allow-Origin', '*'); // Allow all origins
 
     if (request.method !== 'POST') {
         return response.status(405).json({ error: 'Method Not Allowed' });
     }
 
+    // This endpoint sends mail from the app's own Gmail account, so it must
+    // only be reachable by a signed-in app user — without this it was an
+    // open relay: anyone on the internet could POST arbitrary to/subject/html
+    // and have it delivered from our address (spam/phishing abuse risk).
+    const idToken = getBearerToken(request);
+    if (!idToken) {
+        return response.status(401).json({ error: 'Missing Authorization bearer token' });
+    }
+    const uid = await verifyIdToken(idToken);
+    if (!uid) {
+        return response.status(401).json({ error: 'Invalid or expired ID token' });
+    }
+
     try {
         const { to, subject, html } = request.body;
-        
+
         if (!to || !subject || !html) {
             return response.status(400).json({ error: 'Missing required fields: to, subject, html' });
+        }
+        if (typeof to !== 'string' || !EMAIL_PATTERN.test(to)) {
+            return response.status(400).json({ error: 'Invalid recipient email' });
         }
 
         const mailer = await createTransporter();

@@ -32,6 +32,35 @@ const FIREBASE_DATABASE_URL =
 const APP_ORIGIN =
   process.env['APP_ORIGIN'] ||
   (process.env['VERCEL_URL'] ? `https://${process.env['VERCEL_URL']}` : '');
+// Same web API key already shipped client-side in environment.ts — it
+// identifies the Firebase project, it isn't a secret (access control lives
+// in the security rules, not this key), so hardcoding the same fallback
+// here is fine.
+const FIREBASE_WEB_API_KEY =
+  process.env['FIREBASE_WEB_API_KEY'] || 'AIzaSyDJJXDNDCIweU0FzYIZJCMErKHcSLbzvS8';
+
+// Verifies a Firebase ID token server-side and returns the caller's uid, or
+// null if the token is missing/invalid/expired. Any endpoint that acts on
+// behalf of a specific app user (not a cron job or admin tool) should call
+// this before doing anything — see delete-images.ts and index.ts.
+export async function verifyIdToken(idToken: string): Promise<string | null> {
+  if (!idToken) return null;
+  const response = await fetch(
+    `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${FIREBASE_WEB_API_KEY}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken }),
+    },
+  );
+  if (!response.ok) return null;
+  const data = (await response.json()) as { users?: { localId?: string }[] };
+  return data.users?.[0]?.localId || null;
+}
+
+export function getBearerToken(request: VercelRequest): string {
+  return (request.headers.authorization || '').replace(/^Bearer\s+/i, '').trim();
+}
 
 export function applyCors(response: VercelResponse): void {
   response.setHeader('Access-Control-Allow-Origin', '*');
