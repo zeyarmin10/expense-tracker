@@ -108,7 +108,7 @@
           </li>
           <li *ngFor="let member of groupMembers$ | async; trackBy: trackByMemberUid">
             <span class="dropdown-item" [class.text-info]="member.uid === user.uid">
-              {{ member.displayName }} ({{ member.role === 'admin' ? ('NAV_ADMIN' | translate) : ('NAV_MEMBER' |
+              {{ member.displayName }} ({{ (member.role === 'admin' || member.role === 'owner') ? ('NAV_ADMIN' | translate) : ('NAV_MEMBER' |
               translate) }})
               <span *ngIf="member.uid === user.uid">({{ 'NAV_YOU' | translate }})</span>
             </span>
