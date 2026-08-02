@@ -188,8 +188,14 @@ export class Profit implements OnInit, OnDestroy {
 
   // Row actions — three-dot floating menu instead of row-click-to-edit,
   // since the fixed-width mobile table columns left no room for a visible
-  // inline delete button. Same floating-menu pattern as category.ts.
+  // inline delete button. Same floating-menu pattern as category.ts. The
+  // menu is position: fixed (see profit.css) so it can escape the table's
+  // own clipping, which means its coordinates are viewport-relative and
+  // have to be recomputed on scroll/resize — a fixed element doesn't move
+  // with the page on its own, so without this it was left stranded at the
+  // old spot as soon as the page scrolled.
   openMenuId: string | null = null;
+  openMenuButton: HTMLElement | null = null;
   menuX = 0;
   menuY = 0;
 
@@ -197,18 +203,33 @@ export class Profit implements OnInit, OnDestroy {
     event.stopPropagation();
     if (this.openMenuId === id) {
       this.openMenuId = null;
+      this.openMenuButton = null;
       return;
     }
-    const btn = event.currentTarget as HTMLElement;
-    const rect = btn.getBoundingClientRect();
+    this.openMenuButton = event.currentTarget as HTMLElement;
+    this.openMenuId = id;
+    this.positionMenu();
+  }
+
+  private positionMenu(): void {
+    if (!this.openMenuButton) return;
+    const rect = this.openMenuButton.getBoundingClientRect();
     this.menuY = rect.bottom + 4;
     this.menuX = rect.right - 128;
-    this.openMenuId = id;
+  }
+
+  @HostListener('window:scroll')
+  @HostListener('window:resize')
+  onWindowScrollOrResize(): void {
+    if (this.openMenuId) {
+      this.positionMenu();
+    }
   }
 
   @HostListener('document:click')
   onDocumentClick(): void {
     this.openMenuId = null;
+    this.openMenuButton = null;
   }
 
   readonly iconChartLine = ChartLine;

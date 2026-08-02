@@ -282,7 +282,10 @@ type SpaceImageSource = {
       right: 0;
       width: min(290px, calc(100vw - 1.5rem));
       box-sizing: border-box;
-      max-height: min(320px, calc(100vh - 6rem));
+      /* Sized to whatever's actually free below the trigger, not an
+         arbitrary fixed cap — a short space list shows in full, and only
+         a list that genuinely doesn't fit the viewport scrolls. */
+      max-height: calc(100vh - 6rem);
       display: flex;
       flex-direction: column;
       overflow: hidden;

@@ -91,8 +91,13 @@ export class Category implements OnInit, OnDestroy {
   // Mobile-only three-dot menu (desktop keeps the inline edit/delete
   // buttons — see .cat-item-actions-desktop / .cat-item-actions-mobile in
   // category.css). Same floating-menu pattern as the shared category
-  // modal's own list.
+  // modal's own list. The menu is position: fixed (see category.css) so it
+  // can escape the list's own clipping, which means its coordinates are
+  // viewport-relative and have to be recomputed on scroll/resize — a fixed
+  // element doesn't move with the page on its own, so without this it was
+  // left stranded at the old spot as soon as the list scrolled.
   openMenuId: string | null = null;
+  openMenuButton: HTMLElement | null = null;
   menuX = 0;
   menuY = 0;
 
@@ -100,18 +105,33 @@ export class Category implements OnInit, OnDestroy {
     event.stopPropagation();
     if (this.openMenuId === id) {
       this.openMenuId = null;
+      this.openMenuButton = null;
       return;
     }
-    const btn = event.currentTarget as HTMLElement;
-    const rect = btn.getBoundingClientRect();
+    this.openMenuButton = event.currentTarget as HTMLElement;
+    this.openMenuId = id;
+    this.positionMenu();
+  }
+
+  private positionMenu(): void {
+    if (!this.openMenuButton) return;
+    const rect = this.openMenuButton.getBoundingClientRect();
     this.menuY = rect.bottom + 4;
     this.menuX = rect.right - 128;
-    this.openMenuId = id;
+  }
+
+  @HostListener('window:scroll')
+  @HostListener('window:resize')
+  onWindowScrollOrResize(): void {
+    if (this.openMenuId) {
+      this.positionMenu();
+    }
   }
 
   @HostListener('document:click')
   onDocumentClick(): void {
     this.openMenuId = null;
+    this.openMenuButton = null;
   }
 
   readonly categoryIcons = CATEGORY_ICONS;
