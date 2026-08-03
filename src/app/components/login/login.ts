@@ -22,7 +22,8 @@ import { CategoryService } from '../../services/category';
 import { debounceTime, Subject, takeUntil, firstValueFrom } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { SessionManagementService } from '../../services/session-management';
-import { LucideAngularModule, Eye, EyeOff, Sun, Moon, Mail, Info, X, ArrowLeft, KeyRound, CircleCheckBig } from 'lucide-angular';
+import { LucideAngularModule, Eye, EyeOff, Sun, Moon, Mail, Info, X, ArrowLeft, KeyRound, CircleCheckBig, Circle } from 'lucide-angular';
+import { passwordComplexityValidator } from '../../utils/form-validators';
 import { User } from '@angular/fire/auth';
 import { ToastService } from '../../services/toast'; // Import ToastService
 import { InvitationService } from '../../services/invitation.service';
@@ -68,6 +69,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   readonly iconArrowLeft = ArrowLeft;
   readonly iconKeyRound = KeyRound;
   readonly iconCheckCircle = CircleCheckBig;
+  readonly iconCircle = Circle;
   isDarkMode = true;
 
   loginForm: FormGroup;
@@ -497,10 +499,24 @@ export class LoginComponent implements OnInit, OnDestroy {
 
     if (!this.isLoginMode) {
       this.loginForm.controls['name'].setValidators([Validators.required, Validators.maxLength(50)]);
+      // Matches the Firebase Console password policy (Authentication →
+      // Password policy): min 8 chars, upper/lower/number/special required.
+      this.loginForm.controls['password'].setValidators([
+        Validators.required,
+        Validators.minLength(8),
+        Validators.maxLength(4096),
+        passwordComplexityValidator,
+      ]);
     } else {
       this.loginForm.controls['name'].setValidators(Validators.maxLength(50));
+      // Deliberately permissive for login: the policy above is "Notify"
+      // enforcement in Firebase, not "Require", so existing accounts created
+      // before the policy (or with simpler passwords) must still be able to
+      // sign in. Firebase's own hard floor is 6 characters regardless.
+      this.loginForm.controls['password'].setValidators([Validators.required, Validators.minLength(6)]);
     }
     this.loginForm.controls['name'].updateValueAndValidity();
+    this.loginForm.controls['password'].updateValueAndValidity();
   }
 
   async onSubmit(): Promise<void> {
@@ -533,6 +549,32 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   togglePasswordVisibility(): void {
     this.showPassword = !this.showPassword;
+  }
+
+  // Live checklist for the register-mode password field, mirroring the
+  // Firebase Console password policy — see toggleMode().
+  get registerPasswordValue(): string {
+    return this.loginForm.get('password')?.value || '';
+  }
+
+  get pwHasMinLength(): boolean {
+    return this.registerPasswordValue.length >= 8;
+  }
+
+  get pwHasUppercase(): boolean {
+    return /[A-Z]/.test(this.registerPasswordValue);
+  }
+
+  get pwHasLowercase(): boolean {
+    return /[a-z]/.test(this.registerPasswordValue);
+  }
+
+  get pwHasNumber(): boolean {
+    return /[0-9]/.test(this.registerPasswordValue);
+  }
+
+  get pwHasSpecialChar(): boolean {
+    return /[^A-Za-z0-9]/.test(this.registerPasswordValue);
   }
 
   toggleLanguageMenu(): void {

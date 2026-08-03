@@ -582,6 +582,42 @@
   margin-top: 0.5rem;
 }
 
+/* ── Password requirements checklist (register) ── */
+.lgn-pw-requirements {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.3rem 0.6rem;
+  padding: 0.6rem 0.75rem;
+  margin-top: 0.15rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.lgn-pw-req {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  transition: color 0.15s;
+}
+
+.lgn-pw-req lucide-icon {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  transition: color 0.15s;
+}
+
+.lgn-pw-req.met {
+  color: var(--success, #22c55e);
+}
+
+.lgn-pw-req.met lucide-icon {
+  color: var(--success, #22c55e);
+}
+
 /* Alert banners */
 .lgn-alert {
   font-size: 0.8rem;

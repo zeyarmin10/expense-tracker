@@ -223,7 +223,30 @@
             </div>
             <div class="lgn-error" *ngIf="loginForm.controls['password'].invalid && loginForm.controls['password'].touched">
               <span *ngIf="loginForm.controls['password'].errors?.['required']">{{ 'ERROR_PASSWORD_REQUIRED' | translate }}</span>
-              <span *ngIf="loginForm.controls['password'].errors?.['minlength']">{{ 'ERROR_PASSWORD_MINLENGTH' | translate }}</span>
+              <span *ngIf="!loginForm.controls['password'].errors?.['required']">{{ 'ERROR_PASSWORD_POLICY' | translate }}</span>
+            </div>
+            <!-- Live password requirements checklist -->
+            <div class="lgn-pw-requirements">
+              <div class="lgn-pw-req" [class.met]="pwHasMinLength">
+                <lucide-icon [img]="pwHasMinLength ? iconCheckCircle : iconCircle" [size]="13"></lucide-icon>
+                <span>{{ 'PW_REQ_MIN_LENGTH' | translate }}</span>
+              </div>
+              <div class="lgn-pw-req" [class.met]="pwHasUppercase">
+                <lucide-icon [img]="pwHasUppercase ? iconCheckCircle : iconCircle" [size]="13"></lucide-icon>
+                <span>{{ 'PW_REQ_UPPERCASE' | translate }}</span>
+              </div>
+              <div class="lgn-pw-req" [class.met]="pwHasLowercase">
+                <lucide-icon [img]="pwHasLowercase ? iconCheckCircle : iconCircle" [size]="13"></lucide-icon>
+                <span>{{ 'PW_REQ_LOWERCASE' | translate }}</span>
+              </div>
+              <div class="lgn-pw-req" [class.met]="pwHasNumber">
+                <lucide-icon [img]="pwHasNumber ? iconCheckCircle : iconCircle" [size]="13"></lucide-icon>
+                <span>{{ 'PW_REQ_NUMBER' | translate }}</span>
+              </div>
+              <div class="lgn-pw-req" [class.met]="pwHasSpecialChar">
+                <lucide-icon [img]="pwHasSpecialChar ? iconCheckCircle : iconCircle" [size]="13"></lucide-icon>
+                <span>{{ 'PW_REQ_SPECIAL' | translate }}</span>
+              </div>
             </div>
           </div>
           <!-- Alerts -->
