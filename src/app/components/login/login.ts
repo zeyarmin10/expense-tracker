@@ -22,7 +22,7 @@ import { CategoryService } from '../../services/category';
 import { debounceTime, Subject, takeUntil, firstValueFrom } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { SessionManagementService } from '../../services/session-management';
-import { LucideAngularModule, Eye, EyeOff, Sun, Moon, Mail, Info, X } from 'lucide-angular';
+import { LucideAngularModule, Eye, EyeOff, Sun, Moon, Mail, Info, X, ArrowLeft, KeyRound, CircleCheckBig } from 'lucide-angular';
 import { User } from '@angular/fire/auth';
 import { ToastService } from '../../services/toast'; // Import ToastService
 import { InvitationService } from '../../services/invitation.service';
@@ -65,9 +65,16 @@ export class LoginComponent implements OnInit, OnDestroy {
   readonly iconMail = Mail;
   readonly iconInfo = Info;
   readonly iconX = X;
+  readonly iconArrowLeft = ArrowLeft;
+  readonly iconKeyRound = KeyRound;
+  readonly iconCheckCircle = CircleCheckBig;
   isDarkMode = true;
 
   loginForm: FormGroup;
+  forgotPasswordForm: FormGroup;
+  showForgotPassword = false;
+  isSendingResetEmail = false;
+  resetEmailSent = false;
   authService = inject(AuthService);
   userDataService = inject(UserDataService);
   dataManager = inject(DataManagerService); // Inject DataManagerService
@@ -153,6 +160,10 @@ export class LoginComponent implements OnInit, OnDestroy {
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
       name: ['', Validators.maxLength(50)],
+    });
+
+    this.forgotPasswordForm = this.fb.group({
+      email: ['', [Validators.required, Validators.email]],
     });
 
     this.currentLang =
@@ -440,6 +451,40 @@ export class LoginComponent implements OnInit, OnDestroy {
     } else {
       this.loginForm.reset();
       this.errorMessage = null;
+    }
+  }
+
+  openForgotPassword(): void {
+    this.resetEmailSent = false;
+    this.forgotPasswordForm.reset();
+    // Carry over whatever the user already typed into the login form so
+    // they don't have to retype their email.
+    const typedEmail = this.loginForm.get('email')?.value;
+    if (typedEmail) {
+      this.forgotPasswordForm.patchValue({ email: typedEmail });
+    }
+    this.showForgotPassword = true;
+  }
+
+  closeForgotPassword(): void {
+    this.showForgotPassword = false;
+    this.resetEmailSent = false;
+    this.forgotPasswordForm.reset();
+  }
+
+  async sendResetEmail(): Promise<void> {
+    this.forgotPasswordForm.markAllAsTouched();
+    if (this.forgotPasswordForm.invalid || this.isSendingResetEmail) return;
+
+    this.isSendingResetEmail = true;
+    try {
+      const email = (this.forgotPasswordForm.value.email || '').trim();
+      await this.authService.sendPasswordReset(email);
+      this.resetEmailSent = true;
+    } catch (error: any) {
+      this.showErrorModal(error.message);
+    } finally {
+      this.isSendingResetEmail = false;
     }
   }
 

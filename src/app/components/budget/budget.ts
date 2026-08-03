@@ -172,6 +172,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
 
   filteredBudgets$: Observable<ServiceIBudget[]>;
   groupedBudgets$: Observable<BudgetPeriodGroup[]>;
+  totalBudgetsByCurrency$: Observable<{ [key: string]: number }>;
   spendingMonitorData$: Observable<SpendingMonitorItem[]>;
 
   readonly iconTrash2 = Trash2;
@@ -484,6 +485,17 @@ export class BudgetComponent implements OnInit, OnDestroy {
     this.filteredBudgets$ = filteredData$.pipe(map((data) => data.budgets));
     this.groupedBudgets$ = this.filteredBudgets$.pipe(
       map((budgets) => this.groupBudgetsByPeriod(budgets))
+    );
+    // Sum across every period group shown below (same filteredBudgets$
+    // source as groupedBudgets$), for the "Total" row above the list —
+    // same idea as profit.ts's totalIncomesByCurrency$.
+    this.totalBudgetsByCurrency$ = this.filteredBudgets$.pipe(
+      map((budgets) => budgets.reduce((totals, budget) => {
+        if (budget.currency) {
+          totals[budget.currency] = (totals[budget.currency] || 0) + budget.amount;
+        }
+        return totals;
+      }, {} as { [key: string]: number }))
     );
 
     this.monthlySummary$ = filteredData$.pipe(

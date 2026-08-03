@@ -88,7 +88,7 @@
     </div>
 
     <!-- Card -->
-    <div class="lgn-card" *ngIf="!showPreferencesStep">
+    <div class="lgn-card" *ngIf="!showPreferencesStep && !showForgotPassword">
       <!-- Tab switcher -->
       <div class="lgn-tabs">
         <button class="lgn-tab" [class.active]="isLoginMode" type="button" (click)="isLoginMode || toggleMode()">
@@ -166,6 +166,12 @@
                 <span *ngIf="loginForm.controls['password'].errors?.['minlength']">{{ 'ERROR_PASSWORD_MINLENGTH' | translate }}</span>
               </div>
             </div>
+            <!-- Forgot password -->
+            <div class="lgn-forgot-row">
+              <button type="button" class="lgn-toggle-link lgn-forgot-link" (click)="openForgotPassword()">
+                {{ 'FORGOT_PASSWORD_PROMPT' | translate }}
+              </button>
+            </div>
             <!-- Alerts -->
             <div class="lgn-alert lgn-alert-err" *ngIf="errorMessage" role="alert">{{ errorMessage }}</div>
             <div class="lgn-alert lgn-alert-ok" *ngIf="successMessage" role="alert">{{ successMessage }}</div>
@@ -233,8 +239,59 @@
     </div>
     <!-- END card -->
 
+    <!-- Forgot password card -->
+    <div class="lgn-card lgn-forgot-card" *ngIf="showForgotPassword">
+      <button type="button" class="lgn-back-btn" (click)="closeForgotPassword()">
+        <lucide-icon [img]="iconArrowLeft" [size]="16"></lucide-icon>
+        {{ 'BACK_BUTTON' | translate }}
+      </button>
+
+      <ng-container *ngIf="!resetEmailSent; else resetSentTpl">
+        <div class="lgn-forgot-header">
+          <div class="lgn-forgot-icon">
+            <lucide-icon [img]="iconKeyRound" [size]="22"></lucide-icon>
+          </div>
+          <h2 class="lgn-pref-title">{{ 'FORGOT_PASSWORD_TITLE' | translate }}</h2>
+          <p class="lgn-pref-subtitle">{{ 'FORGOT_PASSWORD_INSTRUCTIONS' | translate }}</p>
+        </div>
+
+        <form [formGroup]="forgotPasswordForm" (ngSubmit)="sendResetEmail()" class="lgn-form" autocomplete="off">
+          <div class="lgn-field">
+            <div class="lgn-float-wrap">
+              <input type="email" id="lgn-forgot-email" class="lgn-input" formControlName="email" placeholder=" "
+                [class.err]="forgotPasswordForm.controls['email'].invalid && forgotPasswordForm.controls['email'].touched" />
+              <label class="lgn-label" for="lgn-forgot-email">{{ 'EMAIL_LABEL' | translate }}</label>
+            </div>
+            <div class="lgn-error" *ngIf="forgotPasswordForm.controls['email'].invalid && forgotPasswordForm.controls['email'].touched">
+              <span *ngIf="forgotPasswordForm.controls['email'].errors?.['required']">{{ 'ERROR_EMAIL_REQUIRED' | translate }}</span>
+              <span *ngIf="forgotPasswordForm.controls['email'].errors?.['email']">{{ 'ERROR_EMAIL_INVALID' | translate }}</span>
+            </div>
+          </div>
+
+          <button type="submit" class="lgn-submit-btn" [disabled]="forgotPasswordForm.invalid || isSendingResetEmail">
+            <span *ngIf="isSendingResetEmail" class="lgn-google-spinner"></span>
+            <span class="lgn-btn-text">{{ (isSendingResetEmail ? 'SENDING_RESET_LINK' : 'SEND_RESET_LINK_BUTTON') | translate }}</span>
+          </button>
+        </form>
+      </ng-container>
+
+      <ng-template #resetSentTpl>
+        <div class="lgn-forgot-success">
+          <div class="lgn-forgot-success-icon">
+            <lucide-icon [img]="iconCheckCircle" [size]="30"></lucide-icon>
+          </div>
+          <h2 class="lgn-pref-title">{{ 'PASSWORD_RESET_EMAIL_SENT_TITLE' | translate }}</h2>
+          <p class="lgn-pref-subtitle">{{ 'PASSWORD_RESET_EMAIL_SENT_MSG' | translate }}</p>
+          <button type="button" class="lgn-submit-btn" (click)="closeForgotPassword()">
+            <span class="lgn-btn-text">{{ 'BACK_BUTTON' | translate }}</span>
+          </button>
+        </div>
+      </ng-template>
+    </div>
+    <!-- END forgot password card -->
+
     <!-- Footer card -->
-    <div class="lgn-footer-card" *ngIf="!showPreferencesStep">
+    <div class="lgn-footer-card" *ngIf="!showPreferencesStep && !showForgotPassword">
       <p class="lgn-footer-link">
         {{ (isLoginMode ? 'NO_ACCOUNT_QUESTION' : 'HAVE_ACCOUNT_QUESTION') | translate }}
         <button type="button" class="lgn-toggle-link" (click)="toggleMode()">

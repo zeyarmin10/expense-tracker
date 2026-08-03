@@ -334,6 +334,17 @@
       </button>
       <div class="bgt-panel-body" [class.open]="isRecordedOpen">
         <div class="bgt-panel-inner">
+          <!-- Sum of exactly what's listed below (same filteredBudgets$
+               source as groupedBudgets$), shown as the raw/actual amount —
+               same pattern as the income list's Total row. -->
+          <ng-container *ngIf="totalBudgetsByCurrency$ | async as budgetTotals">
+            <div class="bgt-list-total" *ngIf="(budgetTotals | keyvalue).length > 0">
+              <span class="bgt-list-total-label">{{ 'TOTAL' | translate }}</span>
+              <span *ngFor="let t of budgetTotals | keyvalue; trackBy: trackByKey" class="bgt-list-total-amount"
+                [innerHTML]="formatService.formatAmountWithSymbolHtml(t.value, t.key)"
+              ></span>
+            </div>
+          </ng-container>
           <div class="bgt-budget-list">
             <ng-container *ngIf="groupedBudgets$ | async as dateGroups; else loadingBudget">
               <ng-container *ngIf="dateGroups.length > 0; else noBudgetsTemplate">

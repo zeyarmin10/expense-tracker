@@ -230,14 +230,14 @@
           <!-- Sum of exactly what's listed below (same profitLossData$
                source as incomes$/totalIncomesByCurrency$), shown right at
                the list instead of only in the summary card up top. -->
-          <div class="pnl-list-total" *ngIf="totalIncomesByCurrency$ | async as incomeTotals">
-            <ng-container *ngIf="(incomeTotals | keyvalue).length > 0">
+          <ng-container *ngIf="totalIncomesByCurrency$ | async as incomeTotals">
+            <div class="pnl-list-total" *ngIf="(incomeTotals | keyvalue).length > 0">
               <span class="pnl-list-total-label">{{ 'TOTAL' | translate }}</span>
               <span *ngFor="let t of incomeTotals | keyvalue; trackBy: trackByKey" class="pnl-list-total-amount pnl-amount-income"
                 [innerHTML]="formatService.formatAmountWithSymbolHtml(t.value, t.key)"
               ></span>
-            </ng-container>
-          </div>
+            </div>
+          </ng-container>
           <ng-container *ngIf="incomes$ | async as incomes; else listLoading">
             <ng-container *ngIf="incomes.length > 0; else listEmpty">
               <div class="pnl-table-responsive">

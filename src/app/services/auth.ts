@@ -18,6 +18,7 @@ import {
   reauthenticateWithPopup,
   reauthenticateWithCredential,
   EmailAuthProvider,
+  sendPasswordResetEmail,
 } from '@angular/fire/auth';
 import { AngularFireDatabase } from '@angular/fire/compat/database';
 import { TranslateService } from '@ngx-translate/core';
@@ -167,6 +168,14 @@ export class AuthService {
       await this.handleInvite(userCredential.user);
       this.setLoginTime();
       return userCredential.user;
+    } catch (error: any) {
+      throw new Error(this.getFirebaseErrorMessage(error));
+    }
+  }
+
+  async sendPasswordReset(email: string): Promise<void> {
+    try {
+      await sendPasswordResetEmail(this.auth, email);
     } catch (error: any) {
       throw new Error(this.getFirebaseErrorMessage(error));
     }
@@ -520,6 +529,10 @@ export class AuthService {
           return this.translateService.instant('INVALID_CREDENTIAL');
         case 'auth/timeout':
           return this.translateService.instant('SIGN_IN_TIMEOUT');
+        case 'auth/too-many-requests':
+          return this.translateService.instant('TOO_MANY_REQUESTS');
+        case 'auth/missing-email':
+          return this.translateService.instant('INVALID_EMAIL');
         default:
           return this.translateService.instant('GENERIC', { code: error.code });
       }

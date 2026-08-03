@@ -497,6 +497,91 @@
   font-weight: 500;
 }
 
+/* ── Forgot password link (inside login form) ── */
+.lgn-forgot-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -0.5rem;
+}
+
+.lgn-forgot-link {
+  font-size: 0.76rem;
+  margin-left: 0;
+}
+
+/* ── Forgot password card ── */
+.lgn-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  align-self: flex-start;
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.lgn-back-btn:hover {
+  color: var(--text);
+}
+
+.lgn-forgot-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  text-align: center;
+}
+
+.lgn-forgot-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--accent-dim);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.lgn-forgot-card .lgn-pref-title {
+  text-align: center;
+}
+
+.lgn-forgot-card .lgn-pref-subtitle {
+  text-align: center;
+  margin: 0;
+}
+
+.lgn-forgot-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  text-align: center;
+}
+
+.lgn-forgot-success-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--success-dim, rgba(34, 197, 94, 0.12));
+  color: var(--success, #22c55e);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.lgn-forgot-success .lgn-submit-btn {
+  margin-top: 0.5rem;
+}
+
 /* Alert banners */
 .lgn-alert {
   font-size: 0.8rem;
