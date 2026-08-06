@@ -65,8 +65,9 @@
             <label class="pnl-float-label" for="incomeDesc">{{ 'DESCRIPTION' | translate }}</label>
           </div>
           <div class="pnl-form-footer">
-            <button type="submit" class="pnl-btn pnl-btn-primary" [disabled]="incomeForm.invalid">
-              <lucide-icon [img]="iconSave" [size]="15"></lucide-icon>
+            <button type="submit" class="pnl-btn pnl-btn-primary" [disabled]="incomeForm.invalid || isSubmittingIncome">
+              <span *ngIf="isSubmittingIncome" class="pnl-btn-spinner"></span>
+              <lucide-icon *ngIf="!isSubmittingIncome" [img]="iconSave" [size]="15"></lucide-icon>
               {{ 'SAVE_BUTTON_LABEL' | translate }}
             </button>
           </div>

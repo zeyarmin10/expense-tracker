@@ -150,7 +150,13 @@
             <!-- Visual button only — the whole card already links to /expense
                  when there's nothing to browse yet. -->
             <ng-template #expenseEmptyCta>
-              <span class="dash-card-empty-cta" *ngIf="canManageExpenseActions; else cardNoData">+ {{ 'ADD_EXPENSE' | translate }}</span>
+              <!-- Unlike budgets, adding an expense isn't restricted to
+                   owner/admin (see canManageSharedSpace / the space_data
+                   security rules — any member can write expenses), so this
+                   CTA shouldn't be gated either. Matches the always-visible
+                   "+ Add Expense" in the empty-state banner below and the
+                   ungated Add button on the Expense page itself. -->
+              <span class="dash-card-empty-cta">+ {{ 'ADD_EXPENSE' | translate }}</span>
             </ng-template>
           </div>
           <div class="dash-card-right">

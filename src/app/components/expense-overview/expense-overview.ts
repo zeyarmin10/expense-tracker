@@ -11,6 +11,8 @@ import {
   shareReplay,
   Subject,
   takeUntil,
+  tap,
+  catchError,
 } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Router } from '@angular/router';
@@ -82,7 +84,44 @@ export class ExpenseOverview implements OnInit, OnDestroy {
   readonly iconFlame = Flame;
 
   // --- Filtering and Search Properties ---
-  allExpenses$: Observable<IExpense[]> = this.expenseService.getExpenses();
+  // Tracked separately from filteredExpenses$'s emissions so the template can
+  // tell "still loading" apart from "genuinely zero expenses" — otherwise a
+  // slow or failed Firebase read (not uncommon given the app's documented
+  // Myanmar network/VPN issues) briefly or permanently shows a false
+  // "no expenses found" instead of a loading or error state.
+  isLoadingExpenses = true;
+  hasLoadError = false;
+  // Passed into getExpenses() below — it reports true/false into this on
+  // every fetch attempt, which is a more precise "did the last fetch
+  // actually fail" signal than we could get from the outside, since
+  // getExpenses() already swallows normal fetch failures into an empty
+  // array internally (so we'd otherwise see a plain [] and have no way to
+  // tell that apart from genuinely zero expenses).
+  private expensesLoadError$ = new Subject<boolean>();
+  // No shareReplay here: this is only ever consumed once, inside
+  // filteredExpenses$'s combineLatest below (which has its own shareReplay
+  // for the template's multiple async-pipe reads). Adding one here would
+  // give catchError's fallback a sticky "terminal" replay value — any error
+  // would permanently freeze this at the empty/error state for the rest of
+  // the component's lifetime, even across a later profile/space change that
+  // the underlying getExpenses() would otherwise have recovered from.
+  allExpenses$: Observable<IExpense[]> = this.expenseService.getExpenses(undefined, undefined, undefined, this.expensesLoadError$).pipe(
+    tap(() => {
+      this.isLoadingExpenses = false;
+      this.cdr.markForCheck();
+    }),
+    // Defensive fallback only, for failures upstream of getExpenses()'s own
+    // per-attempt error handling (e.g. resolving the active space) — the
+    // common "fetch failed" case is already reported more precisely via
+    // expensesLoadError$, subscribed in ngOnInit.
+    catchError((err) => {
+      console.error('Error loading expenses:', err);
+      this.isLoadingExpenses = false;
+      this.hasLoadError = true;
+      this.cdr.markForCheck();
+      return of([]);
+    }),
+  );
   filteredExpenses$: Observable<IExpense[]> = of([]);
   selectedDateFilter: string = 'currentMonth';
   dateFilterOptions: SelectOption[] = [];
@@ -126,6 +165,11 @@ export class ExpenseOverview implements OnInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
 
   ngOnInit(): void {
+    this.expensesLoadError$.pipe(takeUntil(this.destroy$)).subscribe((hasError) => {
+      this.hasLoadError = hasError;
+      this.cdr.markForCheck();
+    });
+
     this.translate.stream([
       'CURRENT_WEEK', 'LAST_30_DAYS', 'CURRENT_MONTH', 'LAST_MONTH',
       'LAST_SIX_MONTHS', 'CURRENT_YEAR', 'LAST_YEAR', 'CUSTOM_DATE',

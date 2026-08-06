@@ -50,8 +50,23 @@
       </div>
     </div>
 
+    <div class="exp-loading" *ngIf="isLoadingExpenses">
+      <div class="exp-spinner"></div>
+    </div>
+
+    <div class="table-section" *ngIf="!isLoadingExpenses && hasLoadError">
+      <div class="no-data">{{ "EXPENSE_LOAD_ERROR" | translate }}</div>
+    </div>
+
+    <!-- The async pipe here is what actually subscribes to allExpenses$ (via
+         this combineLatest) and triggers the tap()/catchError() that set
+         isLoadingExpenses/hasLoadError above in the first place — it must
+         stay unconditional. Gating it behind those same flags would deadlock:
+         combineLatest never emits until allExpenses$ already has, so
+         isLoadingExpenses could never flip to false. What to show once it
+         does emit is decided by the inner conditions below instead. -->
     <ng-container *ngIf="filteredExpenses$ | async as expenses">
-      <div *ngIf="expenses.length > 0; else noData">
+      <div *ngIf="!isLoadingExpenses && !hasLoadError && expenses.length > 0">
 
         <!-- Summary Cards -->
         <div class="summary-grid">
@@ -184,11 +199,9 @@
         </div>
 
       </div>
-      <ng-template #noData>
-        <div class="table-section">
-          <div class="no-data">{{ "NO_EXPENSES_FOUND" | translate }}</div>
-        </div>
-      </ng-template>
+      <div class="table-section" *ngIf="!isLoadingExpenses && !hasLoadError && expenses.length === 0">
+        <div class="no-data">{{ "NO_EXPENSES_FOUND" | translate }}</div>
+      </div>
     </ng-container>
   </div>
 </div>

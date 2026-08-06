@@ -165,6 +165,7 @@ export class Profit implements OnInit, OnDestroy {
 
   // ── Add/Edit Income FAB + Bottom-sheet Modal ──
   isAddModalOpen = false;
+  isSubmittingIncome = false;
   isDatePickerOpen = false;
   // Non-null while the modal is editing an existing record instead of
   // adding a new one — same pattern as expense.ts's editingExpense.
@@ -578,7 +579,7 @@ export class Profit implements OnInit, OnDestroy {
   // --- Income Management ---
 
   onSubmitIncome(): void {
-    if (!this.canManageProfitActions) {
+    if (!this.canManageProfitActions || this.isSubmittingIncome) {
       return;
     }
     const defaultCurrency = this.userProfile?.currency || 'MMK';
@@ -600,6 +601,7 @@ export class Profit implements OnInit, OnDestroy {
       : this.incomeService.addIncome(incomeData);
     const successKey = editingId ? 'INCOME_UPDATE_SUCCESS' : 'INCOME_SAVE_SUCCESS';
 
+    this.isSubmittingIncome = true;
     savePromise
       .then(() => {
         Toast.fire({ icon: 'success', title: this.translate.instant(successKey) });
@@ -612,6 +614,9 @@ export class Profit implements OnInit, OnDestroy {
           icon: 'error',
           title: error.message || this.translate.instant('INCOME_SAVE_ERROR')
         });
+      })
+      .finally(() => {
+        this.isSubmittingIncome = false;
       });
   }
 

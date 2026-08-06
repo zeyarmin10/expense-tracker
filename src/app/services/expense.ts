@@ -15,7 +15,7 @@ import {
   endAt,
   Query,
 } from '@angular/fire/database';
-import { Observable, from, of, firstValueFrom } from 'rxjs';
+import { Observable, Subject, from, of, firstValueFrom } from 'rxjs';
 import { map, switchMap, catchError, filter } from 'rxjs/operators';
 import { DataIExpense as IExpense } from '../core/models/data';
 import { AuthService } from './auth';
@@ -105,6 +105,13 @@ export class ExpenseService {
     startDate?: Date,
     endDate?: Date,
     profileOverride?: UserProfile,
+    // Optional, per-call side-channel: emits true right before a failed
+    // fetch falls back to an empty array below, false right before a
+    // successful one returns — lets a caller that cares (expense-overview)
+    // tell "fetch failed" apart from "genuinely zero expenses" without
+    // changing this method's return type/behavior for the other callers
+    // (dashboard, profit, cash-flow, budget, expense) that don't pass one.
+    loadErrorSignal?: Subject<boolean>,
   ): Observable<ServiceIExpense[]> {
     const profile$ = profileOverride
       ? of(profileOverride)
@@ -185,10 +192,12 @@ export class ExpenseService {
               } as ServiceIExpense;
             });
 
+            loadErrorSignal?.next(false);
             return expenses;
           }),
           catchError((error) => {
             console.error('Error fetching expenses:', error);
+            loadErrorSignal?.next(true);
             return of([]);
           })
             );

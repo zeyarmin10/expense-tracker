@@ -201,6 +201,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
 
   // ── Add Budget FAB + Bottom-sheet Modal ──
   isAddModalOpen = false;
+  isSubmittingBudget = false;
   isCategoryPickerOpen = false;
   categoryPickerSearch = '';
   isDatePickerOpen = false;
@@ -1114,12 +1115,13 @@ export class BudgetComponent implements OnInit, OnDestroy {
   }
 
   onSubmitBudget(): void {
-    if (!this.canManageBudgets) {
+    if (!this.canManageBudgets || this.isSubmittingBudget) {
       return;
     }
     const defaultCurrency = this.userProfile?.currency || 'MMK';
     if (this.budgetForm.valid) {
       const formValue = this.budgetForm.value;
+      this.isSubmittingBudget = true;
 
       this.budgetService
         .getBudgets()
@@ -1224,12 +1226,28 @@ export class BudgetComponent implements OnInit, OnDestroy {
             .catch((error) => {
               console.error('Error adding budget:', error);
               Toast.fire({ icon: 'error', title: this.translate.instant('BUDGET_SAVE_ERROR') });
+            })
+            .finally(() => {
+              this.isSubmittingBudget = false;
             });
+        }, (error) => {
+          // getBudgets() already swallows normal fetch failures into an
+          // empty array internally — this only fires for something upstream
+          // of that (e.g. resolving the active space). Still worth guarding:
+          // without it, isSubmittingBudget would stay stuck true and the
+          // Save button permanently disabled.
+          console.error('Error loading budgets before save:', error);
+          this.isSubmittingBudget = false;
+          Toast.fire({ icon: 'error', title: this.translate.instant('BUDGET_SAVE_ERROR') });
         });
     }
   }
 
   private showBudgetErrorModal(errorType: string): void {
+    // Every call site is a validation bail-out inside onSubmitBudget(), so
+    // this is the one place that needs to clear the in-flight flag for all
+    // of them.
+    this.isSubmittingBudget = false;
     let title = '';
     let message = '';
 

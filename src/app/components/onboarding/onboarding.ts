@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, HostListener, inject, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -12,6 +12,7 @@ import { SpaceContextService } from '../../services/space-context.service';
 import { ImageUploadService } from '../../services/image-upload.service';
 import { APP_LANGUAGE_CODES } from '../../core/constants/app.constants';
 import { UserSpaceSummary } from '../../services/space.model';
+import { ModalStateService } from '../../services/modal-state.service';
 import Swal from 'sweetalert2';
 import { LucideAngularModule, CircleCheck, Link, EllipsisVertical, Pencil, Trash2, User, Users, X } from 'lucide-angular';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
@@ -23,7 +24,7 @@ import { CurrentSpaceTitleComponent } from '../common/current-space-title/curren
   templateUrl: './onboarding.html',
   styleUrls: ['./onboarding.css'],
 })
-export class OnboardingComponent implements OnInit {
+export class OnboardingComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private userDataService = inject(UserDataService);
   private dataManager = inject(DataManagerService);
@@ -32,6 +33,7 @@ export class OnboardingComponent implements OnInit {
   private invitationService = inject(InvitationService);
   private spaceContextService = inject(SpaceContextService);
   private imageUploadService = inject(ImageUploadService);
+  private modalStateService = inject(ModalStateService);
 
   readonly iconUser = User;
   readonly iconUsers = Users;
@@ -391,6 +393,12 @@ export class OnboardingComponent implements OnInit {
     this.createSpaceName = '';
     this.createSpaceError = null;
     this.clearCreateSpaceImage();
+    // Push a history entry so the Android hardware back button — which
+    // otherwise exits the app entirely while on /onboarding, see app.ts's
+    // initBackButton — closes this modal instead, via onPopState() below.
+    // Mirrors the pattern already used by category-modal.ts.
+    history.pushState(null, '');
+    this.modalStateService.modalOpened();
     this.isCreateSpaceModalOpen = true;
     setTimeout(() => {
       (document.getElementById('ob-create-space-name') as HTMLInputElement | null)?.focus();
@@ -398,10 +406,38 @@ export class OnboardingComponent implements OnInit {
   }
 
   closeCreateSpaceModal(): void {
-    if (this.isCreatingSpace) return;
+    if (this.isCreatingSpace || !this.isCreateSpaceModalOpen) return;
+    // Consume the history entry pushed in openCreateSpaceModal(); the
+    // resulting popstate event performs the actual close via onPopState().
+    history.back();
+  }
+
+  @HostListener('window:popstate')
+  onPopState(): void {
+    if (!this.isCreateSpaceModalOpen) return;
+    this.resetCreateSpaceModalState();
+  }
+
+  // history.back() (used by closeCreateSpaceModal()) is asynchronous — its
+  // popstate can land either side of a router.navigate() called right after
+  // it, which is exactly what submitCreateSpace() does on success. Racing
+  // those two history operations risks the browser applying the pending
+  // "back" after the router has already pushed '/dashboard', yanking the
+  // URL back to onboarding right after arrival. When we're navigating away
+  // regardless, skip the history dance and just reset local state directly;
+  // the still-pushed history entry is harmlessly left behind (same URL, no
+  // visible effect) rather than raced.
+  private resetCreateSpaceModalState(): void {
     this.isCreateSpaceModalOpen = false;
     this.createSpaceError = null;
     this.clearCreateSpaceImage();
+    this.modalStateService.modalClosed();
+  }
+
+  ngOnDestroy(): void {
+    if (this.isCreateSpaceModalOpen) {
+      this.modalStateService.modalClosed();
+    }
   }
 
   private clearCreateSpaceImage(): void {
@@ -456,7 +492,10 @@ export class OnboardingComponent implements OnInit {
       const lang = this.translate.currentLang || 'my';
       await this.dataManager.createGroup(name, lang, imageUrl);
       this.isCreatingSpace = false;
-      this.closeCreateSpaceModal();
+      // Not closeCreateSpaceModal(): we're navigating away immediately
+      // below, so skip its history.back() — see resetCreateSpaceModalState()
+      // for why racing that against router.navigate() here is unsafe.
+      this.resetCreateSpaceModalState();
       this.router.navigate(['/dashboard']);
     } catch (error) {
       console.error('Error creating group:', error);
@@ -491,8 +530,15 @@ export class OnboardingComponent implements OnInit {
         });
         this.router.navigate(['/dashboard'], { replaceUrl: true });
       } else {
-        await this.authService.logout();
-        this.router.navigate(['/login'], { queryParams: { error: 'invite_used' } });
+        // Invalid/used/expired code — this field is typed manually (unlike
+        // the one-shot email-invite-link flow this logic was adapted from),
+        // so a typo should let the user see the mistake and retry, not end
+        // their session.
+        Swal.fire({
+          icon: 'error',
+          title: this.translate.instant('ERROR_TITLE'),
+          text: this.translate.instant('ONBOARDING_INVALID_INVITE_CODE'),
+        });
       }
     } catch (error) {
       console.error('Error handling invitation:', error);

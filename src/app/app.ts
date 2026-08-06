@@ -25,6 +25,7 @@ import { Keyboard } from '@capacitor/keyboard';
 import Swal from 'sweetalert2';
 import { SpaceContextService } from './services/space-context.service';
 import { SpaceSwitchLoadingService } from './services/space-switch-loading.service';
+import { ModalStateService } from './services/modal-state.service';
 import { UserSpaceSummary } from './services/space.model';
 import { getActiveGroupId, UserProfile } from './services/user-data';
 import { CurrentSpaceTitleComponent } from './components/common/current-space-title/current-space-title.component';
@@ -109,6 +110,7 @@ export class App implements OnInit, AfterViewInit {
   private networkService = inject(NetworkService);
   private spaceContextService = inject(SpaceContextService);
   private spaceSwitchLoadingService = inject(SpaceSwitchLoadingService);
+  private modalStateService = inject(ModalStateService);
   private themeService = inject(ThemeService);
   private notificationService = inject(NotificationService);
   private appUpdateService = inject(AppUpdateService);
@@ -1028,8 +1030,14 @@ export class App implements OnInit, AfterViewInit {
         return;
       }
 
-      // Dashboard / Login မှာဆိုရင် app ထွက်
-      if (url === '/dashboard' || url === '/login' || url === '/onboarding') {
+      // Dashboard / Login / Onboarding မှာဆိုရင် app ထွက် — except when an
+      // in-page modal (e.g. onboarding's create-space sheet) has pushed its
+      // own history entry; then fall through to the generic branch below so
+      // the modal closes instead of exiting the whole app.
+      if (
+        (url === '/dashboard' || url === '/login' || url === '/onboarding') &&
+        !this.modalStateService.isModalOpen
+      ) {
         CapacitorApp.exitApp();
         return;
       }

@@ -167,8 +167,9 @@
           </div>
 
           <div class="bgt-form-footer">
-            <button type="submit" class="bgt-btn bgt-btn-primary" [disabled]="budgetForm.invalid">
-              <lucide-icon [img]="iconSave" [size]="16"></lucide-icon>
+            <button type="submit" class="bgt-btn bgt-btn-primary" [disabled]="budgetForm.invalid || isSubmittingBudget">
+              <span *ngIf="isSubmittingBudget" class="bgt-btn-spinner"></span>
+              <lucide-icon *ngIf="!isSubmittingBudget" [img]="iconSave" [size]="16"></lucide-icon>
               {{ "SAVE_BUTTON_LABEL" | translate }}
             </button>
           </div>
