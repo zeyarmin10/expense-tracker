@@ -35,3 +35,16 @@ export function passwordComplexityValidator(control: AbstractControl): Validatio
 
   return Object.keys(errors).length ? errors : null;
 }
+
+/**
+ * Group-level validator for a "new password" + "confirm password" pair.
+ * Expects controls named exactly 'newPassword' and 'confirmPassword' on the
+ * FormGroup it's attached to. Sets { passwordMismatch: true } on the group
+ * (not on either control) when they differ and both have a value.
+ */
+export function passwordsMatchValidator(group: AbstractControl): ValidationErrors | null {
+  const newPassword = group.get('newPassword')?.value;
+  const confirmPassword = group.get('confirmPassword')?.value;
+  if (!newPassword || !confirmPassword) return null;
+  return newPassword === confirmPassword ? null : { passwordMismatch: true };
+}

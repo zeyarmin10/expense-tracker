@@ -176,6 +176,9 @@
                 />
               </div>
             </div>
+            <div class="exp-field-error" *ngIf="newExpenseForm.controls['price'].invalid && newExpenseForm.controls['price'].touched">
+              {{ 'PRICE_REQUIRED' | translate }}
+            </div>
 
             <!-- Category -->
             <div class="exp-float-field exp-float-group">
@@ -271,6 +274,9 @@
                   [placeholder]="'QUANTITY_LABEL' | translate"
                   [class.is-invalid]="newExpenseForm.controls['quantity'].invalid && newExpenseForm.controls['quantity'].touched"
                 />
+                <div class="exp-field-error" *ngIf="newExpenseForm.controls['quantity'].invalid && newExpenseForm.controls['quantity'].touched">
+                  {{ 'QUANTITY_REQUIRED' | translate }}
+                </div>
               </div>
               <!-- Unit -->
               <div class="exp-float-field">
@@ -303,6 +309,9 @@
                   [class.is-invalid]="newExpenseForm.controls['price'].invalid && newExpenseForm.controls['price'].touched"
                 />
               </div>
+            </div>
+            <div class="exp-field-error" *ngIf="newExpenseForm.controls['price'].invalid && newExpenseForm.controls['price'].touched">
+              {{ 'PRICE_REQUIRED' | translate }}
             </div>
 
             <!-- Live total (quantity × price) -->

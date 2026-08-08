@@ -2,7 +2,7 @@ import { Component, OnInit, inject, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { LucideAngularModule, UserPlus, Mail, Inbox, Trash2, UserX, User, Send, Users, Crown } from 'lucide-angular';
+import { LucideAngularModule, UserPlus, Mail, Inbox, Trash2, UserX, User, Send, Users, Crown, Copy } from 'lucide-angular';
 import { IUserProfile, IInvitation } from '../../core/models/data';
 import { Observable, of, firstValueFrom, combineLatest } from 'rxjs';
 import { switchMap, shareReplay, map } from 'rxjs/operators';
@@ -55,6 +55,7 @@ export class MemberManagementComponent implements OnInit {
   readonly iconInbox = Inbox;
   readonly iconTrash2 = Trash2;
   readonly iconCrown = Crown;
+  readonly iconCopy = Copy;
 
   @ViewChild(LightboxComponent) private lightbox?: LightboxComponent;
 
@@ -220,6 +221,23 @@ export class MemberManagementComponent implements OnInit {
       console.error('User profile or group ID not found.');
       Toast.fire({ icon: 'error', title: this.translate.instant('TOAST_ERROR_USER_INFO') });
       this.isSending = false;
+    }
+  }
+
+  // Email is the only delivery path for an invite code today — if it's
+  // slow, spam-filtered, or lost, the admin previously had no way to see
+  // the code again short of revoking and resending blind. Surfacing it
+  // here (invite.key already carries the code — see
+  // DataManagerService.getPendingInvitations()'s keyField: 'key') gives a
+  // fallback: copy it and share it directly.
+  async copyInviteCode(code: string | undefined): Promise<void> {
+    if (!code) return;
+    try {
+      await navigator.clipboard.writeText(code);
+      Toast.fire({ icon: 'success', title: this.translate.instant('INVITE_CODE_COPIED') });
+    } catch (error) {
+      console.error('Failed to copy invite code:', error);
+      Toast.fire({ icon: 'error', title: this.translate.instant('INVITE_CODE_COPY_FAILED') });
     }
   }
 

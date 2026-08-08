@@ -1222,6 +1222,11 @@ export class BudgetComponent implements OnInit, OnDestroy {
               this.resetForm();
               this.refreshBudgets$.next();
               this.closeAddModal();
+              // Otherwise a budget saved outside the currently active date
+              // filter (e.g. viewing "Last Month" while the form still
+              // defaults to today) succeeds silently and then just doesn't
+              // show up in the list — reading as a failed save.
+              this.ensureDateFilterCovers(budgetData.period!, budgetData.type);
             })
             .catch((error) => {
               console.error('Error adding budget:', error);
@@ -1379,6 +1384,32 @@ export class BudgetComponent implements OnInit, OnDestroy {
 
     const lastDayOfMonth = new Date(year, monthIndex, 0);
     this.endDate = this.datePipe.transform(lastDayOfMonth, 'yyyy-MM-dd') || '';
+  }
+
+  // Widens the active view to the smallest range that actually shows a
+  // budget just saved, if the current filter doesn't already cover its
+  // period — see the call site in onSubmitBudget()'s success handler.
+  private ensureDateFilterCovers(period: string, type: 'monthly' | 'yearly' | 'weekly'): void {
+    const current = this.dateFilter$.getValue();
+    const periodDate = new Date(period);
+    const rangeStartCurrent = new Date(current.start);
+    const rangeEndCurrent = new Date(current.end);
+
+    if (periodDate >= rangeStartCurrent && periodDate <= rangeEndCurrent) {
+      return; // Already visible under the active filter.
+    }
+
+    const rangeStart = type === 'yearly'
+      ? new Date(periodDate.getFullYear(), 0, 1)
+      : new Date(periodDate.getFullYear(), periodDate.getMonth(), 1);
+    const rangeEnd = type === 'yearly'
+      ? new Date(periodDate.getFullYear(), 11, 31)
+      : new Date(periodDate.getFullYear(), periodDate.getMonth() + 1, 0);
+
+    this.startDate = this.datePipe.transform(rangeStart, 'yyyy-MM-dd') || '';
+    this.endDate = this.datePipe.transform(rangeEnd, 'yyyy-MM-dd') || '';
+    this.selectedDateFilter = 'custom';
+    this.dateFilter$.next({ start: this.startDate, end: this.endDate });
   }
 
   setDateFilter(filter: string): void {

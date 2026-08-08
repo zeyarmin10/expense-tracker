@@ -116,8 +116,13 @@
         </span>
       </div>
 
+      <!-- Loading state -->
+      <div class="exp-loading" *ngIf="isLoadingCategories">
+        <div class="exp-spinner"></div>
+      </div>
+
       <!-- Empty state -->
-      <div *ngIf="(categories$ | async)?.length === 0" class="cat-empty">
+      <div *ngIf="!isLoadingCategories && (categories$ | async)?.length === 0" class="cat-empty">
         {{ "NO_CATEGORIES_FOUND" | translate }}
       </div>
 

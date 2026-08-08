@@ -86,9 +86,14 @@
             </div>
             <div class="mm-item-info">
               <span class="mm-item-name">{{ invite.email }}</span>
-              <span class="mm-item-sub mm-sub-warning">{{ 'PENDING' | translate }}</span>
+              <span class="mm-item-sub mm-sub-warning">
+                {{ 'PENDING' | translate }} · <span class="mm-invite-code">{{ invite.key }}</span>
+              </span>
             </div>
           </div>
+          <button class="mm-action-btn mm-action-accent" (click)="copyInviteCode(invite.key)" title="{{ 'COPY_INVITE_CODE' | translate }}">
+            <lucide-icon [img]="iconCopy" [size]="15"></lucide-icon>
+          </button>
           <button class="mm-action-btn mm-action-warn" (click)="confirmRevokeInvite(invite.key)" title="{{ 'REVOKE_BUTTON' | translate }}">
             <lucide-icon [img]="iconUserX" [size]="15"></lucide-icon>
           </button>

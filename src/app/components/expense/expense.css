@@ -418,6 +418,13 @@ body.exp-add-modal-open {
   /* margin-bottom: 0.5rem; */
 }
 
+.exp-field-error {
+  font-size: 0.72rem;
+  color: var(--danger);
+  padding-left: 0.2rem;
+  font-weight: 500;
+}
+
 .exp-amount-hero-currency {
   font-size: 1rem;
   font-weight: 700;

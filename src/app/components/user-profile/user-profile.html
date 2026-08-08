@@ -251,6 +251,28 @@
 
       </form>
 
+      <!-- ── Security (email/password accounts only — Google accounts
+           manage their password with Google, not here) ── -->
+      <div class="prof-section" *ngIf="isPasswordAccount">
+        <div class="prof-section-header">
+          <span class="prof-section-pill prof-section-pill-accent">
+            <lucide-icon [img]="iconKeyRound" [size]="14"></lucide-icon>
+          </span>
+          <span class="prof-section-label">{{ 'SECURITY_SECTION_LABEL' | translate }}</span>
+        </div>
+        <div class="prof-danger-row">
+          <div class="prof-danger-info">
+            <p class="prof-danger-title">{{ 'CHANGE_PASSWORD_BUTTON' | translate }}</p>
+            <p class="prof-danger-desc">{{ 'CHANGE_PASSWORD_INFO' | translate }}</p>
+          </div>
+          <button type="button" class="prof-change-password-btn" (click)="openChangePasswordModal()" [disabled]="isChangingPassword">
+            <lucide-icon [img]="iconKeyRound" [size]="15" *ngIf="!isChangingPassword"></lucide-icon>
+            <span *ngIf="!isChangingPassword">{{ 'CHANGE_PASSWORD_BUTTON' | translate }}</span>
+            <span *ngIf="isChangingPassword">{{ 'CHANGING_PASSWORD_LABEL' | translate }}…</span>
+          </button>
+        </div>
+      </div>
+
       <!-- ── Danger Zone ── -->
       <div class="prof-section prof-danger-section">
         <div class="prof-section-header">
@@ -280,6 +302,94 @@
 </div>
 
 <app-custom-budget-period-modal (periodSaved)="onPeriodSaved($event)"></app-custom-budget-period-modal>
+
+<!-- ── Change Password (bottom-sheet modal — same look as Add
+     Expense/Budget/Income's *-add-modal-*) ── -->
+<div class="prof-pw-modal-backdrop" [class.open]="isChangePasswordModalOpen" (click)="closeChangePasswordModal()"></div>
+<div class="prof-pw-modal-sheet" [class.open]="isChangePasswordModalOpen">
+  <div class="prof-pw-modal-header">
+    <span class="prof-pw-modal-header-title">{{ 'CHANGE_PASSWORD_BUTTON' | translate }}</span>
+    <button type="button" class="prof-pw-modal-close" (click)="closeChangePasswordModal()" [title]="'CANCEL_BUTTON_LABEL' | translate">
+      <lucide-icon [img]="iconX" [size]="18"></lucide-icon>
+    </button>
+  </div>
+
+  <div class="prof-pw-modal-body">
+    <form [formGroup]="changePasswordForm" (ngSubmit)="submitChangePassword()" class="prof-pw-form" autocomplete="off">
+      <!-- Current password -->
+      <div class="prof-float-field">
+        <input [type]="showCurrentPassword ? 'text' : 'password'" id="pw-current" class="prof-input"
+          formControlName="currentPassword" placeholder=" " autocomplete="current-password"
+          [class.is-invalid]="changePasswordForm.controls['currentPassword'].invalid && changePasswordForm.controls['currentPassword'].touched" />
+        <label class="prof-float-label" for="pw-current">{{ 'CHANGE_PASSWORD_CURRENT_PLACEHOLDER' | translate }}</label>
+        <button type="button" class="prof-eye-btn" (click)="toggleCurrentPasswordVisibility()" tabindex="-1">
+          <lucide-icon [img]="showCurrentPassword ? iconEyeOff : iconEye" [size]="15"></lucide-icon>
+        </button>
+      </div>
+      <div class="prof-field-error" *ngIf="changePasswordForm.controls['currentPassword'].invalid && changePasswordForm.controls['currentPassword'].touched">
+        {{ 'ERROR_PASSWORD_REQUIRED' | translate }}
+      </div>
+
+      <!-- New password -->
+      <div class="prof-float-field">
+        <input [type]="showNewPassword ? 'text' : 'password'" id="pw-new" class="prof-input"
+          formControlName="newPassword" placeholder=" " autocomplete="new-password"
+          [class.is-invalid]="changePasswordForm.controls['newPassword'].invalid && changePasswordForm.controls['newPassword'].touched" />
+        <label class="prof-float-label" for="pw-new">{{ 'CHANGE_PASSWORD_NEW_PLACEHOLDER' | translate }}</label>
+        <button type="button" class="prof-eye-btn" (click)="toggleNewPasswordVisibility()" tabindex="-1">
+          <lucide-icon [img]="showNewPassword ? iconEyeOff : iconEye" [size]="15"></lucide-icon>
+        </button>
+      </div>
+
+      <!-- Live password requirements checklist -->
+      <div class="prof-pw-requirements">
+        <div class="prof-pw-req" [class.met]="pwHasMinLength">
+          <lucide-icon [img]="pwHasMinLength ? iconCheckCircle : iconCircle" [size]="13"></lucide-icon>
+          <span>{{ 'PW_REQ_MIN_LENGTH' | translate }}</span>
+        </div>
+        <div class="prof-pw-req" [class.met]="pwHasUppercase">
+          <lucide-icon [img]="pwHasUppercase ? iconCheckCircle : iconCircle" [size]="13"></lucide-icon>
+          <span>{{ 'PW_REQ_UPPERCASE' | translate }}</span>
+        </div>
+        <div class="prof-pw-req" [class.met]="pwHasLowercase">
+          <lucide-icon [img]="pwHasLowercase ? iconCheckCircle : iconCircle" [size]="13"></lucide-icon>
+          <span>{{ 'PW_REQ_LOWERCASE' | translate }}</span>
+        </div>
+        <div class="prof-pw-req" [class.met]="pwHasNumber">
+          <lucide-icon [img]="pwHasNumber ? iconCheckCircle : iconCircle" [size]="13"></lucide-icon>
+          <span>{{ 'PW_REQ_NUMBER' | translate }}</span>
+        </div>
+        <div class="prof-pw-req" [class.met]="pwHasSpecialChar">
+          <lucide-icon [img]="pwHasSpecialChar ? iconCheckCircle : iconCircle" [size]="13"></lucide-icon>
+          <span>{{ 'PW_REQ_SPECIAL' | translate }}</span>
+        </div>
+      </div>
+
+      <!-- Confirm new password -->
+      <div class="prof-float-field">
+        <input [type]="showConfirmPassword ? 'text' : 'password'" id="pw-confirm" class="prof-input"
+          formControlName="confirmPassword" placeholder=" " autocomplete="new-password"
+          [class.is-invalid]="changePasswordForm.controls['confirmPassword'].touched && (changePasswordForm.controls['confirmPassword'].invalid || changePasswordForm.errors?.['passwordMismatch'])" />
+        <label class="prof-float-label" for="pw-confirm">{{ 'CHANGE_PASSWORD_CONFIRM_PLACEHOLDER' | translate }}</label>
+        <button type="button" class="prof-eye-btn" (click)="toggleConfirmPasswordVisibility()" tabindex="-1">
+          <lucide-icon [img]="showConfirmPassword ? iconEyeOff : iconEye" [size]="15"></lucide-icon>
+        </button>
+      </div>
+      <div class="prof-field-error" *ngIf="changePasswordForm.controls['confirmPassword'].touched && changePasswordForm.errors?.['passwordMismatch']">
+        {{ 'ERROR_PASSWORD_MISMATCH' | translate }}
+      </div>
+
+      <div class="prof-pw-form-footer">
+        <button type="submit" class="prof-pw-btn-primary" [disabled]="changePasswordForm.invalid || isChangingPassword">
+          <span *ngIf="isChangingPassword" class="prof-pw-btn-spinner"></span>
+          <lucide-icon *ngIf="!isChangingPassword" [img]="iconKeyRound" [size]="16"></lucide-icon>
+          <span *ngIf="!isChangingPassword">{{ 'CHANGE_PASSWORD_BUTTON' | translate }}</span>
+          <span *ngIf="isChangingPassword">{{ 'CHANGING_PASSWORD_LABEL' | translate }}…</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
 
 <!-- 1:1 crop dialog for profile photo uploads (camera + gallery) -->
 <app-image-cropper

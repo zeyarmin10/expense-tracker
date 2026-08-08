@@ -153,10 +153,13 @@
               <input type="text" inputmode="decimal" id="amount" class="bgt-input bgt-input-joined bgt-amount-hero-input"
                 [value]="amountDisplayValue"
                 (input)="onAmountInput($event)"
-                (focus)="amountDisplayValue = (budgetForm.get('amount')?.value > 0 ? formatWithCommas(budgetForm.get('amount')?.value) : '')"
+                (focus)="amountDisplayValue = (budgetForm.get('amount')?.value > 0 ? formatWithCommas(budgetForm.get('amount')?.value) : ''); budgetForm.get('amount')?.markAsTouched()"
                 placeholder="10,000"
                 [class.is-invalid]="budgetForm.controls['amount'].invalid && budgetForm.controls['amount'].touched" />
             </div>
+          </div>
+          <div class="bgt-field-error" *ngIf="budgetForm.controls['amount'].invalid && budgetForm.controls['amount'].touched">
+            {{ 'AMOUNT_REQUIRED' | translate }}
           </div>
 
           <div class="bgt-float-field">

@@ -983,6 +983,14 @@ app-date-input .di-trigger {
   border-color: var(--accent);
 }
 
+.bgt-field-error {
+  font-size: 0.72rem;
+  color: var(--danger);
+  padding-left: 0.2rem;
+  font-weight: 500;
+  margin-top: -0.5rem;
+}
+
 .bgt-btn-spinner {
   width: 16px;
   height: 16px;

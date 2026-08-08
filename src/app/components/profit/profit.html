@@ -54,10 +54,13 @@
                 class="pnl-input pnl-input-field pnl-input-joined pnl-amount-hero-input"
                 [value]="incomeAmountDisplay"
                 (input)="onIncomeAmountInput($event)"
-                (focus)="incomeAmountDisplay = (incomeForm.get('amount')?.value > 0 ? formatWithCommas(incomeForm.get('amount')?.value) : '')"
+                (focus)="incomeAmountDisplay = (incomeForm.get('amount')?.value > 0 ? formatWithCommas(incomeForm.get('amount')?.value) : ''); incomeForm.get('amount')?.markAsTouched()"
                 placeholder="10,000"
                 [class.is-invalid]="incomeForm.controls['amount'].invalid && incomeForm.controls['amount'].touched" />
             </div>
+          </div>
+          <div class="pnl-field-error" *ngIf="incomeForm.controls['amount'].invalid && incomeForm.controls['amount'].touched">
+            {{ 'AMOUNT_REQUIRED' | translate }}
           </div>
           <div class="pnl-float-field">
             <textarea id="incomeDesc" formControlName="description" class="pnl-input pnl-input-field pnl-textarea"

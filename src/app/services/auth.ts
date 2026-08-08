@@ -19,6 +19,7 @@ import {
   reauthenticateWithCredential,
   EmailAuthProvider,
   sendPasswordResetEmail,
+  updatePassword,
 } from '@angular/fire/auth';
 import { AngularFireDatabase } from '@angular/fire/compat/database';
 import { TranslateService } from '@ngx-translate/core';
@@ -176,6 +177,22 @@ export class AuthService {
   async sendPasswordReset(email: string): Promise<void> {
     try {
       await sendPasswordResetEmail(this.auth, email);
+    } catch (error: any) {
+      throw new Error(this.getFirebaseErrorMessage(error));
+    }
+  }
+
+  // updatePassword() requires a recent sign-in — re-authenticate with the
+  // current password first, same pattern deleteAccount() uses for
+  // password-provider accounts.
+  async changePassword(currentPassword: string, newPassword: string): Promise<void> {
+    const currentUser = this.auth.currentUser;
+    if (!currentUser?.email) throw new Error('No authenticated user');
+
+    try {
+      const credential = EmailAuthProvider.credential(currentUser.email, currentPassword);
+      await reauthenticateWithCredential(currentUser, credential);
+      await updatePassword(currentUser, newPassword);
     } catch (error: any) {
       throw new Error(this.getFirebaseErrorMessage(error));
     }

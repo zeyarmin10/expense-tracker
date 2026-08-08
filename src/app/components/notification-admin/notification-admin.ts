@@ -6,6 +6,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Bell, LucideAngularModule, Send, Shield } from 'lucide-angular';
 import { NotificationService } from '../../services/notification.service';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-notification-admin',
@@ -37,6 +38,23 @@ export class NotificationAdminComponent {
       this.resultMessage = '';
       return;
     }
+
+    // A push notification can't be recalled once sent, and leaving
+    // targetUid blank broadcasts to every user — worth a confirm step,
+    // called out explicitly, before it fires.
+    const isBroadcast = !this.targetUid.trim();
+    const confirmResult = await Swal.fire({
+      icon: 'warning',
+      title: this.translate.instant('NOTI_ADMIN_CONFIRM_TITLE'),
+      text: isBroadcast
+        ? this.translate.instant('NOTI_ADMIN_CONFIRM_BROADCAST_TEXT')
+        : this.translate.instant('NOTI_ADMIN_CONFIRM_TARGETED_TEXT'),
+      showCancelButton: true,
+      confirmButtonText: this.translate.instant('NOTI_ADMIN_CONFIRM_SEND_BUTTON'),
+      cancelButtonText: this.translate.instant('CANCEL_BUTTON'),
+      reverseButtons: true,
+    });
+    if (!confirmResult.isConfirmed) return;
 
     this.isSending = true;
     this.errorMessage = '';

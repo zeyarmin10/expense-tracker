@@ -215,8 +215,15 @@ export class CategoryModalComponent implements OnInit, OnDestroy {
     try {
       const categories = await firstValueFrom(this.categoryService.getCategories());
       this.categories$.next(categories);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading categories:', error);
+      // Previously silent — the modal would just show an empty list with no
+      // explanation, indistinguishable from "you genuinely have no
+      // categories yet".
+      this.showErrorModal(
+        this.translateService.instant('ERROR_TITLE'),
+        error?.message || this.translateService.instant('DATA_LOAD_ERROR'),
+      );
     }
   }
 

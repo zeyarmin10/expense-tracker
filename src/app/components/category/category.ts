@@ -67,6 +67,11 @@ export class Category implements OnInit, OnDestroy {
 
   // ── Add Category FAB + Bottom-sheet Modal ──
   isAddModalOpen = false;
+  // Stays true only until the first loadCategories() call settles — since
+  // _categoriesSubject starts out empty, the template would otherwise flash
+  // "no categories found" on every page load before the real (usually
+  // non-empty, thanks to seeded defaults) list arrives.
+  isLoadingCategories = true;
 
   private _categoriesSubject: BehaviorSubject<ServiceICategory[]> =
     new BehaviorSubject<ServiceICategory[]>([]);
@@ -308,6 +313,9 @@ export class Category implements OnInit, OnDestroy {
         this.translateService.instant('DATA_LOAD_ERROR')
       );
       console.error('Error loading categories:', error);
+    } finally {
+      // Only meaningful the first time through — see isLoadingCategories.
+      this.isLoadingCategories = false;
     }
   }
 

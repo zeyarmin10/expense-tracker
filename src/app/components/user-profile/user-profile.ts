@@ -11,7 +11,7 @@ import { switchMap, tap, catchError, distinctUntilChanged, takeUntil, take } fro
 import { AuthService } from '../../services/auth';
 import { getActiveGroupId, getCurrentSpaceRole, UserDataService, UserProfile } from '../../services/user-data';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { LucideAngularModule, Save, Trash2, Plus, ChevronDown, ChevronUp, X, Bell, BellOff, Clock, Camera as LucideCamera, Images, Moon, Monitor, Sun, CalendarRange, Pencil, PencilLine, Settings2, ShieldAlert } from 'lucide-angular';
+import { LucideAngularModule, Save, Trash2, Plus, ChevronDown, ChevronUp, X, Bell, BellOff, Clock, Camera as LucideCamera, Images, Moon, Monitor, Sun, CalendarRange, Pencil, PencilLine, Settings2, ShieldAlert, KeyRound, Eye, EyeOff, CircleCheckBig, Circle } from 'lucide-angular';
 import { updateProfile } from '@angular/fire/auth';
 import { HttpClient } from '@angular/common/http';
 import { Camera } from '@capacitor/camera';
@@ -33,6 +33,7 @@ import { UserAvatarComponent } from '../common/user-avatar/user-avatar.component
 import { ImageCropperComponent } from '../common/image-cropper/image-cropper.component';
 import { ImageUploadService } from '../../services/image-upload.service';
 import { CustomSelectComponent, SelectOption } from '../common/custom-select/custom-select.component';
+import { passwordComplexityValidator, passwordsMatchValidator } from '../../utils/form-validators';
 
 export const AVAILABLE_BUDGET_PERIODS = [
   { code: null, nameKey: 'BUDGET_PERIOD.NONE' },
@@ -203,11 +204,26 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   readonly iconCalendarRange = CalendarRange;
   readonly iconSettings2 = Settings2;
   readonly iconShieldAlert = ShieldAlert;
+  readonly iconKeyRound = KeyRound;
+  readonly iconEye = Eye;
+  readonly iconEyeOff = EyeOff;
+  readonly iconCheckCircle = CircleCheckBig;
+  readonly iconCircle = Circle;
+  readonly iconX = X;
   imageLoadError: boolean = false;
   isEditingName: boolean = false;
   isFormReady: boolean = false;
   isDeletingAccount: boolean = false;
   isUploadingAvatar = false;
+  // Only email/password accounts have a password to change — Google
+  // accounts hide the row entirely below.
+  isPasswordAccount = false;
+  isChangingPassword = false;
+  isChangePasswordModalOpen = false;
+  showCurrentPassword = false;
+  showNewPassword = false;
+  showConfirmPassword = false;
+  changePasswordForm: FormGroup;
 
   constructor() {
     this.userProfileForm = this.fb.group({
@@ -217,6 +233,12 @@ export class UserProfileComponent implements OnInit, OnDestroy {
       budgetStartDate: [{ value: null, disabled: true }],
       budgetEndDate: [{ value: null, disabled: true }],
     });
+
+    this.changePasswordForm = this.fb.group({
+      currentPassword: ['', Validators.required],
+      newPassword: ['', [Validators.required, Validators.minLength(8), Validators.maxLength(4096), passwordComplexityValidator]],
+      confirmPassword: ['', Validators.required],
+    }, { validators: passwordsMatchValidator });
 
     const getRole = (profile: UserProfile | null | undefined): string => {
       if (!profile) {
@@ -360,6 +382,10 @@ export class UserProfileComponent implements OnInit, OnDestroy {
       })
     );
 
+    this.authService.currentUser$.pipe(takeUntil(this.destroy$)).subscribe((user) => {
+      this.isPasswordAccount = user?.providerData[0]?.providerId === 'password';
+    });
+
     // U2: takeUntil to prevent leak on singleton TranslateService
     this.translate.onLangChange.pipe(takeUntil(this.destroy$)).subscribe(() => {
       this.translateCurrencyNames();
@@ -414,6 +440,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
     this.destroy$.next();
     this.destroy$.complete();
     this.themeSubscription.unsubscribe();
+    document.body.classList.remove('prof-pw-modal-open');
   }
 
   trackByPeriodId(index: number, period: CustomBudgetPeriod): string {
@@ -1126,6 +1153,84 @@ export class UserProfileComponent implements OnInit, OnDestroy {
 
   toggleCustomBudgetList(): void {
     this.isCustomBudgetListCollapsed = !this.isCustomBudgetListCollapsed;
+  }
+
+  // ── Change Password (bottom-sheet modal — same pattern as Add
+  //    Expense/Budget/Income's exp-add-modal-*/bgt-add-modal-*) ──
+  openChangePasswordModal(): void {
+    if (!this.isPasswordAccount || this.isChangingPassword) return;
+    this.changePasswordForm.reset();
+    this.showCurrentPassword = false;
+    this.showNewPassword = false;
+    this.showConfirmPassword = false;
+    this.isChangePasswordModalOpen = true;
+    document.body.classList.add('prof-pw-modal-open');
+  }
+
+  closeChangePasswordModal(): void {
+    if (this.isChangingPassword) return;
+    this.isChangePasswordModalOpen = false;
+    document.body.classList.remove('prof-pw-modal-open');
+  }
+
+  toggleCurrentPasswordVisibility(): void {
+    this.showCurrentPassword = !this.showCurrentPassword;
+  }
+
+  toggleNewPasswordVisibility(): void {
+    this.showNewPassword = !this.showNewPassword;
+  }
+
+  toggleConfirmPasswordVisibility(): void {
+    this.showConfirmPassword = !this.showConfirmPassword;
+  }
+
+  // Live checklist for the new-password field, mirroring the Firebase
+  // Console password policy — same getters as login.ts's register mode.
+  get newPasswordValue(): string {
+    return this.changePasswordForm.get('newPassword')?.value || '';
+  }
+
+  get pwHasMinLength(): boolean {
+    return this.newPasswordValue.length >= 8;
+  }
+
+  get pwHasUppercase(): boolean {
+    return /[A-Z]/.test(this.newPasswordValue);
+  }
+
+  get pwHasLowercase(): boolean {
+    return /[a-z]/.test(this.newPasswordValue);
+  }
+
+  get pwHasNumber(): boolean {
+    return /[0-9]/.test(this.newPasswordValue);
+  }
+
+  get pwHasSpecialChar(): boolean {
+    return /[^A-Za-z0-9]/.test(this.newPasswordValue);
+  }
+
+  async submitChangePassword(): Promise<void> {
+    this.changePasswordForm.markAllAsTouched();
+    if (this.changePasswordForm.invalid || this.isChangingPassword) return;
+
+    const { currentPassword, newPassword } = this.changePasswordForm.value;
+    this.isChangingPassword = true;
+    try {
+      await this.authService.changePassword(currentPassword, newPassword);
+      // Reset before closeChangePasswordModal(): it guards against closing
+      // while isChangingPassword is true (so a backdrop/X click can't
+      // dismiss mid-submit) — that guard would otherwise also block this
+      // same-flow close, since the finally below hasn't run yet.
+      this.isChangingPassword = false;
+      this.closeChangePasswordModal();
+      Toast.fire({ icon: 'success', title: this.translate.instant('CHANGE_PASSWORD_SUCCESS') });
+    } catch (error: any) {
+      Toast.fire({ icon: 'error', title: error?.message || this.translate.instant('CHANGE_PASSWORD_ERROR') });
+    } finally {
+      this.isChangingPassword = false;
+    }
   }
 
   async deleteAccount(): Promise<void> {
