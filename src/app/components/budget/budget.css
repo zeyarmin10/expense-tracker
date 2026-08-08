@@ -48,11 +48,26 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 22px rgba(96, 165, 250, 0.45), 0 0 0 0 rgba(96, 165, 250, 0.35);
+  box-shadow: 0 8px 22px rgba(96, 165, 250, 0.45);
   z-index: 900;
   cursor: pointer;
   transition: transform 0.15s, box-shadow 0.15s;
+}
+
+/* Pulsing ring via a pseudo-element animating transform/opacity only (never
+   box-shadow itself) — animating box-shadow directly on a border-radius:50%
+   element is a known Android WebView rendering trap that can paint the
+   corners/glow solid black instead of the intended translucent color (same
+   root cause category as the overflow:visible→hidden fix already applied to
+   expense.css; see git history "black rendering artifact on Android"). */
+.bgt-add-fab::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.5);
   animation: bgt-fab-pulse 2.6s ease-in-out infinite;
+  pointer-events: none;
 }
 
 .bgt-add-fab-badge {
@@ -72,15 +87,20 @@
 
 .bgt-add-fab:active {
   transform: scale(0.94);
+}
+
+.bgt-add-fab:active::after {
   animation-play-state: paused;
 }
 
 @keyframes bgt-fab-pulse {
   0%, 100% {
-    box-shadow: 0 8px 22px rgba(96, 165, 250, 0.45), 0 0 0 0 rgba(96, 165, 250, 0.35);
+    transform: scale(1);
+    opacity: 0.7;
   }
   50% {
-    box-shadow: 0 8px 26px rgba(96, 165, 250, 0.55), 0 0 0 10px rgba(96, 165, 250, 0);
+    transform: scale(1.28);
+    opacity: 0;
   }
 }
 

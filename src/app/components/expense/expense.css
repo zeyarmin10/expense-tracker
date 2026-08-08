@@ -56,26 +56,46 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 22px rgba(244, 177, 26, 0.45), 0 0 0 0 rgba(244, 177, 26, 0.35);
+  box-shadow: 0 8px 22px rgba(244, 177, 26, 0.45);
   z-index: 900;
   cursor: pointer;
   transition: transform 0.15s, box-shadow 0.15s;
-  animation: exp-fab-pulse 2.6s ease-in-out infinite;
 }
 
 .exp-add-fab:active {
   transform: scale(0.94);
+}
+
+.exp-add-fab:active::after {
   animation-play-state: paused;
 }
 
 /* Gentle expanding-ring pulse so the primary "add expense" action is easy to
-   spot at a glance in both light and dark mode, not just a static flat dot. */
+   spot at a glance in both light and dark mode, not just a static flat dot.
+   Animates transform/opacity only (not box-shadow itself) on a pseudo-
+   element — animating box-shadow directly on a border-radius:50% element is
+   a known Android WebView rendering trap that can paint the corners/glow
+   solid black instead of the intended translucent color (same root cause
+   category as the overflow:visible→hidden fix already applied above in this
+   file; see git history "black rendering artifact on Android"). */
+.exp-add-fab::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(244, 177, 26, 0.5);
+  animation: exp-fab-pulse 2.6s ease-in-out infinite;
+  pointer-events: none;
+}
+
 @keyframes exp-fab-pulse {
   0%, 100% {
-    box-shadow: 0 8px 22px rgba(244, 177, 26, 0.45), 0 0 0 0 rgba(244, 177, 26, 0.35);
+    transform: scale(1);
+    opacity: 0.7;
   }
   50% {
-    box-shadow: 0 8px 26px rgba(244, 177, 26, 0.55), 0 0 0 10px rgba(244, 177, 26, 0);
+    transform: scale(1.28);
+    opacity: 0;
   }
 }
 
