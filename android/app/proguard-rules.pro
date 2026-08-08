@@ -19,3 +19,24 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Keep reflection metadata used by Google Sign-In / Play Services and Firebase
+-keepattributes Signature
+-keepattributes *Annotation*
+-keepattributes EnclosingMethod
+-keepattributes InnerClasses
+-keepattributes Exceptions
+
+# Google Sign-In / Play Services Auth (com.google.android.gms:play-services-auth)
+-keep class com.google.android.gms.auth.** { *; }
+-keep class com.google.android.gms.common.** { *; }
+-keep class com.google.android.gms.signin.** { *; }
+-keep interface com.google.android.gms.** { *; }
+-dontwarn com.google.android.gms.**
+
+# codetrix-studio capacitor-google-auth plugin
+-keep class com.codetrixstudio.capacitor.GoogleAuth.** { *; }
+
+# Firebase (Auth / Analytics / Messaging)
+-keep class com.google.firebase.** { *; }
+-dontwarn com.google.firebase.**
