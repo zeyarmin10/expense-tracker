@@ -5,12 +5,6 @@
 
 <div class="exp-wrapper">
   <div class="exp-container mb-12">
-    <div class="flex flex-row-reverse" *ngIf="isDesktopView">
-      <button type="button" class="exp-add-toolbar-btn" (click)="openAddModal('expense')">
-        <lucide-icon [img]="iconPlus" [size]="15"></lucide-icon>
-        {{ 'EXPENSE_ADD_TITLE' | translate }}
-      </button>
-    </div>
     <!-- ── ADD (FAB + Bottom-sheet Modal) ── -->
     <button type="button" class="exp-add-fab" (click)="openAddModal('expense')" [title]="'EXPENSE_ADD_TITLE' | translate">
       <lucide-icon [img]="iconPlus" [size]="26"></lucide-icon>
@@ -473,54 +467,68 @@
 
     <!-- ── SHARED DATE FILTER BAR ── -->
     <div class="exp-filter-bar" [class.exp-filter-bar-expanded]="showCustomDatePicker">
-      <div class="exp-seg-ctrl">
-        <div class="exp-seg-track">
-          <!-- sliding pill indicator -->
-          <span
-            class="exp-seg-indicator"
-            [style.transform]="'translateX(calc(' + getDateFilterIndex() + ' * 100%))'"
-            aria-hidden="true"
-          ></span>
+      <div class="exp-filter-top-row">
+        <div class="exp-seg-ctrl">
+          <div class="exp-seg-track">
+            <!-- sliding pill indicator -->
+            <span
+              class="exp-seg-indicator"
+              [style.transform]="'translateX(calc(' + getDateFilterIndex() + ' * 100%))'"
+              aria-hidden="true"
+            ></span>
+            <button
+              type="button"
+              class="exp-seg-btn"
+              [class.active]="dateFilterMode === 'today'"
+              (click)="setDateFilterMode('today')"
+            >{{ 'TODAY' | translate }}</button>
+            <button
+              type="button"
+              class="exp-seg-btn"
+              [class.active]="dateFilterMode === 'week'"
+              (click)="setDateFilterMode('week')"
+            >{{ 'THIS_WEEK' | translate }}</button>
+            <button
+              type="button"
+              class="exp-seg-btn"
+              [class.active]="dateFilterMode === 'month'"
+              (click)="setDateFilterMode('month')"
+            >{{ 'THIS_MONTH' | translate }}</button>
+            <button
+              type="button"
+              class="exp-seg-btn"
+              [class.active]="dateFilterMode === 'custom'"
+              (click)="setDateFilterMode('custom')"
+            >{{ 'CUSTOM' | translate }}</button>
+          </div>
           <button
             type="button"
-            class="exp-seg-btn"
-            [class.active]="dateFilterMode === 'today'"
-            (click)="setDateFilterMode('today')"
-          >{{ 'TODAY' | translate }}</button>
-          <button
-            type="button"
-            class="exp-seg-btn"
-            [class.active]="dateFilterMode === 'week'"
-            (click)="setDateFilterMode('week')"
-          >{{ 'THIS_WEEK' | translate }}</button>
-          <button
-            type="button"
-            class="exp-seg-btn"
-            [class.active]="dateFilterMode === 'month'"
-            (click)="setDateFilterMode('month')"
-          >{{ 'THIS_MONTH' | translate }}</button>
-          <button
-            type="button"
-            class="exp-seg-btn"
-            [class.active]="dateFilterMode === 'custom'"
-            (click)="setDateFilterMode('custom')"
-          >{{ 'CUSTOM' | translate }}</button>
+            class="exp-seg-reset"
+            (click)="resetFilter()"
+            [title]="'RESET_FILTER_BUTTON' | translate"
+          >
+            <lucide-icon [img]="iconRotateCcw" [size]="16"></lucide-icon>
+          </button>
         </div>
+
         <button
           type="button"
-          class="exp-seg-reset"
-          (click)="resetFilter()"
-          [title]="'RESET_FILTER_BUTTON' | translate"
+          class="exp-add-toolbar-btn"
+          *ngIf="isDesktopView"
+          (click)="openAddModal('expense')"
         >
-          <lucide-icon [img]="iconRotateCcw" [size]="16"></lucide-icon>
+          <lucide-icon [img]="iconPlus" [size]="15"></lucide-icon>
+          {{ 'EXPENSE_ADD_TITLE' | translate }}
         </button>
       </div>
 
-      <div class="exp-filter-label">
-        <span class="exp-filter-label-date">
-          <lucide-icon [img]="iconCalendar" [size]="16" class="exp-filter-label-icon"></lucide-icon>
-          <span>{{ getFilterLabel() }}</span>
-        </span>
+      <div class="exp-filter-bottom-row">
+        <div class="exp-filter-label">
+          <span class="exp-filter-label-date">
+            <lucide-icon [img]="iconCalendar" [size]="16" class="exp-filter-label-icon"></lucide-icon>
+            <span>{{ getFilterLabel() }}</span>
+          </span>
+        </div>
       </div>
     </div>
     <!-- ── END SHARED DATE FILTER BAR ── -->
