@@ -1,23 +1,22 @@
-<div class="modal fade" id="categoryModal" tabindex="-1" aria-labelledby="categoryModalLabel" aria-hidden="true"
-  #categoryModal data-bs-backdrop="static" data-bs-keyboard="false">
-  <div class="modal-dialog cat-modal-dialog">
-    <div class="modal-content cat-modal-content">
+<div class="cat-modal-backdrop" [class.open]="isModalOpen"></div>
+<div class="cat-modal-dialog" [class.open]="isModalOpen" role="dialog" aria-modal="true" aria-labelledby="categoryModalLabel">
+  <div class="cat-modal-content">
 
-      <!-- Header -->
-      <div class="cat-modal-header">
-        <div class="cat-modal-title-wrap">
-          <lucide-icon [img]="iconTags" [size]="20" class="cat-modal-icon"></lucide-icon>
-          <h5 class="cat-modal-title" id="categoryModalLabel">
-            {{ 'CATEGORY_MODAL_TITLE' | translate }}
-          </h5>
-        </div>
-        <button type="button" class="cat-close-btn" (click)="closeModal()">
-          <lucide-icon [img]="iconTimes" [size]="16"></lucide-icon>
-        </button>
+    <!-- Header -->
+    <div class="cat-modal-header">
+      <div class="cat-modal-title-wrap">
+        <lucide-icon [img]="iconTags" [size]="20" class="cat-modal-icon"></lucide-icon>
+        <h5 class="cat-modal-title" id="categoryModalLabel">
+          {{ 'CATEGORY_MODAL_TITLE' | translate }}
+        </h5>
       </div>
+      <button type="button" class="cat-close-btn" (click)="closeModal()">
+        <lucide-icon [img]="iconTimes" [size]="16"></lucide-icon>
+      </button>
+    </div>
 
-      <!-- Body -->
-      <div class="cat-modal-body">
+    <!-- Body -->
+    <div class="cat-modal-body">
 
         <!-- Add / Edit Form -->
         <form [formGroup]="categoryForm" (ngSubmit)="onSave()" class="cat-form">
@@ -114,10 +113,9 @@
       </div>
     </div>
   </div>
-</div>
 
-<!-- 1:1 crop dialog for custom icon uploads. Kept OUTSIDE #categoryModal:
-     bootstrap's .modal transform would trap this position:fixed overlay. -->
+<!-- 1:1 crop dialog for custom icon uploads. Kept OUTSIDE cat-modal-dialog:
+     a transform on an ancestor would trap this position:fixed overlay. -->
 <app-image-cropper
   *ngIf="pendingCropFile"
   [file]="pendingCropFile"

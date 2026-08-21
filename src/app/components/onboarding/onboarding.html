@@ -176,7 +176,7 @@
   </div>
 
   <!-- ── Create-space modal (replaces the old SweetAlert form) ── -->
-  <div class="ob-modal-backdrop" *ngIf="isCreateSpaceModalOpen" (click)="closeCreateSpaceModal()"></div>
+  <div class="ob-modal-backdrop" *ngIf="isCreateSpaceModalOpen"></div>
   <div class="ob-modal" *ngIf="isCreateSpaceModalOpen" role="dialog" aria-modal="true">
     <div class="ob-modal-header">
       <span class="ob-modal-title">{{ 'ONBOARDING.CREATE_NEW_GROUP' | translate }}</span>

@@ -10,7 +10,7 @@
       <lucide-icon [img]="iconPlus" [size]="26"></lucide-icon>
     </button>
 
-    <div class="exp-add-modal-backdrop" [class.open]="isAddModalOpen" (click)="closeAddModal()"></div>
+    <div class="exp-add-modal-backdrop" [class.open]="isAddModalOpen"></div>
     <div class="exp-add-modal-sheet" [class.open]="isAddModalOpen">
       <div class="exp-add-modal-handle"></div>
       <div class="exp-add-modal-header" *ngIf="!isCategoryPickerOpen && !isDatePickerOpen">

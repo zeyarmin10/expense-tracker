@@ -1,4 +1,4 @@
-import { Component, ElementRef, EventEmitter, OnInit, OnDestroy, Output, ViewChild, inject, HostListener, ChangeDetectorRef } from '@angular/core';
+import { Component, EventEmitter, OnInit, OnDestroy, Output, inject, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CategoryService, getCategoryErrorMessage } from '../../../services/category';
 import { CommonModule } from '@angular/common';
@@ -14,8 +14,6 @@ import { ImageCropperComponent } from '../image-cropper/image-cropper.component'
 import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import { ServiceICategory } from '../../../services/category';
 import Swal from 'sweetalert2';
-
-declare const bootstrap: any;
 
 const Toast = Swal.mixin({
   toast: true,
@@ -49,8 +47,6 @@ export class CategoryModalComponent implements OnInit, OnDestroy {
   categories: ServiceICategory[] = [];
   isModalOpen = false;
   deletingStates: { [key: string]: boolean } = {};
-
-  private bsModal: any;
 
   private categories$ = new BehaviorSubject<ServiceICategory[]>([]);
 
@@ -123,13 +119,6 @@ export class CategoryModalComponent implements OnInit, OnDestroy {
     return category.id ?? String(index);
   }
 
-  @HostListener('window:popstate', ['$event'])
-  onPopState(event: PopStateEvent): void {
-    if (this.isModalOpen) {
-      this.bsModal.hide();
-    }
-  }
-
   constructor(private fb: FormBuilder) {
     this.categoryForm = this.fb.group({
       name: ['', [Validators.required, Validators.maxLength(50), meaningfulTextValidator]]
@@ -149,66 +138,26 @@ export class CategoryModalComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    if (this.bsModal) {
-      this.bsModal.hide();
-    }
-    document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
-    document.body.classList.remove('modal-open');
-    document.body.style.removeProperty('overflow');
-    document.body.style.removeProperty('padding-right');
-  }
-
-  private async initializeModal(): Promise<void> {
-    return new Promise((resolve) => {
-      if (!this.bsModal) {
-        const modalElement = document.getElementById('categoryModal');
-        if (modalElement) {
-          this.bsModal = new bootstrap.Modal(modalElement);
-          modalElement.addEventListener('hidden.bs.modal', () => {
-            this.isModalOpen = false;
-            this.resetForm();
-          });
-        }
-      }
-      resolve();
-    });
+    document.body.classList.remove('cat-modal-open');
   }
 
   async open(): Promise<void> {
-    await this.initializeModal();
     await this.loadCategories();
     this.resetForm();
-
-
-    const modalElement = document.getElementById('categoryModal');
-    if (modalElement) {
-      // When the modal is fully hidden, update the flag.
-      modalElement.addEventListener('hidden.bs.modal', () => {
-        this.isModalOpen = false;
-      }, { once: true });
-
-      modalElement.addEventListener('shown.bs.modal', () => {
-        const inputElement = document.getElementById('catNameInput');
-        if (inputElement) {
-          inputElement.focus();
-        }
-      }, { once: true });
-
-      this.bsModal = new bootstrap.Modal(modalElement);
-
-    // Push state to browser history and update flag before showing
-      history.pushState(null, '');
-      this.isModalOpen = true;
-      this.bsModal.show();
-    }
+    this.isModalOpen = true;
+    document.body.classList.add('cat-modal-open');
+    // loadCategories() resolves outside Angular's zone (see the AngularFire
+    // listVal() note in ngOnInit above), so isModalOpen=true above would
+    // otherwise sit unpainted until some unrelated event triggers a repaint.
+    this.cdr.detectChanges();
+    setTimeout(() => document.getElementById('catNameInput')?.focus(), 0);
   }
 
   closeModal(): void {
-    if (this.isModalOpen) {
-      history.back();
-    } else {
-      this.bsModal.hide();
-    }
+    this.isModalOpen = false;
+    document.body.classList.remove('cat-modal-open');
+    this.resetForm();
+    this.cdr.detectChanges();
   }
 
   private async loadCategories(): Promise<void> {

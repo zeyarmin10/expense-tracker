@@ -1,26 +1,22 @@
-<div class="modal fade" id="customBudgetPeriodModal" tabindex="-1" aria-labelledby="customBudgetPeriodModalLabel"
-  aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-  <div class="modal-dialog cbp-dialog">
-    <div class="modal-content cbp-content">
+<div class="cbp-backdrop" [class.open]="isModalOpen"></div>
+<div class="cbp-dialog" [class.open]="isModalOpen" role="dialog" aria-modal="true" aria-labelledby="customBudgetPeriodModalLabel">
+  <div class="cbp-content">
 
-      <!-- Top accent line -->
-      <div class="cbp-accent-line"></div>
-
-      <!-- Header -->
-      <div class="cbp-header">
-        <div class="cbp-title-wrap">
-          <span class="cbp-icon"><lucide-icon [img]="iconCalendarRange" [size]="16" class="calendar-range-icon"></lucide-icon></span>
-          <h5 class="cbp-title" id="customBudgetPeriodModalLabel">
-            {{ 'CREATE_CUSTOM_BUDGET_PERIOD' | translate }}
-          </h5>
-        </div>
-        <button type="button" class="cbp-close-btn" (click)="close()">
-          <lucide-icon [img]="iconTimes" [size]="16"></lucide-icon>
-        </button>
+    <!-- Header -->
+    <div class="cbp-header">
+      <div class="cbp-title-wrap">
+        <span class="cbp-icon"><lucide-icon [img]="iconCalendarRange" [size]="16" class="calendar-range-icon"></lucide-icon></span>
+        <h5 class="cbp-title" id="customBudgetPeriodModalLabel">
+          {{ 'CREATE_CUSTOM_BUDGET_PERIOD' | translate }}
+        </h5>
       </div>
+      <button type="button" class="cbp-close-btn" (click)="close()">
+        <lucide-icon [img]="iconTimes" [size]="16"></lucide-icon>
+      </button>
+    </div>
 
-      <!-- Body -->
-      <div class="cbp-body">
+    <!-- Body -->
+    <div class="cbp-body">
         <form [formGroup]="budgetPeriodForm">
 
           <!-- Period Name -->
@@ -63,4 +59,3 @@
 
     </div>
   </div>
-</div>

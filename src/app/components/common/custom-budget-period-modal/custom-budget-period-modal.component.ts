@@ -1,12 +1,10 @@
-import { Component, EventEmitter, inject, OnDestroy, Output, HostListener } from '@angular/core';
+import { Component, EventEmitter, inject, OnDestroy, Output } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { CalendarRange, LucideAngularModule, Save, X } from 'lucide-angular';
 import { DateInputComponent } from '../date-input/date-input.component';
 import { DateRangeInputComponent } from '../date-range-input/date-range-input.component';
-
-declare var bootstrap: any;
 
 @Component({
   selector: 'app-custom-budget-period-modal',
@@ -20,19 +18,11 @@ export class CustomBudgetPeriodModalComponent implements OnDestroy {
 
   private formBuilder = inject(FormBuilder);
   budgetPeriodForm: FormGroup;
-  private modalInstance: any;
-  private isModalOpen = false;
+  isModalOpen = false;
 
   readonly iconSave = Save;
   readonly iconTimes = X;
   readonly iconCalendarRange = CalendarRange;
-
-  @HostListener('window:popstate', ['$event'])
-  onPopState(event: PopStateEvent): void {
-    if (this.isModalOpen) {
-      this.modalInstance.hide();
-    }
-  }
 
   constructor() {
     this.budgetPeriodForm = this.formBuilder.group({
@@ -58,37 +48,14 @@ export class CustomBudgetPeriodModalComponent implements OnDestroy {
       endDate: sixMonthsHenceString
     });
 
-    const modalElement = document.getElementById('customBudgetPeriodModal');
-    if (modalElement) {
-      // When the modal is fully hidden, update the flag.
-      modalElement.addEventListener('hidden.bs.modal', () => {
-        this.isModalOpen = false;
-      }, { once: true });
-      
-      modalElement.addEventListener('shown.bs.modal', () => {
-        const inputElement = document.getElementById('budgetName');
-        if (inputElement) {
-          inputElement.focus();
-        }
-      }, { once: true });
-
-      this.modalInstance = new bootstrap.Modal(modalElement);
-      
-      // Push state to browser history and update flag before showing
-      history.pushState(null, '');
-      this.isModalOpen = true;
-      this.modalInstance.show();
-    }
+    this.isModalOpen = true;
+    document.body.classList.add('cbp-modal-open');
+    setTimeout(() => document.getElementById('budgetName')?.focus(), 0);
   }
 
   close(): void {
-    if (this.isModalOpen) {
-      // Trigger the popstate event by going back in history
-      history.back();
-    } else if (this.modalInstance) {
-      // Fallback for safety
-      this.modalInstance.hide();
-    }
+    this.isModalOpen = false;
+    document.body.classList.remove('cbp-modal-open');
   }
 
   save(): void {
@@ -100,12 +67,6 @@ export class CustomBudgetPeriodModalComponent implements OnDestroy {
   }
 
   ngOnDestroy(): void {
-    if (this.modalInstance) {
-      this.modalInstance.hide();
-    }
-    document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
-    document.body.classList.remove('modal-open');
-    document.body.style.removeProperty('overflow');
-    document.body.style.removeProperty('padding-right');
+    document.body.classList.remove('cbp-modal-open');
   }
 }

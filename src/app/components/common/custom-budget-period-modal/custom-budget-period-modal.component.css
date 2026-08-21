@@ -2,27 +2,58 @@
    Custom Budget Period Modal — Dark Theme
    ============================================================ */
 
-.cbp-dialog {
-  max-width: 440px;
-  margin: calc(env(safe-area-inset-top, 0px) + 1.5rem) auto 1.5rem;
-  width: 95%;
+body.cbp-modal-open {
+  overflow: hidden;
 }
 
-/* ── Shell ── */
+.cbp-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 1050;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+}
+
+.cbp-backdrop.open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.cbp-dialog {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 0.85rem);
+  left: 50%;
+  width: 92%;
+  max-width: 480px;
+  max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 1.7rem);
+  margin: 0;
+  z-index: 1051;
+  translate: -50% 0;
+  scale: 0.96;
+  opacity: 0;
+  pointer-events: none;
+  transition: scale 0.2s ease, opacity 0.2s ease;
+}
+
+.cbp-dialog.open {
+  scale: 1;
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* ── Shell (matches the Add Expense/Budget/Profit modal shell) ── */
 .cbp-content {
-  background: var(--bg);
-  border: 1px solid var(--accent);
+  background: var(--surface, #12151c);
+  border: 1px solid var(--border);
   border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6),
-    0 0 0 1px rgba(11, 116, 255, 0.06);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.45);
   padding: 0;
-}
-
-/* ── Top accent line ── */
-.cbp-accent-line {
-  height: 2px;
-  background: linear-gradient(90deg, var(--accent, #0b74ff), rgba(11, 116, 255, 0.2), transparent);
+  display: flex;
+  flex-direction: column;
+  max-height: 100%;
 }
 
 /* ── Header ── */
@@ -30,8 +61,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1.2rem 1.4rem 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  gap: 0.5rem;
+  padding: 0.85rem 0.6rem 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
 }
 
 .cbp-title-wrap {
@@ -65,20 +98,17 @@
   justify-content: center;
   width: 32px;
   height: 32px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
+  border-radius: 50%;
+  border: none;
   background: var(--surface-2);
   color: var(--text-muted);
   cursor: pointer;
-  font-size: 0.78rem;
-  transition: all 0.15s;
-  line-height: 1;
+  flex-shrink: 0;
+  transition: background 0.15s;
 }
 
 .cbp-close-btn:hover {
-  background: rgba(248, 113, 113, 0.12);
-  border-color: rgba(248, 113, 113, 0.3);
-  color: #f87171;
+  background: var(--border);
 }
 
 /* ── Body ── */
@@ -87,6 +117,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.9rem;
+  overflow-y: auto;
 }
 
 /* ── Floating label inputs ── */
@@ -193,6 +224,7 @@
   display: flex;
   justify-content: flex-end;
   padding: 0 1.4rem 1.4rem;
+  flex-shrink: 0;
 }
 
 .cbp-save-btn {
