@@ -14,7 +14,8 @@ import { ToastService } from './services/toast';
 import { NetworkService } from './services/network.service';
 import { ThemeService } from './services/theme.service';
 import { NotificationService } from './services/notification.service';
-import { AppUpdateService } from './services/app-update.service';
+import { AppUpdateService, AppUpdateStatus } from './services/app-update.service';
+import { FlexibleUpdateInstallStatus } from '@capawesome/capacitor-app-update';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { APP_LANGUAGES } from './core/constants/app.constants';
 import { SplashScreen } from '@capacitor/splash-screen';
@@ -685,7 +686,7 @@ export class App implements OnInit, AfterViewInit {
       );
       const status = await this.appUpdateService.checkForUpdate();
       if (status.updateAvailable) {
-        this.showAppUpdateAlert(status.latestVersionName);
+        this.showAppUpdateAlert(status);
       }
     } catch {
       // Update check is best-effort — never block app startup on it.
@@ -704,7 +705,7 @@ export class App implements OnInit, AfterViewInit {
     );
   }
 
-  private showAppUpdateAlert(latestVersionName?: string): void {
+  private showAppUpdateAlert(status: AppUpdateStatus): void {
     if (Swal.isVisible()) return;
 
     const lang = this.getActiveLang();
@@ -724,8 +725,8 @@ export class App implements OnInit, AfterViewInit {
       </svg>`;
 
     const title = isMy ? 'App အသစ်တစ်ခု ရနိုင်ပါပြီ' : 'A New Update is Available';
-    const versionLine = latestVersionName
-      ? (isMy ? `\nဗားရှင်း ${latestVersionName} ရရှိနိုင်ပါပြီ` : `\nVersion ${latestVersionName} is now available`)
+    const versionLine = status.latestVersionName
+      ? (isMy ? `\nဗားရှင်း ${status.latestVersionName} ရရှိနိုင်ပါပြီ` : `\nVersion ${status.latestVersionName} is now available`)
       : '';
     const text = isMy
       ? `App ကို နောက်ဆုံးဗားရှင်းအသစ်သို့ အပ်ဒိတ်လုပ်ပြီး အသုံးပြုပါ${versionLine}`
@@ -754,8 +755,84 @@ export class App implements OnInit, AfterViewInit {
         popup: isDark ? 'swal-dark' : 'swal-light',
       }
     }).then((result) => {
+      if (!result.isConfirmed) return;
+
+      if (Capacitor.getPlatform() === 'android' && status.flexibleUpdateAllowed) {
+        void this.startAndroidFlexibleUpdate();
+      } else {
+        this.appUpdateService.openStore();
+      }
+    });
+  }
+
+  // Downloads the update in the background (no full-screen block) and, once
+  // ready, prompts the user to restart into it. Falls back to the store
+  // listing if Play Core can't start the flow (e.g. rate-limited, no network).
+  private async startAndroidFlexibleUpdate(): Promise<void> {
+    const started = await this.appUpdateService.startFlexibleUpdate();
+    if (!started) {
+      this.appUpdateService.openStore();
+      return;
+    }
+
+    await this.appUpdateService.addFlexibleUpdateListener((state) => {
+      if (state.installStatus === FlexibleUpdateInstallStatus.DOWNLOADED) {
+        this.showRestartToInstallAlert();
+      } else if (
+        state.installStatus === FlexibleUpdateInstallStatus.FAILED ||
+        state.installStatus === FlexibleUpdateInstallStatus.CANCELED
+      ) {
+        this.appUpdateService.openStore();
+      }
+    });
+  }
+
+  private showRestartToInstallAlert(): void {
+    if (Swal.isVisible()) return;
+
+    const lang = this.getActiveLang();
+    const isMy = lang === 'my';
+
+    const isDark = document.body.classList.contains('light-mode') === false;
+    const bgColor = isDark ? '#07162f' : '#ffffff';
+    const titleColor = isDark ? '#ffffff' : '#111827';
+    const textColor = isDark ? '#9ca3af' : '#4b5563';
+
+    const restartIcon = `
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64"
+          fill="none" stroke="#22c55e" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M16 32 L27 43 L48 20" />
+      </svg>`;
+
+    const title = isMy ? 'အပ်ဒိတ် ရယူပြီးပါပြီ' : 'Update Downloaded';
+    const text = isMy
+      ? 'အသစ်ဖြင့် ပြန်စတင်ရန် App ကို Restart လုပ်ပါ'
+      : 'Restart the app to finish installing the update.';
+    const restartBtnText = isMy ? 'Restart လုပ်မယ်' : 'Restart Now';
+    const laterBtnText = isMy ? 'နောက်မှ' : 'Later';
+
+    Swal.fire({
+      html: `
+        <div style="display:flex;flex-direction:column;align-items:center;gap:12px;">
+          ${restartIcon}
+          <div style="font-size:1rem;font-weight:700;color:${titleColor};">${title}</div>
+          <div style="font-size:0.82rem;color:${textColor};white-space:pre-line;text-align:center;">${text}</div>
+        </div>`,
+      confirmButtonText: restartBtnText,
+      confirmButtonColor: '#0b74ff',
+      showCancelButton: true,
+      cancelButtonText: laterBtnText,
+      reverseButtons: true,
+      background: bgColor,
+      color: titleColor,
+      allowOutsideClick: true,
+      showClass: { popup: 'swal2-show' },
+      customClass: {
+        popup: isDark ? 'swal-dark' : 'swal-light',
+      }
+    }).then((result) => {
       if (result.isConfirmed) {
-        this.appUpdateService.openPlayStore();
+        void this.appUpdateService.completeFlexibleUpdate();
       }
     });
   }
