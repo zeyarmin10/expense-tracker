@@ -190,8 +190,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 40px;
-  min-height: 40px;
+  min-width: 44px;
+  min-height: 44px;
   border-radius: 10px;
   border: none;
   font-size: 0.85rem;
@@ -406,8 +406,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 32px;
-  min-height: 32px;
+  min-width: 44px;
+  min-height: 44px;
   border-radius: 8px;
   border: 1px solid rgba(11, 116, 255, 0.25);
   background: var(--accent-dim);
@@ -768,8 +768,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 36px;
-  min-height: 36px;
+  min-width: 44px;
+  min-height: 44px;
   border-radius: 8px;
   border: 1px solid rgba(248, 113, 113, 0.25);
   background: rgba(248, 113, 113, 0.08);
@@ -961,8 +961,8 @@ body.prof-pw-modal-open {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   border: none;
   background: var(--surface-2);

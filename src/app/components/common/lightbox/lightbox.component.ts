@@ -10,11 +10,12 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NgZone } from '@angular/core';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-lightbox',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslateModule],
   templateUrl: './lightbox.component.html',
   styleUrls: ['./lightbox.component.css'],
 })

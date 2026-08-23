@@ -195,8 +195,8 @@ body.exp-add-modal-open {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   border: none;
   background: var(--surface-2);
@@ -674,13 +674,16 @@ body.exp-add-modal-open {
   justify-content: center;
   background: var(--surface-2);
   border: 1px solid var(--border);
-  border-radius: 10px 0 0 10px;
   padding: 0 0.85rem;
   /* font-family: 'DM Mono', monospace; */
   font-size: 0.75rem;
   color: var(--text-muted);
   white-space: nowrap;
   flex-shrink: 0;
+}
+
+.exp-currency-badge {
+  border-radius: 10px 0 0 10px;
 }
 
 .exp-addon-btn {
@@ -825,10 +828,10 @@ body.exp-add-modal-open {
 
 .exp-thumb-remove {
   position: absolute;
-  top: 3px;
-  right: 3px;
-  width: 22px;
-  height: 22px;
+  top: 2px;
+  right: 2px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   border: none;
   background: rgba(10, 12, 16, 0.72);
@@ -1227,8 +1230,8 @@ body.exp-add-modal-open {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
+  width: 44px;
+  height: 44px;
   border-radius: 8px;
   border: 1px solid var(--border);
   background: var(--surface-2);

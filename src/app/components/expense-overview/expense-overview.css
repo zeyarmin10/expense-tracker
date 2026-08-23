@@ -86,12 +86,6 @@
   }
 }
 
-/* search row */
-.ov-search-row {
-  margin-bottom: 1.25rem;
-  width: 100%;
-}
-
 /* select: fit content */
 .ov-fl-wrap .ov-fl-select {
   min-width: 150px;

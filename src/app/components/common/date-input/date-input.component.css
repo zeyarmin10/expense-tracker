@@ -142,8 +142,8 @@
 }
 
 .di-sheet-close {
-  width: 32px;
-  height: 32px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   background: var(--surface-2);
   border: 1px solid var(--border);

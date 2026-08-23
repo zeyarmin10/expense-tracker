@@ -86,11 +86,6 @@
   line-height: 1.45;
 }
 
-.noti-admin-security fa-icon {
-  color: var(--gold);
-  margin-top: 0.1rem;
-}
-
 .noti-admin-field {
   display: flex;
   flex-direction: column;

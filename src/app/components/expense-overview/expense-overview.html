@@ -32,7 +32,7 @@
       <div class="search-group" *ngIf="selectedDateFilter !== 'custom'">
         <input type="text" class="search-input" placeholder="{{ 'SEARCH_PLACEHOLDER' | translate }}"
           [(ngModel)]="searchTerm" (keyup.enter)="onSearch()" />
-        <button class="search-btn" type="button" (click)="onSearch()">
+        <button class="search-btn" type="button" (click)="onSearch()" [title]="'SEARCH' | translate">
           <lucide-icon [img]="iconSearch" [size]="15"></lucide-icon>
         </button>
       </div>
@@ -44,7 +44,7 @@
       <div class="search-group">
         <input type="text" class="search-input" placeholder="{{ 'SEARCH_PLACEHOLDER' | translate }}"
           [(ngModel)]="searchTerm" (keyup.enter)="onSearch()" />
-        <button class="search-btn" type="button" (click)="onSearch()">
+        <button class="search-btn" type="button" (click)="onSearch()" [title]="'SEARCH' | translate">
           <lucide-icon [img]="iconSearch" [size]="15"></lucide-icon>
         </button>
       </div>
@@ -148,7 +148,7 @@
               <lucide-icon [img]="iconList" [size]="15"></lucide-icon>
               {{ "EXPENSE_LIST" | translate }}
             </h5>
-            <span class="table-count">{{ expenses.length }} items</span>
+            <span class="table-count">{{ 'EXPENSE_GROUP_COUNT' | translate: { count: expenses.length } }}</span>
           </div>
           <div class="table-responsive">
             <table class="expense-table">

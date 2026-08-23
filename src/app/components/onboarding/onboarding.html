@@ -71,7 +71,8 @@
                     type="button"
                     (click)="toggleSpaceActions(space.id!, $event)"
                     [class.ob-space-action-trigger-open]="openActionMenuSpaceId === space.id"
-                    [attr.aria-expanded]="openActionMenuSpaceId === space.id">
+                    [attr.aria-expanded]="openActionMenuSpaceId === space.id"
+                    [attr.aria-label]="'ACTIONS_LABEL' | translate">
                     <lucide-icon [img]="iconEllipsisVertical" [size]="16"></lucide-icon>
                   </button>
                 </div>

@@ -5,7 +5,7 @@
 
   <div class="lgn-top-controls">
     <!-- Theme toggle -->
-    <button class="lgn-lang-btn" type="button" (click)="toggleTheme()" [title]="isDarkMode ? 'Light Mode' : 'Dark Mode'">
+    <button class="lgn-lang-btn" type="button" (click)="toggleTheme()" [title]="(isDarkMode ? 'LOGIN_LIGHT' : 'LOGIN_DARK') | translate">
       <lucide-icon *ngIf="isDarkMode" [img]="iconSun" [size]="16" class="theme-icon"></lucide-icon>
       <lucide-icon *ngIf="!isDarkMode" [img]="iconMoon" [size]="16" class="theme-icon"></lucide-icon>
       <!-- <span [class]="isDarkMode ? 'light-text' : 'dark-text'">
@@ -17,7 +17,7 @@
     <div class="lgn-language-picker" *ngIf="!showPreferencesStep" (click)="$event.stopPropagation()">
       <button class="lgn-lang-btn" type="button" (click)="toggleLanguageMenu()"
         aria-haspopup="listbox" [attr.aria-expanded]="isLanguageMenuOpen" aria-controls="lgn-language-menu"
-        [attr.aria-label]="'Language: ' + currentLanguageLabel">
+        [attr.aria-label]="(('LANGUAGE_LABEL' | translate) + ': ' + currentLanguageLabel)">
         <span class="lgn-lang-flag" aria-hidden="true">{{ currentLanguageFlag }}</span>
         <svg class="lgn-lang-chevron" [class.open]="isLanguageMenuOpen" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
@@ -25,7 +25,7 @@
       </button>
 
       <div id="lgn-language-menu" class="lgn-language-menu" *ngIf="isLanguageMenuOpen" role="listbox"
-        [attr.aria-label]="'Language'">
+        [attr.aria-label]="'LANGUAGE_LABEL' | translate">
         <button type="button" class="lgn-language-option" *ngFor="let language of appLanguages"
           [class.active]="currentLang === language.code" [attr.aria-selected]="currentLang === language.code"
           role="option" (click)="switchLanguage(language.code)">
@@ -157,7 +157,7 @@
                   formControlName="password" placeholder=" "
                   [class.err]="loginForm.controls['password'].invalid && loginForm.controls['password'].touched" />
                 <label class="lgn-label" for="lgn-pass">{{ 'PASSWORD_LABEL' | translate }}</label>
-                <button type="button" class="lgn-eye-btn" (click)="togglePasswordVisibility()" tabindex="-1">
+                <button type="button" class="lgn-eye-btn" (click)="togglePasswordVisibility()" [attr.aria-label]="(showPassword ? 'HIDE_PASSWORD' : 'SHOW_PASSWORD') | translate">
                   <lucide-icon [img]="showPassword ? iconEyeOff : iconEye" [size]="15"></lucide-icon>
                 </button>
               </div>

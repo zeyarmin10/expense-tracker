@@ -193,7 +193,7 @@
                 type="button"
                 class="exp-addon-btn"
                 (click)="openCategoryModal()"
-                title="Add category"
+                [title]="'EXPENSE_ADD_CATEGORY_BTN' | translate"
               >
                 <lucide-icon [img]="iconPlus" [size]="16"></lucide-icon>
               </button>
@@ -235,7 +235,7 @@
                 type="button"
                 class="exp-addon-btn"
                 (click)="openCategoryModal()"
-                title="Add category"
+                [title]="'EXPENSE_ADD_CATEGORY_BTN' | translate"
               >
                 <lucide-icon [img]="iconPlus" [size]="16"></lucide-icon>
               </button>

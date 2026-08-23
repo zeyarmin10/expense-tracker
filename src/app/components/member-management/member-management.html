@@ -9,7 +9,7 @@
       </h2>
       <div class="mm-space-name-row" *ngIf="spaceName$ | async as spaceName">
         <ng-container *ngIf="spaceImageUrl$ | async as imgUrl">
-          <button type="button" class="mm-group-avatar mm-group-avatar-clickable" (click)="openSpacePhoto(imgUrl)">
+          <button type="button" class="mm-group-avatar mm-group-avatar-clickable" (click)="openSpacePhoto(imgUrl)" [title]="'VIEW_PHOTO' | translate">
             <img [src]="imgUrl" alt="">
           </button>
         </ng-container>
@@ -55,7 +55,8 @@
           <!-- Send button: requires valid email format -->
           <button class="mm-send-btn"
             (click)="sendInvite()"
-            [disabled]="isSending || !newMemberEmail || !isValidEmail(newMemberEmail)">
+            [disabled]="isSending || !newMemberEmail || !isValidEmail(newMemberEmail)"
+            [title]="'SEND_INVITE_BUTTON' | translate">
             <span *ngIf="!isSending"><lucide-icon [img]="iconSend" [size]="22"></lucide-icon></span>
             <span *ngIf="isSending" class="mm-spinner"></span>
           </button>
@@ -70,7 +71,7 @@
     </div>
 
     <!-- Pending Invites -->
-    <div class="mm-panel" *ngIf="(pendingInvites$ | async)?.length ?? 0 > 0">
+    <div class="mm-panel" *ngIf="((pendingInvites$ | async)?.length ?? 0) > 0">
       <div class="mm-panel-header">
         <span class="mm-panel-title mm-title-warning">
           <lucide-icon [img]="iconMail" [size]="15"></lucide-icon>

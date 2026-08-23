@@ -175,8 +175,8 @@ body.bgt-add-modal-open {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   border: none;
   background: var(--surface-2);
@@ -1128,8 +1128,8 @@ app-date-input .di-trigger {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 44px;
+  height: 44px;
   border-radius: 8px;
   border: 1px solid rgba(248, 113, 113, 0.25);
   background: rgba(248, 113, 113, 0.08);

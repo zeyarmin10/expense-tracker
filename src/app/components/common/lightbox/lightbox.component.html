@@ -20,12 +20,12 @@
         download
         target="_blank"
         rel="noopener"
-        aria-label="Download"
+        [attr.aria-label]="'DOWNLOAD_BUTTON_LABEL' | translate"
         (click)="$event.stopPropagation()"
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       </a>
-      <button class="lb-action-btn lb-close-btn" (click)="hide()" aria-label="Close">
+      <button class="lb-action-btn lb-close-btn" (click)="hide()" [attr.aria-label]="'CLOSE_BUTTON_LABEL' | translate">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
@@ -56,10 +56,10 @@
   </div>
 
   <!-- Prev / Next -->
-  <button *ngIf="images.length > 1 && idx > 0"     class="lb-nav lb-prev" (click)="prev()" aria-label="Previous">
+  <button *ngIf="images.length > 1 && idx > 0"     class="lb-nav lb-prev" (click)="prev()" [attr.aria-label]="'PREVIOUS_BUTTON_LABEL' | translate">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
   </button>
-  <button *ngIf="images.length > 1 && idx < images.length - 1" class="lb-nav lb-next" (click)="next()" aria-label="Next">
+  <button *ngIf="images.length > 1 && idx < images.length - 1" class="lb-nav lb-next" (click)="next()" [attr.aria-label]="'NEXT_BUTTON_LABEL' | translate">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
   </button>
 
