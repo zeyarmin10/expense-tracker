@@ -199,7 +199,7 @@ export class App implements OnInit, AfterViewInit {
       map((event: NavigationEnd) => event.urlAfterRedirects),
       startWith(this.router.url)
     ).pipe(
-      map(url => url.includes('/login') || url.includes('/onboarding') || url.includes('/privacy-policy'))
+      map(url => url.includes('/login') || url.includes('/onboarding') || url.includes('/privacy-policy') || url.includes('/about'))
     );
 
     const routeUrl$ = this.router.events.pipe(
@@ -211,7 +211,8 @@ export class App implements OnInit, AfterViewInit {
       map(url =>
         url.includes('/login') ||
         url.includes('/onboarding') ||
-        url.includes('/privacy-policy')
+        url.includes('/privacy-policy') ||
+        url.includes('/about')
       )
     );
 
@@ -233,6 +234,7 @@ export class App implements OnInit, AfterViewInit {
       '/onboarding':         'SPACE_CREATE_OR_JOIN',
       '/privacy-policy':     'NAV_PRIVACY_POLICY',
       '/notification-admin': 'NOTI_ADMIN_TITLE',
+      '/about':              'NAV_ABOUT',
     };
 
     const currentUrl$ = this.router.events.pipe(
@@ -287,7 +289,7 @@ export class App implements OnInit, AfterViewInit {
       )
     );
 
-    const drawerRoutes = ['/expense-overview', '/cash-flow', '/category', '/member-management', '/profile', '/privacy-policy'];
+    const drawerRoutes = ['/expense-overview', '/cash-flow', '/category', '/member-management', '/profile', '/privacy-policy', '/about'];
     this.isDrawerRouteActive$ = this.router.events.pipe(
       filter((event): event is NavigationEnd => event instanceof NavigationEnd),
       map((e: NavigationEnd) => e.urlAfterRedirects.split('?')[0]),

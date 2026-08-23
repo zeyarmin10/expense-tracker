@@ -13,6 +13,11 @@ export const routes: Routes = [
     data: { titleKey: 'PRIVACY_POLICY_TITLE' },
   },
   {
+    path: 'about',
+    loadComponent: () => import('./components/about/about').then((m) => m.AboutComponent),
+    data: { titleKey: 'ABOUT_TITLE' },
+  },
+  {
     path: '',
     canActivate: [AuthGuard],
     children: [

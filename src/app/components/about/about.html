@@ -1,0 +1,89 @@
+<!-- Floating back button -->
+<button class="ab-float-back" (click)="goBack()" [attr.aria-label]="'BACK_BUTTON' | translate">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+    stroke-linejoin="round">
+    <polyline points="15 18 9 12 15 6" />
+  </svg>
+</button>
+
+<div class="ab-wrapper">
+  <div class="ab-container mb-5">
+
+    <!-- ── Hero ── -->
+    <div class="ab-hero">
+      <div class="ab-hero-logo">
+        <img src="/images/Kyat-Wise-Logo-Large.png" alt="Kyat Wise" class="ab-hero-logo-img" onerror="
+          this.style.display = 'none';
+          this.nextElementSibling.style.display = 'flex';
+        " />
+        <div class="ab-hero-logo-fallback" style="display: none">₭</div>
+      </div>
+      <h2 class="ab-hero-name">Kyat Wise</h2>
+      <p class="ab-hero-tagline">{{ 'ABOUT_TAGLINE' | translate }}</p>
+      <span class="ab-version-badge">{{ 'ABOUT_VERSION_LABEL' | translate }} {{ appVersion }}</span>
+    </div>
+
+    <!-- ── Description ── -->
+    <div class="ab-section">
+      <p class="ab-description">{{ 'ABOUT_DESCRIPTION' | translate }}</p>
+    </div>
+
+    <!-- ── Features ── -->
+    <div class="ab-section">
+      <div class="ab-section-header">
+        <span class="ab-icon-badge">
+          <lucide-icon [img]="iconSparkles" [size]="16"></lucide-icon>
+        </span>
+        <h3 class="ab-section-title">{{ 'ABOUT_FEATURES_TITLE' | translate }}</h3>
+      </div>
+      <div class="ab-feature-grid">
+        <div class="ab-feature-card" *ngFor="let feature of features">
+          <span class="ab-feature-icon">
+            <lucide-icon [img]="feature.icon" [size]="18"></lucide-icon>
+          </span>
+          <div class="ab-feature-text">
+            <h4 class="ab-feature-title">{{ feature.titleKey | translate }}</h4>
+            <p class="ab-feature-desc">{{ feature.descKey | translate }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Developer ── -->
+    <div class="ab-section">
+      <div class="ab-section-header">
+        <span class="ab-icon-badge">
+          <lucide-icon [img]="iconHeart" [size]="16"></lucide-icon>
+        </span>
+        <h3 class="ab-section-title">{{ 'ABOUT_DEVELOPER_TITLE' | translate }}</h3>
+      </div>
+      <p class="ab-section-body">{{ 'ABOUT_DEVELOPER_BODY' | translate }}</p>
+      <div class="ab-link-row">
+        <a [href]="feedbackUrl" target="_blank" rel="noopener noreferrer" class="ab-action-link">
+          <lucide-icon [img]="iconMail" [size]="15"></lucide-icon>
+          {{ 'ABOUT_FEEDBACK_LINK' | translate }}
+        </a>
+        <button type="button" class="ab-action-link ab-action-link-accent" (click)="openPlayStore()">
+          <lucide-icon [img]="iconStar" [size]="15"></lucide-icon>
+          {{ 'ABOUT_RATE_LINK' | translate }}
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Legal ── -->
+    <div class="ab-legal-row">
+      <a routerLink="/privacy-policy" class="ab-legal-link">{{ 'PRIVACY_POLICY_TITLE' | translate }}</a>
+    </div>
+
+    <!-- ── Footer ── -->
+    <div class="ab-footer">
+      <p class="ab-made-with">
+        {{ 'ABOUT_MADE_WITH' | translate }}
+        <lucide-icon [img]="iconHeart" [size]="13" class="ab-made-with-heart"></lucide-icon>
+        {{ 'ABOUT_MADE_IN' | translate }}
+      </p>
+      <p class="ab-copyright">{{ 'ABOUT_COPYRIGHT' | translate: { year: currentYear } }}</p>
+    </div>
+
+  </div>
+</div>
