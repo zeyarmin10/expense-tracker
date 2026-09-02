@@ -139,6 +139,22 @@
           </div>
         </div>
 
+        <!-- ── Mini Inventory (group spaces only) ── -->
+        <div class="prof-list-card" *ngIf="canEditSettings && accountType === 'group'">
+          <label class="prof-noti-switch-row">
+            <span class="prof-noti-toggle-copy">
+              <span class="prof-noti-toggle-title">{{ 'ENABLE_INVENTORY_LABEL' | translate }}</span>
+              <span>{{ 'ENABLE_INVENTORY_HINT' | translate }}</span>
+            </span>
+            <span class="prof-switch-control">
+              <input type="checkbox" formControlName="inventoryEnabled" />
+              <span class="prof-switch-track">
+                <span class="prof-switch-thumb"></span>
+              </span>
+            </span>
+          </label>
+        </div>
+
         <!-- ── Preferences ── -->
         <div class="prof-list-card">
           <div class="prof-card-header-row">

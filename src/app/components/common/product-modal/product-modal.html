@@ -1,0 +1,92 @@
+<div class="pd-modal-backdrop" [class.open]="isModalOpen"></div>
+<div class="pd-modal-dialog" [class.open]="isModalOpen" role="dialog" aria-modal="true" aria-labelledby="productModalLabel">
+  <div class="pd-modal-content">
+
+    <!-- Header -->
+    <div class="pd-modal-header">
+      <div class="pd-modal-title-wrap">
+        <lucide-icon [img]="iconPackage" [size]="20" class="pd-modal-icon"></lucide-icon>
+        <h5 class="pd-modal-title" id="productModalLabel">
+          {{ 'PRODUCT_MODAL_TITLE' | translate }}
+        </h5>
+      </div>
+      <button type="button" class="pd-close-btn" (click)="closeModal()">
+        <lucide-icon [img]="iconTimes" [size]="16"></lucide-icon>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="pd-modal-body">
+
+      <!-- Add Form -->
+      <form [formGroup]="productForm" (ngSubmit)="onSave()" class="pd-form">
+        <div class="pd-form-row">
+          <div class="pd-fl-wrap">
+            <input
+              type="text"
+              class="pd-fl-input"
+              formControlName="name"
+              placeholder=" "
+              id="pdNameInput"
+              maxlength="50"
+              autocomplete="off"
+              [class.err]="(productForm.get('name')?.value?.length ?? 0) >= 50" />
+            <label class="pd-fl-label" for="pdNameInput">
+              {{ 'PRODUCT_NAME_LABEL' | translate }}
+            </label>
+          </div>
+          <div class="pd-fl-wrap pd-fl-unit">
+            <input
+              type="text"
+              class="pd-fl-input"
+              formControlName="unit"
+              placeholder=" "
+              id="pdUnitInput"
+              maxlength="20"
+              autocomplete="off" />
+            <label class="pd-fl-label" for="pdUnitInput">
+              {{ 'PRODUCT_UNIT_LABEL' | translate }}
+            </label>
+          </div>
+          <button class="pd-save-btn" type="submit" [disabled]="productForm.invalid">
+            <lucide-icon [img]="iconPlus" [size]="20"></lucide-icon>
+          </button>
+        </div>
+        <div class="pd-modal-error" *ngIf="productForm.controls['name'].touched && productForm.controls['name'].errors?.['required']">
+          {{ 'PRODUCT_NAME_REQUIRED' | translate }}
+        </div>
+      </form>
+
+      <!-- Product List -->
+      <div class="pd-list-wrap">
+        <div class="pd-list-header">
+          <span class="pd-list-title">{{ 'EXISTING_PRODUCTS' | translate }}</span>
+          <span class="pd-list-count">{{ products.length }}</span>
+        </div>
+
+        <div class="pd-list-empty" *ngIf="products.length === 0">
+          {{ 'INVENTORY_EMPTY_PRODUCTS' | translate }}
+        </div>
+
+        <ul class="pd-list">
+          <li *ngFor="let product of products; trackBy: trackByProductId" class="pd-item">
+            <div class="pd-item-avatar">
+              <lucide-icon [img]="iconPackage" [size]="18"></lucide-icon>
+            </div>
+            <span class="pd-item-name">{{ product.name }}</span>
+            <span class="pd-item-unit" *ngIf="product.unit">{{ product.unit }}</span>
+            <div class="pd-item-actions">
+              <button class="pd-action-btn pd-action-delete" type="button"
+                (click)="onDelete(product.id!)"
+                [disabled]="isDeleting(product.id!)"
+                [attr.aria-label]="'DELETE_BUTTON_LABEL' | translate">
+                <lucide-icon [img]="iconTrash2" [size]="16"></lucide-icon>
+              </button>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</div>

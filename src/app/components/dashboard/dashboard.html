@@ -1,6 +1,9 @@
 <div class="dash-wrapper">
   <div class="dash-container mb-5">
 
+    <app-shop-dashboard *ngIf="inventoryEnabled$ | async; else personalDashboard"></app-shop-dashboard>
+    <ng-template #personalDashboard>
+
     <!-- ── Header ── -->
     <div class="dash-header">
       <div class="dash-header-left">
@@ -264,6 +267,8 @@
     <!-- END Charts -->
 
     </div>
+
+    </ng-template>
 
   </div>
 </div>

@@ -218,6 +218,19 @@
         </span>
       </div>
 
+      <label class="ob-modal-inventory-toggle">
+        <span class="ob-modal-inventory-toggle-copy">
+          <span class="ob-modal-inventory-toggle-label">{{ 'ENABLE_INVENTORY_LABEL' | translate }}</span>
+          <span class="ob-modal-inventory-toggle-hint">{{ 'ENABLE_INVENTORY_HINT' | translate }}</span>
+        </span>
+        <span class="ob-switch">
+          <input type="checkbox" [(ngModel)]="createSpaceEnableInventory" [disabled]="isCreatingSpace" />
+          <span class="ob-switch-track">
+            <span class="ob-switch-thumb"></span>
+          </span>
+        </span>
+      </label>
+
       <div class="ob-modal-actions">
         <button type="button" class="ob-btn ob-btn-accent ob-modal-submit"
           (click)="submitCreateSpace()" [disabled]="!canSubmitCreateSpace">

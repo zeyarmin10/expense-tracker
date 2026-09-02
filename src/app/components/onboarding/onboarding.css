@@ -896,6 +896,91 @@
   color: #f87171;
 }
 
+.ob-modal-inventory-toggle {
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: 12px;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+  background: var(--surface-2, rgba(255, 255, 255, 0.05));
+  margin: 0 0 1rem;
+  cursor: pointer;
+}
+
+.ob-modal-inventory-toggle-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.ob-modal-inventory-toggle-label {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--text, #fff);
+}
+
+.ob-modal-inventory-toggle-hint {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--text-muted, #6b7280);
+  margin-top: 0.15rem;
+}
+
+.ob-switch {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.ob-switch input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.ob-switch input:disabled {
+  cursor: not-allowed;
+}
+
+.ob-switch-track {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  border-radius: 999px;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+  background: rgba(148, 163, 184, 0.22);
+  display: inline-flex;
+  align-items: center;
+  padding: 2px;
+  transition: background 0.18s, border-color 0.18s;
+}
+
+.ob-switch-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: var(--text-muted, #6b7280);
+  transform: translateX(0);
+  transition: transform 0.18s, background 0.18s;
+}
+
+.ob-switch input:checked + .ob-switch-track {
+  border-color: var(--income-border, #34d399);
+  background: var(--success-dim, rgba(16, 185, 129, 0.2));
+}
+
+.ob-switch input:checked + .ob-switch-track .ob-switch-thumb {
+  background: var(--success, #10b981);
+  transform: translateX(20px);
+}
+
 .ob-modal-actions {
   width: 100%;
   display: flex;

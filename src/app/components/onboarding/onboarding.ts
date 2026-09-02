@@ -378,6 +378,7 @@ export class OnboardingComponent implements OnInit, OnDestroy {
   createSpaceError: string | null = null;
   createSpaceImageFile: File | null = null;
   createSpaceImagePreview: string | null = null;
+  createSpaceEnableInventory = false;
 
   async openCreateSpaceModal(): Promise<void> {
     const user = await firstValueFrom(this.authService.currentUser$);
@@ -392,6 +393,7 @@ export class OnboardingComponent implements OnInit, OnDestroy {
 
     this.createSpaceName = '';
     this.createSpaceError = null;
+    this.createSpaceEnableInventory = false;
     this.clearCreateSpaceImage();
     // Push a history entry so the Android hardware back button — which
     // otherwise exits the app entirely while on /onboarding, see app.ts's
@@ -490,7 +492,7 @@ export class OnboardingComponent implements OnInit, OnDestroy {
       }
 
       const lang = this.translate.currentLang || 'my';
-      await this.dataManager.createGroup(name, lang, imageUrl);
+      await this.dataManager.createGroup(name, lang, imageUrl, this.createSpaceEnableInventory);
       this.isCreatingSpace = false;
       // Not closeCreateSpaceModal(): we're navigating away immediately
       // below, so skip its history.back() — see resetCreateSpaceModalState()

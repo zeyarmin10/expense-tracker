@@ -1,0 +1,40 @@
+<div class="shopdash-wrapper" *ngIf="stats$ | async as stats">
+
+  <div class="shopdash-stats-row">
+    <div class="shopdash-stat-card shopdash-stat-sales">
+      <lucide-icon [img]="iconBanknote" [size]="20"></lucide-icon>
+      <div>
+        <span class="shopdash-stat-label">{{ 'SHOP_DASHBOARD_TODAY_SALES' | translate }}</span>
+        <span class="shopdash-stat-value" [innerHTML]="formatService.formatAmountShortHtml(stats.todaySales, currency)"></span>
+      </div>
+    </div>
+    <div class="shopdash-stat-card shopdash-stat-purchases">
+      <lucide-icon [img]="iconShoppingCart" [size]="20"></lucide-icon>
+      <div>
+        <span class="shopdash-stat-label">{{ 'SHOP_DASHBOARD_TODAY_PURCHASES' | translate }}</span>
+        <span class="shopdash-stat-value" [innerHTML]="formatService.formatAmountShortHtml(stats.todayPurchases, currency)"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="shopdash-quick-actions">
+    <a routerLink="/sales" class="shopdash-quick-btn shopdash-quick-sale">
+      <lucide-icon [img]="iconBanknote" [size]="16"></lucide-icon>
+      {{ 'SHOP_DASHBOARD_QUICK_SALE' | translate }}
+    </a>
+    <a routerLink="/purchase" class="shopdash-quick-btn shopdash-quick-purchase">
+      <lucide-icon [img]="iconShoppingCart" [size]="16"></lucide-icon>
+      {{ 'SHOP_DASHBOARD_QUICK_PURCHASE' | translate }}
+    </a>
+  </div>
+
+  <a routerLink="/inventory" class="shopdash-stock-warning" *ngIf="stats.outOfStockProducts.length > 0">
+    <lucide-icon [img]="iconWarning" [size]="18"></lucide-icon>
+    <span>{{ 'SHOP_DASHBOARD_LOW_STOCK_WARNING' | translate: { count: stats.outOfStockProducts.length } }}</span>
+  </a>
+  <div class="shopdash-stock-ok" *ngIf="stats.outOfStockProducts.length === 0">
+    <lucide-icon [img]="iconPackage" [size]="18"></lucide-icon>
+    <span>{{ 'SHOP_DASHBOARD_NO_LOW_STOCK' | translate }}</span>
+  </div>
+
+</div>

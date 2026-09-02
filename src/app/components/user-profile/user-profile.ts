@@ -232,6 +232,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
       budgetPeriod: [null],
       budgetStartDate: [{ value: null, disabled: true }],
       budgetEndDate: [{ value: null, disabled: true }],
+      inventoryEnabled: [false],
     });
 
     this.changePasswordForm = this.fb.group({
@@ -273,12 +274,14 @@ export class UserProfileComponent implements OnInit, OnDestroy {
 
               // Fetch group name if accountType is 'group'
               const activeGroupId = getActiveGroupId(profile);
-              const groupName$ = (profile.currentSpaceType === 'group' || profile.accountType === 'group') && activeGroupId
-                ? this.spaceContextService.getSpace(activeGroupId).pipe(map(space => space?.name ?? null))
-                : of(null);
+              const groupSpace$ = (profile.currentSpaceType === 'group' || profile.accountType === 'group') && activeGroupId
+                ? this.spaceContextService.getSpace(activeGroupId).pipe(
+                    map(space => ({ name: space?.name ?? null, inventoryEnabled: !!space?.inventoryEnabled })),
+                  )
+                : of({ name: null as string | null, inventoryEnabled: false });
 
-              return combineLatest([groupName$, this.authService.userProfile$]).pipe(
-                map(([groupName, mergedProfile]) => {
+              return combineLatest([groupSpace$, this.authService.userProfile$]).pipe(
+                map(([{ name: groupName, inventoryEnabled }, mergedProfile]) => {
                   const effectiveRole = getRole(mergedProfile || profile);
                   this.userRole = effectiveRole;
                   this.accountType = mergedProfile?.accountType || this.accountType;
@@ -290,7 +293,8 @@ export class UserProfileComponent implements OnInit, OnDestroy {
 
                   // form ကိုလည်း group currency နဲ့ update လုပ်ပါ
                   this.userProfileForm.patchValue({
-                    currency: effectiveCurrency
+                    currency: effectiveCurrency,
+                    inventoryEnabled
                   }, { emitEvent: false });
                   this.selectedCurrency = effectiveCurrency;
                   this.previousCurrency = effectiveCurrency;
@@ -304,7 +308,8 @@ export class UserProfileComponent implements OnInit, OnDestroy {
                     budgetEndDate: mergedProfile?.budgetEndDate || profile.budgetEndDate || null,
                     roles: effectiveRole,
                     accountType: mergedProfile?.accountType || this.accountType,
-                    groupName: groupName
+                    groupName: groupName,
+                    inventoryEnabled
                   });
                 })
               );
@@ -1035,6 +1040,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
             await this.dataManager.updateGroupSettings(this.groupId!, {
               currency: formValues.currency,
               ...budgetFields,
+              inventoryEnabled: !!formValues.inventoryEnabled,
             });
           }
 

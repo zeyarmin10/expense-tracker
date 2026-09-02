@@ -32,6 +32,8 @@ import { ServiceIExpense } from '../../services/expense'; // Assuming types are 
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ServiceIIncome, IncomeService } from '../../services/income';
 import { CategoryService, ServiceICategory } from '../../services/category';
+import { ServiceIProduct, ProductService } from '../../services/product';
+import { SpaceContextService } from '../../services/space-context.service';
 import { LucideAngularModule } from 'lucide-angular';
 import { getIconData } from '../../utils/category-icons';
 import {
@@ -54,6 +56,7 @@ import { ExpenseService } from '../../services/expense'; // Added missing import
 import { ProfitLossService } from '../../services/profit-loss.service';
 import Swal from 'sweetalert2';
 import { UserAvatarComponent } from '../common/user-avatar/user-avatar.component';
+import { ProductModalComponent } from '../common/product-modal/product-modal';
 import { CustomSelectComponent, SelectOption } from '../common/custom-select/custom-select.component';
 import { DateRangeInputComponent } from '../common/date-range-input/date-range-input.component';
 import { ShowFullTextDirective } from '../../directives/show-full-text.directive';
@@ -94,6 +97,7 @@ type CurrencyMap = { [currency: string]: number };
     CustomSelectComponent,
     DateRangeInputComponent,
     ShowFullTextDirective,
+    ProductModalComponent,
   ],
   providers: [DatePipe],
   templateUrl: './profit.html',
@@ -113,8 +117,13 @@ export class Profit implements OnInit, OnDestroy {
   public formatService = inject(FormatService);
   private profitLossService = inject(ProfitLossService);
   private categoryService = inject(CategoryService);
+  productService = inject(ProductService);
+  private spaceContextService = inject(SpaceContextService);
 
   categoryList: ServiceICategory[] = [];
+  productList: ServiceIProduct[] = [];
+  productSelectOptions: SelectOption[] = [];
+  inventoryEnabled = false;
 
   getIconForCategory(categoryName: string) {
     return getIconData(this.categoryList.find(c => c.name === categoryName)?.icon);
@@ -123,6 +132,7 @@ export class Profit implements OnInit, OnDestroy {
   // --- View Children ---
   @ViewChild('profitChartCanvas')
   private profitChartCanvas!: ElementRef<HTMLCanvasElement>;
+  @ViewChild(ProductModalComponent) productModal!: ProductModalComponent;
 
   // --- Form and Data Observables ---
   incomeForm: FormGroup;
@@ -275,6 +285,61 @@ export class Profit implements OnInit, OnDestroy {
   }
   // ──────────────────────────────────────────────
 
+  // ── Product sale (mini inventory) ──────────────
+  get isProductSaleActive(): boolean {
+    return this.inventoryEnabled && !!this.incomeForm.get('isProductSale')?.value;
+  }
+
+  // `amount` keeps the same validators either way (always required, > 0) —
+  // only productId/quantity/unitPrice's requiredness depends on the toggle.
+  toggleIsProductSale(isProductSale: boolean): void {
+    this.incomeForm.get('isProductSale')?.setValue(isProductSale);
+    const productIdControl = this.incomeForm.get('productId');
+    const quantityControl = this.incomeForm.get('quantity');
+    const unitPriceControl = this.incomeForm.get('unitPrice');
+
+    if (isProductSale) {
+      productIdControl?.setValidators(Validators.required);
+      quantityControl?.setValidators([Validators.required, Validators.min(0.01)]);
+      unitPriceControl?.setValidators([Validators.required, Validators.min(0.01)]);
+      this.syncProductSaleAmount();
+    } else {
+      productIdControl?.clearValidators();
+      quantityControl?.clearValidators();
+      unitPriceControl?.clearValidators();
+    }
+    productIdControl?.updateValueAndValidity();
+    quantityControl?.updateValueAndValidity();
+    unitPriceControl?.updateValueAndValidity();
+  }
+
+  private syncProductSaleAmount(): void {
+    if (!this.incomeForm.get('isProductSale')?.value) {
+      return;
+    }
+    const quantity = Number(this.incomeForm.get('quantity')?.value);
+    const unitPrice = Number(this.incomeForm.get('unitPrice')?.value);
+    const amount = quantity > 0 && unitPrice > 0 ? Math.round(quantity * unitPrice * 100) / 100 : null;
+    this.incomeForm.get('amount')?.setValue(amount, { emitEvent: false });
+    this.incomeAmountDisplay = amount ? this.formatWithCommas(amount) : '';
+    this.cdr.markForCheck();
+  }
+
+  loadProducts(): void {
+    this.subscriptions.add(
+      this.productService.getProducts().subscribe(products => {
+        this.productList = products;
+        this.productSelectOptions = products.map(p => ({ value: p.id!, label: p.name }));
+        this.cdr.markForCheck();
+      })
+    );
+  }
+
+  openProductModal(): void {
+    this.productModal.open();
+  }
+  // ────────────────────────────────────────────────
+
   formatCount(n: number): string {
     if (this.translate.currentLang !== 'my') return String(n);
     const mm = ['၀','၁','၂','၃','၄','၅','၆','၇','၈','၉'];
@@ -290,7 +355,18 @@ export class Profit implements OnInit, OnDestroy {
         this.datePipe.transform(new Date(), 'yyyy-MM-dd'),
         Validators.required,
       ],
+      // Defaults ON — in an inventory-enabled group most income is a
+      // product sale; the toggle/fields below only ever render when the
+      // mini inventory feature is on for the current space (see
+      // inventoryEnabled), so this default never surfaces otherwise.
+      isProductSale: [true],
+      productId: [''],
+      quantity: [''],
+      unitPrice: [''],
     });
+
+    this.incomeForm.get('quantity')?.valueChanges.subscribe(() => this.syncProductSaleAmount());
+    this.incomeForm.get('unitPrice')?.valueChanges.subscribe(() => this.syncProductSaleAmount());
 
     const oneYearAgo = new Date();
     oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
@@ -417,6 +493,23 @@ export class Profit implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.subscriptions.add(
       this.categoryService.getCategories().subscribe(cats => { this.categoryList = cats; this.cdr.markForCheck(); })
+    );
+    this.loadProducts();
+    this.subscriptions.add(
+      this.authService.userProfile$.pipe(
+        switchMap(profile => this.spaceContextService.isInventoryEnabled$(profile)),
+      ).subscribe(enabled => {
+        this.inventoryEnabled = enabled;
+        // The toggle/fields only ever render while enabled — force the
+        // control back off when the feature isn't available so a stale
+        // `true` from a previous space can't leave hidden validators active.
+        if (!enabled) {
+          this.incomeForm.get('isProductSale')?.setValue(false, { emitEvent: false });
+        } else if (!this.editingIncome) {
+          this.incomeForm.get('isProductSale')?.setValue(true, { emitEvent: false });
+        }
+        this.cdr.markForCheck();
+      })
     );
     this.subscriptions.add(
       this.translate.stream([
@@ -588,18 +681,25 @@ export class Profit implements OnInit, OnDestroy {
       return;
     }
 
-    const incomeData: Omit<ServiceIIncome, 'id' | 'userId' | 'createdAt' | 'device' | 'editedDevice'> = {
+    const isProductSale = this.isProductSaleActive;
+    const incomeData: any = {
       description: (this.incomeForm.value.description || '').trim(),
       amount: this.incomeForm.value.amount,
       currency: defaultCurrency,
       date: this.incomeForm.value.date,
+      isProductSale,
+      productId: isProductSale ? this.incomeForm.value.productId : null,
+      quantity: isProductSale ? this.incomeForm.value.quantity : null,
+      unitPrice: isProductSale ? this.incomeForm.value.unitPrice : null,
     };
 
     const editingId = this.editingIncome?.id;
     const savePromise = editingId
       ? this.incomeService.updateIncome(editingId, incomeData)
       : this.incomeService.addIncome(incomeData);
-    const successKey = editingId ? 'INCOME_UPDATE_SUCCESS' : 'INCOME_SAVE_SUCCESS';
+    const successKey = editingId
+      ? (this.inventoryEnabled ? 'SALE_UPDATE_SUCCESS' : 'INCOME_UPDATE_SUCCESS')
+      : (this.inventoryEnabled ? 'SALE_SAVE_SUCCESS' : 'INCOME_SAVE_SUCCESS');
 
     this.isSubmittingIncome = true;
     savePromise
@@ -612,7 +712,7 @@ export class Profit implements OnInit, OnDestroy {
         console.error('Error saving income:', error);
         Toast.fire({
           icon: 'error',
-          title: error.message || this.translate.instant('INCOME_SAVE_ERROR')
+          title: error.message || this.translate.instant(this.inventoryEnabled ? 'SALE_SAVE_ERROR' : 'INCOME_SAVE_ERROR')
         });
       })
       .finally(() => {
@@ -632,7 +732,11 @@ export class Profit implements OnInit, OnDestroy {
       description: income.description || '',
       amount: income.amount,
       date: income.date,
+      productId: income.productId || '',
+      quantity: income.quantity ?? '',
+      unitPrice: income.unitPrice ?? '',
     });
+    this.toggleIsProductSale(this.inventoryEnabled && !!income.isProductSale);
     this.isAddModalOpen = true;
     this.closeDatePicker();
     document.body.classList.add('pnl-add-modal-open');
@@ -645,7 +749,7 @@ export class Profit implements OnInit, OnDestroy {
     if (incomeId) {
         Swal.fire({
             title: this.translate.instant('CONFIRM_DELETE_TITLE'),
-            text: this.translate.instant('CONFIRM_DELETE_INCOME'),
+            text: this.translate.instant(this.inventoryEnabled ? 'CONFIRM_DELETE_SALE' : 'CONFIRM_DELETE_INCOME'),
             icon: 'warning',
             showCancelButton: true,
             confirmButtonText: this.translate.instant('DELETE_BUTTON'),
@@ -656,14 +760,14 @@ export class Profit implements OnInit, OnDestroy {
               this.incomeService
                 .deleteIncome(incomeId)
                 .then(() => {
-                  Toast.fire({ icon: 'success', title: this.translate.instant('INCOME_DELETE_SUCCESS') });
+                  Toast.fire({ icon: 'success', title: this.translate.instant(this.inventoryEnabled ? 'SALE_DELETE_SUCCESS' : 'INCOME_DELETE_SUCCESS') });
                   this.refreshIncomes$.next();
                 })
                 .catch((error) => {
                     console.error('Error deleting income:', error);
                     Toast.fire({
                         icon: 'error',
-                        title: error.message || this.translate.instant('INCOME_DELETE_ERROR')
+                        title: error.message || this.translate.instant(this.inventoryEnabled ? 'SALE_DELETE_ERROR' : 'INCOME_DELETE_ERROR')
                       });
                 });
             }
@@ -689,7 +793,11 @@ export class Profit implements OnInit, OnDestroy {
       amount: '',
       currency: defaultCurrency,
       date: this.datePipe.transform(new Date(), 'yyyy-MM-dd'),
+      productId: '',
+      quantity: '',
+      unitPrice: '',
     });
+    this.toggleIsProductSale(this.inventoryEnabled);
     this.cdr.markForCheck();
   }
 

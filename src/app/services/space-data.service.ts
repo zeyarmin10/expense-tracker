@@ -8,7 +8,7 @@ import {
 } from '@angular/fire/database';
 import { getActiveGroupId, UserProfile } from './user-data';
 
-export type SpaceCollection = 'expenses' | 'incomes' | 'budgets' | 'categories' | 'vouchers';
+export type SpaceCollection = 'expenses' | 'incomes' | 'budgets' | 'categories' | 'vouchers' | 'products';
 
 export interface ActiveSpaceDataContext {
   spaceId: string | null;
@@ -123,6 +123,7 @@ export class SpaceDataService {
       await this.backfillCollection(spaceId, 'incomes', migrationProfile);
       await this.backfillCollection(spaceId, 'expenses', migrationProfile);
       await this.backfillCollection(spaceId, 'vouchers', migrationProfile);
+      await this.backfillCollection(spaceId, 'products', migrationProfile);
       this.ensuredSpaces.add(spaceId);
     } catch (error: any) {
       if (!this.isPermissionDenied(error)) {

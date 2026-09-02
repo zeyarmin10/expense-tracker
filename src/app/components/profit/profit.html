@@ -2,7 +2,7 @@
   <div class="pnl-container mb-5">
 
     <!-- ── ADD (FAB + Bottom-sheet Modal) ── -->
-    <button *ngIf="canManageProfitActions" type="button" class="pnl-add-fab" (click)="openAddModal()" [title]="'ADD_INCOME' | translate">
+    <button *ngIf="canManageProfitActions" type="button" class="pnl-add-fab" (click)="openAddModal()" [title]="(inventoryEnabled ? 'ADD_SALE' : 'ADD_INCOME') | translate">
       <lucide-icon [img]="iconBanknote" [size]="26"></lucide-icon>
       <span class="pnl-add-fab-badge">
         <lucide-icon [img]="iconPlus" [size]="12"></lucide-icon>
@@ -14,7 +14,7 @@
       <div class="pnl-add-modal-handle"></div>
 
       <div class="pnl-add-modal-header" *ngIf="!isDatePickerOpen">
-        <span class="pnl-add-modal-header-title">{{ (editingIncome ? 'EDIT_INCOME' : 'ADD_INCOME') | translate }}</span>
+        <span class="pnl-add-modal-header-title">{{ (editingIncome ? (inventoryEnabled ? 'EDIT_SALE' : 'EDIT_INCOME') : (inventoryEnabled ? 'ADD_SALE' : 'ADD_INCOME')) | translate }}</span>
         <button type="button" class="pnl-add-modal-close" (click)="closeAddModal()" [title]="'CANCEL_BUTTON_LABEL' | translate">
           <lucide-icon [img]="iconX" [size]="18"></lucide-icon>
         </button>
@@ -46,22 +46,77 @@
             </button>
           </div>
 
-          <!-- Amount — same prominent hero style as Add Expense's price field -->
-          <div class="pnl-amount-hero pnl-float-field pnl-float-group">
-            <span class="pnl-currency-badge pnl-amount-hero-currency">{{ userProfile?.currency || 'MMK' }}</span>
-            <div class="pnl-float-field" style="flex:1; min-width:0;">
-              <input type="text" inputmode="decimal" id="incomeAmount"
-                class="pnl-input pnl-input-field pnl-input-joined pnl-amount-hero-input"
-                [value]="incomeAmountDisplay"
-                (input)="onIncomeAmountInput($event)"
-                (focus)="incomeAmountDisplay = (incomeForm.get('amount')?.value > 0 ? formatWithCommas(incomeForm.get('amount')?.value) : ''); incomeForm.get('amount')?.markAsTouched()"
-                placeholder="10,000"
-                [class.is-invalid]="incomeForm.controls['amount'].invalid && incomeForm.controls['amount'].touched" />
+          <!-- Product sale toggle — only when mini inventory is enabled for this space -->
+          <label class="pnl-product-sale-toggle" *ngIf="inventoryEnabled">
+            <span>{{ 'IS_PRODUCT_SALE_LABEL' | translate }}</span>
+            <span class="pnl-switch">
+              <input type="checkbox" [checked]="incomeForm.get('isProductSale')?.value"
+                (change)="toggleIsProductSale($any($event.target).checked)" />
+              <span class="pnl-switch-track">
+                <span class="pnl-switch-thumb"></span>
+              </span>
+            </span>
+          </label>
+
+          <!-- Product sale fields -->
+          <ng-container *ngIf="isProductSaleActive">
+            <div class="pnl-float-field pnl-float-group">
+              <app-custom-select
+                [hasAddon]="true"
+                formControlName="productId"
+                [options]="productSelectOptions"
+                [sheetTitle]="'SELECT_PRODUCT' | translate">
+              </app-custom-select>
+              <button type="button" class="pnl-addon-btn" (click)="openProductModal()"
+                [title]="'ADD_PRODUCT_BTN' | translate">
+                <lucide-icon [img]="iconPlus" [size]="16"></lucide-icon>
+              </button>
             </div>
-          </div>
-          <div class="pnl-field-error" *ngIf="incomeForm.controls['amount'].invalid && incomeForm.controls['amount'].touched">
-            {{ 'AMOUNT_REQUIRED' | translate }}
-          </div>
+            <div class="pnl-field-error" *ngIf="incomeForm.controls['productId'].invalid && incomeForm.controls['productId'].touched">
+              {{ 'INCOME_PRODUCT_REQUIRED' | translate }}
+            </div>
+
+            <div class="pnl-form-row">
+              <div class="pnl-float-field">
+                <input type="number" formControlName="quantity" min="0.01" step="0.01"
+                  class="pnl-input pnl-input-field" [placeholder]="'QUANTITY_LABEL' | translate" />
+                <div class="pnl-field-error" *ngIf="incomeForm.controls['quantity'].invalid && incomeForm.controls['quantity'].touched">
+                  {{ 'QUANTITY_REQUIRED' | translate }}
+                </div>
+              </div>
+              <div class="pnl-float-field">
+                <input type="number" formControlName="unitPrice" min="0.01" step="0.01"
+                  class="pnl-input pnl-input-field" [placeholder]="'INCOME_UNIT_PRICE_LABEL' | translate" />
+                <div class="pnl-field-error" *ngIf="incomeForm.controls['unitPrice'].invalid && incomeForm.controls['unitPrice'].touched">
+                  {{ 'INCOME_UNIT_PRICE_REQUIRED' | translate }}
+                </div>
+              </div>
+            </div>
+
+            <div class="pnl-total-hint" *ngIf="incomeForm.get('amount')?.value">
+              {{ 'TOTAL_COST_LABEL' | translate }}:
+              <span class="pnl-total-hint-amount">{{ formatWithCommas(incomeForm.get('amount')?.value) }} {{ userProfile?.currency || 'MMK' }}</span>
+            </div>
+          </ng-container>
+
+          <!-- Amount — same prominent hero style as Add Expense's price field (plain income only) -->
+          <ng-container *ngIf="!isProductSaleActive">
+            <div class="pnl-amount-hero pnl-float-field pnl-float-group">
+              <span class="pnl-currency-badge pnl-amount-hero-currency">{{ userProfile?.currency || 'MMK' }}</span>
+              <div class="pnl-float-field" style="flex:1; min-width:0;">
+                <input type="text" inputmode="decimal" id="incomeAmount"
+                  class="pnl-input pnl-input-field pnl-input-joined pnl-amount-hero-input"
+                  [value]="incomeAmountDisplay"
+                  (input)="onIncomeAmountInput($event)"
+                  (focus)="incomeAmountDisplay = (incomeForm.get('amount')?.value > 0 ? formatWithCommas(incomeForm.get('amount')?.value) : ''); incomeForm.get('amount')?.markAsTouched()"
+                  placeholder="10,000"
+                  [class.is-invalid]="incomeForm.controls['amount'].invalid && incomeForm.controls['amount'].touched" />
+              </div>
+            </div>
+            <div class="pnl-field-error" *ngIf="incomeForm.controls['amount'].invalid && incomeForm.controls['amount'].touched">
+              {{ 'AMOUNT_REQUIRED' | translate }}
+            </div>
+          </ng-container>
           <div class="pnl-float-field">
             <textarea id="incomeDesc" formControlName="description" class="pnl-input pnl-input-field pnl-textarea"
               placeholder=" " maxlength="250" [class.pnl-has-val]="incomeForm.get('description')?.value"></textarea>
@@ -105,7 +160,7 @@
       <!-- Desktop only — the FAB is hidden at this breakpoint (see .pnl-add-fab) -->
       <button *ngIf="canManageProfitActions" type="button" class="pnl-add-toolbar-btn" (click)="openAddModal()">
         <lucide-icon [img]="iconPlus" [size]="15"></lucide-icon>
-        {{ 'ADD_INCOME' | translate }}
+        {{ (inventoryEnabled ? 'ADD_SALE' : 'ADD_INCOME') | translate }}
       </button>
     </div>
 
@@ -115,7 +170,7 @@
 
         <div class="pnl-card pnl-card-income">
           <div class="pnl-card-left">
-            <span class="pnl-card-label">{{ 'TOTAL_INCOMES' | translate }}</span>
+            <span class="pnl-card-label">{{ (inventoryEnabled ? 'TOTAL_SALES_LABEL' : 'TOTAL_INCOMES') | translate }}</span>
             <ng-container *ngIf="totalIncomesByCurrency$ | async as totals; else cardLoading">
               <ng-container *ngIf="(totals | keyvalue).length > 0; else cardNoData">
                 <span *ngFor="let t of totals | keyvalue; trackBy: trackByKey" class="pnl-card-amount pnl-amount-income"
@@ -131,7 +186,7 @@
 
         <div class="pnl-card pnl-card-expense">
           <div class="pnl-card-left">
-            <span class="pnl-card-label">{{ 'TOTAL_EXPENSES' | translate }}</span>
+            <span class="pnl-card-label">{{ (inventoryEnabled ? 'TOTAL_PURCHASES_LABEL' : 'TOTAL_EXPENSES') | translate }}</span>
             <ng-container *ngIf="totalExpensesByCurrency$ | async as totals; else cardLoading">
               <ng-container *ngIf="(totals | keyvalue).length > 0; else cardNoData">
                 <span *ngFor="let t of totals | keyvalue; trackBy: trackByKey" class="pnl-card-amount pnl-amount-expense"
@@ -181,13 +236,13 @@
     <div class="pnl-empty-banner" *ngIf="(hasIncomeData$ | async) === false">
       <div class="pnl-empty-icon"><lucide-icon [img]="iconChartColumn" [size]="32"></lucide-icon></div>
       <div class="pnl-empty-content">
-        <p class="pnl-empty-title">{{ 'PNL_EMPTY_TITLE' | translate }}</p>
-        <p class="pnl-empty-sub">{{ 'PNL_EMPTY_SUB' | translate }}</p>
+        <p class="pnl-empty-title">{{ (inventoryEnabled ? 'SALES_EMPTY_TITLE' : 'PNL_EMPTY_TITLE') | translate }}</p>
+        <p class="pnl-empty-sub">{{ (inventoryEnabled ? 'SALES_EMPTY_SUB' : 'PNL_EMPTY_SUB') | translate }}</p>
       </div>
       <div class="pnl-empty-actions" *ngIf="canManageProfitActions">
         <button type="button" class="pnl-empty-btn pnl-empty-btn-primary"
           (click)="openIncomeFormAndFocus()">
-          + {{ 'ADD_INCOME' | translate }}
+          + {{ (inventoryEnabled ? 'ADD_SALE' : 'ADD_INCOME') | translate }}
         </button>
       </div>
     </div>
@@ -208,7 +263,7 @@
             <lucide-icon [img]="iconChartColumn" [size]="32" class="pnl-no-chart-icon-fa"></lucide-icon>
             <p class="pnl-no-chart-msg">{{ 'NO_PNL_CHART_DATA' | translate }}</p>
             <button *ngIf="canManageProfitActions" type="button" class="pnl-no-chart-cta" (click)="openIncomeFormAndFocus()">
-              + {{ 'ADD_INCOME' | translate }}
+              + {{ (inventoryEnabled ? 'ADD_SALE' : 'ADD_INCOME') | translate }}
             </button>
           </div>
         </div>
@@ -222,7 +277,7 @@
           <span class="pnl-toggle-pill pnl-toggle-pill-income">
             <lucide-icon [img]="iconBanknote" [size]="13"></lucide-icon>
           </span>
-          {{ 'RECORDED_INCOMES' | translate }}
+          {{ (inventoryEnabled ? 'RECORDED_SALES' : 'RECORDED_INCOMES') | translate }}
         </span>
         <span class="grid grid-cols-2 gap-2">
           <span class="pnl-table-count" *ngIf="incomes$ | async as headerIncomes">{{ formatCount(headerIncomes.length) }}</span>
@@ -310,7 +365,7 @@
             <ng-template #listEmpty>
               <div class="pnl-list-empty">
                 <lucide-icon [img]="iconBanknote" [size]="28" class="pnl-list-empty-icon"></lucide-icon>
-                <p>{{ 'NO_INCOME_DATA' | translate }}</p>
+                <p>{{ (inventoryEnabled ? 'NO_SALES_DATA' : 'NO_INCOME_DATA') | translate }}</p>
               </div>
             </ng-template>
           </ng-container>
@@ -356,3 +411,5 @@
 
   </div>
 </div>
+
+<app-product-modal *ngIf="inventoryEnabled" (productAdded)="loadProducts()"></app-product-modal>

@@ -20,6 +20,7 @@ import {
 import { ServiceIExpense as IExpense, ExpenseService } from '../../services/expense';
 import { ServiceIVoucher, VoucherService } from '../../services/voucher';
 import { ServiceICategory, CategoryService } from '../../services/category';
+import { ServiceIProduct, ProductService } from '../../services/product';
 import flatpickr from 'flatpickr';
 import type { Instance as FlatpickrInstance } from 'flatpickr/dist/types/instance';
 import { Burmese } from 'flatpickr/dist/l10n/my';
@@ -47,10 +48,12 @@ import {
 } from 'lucide-angular';
 
 import { CategoryModalComponent } from '../common/category-modal/category-modal';
+import { ProductModalComponent } from '../common/product-modal/product-modal';
 import { LightboxComponent } from '../common/lightbox/lightbox.component';
 import { getIconData, getIconHue } from '../../utils/category-icons';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../services/auth';
+import { SpaceContextService } from '../../services/space-context.service';
 import {
   UserProfile,
   canManageSharedSpace,
@@ -98,6 +101,7 @@ interface ExpenseDateGroup {
     FormsModule,
     LucideAngularModule,
     CategoryModalComponent,
+    ProductModalComponent,
     LightboxComponent,
     TranslateModule,
     CurrentSpaceTitleComponent,
@@ -112,6 +116,7 @@ interface ExpenseDateGroup {
 })
 export class Expense implements OnInit, OnDestroy {
   @ViewChild(CategoryModalComponent) categoryModal!: CategoryModalComponent;
+  @ViewChild(ProductModalComponent) productModal!: ProductModalComponent;
   @ViewChild(LightboxComponent) lightbox!: LightboxComponent;
   @ViewChild('galleryFileInput') galleryFileInput!: ElementRef<HTMLInputElement>;
   @ViewChild('voucherTitleInput') voucherTitleInput!: ElementRef<HTMLInputElement>;
@@ -130,6 +135,14 @@ export class Expense implements OnInit, OnDestroy {
   getIconUrlForCategory(categoryName: string): string | null {
     return this.categoryList.find(c => c.name === categoryName)?.iconUrl ?? null;
   }
+
+  products$!: Observable<ServiceIProduct[]>;
+  productList: ServiceIProduct[] = [];
+  inventoryEnabled$!: Observable<boolean>;
+  // Plain boolean mirror of inventoryEnabled$ — lets templates/TS pick the
+  // Purchase- vs Expense-flavored translation key with a ternary instead of
+  // repeated async-pipe subscriptions (same pattern as profit.ts).
+  inventoryEnabled = false;
 
   private refreshExpenses$ = new BehaviorSubject<void>(undefined);
   private refreshVouchers$ = new BehaviorSubject<void>(undefined);
@@ -150,6 +163,8 @@ export class Expense implements OnInit, OnDestroy {
   expenseService = inject(ExpenseService);
   voucherService = inject(VoucherService);
   categoryService = inject(CategoryService);
+  productService = inject(ProductService);
+  private spaceContextService = inject(SpaceContextService);
   datePipe = inject(DatePipe);
   translate = inject(TranslateService);
 
@@ -282,6 +297,7 @@ export class Expense implements OnInit, OnDestroy {
     this.newExpenseForm = this.fb.group({
       date: [todayFormatted, Validators.required],
       category: ['', Validators.required],
+      productId: [''],
       itemName: ['', Validators.maxLength(50)],
       quantity: [1, [Validators.required, Validators.min(0.01), Validators.max(99999)]],
       unit: ['', Validators.maxLength(20)],
@@ -356,6 +372,14 @@ export class Expense implements OnInit, OnDestroy {
       this.cdr.markForCheck();
     });
     this.loadCategories();
+    this.loadProducts();
+    this.inventoryEnabled$ = this.authService.userProfile$.pipe(
+      switchMap(profile => this.spaceContextService.isInventoryEnabled$(profile)),
+    );
+    this.inventoryEnabled$.pipe(takeUntil(this.destroy$)).subscribe(enabled => {
+      this.inventoryEnabled = enabled;
+      this.cdr.markForCheck();
+    });
   }
 
   ngOnDestroy(): void {
@@ -390,7 +414,7 @@ export class Expense implements OnInit, OnDestroy {
   private resetNewExpenseForm(): void {
     const today = this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
     this.newExpenseForm.reset({
-      date: today, category: '', itemName: '', quantity: 1, unit: '', price: ''
+      date: today, category: '', productId: '', itemName: '', quantity: 1, unit: '', price: ''
     });
     this.priceDisplayValue = '';
   }
@@ -430,6 +454,47 @@ export class Expense implements OnInit, OnDestroy {
     const q = this.categoryPickerSearch.trim().toLowerCase();
     if (!q) return this.categoryList;
     return this.categoryList.filter(c => c.name.toLowerCase().includes(q));
+  }
+
+  // ── Product picker (same drill-down pattern as the category picker above) ──
+  isProductPickerOpen = false;
+  productPickerSearch = '';
+
+  openProductPicker(): void {
+    this.productPickerSearch = '';
+    this.isProductPickerOpen = true;
+    this.closeDatePicker();
+  }
+
+  closeProductPicker(): void {
+    this.isProductPickerOpen = false;
+  }
+
+  // Selecting a product stays optional and never clobbers a manually-typed
+  // itemName/unit — it only fills them in when they're still blank.
+  selectProduct(product: ServiceIProduct | null): void {
+    this.newExpenseForm.get('productId')?.setValue(product?.id ?? '');
+    if (product) {
+      const itemNameControl = this.newExpenseForm.get('itemName');
+      if (!itemNameControl?.value) {
+        itemNameControl?.setValue(product.name);
+      }
+      const unitControl = this.newExpenseForm.get('unit');
+      if (product.unit && !unitControl?.value) {
+        unitControl?.setValue(product.unit);
+      }
+    }
+    this.closeProductPicker();
+  }
+
+  get filteredPickerProducts(): ServiceIProduct[] {
+    const q = this.productPickerSearch.trim().toLowerCase();
+    if (!q) return this.productList;
+    return this.productList.filter(p => p.name.toLowerCase().includes(q));
+  }
+
+  getSelectedProductName(productId: string): string | null {
+    return this.productList.find(p => p.id === productId)?.name ?? null;
   }
 
   // ── Date picker (drill-down within the Add-Expense/Voucher modal) ──
@@ -623,6 +688,19 @@ export class Expense implements OnInit, OnDestroy {
     this.categoryModal.open();
   }
 
+  loadProducts(): void {
+    this.products$ = this.productService.getProducts();
+    this.products$.pipe(takeUntil(this.destroy$)).subscribe(products => { this.productList = products; this.cdr.markForCheck(); });
+  }
+
+  openProductModal(): void {
+    this.productModal.open();
+  }
+
+  trackByProductId(index: number, product: ServiceIProduct): string {
+    return product.id ?? String(index);
+  }
+
   trackByIndex(index: number): number {
     return index;
   }
@@ -666,6 +744,7 @@ export class Expense implements OnInit, OnDestroy {
         const updated: any = {
           date: fv.date,
           category: fv.category,
+          productId: fv.productId || null,
           itemName: fv.itemName,
           quantity: fv.quantity,
           unit: fv.unit,
@@ -676,7 +755,7 @@ export class Expense implements OnInit, OnDestroy {
           editedDevice: 'Web Browser',
         };
         await this.expenseService.updateExpense(this.editingExpense.id!, updated);
-        Toast.fire({ icon: 'success', title: this.translate.instant('EXPENSE_SUCCESS_UPDATED') });
+        Toast.fire({ icon: 'success', title: this.translate.instant(this.inventoryEnabled ? 'PURCHASE_SUCCESS_UPDATED' : 'EXPENSE_SUCCESS_UPDATED') });
         this.refreshExpenses$.next();
         this.closeAddModal(); // also clears editingExpense + resets the form
         return;
@@ -685,6 +764,7 @@ export class Expense implements OnInit, OnDestroy {
       const newExpense: Omit<IExpense, 'id'> = {
         date: fv.date,
         category: fv.category,
+        ...(fv.productId ? { productId: fv.productId } : {}),
         itemName: fv.itemName,
         quantity: fv.quantity,
         unit: fv.unit,
@@ -693,16 +773,18 @@ export class Expense implements OnInit, OnDestroy {
         totalCost: fv.quantity * fv.price,
       };
       await this.expenseService.addExpense(newExpense as any);
-      Toast.fire({ icon: 'success', title: this.translate.instant('EXPENSE_SUCCESS_ADDED') });
+      Toast.fire({ icon: 'success', title: this.translate.instant(this.inventoryEnabled ? 'PURCHASE_SUCCESS_ADDED' : 'EXPENSE_SUCCESS_ADDED') });
       this.newExpenseForm.reset({
         date: this.datePipe.transform(fv.date, 'yyyy-MM-dd') || '',
-        category: '', itemName: '', quantity: 1, unit: '', price: ''
+        category: '', productId: '', itemName: '', quantity: 1, unit: '', price: ''
       });
       this.priceDisplayValue = '';
       this.refreshExpenses$.next();
       this.closeAddModal();
     } catch (error: any) {
-      const fallbackKey = this.editingExpense ? 'EXPENSE_ERROR_UPDATE' : 'EXPENSE_ERROR_ADD';
+      const fallbackKey = this.editingExpense
+        ? (this.inventoryEnabled ? 'PURCHASE_ERROR_UPDATE' : 'EXPENSE_ERROR_UPDATE')
+        : (this.inventoryEnabled ? 'PURCHASE_ERROR_ADD' : 'EXPENSE_ERROR_ADD');
       Toast.fire({ icon: 'error', title: error.message || this.translate.instant(fallbackKey) });
     } finally {
       this.isSaving = false;
@@ -1088,6 +1170,7 @@ export class Expense implements OnInit, OnDestroy {
     this.newExpenseForm.patchValue({
       date: expense.date,
       category: expense.category,
+      productId: expense.productId || '',
       itemName: expense.itemName || '',
       quantity: expense.quantity ?? 1,
       unit: expense.unit || '',
@@ -1104,7 +1187,7 @@ export class Expense implements OnInit, OnDestroy {
     }
     Swal.fire({
       title: this.translate.instant('CONFIRM_DELETE_TITLE'),
-      text: this.translate.instant('CONFIRM_DELETE_EXPENSE'),
+      text: this.translate.instant(this.inventoryEnabled ? 'CONFIRM_DELETE_PURCHASE' : 'CONFIRM_DELETE_EXPENSE'),
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: this.translate.instant('DELETE_BUTTON'),
@@ -1116,7 +1199,7 @@ export class Expense implements OnInit, OnDestroy {
         this.cdr.markForCheck();
         try {
           await this.expenseService.deleteExpense(expenseId);
-          Toast.fire({ icon: 'success', title: this.translate.instant('EXPENSE_DELETED_SUCCESS') });
+          Toast.fire({ icon: 'success', title: this.translate.instant(this.inventoryEnabled ? 'PURCHASE_DELETED_SUCCESS' : 'EXPENSE_DELETED_SUCCESS') });
           this.refreshExpenses$.next();
         } catch (error: any) {
           Toast.fire({ icon: 'error', title: error.message || this.translate.instant('DATA_DELETE_ERROR') });

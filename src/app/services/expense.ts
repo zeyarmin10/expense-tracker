@@ -286,7 +286,7 @@ export class ExpenseService {
     const currentExpense = await this.getExpense(expenseId);
 
     // ── Changed fields ကို detect ──
-    const TRACKED_FIELDS: (keyof IExpense)[] = ['itemName', 'price', 'quantity', 'unit', 'category', 'date'];
+    const TRACKED_FIELDS: (keyof IExpense)[] = ['itemName', 'price', 'quantity', 'unit', 'category', 'date', 'productId'];
     const changes: Record<string, { from: any; to: any }> = {};
     const sanitize = (val: any) => (val === undefined || val === null) ? '' : val;
     for (const field of TRACKED_FIELDS) {

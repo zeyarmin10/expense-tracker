@@ -47,7 +47,7 @@
         },
 
         "expenses": {
-          ".indexOn": ["date", "category"],
+          ".indexOn": ["date", "category", "productId"],
           ".write": "$uid === auth.uid",
           "$expenseId": {
             "editHistory": {
@@ -59,7 +59,7 @@
         },
 
         "incomes": {
-          ".indexOn": "date",
+          ".indexOn": ["date", "productId"],
           ".write": "$uid === auth.uid"
         },
 
@@ -70,6 +70,11 @@
 
         "categories": {
           ".indexOn": "category",
+          ".write": "$uid === auth.uid"
+        },
+
+        "products": {
+          ".indexOn": "name",
           ".write": "$uid === auth.uid"
         }
       }
@@ -139,7 +144,7 @@
         ".write": "root.child('space_members').child($spaceId).child(auth.uid).exists() || root.child('group_members').child($spaceId).child(auth.uid).exists() || root.child('users').child(auth.uid).child('personalSpaceId').val() === $spaceId",
 
         "expenses": {
-          ".indexOn": ["date", "category"],
+          ".indexOn": ["date", "category", "productId"],
           "$expenseId": {
             "editHistory": {
               "$entryKey": {
@@ -150,7 +155,7 @@
         },
 
         "incomes": {
-          ".indexOn": "date"
+          ".indexOn": ["date", "productId"]
         },
 
         "budgets": {
@@ -158,6 +163,10 @@
         },
 
         "categories": {
+          ".indexOn": "name"
+        },
+
+        "products": {
           ".indexOn": "name"
         }
       }
@@ -199,7 +208,7 @@
         ".write": "root.child('group_members').child($groupId).child(auth.uid).exists()",
 
         "expenses": {
-          ".indexOn": ["date", "category"],
+          ".indexOn": ["date", "category", "productId"],
           "$expenseId": {
             "editHistory": {
               "$entryKey": {
@@ -210,7 +219,7 @@
         },
 
         "incomes": {
-          ".indexOn": "date"
+          ".indexOn": ["date", "productId"]
         },
 
         "budgets": {
@@ -218,6 +227,10 @@
         },
 
         "categories": {
+          ".indexOn": "name"
+        },
+
+        "products": {
           ".indexOn": "name"
         }
       }

@@ -82,7 +82,12 @@ export class DataManagerService {
     return trimmedName;
   }
 
-  async createGroup(groupName: string, language: string, imageUrl?: string | null): Promise<string> {
+  async createGroup(
+    groupName: string,
+    language: string,
+    imageUrl?: string | null,
+    enableInventory = false,
+  ): Promise<string> {
     const userId = (await firstValueFrom(
       this.authService.currentUser$.pipe(rxMap((user) => user?.uid))
     ))!;
@@ -112,6 +117,7 @@ export class DataManagerService {
       budgetStartDate: userProfile?.budgetStartDate || null,
       budgetEndDate: userProfile?.budgetEndDate || null,
       selectedBudgetPeriodId: userProfile?.selectedBudgetPeriodId || null,
+      inventoryEnabled: enableInventory,
       createdAt: Date.now(),
       ...(imageUrl ? { imageUrl } : {}),
     });

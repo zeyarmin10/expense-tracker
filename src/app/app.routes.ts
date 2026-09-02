@@ -48,6 +48,16 @@ export const routes: Routes = [
         data: { titleKey: 'EXPENSE_ADD_TITLE' },
       },
       {
+        path: 'purchase',
+        loadComponent: () => import('./components/expense/expense').then((m) => m.Expense),
+        data: { titleKey: 'PURCHASE_ADD_TITLE' },
+      },
+      {
+        path: 'sales',
+        loadComponent: () => import('./components/profit/profit').then((m) => m.Profit),
+        data: { titleKey: 'SALES_ADD_TITLE' },
+      },
+      {
         path: 'expense-overview',
         loadComponent: () => import('./components/expense-overview/expense-overview').then((m) => m.ExpenseOverview),
         data: { titleKey: 'EXPENSE_OVERVIEW_TITLE' },
@@ -66,6 +76,11 @@ export const routes: Routes = [
         path: 'category',
         loadComponent: () => import('./components/category/category').then((m) => m.Category),
         data: { titleKey: 'CREATE_CATEGORY_TITLE' },
+      },
+      {
+        path: 'inventory',
+        loadComponent: () => import('./components/inventory/inventory').then((m) => m.Inventory),
+        data: { titleKey: 'INVENTORY_TITLE' },
       },
       {
         path: 'onboarding',

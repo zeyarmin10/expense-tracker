@@ -28,21 +28,49 @@
       <li><a routerLink="/dashboard" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_DASHBOARD' |
           translate
           }}</a></li>
-      <li><a routerLink="/expense" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_EXPENSE' |
+
+      <!-- Generic (personal / non-shop) links -->
+      <ng-container *ngIf="!(inventoryEnabled$ | async)">
+        <li><a routerLink="/expense" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_EXPENSE' |
+            translate
+            }}</a></li>
+        <li><a routerLink="/expense-overview" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{
+            'NAV_EXPENSE_OVERVIEW' | translate }}</a></li>
+        <li><a routerLink="/budget" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_BUDGET' | translate
+            }}</a></li>
+        <li><a routerLink="/profit" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_PROFIT' | translate
+            }}</a></li>
+      </ng-container>
+
+      <!-- Shop (inventory-enabled) links -->
+      <ng-container *ngIf="inventoryEnabled$ | async">
+        <li><a routerLink="/purchase" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_PURCHASE' |
+            translate
+            }}</a></li>
+        <li><a routerLink="/sales" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_SALES' |
+            translate
+            }}</a></li>
+      </ng-container>
+
+      <li *ngIf="!(inventoryEnabled$ | async)">
+        <a routerLink="/cash-flow" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_CASH_FLOW' |
           translate
-          }}</a></li>
-      <li><a routerLink="/expense-overview" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{
-          'NAV_EXPENSE_OVERVIEW' | translate }}</a></li>
-      <li><a routerLink="/budget" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_BUDGET' | translate
-          }}</a></li>
-      <li><a routerLink="/profit" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_PROFIT' | translate
-          }}</a></li>
-      <li><a routerLink="/cash-flow" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_CASH_FLOW' |
+          }}</a>
+      </li>
+      <li *ngIf="inventoryEnabled$ | async">
+        <a routerLink="/cash-flow" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_CASH_IN_OUT' |
           translate
-          }}</a></li>
+          }}</a>
+      </li>
+
       <li><a routerLink="/category" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_CATEGORY' |
           translate
           }}</a></li>
+      <li *ngIf="inventoryEnabled$ | async">
+        <a routerLink="/inventory" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_SUMMARY' |
+          translate
+          }}</a>
+      </li>
       <li *ngIf="isGroupAdmin$ | async">
         <a routerLink="/member-management" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{
           'NAV_MEMBER_MANAGEMENT'
@@ -180,54 +208,82 @@
     <span class="mob-nav-label">{{ 'NAV_DASHBOARD' | translate }}</span>
   </a>
 
-  <!-- Budget -->
-  <a id="tour-nav-budget" class="mob-nav-item" routerLink="/budget" routerLinkActive="mob-nav-active">
-    <span class="mob-nav-icon">
-      <!-- Wallet / budget icon -->
-      <!-- <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M20 12V8H6a2 2 0 0 1 0-4h14v4"/>
-        <path d="M20 12a2 2 0 0 1 0 4H6a2 2 0 0 1-2-2v-1"/>
-        <circle cx="17" cy="12" r="1" fill="currentColor"/>
-      </svg> -->
-      <lucide-icon [img]="iconPiggyBank" [size]="24"></lucide-icon>
-    </span>
-    <span class="mob-nav-label">{{ 'NAV_BUDGET' | translate }}</span>
-  </a>
-
-  <!-- FAB Center: Expense -->
-  <a id="tour-nav-add" class="mob-nav-item mob-nav-fab" routerLink="/expense" routerLinkActive="mob-nav-fab-active">
-    <ng-container *ngIf="showFab$ | async; else expenseActiveIcon">
-      <!-- Plus FAB: တခြား page မှာ ပြ -->
-      <span class="mob-fab-circle">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
-          stroke-linejoin="round">
-          <line x1="12" y1="5" x2="12" y2="19" />
-          <line x1="5" y1="12" x2="19" y2="12" />
-        </svg>
-      </span>
-    </ng-container>
-    <ng-template #expenseActiveIcon>
-      <!-- Expense active icon: receipt/list style -->
+  <!-- Budget / Purchase / Sales FAB / Income / Summary — swapped as a set based on shop mode -->
+  <ng-container *ngIf="!(inventoryEnabled$ | async)">
+    <!-- Budget -->
+    <a id="tour-nav-budget" class="mob-nav-item" routerLink="/budget" routerLinkActive="mob-nav-active">
       <span class="mob-nav-icon">
-        <!-- <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-          <polyline points="14 2 14 8 20 8"/>
-          <line x1="9" y1="13" x2="15" y2="13"/>
-          <line x1="9" y1="17" x2="13" y2="17"/>
-        </svg> -->
+        <lucide-icon [img]="iconPiggyBank" [size]="24"></lucide-icon>
+      </span>
+      <span class="mob-nav-label">{{ 'NAV_BUDGET' | translate }}</span>
+    </a>
+
+    <!-- FAB Center: Expense -->
+    <a id="tour-nav-add" class="mob-nav-item mob-nav-fab" routerLink="/expense" routerLinkActive="mob-nav-fab-active">
+      <ng-container *ngIf="showFab$ | async; else expenseActiveIcon">
+        <!-- Plus FAB: တခြား page မှာ ပြ -->
+        <span class="mob-fab-circle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+            stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+        </span>
+      </ng-container>
+      <ng-template #expenseActiveIcon>
+        <!-- Expense active icon: receipt/list style -->
+        <span class="mob-nav-icon">
+          <lucide-icon [img]="iconShoppingCart" [size]="24"></lucide-icon>
+        </span>
+      </ng-template>
+      <span class="mob-nav-label">{{ 'NAV_EXPENSE' | translate }}</span>
+    </a>
+
+    <!-- Income (formerly labeled "Profit") -->
+    <a id="tour-nav-income" class="mob-nav-item" routerLink="/profit" routerLinkActive="mob-nav-active">
+      <span class="mob-nav-icon">
+        <lucide-icon [img]="iconBanknote" [size]="24"></lucide-icon>
+      </span>
+      <span class="mob-nav-label">{{ 'NAV_PROFIT' | translate }}</span>
+    </a>
+  </ng-container>
+
+  <ng-container *ngIf="inventoryEnabled$ | async">
+    <!-- Purchase -->
+    <a id="tour-nav-purchase" class="mob-nav-item" routerLink="/purchase" routerLinkActive="mob-nav-active">
+      <span class="mob-nav-icon">
         <lucide-icon [img]="iconShoppingCart" [size]="24"></lucide-icon>
       </span>
-    </ng-template>
-    <span class="mob-nav-label">{{ 'NAV_EXPENSE' | translate }}</span>
-  </a>
+      <span class="mob-nav-label">{{ 'NAV_PURCHASE' | translate }}</span>
+    </a>
 
-  <!-- Income (formerly labeled "Profit") -->
-  <a id="tour-nav-income" class="mob-nav-item" routerLink="/profit" routerLinkActive="mob-nav-active">
-    <span class="mob-nav-icon">
-      <lucide-icon [img]="iconBanknote" [size]="24"></lucide-icon>
-    </span>
-    <span class="mob-nav-label">{{ 'NAV_PROFIT' | translate }}</span>
-  </a>
+    <!-- FAB Center: Sales — the shop's highest-frequency action -->
+    <a id="tour-nav-sales-fab" class="mob-nav-item mob-nav-fab" routerLink="/sales" routerLinkActive="mob-nav-fab-active">
+      <ng-container *ngIf="showFab$ | async; else salesActiveIcon">
+        <span class="mob-fab-circle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+            stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+        </span>
+      </ng-container>
+      <ng-template #salesActiveIcon>
+        <span class="mob-nav-icon">
+          <lucide-icon [img]="iconBanknote" [size]="24"></lucide-icon>
+        </span>
+      </ng-template>
+      <span class="mob-nav-label">{{ 'NAV_SALES' | translate }}</span>
+    </a>
+
+    <!-- Summary (Inventory page — Products + Stock & Profit) -->
+    <a id="tour-nav-summary" class="mob-nav-item" routerLink="/inventory" routerLinkActive="mob-nav-active">
+      <span class="mob-nav-icon">
+        <lucide-icon [img]="iconPackage" [size]="24"></lucide-icon>
+      </span>
+      <span class="mob-nav-label">{{ 'NAV_SUMMARY' | translate }}</span>
+    </a>
+  </ng-container>
 
   <!-- More -->
   <button id="tour-nav-more" class="mob-nav-item mob-nav-more-btn" type="button" (click)="toggleMobileMenu()"
@@ -333,7 +389,7 @@
 
   <!-- Nav links in drawer -->
   <div class="mob-drawer-links">
-    <a class="mob-drawer-link" routerLink="/expense-overview" routerLinkActive="mob-drawer-active" (click)="closeNavbarMenu()">
+    <a class="mob-drawer-link" *ngIf="!(inventoryEnabled$ | async)" routerLink="/expense-overview" routerLinkActive="mob-drawer-active" (click)="closeNavbarMenu()">
       <span class="mob-drawer-link-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
           stroke-linejoin="round">
@@ -343,11 +399,17 @@
       <span>{{ 'NAV_EXPENSE_OVERVIEW' | translate }}</span>
     </a>
 
-    <a class="mob-drawer-link" routerLink="/cash-flow" routerLinkActive="mob-drawer-active" (click)="closeNavbarMenu()">
+    <a class="mob-drawer-link" *ngIf="!(inventoryEnabled$ | async)" routerLink="/cash-flow" routerLinkActive="mob-drawer-active" (click)="closeNavbarMenu()">
       <span class="mob-drawer-link-icon">
         <lucide-icon [img]="iconTrendingUp" [size]="16"></lucide-icon>
       </span>
       <span>{{ 'NAV_CASH_FLOW' | translate }}</span>
+    </a>
+    <a class="mob-drawer-link" *ngIf="inventoryEnabled$ | async" routerLink="/cash-flow" routerLinkActive="mob-drawer-active" (click)="closeNavbarMenu()">
+      <span class="mob-drawer-link-icon">
+        <lucide-icon [img]="iconTrendingUp" [size]="16"></lucide-icon>
+      </span>
+      <span>{{ 'NAV_CASH_IN_OUT' | translate }}</span>
     </a>
 
     <a class="mob-drawer-link" routerLink="/category" routerLinkActive="mob-drawer-active" (click)="closeNavbarMenu()">

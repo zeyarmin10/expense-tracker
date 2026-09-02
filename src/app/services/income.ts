@@ -27,6 +27,10 @@ export interface ServiceIIncome {
   amount: number;
   currency: string;
   description?: string;
+  isProductSale?: boolean;
+  productId?: string;
+  quantity?: number;
+  unitPrice?: number;
   userId?: string;
   groupId?: string;
   createdAt?: string;

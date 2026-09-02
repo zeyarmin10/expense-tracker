@@ -11,7 +11,7 @@ import {
 import { Observable, combineLatest, map, of, switchMap, catchError } from 'rxjs';
 import { CategoryService } from './category';
 import { Space, SpaceRole, UserSpaceSummary } from './space.model';
-import { UserDataService } from './user-data';
+import { UserDataService, UserProfile, getActiveGroupId } from './user-data';
 
 @Injectable({
   providedIn: 'root',
@@ -70,6 +70,20 @@ export class SpaceContextService {
         `the current database rules don't allow this account to backfill its own membership record.`,
       );
     }
+  }
+
+  /**
+   * The mini inventory feature is group-space only, and opt-in per group
+   * (see Space.inventoryEnabled) — a personal space (no active group) is
+   * never enabled. Shared by the nav gating (app.ts), the Inventory page's
+   * own redirect guard, and the Expense/Income forms' product-picker gating.
+   */
+  isInventoryEnabled$(profile: UserProfile | null): Observable<boolean> {
+    const activeGroupId = getActiveGroupId(profile);
+    if (!activeGroupId) {
+      return of(false);
+    }
+    return this.getSpace(activeGroupId).pipe(map((space) => !!space?.inventoryEnabled));
   }
 
   getSpace(spaceId: string | null | undefined): Observable<Space | null> {

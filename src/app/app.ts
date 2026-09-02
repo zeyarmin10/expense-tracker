@@ -7,7 +7,7 @@ import { Observable, combineLatest, of, firstValueFrom } from 'rxjs';
 import { map, filter, startWith, switchMap, distinctUntilChanged, debounceTime, take } from 'rxjs/operators';
 import { AuthService } from './services/auth';
 import { User } from '@angular/fire/auth';
-import { LucideAngularModule, LogOut, Users as LucideUsers, User as LucideUserIcon, ChevronDown, Sun, Moon, PiggyBank, ShoppingCart, Tags, ArrowDown, RotateCw, TrendingUp, Banknote } from 'lucide-angular';
+import { LucideAngularModule, LogOut, Users as LucideUsers, User as LucideUserIcon, ChevronDown, Sun, Moon, PiggyBank, ShoppingCart, Tags, ArrowDown, RotateCw, TrendingUp, Banknote, Package } from 'lucide-angular';
 import { InvitationService } from './services/invitation.service';
 import { DataManagerService } from './services/data-manager';
 import { ToastService } from './services/toast';
@@ -61,6 +61,7 @@ export class App implements OnInit, AfterViewInit {
   isGroupAccount$: Observable<boolean>;
   groupMembers$: Observable<any[]>;
   groupName$: Observable<string | null>;
+  inventoryEnabled$: Observable<boolean>;
   userSpaces$: Observable<UserSpaceSummary[]>;
   currentSpaceName$: Observable<string | null>;
   currentSpaceId$: Observable<string | null>;
@@ -86,6 +87,7 @@ export class App implements OnInit, AfterViewInit {
   readonly iconRotateCw = RotateCw;
   readonly iconTrendingUp = TrendingUp;
   readonly iconBanknote = Banknote;
+  readonly iconPackage = Package;
   currentLang: string;
   mobileMenuOpen = false;
   isDarkMode = true;
@@ -182,6 +184,10 @@ export class App implements OnInit, AfterViewInit {
         }
         return of(null);
       })
+    );
+
+    this.inventoryEnabled$ = this.authService.userProfile$.pipe(
+      switchMap(profile => this.spaceContextService.isInventoryEnabled$(profile))
     );
 
     this.userSpaces$ = this.currentUser$.pipe(

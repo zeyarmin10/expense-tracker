@@ -60,6 +60,8 @@ import { FormatService } from '../../services/format.service';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
 import { CustomBudgetPeriod, CustomBudgetPeriodService } from '../../services/custom-budget-period.service';
 import { SpaceDataService } from '../../services/space-data.service';
+import { SpaceContextService } from '../../services/space-context.service';
+import { ShopDashboardComponent } from '../shop-dashboard/shop-dashboard';
 
 Chart.register(...registerables);
 type CurrencyMap = { [currency: string]: number };
@@ -75,7 +77,7 @@ type DashboardDataState = DashboardData & {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, LucideAngularModule, RouterModule, CurrentSpaceTitleComponent],
+  imports: [CommonModule, FormsModule, TranslateModule, LucideAngularModule, RouterModule, CurrentSpaceTitleComponent, ShopDashboardComponent],
   providers: [DatePipe],
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.css'],
@@ -109,6 +111,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   private categoryService = inject(CategoryService);
   private customBudgetPeriodService = inject(CustomBudgetPeriodService);
   private spaceDataService = inject(SpaceDataService);
+  private spaceContextService = inject(SpaceContextService);
   private customBudgetPeriods: CustomBudgetPeriod[] = [];
 
   @ViewChild('expenseChartCanvas')
@@ -128,6 +131,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     incomes: ServiceIIncome[];
   }>;
   totalIncomesByCurrency$!: Observable<{ [currency: string]: number }>;
+  inventoryEnabled$!: Observable<boolean>;
 
   private dashboardAllData$!: Observable<DashboardData>;
   expenseFilterForm!: FormGroup;
@@ -190,6 +194,9 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     this.initializeForms();
     this.initializeUserDataAndDateRange();
     this.initializeDataStreams();
+    this.inventoryEnabled$ = this.authService.userProfile$.pipe(
+      switchMap(profile => this.spaceContextService.isInventoryEnabled$(profile)),
+    );
   }
 
   ngAfterViewInit(): void {

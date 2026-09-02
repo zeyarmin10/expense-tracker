@@ -50,6 +50,7 @@ export interface DataIExpense {
   date: string;
   category: string;
   categoryId?: string;
+  productId?: string;
   itemName: string;
   quantity: number;
   unit?: string;

@@ -1864,3 +1864,104 @@ app-date-input .di-trigger {
   font-style: italic;
   opacity: 0.7;
 }
+
+/* ── Product sale toggle + fields (mini inventory feature) ── */
+.pnl-product-sale-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.6rem 0.85rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 0.82rem;
+  color: var(--text);
+  cursor: pointer;
+  margin-bottom: 0.85rem;
+}
+
+.pnl-switch {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.pnl-switch input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.pnl-switch-track {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(148, 163, 184, 0.22);
+  display: inline-flex;
+  align-items: center;
+  padding: 2px;
+  transition: background 0.18s, border-color 0.18s;
+}
+
+.pnl-switch-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: var(--text-muted);
+  transform: translateX(0);
+  transition: transform 0.18s, background 0.18s;
+}
+
+.pnl-switch input:checked + .pnl-switch-track {
+  border-color: var(--income-border);
+  background: var(--success-dim);
+}
+
+.pnl-switch input:checked + .pnl-switch-track .pnl-switch-thumb {
+  background: var(--success);
+  transform: translateX(20px);
+}
+
+.pnl-float-group > app-custom-select {
+  flex: 1;
+  min-width: 0;
+}
+
+.pnl-float-group .pnl-addon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--info);
+  border: 1px solid var(--border);
+  border-left: none;
+  border-radius: 0 10px 10px 0;
+  padding: 0 0.95rem;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+
+.pnl-float-group .pnl-addon-btn:hover {
+  background: var(--accent);
+}
+
+.pnl-total-hint {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  text-align: right;
+  margin: -0.4rem 0 0.6rem;
+}
+
+.pnl-total-hint-amount {
+  font-weight: 700;
+  color: var(--warning);
+}
