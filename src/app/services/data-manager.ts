@@ -71,8 +71,20 @@ export class DataManagerService {
 
     const existingNames = await Promise.all(
       ownedGroupSpaces.map(async ([spaceId]) => {
-        const spaceSnap = await get(ref(this.db, `spaces/${spaceId}/name`));
-        return spaceSnap.exists() ? (spaceSnap.val() as string).trim().toLowerCase() : null;
+        try {
+          const spaceSnap = await get(ref(this.db, `spaces/${spaceId}/name`));
+          return spaceSnap.exists() ? (spaceSnap.val() as string).trim().toLowerCase() : null;
+        } catch {
+          // A stale spaceMemberships entry (e.g. this account's own
+          // space_members record for it was removed, or the space record
+          // itself no longer exists) makes this specific read permission-
+          // denied — without this catch, Promise.all rejects on that one
+          // read and the whole create-group flow fails with a raw
+          // "Permission denied" for every account that happens to have any
+          // such leftover entry, regardless of the new group's own data.
+          // Treat an inaccessible space as "can't tell", not a duplicate.
+          return null;
+        }
       })
     );
     if (existingNames.some(name => name === trimmedName.toLowerCase())) {

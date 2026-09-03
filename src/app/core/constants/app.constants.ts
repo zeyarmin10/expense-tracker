@@ -5,7 +5,7 @@ import { Currency } from '../models/currency.model';
 // about.ts's Capacitor App.getInfo() call). Bump this together with
 // android/app/build.gradle's versionName on every release so the two never
 // drift — this is the single place to update on the web side.
-export const APP_VERSION = '19.0';
+export const APP_VERSION = '20.0';
 
 // Every language the app ships with. Labels are the language's own native
 // name — shown as-is in pickers, never translated. Adding a language also

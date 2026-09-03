@@ -237,7 +237,10 @@ export class Inventory implements OnInit, OnDestroy {
   async loadProducts(): Promise<void> {
     try {
       const products = await firstValueFrom(this.productService.getProducts());
-      this._productsSubject.next(products);
+      // Most recently added first — older products (from before createdAt
+      // was tracked) fall back to '' and sink to the bottom.
+      const sorted = [...products].sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+      this._productsSubject.next(sorted);
     } catch (error) {
       this.showErrorModal(
         this.translateService.instant('ERROR_TITLE'),
