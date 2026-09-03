@@ -5,10 +5,11 @@ import {
   FormGroup,
   Validators,
   ReactiveFormsModule,
+  FormsModule,
   FormControl,
 } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Observable, BehaviorSubject, Subject, firstValueFrom } from 'rxjs';
+import { Observable, BehaviorSubject, Subject, firstValueFrom, of } from 'rxjs';
 import { switchMap, takeUntil } from 'rxjs/operators';
 import { ProductService, ServiceIProduct, getProductErrorMessage } from '../../services/product';
 import { ExpenseService } from '../../services/expense';
@@ -16,10 +17,13 @@ import { IncomeService } from '../../services/income';
 import { InventoryService, ProductStockSummary } from '../../services/inventory.service';
 import { AuthService } from '../../services/auth';
 import { SpaceContextService } from '../../services/space-context.service';
+import { DataManagerService } from '../../services/data-manager';
+import { getActiveGroupId } from '../../services/user-data';
 import { FormatService } from '../../services/format.service';
 import { meaningfulTextValidator } from '../../utils/form-validators';
 import {
   LucideAngularModule, Package, Plus, Pencil, Trash2, X, Save, TriangleAlert,
+  ChevronDown, ChevronUp,
 } from 'lucide-angular';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import Swal from 'sweetalert2';
@@ -41,7 +45,7 @@ const Toast = Swal.mixin({
 @Component({
   selector: 'app-inventory',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslateModule, LucideAngularModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, TranslateModule, LucideAngularModule],
   templateUrl: './inventory.html',
   styleUrls: ['./inventory.css'],
 })
@@ -52,6 +56,7 @@ export class Inventory implements OnInit, OnDestroy {
   private inventoryService = inject(InventoryService);
   private authService = inject(AuthService);
   private spaceContextService = inject(SpaceContextService);
+  private dataManager = inject(DataManagerService);
   public formatService = inject(FormatService);
   private translateService = inject(TranslateService);
   private cdr = inject(ChangeDetectorRef);
@@ -65,9 +70,17 @@ export class Inventory implements OnInit, OnDestroy {
   readonly iconTimes = X;
   readonly iconSave = Save;
   readonly iconWarning = TriangleAlert;
+  readonly iconChevronDown = ChevronDown;
+  readonly iconChevronUp = ChevronUp;
 
   activeTab: 'products' | 'stock' = 'products';
   currency = 'MMK';
+  private activeGroupId: string | null = null;
+  lowStockThreshold = 0;
+  isSavingThreshold = false;
+  // Mobile Stock & Profit view: which product's card is expanded to show
+  // full detail — null means every card is collapsed to its summary line.
+  expandedProductId: string | null = null;
 
   addProductForm: FormGroup;
   editingProductId: string | null = null;
@@ -86,7 +99,7 @@ export class Inventory implements OnInit, OnDestroy {
 
   constructor(private fb: FormBuilder) {
     this.addProductForm = this.fb.group({
-      name: ['', [Validators.required, Validators.maxLength(50), meaningfulTextValidator]],
+      name: ['', [Validators.required, Validators.maxLength(100), meaningfulTextValidator]],
       unit: ['', Validators.maxLength(20)],
     });
   }
@@ -96,6 +109,20 @@ export class Inventory implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe((profile) => {
         this.currency = profile?.currency || 'MMK';
+        this.activeGroupId = getActiveGroupId(profile);
+      });
+
+    this.authService.userProfile$
+      .pipe(
+        switchMap((profile) => {
+          const groupId = getActiveGroupId(profile);
+          return groupId ? this.spaceContextService.getSpace(groupId) : of(null);
+        }),
+        takeUntil(this.destroy$),
+      )
+      .subscribe((space) => {
+        this.lowStockThreshold = space?.lowStockThreshold ?? 0;
+        this.cdr.markForCheck();
       });
 
     this.authService.userProfile$
@@ -121,12 +148,40 @@ export class Inventory implements OnInit, OnDestroy {
     this.activeTab = tab;
   }
 
+  async saveLowStockThreshold(): Promise<void> {
+    if (!this.activeGroupId) return;
+    this.isSavingThreshold = true;
+    this.cdr.markForCheck();
+    try {
+      await this.dataManager.updateGroupSettings(this.activeGroupId, {
+        lowStockThreshold: Number(this.lowStockThreshold) || 0,
+      });
+      Toast.fire({ icon: 'success', title: this.translateService.instant('LOW_STOCK_THRESHOLD_SAVED') });
+    } catch (error: any) {
+      this.showErrorModal(
+        this.translateService.instant('ERROR_TITLE'),
+        error.message || this.translateService.instant('DATA_SAVE_ERROR'),
+      );
+    } finally {
+      this.isSavingThreshold = false;
+      this.cdr.markForCheck();
+    }
+  }
+
   trackByProductId(index: number, product: ServiceIProduct): string {
     return product.id ?? String(index);
   }
 
   trackByStockRow(index: number, row: ProductStockSummary): string {
     return row.productId;
+  }
+
+  getTotalEstProfit(summary: ProductStockSummary[]): number {
+    return summary.reduce((sum, row) => sum + (row.estProfit || 0), 0);
+  }
+
+  toggleRowExpand(productId: string): void {
+    this.expandedProductId = this.expandedProductId === productId ? null : productId;
   }
 
   async loadProducts(): Promise<void> {
@@ -170,7 +225,7 @@ export class Inventory implements OnInit, OnDestroy {
     this.editingProductId = product.id!;
     this.editingNameControl = new FormControl(
       product.name,
-      [Validators.required, Validators.maxLength(50), meaningfulTextValidator],
+      [Validators.required, Validators.maxLength(100), meaningfulTextValidator],
     );
     this.editingUnitControl = new FormControl(product.unit ?? '', Validators.maxLength(20));
   }

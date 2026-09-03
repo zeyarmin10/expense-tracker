@@ -1082,6 +1082,18 @@ body.pnl-add-modal-open {
   white-space: nowrap;
 }
 
+.pnl-td-desc-sub {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--text-muted);
+  margin-top: 0.1rem;
+}
+
 /* Mobile: show creator name below the description, same as expense-overview */
 .pnl-td-name-creator {
   display: none;
@@ -1158,7 +1170,7 @@ body.pnl-add-modal-open {
 .pnl-form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.85rem;
+  gap: 0.25rem;
 }
 
 /* app-date-input's own trigger padding/alignment was tuned to leave room for
@@ -1174,6 +1186,17 @@ app-date-input .di-trigger {
   .pnl-form-row {
     grid-template-columns: 1fr;
   }
+}
+
+/* Quantity/Unit Price: 25/75 split, kept side by side even on mobile — a
+   1-2 digit quantity doesn't need a full row to itself. Extra class in the
+   selector for specificity over the plain .pnl-form-row mobile rule above. */
+.pnl-form-row.pnl-form-row-qty-price {
+  grid-template-columns: 1fr 3fr;
+}
+
+.pnl-input.pnl-input-field.pnl-input-compact {
+  padding: 0 0.6rem;
 }
 
 /* Floating label */
@@ -1196,7 +1219,7 @@ app-date-input .di-trigger {
   border-radius: 10px;
   color: var(--text);
   /* font-family: 'Syne', sans-serif; */
-  font-size: 0.9rem;
+  font-size: 1.25rem;
   padding: 1.35rem 0.9rem 0.45rem;
   outline: none;
   transition: border-color 0.15s;
@@ -1206,6 +1229,13 @@ app-date-input .di-trigger {
 
 .pnl-input.pnl-input-field:focus {
   border-color: var(--accent);
+}
+
+/* Plain inputs that only ever show a placeholder (no floating <label> to
+   reserve the top padding for) — the base .pnl-input-field padding pushes
+   placeholder text down awkwardly without one. */
+.pnl-input.pnl-input-field.pnl-input-plain {
+  padding: 0 0.9rem;
 }
 
 .pnl-input.pnl-textarea {
@@ -1393,7 +1423,7 @@ app-date-input .di-trigger {
   color: var(--danger);
   padding-left: 0.2rem;
   font-weight: 500;
-  margin-top: -0.5rem;
+  margin-top: 0.3rem;
 }
 
 .pnl-btn-spinner {
@@ -1875,10 +1905,10 @@ app-date-input .di-trigger {
   background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: 10px;
-  font-size: 0.82rem;
+  font-size: 0.75rem;
   color: var(--text);
   cursor: pointer;
-  margin-bottom: 0.85rem;
+  /* margin-bottom: 0.85rem; */
 }
 
 .pnl-switch {
@@ -1964,4 +1994,153 @@ app-date-input .di-trigger {
 .pnl-total-hint-amount {
   font-weight: 700;
   color: var(--warning);
+}
+
+/* ── Product picker trigger + search/list (mirrors expense.css's
+   .exp-cat-select-trigger / .exp-cat-picker-* — a bespoke swap-in-place
+   picker instead of app-custom-select, which breaks positioning once
+   nested inside this modal's own transformed slide-up sheet). ── */
+.pnl-cat-select-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  height: 52px;
+  padding: 0 0.9rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s;
+}
+
+.pnl-cat-select-trigger:hover,
+.pnl-cat-select-trigger:focus-visible {
+  border-color: var(--accent);
+}
+
+.pnl-float-group > .pnl-cat-select-trigger {
+  flex: 1;
+  min-width: 0;
+  border-radius: 10px 0 0 10px;
+}
+
+.pnl-cat-select-trigger-value {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.88rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pnl-cat-select-trigger-placeholder {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+}
+
+.pnl-cat-select-trigger-chevron {
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+.pnl-cat-picker-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: 320px;
+}
+
+.pnl-cat-picker-search {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 0.85rem;
+  height: 46px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.pnl-cat-picker-search-icon {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.pnl-cat-picker-search-input {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-size: 0.88rem;
+}
+
+.pnl-cat-picker-search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.pnl-cat-picker-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  overflow-y: auto;
+}
+
+.pnl-cat-picker-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.65rem 0.7rem;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+  width: 100%;
+}
+
+.pnl-cat-picker-item:hover {
+  background: var(--surface-2);
+}
+
+.pnl-cat-picker-item-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  background: hsl(220 80% 55% / 0.15);
+  color: hsl(220 80% 70%);
+}
+
+.pnl-cat-picker-item-label {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.88rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pnl-cat-picker-item-check {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.pnl-cat-picker-empty {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  padding: 2rem 1rem;
 }

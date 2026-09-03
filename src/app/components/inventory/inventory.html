@@ -22,10 +22,12 @@
     <!-- ── Products tab ── -->
     <div *ngIf="activeTab === 'products'">
       <form [formGroup]="addProductForm" (ngSubmit)="onAddSubmit()" class="inv-add-form">
-        <input type="text" class="inv-input" formControlName="name" maxlength="50" autocomplete="off"
-          [placeholder]="'PRODUCT_NAME_LABEL' | translate" />
-        <input type="text" class="inv-input inv-input-unit" formControlName="unit" maxlength="20" autocomplete="off"
-          [placeholder]="'PRODUCT_UNIT_LABEL' | translate" />
+        <div class="inv-add-form-fields">
+          <input type="text" class="inv-input" formControlName="name" maxlength="100" autocomplete="off"
+            [placeholder]="'PRODUCT_NAME_LABEL' | translate" />
+          <input type="text" class="inv-input inv-input-unit" formControlName="unit" maxlength="20" autocomplete="off"
+            [placeholder]="'PRODUCT_UNIT_LABEL' | translate" />
+        </div>
         <button type="submit" class="inv-add-btn" [disabled]="addProductForm.invalid">
           <lucide-icon [img]="iconPlus" [size]="18"></lucide-icon>
           {{ 'ADD_PRODUCT' | translate }}
@@ -35,6 +37,10 @@
       <ng-container *ngIf="products$ | async as products">
         <div class="inv-empty" *ngIf="!isLoadingProducts && products.length === 0">
           {{ 'INVENTORY_EMPTY_PRODUCTS' | translate }}
+        </div>
+
+        <div class="inv-list-summary" *ngIf="products.length > 0">
+          {{ 'INVENTORY_TOTAL_PRODUCTS_LABEL' | translate }}: <strong>{{ formatService.formatCount(products.length) }}</strong>
         </div>
 
         <ul class="inv-product-list">
@@ -58,7 +64,7 @@
             </ng-container>
 
             <ng-template #editRow>
-              <input type="text" class="inv-input inv-edit-input" [formControl]="editingNameControl!" maxlength="50" />
+              <input type="text" class="inv-input inv-edit-input" [formControl]="editingNameControl!" maxlength="100" />
               <input type="text" class="inv-input inv-edit-input inv-input-unit" [formControl]="editingUnitControl!" maxlength="20" />
               <div class="inv-product-actions">
                 <button type="button" class="inv-action-btn inv-action-save" (click)="onUpdateInline(product.id!)"
@@ -77,49 +83,128 @@
 
     <!-- ── Stock & Profit tab ── -->
     <div *ngIf="activeTab === 'stock'">
+      <div class="inv-threshold-row">
+        <label for="inv-low-stock-threshold">{{ 'LOW_STOCK_THRESHOLD_LABEL' | translate }}</label>
+        <input id="inv-low-stock-threshold" type="number" min="0" step="1" class="inv-input inv-threshold-input"
+          [(ngModel)]="lowStockThreshold" />
+        <button type="button" class="inv-threshold-save-btn" [disabled]="isSavingThreshold" (click)="saveLowStockThreshold()">
+          {{ 'SAVE_BUTTON_LABEL' | translate }}
+        </button>
+      </div>
+
       <ng-container *ngIf="stockSummary$ | async as summary">
         <div class="inv-empty" *ngIf="summary.length === 0">
           {{ 'INVENTORY_EMPTY_STOCK_SUMMARY' | translate }}
         </div>
 
-        <div class="inv-table-scroll" *ngIf="summary.length > 0">
-          <table class="inv-table">
-            <thead>
-              <tr>
-                <th>{{ 'STOCK_SUMMARY_PRODUCT_COL' | translate }}</th>
-                <th>{{ 'STOCK_SUMMARY_CURRENT_STOCK_COL' | translate }}</th>
-                <th>{{ 'STOCK_SUMMARY_AVG_COST_COL' | translate }}</th>
-                <th>{{ 'STOCK_SUMMARY_STOCK_VALUE_COL' | translate }}</th>
-                <th>{{ 'STOCK_SUMMARY_TOTAL_SOLD_COL' | translate }}</th>
-                <th>{{ 'STOCK_SUMMARY_REVENUE_COL' | translate }}</th>
-                <th>{{ 'STOCK_SUMMARY_EST_COGS_COL' | translate }}</th>
-                <th>{{ 'STOCK_SUMMARY_EST_PROFIT_COL' | translate }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let row of summary; trackBy: trackByStockRow">
-                <td class="inv-table-product-cell">
+        <ng-container *ngIf="summary.length > 0">
+          <!-- Total estimated profit — shown above the table so it's the
+               first thing seen, colored green/red by profit vs loss. -->
+          <div class="inv-total-profit-banner"
+               [class.inv-total-profit-positive]="getTotalEstProfit(summary) > 0"
+               [class.inv-total-profit-negative]="getTotalEstProfit(summary) <= 0">
+            <span class="inv-total-profit-label">{{ 'STOCK_SUMMARY_TOTAL_EST_PROFIT_LABEL' | translate }}</span>
+            <span class="inv-total-profit-value" [innerHTML]="formatService.formatAmountShortHtml(getTotalEstProfit(summary), currency)"></span>
+          </div>
+
+          <!-- Desktop / tablet: full table -->
+          <div class="inv-table-scroll inv-stock-desktop">
+            <table class="inv-table">
+              <thead>
+                <tr>
+                  <th>{{ 'STOCK_SUMMARY_PRODUCT_COL' | translate }}</th>
+                  <th>{{ 'STOCK_SUMMARY_CURRENT_STOCK_COL' | translate }}</th>
+                  <th>{{ 'STOCK_SUMMARY_AVG_COST_COL' | translate }}</th>
+                  <th>{{ 'STOCK_SUMMARY_STOCK_VALUE_COL' | translate }}</th>
+                  <th>{{ 'STOCK_SUMMARY_TOTAL_SOLD_COL' | translate }}</th>
+                  <th>{{ 'STOCK_SUMMARY_REVENUE_COL' | translate }}</th>
+                  <th>{{ 'STOCK_SUMMARY_EST_COGS_COL' | translate }}</th>
+                  <th>{{ 'STOCK_SUMMARY_EST_PROFIT_COL' | translate }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let row of summary; trackBy: trackByStockRow"
+                    [class.inv-row-negative]="row.currentStock < 0"
+                    [class.inv-row-low-stock]="row.currentStock >= 0 && row.currentStock <= lowStockThreshold">
+                  <td class="inv-table-product-cell">
+                    {{ row.productName }}
+                    <span class="inv-table-unit" *ngIf="row.unit">({{ row.unit }})</span>
+                  </td>
+                  <td [class.inv-negative]="row.currentStock < 0"
+                      [class.inv-low-stock]="row.currentStock >= 0 && row.currentStock <= lowStockThreshold">
+                    {{ formatService.formatCount(row.currentStock) }}
+                    <lucide-icon *ngIf="row.currentStock < 0" [img]="iconWarning" [size]="13"
+                      [title]="'STOCK_SUMMARY_NEGATIVE_STOCK_WARNING' | translate"></lucide-icon>
+                    <lucide-icon *ngIf="row.currentStock >= 0 && row.currentStock <= lowStockThreshold" [img]="iconWarning" [size]="13"
+                      [title]="'STOCK_SUMMARY_LOW_STOCK_WARNING' | translate"></lucide-icon>
+                  </td>
+                  <td>
+                    <span *ngIf="row.avgCost === null" class="inv-muted">{{ 'STOCK_SUMMARY_NEVER_PURCHASED' | translate }}</span>
+                    <span *ngIf="row.avgCost !== null" [innerHTML]="formatService.formatAmountShortHtml(row.avgCost, currency)"></span>
+                  </td>
+                  <td [innerHTML]="formatService.formatAmountShortHtml(row.stockValue, currency)"></td>
+                  <td>{{ formatService.formatCount(row.totalSoldQty) }}</td>
+                  <td [innerHTML]="formatService.formatAmountShortHtml(row.totalRevenue, currency)"></td>
+                  <td class="inv-cogs-cell" [innerHTML]="formatService.formatAmountShortHtml(row.estCOGS, currency)"></td>
+                  <td [class.inv-profit-positive]="row.estProfit > 0" [class.inv-profit-negative]="row.estProfit <= 0"
+                      [innerHTML]="formatService.formatAmountShortHtml(row.estProfit, currency)"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Mobile: summary cards, tap to expand full detail inline (no modal) -->
+          <div class="inv-stock-cards inv-stock-mobile">
+            <div class="inv-stock-card" *ngFor="let row of summary; trackBy: trackByStockRow"
+                 [class.inv-row-negative]="row.currentStock < 0"
+                 [class.inv-row-low-stock]="row.currentStock >= 0 && row.currentStock <= lowStockThreshold">
+              <button type="button" class="inv-stock-card-summary" (click)="toggleRowExpand(row.productId)"
+                      [attr.aria-expanded]="expandedProductId === row.productId">
+                <span class="inv-stock-card-name">
                   {{ row.productName }}
                   <span class="inv-table-unit" *ngIf="row.unit">({{ row.unit }})</span>
-                </td>
-                <td [class.inv-negative]="row.currentStock < 0">
-                  {{ row.currentStock }}
-                  <lucide-icon *ngIf="row.currentStock < 0" [img]="iconWarning" [size]="13"
-                    [title]="'STOCK_SUMMARY_NEGATIVE_STOCK_WARNING' | translate"></lucide-icon>
-                </td>
-                <td>
+                </span>
+                <span class="inv-stock-card-stock"
+                      [class.inv-negative]="row.currentStock < 0"
+                      [class.inv-low-stock]="row.currentStock >= 0 && row.currentStock <= lowStockThreshold">
+                  {{ formatService.formatCount(row.currentStock) }}
+                  <lucide-icon *ngIf="row.currentStock < 0 || (row.currentStock >= 0 && row.currentStock <= lowStockThreshold)"
+                    [img]="iconWarning" [size]="13"></lucide-icon>
+                </span>
+                <lucide-icon [img]="expandedProductId === row.productId ? iconChevronUp : iconChevronDown" [size]="16" class="inv-stock-card-chevron"></lucide-icon>
+              </button>
+
+              <div class="inv-stock-card-detail" *ngIf="expandedProductId === row.productId">
+                <div class="inv-stock-card-detail-row">
+                  <span>{{ 'STOCK_SUMMARY_AVG_COST_COL' | translate }}</span>
                   <span *ngIf="row.avgCost === null" class="inv-muted">{{ 'STOCK_SUMMARY_NEVER_PURCHASED' | translate }}</span>
                   <span *ngIf="row.avgCost !== null" [innerHTML]="formatService.formatAmountShortHtml(row.avgCost, currency)"></span>
-                </td>
-                <td [innerHTML]="formatService.formatAmountShortHtml(row.stockValue, currency)"></td>
-                <td>{{ row.totalSoldQty }}</td>
-                <td [innerHTML]="formatService.formatAmountShortHtml(row.totalRevenue, currency)"></td>
-                <td [innerHTML]="formatService.formatAmountShortHtml(row.estCOGS, currency)"></td>
-                <td [innerHTML]="formatService.formatAmountShortHtml(row.estProfit, currency)"></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+                </div>
+                <div class="inv-stock-card-detail-row">
+                  <span>{{ 'STOCK_SUMMARY_STOCK_VALUE_COL' | translate }}</span>
+                  <span [innerHTML]="formatService.formatAmountShortHtml(row.stockValue, currency)"></span>
+                </div>
+                <div class="inv-stock-card-detail-row">
+                  <span>{{ 'STOCK_SUMMARY_TOTAL_SOLD_COL' | translate }}</span>
+                  <span>{{ formatService.formatCount(row.totalSoldQty) }}</span>
+                </div>
+                <div class="inv-stock-card-detail-row">
+                  <span>{{ 'STOCK_SUMMARY_REVENUE_COL' | translate }}</span>
+                  <span [innerHTML]="formatService.formatAmountShortHtml(row.totalRevenue, currency)"></span>
+                </div>
+                <div class="inv-stock-card-detail-row">
+                  <span>{{ 'STOCK_SUMMARY_EST_COGS_COL' | translate }}</span>
+                  <span class="inv-cogs-cell" [innerHTML]="formatService.formatAmountShortHtml(row.estCOGS, currency)"></span>
+                </div>
+                <div class="inv-stock-card-detail-row inv-stock-card-detail-profit">
+                  <span>{{ 'STOCK_SUMMARY_EST_PROFIT_COL' | translate }}</span>
+                  <span [class.inv-profit-positive]="row.estProfit > 0" [class.inv-profit-negative]="row.estProfit <= 0"
+                        [innerHTML]="formatService.formatAmountShortHtml(row.estProfit, currency)"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </ng-container>
       </ng-container>
 
       <p class="inv-method-note">{{ 'STOCK_SUMMARY_METHOD_NOTE' | translate }}</p>

@@ -298,7 +298,12 @@ export class Expense implements OnInit, OnDestroy {
       date: [todayFormatted, Validators.required],
       category: ['', Validators.required],
       productId: [''],
-      itemName: ['', Validators.maxLength(50)],
+      // Capped at 100, not 50 — in shop mode this is silently auto-filled
+      // with the selected product's own name (itself capped at 100, see
+      // Inventory's product-name validators), and the field is hidden
+      // there, so a lower cap here would make the form invalid with no
+      // visible field to fix it on.
+      itemName: ['', Validators.maxLength(100)],
       quantity: [1, [Validators.required, Validators.min(0.01), Validators.max(99999)]],
       unit: ['', Validators.maxLength(20)],
       price: ['', [Validators.required, Validators.min(0.01), Validators.max(999999999)]],
@@ -378,6 +383,7 @@ export class Expense implements OnInit, OnDestroy {
     );
     this.inventoryEnabled$.pipe(takeUntil(this.destroy$)).subscribe(enabled => {
       this.inventoryEnabled = enabled;
+      this.updateProductIdValidators(enabled);
       this.cdr.markForCheck();
     });
   }
@@ -403,12 +409,11 @@ export class Expense implements OnInit, OnDestroy {
     this.isCategoryPickerOpen = false;
     this.closeDatePicker();
     document.body.classList.remove('exp-add-modal-open');
-    // Leaving edit mode: clear the prefilled values so the next "add"
-    // starts from a clean form instead of the edited record's data.
-    if (this.editingExpense) {
-      this.editingExpense = null;
-      this.resetNewExpenseForm();
-    }
+    // Always reset — whether closing out of edit mode or just abandoning an
+    // in-progress add — so leftover values and touched/invalid validation
+    // state never carry over into the next time the modal opens.
+    this.editingExpense = null;
+    this.resetNewExpenseForm();
   }
 
   private resetNewExpenseForm(): void {
@@ -471,7 +476,10 @@ export class Expense implements OnInit, OnDestroy {
   }
 
   // Selecting a product stays optional and never clobbers a manually-typed
-  // itemName/unit — it only fills them in when they're still blank.
+  // itemName. Unit always syncs to the newly selected product's own unit
+  // (when it has one) — a "fill only if blank" guard here would leave a
+  // stale unit from a previously selected product in place after switching
+  // to a different one.
   selectProduct(product: ServiceIProduct | null): void {
     this.newExpenseForm.get('productId')?.setValue(product?.id ?? '');
     if (product) {
@@ -479,9 +487,8 @@ export class Expense implements OnInit, OnDestroy {
       if (!itemNameControl?.value) {
         itemNameControl?.setValue(product.name);
       }
-      const unitControl = this.newExpenseForm.get('unit');
-      if (product.unit && !unitControl?.value) {
-        unitControl?.setValue(product.unit);
+      if (product.unit) {
+        this.newExpenseForm.get('unit')?.setValue(product.unit);
       }
     }
     this.closeProductPicker();
@@ -585,13 +592,22 @@ export class Expense implements OnInit, OnDestroy {
     return `${type}:${id}`;
   }
 
+  // In an inventory-enabled (shop) space, every purchase must be linked to a
+  // product — the free-text item name field is hidden there (see
+  // expense.html) so productId is the only way to identify what was bought.
+  private updateProductIdValidators(inventoryEnabled: boolean): void {
+    const productIdCtrl = this.newExpenseForm.get('productId');
+    productIdCtrl?.setValidators(inventoryEnabled ? [Validators.required] : []);
+    productIdCtrl?.updateValueAndValidity({ emitEvent: false });
+  }
+
   private setQuickMode(isQuickMode: boolean): void {
     this.isQuickMode = isQuickMode;
     // Item name is optional in both quick and full mode — a blank name
     // falls back to the category name on submit (see onSubmitNewExpense).
     const itemNameCtrl = this.newExpenseForm.get('itemName');
     itemNameCtrl?.clearValidators();
-    itemNameCtrl?.setValidators(Validators.maxLength(50));
+    itemNameCtrl?.setValidators(Validators.maxLength(100));
     itemNameCtrl?.updateValueAndValidity();
     if (this.isQuickMode) {
       this.newExpenseForm.patchValue({ quantity: 1, unit: '' });

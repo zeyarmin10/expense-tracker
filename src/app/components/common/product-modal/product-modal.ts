@@ -54,7 +54,7 @@ export class ProductModalComponent implements OnInit, OnDestroy {
 
   constructor(private fb: FormBuilder) {
     this.productForm = this.fb.group({
-      name: ['', [Validators.required, Validators.maxLength(50), meaningfulTextValidator]],
+      name: ['', [Validators.required, Validators.maxLength(100), meaningfulTextValidator]],
       unit: ['', Validators.maxLength(20)],
     });
   }

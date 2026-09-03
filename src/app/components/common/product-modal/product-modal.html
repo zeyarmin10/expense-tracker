@@ -28,9 +28,9 @@
               formControlName="name"
               placeholder=" "
               id="pdNameInput"
-              maxlength="50"
+              maxlength="100"
               autocomplete="off"
-              [class.err]="(productForm.get('name')?.value?.length ?? 0) >= 50" />
+              [class.err]="(productForm.get('name')?.value?.length ?? 0) >= 100" />
             <label class="pd-fl-label" for="pdNameInput">
               {{ 'PRODUCT_NAME_LABEL' | translate }}
             </label>
@@ -48,13 +48,14 @@
               {{ 'PRODUCT_UNIT_LABEL' | translate }}
             </label>
           </div>
-          <button class="pd-save-btn" type="submit" [disabled]="productForm.invalid">
-            <lucide-icon [img]="iconPlus" [size]="20"></lucide-icon>
-          </button>
         </div>
         <div class="pd-modal-error" *ngIf="productForm.controls['name'].touched && productForm.controls['name'].errors?.['required']">
           {{ 'PRODUCT_NAME_REQUIRED' | translate }}
         </div>
+        <button class="pd-save-btn" type="submit" [disabled]="productForm.invalid">
+          <lucide-icon [img]="iconPlus" [size]="18"></lucide-icon>
+          {{ 'ADD_PRODUCT' | translate }}
+        </button>
       </form>
 
       <!-- Product List -->

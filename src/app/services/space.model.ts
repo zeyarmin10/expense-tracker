@@ -13,6 +13,9 @@ export interface Space {
   selectedBudgetPeriodId?: string | null;
   /** Group spaces only — enables the mini inventory (stock & profit) feature. */
   inventoryEnabled?: boolean;
+  /** Group spaces only — a product's currentStock at or below this counts
+   *  as "low stock" for warnings/highlighting. Defaults to 0 when unset. */
+  lowStockThreshold?: number;
   imageUrl?: string | null;
   avatarUrl?: string | null;
   logoUrl?: string | null;

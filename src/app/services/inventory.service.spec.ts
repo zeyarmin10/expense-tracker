@@ -76,4 +76,25 @@ describe('InventoryService', () => {
     expect(summary.avgCost).toBe(500);
     expect(summary.estCOGS).toBe(2500); // 5 * 500
   });
+
+  it('should track the earliest purchase date across multiple batches', () => {
+    const products = [{ id: 'p4', name: 'Air Filter' }];
+    const expenses = [
+      { productId: 'p4', date: '2026-03-15', quantity: 5, price: 1000, totalCost: 5000 },
+      { productId: 'p4', date: '2026-01-10', quantity: 5, price: 1000, totalCost: 5000 },
+      { productId: 'p4', date: '2026-02-01', quantity: 5, price: 1000, totalCost: 5000 },
+    ];
+    const incomes: any[] = [];
+
+    const [summary] = getSummary(products, expenses, incomes);
+
+    expect(summary.firstPurchaseDate).toBe('2026-01-10');
+  });
+
+  it('should report a null firstPurchaseDate for a product never purchased', () => {
+    const products = [{ id: 'p5', name: 'Wiper Blade' }];
+    const [summary] = getSummary(products, [], []);
+
+    expect(summary.firstPurchaseDate).toBeNull();
+  });
 });

@@ -4,7 +4,7 @@ import { Router, NavigationEnd, RouterOutlet, RouterModule, ActivatedRoute } fro
 import { Title } from '@angular/platform-browser';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { Observable, combineLatest, of, firstValueFrom } from 'rxjs';
-import { map, filter, startWith, switchMap, distinctUntilChanged, debounceTime, take } from 'rxjs/operators';
+import { map, filter, startWith, switchMap, distinctUntilChanged, debounceTime, take, shareReplay } from 'rxjs/operators';
 import { AuthService } from './services/auth';
 import { User } from '@angular/fire/auth';
 import { LucideAngularModule, LogOut, Users as LucideUsers, User as LucideUserIcon, ChevronDown, Sun, Moon, PiggyBank, ShoppingCart, Tags, ArrowDown, RotateCw, TrendingUp, Banknote, Package } from 'lucide-angular';
@@ -285,9 +285,20 @@ export class App implements OnInit, AfterViewInit {
         const isExactExpense = url === '/expense' ||
                                url.startsWith('/expense/') ||
                                (url.includes('/expense') && !url.includes('/expense-overview'));
-        return isExactExpense;
-      })
+        // Shop mode's FAB targets /sales (not /expense) — same "on the FAB's
+        // own page" rule so its icon swaps from + to the page icon there too.
+        const isSalesRoute = url === '/sales' || url.startsWith('/sales/');
+        return isExactExpense || isSalesRoute;
+      }),
+      // Without this, a late subscriber (e.g. the shop-mode Sales FAB,
+      // which only renders once the async inventoryEnabled$ check resolves)
+      // misses the initial NavigationEnd and falls back to the frozen
+      // startWith() snapshot forever — shareReplay hands it the latest
+      // known value instead. Subscribed eagerly below so that value is
+      // always up to date by the time a late subscriber arrives.
+      shareReplay(1)
     );
+    isExpenseRoute$.subscribe();
 
     this.showFab$ = combineLatest([isLoggedIn$, isSpecialRoute$, isExpenseRoute$]).pipe(
       map(([isLoggedIn, isSpecialRoute, isExpense]) =>

@@ -17,6 +17,8 @@ export interface ProductStockSummary {
   estCOGS: number;
   estProfit: number;
   stockValue: number;
+  /** Earliest expense.date this product was purchased on, or null if never purchased. */
+  firstPurchaseDate: string | null;
 }
 
 interface ProductTotals {
@@ -24,6 +26,7 @@ interface ProductTotals {
   totalPurchaseCost: number;
   totalSoldQty: number;
   totalRevenue: number;
+  firstPurchaseDate: string | null;
 }
 
 @Injectable({
@@ -52,7 +55,7 @@ export class InventoryService {
         const getTotals = (productId: string): ProductTotals => {
           let totals = totalsByProductId.get(productId);
           if (!totals) {
-            totals = { totalPurchasedQty: 0, totalPurchaseCost: 0, totalSoldQty: 0, totalRevenue: 0 };
+            totals = { totalPurchasedQty: 0, totalPurchaseCost: 0, totalSoldQty: 0, totalRevenue: 0, firstPurchaseDate: null };
             totalsByProductId.set(productId, totals);
           }
           return totals;
@@ -64,6 +67,9 @@ export class InventoryService {
             const totals = getTotals(expense.productId!);
             totals.totalPurchasedQty += Number(expense.quantity) || 0;
             totals.totalPurchaseCost += Number(expense.totalCost ?? expense.quantity * expense.price) || 0;
+            if (expense.date && (!totals.firstPurchaseDate || expense.date < totals.firstPurchaseDate)) {
+              totals.firstPurchaseDate = expense.date;
+            }
           });
 
         incomes
@@ -80,6 +86,7 @@ export class InventoryService {
             totalPurchaseCost: 0,
             totalSoldQty: 0,
             totalRevenue: 0,
+            firstPurchaseDate: null,
           };
 
           const avgCost = totals.totalPurchasedQty > 0
@@ -103,6 +110,7 @@ export class InventoryService {
             estCOGS,
             estProfit,
             stockValue,
+            firstPurchaseDate: totals.firstPurchaseDate,
           };
         });
       }),

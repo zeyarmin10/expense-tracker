@@ -74,6 +74,14 @@ export class FormatService {
     return labelFirst ? `${labelHtml}${amountText}` : `${amountText} ${labelHtml}`;
   }
 
+  // Plain integer counts (quantities, list counts) — not a currency amount,
+  // just digits rendered in the app's current numbering system.
+  formatCount(n: number): string {
+    if (this.translate.currentLang !== 'my') return String(n);
+    const mm = ['၀', '၁', '၂', '၃', '၄', '၅', '၆', '၇', '၈', '၉'];
+    return String(n).replace(/\d/g, (d) => mm[+d]);
+  }
+
   private buildAmountShortParts(
     amount: number,
     currencyCode?: string,

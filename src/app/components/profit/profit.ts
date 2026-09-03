@@ -40,6 +40,7 @@ import {
   TrendingUp, TrendingDown, Banknote, ShoppingCart, ChartLine,
   ChartColumn, ChevronDown, ChevronRight, Save, Trash2,
   Plus, X, CalendarDays, EllipsisVertical, Pencil,
+  Search, Check, Package,
   LucideIconData,
 } from 'lucide-angular';
 import { AuthService } from '../../services/auth';
@@ -258,6 +259,9 @@ export class Profit implements OnInit, OnDestroy {
   readonly iconCalendarDays = CalendarDays;
   readonly iconTrendingUp = TrendingUp;
   readonly iconTrendingDown = TrendingDown;
+  readonly iconSearch = Search;
+  readonly iconCheck = Check;
+  readonly iconPackage = Package;
 
   // ── Comma formatting ──────────────────────────
   incomeAmountDisplay: string = '';
@@ -283,6 +287,38 @@ export class Profit implements OnInit, OnDestroy {
     this.incomeAmountDisplay = intPart + decPart;
     input.value = this.incomeAmountDisplay;
   }
+
+  // Quantity/Unit Price for a product sale — same plain-text,
+  // comma-formatted, digits-only pattern as the Amount field above (no
+  // native number-input spin buttons).
+  quantityDisplay: string = '';
+  unitPriceDisplay: string = '';
+
+  onQuantityInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    let raw = input.value.replace(/[^\d.]/g, '');
+    const parts = raw.split('.');
+    if (parts.length > 2) raw = parts[0] + '.' + parts.slice(1).join('');
+    const numericValue = parseFloat(raw.replace(/,/g, '')) || null;
+    this.incomeForm.get('quantity')?.setValue(numericValue, { emitEvent: true });
+    const intPart = (raw.split('.')[0] || '').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    const decPart = raw.includes('.') ? '.' + (raw.split('.')[1] || '') : '';
+    this.quantityDisplay = intPart + decPart;
+    input.value = this.quantityDisplay;
+  }
+
+  onUnitPriceInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    let raw = input.value.replace(/[^\d.]/g, '');
+    const parts = raw.split('.');
+    if (parts.length > 2) raw = parts[0] + '.' + parts.slice(1).join('');
+    const numericValue = parseFloat(raw.replace(/,/g, '')) || null;
+    this.incomeForm.get('unitPrice')?.setValue(numericValue, { emitEvent: true });
+    const intPart = (raw.split('.')[0] || '').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    const decPart = raw.includes('.') ? '.' + (raw.split('.')[1] || '') : '';
+    this.unitPriceDisplay = intPart + decPart;
+    input.value = this.unitPriceDisplay;
+  }
   // ──────────────────────────────────────────────
 
   // ── Product sale (mini inventory) ──────────────
@@ -300,8 +336,14 @@ export class Profit implements OnInit, OnDestroy {
 
     if (isProductSale) {
       productIdControl?.setValidators(Validators.required);
-      quantityControl?.setValidators([Validators.required, Validators.min(0.01)]);
-      unitPriceControl?.setValidators([Validators.required, Validators.min(0.01)]);
+      quantityControl?.setValidators([Validators.required, Validators.min(0.01), Validators.max(99999)]);
+      unitPriceControl?.setValidators([Validators.required, Validators.min(0.01), Validators.max(999999999)]);
+      // Quantity defaults to 1 whenever product-sale mode turns on without
+      // an already-valid quantity (fresh add, or toggled on mid-edit).
+      if (!(Number(quantityControl?.value) > 0)) {
+        quantityControl?.setValue(1, { emitEvent: false });
+        this.quantityDisplay = '1';
+      }
       this.syncProductSaleAmount();
     } else {
       productIdControl?.clearValidators();
@@ -338,12 +380,46 @@ export class Profit implements OnInit, OnDestroy {
   openProductModal(): void {
     this.productModal.open();
   }
+
+  // ── Product picker (same drill-down pattern as expense.ts's — a
+  // custom-select's position:fixed floating panel breaks once nested
+  // inside this modal's own transformed slide-up sheet, so this avoids
+  // that entirely by swapping content within the sheet instead). ──
+  isProductPickerOpen = false;
+  productPickerSearch = '';
+
+  openProductPicker(): void {
+    this.productPickerSearch = '';
+    this.isProductPickerOpen = true;
+    this.closeDatePicker();
+  }
+
+  closeProductPicker(): void {
+    this.isProductPickerOpen = false;
+  }
+
+  selectProduct(product: ServiceIProduct | null): void {
+    this.incomeForm.get('productId')?.setValue(product?.id ?? '');
+    this.closeProductPicker();
+  }
+
+  get filteredPickerProducts(): ServiceIProduct[] {
+    const q = this.productPickerSearch.trim().toLowerCase();
+    if (!q) return this.productList;
+    return this.productList.filter(p => p.name.toLowerCase().includes(q));
+  }
+
+  getSelectedProductName(productId: string): string | null {
+    return this.productList.find(p => p.id === productId)?.name ?? null;
+  }
+
+  trackByProductId(index: number, product: ServiceIProduct): string {
+    return product.id ?? String(index);
+  }
   // ────────────────────────────────────────────────
 
   formatCount(n: number): string {
-    if (this.translate.currentLang !== 'my') return String(n);
-    const mm = ['၀','၁','၂','၃','၄','၅','၆','၇','၈','၉'];
-    return String(n).replace(/\d/g, d => mm[+d]);
+    return this.formatService.formatCount(n);
   }
 
   constructor() {
@@ -361,9 +437,10 @@ export class Profit implements OnInit, OnDestroy {
       // inventoryEnabled), so this default never surfaces otherwise.
       isProductSale: [true],
       productId: [''],
-      quantity: [''],
+      quantity: [1],
       unitPrice: [''],
     });
+    this.quantityDisplay = '1';
 
     this.incomeForm.get('quantity')?.valueChanges.subscribe(() => this.syncProductSaleAmount());
     this.incomeForm.get('unitPrice')?.valueChanges.subscribe(() => this.syncProductSaleAmount());
@@ -503,10 +580,15 @@ export class Profit implements OnInit, OnDestroy {
         // The toggle/fields only ever render while enabled — force the
         // control back off when the feature isn't available so a stale
         // `true` from a previous space can't leave hidden validators active.
+        // Goes through toggleIsProductSale() (not a raw setValue) so the
+        // productId/quantity/unitPrice validators actually get applied or
+        // cleared to match — a raw setValue left them permanently absent,
+        // so an inventory-enabled sale could be submitted with blank
+        // quantity/price and still pass form.valid.
         if (!enabled) {
-          this.incomeForm.get('isProductSale')?.setValue(false, { emitEvent: false });
+          this.toggleIsProductSale(false);
         } else if (!this.editingIncome) {
-          this.incomeForm.get('isProductSale')?.setValue(true, { emitEvent: false });
+          this.toggleIsProductSale(true);
         }
         this.cdr.markForCheck();
       })
@@ -728,6 +810,8 @@ export class Profit implements OnInit, OnDestroy {
     }
     this.editingIncome = income;
     this.incomeAmountDisplay = income.amount > 0 ? this.formatWithCommas(income.amount) : '';
+    this.quantityDisplay = income.quantity ? this.formatWithCommas(income.quantity) : '';
+    this.unitPriceDisplay = income.unitPrice ? this.formatWithCommas(income.unitPrice) : '';
     this.incomeForm.patchValue({
       description: income.description || '',
       amount: income.amount,
@@ -788,13 +872,15 @@ export class Profit implements OnInit, OnDestroy {
     const defaultCurrency = this.userProfile?.currency || 'MMK';
     this.editingIncome = null;
     this.incomeAmountDisplay = '';
+    this.quantityDisplay = '1';
+    this.unitPriceDisplay = '';
     this.incomeForm.reset({
       description: '',
       amount: '',
       currency: defaultCurrency,
       date: this.datePipe.transform(new Date(), 'yyyy-MM-dd'),
       productId: '',
-      quantity: '',
+      quantity: 1,
       unitPrice: '',
     });
     this.toggleIsProductSale(this.inventoryEnabled);
@@ -834,11 +920,10 @@ export class Profit implements OnInit, OnDestroy {
     this.isAddModalOpen = false;
     this.closeDatePicker();
     document.body.classList.remove('pnl-add-modal-open');
-    // Leaving edit mode: clear the prefilled values so the next "add"
-    // starts from a clean form instead of the edited record's data.
-    if (this.editingIncome) {
-      this.resetForm();
-    }
+    // Always reset — whether closing out of edit mode or just abandoning an
+    // in-progress add — so leftover values and touched/invalid validation
+    // state never carry over into the next time the modal opens.
+    this.resetForm();
   }
 
   // ── Date picker (drill-down within the Add-Income modal) ──

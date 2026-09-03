@@ -9,8 +9,14 @@
 
 .shopdash-stats-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 0.7rem;
+}
+
+@media (max-width: 600px) {
+  .shopdash-stats-row {
+    grid-template-columns: 1fr;
+  }
 }
 
 .shopdash-stat-card {
@@ -21,14 +27,73 @@
   border-radius: 14px;
   border: 1px solid var(--border);
   background: var(--surface);
+  position: relative;
+  overflow: hidden;
+}
+
+.shopdash-stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
 }
 
 .shopdash-stat-sales {
-  color: var(--success, #10b981);
+  color: var(--income-color);
+  border-color: var(--income-border);
+  background: linear-gradient(145deg, var(--surface), var(--income-dim));
+}
+
+.shopdash-stat-sales::before {
+  background: linear-gradient(90deg, var(--income-color), transparent);
+}
+
+.shopdash-stat-sales .shopdash-stat-value {
+  color: var(--income-color);
 }
 
 .shopdash-stat-purchases {
-  color: var(--warning, #f59e0b);
+  color: var(--expense-color);
+  border-color: var(--expense-border);
+  background: linear-gradient(145deg, var(--surface), var(--expense-dim));
+}
+
+.shopdash-stat-purchases::before {
+  background: linear-gradient(90deg, var(--expense-color), transparent);
+}
+
+.shopdash-stat-purchases .shopdash-stat-value {
+  color: var(--expense-color);
+}
+
+.shopdash-stat-profit {
+  color: var(--profit-color);
+  border-color: var(--profit-border);
+  background: linear-gradient(145deg, var(--surface), var(--profit-dim));
+}
+
+.shopdash-stat-profit::before {
+  background: linear-gradient(90deg, var(--profit-color), transparent);
+}
+
+.shopdash-stat-profit .shopdash-stat-value {
+  color: var(--profit-color);
+}
+
+.shopdash-stat-loss {
+  color: var(--loss-color);
+  border-color: var(--loss-border);
+  background: linear-gradient(145deg, var(--surface), var(--loss-dim));
+}
+
+.shopdash-stat-loss::before {
+  background: linear-gradient(90deg, var(--loss-color), transparent);
+}
+
+.shopdash-stat-loss .shopdash-stat-value {
+  color: var(--loss-color);
 }
 
 .shopdash-stat-label {
@@ -75,6 +140,27 @@
   background: var(--info, #0b74ff);
 }
 
+.shopdash-quick-btn-secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  height: 42px;
+  border-radius: 12px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: none;
+  border: 1px dashed var(--border);
+  color: var(--text-muted);
+  background: transparent;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.shopdash-quick-btn-secondary:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 .shopdash-stock-warning {
   display: flex;
   align-items: center;
@@ -95,7 +181,134 @@
   gap: 0.6rem;
   padding: 0.8rem 1rem;
   border-radius: 12px;
-  border: 1px dashed var(--border);
-  color: var(--text-muted);
+  border: 1px solid var(--income-border);
+  background: var(--income-dim);
+  color: var(--income-color);
   font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.shopdash-stock-warning-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.shopdash-stock-warning-names {
+  font-size: 0.75rem;
+  font-weight: 400;
+  opacity: 0.85;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.shopdash-panel {
+  padding: 0.9rem 1rem;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  position: relative;
+  overflow: hidden;
+}
+
+.shopdash-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+}
+
+.shopdash-panel-good {
+  border-color: var(--income-border);
+  background: linear-gradient(145deg, var(--surface), var(--income-dim));
+}
+
+.shopdash-panel-good::before {
+  background: linear-gradient(90deg, var(--income-color), transparent);
+}
+
+.shopdash-panel-bad {
+  border-color: var(--loss-border);
+  background: linear-gradient(145deg, var(--surface), var(--loss-dim));
+}
+
+.shopdash-panel-bad::before {
+  background: linear-gradient(90deg, var(--loss-color), transparent);
+}
+
+.shopdash-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.6rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.shopdash-panel-title-good {
+  color: var(--success, #10b981);
+}
+
+.shopdash-panel-title-bad {
+  color: var(--danger, #f87171);
+}
+
+.shopdash-item-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.shopdash-item-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.shopdash-item-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
+}
+
+.shopdash-item-qty {
+  flex-shrink: 0;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* #1 top seller — stands out from the rest of the ranked list */
+.shopdash-item-top {
+  font-size: 1.02em;
+}
+
+.shopdash-item-top .shopdash-item-name,
+.shopdash-item-top .shopdash-item-qty {
+  color: var(--gold, #f4b11a);
+  font-weight: 800;
+}
+
+.shopdash-item-top-icon {
+  vertical-align: -2px;
+  margin-right: 0.15rem;
+}
+
+.shopdash-rankings-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 0.7rem;
 }
