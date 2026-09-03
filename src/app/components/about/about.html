@@ -12,7 +12,7 @@
     <!-- ── Hero ── -->
     <div class="ab-hero">
       <div class="ab-hero-logo">
-        <img src="/images/Kyat-Wise-Logo-Large.png" alt="Kyat Wise" class="ab-hero-logo-img" onerror="
+        <img src="/images/Kyat-Wise-Logo.png" alt="Kyat Wise" class="ab-hero-logo-img" onerror="
           this.style.display = 'none';
           this.nextElementSibling.style.display = 'flex';
         " />
@@ -59,7 +59,9 @@
       </div>
       <p class="ab-section-body">{{ 'ABOUT_DEVELOPER_BODY' | translate }}</p>
       <div class="ab-link-row">
-        <a [href]="feedbackUrl" target="_blank" rel="noopener noreferrer" class="ab-action-link">
+        <!-- Hidden for now at the user's request — feedbackUrl/iconMail kept
+             in about.ts so this can be restored with just this *ngIf. -->
+        <a *ngIf="false" [href]="feedbackUrl" target="_blank" rel="noopener noreferrer" class="ab-action-link">
           <lucide-icon [img]="iconMail" [size]="15"></lucide-icon>
           {{ 'ABOUT_FEEDBACK_LINK' | translate }}
         </a>

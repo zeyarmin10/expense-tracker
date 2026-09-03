@@ -40,7 +40,7 @@ import {
   TrendingUp, TrendingDown, Banknote, ShoppingCart, ChartLine,
   ChartColumn, ChevronDown, ChevronRight, Save, Trash2,
   Plus, X, CalendarDays, EllipsisVertical, Pencil,
-  Search, Check, Package,
+  Search, Check, Package, HandCoins,
   LucideIconData,
 } from 'lucide-angular';
 import { AuthService } from '../../services/auth';
@@ -246,6 +246,7 @@ export class Profit implements OnInit, OnDestroy {
 
   readonly iconChartLine = ChartLine;
   readonly iconBanknote = Banknote;
+  readonly iconHandCoins = HandCoins;
   readonly iconShoppingCart = ShoppingCart;
   readonly iconChevronDown = ChevronDown;
   readonly iconChevronRight = ChevronRight;
@@ -398,8 +399,16 @@ export class Profit implements OnInit, OnDestroy {
     this.isProductPickerOpen = false;
   }
 
+  // Unit price always syncs to the newly selected product's own selling
+  // price when it has one — same reasoning as the Purchase form's unit
+  // auto-fill fix: a "fill only if blank" guard would leave a stale price
+  // from a previously selected product in place after switching to another.
   selectProduct(product: ServiceIProduct | null): void {
     this.incomeForm.get('productId')?.setValue(product?.id ?? '');
+    if (product?.sellingPrice) {
+      this.incomeForm.get('unitPrice')?.setValue(product.sellingPrice);
+      this.unitPriceDisplay = this.formatWithCommas(product.sellingPrice);
+    }
     this.closeProductPicker();
   }
 

@@ -117,6 +117,20 @@ body.pd-modal-open {
   gap: 0.6rem;
 }
 
+.pd-form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* .pd-fl-wrap's own flex:1 is meant for a *row* of fields (.pd-form-row) —
+   as a direct child of the flex-column .pd-form-fields it would instead
+   flex-shrink vertically, collapsing the Name field's height. */
+.pd-form-fields > .pd-fl-wrap {
+  flex: none;
+  width: 100%;
+}
+
 .pd-form-row {
   display: flex;
   gap: 0.5rem;

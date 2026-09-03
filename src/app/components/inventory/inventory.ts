@@ -86,6 +86,47 @@ export class Inventory implements OnInit, OnDestroy {
   editingProductId: string | null = null;
   editingNameControl: FormControl | null = null;
   editingUnitControl: FormControl | null = null;
+  editingSellingPriceControl: FormControl | null = null;
+
+  // Selling price inputs are plain text (not type="number") so there's no
+  // native spin-button — same comma-formatted, digits-only pattern used for
+  // price fields on the Expense/Profit forms.
+  sellingPriceDisplay = '';
+  editingSellingPriceDisplay = '';
+
+  formatWithCommas(value: number | string | null): string {
+    if (value === null || value === undefined || value === '') return '';
+    const num = typeof value === 'string' ? parseFloat(value.replace(/,/g, '')) : value;
+    if (isNaN(num)) return '';
+    const parts = num.toString().split('.');
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return parts.join('.');
+  }
+
+  private parsePriceInput(event: Event): { numericValue: number | null; formatted: string } {
+    const input = event.target as HTMLInputElement;
+    let raw = input.value.replace(/[^\d.]/g, '');
+    const parts = raw.split('.');
+    if (parts.length > 2) raw = parts[0] + '.' + parts.slice(1).join('');
+    const numericValue = parseFloat(raw.replace(/,/g, '')) || null;
+    const intPart = (raw.split('.')[0] || '').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    const decPart = raw.includes('.') ? '.' + (raw.split('.')[1] || '') : '';
+    const formatted = intPart + decPart;
+    input.value = formatted;
+    return { numericValue, formatted };
+  }
+
+  onSellingPriceInput(event: Event): void {
+    const { numericValue, formatted } = this.parsePriceInput(event);
+    this.addProductForm.get('sellingPrice')?.setValue(numericValue, { emitEvent: true });
+    this.sellingPriceDisplay = formatted;
+  }
+
+  onEditingSellingPriceInput(event: Event): void {
+    const { numericValue, formatted } = this.parsePriceInput(event);
+    this.editingSellingPriceControl?.setValue(numericValue, { emitEvent: true });
+    this.editingSellingPriceDisplay = formatted;
+  }
 
   isLoadingProducts = true;
   private _productsSubject = new BehaviorSubject<ServiceIProduct[]>([]);
@@ -101,6 +142,8 @@ export class Inventory implements OnInit, OnDestroy {
     this.addProductForm = this.fb.group({
       name: ['', [Validators.required, Validators.maxLength(100), meaningfulTextValidator]],
       unit: ['', Validators.maxLength(20)],
+      // Optional — settable now or later via inline edit, since prices change.
+      sellingPrice: ['', Validators.min(0.01)],
     });
   }
 
@@ -180,6 +223,13 @@ export class Inventory implements OnInit, OnDestroy {
     return summary.reduce((sum, row) => sum + (row.estProfit || 0), 0);
   }
 
+  // A product that's never been purchased naturally has currentStock 0 —
+  // that's "not yet stocked", not "running low" (same distinction already
+  // made for the shop dashboard's out-of-stock warning list).
+  isLowStock(row: ProductStockSummary): boolean {
+    return row.totalPurchasedQty > 0 && row.currentStock >= 0 && row.currentStock <= this.lowStockThreshold;
+  }
+
   toggleRowExpand(productId: string): void {
     this.expandedProductId = this.expandedProductId === productId ? null : productId;
   }
@@ -205,11 +255,12 @@ export class Inventory implements OnInit, OnDestroy {
       return;
     }
 
-    const { name, unit } = this.addProductForm.value;
+    const { name, unit, sellingPrice } = this.addProductForm.value;
     try {
-      await this.productService.addProduct(name, unit || undefined);
+      await this.productService.addProduct(name, unit || undefined, Number(sellingPrice) || undefined);
       Toast.fire({ icon: 'success', title: this.translateService.instant('PRODUCT_ADDED_SUCCESS') });
       this.addProductForm.reset();
+      this.sellingPriceDisplay = '';
       await this.loadProducts();
     } catch (error: any) {
       const key = getProductErrorMessage(error) || 'DATA_SAVE_ERROR';
@@ -228,12 +279,16 @@ export class Inventory implements OnInit, OnDestroy {
       [Validators.required, Validators.maxLength(100), meaningfulTextValidator],
     );
     this.editingUnitControl = new FormControl(product.unit ?? '', Validators.maxLength(20));
+    this.editingSellingPriceControl = new FormControl(product.sellingPrice ?? '', Validators.min(0.01));
+    this.editingSellingPriceDisplay = product.sellingPrice ? this.formatWithCommas(product.sellingPrice) : '';
   }
 
   cancelEdit(): void {
     this.editingProductId = null;
     this.editingNameControl = null;
     this.editingUnitControl = null;
+    this.editingSellingPriceControl = null;
+    this.editingSellingPriceDisplay = '';
   }
 
   async onUpdateInline(productId: string): Promise<void> {
@@ -247,8 +302,9 @@ export class Inventory implements OnInit, OnDestroy {
 
     const newName = (this.editingNameControl.value || '').trim();
     const newUnit = (this.editingUnitControl?.value || '').trim();
+    const newSellingPrice = Number(this.editingSellingPriceControl?.value) || null;
     try {
-      await this.productService.updateProduct(productId, newName, newUnit);
+      await this.productService.updateProduct(productId, newName, newUnit, newSellingPrice);
       Toast.fire({ icon: 'success', title: this.translateService.instant('PRODUCT_UPDATED_SUCCESS') });
       this.cancelEdit();
       await this.loadProducts();

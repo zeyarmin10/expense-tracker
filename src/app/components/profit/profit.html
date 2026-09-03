@@ -3,7 +3,7 @@
 
     <!-- ── ADD (FAB + Bottom-sheet Modal) ── -->
     <button *ngIf="canManageProfitActions" type="button" class="pnl-add-fab" (click)="openAddModal()" [title]="(inventoryEnabled ? 'ADD_SALE' : 'ADD_INCOME') | translate">
-      <lucide-icon [img]="iconBanknote" [size]="26"></lucide-icon>
+      <lucide-icon [img]="inventoryEnabled ? iconHandCoins : iconBanknote" [size]="26"></lucide-icon>
       <span class="pnl-add-fab-badge">
         <lucide-icon [img]="iconPlus" [size]="12"></lucide-icon>
       </span>

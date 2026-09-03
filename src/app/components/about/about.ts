@@ -4,9 +4,10 @@ import { TranslateModule } from '@ngx-translate/core';
 import { RouterModule } from '@angular/router';
 import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
+import { APP_VERSION } from '../../core/constants/app.constants';
 import {
   LucideAngularModule,
-  Wallet, PiggyBank, TrendingUp, Users, Globe, Tags,
+  Wallet, PiggyBank, TrendingUp, Users, Globe, Tags, Package,
   Heart, Star, Mail, Sparkles,
 } from 'lucide-angular';
 
@@ -36,13 +37,15 @@ export class AboutComponent implements OnInit {
     { icon: PiggyBank, titleKey: 'ABOUT_FEATURE_BUDGET_TITLE', descKey: 'ABOUT_FEATURE_BUDGET_DESC' },
     { icon: TrendingUp, titleKey: 'ABOUT_FEATURE_PROFIT_TITLE', descKey: 'ABOUT_FEATURE_PROFIT_DESC' },
     { icon: Users, titleKey: 'ABOUT_FEATURE_GROUP_TITLE', descKey: 'ABOUT_FEATURE_GROUP_DESC' },
+    { icon: Package, titleKey: 'ABOUT_FEATURE_INVENTORY_TITLE', descKey: 'ABOUT_FEATURE_INVENTORY_DESC' },
     { icon: Tags, titleKey: 'ABOUT_FEATURE_CURRENCY_TITLE', descKey: 'ABOUT_FEATURE_CURRENCY_DESC' },
     { icon: Globe, titleKey: 'ABOUT_FEATURE_LANGUAGE_TITLE', descKey: 'ABOUT_FEATURE_LANGUAGE_DESC' },
   ];
 
-  // Keep in sync with android/app/build.gradle's versionName — used only as a
-  // web/fallback value; the native app overrides it with the real installed version.
-  appVersion = '18.0';
+  // Web fallback — overridden below with the real installed version on
+  // native builds. See APP_VERSION's own comment for how to keep this in
+  // sync with android/app/build.gradle.
+  appVersion = APP_VERSION;
   readonly currentYear = new Date().getFullYear();
 
   private readonly androidAppId = 'com.ethan.expensetracker';

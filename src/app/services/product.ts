@@ -22,6 +22,9 @@ export interface ServiceIProduct {
   id?: string;
   name: string;
   unit?: string;
+  // Default selling price — set at creation (or edited later) so the Sales
+  // form can auto-fill Unit Price the moment this product is picked.
+  sellingPrice?: number;
   userId?: string;
   groupId?: string;
   createdAt?: string;
@@ -95,7 +98,7 @@ export class ProductService {
     }
   }
 
-  async addProduct(name: string, unit?: string): Promise<void> {
+  async addProduct(name: string, unit?: string, sellingPrice?: number): Promise<void> {
     const profile = await firstValueFrom(this.authService.userProfile$) as UserProfile | null;
     if (!profile?.uid) {
       throw new Error('User not authenticated.');
@@ -107,6 +110,7 @@ export class ProductService {
     const newProduct: Omit<ServiceIProduct, 'id'> = {
       name: trimmedName,
       ...(unit ? { unit: unit.trim() } : {}),
+      ...(sellingPrice && sellingPrice > 0 ? { sellingPrice } : {}),
       createdAt: new Date().toISOString(),
     };
 
@@ -122,7 +126,7 @@ export class ProductService {
     await push(productsRef, newProduct);
   }
 
-  async updateProduct(productId: string, newName: string, unit?: string): Promise<void> {
+  async updateProduct(productId: string, newName: string, unit?: string, sellingPrice?: number | null): Promise<void> {
     const profile = await firstValueFrom(this.authService.userProfile$) as UserProfile | null;
     if (!profile?.uid) {
       throw new Error('User not authenticated.');
@@ -143,9 +147,14 @@ export class ProductService {
     const trimmedNewName = newName.trim();
     await this.assertProductNameAvailable(trimmedNewName, productId);
 
-    const updateData: { name: string; unit?: string } = { name: trimmedNewName };
+    const updateData: { name: string; unit?: string; sellingPrice?: number | null } = { name: trimmedNewName };
     if (unit !== undefined) {
       updateData.unit = unit.trim();
+    }
+    if (sellingPrice !== undefined) {
+      // Firebase RTDB removes the key when set to null — used to clear a
+      // previously-set selling price.
+      updateData.sellingPrice = sellingPrice && sellingPrice > 0 ? sellingPrice : null;
     }
     await update(productRef, updateData);
   }

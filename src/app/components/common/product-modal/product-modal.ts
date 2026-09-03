@@ -52,10 +52,27 @@ export class ProductModalComponent implements OnInit, OnDestroy {
     return product.id ?? String(index);
   }
 
+  // Plain text, comma-formatted, digits-only — no native number spin button.
+  sellingPriceDisplay = '';
+
+  onSellingPriceInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    let raw = input.value.replace(/[^\d.]/g, '');
+    const parts = raw.split('.');
+    if (parts.length > 2) raw = parts[0] + '.' + parts.slice(1).join('');
+    const numericValue = parseFloat(raw.replace(/,/g, '')) || null;
+    this.productForm.get('sellingPrice')?.setValue(numericValue, { emitEvent: true });
+    const intPart = (raw.split('.')[0] || '').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    const decPart = raw.includes('.') ? '.' + (raw.split('.')[1] || '') : '';
+    this.sellingPriceDisplay = intPart + decPart;
+    input.value = this.sellingPriceDisplay;
+  }
+
   constructor(private fb: FormBuilder) {
     this.productForm = this.fb.group({
       name: ['', [Validators.required, Validators.maxLength(100), meaningfulTextValidator]],
       unit: ['', Validators.maxLength(20)],
+      sellingPrice: ['', Validators.min(0.01)],
     });
   }
 
@@ -105,6 +122,7 @@ export class ProductModalComponent implements OnInit, OnDestroy {
 
   resetForm(): void {
     this.productForm.reset();
+    this.sellingPriceDisplay = '';
   }
 
   isDeleting(productId: string): boolean {
@@ -116,10 +134,10 @@ export class ProductModalComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const { name, unit } = this.productForm.value;
+    const { name, unit, sellingPrice } = this.productForm.value;
 
     try {
-      await this.productService.addProduct(name, unit || undefined);
+      await this.productService.addProduct(name, unit || undefined, Number(sellingPrice) || undefined);
       Toast.fire({ icon: 'success', title: this.translateService.instant('PRODUCT_ADDED_SUCCESS') });
       await this.loadProducts();
       this.productAdded.emit();

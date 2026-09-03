@@ -1,5 +1,12 @@
 import { Currency } from '../models/currency.model';
 
+// Web fallback app version — shown on the About page for browser visits and
+// overridden with the real installed version on native builds (see
+// about.ts's Capacitor App.getInfo() call). Bump this together with
+// android/app/build.gradle's versionName on every release so the two never
+// drift — this is the single place to update on the web side.
+export const APP_VERSION = '19.0';
+
 // Every language the app ships with. Labels are the language's own native
 // name — shown as-is in pickers, never translated. Adding a language also
 // requires: assets/i18n/<code>.json + registerLocaleData in main.ts.

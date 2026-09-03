@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Observable, combineLatest, map, of, switchMap } from 'rxjs';
 import { TranslateModule } from '@ngx-translate/core';
-import { LucideAngularModule, ShoppingCart, Banknote, TriangleAlert, Package, TrendingUp, TrendingDown, Plus, Trophy } from 'lucide-angular';
+import { LucideAngularModule, ShoppingCart, HandCoins, TriangleAlert, Package, TrendingUp, TrendingDown, Plus, Trophy } from 'lucide-angular';
 import { ProductService } from '../../services/product';
 import { ExpenseService } from '../../services/expense';
 import { IncomeService } from '../../services/income';
@@ -60,7 +60,7 @@ export class ShopDashboardComponent implements OnInit {
   public formatService = inject(FormatService);
 
   readonly iconShoppingCart = ShoppingCart;
-  readonly iconBanknote = Banknote;
+  readonly iconHandCoins = HandCoins;
   readonly iconWarning = TriangleAlert;
   readonly iconPackage = Package;
   readonly iconTrendingUp = TrendingUp;

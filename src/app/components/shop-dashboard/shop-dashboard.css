@@ -150,15 +150,15 @@
   font-size: 0.82rem;
   font-weight: 700;
   text-decoration: none;
-  border: 1px dashed var(--border);
-  color: var(--text-muted);
-  background: transparent;
-  transition: border-color 0.15s, color 0.15s;
+  border: 1px solid var(--budget-border);
+  background: var(--budget-dim);
+  color: var(--budget-color);
+  transition: border-color 0.15s, background 0.15s;
 }
 
 .shopdash-quick-btn-secondary:hover {
-  border-color: var(--accent);
-  color: var(--accent);
+  border-color: var(--budget-color);
+  background: var(--budget-dim);
 }
 
 .shopdash-stock-warning {

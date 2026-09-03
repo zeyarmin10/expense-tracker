@@ -2,7 +2,7 @@
 
   <div class="shopdash-stats-row">
     <div class="shopdash-stat-card shopdash-stat-sales">
-      <lucide-icon [img]="iconBanknote" [size]="20"></lucide-icon>
+      <lucide-icon [img]="iconHandCoins" [size]="20"></lucide-icon>
       <div>
         <span class="shopdash-stat-label">{{ 'SHOP_DASHBOARD_TODAY_SALES' | translate }}</span>
         <span class="shopdash-stat-value" [innerHTML]="formatService.formatAmountShortHtml(stats.todaySales, currency)"></span>
@@ -28,7 +28,7 @@
 
   <div class="shopdash-quick-actions">
     <a routerLink="/sales" class="shopdash-quick-btn shopdash-quick-sale">
-      <lucide-icon [img]="iconBanknote" [size]="16"></lucide-icon>
+      <lucide-icon [img]="iconHandCoins" [size]="16"></lucide-icon>
       {{ 'SHOP_DASHBOARD_QUICK_SALE' | translate }}
     </a>
     <a routerLink="/purchase" class="shopdash-quick-btn shopdash-quick-purchase">
@@ -59,7 +59,7 @@
   <!-- Today's sold items -->
   <div class="shopdash-panel shopdash-panel-good" *ngIf="stats.todaySoldItems.length > 0">
     <h3 class="shopdash-panel-title shopdash-panel-title-good">
-      <lucide-icon [img]="iconBanknote" [size]="15"></lucide-icon>
+      <lucide-icon [img]="iconHandCoins" [size]="15"></lucide-icon>
       {{ 'SHOP_DASHBOARD_TODAY_SOLD_ITEMS' | translate }}
     </h3>
     <ul class="shopdash-item-list">
