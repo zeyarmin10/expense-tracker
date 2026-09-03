@@ -67,7 +67,7 @@
           translate
           }}</a></li>
       <li *ngIf="inventoryEnabled$ | async">
-        <a routerLink="/inventory" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_SUMMARY' |
+        <a routerLink="/inventory" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_INVENTORY' |
           translate
           }}</a>
       </li>
@@ -281,7 +281,7 @@
       <span class="mob-nav-icon">
         <lucide-icon [img]="iconPackage" [size]="24"></lucide-icon>
       </span>
-      <span class="mob-nav-label">{{ 'NAV_SUMMARY' | translate }}</span>
+      <span class="mob-nav-label">{{ 'NAV_INVENTORY' | translate }}</span>
     </a>
   </ng-container>
 
