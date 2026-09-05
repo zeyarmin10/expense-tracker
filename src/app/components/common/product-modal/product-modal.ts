@@ -4,7 +4,7 @@ import { ProductService, ServiceIProduct, getProductErrorMessage } from '../../.
 import { BarcodeScannerService } from '../../../services/barcode-scanner.service';
 import { CommonModule } from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { LucideAngularModule, X, Plus, Package, Trash2, ScanLine } from 'lucide-angular';
+import { LucideAngularModule, X, Plus, Package, Trash2, ScanLine, Eye } from 'lucide-angular';
 import { meaningfulTextValidator } from '../../../utils/form-validators';
 import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import Swal from 'sweetalert2';
@@ -54,6 +54,7 @@ export class ProductModalComponent implements OnInit, OnDestroy {
   readonly iconPackage = Package;
   readonly iconTrash2 = Trash2;
   readonly iconScanLine = ScanLine;
+  readonly iconEye = Eye;
   readonly canScanBarcode = this.barcodeScanner.isSupported();
 
   trackByProductId(index: number, product: ServiceIProduct): string {
@@ -247,10 +248,20 @@ export class ProductModalComponent implements OnInit, OnDestroy {
       const isUsed = await this.productService.isProductInUse(productId);
 
       if (isUsed) {
-        this.showErrorModal(
-          this.translateService.instant('DELETE_PRODUCT_ERROR_TITLE'),
-          this.translateService.instant('PRODUCT_IN_USE_ERROR')
-        );
+        const hideResult = await Swal.fire({
+          title: this.translateService.instant('PRODUCT_HIDE_BUTTON'),
+          text: this.translateService.instant('PRODUCT_DEACTIVATE_CONFIRM'),
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: this.translateService.instant('PRODUCT_HIDE_BUTTON'),
+          cancelButtonText: this.translateService.instant('CANCEL_BUTTON'),
+          reverseButtons: true,
+        });
+        if (hideResult.isConfirmed) {
+          await this.productService.deactivateProduct(productId);
+          Toast.fire({ icon: 'success', title: this.translateService.instant('PRODUCT_DEACTIVATED_SUCCESS') });
+          await this.loadProducts();
+        }
         return;
       }
 
@@ -286,6 +297,19 @@ export class ProductModalComponent implements OnInit, OnDestroy {
         this.translateService.instant('ERROR_TITLE'),
         error.message ||
         this.translateService.instant('FAILED_CHECK_PRODUCT_USAGE')
+      );
+    }
+  }
+
+  async onReactivate(productId: string): Promise<void> {
+    try {
+      await this.productService.activateProduct(productId);
+      Toast.fire({ icon: 'success', title: this.translateService.instant('PRODUCT_REACTIVATED_SUCCESS') });
+      await this.loadProducts();
+    } catch (error: any) {
+      this.showErrorModal(
+        this.translateService.instant('ERROR_TITLE'),
+        error.message || this.translateService.instant('DATA_SAVE_ERROR')
       );
     }
   }

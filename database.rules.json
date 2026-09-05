@@ -50,6 +50,9 @@
           ".indexOn": ["date", "category", "productId"],
           ".write": "$uid === auth.uid",
           "$expenseId": {
+            "status": {
+              ".validate": "!newData.exists() || (newData.isString() && (newData.val() === 'active' || newData.val() === 'void'))"
+            },
             "editHistory": {
               "$entryKey": {
                 ".validate": "newData.hasChildren(['editedAt', 'editedBy', 'editedByName', 'changes'])"
@@ -60,7 +63,12 @@
 
         "incomes": {
           ".indexOn": ["date", "productId"],
-          ".write": "$uid === auth.uid"
+          ".write": "$uid === auth.uid",
+          "$incomeId": {
+            "status": {
+              ".validate": "!newData.exists() || (newData.isString() && (newData.val() === 'active' || newData.val() === 'void'))"
+            }
+          }
         },
 
         "budgets": {
@@ -75,7 +83,12 @@
 
         "products": {
           ".indexOn": "name",
-          ".write": "$uid === auth.uid"
+          ".write": "$uid === auth.uid",
+          "$productId": {
+            "isActive": {
+              ".validate": "!newData.exists() || newData.isBoolean()"
+            }
+          }
         }
       }
     },
@@ -146,6 +159,9 @@
         "expenses": {
           ".indexOn": ["date", "category", "productId"],
           "$expenseId": {
+            "status": {
+              ".validate": "!newData.exists() || (newData.isString() && (newData.val() === 'active' || newData.val() === 'void'))"
+            },
             "editHistory": {
               "$entryKey": {
                 ".validate": "newData.hasChildren(['editedAt', 'editedBy', 'editedByName', 'changes'])"
@@ -155,7 +171,12 @@
         },
 
         "incomes": {
-          ".indexOn": ["date", "productId"]
+          ".indexOn": ["date", "productId"],
+          "$incomeId": {
+            "status": {
+              ".validate": "!newData.exists() || (newData.isString() && (newData.val() === 'active' || newData.val() === 'void'))"
+            }
+          }
         },
 
         "budgets": {
@@ -167,7 +188,12 @@
         },
 
         "products": {
-          ".indexOn": ["name", "barcode"]
+          ".indexOn": ["name", "barcode"],
+          "$productId": {
+            "isActive": {
+              ".validate": "!newData.exists() || newData.isBoolean()"
+            }
+          }
         }
       }
     },
@@ -210,6 +236,9 @@
         "expenses": {
           ".indexOn": ["date", "category", "productId"],
           "$expenseId": {
+            "status": {
+              ".validate": "!newData.exists() || (newData.isString() && (newData.val() === 'active' || newData.val() === 'void'))"
+            },
             "editHistory": {
               "$entryKey": {
                 ".validate": "newData.hasChildren(['editedAt', 'editedBy', 'editedByName', 'changes'])"
@@ -219,7 +248,12 @@
         },
 
         "incomes": {
-          ".indexOn": ["date", "productId"]
+          ".indexOn": ["date", "productId"],
+          "$incomeId": {
+            "status": {
+              ".validate": "!newData.exists() || (newData.isString() && (newData.val() === 'active' || newData.val() === 'void'))"
+            }
+          }
         },
 
         "budgets": {
@@ -231,7 +265,12 @@
         },
 
         "products": {
-          ".indexOn": ["name", "barcode"]
+          ".indexOn": ["name", "barcode"],
+          "$productId": {
+            "isActive": {
+              ".validate": "!newData.exists() || newData.isBoolean()"
+            }
+          }
         }
       }
     },

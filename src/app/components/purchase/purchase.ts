@@ -46,7 +46,7 @@ import {
   Plus, Minus, Pencil, Trash2, Save, X, RotateCcw, Info, Wallet, ListChecks,
   Coins, ChevronDown, ChevronUp, Calendar, CalendarDays, RotateCw, Receipt,
   Image, Images, Eye, Camera as LucideCamera, Archive,
-  Search, Check, ScanLine, ShoppingCart, Package,
+  Search, Check, ScanLine, ShoppingCart, Package, Ban,
 } from 'lucide-angular';
 
 import { CategoryModalComponent } from '../common/category-modal/category-modal';
@@ -509,6 +509,7 @@ export class Purchase implements OnInit, OnDestroy {
   readonly iconMinus = Minus;
   readonly iconPencil = Pencil;
   readonly iconTrash2 = Trash2;
+  readonly iconBan = Ban;
   readonly iconSave = Save;
   readonly iconX = X;
   readonly iconRotateCcw = RotateCcw;
@@ -727,8 +728,17 @@ export class Purchase implements OnInit, OnDestroy {
 
   get filteredPickerProducts(): ServiceIProduct[] {
     const q = this.productPickerSearch.trim().toLowerCase();
-    if (!q) return this.productList;
-    return this.productList.filter(p => p.name.toLowerCase().includes(q));
+    // Restocking a hidden/deactivated product doesn't make sense — only the
+    // cart picker (adding a new purchase line) hides these; the legacy edit
+    // form's picker leaves its full list untouched so editing an old record
+    // that references one still works. Mirrors sales.ts's filteredPickerProducts.
+    let list = this.productPickerMode === 'cart'
+      ? this.productList.filter(p => p.isActive !== false)
+      : this.productList;
+    if (q) {
+      list = list.filter(p => p.name.toLowerCase().includes(q));
+    }
+    return list;
   }
 
   getSelectedProductName(productId: string): string | null {
@@ -1358,16 +1368,21 @@ export class Purchase implements OnInit, OnDestroy {
     history.pushState(null, '');
   }
 
-  onDelete(expenseId: string): void {
+  // Cancels the purchase instead of erasing it (see ExpenseService.voidExpense())
+  // — the row is excluded from every list/total/stock calc from then on, but
+  // stays in Firebase forever for audit purposes.
+  onVoid(expenseId: string): void {
     if (!this.canManageExpenseRecords) {
       return;
     }
     Swal.fire({
-      title: this.translate.instant('CONFIRM_DELETE_TITLE'),
-      text: this.translate.instant('CONFIRM_DELETE_PURCHASE'),
+      title: this.translate.instant('CONFIRM_VOID_TITLE'),
+      text: this.translate.instant('CONFIRM_VOID_PURCHASE'),
       icon: 'warning',
+      input: 'textarea',
+      inputPlaceholder: this.translate.instant('VOID_REASON_PLACEHOLDER'),
       showCancelButton: true,
-      confirmButtonText: this.translate.instant('DELETE_BUTTON'),
+      confirmButtonText: this.translate.instant('VOID_PURCHASE_BUTTON'),
       cancelButtonText: this.translate.instant('CANCEL_BUTTON'),
       reverseButtons: true
     }).then(async result => {
@@ -1375,8 +1390,8 @@ export class Purchase implements OnInit, OnDestroy {
         this.isSaving = true;
         this.cdr.markForCheck();
         try {
-          await this.expenseService.deleteExpense(expenseId);
-          Toast.fire({ icon: 'success', title: this.translate.instant('PURCHASE_DELETED_SUCCESS') });
+          await this.expenseService.voidExpense(expenseId, result.value || undefined);
+          Toast.fire({ icon: 'success', title: this.translate.instant('PURCHASE_VOIDED_SUCCESS') });
           this.refreshExpenses$.next();
         } catch (error: any) {
           Toast.fire({ icon: 'error', title: error.message || this.translate.instant('DATA_DELETE_ERROR') });

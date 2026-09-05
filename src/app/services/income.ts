@@ -51,6 +51,14 @@ export interface ServiceIIncome {
   createdByPhotoURL?: string | null;
   device: string;
   editedDevice?: string;
+  // ── Soft delete — absent/'active' means normal; 'void' means cancelled.
+  // Never remove()'d so stock/reports stay auditable — see IncomeService's
+  // getIncomes()/voidIncome() and InventoryService.getStockSummary(). ──
+  status?: 'active' | 'void';
+  voidedAt?: string;
+  voidedBy?: string;
+  voidedByName?: string;
+  voidReason?: string;
 }
 
 // Every product-sale consumer (stock/profit math, the shop dashboard's
@@ -208,7 +216,13 @@ export class IncomeService {
                 createdByName,
                 createdByPhotoURL,
               } as ServiceIIncome;
-            });
+            })
+              // Voided (soft-deleted) records stay in Firebase forever for
+              // audit purposes but never surface here — every caller (lists,
+              // InventoryService's stock derivation, ProfitLossService's
+              // totals, SalesReport) reads through this one method, so
+              // filtering once here is enough to fix all of them at once.
+              .filter((i: ServiceIIncome) => i.status !== 'void');
           }),
           catchError(error => {
             console.error('Error fetching incomes:', error);
@@ -271,6 +285,41 @@ export class IncomeService {
         incomeRef = ref(this.db, `users/${profile.uid}/incomes/${id}`);
     }
     await remove(incomeRef);
+  }
+
+  // The user-facing "Delete" action for a sale — cancels it instead of
+  // erasing it. Excluded from getIncomes() (status !== 'void') so stock
+  // and totals correct themselves automatically; the row itself is kept
+  // forever for audit purposes. See deleteIncome() above for the (now
+  // UI-unused) true hard-delete.
+  async voidIncome(id: string, reason?: string): Promise<void> {
+    const profile = await firstValueFrom(this.authService.userProfile$);
+    if (!profile?.uid) {
+      throw new Error('User not authenticated.');
+    }
+    if (!id) {
+      throw new Error('Income ID is required for voiding.');
+    }
+
+    let incomeRef: DatabaseReference;
+    const activeGroupId = getActiveGroupId(profile);
+    const currentSpaceId = this.spaceDataService.getCurrentSpaceId(profile);
+    const { canonicalRef } = await this.spaceDataService.getActiveCollectionContext(profile, 'incomes');
+    if (canonicalRef && currentSpaceId) {
+      incomeRef = ref(this.db, `space_data/${currentSpaceId}/incomes/${id}`);
+    } else if (activeGroupId) {
+      incomeRef = ref(this.db, `group_data/${activeGroupId}/incomes/${id}`);
+    } else {
+      incomeRef = ref(this.db, `users/${profile.uid}/incomes/${id}`);
+    }
+
+    await update(incomeRef, {
+      status: 'void',
+      voidedAt: new Date().toISOString(),
+      voidedBy: profile.uid,
+      voidedByName: profile.displayName || 'Unknown',
+      voidReason: reason || null,
+    });
   }
 
   getIncomesByYear(year: number): Observable<ServiceIIncome[]> {

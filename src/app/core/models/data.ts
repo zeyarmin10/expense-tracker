@@ -86,6 +86,14 @@ export interface DataIExpense {
   editedDevice?: string;
   // ── Edit history: key = timestamp (Date.now()), value = IEditHistoryEntry ──
   editHistory?: { [key: string]: IEditHistoryEntry };
+  // ── Soft delete — absent/'active' means normal; 'void' means cancelled.
+  // Never remove()'d so stock/reports stay auditable — see ExpenseService's
+  // getExpenses()/voidExpense() and InventoryService.getStockSummary(). ──
+  status?: 'active' | 'void';
+  voidedAt?: string;
+  voidedBy?: string;
+  voidedByName?: string;
+  voidReason?: string;
 }
 
 export interface DataIVoucher {

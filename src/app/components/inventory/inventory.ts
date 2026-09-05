@@ -24,7 +24,7 @@ import { FormatService } from '../../services/format.service';
 import { meaningfulTextValidator } from '../../utils/form-validators';
 import {
   LucideAngularModule, Package, Plus, Pencil, Trash2, X, Save, TriangleAlert,
-  ChevronDown, ChevronUp, ScanLine,
+  ChevronDown, ChevronUp, ScanLine, EyeOff, Eye,
 } from 'lucide-angular';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import Swal from 'sweetalert2';
@@ -75,6 +75,8 @@ export class Inventory implements OnInit, OnDestroy {
   readonly iconChevronDown = ChevronDown;
   readonly iconChevronUp = ChevronUp;
   readonly iconScanLine = ScanLine;
+  readonly iconEyeOff = EyeOff;
+  readonly iconEye = Eye;
 
   // Only native builds can actually scan — the button hides on web/dev.
   readonly canScanBarcode = this.barcodeScanner.isSupported();
@@ -360,10 +362,20 @@ export class Inventory implements OnInit, OnDestroy {
     try {
       const isUsed = await this.productService.isProductInUse(productId);
       if (isUsed) {
-        this.showErrorModal(
-          this.translateService.instant('DELETE_PRODUCT_ERROR_TITLE'),
-          this.translateService.instant('PRODUCT_IN_USE_ERROR'),
-        );
+        const hideResult = await Swal.fire({
+          title: this.translateService.instant('PRODUCT_HIDE_BUTTON'),
+          text: this.translateService.instant('PRODUCT_DEACTIVATE_CONFIRM'),
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: this.translateService.instant('PRODUCT_HIDE_BUTTON'),
+          cancelButtonText: this.translateService.instant('CANCEL_BUTTON'),
+          reverseButtons: true,
+        });
+        if (hideResult.isConfirmed) {
+          await this.productService.deactivateProduct(productId);
+          Toast.fire({ icon: 'success', title: this.translateService.instant('PRODUCT_DEACTIVATED_SUCCESS') });
+          await this.loadProducts();
+        }
         return;
       }
 
@@ -390,6 +402,19 @@ export class Inventory implements OnInit, OnDestroy {
       this.showErrorModal(
         this.translateService.instant('ERROR_TITLE'),
         error.message || this.translateService.instant('FAILED_CHECK_PRODUCT_USAGE'),
+      );
+    }
+  }
+
+  async onReactivate(productId: string): Promise<void> {
+    try {
+      await this.productService.activateProduct(productId);
+      Toast.fire({ icon: 'success', title: this.translateService.instant('PRODUCT_REACTIVATED_SUCCESS') });
+      await this.loadProducts();
+    } catch (error: any) {
+      this.showErrorModal(
+        this.translateService.instant('ERROR_TITLE'),
+        error.message || this.translateService.instant('DATA_SAVE_ERROR'),
       );
     }
   }

@@ -17,6 +17,8 @@ import { AuthService } from './auth';
 import { getActiveGroupId, UserProfile } from './user-data';
 import { SpaceDataService } from './space-data.service';
 import { SpaceSwitchLoadingService } from './space-switch-loading.service';
+import { getExpenseLineItems, ServiceIExpense } from './expense';
+import { getIncomeLineItems, ServiceIIncome } from './income';
 
 export interface ServiceIProduct {
   id?: string;
@@ -31,6 +33,10 @@ export interface ServiceIProduct {
   userId?: string;
   groupId?: string;
   createdAt?: string;
+  // Absent/true = shown in "Add Item" pickers; false = hidden from new
+  // selections but kept intact for historical purchase/sale records — see
+  // deactivateProduct()/activateProduct().
+  isActive?: boolean;
 }
 
 /**
@@ -262,11 +268,61 @@ export class ProductService {
     const expensesRef = expenseContext.canonicalRef || expenseContext.legacyRef;
     const incomesRef = incomeContext.canonicalRef || incomeContext.legacyRef;
 
+    // Indexed queries first — cheap, and cover every legacy single-item
+    // purchase/sale (the common case).
     const [expenseSnapshot, incomeSnapshot] = await Promise.all([
       get(query(expensesRef, orderByChild('productId'), equalTo(productId))),
       get(query(incomesRef, orderByChild('productId'), equalTo(productId))),
     ]);
+    if (expenseSnapshot.exists() || incomeSnapshot.exists()) {
+      return true;
+    }
 
-    return expenseSnapshot.exists() || incomeSnapshot.exists();
+    // RTDB can't index into lineItems[].productId, so a product used only
+    // via a POS-cart (multi-item) purchase/sale would otherwise slip past
+    // the check above and be reported as "not in use" — fetch the full
+    // lists once and scan their line items directly.
+    const [allExpensesSnapshot, allIncomesSnapshot] = await Promise.all([
+      get(expensesRef),
+      get(incomesRef),
+    ]);
+    const expensesVal = (allExpensesSnapshot.val() || {}) as Record<string, ServiceIExpense>;
+    const incomesVal = (allIncomesSnapshot.val() || {}) as Record<string, ServiceIIncome>;
+
+    const usedInExpenseLineItems = Object.values(expensesVal).some((e) =>
+      getExpenseLineItems(e).some((li) => li.productId === productId)
+    );
+    if (usedInExpenseLineItems) {
+      return true;
+    }
+    return Object.values(incomesVal).some((i) =>
+      getIncomeLineItems(i).some((li) => li.productId === productId)
+    );
+  }
+
+  async deactivateProduct(productId: string): Promise<void> {
+    await this.setProductActive(productId, false);
+  }
+
+  async activateProduct(productId: string): Promise<void> {
+    await this.setProductActive(productId, true);
+  }
+
+  private async setProductActive(productId: string, isActive: boolean): Promise<void> {
+    const profile = await firstValueFrom(this.authService.userProfile$) as UserProfile | null;
+    if (!profile?.uid) {
+      throw new Error('User not authenticated.');
+    }
+    const activeGroupId = getActiveGroupId(profile);
+    const currentSpaceId = this.spaceDataService.getCurrentSpaceId(profile);
+    const { canonicalRef } = await this.spaceDataService.getActiveCollectionContext(profile, 'products');
+
+    const primaryPath = canonicalRef && currentSpaceId
+      ? `space_data/${currentSpaceId}/products/${productId}`
+      : activeGroupId
+        ? `group_data/${activeGroupId}/products/${productId}`
+        : `users/${profile.uid}/products/${productId}`;
+
+    await update(ref(this.db, primaryPath), { isActive });
   }
 }

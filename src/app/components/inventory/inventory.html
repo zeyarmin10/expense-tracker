@@ -69,6 +69,9 @@
               </div>
               <div class="inv-product-info">
                 <span class="inv-product-name">{{ product.name }}</span>
+                <span class="inv-product-hidden-badge" *ngIf="product.isActive === false">
+                  {{ 'PRODUCT_HIDDEN_BADGE' | translate }}
+                </span>
                 <span class="inv-product-meta" *ngIf="product.unit || product.sellingPrice">
                   <span *ngIf="product.unit">{{ product.unit }}</span>
                   <span *ngIf="product.unit && product.sellingPrice"> · </span>
@@ -80,6 +83,11 @@
                 <button type="button" class="inv-action-btn" (click)="startEdit(product)"
                   [attr.aria-label]="'EDIT_PRODUCT' | translate">
                   <lucide-icon [img]="iconPencil" [size]="15"></lucide-icon>
+                </button>
+                <button type="button" class="inv-action-btn" *ngIf="product.isActive === false"
+                  (click)="onReactivate(product.id!)" [attr.aria-label]="'PRODUCT_REACTIVATE_BUTTON' | translate"
+                  [title]="'PRODUCT_REACTIVATE_BUTTON' | translate">
+                  <lucide-icon [img]="iconEye" [size]="15"></lucide-icon>
                 </button>
                 <button type="button" class="inv-action-btn inv-action-delete" (click)="onDelete(product.id!)"
                   [attr.aria-label]="'DELETE_BUTTON_LABEL' | translate">

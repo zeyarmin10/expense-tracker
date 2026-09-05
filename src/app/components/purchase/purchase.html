@@ -714,9 +714,10 @@
                       <button
                         *ngIf="canManageExpenseRecords"
                         class="exp-btn exp-btn-sm exp-btn-outline-danger"
-                        (click)="onDelete(expense.id!)"
+                        (click)="onVoid(expense.id!)"
+                        [title]="'VOID_PURCHASE_BUTTON' | translate"
                       >
-                        <lucide-icon [img]="iconTrash2" [size]="16" class="fa-regular-icon fa-delete-btn"></lucide-icon>
+                        <lucide-icon [img]="iconBan" [size]="16" class="fa-regular-icon fa-delete-btn"></lucide-icon>
                       </button>
                     </div>
                     <div class="exp-info-avatar-row">

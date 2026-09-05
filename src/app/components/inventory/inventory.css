@@ -278,6 +278,17 @@ body.light-mode .inv-seg-btn.active {
   white-space: nowrap;
 }
 
+.inv-product-hidden-badge {
+  display: inline-block;
+  align-self: flex-start;
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--surface-alt, rgba(128, 128, 128, 0.15));
+  border-radius: 4px;
+  padding: 0.05rem 0.4rem;
+}
+
 .inv-product-meta {
   font-size: 0.72rem;
   color: var(--text-muted);

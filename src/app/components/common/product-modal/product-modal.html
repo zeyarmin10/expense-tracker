@@ -121,8 +121,17 @@
               <lucide-icon [img]="iconPackage" [size]="18"></lucide-icon>
             </div>
             <span class="pd-item-name">{{ product.name }}</span>
+            <span class="pd-item-hidden-badge" *ngIf="product.isActive === false">
+              {{ 'PRODUCT_HIDDEN_BADGE' | translate }}
+            </span>
             <span class="pd-item-unit" *ngIf="product.unit">{{ product.unit }}</span>
             <div class="pd-item-actions">
+              <button class="pd-action-btn" type="button" *ngIf="product.isActive === false"
+                (click)="onReactivate(product.id!)"
+                [attr.aria-label]="'PRODUCT_REACTIVATE_BUTTON' | translate"
+                [title]="'PRODUCT_REACTIVATE_BUTTON' | translate">
+                <lucide-icon [img]="iconEye" [size]="16"></lucide-icon>
+              </button>
               <button class="pd-action-btn pd-action-delete" type="button"
                 (click)="onDelete(product.id!)"
                 [disabled]="isDeleting(product.id!)"

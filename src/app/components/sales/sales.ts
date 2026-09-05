@@ -40,7 +40,7 @@ import {
   ChartColumn, ChevronDown, ChevronUp, ChevronRight, Save, Trash2,
   Plus, Minus, X, CalendarDays, Pencil,
   Search, Check, Package, HandCoins, ScanLine, RotateCcw, Calendar,
-  Receipt, Share2, Download,
+  Receipt, Share2, Download, Ban,
 } from 'lucide-angular';
 import { Share } from '@capacitor/share';
 import { Filesystem, Directory } from '@capacitor/filesystem';
@@ -278,6 +278,7 @@ export class Sales implements OnInit, OnDestroy {
   readonly iconScanLine = ScanLine;
   readonly iconMinus = Minus;
   readonly iconReceipt = Receipt;
+  readonly iconBan = Ban;
   readonly iconShare2 = Share2;
   readonly iconDownload = Download;
   isSavingReceiptImage = false;
@@ -619,7 +620,8 @@ export class Sales implements OnInit, OnDestroy {
     // these; the legacy edit form's picker leaves its full list untouched
     // so editing an old record that references one still works.
     let list = this.productPickerMode === 'cart'
-      ? this.productList.filter(p => (this.stockByProductId.get(p.id!)?.totalPurchasedQty ?? 0) > 0)
+      ? this.productList.filter(p =>
+          p.isActive !== false && (this.stockByProductId.get(p.id!)?.totalPurchasedQty ?? 0) > 0)
       : this.productList;
     if (q) {
       list = list.filter(p => p.name.toLowerCase().includes(q));
@@ -1225,29 +1227,34 @@ export class Sales implements OnInit, OnDestroy {
     history.pushState(null, '');
   }
 
-  confirmDeleteIncome(incomeId: string | undefined): void {
+  // Cancels the sale instead of erasing it (see IncomeService.voidIncome())
+  // — the row is excluded from every list/total/stock calc from then on, but
+  // stays in Firebase forever for audit purposes.
+  confirmVoidIncome(incomeId: string | undefined): void {
     if (!this.canDeleteIncome) {
       return;
     }
     if (incomeId) {
         Swal.fire({
-            title: this.translate.instant('CONFIRM_DELETE_TITLE'),
-            text: this.translate.instant('CONFIRM_DELETE_SALE'),
+            title: this.translate.instant('CONFIRM_VOID_TITLE'),
+            text: this.translate.instant('CONFIRM_VOID_SALE'),
             icon: 'warning',
+            input: 'textarea',
+            inputPlaceholder: this.translate.instant('VOID_REASON_PLACEHOLDER'),
             showCancelButton: true,
-            confirmButtonText: this.translate.instant('DELETE_BUTTON'),
+            confirmButtonText: this.translate.instant('VOID_SALE_BUTTON'),
             cancelButtonText: this.translate.instant('CANCEL_BUTTON'),
             reverseButtons: true
           }).then((result) => {
             if (result.isConfirmed) {
               this.incomeService
-                .deleteIncome(incomeId)
+                .voidIncome(incomeId, result.value || undefined)
                 .then(() => {
-                  Toast.fire({ icon: 'success', title: this.translate.instant('SALE_DELETE_SUCCESS') });
+                  Toast.fire({ icon: 'success', title: this.translate.instant('SALE_VOIDED_SUCCESS') });
                   this.refreshIncomes$.next();
                 })
                 .catch((error) => {
-                    console.error('Error deleting income:', error);
+                    console.error('Error voiding income:', error);
                     Toast.fire({
                         icon: 'error',
                         title: error.message || this.translate.instant('SALE_DELETE_ERROR')

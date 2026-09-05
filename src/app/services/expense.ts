@@ -222,7 +222,12 @@ export class ExpenseService {
             });
 
             loadErrorSignal?.next(false);
-            return expenses;
+            // Voided (soft-deleted) records stay in Firebase forever for
+            // audit purposes but never surface here — every caller (lists,
+            // InventoryService's stock derivation, ProfitLossService's
+            // totals, SalesReport) reads through this one method, so
+            // filtering once here is enough to fix all of them at once.
+            return expenses.filter((e) => e.status !== 'void');
           }),
           catchError((error) => {
             console.error('Error fetching expenses:', error);
@@ -386,6 +391,53 @@ export class ExpenseService {
         ? this.getGroupExpenseRef(activeGroupId, expenseId)
         : this.getExpenseRef(profile.uid, expenseId);
     await remove(expenseRef);
+  }
+
+  // The user-facing "Delete" action for a purchase — cancels it instead of
+  // erasing it. Excluded from getExpenses() (status !== 'void') so stock
+  // and totals correct themselves automatically; the row itself is kept
+  // forever for audit purposes. See deleteExpense() above for the (now
+  // UI-unused) true hard-delete.
+  async voidExpense(expenseId: string, reason?: string): Promise<void> {
+    const profile = await firstValueFrom(this.authService.userProfile$);
+    if (!profile?.uid) {
+      throw new Error('User not authenticated.');
+    }
+    const currentUser = await firstValueFrom(this.authService.currentUser$);
+
+    const activeGroupId = getActiveGroupId(profile);
+    const currentSpaceId = this.spaceDataService.getCurrentSpaceId(profile);
+    const { canonicalRef } = await this.spaceDataService.getActiveCollectionContext(profile, 'expenses');
+    const expenseRef = canonicalRef && currentSpaceId
+      ? ref(this.db, `space_data/${currentSpaceId}/expenses/${expenseId}`)
+      : activeGroupId
+        ? this.getGroupExpenseRef(activeGroupId, expenseId)
+        : this.getExpenseRef(profile.uid, expenseId);
+
+    const now = new Date().toISOString();
+    await update(expenseRef, {
+      status: 'void',
+      voidedAt: now,
+      voidedBy: profile.uid,
+      voidedByName: profile.displayName || 'Unknown',
+      voidReason: reason || null,
+    });
+
+    const historyRef = canonicalRef && currentSpaceId
+      ? ref(this.db, `space_data/${currentSpaceId}/expenses/${expenseId}/editHistory`)
+      : ref(
+          this.db,
+          activeGroupId
+            ? `group_data/${activeGroupId}/expenses/${expenseId}/editHistory`
+            : `users/${profile.uid}/expenses/${expenseId}/editHistory`
+        );
+    await push(historyRef, {
+      editedAt: now,
+      editedBy: profile.uid,
+      editedByName: profile.displayName || 'Unknown',
+      editedByPhotoURL: this.getProfilePhotoURL(profile) || currentUser?.photoURL || null,
+      changes: { status: { from: 'active', to: 'void' } },
+    });
   }
 
   getExpense(expenseId: string): Promise<ServiceIExpense> {
