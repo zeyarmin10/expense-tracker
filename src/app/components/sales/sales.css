@@ -2632,6 +2632,31 @@ app-date-input .di-trigger {
   border-top: 1px solid var(--border);
 }
 
+/* Mobile only: pin the total+checkout bar to the bottom of the full-screen
+   cart overlay (sticky within .pnl-cart-overlay-scroll's own scroll area)
+   and shrink it — so it never gets pushed off-screen as the cart list
+   grows, without touching the desktop inline-cart layout at all. */
+@media (max-width: 991.98px) {
+  .pnl-pos-footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    background: var(--surface);
+    margin: 0.9rem -1.2rem -1.2rem;
+    padding: 0.5rem 1.2rem calc(env(safe-area-inset-bottom, 0px) + 0.5rem);
+    border-radius: 0 0 14px 14px;
+  }
+
+  .pnl-pos-footer .pnl-pos-total-value {
+    font-size: 0.9rem;
+  }
+
+  .pnl-pos-footer .pnl-btn-primary {
+    padding: 0.42rem 0.85rem;
+    font-size: 0.76rem;
+  }
+}
+
 .pnl-pos-total {
   display: flex;
   flex-direction: column;

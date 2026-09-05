@@ -11,9 +11,6 @@
          below and opens as a full-screen overlay (no modal box). ── -->
     <div class="exp-cart-overlay" [class.exp-cart-overlay-open]="showAddCartOverlay" *ngIf="canManageExpenseRecords">
       <div class="exp-cart-overlay-topbar">
-        <button type="button" class="exp-cart-overlay-close" (click)="closeAddCartOverlay()" [title]="'CANCEL_BUTTON_LABEL' | translate">
-          <lucide-icon [img]="iconX" [size]="20"></lucide-icon>
-        </button>
         <div class="exp-cart-overlay-tabs">
           <button type="button" class="exp-cart-overlay-tab" [class.active]="overlayTab === 'purchase'" (click)="overlayTab = 'purchase'">
             {{ 'PURCHASE_ADD_TITLE' | translate }}
@@ -22,6 +19,9 @@
             {{ 'VOUCHER_ADD_TITLE' | translate }}
           </button>
         </div>
+        <button type="button" class="exp-cart-overlay-close" (click)="closeAddCartOverlay()" [title]="'CANCEL_BUTTON_LABEL' | translate">
+          <lucide-icon [img]="iconX" [size]="20"></lucide-icon>
+        </button>
       </div>
       <div class="exp-cart-overlay-scroll">
       <div class="exp-pos-section" *ngIf="overlayTab === 'purchase'">

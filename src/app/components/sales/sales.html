@@ -5,12 +5,6 @@
          top of the page on desktop; on mobile it's reached via the FAB
          below and opens as a full-screen overlay (no modal box). ── -->
     <div class="pnl-cart-overlay" [class.pnl-cart-overlay-open]="showAddCartOverlay" *ngIf="canManageProfitActions">
-      <div class="pnl-cart-overlay-topbar">
-        <button type="button" class="pnl-cart-overlay-close" (click)="closeAddCartOverlay()"
-          [title]="'CANCEL_BUTTON_LABEL' | translate">
-          <lucide-icon [img]="iconX" [size]="20"></lucide-icon>
-        </button>
-      </div>
       <div class="pnl-cart-overlay-scroll">
         <div class="pnl-pos-section">
           <div class="pnl-pos-section-header">
@@ -87,6 +81,12 @@
             </button>
           </div>
         </div>
+      </div>
+      <div class="pnl-cart-overlay-topbar">
+        <button type="button" class="pnl-cart-overlay-close" (click)="closeAddCartOverlay()"
+          [title]="'CANCEL_BUTTON_LABEL' | translate">
+          <lucide-icon [img]="iconX" [size]="20"></lucide-icon>
+        </button>
       </div>
     </div>
 

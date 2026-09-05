@@ -97,6 +97,17 @@ export class ProductModalComponent implements OnInit, OnDestroy {
     this.closeModal();
   }
 
+  // If this exact barcode already belongs to an existing product, surface
+  // its name right away — otherwise only the barcode field ever got
+  // "autocompleted" while name stayed blank, which is exactly what let a
+  // re-scanned barcode create a same-barcode duplicate under a retyped name.
+  private applyBarcodeMatch(barcode: string): void {
+    const match = this.products.find(p => p.barcode && p.barcode === barcode);
+    if (!match) return;
+    this.productForm.get('name')?.setValue(match.name);
+    this.onNameInput();
+  }
+
   // Plain text, comma-formatted, digits-only — no native number spin button.
   sellingPriceDisplay = '';
 
@@ -127,6 +138,8 @@ export class ProductModalComponent implements OnInit, OnDestroy {
       const scanned = await this.barcodeScanner.scan();
       if (scanned) {
         this.productForm.get('barcode')?.setValue(scanned);
+        this.applyBarcodeMatch(scanned);
+        this.cdr.markForCheck();
       }
     } catch (error: any) {
       const key = error?.message === 'Camera permission denied.' ? 'PERMISSION_CAMERA_DENIED' : 'DATA_LOAD_ERROR';
@@ -157,6 +170,7 @@ export class ProductModalComponent implements OnInit, OnDestroy {
     this.resetForm();
     if (prefillBarcode) {
       this.productForm.get('barcode')?.setValue(prefillBarcode);
+      this.applyBarcodeMatch(prefillBarcode);
     }
     this.isModalOpen = true;
     document.body.classList.add('pd-modal-open');
