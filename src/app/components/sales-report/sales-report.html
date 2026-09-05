@@ -1,0 +1,183 @@
+<div class="srpt-wrapper">
+  <div class="srpt-container mb-5">
+
+    <!-- Row 1: date select + (custom: 2 date pickers) | (normal: search) -->
+    <div class="ov-filter-row" [class.ov-filter-row-custom]="selectedDateFilter === 'custom'">
+
+      <app-custom-select
+        [(ngModel)]="selectedDateFilter"
+        (ngModelChange)="setDateFilter($event)"
+        [options]="dateFilterOptions"
+        [sheetTitle]="'DATE_FILTER' | translate"
+        [fitContent]="true"
+        [showSearch]="false">
+      </app-custom-select>
+
+      <div class="ov-date-row" *ngIf="selectedDateFilter === 'custom'">
+        <app-date-range-input
+          [fitContent]="true"
+          [(startDate)]="startDate"
+          [(endDate)]="endDate"
+          (rangeChange)="setDateFilter('custom')"
+          [showLabel]="false"
+          [startLabel]="'START_DATE' | translate"
+          [endLabel]="'END_DATE' | translate">
+        </app-date-range-input>
+      </div>
+
+      <div class="search-group" *ngIf="selectedDateFilter !== 'custom'">
+        <input type="text" class="search-input" placeholder="{{ 'SEARCH_PLACEHOLDER' | translate }}"
+          [(ngModel)]="searchTerm" (keyup.enter)="onSearch()" />
+        <button class="search-btn" type="button" (click)="onSearch()" [title]="'SEARCH' | translate">
+          <lucide-icon [img]="iconSearch" [size]="15"></lucide-icon>
+        </button>
+      </div>
+
+    </div>
+
+    <div class="ov-search-row" *ngIf="selectedDateFilter === 'custom'">
+      <div class="search-group">
+        <input type="text" class="search-input" placeholder="{{ 'SEARCH_PLACEHOLDER' | translate }}"
+          [(ngModel)]="searchTerm" (keyup.enter)="onSearch()" />
+        <button class="search-btn" type="button" (click)="onSearch()" [title]="'SEARCH' | translate">
+          <lucide-icon [img]="iconSearch" [size]="15"></lucide-icon>
+        </button>
+      </div>
+    </div>
+
+    <div class="exp-loading" *ngIf="isLoadingSales">
+      <div class="exp-spinner"></div>
+    </div>
+
+    <div class="table-section" *ngIf="!isLoadingSales && hasLoadError">
+      <div class="no-data">{{ "SALES_LOAD_ERROR" | translate }}</div>
+    </div>
+
+    <ng-container *ngIf="filteredIncomes$ | async as incomes">
+      <div *ngIf="!isLoadingSales && !hasLoadError && incomes.length > 0">
+
+        <!-- Summary Cards -->
+        <div class="summary-grid">
+          <div class="summary-card highlight" *ngFor="let summary of currencySummaries; trackBy: trackByCurrency">
+            <div class="summary-label">{{ "TOTAL_SALES_LABEL" | translate }} · {{ summary.currency }}</div>
+            <span class="summary-amount"
+              [innerHTML]="formatService.formatAmountShortHtml(summary.totalSales, summary.currency)"
+            ></span>
+            <div class="summary-sub">
+              {{ "DAILY_AVERAGE" | translate }}
+              <span [innerHTML]="formatService.formatAmountShortHtml(summary.dailyAverage, summary.currency)"></span>
+            </div>
+          </div>
+
+          <div class="summary-card product-highlight-card">
+            <div class="product-icon"><lucide-icon [img]="iconTrophy" [size]="25" style="vertical-align:middle;color:#f5b301"></lucide-icon></div>
+            <div>
+              <div class="summary-label">{{ "TOP_SELLING_PRODUCT" | translate }}</div>
+              <span class="summary-amount">{{ topSellingProduct }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Product Breakdown Bars -->
+        <div class="ov-breakdown-panel" *ngIf="productTotals.length > 0">
+          <div class="ov-breakdown-header">
+            <lucide-icon [img]="iconChartColumn" [size]="15"></lucide-icon>
+            <span>{{ 'PRODUCT_BREAKDOWN' | translate }}</span>
+          </div>
+          <div class="ov-bar-list">
+            <div class="ov-bar-row ov-bar-row-all"
+                 role="button"
+                 tabindex="0"
+                 (click)="filterByProduct('')"
+                 (keydown.enter)="filterByProduct('')"
+                 (keydown.space)="filterByProduct(''); $event.preventDefault()"
+                 [class.ov-bar-active]="!(_selectedProduct$ | async)">
+              <div class="ov-bar-meta">
+                <span class="ov-bar-dot ov-bar-dot-all"></span>
+                <span class="ov-bar-name">{{ 'ALL_PRODUCTS' | translate }}</span>
+                <span class="ov-bar-amount" *ngFor="let t of allProductsTotal; trackBy: trackByCurrency"
+                  [innerHTML]="formatService.formatAmountShortHtml(t.amount, t.currency)"
+                ></span>
+              </div>
+            </div>
+            <div class="ov-bar-divider"></div>
+            <div class="ov-bar-row"
+                 *ngFor="let p of productTotals; trackBy: trackByProduct"
+                 role="button"
+                 tabindex="0"
+                 (click)="filterByProduct(p.productName)"
+                 (keydown.enter)="filterByProduct(p.productName)"
+                 (keydown.space)="filterByProduct(p.productName); $event.preventDefault()"
+                 [class.ov-bar-active]="p.productName === (_selectedProduct$ | async)">
+              <div class="ov-bar-meta">
+                <lucide-icon [img]="iconPackage" [size]="16" class="ov-bar-cat-icon"></lucide-icon>
+                <span class="ov-bar-name">{{ p.productName }}</span>
+                <span class="ov-bar-qty">&#215; {{ formatService.formatCount(p.qty) }}</span>
+                <span class="ov-bar-amount" [innerHTML]="formatService.formatAmountShortHtml(p.total, p.currency)"></span>
+              </div>
+              <div class="ov-bar-footer">
+                <div class="ov-bar-track">
+                  <div class="ov-bar-fill" [style.width.%]="getProductPercent(p.total)"></div>
+                </div>
+                <span class="ov-bar-pct">{{ getProductPercent(p.total) | number:'1.0-0' }}%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sales Table -->
+        <div class="table-section">
+          <div class="table-header">
+            <h5 class="table-title">
+              <lucide-icon [img]="iconList" [size]="15"></lucide-icon>
+              {{ "RECORDED_SALES" | translate }}
+            </h5>
+            <span class="table-count">{{ 'EXPENSE_GROUP_COUNT' | translate: { count: incomes.length } }}</span>
+          </div>
+          <div class="table-responsive">
+            <table class="sales-table">
+              <thead>
+                <tr>
+                  <th width="90">{{ "DATE_LABEL" | translate }}</th>
+                  <th class="td-created-by" *ngIf="isGroupUser">{{ "ADDED_BY" | translate }}</th>
+                  <th>{{ "ITEM_NAME_LABEL" | translate }}</th>
+                  <th>{{ "TOTAL_COST_LABEL" | translate }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let income of incomes; trackBy: trackByIncomeId">
+                  <td class="td-date pe-1">
+                    <span class="d-none d-md-inline">{{ formatService.formatLocalizedDate(income.date) }}</span>
+                    <span class="d-md-none">{{ formatService.formatMobileDate(income.date) }}</span>
+                  </td>
+                  <td class="td-created-by" *ngIf="isGroupUser">
+                    <span class="created-by-badge">
+                      <app-user-avatar [name]="income.createdByName || 'Former Member'"
+                        [photoUrl]="income.createdByPhotoURL" [size]="20"></app-user-avatar>
+                      <span class="created-by-name">{{ income.createdByName || '—' }}</span>
+                    </span>
+                  </td>
+                  <td class="td-name">
+                    <span class="td-item-name">{{ getSaleDisplayName(income) }}</span>
+                    <span class="td-name-creator" *ngIf="isGroupUser">
+                      <app-user-avatar [name]="income.createdByName || 'Former Member'"
+                        [photoUrl]="income.createdByPhotoURL" [size]="20"></app-user-avatar>
+                      <span class="td-name-creator-text">{{ income.createdByName || '' }}</span>
+                    </span>
+                  </td>
+                  <td class="td-amount"
+                    [innerHTML]="formatService.formatAmountShortHtml(income.amount, income.currency)"
+                  ></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+      <div class="table-section" *ngIf="!isLoadingSales && !hasLoadError && incomes.length === 0">
+        <div class="no-data">{{ "NO_SALES_DATA" | translate }}</div>
+      </div>
+    </ng-container>
+  </div>
+</div>

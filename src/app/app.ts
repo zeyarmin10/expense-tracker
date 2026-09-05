@@ -7,7 +7,7 @@ import { Observable, combineLatest, of, firstValueFrom } from 'rxjs';
 import { map, filter, startWith, switchMap, distinctUntilChanged, debounceTime, take, shareReplay } from 'rxjs/operators';
 import { AuthService } from './services/auth';
 import { User } from '@angular/fire/auth';
-import { LucideAngularModule, LogOut, Users as LucideUsers, User as LucideUserIcon, ChevronDown, Sun, Moon, PiggyBank, ShoppingCart, Tags, ArrowDown, RotateCw, TrendingUp, Banknote, Package, HandCoins } from 'lucide-angular';
+import { LucideAngularModule, LogOut, Users as LucideUsers, User as LucideUserIcon, ChevronDown, Sun, Moon, PiggyBank, ShoppingCart, Tags, ArrowDown, RotateCw, TrendingUp, Banknote, Package, HandCoins, ChartColumn } from 'lucide-angular';
 import { InvitationService } from './services/invitation.service';
 import { DataManagerService } from './services/data-manager';
 import { ToastService } from './services/toast';
@@ -89,6 +89,7 @@ export class App implements OnInit, AfterViewInit {
   readonly iconBanknote = Banknote;
   readonly iconHandCoins = HandCoins;
   readonly iconPackage = Package;
+  readonly iconChartColumn = ChartColumn;
   currentLang: string;
   mobileMenuOpen = false;
   isDarkMode = true;

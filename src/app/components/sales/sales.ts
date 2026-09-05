@@ -52,6 +52,7 @@ import { AVAILABLE_CURRENCIES } from '../../core/constants/app.constants';
 
 import { FormatService } from '../../services/format.service';
 import { ExpenseService } from '../../services/expense'; // Added missing import
+import { InventoryService, ProductStockSummary } from '../../services/inventory.service';
 import { ProfitLossService } from '../../services/profit-loss.service';
 import Swal from 'sweetalert2';
 import { UserAvatarComponent } from '../common/user-avatar/user-avatar.component';
@@ -131,10 +132,16 @@ export class Sales implements OnInit, OnDestroy {
   productService = inject(ProductService);
   private spaceContextService = inject(SpaceContextService);
   private barcodeScanner = inject(BarcodeScannerService);
+  private inventoryService = inject(InventoryService);
   private router = inject(Router);
 
   categoryList: ServiceICategory[] = [];
   productList: ServiceIProduct[] = [];
+  // Cached synchronously (mirroring productList's own subscribe-and-cache
+  // pattern) so both the cart's product picker (filter + display) and the
+  // checkout stock check below can read it without going through the async
+  // pipe. Keyed by productId for O(1) lookups.
+  private stockByProductId = new Map<string, ProductStockSummary>();
   productSelectOptions: SelectOption[] = [];
 
   getIconForCategory(categoryName: string) {
@@ -195,11 +202,25 @@ export class Sales implements OnInit, OnDestroy {
   openAddCartOverlay(): void {
     this.showAddCartOverlay = true;
     document.body.classList.add('pnl-add-modal-open');
+    // Lets the phone's hardware/gesture back button close the overlay
+    // instead of navigating away from the page — see onPopState() below.
+    history.pushState(null, '');
   }
 
+  // Closes the cart overlay — wired to its own X button and (via
+  // onPopState()) the phone's back button. Always routes through
+  // history.back() so the entry pushed by openAddCartOverlay() above gets
+  // consumed either way; otherwise repeated open/close cycles would leave
+  // stale, invisible history entries that make back-button presses pile up.
   closeAddCartOverlay(): void {
+    if (!this.showAddCartOverlay) return;
+    history.back();
+  }
+
+  private reallyCloseAddCartOverlay(): void {
     this.showAddCartOverlay = false;
     document.body.classList.remove('pnl-add-modal-open');
+    this.resetForm();
   }
   private datePickerFp: FlatpickrInstance | null = null;
   get canManageProfitActions(): boolean {
@@ -312,11 +333,36 @@ export class Sales implements OnInit, OnDestroy {
       `${this.translate.instant('SALE_RECEIPT_THANK_YOU')}`;
 
     this.showReceipt = true;
+    history.pushState(null, '');
     this.cdr.markForCheck();
   }
 
+  // Wired to the receipt's own X button — no longer to its backdrop (a
+  // successful sale's receipt shouldn't vanish from an accidental outside
+  // tap) — and, via onPopState(), the phone's back button.
   closeReceipt(): void {
+    if (!this.showReceipt) return;
+    history.back();
+  }
+
+  private reallyCloseReceipt(): void {
     this.showReceipt = false;
+  }
+
+  @HostListener('window:popstate')
+  onPopState(): void {
+    if (this.showReceipt) {
+      this.reallyCloseReceipt();
+      return;
+    }
+    if (this.isAddModalOpen) {
+      this.reallyCloseAddModal();
+      return;
+    }
+    if (this.showAddCartOverlay) {
+      this.reallyCloseAddCartOverlay();
+      return;
+    }
   }
 
   async shareReceipt(): Promise<void> {
@@ -505,8 +551,40 @@ export class Sales implements OnInit, OnDestroy {
 
   get filteredPickerProducts(): ServiceIProduct[] {
     const q = this.productPickerSearch.trim().toLowerCase();
-    if (!q) return this.productList;
-    return this.productList.filter(p => p.name.toLowerCase().includes(q));
+    // Selling a product that's never actually been stocked doesn't make
+    // sense — only the cart's own picker (adding a new sale item) hides
+    // these; the legacy edit form's picker leaves its full list untouched
+    // so editing an old record that references one still works.
+    let list = this.productPickerMode === 'cart'
+      ? this.productList.filter(p => (this.stockByProductId.get(p.id!)?.totalPurchasedQty ?? 0) > 0)
+      : this.productList;
+    if (q) {
+      list = list.filter(p => p.name.toLowerCase().includes(q));
+    }
+    return list;
+  }
+
+  getProductStock(productId: string): number | null {
+    return this.stockByProductId.get(productId)?.currentStock ?? null;
+  }
+
+  private getInsufficientStockLines(): { productName: string; available: number; requested: number }[] {
+    return this.cart
+      .map(line => ({
+        productName: line.productName,
+        available: this.getProductStock(line.productId) ?? 0,
+        requested: line.quantity,
+      }))
+      .filter(item => item.requested > item.available);
+  }
+
+  private escapeHtml(value: string): string {
+    return value
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 
   getSelectedProductName(productId: string): string | null {
@@ -637,6 +715,24 @@ export class Sales implements OnInit, OnDestroy {
       return;
     }
     this.cartPriceError = false;
+
+    const insufficientStock = this.getInsufficientStockLines();
+    if (insufficientStock.length > 0) {
+      const lines = insufficientStock
+        .map(item => this.translate.instant('INSUFFICIENT_STOCK_ITEM_LINE', {
+          name: this.escapeHtml(item.productName),
+          available: this.formatCount(item.available),
+          requested: this.formatCount(item.requested),
+        }))
+        .join('<br>');
+      Swal.fire({
+        icon: 'error',
+        title: this.translate.instant('INSUFFICIENT_STOCK_TITLE'),
+        html: lines,
+      });
+      return;
+    }
+
     this.isCheckingOut = true;
     this.cdr.markForCheck();
 
@@ -663,7 +759,13 @@ export class Sales implements OnInit, OnDestroy {
       Toast.fire({ icon: 'success', title: this.translate.instant('SALE_SAVE_SUCCESS') });
       this.refreshIncomes$.next();
       this.closeAddModal();
-      this.closeAddCartOverlay();
+      // Bypasses closeAddCartOverlay()'s history.back() dance — it's async,
+      // and racing it against buildAndShowReceipt()'s own pushState() right
+      // below (same tick) risks the two history operations landing in the
+      // wrong order. Leaves the overlay's pushed entry stale (harmless —
+      // same URL, no visible effect; same trade-off onboarding.ts documents
+      // for its own history.back()-vs-navigate() race).
+      this.reallyCloseAddCartOverlay();
       this.buildAndShowReceipt(lineItems, amount, currency, date);
     } catch (error: any) {
       console.error('Error checking out sale:', error);
@@ -782,6 +884,21 @@ export class Sales implements OnInit, OnDestroy {
       this.categoryService.getCategories().subscribe(cats => { this.categoryList = cats; this.cdr.markForCheck(); })
     );
     this.loadProducts();
+    // Powers the cart's product picker: hides never-purchased products and
+    // shows/validates remaining stock for the rest (see filteredPickerProducts,
+    // hasCartLineExceedingStock()). Set up once here (not inside
+    // loadProducts(), which re-runs on every product-modal add) to avoid
+    // piling up duplicate subscriptions.
+    this.subscriptions.add(
+      this.inventoryService.getStockSummary(
+        this.productService.getProducts(),
+        this.expenseService.getExpenses(),
+        this.incomeService.getIncomes(),
+      ).subscribe(summary => {
+        this.stockByProductId = new Map(summary.map(row => [row.productId, row]));
+        this.cdr.markForCheck();
+      })
+    );
     // The Sales nav entry/route is only ever reachable for a space with
     // mini inventory enabled — this is just a defensive guard against a
     // direct URL visit from a space that doesn't have it.
@@ -1042,6 +1159,7 @@ export class Sales implements OnInit, OnDestroy {
     this.isAddModalOpen = true;
     this.closeDatePicker();
     document.body.classList.add('pnl-add-modal-open');
+    history.pushState(null, '');
   }
 
   confirmDeleteIncome(incomeId: string | undefined): void {
@@ -1122,7 +1240,15 @@ export class Sales implements OnInit, OnDestroy {
     }
   }
 
+  // Closes the edit modal — wired to its own X button and (via
+  // onPopState()) the phone's back button; also called (harmlessly, guarded
+  // by isAddModalOpen) from the cart's own onCheckout() as defensive cleanup.
   closeAddModal(): void {
+    if (!this.isAddModalOpen) return;
+    history.back();
+  }
+
+  private reallyCloseAddModal(): void {
     this.isAddModalOpen = false;
     this.closeDatePicker();
     document.body.classList.remove('pnl-add-modal-open');

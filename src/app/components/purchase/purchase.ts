@@ -215,11 +215,38 @@ export class Purchase implements OnInit, OnDestroy {
     this.showAddCartOverlay = true;
     this.overlayTab = 'purchase';
     document.body.classList.add('exp-add-modal-open');
+    // Lets the phone's hardware/gesture back button close the overlay
+    // instead of navigating away from the page — see onPopState() below.
+    history.pushState(null, '');
   }
 
+  // Closes the cart overlay — wired to its own X button and (via
+  // onPopState()) the phone's back button. Always routes through
+  // history.back() so the entry pushed by openAddCartOverlay() above gets
+  // consumed either way; otherwise repeated open/close cycles would leave
+  // stale, invisible history entries that make back-button presses pile up.
   closeAddCartOverlay(): void {
+    if (!this.showAddCartOverlay) return;
+    history.back();
+  }
+
+  private reallyCloseAddCartOverlay(): void {
     this.showAddCartOverlay = false;
     document.body.classList.remove('exp-add-modal-open');
+    this.cart = [];
+    this.resetCartForm();
+  }
+
+  @HostListener('window:popstate')
+  onPopState(): void {
+    if (this.isAddModalOpen) {
+      this.reallyCloseAddModal();
+      return;
+    }
+    if (this.showAddCartOverlay) {
+      this.reallyCloseAddCartOverlay();
+      return;
+    }
   }
 
   trackByCartLine(index: number, line: CartLine): string {
@@ -597,7 +624,15 @@ export class Purchase implements OnInit, OnDestroy {
     document.body.classList.remove('exp-add-modal-open');
   }
 
+  // Closes the edit modal — wired to its own X button and (via
+  // onPopState()) the phone's back button; also called (harmlessly, guarded
+  // by isAddModalOpen) as defensive cleanup elsewhere (e.g. on space switch).
   closeAddModal(): void {
+    if (!this.isAddModalOpen) return;
+    history.back();
+  }
+
+  private reallyCloseAddModal(): void {
     this.isAddModalOpen = false;
     this.isCategoryPickerOpen = false;
     this.closeDatePicker();
@@ -1320,6 +1355,7 @@ export class Purchase implements OnInit, OnDestroy {
     this.isCategoryPickerOpen = false;
     this.closeDatePicker();
     document.body.classList.add('exp-add-modal-open');
+    history.pushState(null, '');
   }
 
   onDelete(expenseId: string): void {

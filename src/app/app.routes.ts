@@ -63,6 +63,11 @@ export const routes: Routes = [
         data: { titleKey: 'EXPENSE_OVERVIEW_TITLE' },
       },
       {
+        path: 'sales-report',
+        loadComponent: () => import('./components/sales-report/sales-report').then((m) => m.SalesReport),
+        data: { titleKey: 'SALES_REPORT_TITLE' },
+      },
+      {
         path: 'budget',
         loadComponent: () => import('./components/budget/budget').then((m) => m.BudgetComponent),
         data: { titleKey: 'BUDGET_TITLE' },

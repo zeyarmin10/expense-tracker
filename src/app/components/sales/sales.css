@@ -293,6 +293,7 @@ body.pnl-add-modal-open {
   border: 1px dashed var(--border);
   border-radius: 10px;
   padding: 1rem;
+  margin-bottom: 1rem;
 }
 
 .pnl-receipt-shop {
@@ -2340,7 +2341,7 @@ app-date-input .di-trigger {
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  padding: 0.65rem 0.7rem;
+  padding: 0.65rem 0rem;
   border-radius: 10px;
   border: none;
   background: transparent;
@@ -2381,6 +2382,13 @@ app-date-input .di-trigger {
   flex-shrink: 0;
 }
 
+.pnl-cat-picker-item-stock {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 .pnl-cat-picker-empty {
   text-align: center;
   color: var(--text-muted);
@@ -2396,7 +2404,7 @@ app-date-input .di-trigger {
   align-items: center;
   gap: 0.5rem;
   flex-shrink: 0;
-  padding: 0.5rem 0.85rem;
+  padding: 0.5rem 0rem;
 }
 
 .pnl-cat-picker-search-row .pnl-cat-picker-search {

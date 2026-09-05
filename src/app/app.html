@@ -50,6 +50,9 @@
         <li><a routerLink="/sales" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_SALES' |
             translate
             }}</a></li>
+        <li><a routerLink="/sales-report" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_SALES_REPORT' |
+            translate
+            }}</a></li>
       </ng-container>
 
       <li *ngIf="!(inventoryEnabled$ | async)">
@@ -410,6 +413,12 @@
         <lucide-icon [img]="iconTrendingUp" [size]="16"></lucide-icon>
       </span>
       <span>{{ 'NAV_CASH_IN_OUT' | translate }}</span>
+    </a>
+    <a class="mob-drawer-link" *ngIf="inventoryEnabled$ | async" routerLink="/sales-report" routerLinkActive="mob-drawer-active" (click)="closeNavbarMenu()">
+      <span class="mob-drawer-link-icon">
+        <lucide-icon [img]="iconChartColumn" [size]="16"></lucide-icon>
+      </span>
+      <span>{{ 'NAV_SALES_REPORT' | translate }}</span>
     </a>
 
     <a class="mob-drawer-link" routerLink="/category" routerLinkActive="mob-drawer-active" (click)="closeNavbarMenu()">

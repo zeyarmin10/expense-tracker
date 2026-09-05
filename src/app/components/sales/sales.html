@@ -398,6 +398,7 @@
             <lucide-icon [img]="iconPackage" [size]="15"></lucide-icon>
           </span>
           <span class="pnl-cat-picker-item-label">{{ prod.name }}</span>
+          <span class="pnl-cat-picker-item-stock">{{ 'STOCK_REMAINING_LABEL' | translate }}: {{ formatCount(getProductStock(prod.id!) ?? 0) }}</span>
         </button>
       </div>
     </div>
@@ -611,7 +612,7 @@
 </div>
 
 <!-- ── Printable receipt — shown right after a successful checkout ── -->
-<div class="pnl-add-modal-backdrop" [class.open]="showReceipt" (click)="closeReceipt()"></div>
+<div class="pnl-add-modal-backdrop" [class.open]="showReceipt"></div>
 <div class="pnl-add-modal-sheet pnl-receipt-sheet" [class.open]="showReceipt">
   <div class="pnl-add-modal-header">
     <span class="pnl-add-modal-header-title">
