@@ -680,9 +680,14 @@ export class App implements OnInit, AfterViewInit {
     }
 
     // status ပြောင်းမှသာ react လုပ်မယ်
+    // debounceTime is intentionally generous — absorbs a brief
+    // disconnected→connected flicker (e.g. right after returning from the
+    // camera app on some devices, on top of checkOnResume()'s own settle
+    // delay) so it never surfaces as a spurious alert+toast pair; a real
+    // outage still lasts well past this window.
     this.networkService.isOnline$.pipe(
       distinctUntilChanged(),  // တူတဲ့ value ထပ်မ emit မဖြစ်အောင်
-      debounceTime(500)
+      debounceTime(1500)
     ).subscribe(isOnline => {
       if (!isOnline) {
         this.wasOffline = true;

@@ -24,7 +24,16 @@ export class NetworkService {
   }
 
   // foreground ပြန်လာတိုင်း current status စစ်ပြီး emit လုပ်တယ်
+  //
+  // Some devices report a stale/transient "disconnected" status for a
+  // moment right as the app returns to the foreground — e.g. coming back
+  // from the native camera app after a voucher photo — because the
+  // WiFi/mobile radio is still waking up, not because connectivity
+  // actually changed. Sampling immediately made that brief blip show up
+  // as a real drop, triggering a "No internet" alert immediately followed
+  // by "Internet restored". Give the radio a moment to settle first.
   async checkOnResume() {
+    await new Promise(resolve => setTimeout(resolve, 800));
     const status = await Network.getStatus();
     this.isOnline$.next(status.connected);
   }

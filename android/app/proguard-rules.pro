@@ -40,3 +40,8 @@
 # Firebase (Auth / Analytics / Messaging)
 -keep class com.google.firebase.** { *; }
 -dontwarn com.google.firebase.**
+
+# Kotlin coroutines internal debug-metadata class (referenced by a plugin's
+# coroutines usage, e.g. @capacitor/filesystem) — not present at runtime and
+# not needed; R8 (missing_rules.txt) generated this exact suppression itself.
+-dontwarn kotlin.coroutines.jvm.internal.SpillingKt
