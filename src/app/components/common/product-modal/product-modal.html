@@ -21,7 +21,7 @@
       <!-- Add Form -->
       <form [formGroup]="productForm" (ngSubmit)="onSave()" class="pd-form">
         <div class="pd-form-fields">
-          <div class="pd-fl-wrap">
+          <div class="pd-fl-wrap pd-name-wrap">
             <input
               type="text"
               class="pd-fl-input"
@@ -30,10 +30,22 @@
               id="pdNameInput"
               maxlength="100"
               autocomplete="off"
+              (input)="onNameInput()"
+              (focus)="onNameInput()"
+              (blur)="hideNameSuggestionsSoon()"
               [class.err]="(productForm.get('name')?.value?.length ?? 0) >= 100" />
             <label class="pd-fl-label" for="pdNameInput">
               {{ 'PRODUCT_NAME_LABEL' | translate }}
             </label>
+            <ul class="pd-name-suggestions" *ngIf="showNameSuggestions">
+              <li *ngFor="let s of nameSuggestions; trackBy: trackByProductId">
+                <button type="button" (mousedown)="selectExistingProduct(s)">
+                  <lucide-icon [img]="iconPackage" [size]="14"></lucide-icon>
+                  <span class="pd-name-suggestion-text">{{ s.name }}</span>
+                  <span class="pd-name-suggestion-hint">{{ 'PRODUCT_USE_EXISTING_HINT' | translate }}</span>
+                </button>
+              </li>
+            </ul>
           </div>
           <div class="pd-form-row">
             <div class="pd-fl-wrap pd-fl-unit">

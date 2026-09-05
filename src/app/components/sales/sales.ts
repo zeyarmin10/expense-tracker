@@ -28,7 +28,7 @@ import {
 } from 'rxjs';
 import { ServiceIExpense } from '../../services/expense'; // Assuming types are kept here
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { ServiceIIncome, IncomeService, IncomeLineItem } from '../../services/income';
+import { ServiceIIncome, IncomeService, IncomeLineItem, getIncomeLineItems } from '../../services/income';
 import { CategoryService, ServiceICategory } from '../../services/category';
 import { ServiceIProduct, ProductService } from '../../services/product';
 import { SpaceContextService } from '../../services/space-context.service';
@@ -40,9 +40,12 @@ import {
   ChartColumn, ChevronDown, ChevronUp, ChevronRight, Save, Trash2,
   Plus, Minus, X, CalendarDays, Pencil,
   Search, Check, Package, HandCoins, ScanLine, RotateCcw, Calendar,
-  Receipt, Share2,
+  Receipt, Share2, Download,
 } from 'lucide-angular';
 import { Share } from '@capacitor/share';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Capacitor } from '@capacitor/core';
+import html2canvas from 'html2canvas';
 import { AuthService } from '../../services/auth';
 import {
   UserProfile,
@@ -276,6 +279,8 @@ export class Sales implements OnInit, OnDestroy {
   readonly iconMinus = Minus;
   readonly iconReceipt = Receipt;
   readonly iconShare2 = Share2;
+  readonly iconDownload = Download;
+  isSavingReceiptImage = false;
 
   // Only native builds can actually scan — the button hides on web/dev,
   // same guard as inventory.ts's/product-modal.ts's.
@@ -294,16 +299,32 @@ export class Sales implements OnInit, OnDestroy {
     return this.cart.some(line => !line.unitPrice || line.unitPrice <= 0);
   }
 
-  // ── Printable receipt — shown right after a successful checkout, shared
-  // as plain text via the native share sheet. No new native plugin needed
-  // this way; an image-formatted receipt would need html2canvas +
-  // @capacitor/filesystem added later if that's ever wanted instead. ──
+  // ── Printable receipt — shown right after a successful checkout (and
+  // re-viewable later from any Recorded Sales row's receipt icon, see
+  // viewReceiptForIncome()), shareable as plain text or a PNG image. ──
   showReceipt = false;
   receiptShopName = '';
   receiptDate = '';
   receiptLines: { name: string; qtyUnit: string; unitPrice: string; subtotal: string }[] = [];
   receiptTotal = '';
   private receiptText = '';
+
+  // Reopens the same receipt modal for an already-recorded sale — a plain
+  // (non-product) sale has no lineItems, so it's shown as a single
+  // synthetic line using its description and full amount.
+  viewReceiptForIncome(income: ServiceIIncome): void {
+    const lineItems = getIncomeLineItems(income);
+    const effectiveLineItems: IncomeLineItem[] = lineItems.length > 0
+      ? lineItems
+      : [{
+          productId: '',
+          productName: income.description || this.translate.instant('DESCRIPTION'),
+          quantity: 1,
+          unitPrice: income.amount,
+          subtotal: income.amount,
+        }];
+    this.buildAndShowReceipt(effectiveLineItems, income.amount, income.currency, income.date);
+  }
 
   private buildAndShowReceipt(lineItems: IncomeLineItem[], amount: number, currency: string, date: string): void {
     this.receiptShopName = this.userProfile?.currentSpaceName || 'Kyat Wise';
@@ -385,6 +406,48 @@ export class Sales implements OnInit, OnDestroy {
       } catch {
         // Nothing more we can do — the receipt stays visible on screen.
       }
+    }
+  }
+
+  // Renders the on-screen receipt card to a PNG (html2canvas — pixel-faithful
+  // to .pnl-receipt-paper's own styling, no need to hand-draw the layout on
+  // a canvas ourselves) and hands it off platform-appropriately: on a native
+  // build, written to the app's cache dir and opened in the native share
+  // sheet (files:) so the user can save it to Gallery/Files; on plain web,
+  // a normal browser download.
+  async saveReceiptAsImage(): Promise<void> {
+    const element = document.querySelector('.pnl-receipt-paper') as HTMLElement | null;
+    if (!element || this.isSavingReceiptImage) return;
+
+    this.isSavingReceiptImage = true;
+    this.cdr.markForCheck();
+    try {
+      const canvas = await html2canvas(element, { backgroundColor: '#ffffff', scale: 2, useCORS: true });
+      const dataUrl = canvas.toDataURL('image/png');
+
+      if (Capacitor.isNativePlatform()) {
+        const base64 = dataUrl.split(',')[1];
+        const fileName = `receipt-${Date.now()}.png`;
+        const written = await Filesystem.writeFile({ path: fileName, data: base64, directory: Directory.Cache });
+        try {
+          await Share.share({ title: this.translate.instant('SALE_RECEIPT_TITLE'), files: [written.uri] });
+        } catch {
+          // User closed the share sheet without picking a target — not an error.
+        }
+      } else {
+        const link = document.createElement('a');
+        link.href = dataUrl;
+        link.download = `receipt-${Date.now()}.png`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+      }
+    } catch (error: any) {
+      console.error('Error saving receipt image:', error);
+      Swal.fire({ icon: 'error', text: this.translate.instant('SALE_RECEIPT_IMAGE_ERROR') });
+    } finally {
+      this.isSavingReceiptImage = false;
+      this.cdr.markForCheck();
     }
   }
 

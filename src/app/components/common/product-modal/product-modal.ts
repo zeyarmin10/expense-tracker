@@ -60,6 +60,43 @@ export class ProductModalComponent implements OnInit, OnDestroy {
     return product.id ?? String(index);
   }
 
+  // ── Name autocomplete — surfaces existing products as the user types, so
+  // a scan-miss (barcode not found) that's actually the same physical item
+  // under a slightly different spelling gets caught before a near-duplicate
+  // product is created. Picking a suggestion emits that existing product
+  // (same event a real save would) instead of writing a new record. ──
+  nameSuggestions: ServiceIProduct[] = [];
+  showNameSuggestions = false;
+
+  onNameInput(): void {
+    const q = (this.productForm.get('name')?.value || '').trim().toLowerCase();
+    if (!q) {
+      this.nameSuggestions = [];
+      this.showNameSuggestions = false;
+      return;
+    }
+    this.nameSuggestions = this.products
+      .filter(p => p.name.toLowerCase().includes(q))
+      .slice(0, 6);
+    this.showNameSuggestions = this.nameSuggestions.length > 0;
+  }
+
+  // Delayed so a (mousedown-triggered) suggestion click registers before
+  // the list disappears — a plain blur-triggered hide would fire first.
+  hideNameSuggestionsSoon(): void {
+    setTimeout(() => {
+      this.showNameSuggestions = false;
+      this.cdr.markForCheck();
+    }, 150);
+  }
+
+  selectExistingProduct(product: ServiceIProduct): void {
+    this.showNameSuggestions = false;
+    this.productAdded.emit(product);
+    this.resetForm();
+    this.closeModal();
+  }
+
   // Plain text, comma-formatted, digits-only — no native number spin button.
   sellingPriceDisplay = '';
 
@@ -150,6 +187,8 @@ export class ProductModalComponent implements OnInit, OnDestroy {
   resetForm(): void {
     this.productForm.reset();
     this.sellingPriceDisplay = '';
+    this.nameSuggestions = [];
+    this.showNameSuggestions = false;
   }
 
   isDeleting(productId: string): boolean {
