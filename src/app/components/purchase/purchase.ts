@@ -17,9 +17,12 @@ import {
   ReactiveFormsModule,
   FormsModule,
 } from '@angular/forms';
-import { ServiceIExpense as IExpense, ExpenseService } from '../../services/expense';
+import { ServiceIExpense as IExpense, ExpenseService, ExpenseLineItem } from '../../services/expense';
 import { ServiceIVoucher, VoucherService } from '../../services/voucher';
 import { ServiceICategory, CategoryService } from '../../services/category';
+import { ServiceIProduct, ProductService } from '../../services/product';
+import { BarcodeScannerService } from '../../services/barcode-scanner.service';
+import { SpaceContextService } from '../../services/space-context.service';
 import flatpickr from 'flatpickr';
 import type { Instance as FlatpickrInstance } from 'flatpickr/dist/types/instance';
 import { Burmese } from 'flatpickr/dist/l10n/my';
@@ -40,33 +43,27 @@ import Swal from 'sweetalert2';
 
 import {
   LucideAngularModule,
-  Plus, Pencil, Trash2, Save, X, RotateCcw, Info, Wallet, ListChecks,
+  Plus, Minus, Pencil, Trash2, Save, X, RotateCcw, Info, Wallet, ListChecks,
   Coins, ChevronDown, ChevronUp, Calendar, CalendarDays, RotateCw, Receipt,
-  Image, Images, Eye, Camera as LucideCamera, Zap, List, Archive,
-  Search, Check,
+  Image, Images, Eye, Camera as LucideCamera, Archive,
+  Search, Check, ScanLine, ShoppingCart, Package,
 } from 'lucide-angular';
 
 import { CategoryModalComponent } from '../common/category-modal/category-modal';
+import { ProductModalComponent } from '../common/product-modal/product-modal';
 import { LightboxComponent } from '../common/lightbox/lightbox.component';
 import { getIconData, getIconHue } from '../../utils/category-icons';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth';
 import {
   UserProfile,
   canManageSharedSpace,
-  getCurrentSpaceRole,
-  isPersonalContext,
 } from '../../services/user-data';
-import { BURMESE_MONTH_FULL_NAMES } from '../../core/constants/app.constants';
 import { DateRangeInputComponent } from '../common/date-range-input/date-range-input.component';
 import { FormatService } from '../../services/format.service';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
 import { UserAvatarComponent } from '../common/user-avatar/user-avatar.component';
 import { ShowFullTextDirective } from '../../directives/show-full-text.directive';
-
-// Matches the existing `min-width: 992px` breakpoint in expense.css that
-// switches from the mobile FAB to the desktop toolbar "Add Expense" button.
-const DESKTOP_BREAKPOINT = 992;
 
 const Toast = Swal.mixin({
   toast: true,
@@ -89,8 +86,17 @@ interface ExpenseDateGroup {
   count: number;
 }
 
+interface CartLine {
+  productId: string;
+  productName: string;
+  unit?: string;
+  quantity: number;
+  price: number;
+  priceDisplay: string;
+}
+
 @Component({
-  selector: 'app-expense',
+  selector: 'app-purchase',
   standalone: true,
   imports: [
     CommonModule,
@@ -98,6 +104,7 @@ interface ExpenseDateGroup {
     FormsModule,
     LucideAngularModule,
     CategoryModalComponent,
+    ProductModalComponent,
     LightboxComponent,
     TranslateModule,
     CurrentSpaceTitleComponent,
@@ -107,17 +114,22 @@ interface ExpenseDateGroup {
   ],
   providers: [DatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  templateUrl: './expense.html',
-  styleUrls: ['./expense.css'],
+  templateUrl: './purchase.html',
+  styleUrls: ['./purchase.css'],
 })
-export class Expense implements OnInit, OnDestroy {
+export class Purchase implements OnInit, OnDestroy {
   @ViewChild(CategoryModalComponent) categoryModal!: CategoryModalComponent;
+  @ViewChild(ProductModalComponent) productModal!: ProductModalComponent;
   @ViewChild(LightboxComponent) lightbox!: LightboxComponent;
   @ViewChild('galleryFileInput') galleryFileInput!: ElementRef<HTMLInputElement>;
   @ViewChild('voucherTitleInput') voucherTitleInput!: ElementRef<HTMLInputElement>;
 
+  // Legacy single-item form — editing a pre-existing single-item purchase
+  // only (see the list's Edit guard). New purchases go through the cart.
   newExpenseForm: FormGroup;
   voucherForm: FormGroup;
+  // Cart checkout picks ONE category + date for the whole basket.
+  cartForm: FormGroup;
 
   expenses$!: Observable<IExpense[]>;
   vouchers$!: Observable<ServiceIVoucher[]>;
@@ -131,6 +143,9 @@ export class Expense implements OnInit, OnDestroy {
     return this.categoryList.find(c => c.name === categoryName)?.iconUrl ?? null;
   }
 
+  products$!: Observable<ServiceIProduct[]>;
+  productList: ServiceIProduct[] = [];
+
   private refreshExpenses$ = new BehaviorSubject<void>(undefined);
   private refreshVouchers$ = new BehaviorSubject<void>(undefined);
   public _selectedDate$ = new BehaviorSubject<string>('');
@@ -141,6 +156,9 @@ export class Expense implements OnInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
   public formatService = inject(FormatService);
   private destroy$ = new Subject<void>();
+  private router = inject(Router);
+  private spaceContextService = inject(SpaceContextService);
+  private barcodeScanner = inject(BarcodeScannerService);
 
   displayedExpenses$!: Observable<IExpense[]>;
   displayedVouchers$!: Observable<ServiceIVoucher[]>;
@@ -150,29 +168,248 @@ export class Expense implements OnInit, OnDestroy {
   expenseService = inject(ExpenseService);
   voucherService = inject(VoucherService);
   categoryService = inject(CategoryService);
+  productService = inject(ProductService);
   datePipe = inject(DatePipe);
   translate = inject(TranslateService);
 
   public userRole: string | null = null;
-  // Gates the desktop-only toolbar "Add Expense" button — kept out of the
-  // DOM entirely on mobile (not just CSS-hidden) so it can't add stray
-  // space above the filter bar; the mobile FAB covers the same action there.
-  isDesktopView = typeof window !== 'undefined' ? window.innerWidth >= DESKTOP_BREAKPOINT : false;
   isSaving = false;
   isAddModalOpen = false;
-  addModalTab: 'expense' | 'voucher' = 'expense';
-  // Non-null while the add modal is editing an existing record instead.
+  // Non-null while the modal is editing an existing single-item record.
   editingExpense: IExpense | null = null;
   isVoucherSaving = false;
   isSavedVoucherListOpen = false;
-  isQuickMode = true;
   selectedVoucherFiles: File[] = [];
   voucherPreviewUrls: string[] = [];
   readonly MAX_VOUCHER_IMAGES = 10;
   private activeSpaceModeKey: string | null = null;
   get canManageExpenseRecords(): boolean { return canManageSharedSpace(this.userProfile); }
 
-  // ── Date picker bounds for expense / voucher forms ──
+  // Only native builds can actually scan — the button hides on web/dev.
+  readonly canScanBarcode = this.barcodeScanner.isSupported();
+
+  // ── Cart (the actual "Add Purchase" flow — scan or manually add
+  //    products, adjust qty/price, checkout as one multi-item purchase). ──
+  cart: CartLine[] = [];
+  isCheckingOut = false;
+  // True once a checkout attempt found a line with no price entered — shown
+  // as inline text next to the cart, not a toast (see onCheckout()).
+  cartPriceError = false;
+
+  get cartTotal(): number {
+    return this.cart.reduce((sum, line) => sum + line.quantity * line.price, 0);
+  }
+
+  private hasCartLineWithoutPrice(): boolean {
+    return this.cart.some(line => !line.price || line.price <= 0);
+  }
+
+  // ── Add-Purchase cart: full-screen on mobile (FAB-triggered), inline on
+  // desktop — see .exp-cart-overlay's media query in purchase.css. It has
+  // two tabs: "Purchase" (the cart above) and "Voucher" (receipt photos) —
+  // unified here instead of a separate collapsible section + modal. ──
+  showAddCartOverlay = false;
+  overlayTab: 'purchase' | 'voucher' = 'purchase';
+
+  openAddCartOverlay(): void {
+    this.showAddCartOverlay = true;
+    this.overlayTab = 'purchase';
+    document.body.classList.add('exp-add-modal-open');
+  }
+
+  closeAddCartOverlay(): void {
+    this.showAddCartOverlay = false;
+    document.body.classList.remove('exp-add-modal-open');
+  }
+
+  trackByCartLine(index: number, line: CartLine): string {
+    return line.productId;
+  }
+
+  addToCart(product: ServiceIProduct): void {
+    if (!product.id) return;
+    const existing = this.cart.find((line) => line.productId === product.id);
+    if (existing) {
+      existing.quantity += 1;
+    } else {
+      this.cart = [
+        ...this.cart,
+        {
+          productId: product.id,
+          productName: product.name,
+          unit: product.unit,
+          quantity: 1,
+          price: 0,
+          priceDisplay: '',
+        },
+      ];
+    }
+    this.closeProductPicker();
+    this.cdr.markForCheck();
+  }
+
+  incrementQty(line: CartLine): void {
+    line.quantity += 1;
+    this.cdr.markForCheck();
+  }
+
+  decrementQty(line: CartLine): void {
+    if (line.quantity <= 1) {
+      this.removeFromCart(line.productId);
+      return;
+    }
+    line.quantity -= 1;
+    this.cdr.markForCheck();
+  }
+
+  removeFromCart(productId: string): void {
+    this.cart = this.cart.filter((line) => line.productId !== productId);
+    if (this.cartPriceError && !this.hasCartLineWithoutPrice()) {
+      this.cartPriceError = false;
+    }
+    this.cdr.markForCheck();
+  }
+
+  onLineUnitPriceInput(line: CartLine, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    let raw = input.value.replace(/[^\d.]/g, '');
+    const parts = raw.split('.');
+    if (parts.length > 2) raw = parts[0] + '.' + parts.slice(1).join('');
+    line.price = parseFloat(raw.replace(/,/g, '')) || 0;
+    const intPart = (raw.split('.')[0] || '').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    const decPart = raw.includes('.') ? '.' + (raw.split('.')[1] || '') : '';
+    line.priceDisplay = intPart + decPart;
+    input.value = line.priceDisplay;
+    if (this.cartPriceError && !this.hasCartLineWithoutPrice()) {
+      this.cartPriceError = false;
+    }
+    this.cdr.markForCheck();
+  }
+
+  async onScanBarcode(): Promise<void> {
+    try {
+      const scanned = await this.barcodeScanner.scan();
+      if (!scanned) return;
+      const product = await this.productService.getProductByBarcode(scanned);
+      if (product) {
+        this.addToCart(product);
+        return;
+      }
+      const result = await Swal.fire({
+        icon: 'question',
+        title: this.translate.instant('SCAN_PRODUCT_NOT_FOUND_TITLE'),
+        text: this.translate.instant('SCAN_ADD_NEW_PRODUCT_CONFIRM'),
+        showCancelButton: true,
+        confirmButtonText: this.translate.instant('ADD_PRODUCT_BTN'),
+        cancelButtonText: this.translate.instant('CANCEL_BUTTON'),
+        reverseButtons: true,
+      });
+      if (result.isConfirmed) {
+        this.productModal.open(scanned);
+      }
+    } catch (error: any) {
+      const key = error?.message === 'Camera permission denied.' ? 'PERMISSION_CAMERA_DENIED' : 'DATA_LOAD_ERROR';
+      Swal.fire({ icon: 'error', text: this.translate.instant(key) });
+    }
+  }
+
+  // Fires for both a scan-miss's "add new product" and the picker's own
+  // "+" button — either way, if we're mid Add-Purchase (not editing a
+  // legacy record), the freshly created product goes straight into the cart.
+  onProductModalAdded(product: ServiceIProduct): void {
+    this.loadProducts();
+    if (!this.editingExpense) {
+      this.addToCart(product);
+    }
+  }
+
+  async onCheckout(): Promise<void> {
+    if (!this.canManageExpenseRecords || this.isCheckingOut || this.cart.length === 0) {
+      return;
+    }
+    if (this.hasCartLineWithoutPrice()) {
+      this.cartPriceError = true;
+      this.cdr.markForCheck();
+      return;
+    }
+    this.cartPriceError = false;
+    // Inline field errors (e.g. "Category is required.") already surface
+    // right under the field once touched — no need for a redundant toast.
+    this.cartForm.markAllAsTouched();
+    if (this.cartForm.invalid) {
+      return;
+    }
+    this.isCheckingOut = true;
+    this.cdr.markForCheck();
+
+    const lineItems: ExpenseLineItem[] = this.cart.map((line) => ({
+      productId: line.productId,
+      productName: line.productName,
+      ...(line.unit ? { unit: line.unit } : {}),
+      quantity: line.quantity,
+      price: line.price,
+      subtotal: Math.round(line.quantity * line.price * 100) / 100,
+    }));
+
+    try {
+      await this.expenseService.addExpense({
+        date: this.cartForm.value.date,
+        category: this.cartForm.value.category,
+        itemName: '',
+        lineItems,
+      } as any);
+      Toast.fire({ icon: 'success', title: this.translate.instant('PURCHASE_SUCCESS_ADDED') });
+      this.cart = [];
+      this.resetCartForm();
+      this.refreshExpenses$.next();
+      this.closeAddCartOverlay();
+    } catch (error: any) {
+      console.error('Error checking out purchase:', error);
+      Toast.fire({
+        icon: 'error',
+        title: error.message || this.translate.instant('PURCHASE_ERROR_ADD'),
+      });
+    } finally {
+      this.isCheckingOut = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  private resetCartForm(): void {
+    const today = this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
+    this.cartForm.reset({ category: '', date: today });
+    this.cartPriceError = false;
+  }
+
+  // The cart's and voucher's date/category(/product) pickers render as
+  // their own bottom sheet (see purchase.html) rather than swapping the
+  // edit modal's body — the overlay isn't a transformed modal, so a plain
+  // top-level picker sheet works fine and doesn't disturb that other modal.
+  get isCartPickerOpen(): boolean {
+    return (this.isDatePickerOpen && (this.datePickerTarget === 'cart' || this.datePickerTarget === 'voucher'))
+      || (this.isCategoryPickerOpen && (this.categoryPickerTarget === 'cart' || this.categoryPickerTarget === 'voucher'))
+      || (this.isProductPickerOpen && this.productPickerMode === 'cart');
+  }
+
+  // ── Recorded Purchases: multi-item (POS) breakdown ──
+  expandedExpenseId: string | null = null;
+
+  toggleLineItems(expenseId: string): void {
+    this.expandedExpenseId = this.expandedExpenseId === expenseId ? null : expenseId;
+  }
+
+  // A POS line item stores its own productName at checkout time; a legacy
+  // single-item purchase doesn't, so fall back to looking the product up live.
+  getLineItemName(item: { productId: string; productName?: string }): string {
+    return item.productName || this.getSelectedProductName(item.productId) || '—';
+  }
+  // ────────────────────────────────────────────────
+
+  // Gates the desktop-only toolbar button — no longer used (cart is always
+  // visible), kept only in case a future layout needs the breakpoint again.
+  isDesktopView = typeof window !== 'undefined' ? window.innerWidth >= 992 : false;
+
+  // ── Date picker bounds for the edit / voucher forms ──
   readonly expenseDateMax: string = (() => {
     const t = new Date(); return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
   })();
@@ -189,7 +426,7 @@ export class Expense implements OnInit, OnDestroy {
   // ──────────────────────────────────────────────────
   objectKeys = Object.keys;
 
-  // ── Comma Formatting for Price inputs ──────────────
+  // ── Comma Formatting for the edit form's price input ──
   priceDisplayValue: string = '';
 
   formatWithCommas(value: number | string | null): string {
@@ -208,8 +445,8 @@ export class Expense implements OnInit, OnDestroy {
     return parseFloat(cleaned) || 0;
   }
 
-  // Live quantity × price total shown under the full-mode price field —
-  // matches the totalCost that onSubmit will actually save.
+  // Live quantity × price total shown under the edit form's price field —
+  // matches the totalCost that onSubmitNewExpense will actually save.
   get fullFormTotal(): number | null {
     const quantity = Number(this.newExpenseForm?.get('quantity')?.value);
     const price = Number(this.newExpenseForm?.get('price')?.value);
@@ -242,6 +479,7 @@ export class Expense implements OnInit, OnDestroy {
 
   // Icons
   readonly iconPlus = Plus;
+  readonly iconMinus = Minus;
   readonly iconPencil = Pencil;
   readonly iconTrash2 = Trash2;
   readonly iconSave = Save;
@@ -262,30 +500,36 @@ export class Expense implements OnInit, OnDestroy {
   readonly iconImages = Images;
   readonly iconEye = Eye;
   readonly iconCamera = LucideCamera;
-  readonly iconZap = Zap;
-  readonly iconList = List;
   readonly iconArchive = Archive;
   readonly iconSearch = Search;
   readonly iconCheck = Check;
+  readonly iconScanLine = ScanLine;
+  readonly iconShoppingCart = ShoppingCart;
+  readonly iconPackage = Package;
 
   activeAvatarExpenseId: string | null = null;
   activeAvatarVoucherId: string | null = null;
 
   userProfile: UserProfile | null = null;
 
-  router = inject(Router);
-  route = inject(ActivatedRoute);
-
   constructor(private fb: FormBuilder) {
     const todayFormatted = new DatePipe('en').transform(new Date(), 'yyyy-MM-dd') || '';
 
+    // Purchase always deals in products — productId is required, no
+    // free-text itemName field (unlike personal Expense).
     this.newExpenseForm = this.fb.group({
       date: [todayFormatted, Validators.required],
       category: ['', Validators.required],
-      itemName: ['', Validators.maxLength(100)],
+      productId: ['', Validators.required],
+      itemName: [''],
       quantity: [1, [Validators.required, Validators.min(0.01), Validators.max(99999)]],
       unit: ['', Validators.maxLength(20)],
       price: ['', [Validators.required, Validators.min(0.01), Validators.max(999999999)]],
+    });
+
+    this.cartForm = this.fb.group({
+      date: [todayFormatted, Validators.required],
+      category: ['', Validators.required],
     });
 
     this.voucherForm = this.fb.group({
@@ -303,43 +547,29 @@ export class Expense implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loadExpenses();
     this.loadVouchers();
-    this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe(params => {
-      const date = params.get('date');
-      const todayStr = this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
+    this.dateFilterMode = 'today';
+    this._selectedDate$.next(this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '');
+    this.refreshExpenses$.next();
+    this.refreshVouchers$.next();
 
-      if (date) {
-        if (date === todayStr) {
-          this.dateFilterMode = 'today';
-          this.showCustomDatePicker = false;
-          this.customStartDate = '';
-          this.customEndDate = '';
-        } else {
-          this.dateFilterMode = 'custom';
-          this.showCustomDatePicker = true;
-          this.customStartDate = date;
-          this.customEndDate = date;
-        }
-        this._selectedDate$.next(date);
-      } else {
-        this.dateFilterMode = 'today';
-        this.showCustomDatePicker = false;
-        this.customStartDate = '';
-        this.customEndDate = '';
-        this._selectedDate$.next(todayStr);
+    // The Purchase nav entry/route is only ever reachable for a space with
+    // mini inventory enabled — this is just a defensive guard against a
+    // direct URL visit from a space that doesn't have it.
+    this.authService.userProfile$.pipe(
+      switchMap(profile => this.spaceContextService.isInventoryEnabled$(profile)),
+      takeUntil(this.destroy$),
+    ).subscribe(enabled => {
+      if (!enabled) {
+        this.router.navigate(['/expense']);
       }
-      this.refreshExpenses$.next();
-      this.refreshVouchers$.next();
-      this.cdr.markForCheck();
     });
 
     this.authService.userProfile$.pipe(takeUntil(this.destroy$)).subscribe(profile => {
       this.userProfile = profile;
-      this.userRole = getCurrentSpaceRole(profile);
       const spaceModeKey = this.getSpaceModeKey(profile);
       if (spaceModeKey !== this.activeSpaceModeKey) {
         const isActualSpaceSwitch = this.activeSpaceModeKey !== null;
         this.activeSpaceModeKey = spaceModeKey;
-        this.setQuickMode(isPersonalContext(profile));
         this._activeCurrencyFilter$.next(null);
         this._activeCategoryFilter$.next(null);
         this.clearAllVoucherFiles();
@@ -356,6 +586,7 @@ export class Expense implements OnInit, OnDestroy {
       this.cdr.markForCheck();
     });
     this.loadCategories();
+    this.loadProducts();
   }
 
   ngOnDestroy(): void {
@@ -364,14 +595,6 @@ export class Expense implements OnInit, OnDestroy {
     this.clearAllVoucherFiles();
     this.destroyDatePickerFlatpickr();
     document.body.classList.remove('exp-add-modal-open');
-  }
-
-  openAddModal(tab: 'expense' | 'voucher' = 'expense'): void {
-    this.addModalTab = tab;
-    this.isAddModalOpen = true;
-    this.isCategoryPickerOpen = false;
-    this.closeDatePicker();
-    document.body.classList.add('exp-add-modal-open');
   }
 
   closeAddModal(): void {
@@ -389,26 +612,18 @@ export class Expense implements OnInit, OnDestroy {
   private resetNewExpenseForm(): void {
     const today = this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
     this.newExpenseForm.reset({
-      date: today, category: '', itemName: '', quantity: 1, unit: '', price: ''
+      date: today, category: '', productId: '', itemName: '', quantity: 1, unit: '', price: ''
     });
     this.priceDisplayValue = '';
   }
 
-  setAddModalTab(tab: 'expense' | 'voucher'): void {
-    this.addModalTab = tab;
-  }
-
-  // ── Category picker (drill-down within the Add-Expense/Voucher modal) ──
-  // Not using app-custom-select's own bottom-sheet here: that component
-  // manages its own history-based close on mobile, and nesting it inside
-  // this modal left the picker/backdrop stuck open after selecting an item.
-  // A picker that simply swaps this modal's own content sidesteps that
-  // entirely — there's only ever one sheet/backdrop on screen.
+  // ── Category picker (drill-down within the modal) — shared by the
+  // legacy edit form, the cart, and the voucher form. ──
   isCategoryPickerOpen = false;
-  categoryPickerTarget: 'expense' | 'voucher' = 'expense';
+  categoryPickerTarget: 'edit' | 'cart' | 'voucher' = 'cart';
   categoryPickerSearch = '';
 
-  openCategoryPicker(target: 'expense' | 'voucher'): void {
+  openCategoryPicker(target: 'edit' | 'cart' | 'voucher'): void {
     this.categoryPickerTarget = target;
     this.categoryPickerSearch = '';
     this.isCategoryPickerOpen = true;
@@ -419,9 +634,14 @@ export class Expense implements OnInit, OnDestroy {
     this.isCategoryPickerOpen = false;
   }
 
+  private getCategoryPickerForm(): FormGroup {
+    if (this.categoryPickerTarget === 'voucher') return this.voucherForm;
+    if (this.categoryPickerTarget === 'edit') return this.newExpenseForm;
+    return this.cartForm;
+  }
+
   selectCategory(name: string): void {
-    const form = this.categoryPickerTarget === 'voucher' ? this.voucherForm : this.newExpenseForm;
-    form.get('category')?.setValue(name);
+    this.getCategoryPickerForm().get('category')?.setValue(name);
     this.closeCategoryPicker();
   }
 
@@ -431,19 +651,62 @@ export class Expense implements OnInit, OnDestroy {
     return this.categoryList.filter(c => c.name.toLowerCase().includes(q));
   }
 
-  // ── Date picker (drill-down within the Add-Expense/Voucher modal) ──
-  // Same reasoning as the category picker above: app-date-input's own
-  // sheet manages its close state via history.back()/popstate, and that
-  // round trip wasn't reliably resolving once nested inside this modal —
-  // isOpen got stuck true, leaving the backdrop stuck on screen with
-  // nothing closing it. This uses flatpickr directly (same library, same
-  // global flatpickr theme in styles.css) with no separate backdrop/sheet
-  // and no history manipulation of its own.
+  // ── Product picker (same drill-down pattern as the category picker
+  // above). Shared by the cart's "Add Item" and the legacy edit form's
+  // single product select — productPickerMode picks which one a tap
+  // wires to. ──
+  isProductPickerOpen = false;
+  productPickerSearch = '';
+  productPickerMode: 'edit' | 'cart' = 'cart';
+
+  openProductPicker(mode: 'edit' | 'cart' = 'cart'): void {
+    this.productPickerMode = mode;
+    this.productPickerSearch = '';
+    this.isProductPickerOpen = true;
+    this.closeDatePicker();
+  }
+
+  closeProductPicker(): void {
+    this.isProductPickerOpen = false;
+  }
+
+  onPickProduct(product: ServiceIProduct): void {
+    if (this.productPickerMode === 'cart') {
+      this.addToCart(product);
+    } else {
+      this.selectProduct(product);
+    }
+  }
+
+  // Unit always syncs to the newly selected product's own unit (when it
+  // has one) — a "fill only if blank" guard here would leave a stale unit
+  // from a previously selected product in place after switching to a
+  // different one.
+  selectProduct(product: ServiceIProduct | null): void {
+    this.newExpenseForm.get('productId')?.setValue(product?.id ?? '');
+    if (product?.unit) {
+      this.newExpenseForm.get('unit')?.setValue(product.unit);
+    }
+    this.closeProductPicker();
+  }
+
+  get filteredPickerProducts(): ServiceIProduct[] {
+    const q = this.productPickerSearch.trim().toLowerCase();
+    if (!q) return this.productList;
+    return this.productList.filter(p => p.name.toLowerCase().includes(q));
+  }
+
+  getSelectedProductName(productId: string): string | null {
+    return this.productList.find(p => p.id === productId)?.name ?? null;
+  }
+
+  // ── Date picker (drill-down within the modal) — shared by the edit
+  // form, the cart, and the voucher form. ──
   isDatePickerOpen = false;
-  datePickerTarget: 'expense' | 'voucher' = 'expense';
+  datePickerTarget: 'edit' | 'cart' | 'voucher' = 'cart';
   private datePickerFp: FlatpickrInstance | null = null;
 
-  openDatePicker(target: 'expense' | 'voucher'): void {
+  openDatePicker(target: 'edit' | 'cart' | 'voucher'): void {
     this.datePickerTarget = target;
     this.isCategoryPickerOpen = false;
     this.isDatePickerOpen = true;
@@ -453,6 +716,12 @@ export class Expense implements OnInit, OnDestroy {
   closeDatePicker(): void {
     this.isDatePickerOpen = false;
     this.destroyDatePickerFlatpickr();
+  }
+
+  private getDatePickerForm(): FormGroup {
+    if (this.datePickerTarget === 'voucher') return this.voucherForm;
+    if (this.datePickerTarget === 'edit') return this.newExpenseForm;
+    return this.cartForm;
   }
 
   private initDatePickerFlatpickr(): void {
@@ -465,7 +734,7 @@ export class Expense implements OnInit, OnDestroy {
     hiddenInput.style.display = 'none';
     container.appendChild(hiddenInput);
 
-    const form = this.datePickerTarget === 'voucher' ? this.voucherForm : this.newExpenseForm;
+    const form = this.getDatePickerForm();
     const currentValue = form.get('date')?.value;
     const lang = this.translate.currentLang || this.translate.getDefaultLang();
     const isMy = lang === 'my';
@@ -488,11 +757,6 @@ export class Expense implements OnInit, OnDestroy {
         const str = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
         form.get('date')?.setValue(str);
         this.closeDatePicker();
-        // flatpickr's day click is a native DOM event, not an Angular
-        // (click) binding — under OnPush that doesn't automatically mark
-        // this component dirty, so closeDatePicker()'s isDatePickerOpen
-        // flip was never reflected in the view (stuck on an empty picker
-        // body). Force it explicitly.
         this.cdr.markForCheck();
       },
     }) as unknown as FlatpickrInstance;
@@ -505,10 +769,6 @@ export class Expense implements OnInit, OnDestroy {
     }
   }
 
-  toggleQuickMode(): void {
-    this.setQuickMode(!this.isQuickMode);
-  }
-
   private getSpaceModeKey(profile: UserProfile | null): string {
     if (!profile) {
       return 'none';
@@ -517,19 +777,6 @@ export class Expense implements OnInit, OnDestroy {
     const type = profile.currentSpaceType || profile.accountType || 'personal';
     const id = profile.currentSpaceId || profile.groupId || profile.personalSpaceId || profile.uid;
     return `${type}:${id}`;
-  }
-
-  private setQuickMode(isQuickMode: boolean): void {
-    this.isQuickMode = isQuickMode;
-    // Item name is optional in both quick and full mode — a blank name
-    // falls back to the category name on submit (see onSubmitNewExpense).
-    const itemNameCtrl = this.newExpenseForm.get('itemName');
-    itemNameCtrl?.clearValidators();
-    itemNameCtrl?.setValidators(Validators.maxLength(100));
-    itemNameCtrl?.updateValueAndValidity();
-    if (this.isQuickMode) {
-      this.newExpenseForm.patchValue({ quantity: 1, unit: '' });
-    }
   }
 
   loadExpenses(): void {
@@ -622,6 +869,19 @@ export class Expense implements OnInit, OnDestroy {
     this.categoryModal.open();
   }
 
+  loadProducts(): void {
+    this.products$ = this.productService.getProducts();
+    this.products$.pipe(takeUntil(this.destroy$)).subscribe(products => { this.productList = products; this.cdr.markForCheck(); });
+  }
+
+  openProductModal(): void {
+    this.productModal.open();
+  }
+
+  trackByProductId(index: number, product: ServiceIProduct): string {
+    return product.id ?? String(index);
+  }
+
   trackByIndex(index: number): number {
     return index;
   }
@@ -646,6 +906,7 @@ export class Expense implements OnInit, OnDestroy {
     return expense.id ?? String(index);
   }
 
+  // ── Edit — legacy single-item purchase only ──
   async onSubmitNewExpense(): Promise<void> {
     this.newExpenseForm.markAllAsTouched();
     if (this.newExpenseForm.invalid) {
@@ -657,7 +918,7 @@ export class Expense implements OnInit, OnDestroy {
     this.cdr.markForCheck();
     const fv = this.newExpenseForm.value;
     if (!fv.itemName) {
-      fv.itemName = fv.category || '-';
+      fv.itemName = this.getSelectedProductName(fv.productId) || fv.category || '-';
     }
 
     try {
@@ -665,6 +926,7 @@ export class Expense implements OnInit, OnDestroy {
         const updated: any = {
           date: fv.date,
           category: fv.category,
+          productId: fv.productId || null,
           itemName: fv.itemName,
           quantity: fv.quantity,
           unit: fv.unit,
@@ -675,33 +937,13 @@ export class Expense implements OnInit, OnDestroy {
           editedDevice: 'Web Browser',
         };
         await this.expenseService.updateExpense(this.editingExpense.id!, updated);
-        Toast.fire({ icon: 'success', title: this.translate.instant('EXPENSE_SUCCESS_UPDATED') });
+        Toast.fire({ icon: 'success', title: this.translate.instant('PURCHASE_SUCCESS_UPDATED') });
         this.refreshExpenses$.next();
         this.closeAddModal(); // also clears editingExpense + resets the form
         return;
       }
-
-      const newExpense: Omit<IExpense, 'id'> = {
-        date: fv.date,
-        category: fv.category,
-        itemName: fv.itemName,
-        quantity: fv.quantity,
-        unit: fv.unit,
-        price: fv.price,
-        currency: this.userProfile?.currency || 'MMK',
-        totalCost: fv.quantity * fv.price,
-      };
-      await this.expenseService.addExpense(newExpense as any);
-      Toast.fire({ icon: 'success', title: this.translate.instant('EXPENSE_SUCCESS_ADDED') });
-      this.newExpenseForm.reset({
-        date: this.datePipe.transform(fv.date, 'yyyy-MM-dd') || '',
-        category: '', itemName: '', quantity: 1, unit: '', price: ''
-      });
-      this.priceDisplayValue = '';
-      this.refreshExpenses$.next();
-      this.closeAddModal();
     } catch (error: any) {
-      const fallbackKey = this.editingExpense ? 'EXPENSE_ERROR_UPDATE' : 'EXPENSE_ERROR_ADD';
+      const fallbackKey = 'PURCHASE_ERROR_UPDATE';
       Toast.fire({ icon: 'error', title: error.message || this.translate.instant(fallbackKey) });
     } finally {
       this.isSaving = false;
@@ -946,17 +1188,7 @@ export class Expense implements OnInit, OnDestroy {
     const toMy = (n: number) =>
       new Intl.NumberFormat('my-MM', { numberingSystem: 'mymr', useGrouping: false }).format(n);
 
-    const myMonth = (d: Date): string => {
-      const en = this.datePipe.transform(d, 'MMMM') as keyof typeof BURMESE_MONTH_FULL_NAMES;
-      return BURMESE_MONTH_FULL_NAMES[en] ?? en;
-    };
-
-    // Returns localized date string; withYear controls whether year is appended
     const fmt = (d: Date, withYear = true): string => {
-      if (isMy) {
-        const base = `${toMy(d.getDate())} ${myMonth(d)}`;
-        return withYear ? `${base} ${toMy(d.getFullYear())}` : base;
-      }
       return withYear
         ? (this.datePipe.transform(d, 'MMM d, yyyy') || '')
         : (this.datePipe.transform(d, 'MMM d') || '');
@@ -977,9 +1209,7 @@ export class Expense implements OnInit, OnDestroy {
       }
 
       case 'month':
-        return isMy
-          ? `${myMonth(today)} ${toMy(today.getFullYear())}`
-          : (this.datePipe.transform(today, 'MMMM yyyy') || '');
+        return this.datePipe.transform(today, 'MMMM yyyy') || '';
 
       case 'custom': {
         if (this.customStartDate && this.customEndDate) {
@@ -1071,31 +1301,26 @@ export class Expense implements OnInit, OnDestroy {
     return String(n).replace(/\d/g, d => mm[+d]);
   }
 
-  // ── Swal-based Edit ────────────────────────────────────────────────────────
-  // ── Edit — reuses the Add-Expense modal (same custom category/date
-  //    pickers as adding) instead of the old SweetAlert HTML form, so add
-  //    and edit share one look and behavior. ──
+  // ── Edit — reuses this modal (same custom category/date pickers as
+  //    adding a voucher), only reachable for a single-item legacy
+  //    purchase (see the list's Edit guard). ──
   startEdit(expense: IExpense): void {
-    const isPersonal = this.userProfile?.accountType === 'personal';
-    const hasQtyOrUnit = (expense.quantity != null && expense.quantity !== 1) || !!expense.unit;
-    const showQtyUnit = !isPersonal || hasQtyOrUnit;
-
     this.editingExpense = expense;
-    // Full mode when quantity/unit matter for this record — set BEFORE
-    // patching, since entering quick mode resets quantity/unit.
-    this.setQuickMode(!showQtyUnit);
     this.newExpenseForm.patchValue({
       date: expense.date,
       category: expense.category,
+      productId: expense.productId || '',
       itemName: expense.itemName || '',
       quantity: expense.quantity ?? 1,
       unit: expense.unit || '',
       price: expense.price,
     });
     this.priceDisplayValue = (expense.price ?? 0) > 0 ? this.formatWithCommas(expense.price ?? 0) : '';
-    this.openAddModal('expense');
+    this.isAddModalOpen = true;
+    this.isCategoryPickerOpen = false;
+    this.closeDatePicker();
+    document.body.classList.add('exp-add-modal-open');
   }
-  // ─────────────────────────────────────────────────────────────────────────
 
   onDelete(expenseId: string): void {
     if (!this.canManageExpenseRecords) {
@@ -1103,7 +1328,7 @@ export class Expense implements OnInit, OnDestroy {
     }
     Swal.fire({
       title: this.translate.instant('CONFIRM_DELETE_TITLE'),
-      text: this.translate.instant('CONFIRM_DELETE_EXPENSE'),
+      text: this.translate.instant('CONFIRM_DELETE_PURCHASE'),
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: this.translate.instant('DELETE_BUTTON'),
@@ -1115,7 +1340,7 @@ export class Expense implements OnInit, OnDestroy {
         this.cdr.markForCheck();
         try {
           await this.expenseService.deleteExpense(expenseId);
-          Toast.fire({ icon: 'success', title: this.translate.instant('EXPENSE_DELETED_SUCCESS') });
+          Toast.fire({ icon: 'success', title: this.translate.instant('PURCHASE_DELETED_SUCCESS') });
           this.refreshExpenses$.next();
         } catch (error: any) {
           Toast.fire({ icon: 'error', title: error.message || this.translate.instant('DATA_DELETE_ERROR') });
@@ -1187,7 +1412,7 @@ export class Expense implements OnInit, OnDestroy {
 
   @HostListener('window:resize')
   onWindowResize(): void {
-    this.isDesktopView = window.innerWidth >= DESKTOP_BREAKPOINT;
+    this.isDesktopView = window.innerWidth >= 992;
   }
 
   toggleAvatarName(expenseId: string, event: Event): void {
@@ -1210,7 +1435,6 @@ export class Expense implements OnInit, OnDestroy {
     const border = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.08)';
     const surfaceAlt = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)';
     const accent = '#0b74ff';
-    const isPersonal = this.userProfile?.accountType === 'personal';
     const iconFilter = isDark ? 'invert(1) brightness(2)' : 'none';
 
     const row = (iconSvg: string, label: string, value: string, color = textColor, noBorder = false) => `
@@ -1266,7 +1490,7 @@ export class Expense implements OnInit, OnDestroy {
     const amt = this.formatService.formatAmountWithSymbol(expense.totalCost, expense.currency);
     rows += row(`<img src="../../assets/icons/money-bag.png" alt="money-bag" style="width:25px;height:25px;filter:${iconFilter};vertical-align:middle;">`, this.translate.instant('TOTAL_COST_LABEL'), amt, accent);
 
-    if (!isPersonal && expense.createdByName) {
+    if (expense.createdByName) {
       const dt = expense.createdAt ? this.formatService.formatLocalizedDate(expense.createdAt, 'longDateTime') : '';
       const creatorName = this.getExpenseCreatorName(expense);
       const creatorAvatar = this.getUserAvatarHtml(
@@ -1284,10 +1508,7 @@ export class Expense implements OnInit, OnDestroy {
       historyEntries.forEach((entry, idx) => {
         const isLast = idx === historyEntries.length - 1;
         const dt = this.formatService.formatLocalizedDate(entry.editedAt, 'longDateTime');
-
-        const whoWhen = isPersonal
-          ? dt
-          : `${entry.editedByName} · ${dt}`;
+        const whoWhen = `${entry.editedByName} · ${dt}`;
 
         const changeLines = Object.entries(entry.changes)
           .map(([field, { from, to }]) =>

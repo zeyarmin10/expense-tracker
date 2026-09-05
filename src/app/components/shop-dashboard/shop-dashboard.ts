@@ -6,7 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { LucideAngularModule, ShoppingCart, HandCoins, TriangleAlert, Package, TrendingUp, TrendingDown, Plus, Trophy } from 'lucide-angular';
 import { ProductService } from '../../services/product';
 import { ExpenseService } from '../../services/expense';
-import { IncomeService } from '../../services/income';
+import { IncomeService, getIncomeLineItems } from '../../services/income';
 import { InventoryService, ProductStockSummary } from '../../services/inventory.service';
 import { AuthService } from '../../services/auth';
 import { SpaceContextService } from '../../services/space-context.service';
@@ -107,10 +107,13 @@ export class ShopDashboardComponent implements OnInit {
       map(([incomes, products]) => {
         const quantityByProductId = new Map<string, number>();
         incomes
-          .filter((income) => income.isProductSale && !!income.productId)
+          .filter((income) => income.isProductSale)
           .forEach((income) => {
-            const prev = quantityByProductId.get(income.productId!) || 0;
-            quantityByProductId.set(income.productId!, prev + (Number(income.quantity) || 0));
+            getIncomeLineItems(income).forEach((item) => {
+              if (!item.productId) return;
+              const prev = quantityByProductId.get(item.productId) || 0;
+              quantityByProductId.set(item.productId, prev + item.quantity);
+            });
           });
 
         const rows: SoldItemRow[] = [];
@@ -130,14 +133,17 @@ export class ShopDashboardComponent implements OnInit {
         const windowStart = now - TOP_SELLER_WINDOW_DAYS * MS_PER_DAY;
         const quantityByProductId = new Map<string, number>();
         incomes
-          .filter((income) => income.isProductSale && !!income.productId)
+          .filter((income) => income.isProductSale)
           .filter((income) => {
             const t = new Date(income.date).getTime();
             return !Number.isNaN(t) && t >= windowStart;
           })
           .forEach((income) => {
-            const prev = quantityByProductId.get(income.productId!) || 0;
-            quantityByProductId.set(income.productId!, prev + (Number(income.quantity) || 0));
+            getIncomeLineItems(income).forEach((item) => {
+              if (!item.productId) return;
+              const prev = quantityByProductId.get(item.productId) || 0;
+              quantityByProductId.set(item.productId, prev + item.quantity);
+            });
           });
 
         const rows: RankedProductRow[] = [];

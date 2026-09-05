@@ -1,0 +1,1014 @@
+<!-- Loading Overlay -->
+<div class="exp-overlay" *ngIf="isSaving">
+  <div class="exp-spinner"></div>
+</div>
+
+<div class="exp-wrapper">
+  <div class="exp-container mb-12">
+
+    <!-- ── Cart section — the real "Add Purchase" experience. Inline at the
+         top of the page on desktop; on mobile it's reached via the FAB
+         below and opens as a full-screen overlay (no modal box). ── -->
+    <div class="exp-cart-overlay" [class.exp-cart-overlay-open]="showAddCartOverlay" *ngIf="canManageExpenseRecords">
+      <div class="exp-cart-overlay-topbar">
+        <button type="button" class="exp-cart-overlay-close" (click)="closeAddCartOverlay()" [title]="'CANCEL_BUTTON_LABEL' | translate">
+          <lucide-icon [img]="iconX" [size]="20"></lucide-icon>
+        </button>
+        <div class="exp-cart-overlay-tabs">
+          <button type="button" class="exp-cart-overlay-tab" [class.active]="overlayTab === 'purchase'" (click)="overlayTab = 'purchase'">
+            {{ 'PURCHASE_ADD_TITLE' | translate }}
+          </button>
+          <button type="button" class="exp-cart-overlay-tab" [class.active]="overlayTab === 'voucher'" (click)="overlayTab = 'voucher'">
+            {{ 'VOUCHER_ADD_TITLE' | translate }}
+          </button>
+        </div>
+      </div>
+      <div class="exp-cart-overlay-scroll">
+      <div class="exp-pos-section" *ngIf="overlayTab === 'purchase'">
+      <div class="exp-pos-section-header">
+        <h2 class="exp-pos-section-title">
+          <lucide-icon [img]="iconShoppingCart" [size]="18" class="exp-icon-warning"></lucide-icon>
+          {{ 'PURCHASE_ADD_TITLE' | translate }}
+        </h2>
+        <button type="button" class="exp-date-pill" (click)="openDatePicker('cart')">
+          <lucide-icon [img]="iconCalendarDays" [size]="13"></lucide-icon>
+          <span>{{ formatService.formatLocalizedDate(cartForm.get('date')?.value) }}</span>
+        </button>
+      </div>
+
+      <div class="exp-float-field exp-float-group">
+        <button type="button" class="exp-cat-select-trigger" (click)="openCategoryPicker('cart')">
+          <ng-container *ngIf="cartForm.get('category')?.value as catVal; else catCartPlaceholder">
+            <span class="exp-cat-select-trigger-icon" [style.--cat-hue]="getIconHueForCategory(catVal)">
+              <img *ngIf="getIconUrlForCategory(catVal)" [src]="getIconUrlForCategory(catVal)!" alt="" class="cat-img-icon" style="width:100%;height:100%" />
+              <lucide-icon *ngIf="!getIconUrlForCategory(catVal)" [img]="getIconForCategory(catVal)" [size]="14"></lucide-icon>
+            </span>
+            <span class="exp-cat-select-trigger-value">{{ catVal }}</span>
+          </ng-container>
+          <ng-template #catCartPlaceholder>
+            <span class="exp-cat-select-trigger-placeholder">{{ 'EXPENSE_CATEGORY_LABEL' | translate }}</span>
+          </ng-template>
+          <lucide-icon [img]="iconChevronDown" [size]="14" class="exp-cat-select-trigger-chevron"></lucide-icon>
+        </button>
+        <button type="button" class="exp-addon-btn" (click)="openCategoryModal()"
+          [title]="'EXPENSE_ADD_CATEGORY_BTN' | translate">
+          <lucide-icon [img]="iconPlus" [size]="16"></lucide-icon>
+        </button>
+      </div>
+      <div class="exp-field-error" *ngIf="cartForm.controls['category'].invalid && cartForm.controls['category'].touched">
+        {{ 'CATEGORY_REQUIRED' | translate }}
+      </div>
+
+      <div class="exp-pos-action-row">
+        <button type="button" class="exp-pos-scan-btn" *ngIf="canScanBarcode" (click)="onScanBarcode()">
+          <lucide-icon [img]="iconScanLine" [size]="18"></lucide-icon>
+          {{ 'SCAN_BARCODE_BUTTON' | translate }}
+        </button>
+        <button type="button" class="exp-pos-manual-add-btn" (click)="openProductPicker('cart')">
+          <lucide-icon [img]="iconPlus" [size]="16"></lucide-icon>
+          {{ 'POS_ADD_ITEM_MANUAL' | translate }}
+        </button>
+      </div>
+
+      <div class="exp-pos-cart-empty" *ngIf="cart.length === 0">
+        <lucide-icon [img]="iconShoppingCart" [size]="28" class="exp-pos-cart-empty-icon"></lucide-icon>
+        <p>{{ 'POS_CART_EMPTY' | translate }}</p>
+      </div>
+
+      <ul class="exp-pos-cart-list" *ngIf="cart.length > 0">
+        <li class="exp-pos-cart-line" *ngFor="let line of cart; trackBy: trackByCartLine">
+          <div class="exp-pos-cart-line-main">
+            <span class="exp-pos-cart-line-name">{{ line.productName }}</span>
+            <span class="exp-pos-cart-line-unit" *ngIf="line.unit">{{ line.unit }}</span>
+          </div>
+          <div class="exp-pos-cart-line-controls">
+            <div class="exp-pos-qty-stepper">
+              <button type="button" class="exp-pos-qty-btn" (click)="decrementQty(line)">
+                <lucide-icon [img]="iconMinus" [size]="13"></lucide-icon>
+              </button>
+              <span class="exp-pos-qty-value">{{ line.quantity }}</span>
+              <button type="button" class="exp-pos-qty-btn" (click)="incrementQty(line)">
+                <lucide-icon [img]="iconPlus" [size]="13"></lucide-icon>
+              </button>
+            </div>
+            <input
+              type="text"
+              inputmode="decimal"
+              class="exp-pos-unit-price-input"
+              [class.exp-pos-unit-price-input-error]="cartPriceError && (!line.price || line.price <= 0)"
+              [value]="line.priceDisplay"
+              (input)="onLineUnitPriceInput(line, $event)" />
+            <span class="exp-pos-line-subtotal" [innerHTML]="formatService.formatAmountShortHtml(line.quantity * line.price, userProfile?.currency || 'MMK')"></span>
+            <button type="button" class="exp-pos-remove-btn" (click)="removeFromCart(line.productId)">
+              <lucide-icon [img]="iconTrash2" [size]="14"></lucide-icon>
+            </button>
+          </div>
+        </li>
+      </ul>
+
+      <div class="exp-field-error" *ngIf="cartPriceError">
+        {{ 'PRICE_REQUIRED' | translate }}
+      </div>
+
+      <div class="exp-pos-footer" *ngIf="cart.length > 0">
+        <div class="exp-pos-total">
+          <span class="exp-pos-total-label">{{ 'POS_TOTAL_LABEL' | translate }}</span>
+          <span class="exp-pos-total-value" [innerHTML]="formatService.formatAmountWithSymbolHtml(cartTotal, userProfile?.currency || 'MMK')"></span>
+        </div>
+        <button type="button" class="exp-btn exp-btn-primary" [disabled]="isCheckingOut" (click)="onCheckout()">
+          <lucide-icon [img]="iconSave" [size]="16"></lucide-icon>
+          {{ 'POS_CHECKOUT_BUTTON' | translate }}
+        </button>
+      </div>
+      </div>
+
+      <!-- ── Voucher tab — the add form and the saved-vouchers list unified
+           in one place instead of a separate modal + collapsible section. ── -->
+      <div class="exp-voucher-tab-section" *ngIf="overlayTab === 'voucher'">
+        <div class="exp-pos-section-header">
+          <h2 class="exp-pos-section-title">
+            <lucide-icon [img]="iconArchive" [size]="18" class="exp-icon-warning"></lucide-icon>
+            {{ 'VOUCHER_ADD_TITLE' | translate }}
+          </h2>
+        </div>
+
+        <form [formGroup]="voucherForm" (ngSubmit)="onSubmitVoucher()" class="exp-form exp-voucher-form">
+          <div class="exp-mode-date-row exp-mode-date-row-solo">
+            <button type="button" class="exp-date-pill" (click)="openDatePicker('voucher')">
+              <lucide-icon [img]="iconCalendarDays" [size]="13"></lucide-icon>
+              <span>{{ formatService.formatLocalizedDate(voucherForm.get('date')?.value) }}</span>
+            </button>
+          </div>
+
+          <div class="exp-float-field">
+            <button type="button" class="exp-cat-select-trigger" (click)="openCategoryPicker('voucher')">
+              <ng-container *ngIf="voucherForm.get('category')?.value as catVal; else catVoucherPlaceholder">
+                <span class="exp-cat-select-trigger-icon" [style.--cat-hue]="getIconHueForCategory(catVal)">
+                  <img *ngIf="getIconUrlForCategory(catVal)" [src]="getIconUrlForCategory(catVal)!" alt="" class="cat-img-icon" style="width:100%;height:100%" />
+                  <lucide-icon *ngIf="!getIconUrlForCategory(catVal)" [img]="getIconForCategory(catVal)" [size]="14"></lucide-icon>
+                </span>
+                <span class="exp-cat-select-trigger-value">{{ catVal }}</span>
+              </ng-container>
+              <ng-template #catVoucherPlaceholder>
+                <span class="exp-cat-select-trigger-placeholder">{{ 'VOUCHER_NO_CATEGORY' | translate }}</span>
+              </ng-template>
+              <lucide-icon [img]="iconChevronDown" [size]="14" class="exp-cat-select-trigger-chevron"></lucide-icon>
+            </button>
+          </div>
+
+          <div class="exp-float-field">
+            <input
+              #voucherTitleInput
+              type="text"
+              class="exp-float-input"
+              id="voucher-title"
+              formControlName="title"
+              [placeholder]="('VOUCHER_TITLE_LABEL' | translate) + ' (' + ('OPTIONAL' | translate) + ')'"
+              maxlength="50"
+            />
+          </div>
+
+          <div class="exp-float-field">
+            <textarea
+              class="exp-float-input exp-textarea"
+              id="voucher-note"
+              formControlName="note"
+              [placeholder]="('DESCRIPTION' | translate) + ' (' + ('OPTIONAL' | translate) + ')'"
+              maxlength="250"
+            ></textarea>
+          </div>
+
+          <!-- Hidden gallery file input -->
+          <input
+            #galleryFileInput
+            type="file"
+            accept="image/*"
+            multiple
+            class="exp-file-input"
+            (change)="onVoucherFilesSelected($event)"
+          />
+
+          <!-- Empty state — two action buttons -->
+          <div *ngIf="selectedVoucherFiles.length === 0" class="exp-upload-actions">
+            <button type="button" class="exp-upload-btn exp-upload-btn-camera"
+              (click)="openCamera()">
+              <span class="exp-upload-btn-icon"><lucide-icon [img]="iconCamera" [size]="28"></lucide-icon></span>
+              <span class="exp-upload-btn-label">{{ "VOUCHER_CAMERA" | translate }}</span>
+            </button>
+            <button type="button" class="exp-upload-btn exp-upload-btn-gallery"
+              (click)="openGallery()">
+              <span class="exp-upload-btn-icon"><lucide-icon [img]="iconImages" [size]="28"></lucide-icon></span>
+              <span class="exp-upload-btn-label">{{ "VOUCHER_GALLERY" | translate }}</span>
+            </button>
+          </div>
+
+          <!-- Image grid -->
+          <div class="exp-image-grid" *ngIf="selectedVoucherFiles.length > 0">
+            <div class="exp-image-thumb" *ngFor="let url of voucherPreviewUrls; let i = index; trackBy: trackByIndex">
+              <img
+                [src]="url"
+                [alt]="'VOUCHER_IMAGE_ALT' | translate"
+                (click)="openLightbox(voucherPreviewUrls, i)"
+              />
+              <button
+                type="button"
+                class="exp-thumb-remove"
+                (click)="removeVoucherFile(i)"
+                [title]="'CANCEL_BUTTON_LABEL' | translate"
+              >
+                <lucide-icon [img]="iconX" [size]="16"></lucide-icon>
+              </button>
+            </div>
+            <div *ngIf="selectedVoucherFiles.length < MAX_VOUCHER_IMAGES"
+              class="exp-image-add-more-wrap">
+              <button type="button" class="exp-image-add-more exp-image-add-camera"
+                (click)="openCamera()"
+                [title]="'VOUCHER_CAMERA' | translate">
+                <lucide-icon [img]="iconCamera" [size]="16"></lucide-icon>
+              </button>
+              <button type="button" class="exp-image-add-more exp-image-add-gallery"
+                (click)="openGallery()"
+                [title]="'VOUCHER_GALLERY' | translate">
+                <lucide-icon [img]="iconImages" [size]="16"></lucide-icon>
+              </button>
+            </div>
+          </div>
+
+          <!-- Counter + clear -->
+          <div class="exp-image-info-row" *ngIf="selectedVoucherFiles.length > 0">
+            <span class="exp-image-counter">{{ selectedVoucherFiles.length }} / {{ MAX_VOUCHER_IMAGES }}</span>
+            <button
+              type="button"
+              class="exp-btn exp-btn-sm exp-btn-ghost"
+              (click)="clearAllVoucherFiles()"
+            >
+              <lucide-icon [img]="iconX" [size]="16"></lucide-icon>
+              {{ "VOUCHER_CLEAR_ALL" | translate }}
+            </button>
+          </div>
+
+          <div class="exp-form-footer">
+            <button
+              type="submit"
+              class="exp-btn exp-btn-primary"
+              [disabled]="voucherForm.invalid || selectedVoucherFiles.length === 0 || isVoucherSaving"
+            >
+              <lucide-icon [img]="iconSave" [size]="16"></lucide-icon>
+              {{ "VOUCHER_SAVE_BUTTON" | translate }}
+            </button>
+          </div>
+        </form>
+      </div>
+      </div>
+    </div>
+
+    <!-- Mobile-only FAB — opens the cart above as a full-screen overlay.
+         Hidden at desktop widths (.exp-add-fab's own media query) and
+         while the overlay is already open. -->
+    <button type="button" class="exp-add-fab" *ngIf="canManageExpenseRecords && !showAddCartOverlay" (click)="openAddCartOverlay()" [title]="'PURCHASE_ADD_TITLE' | translate">
+      <lucide-icon [img]="iconPlus" [size]="24"></lucide-icon>
+    </button>
+
+    <!-- Cart's own date/category/product picker sheet — independent of the
+         edit/voucher modal below (both share the same isDatePickerOpen/
+         isCategoryPickerOpen/isProductPickerOpen state, but the *Target/
+         *Mode being 'cart' vs 'edit'/'voucher' keeps exactly one of the
+         two renderers active at a time). -->
+    <div class="exp-pos-picker-backdrop" [class.open]="isCartPickerOpen" (click)="closeDatePicker(); closeCategoryPicker(); closeProductPicker()"></div>
+    <div class="exp-pos-picker-sheet" [class.open]="isCartPickerOpen">
+      <div class="exp-pos-picker-handle"></div>
+
+      <ng-container *ngIf="isDatePickerOpen && (datePickerTarget === 'cart' || datePickerTarget === 'voucher')">
+        <div class="exp-pos-picker-header">
+          <span class="exp-pos-picker-title">{{ 'EXPENSE_DATE_LABEL' | translate }}</span>
+          <button type="button" class="exp-add-modal-close" (click)="closeDatePicker()" [title]="'BACK_BUTTON' | translate">
+            <lucide-icon [img]="iconX" [size]="18"></lucide-icon>
+          </button>
+        </div>
+        <div class="exp-date-picker-body">
+          <div id="exp-date-picker-container"></div>
+        </div>
+      </ng-container>
+
+      <ng-container *ngIf="isCategoryPickerOpen && (categoryPickerTarget === 'cart' || categoryPickerTarget === 'voucher')">
+        <div class="exp-pos-picker-header">
+          <span class="exp-pos-picker-title">{{ 'EXPENSE_CATEGORY_LABEL' | translate }}</span>
+          <button type="button" class="exp-add-modal-close" (click)="closeCategoryPicker()" [title]="'BACK_BUTTON' | translate">
+            <lucide-icon [img]="iconX" [size]="18"></lucide-icon>
+          </button>
+        </div>
+        <div class="exp-cat-picker-body">
+          <div class="exp-cat-picker-search">
+            <lucide-icon [img]="iconSearch" [size]="15" class="exp-cat-picker-search-icon"></lucide-icon>
+            <input
+              type="text"
+              [(ngModel)]="categoryPickerSearch"
+              [ngModelOptions]="{standalone: true}"
+              [placeholder]="'CUSTOM_SELECT_SEARCH' | translate"
+              class="exp-cat-picker-search-input"
+            />
+          </div>
+          <div class="exp-cat-picker-list">
+            <button
+              type="button"
+              class="exp-cat-picker-item"
+              *ngIf="categoryPickerTarget === 'voucher' && !categoryPickerSearch"
+              (click)="selectCategory('')"
+            >
+              <span class="exp-cat-picker-item-label">{{ 'VOUCHER_NO_CATEGORY' | translate }}</span>
+              <lucide-icon
+                *ngIf="!voucherForm.get('category')?.value"
+                [img]="iconCheck" [size]="16" class="exp-cat-picker-item-check">
+              </lucide-icon>
+            </button>
+            <p class="exp-cat-picker-empty" *ngIf="filteredPickerCategories.length === 0">
+              {{ 'CUSTOM_SELECT_NO_RESULTS' | translate }}
+            </p>
+            <button
+              type="button"
+              class="exp-cat-picker-item"
+              *ngFor="let cat of filteredPickerCategories; trackBy: trackByCategoryId"
+              [style.--cat-hue]="getIconHueForCategory(cat.name)"
+              (click)="selectCategory(cat.name)"
+            >
+              <span class="exp-cat-picker-item-icon">
+                <img *ngIf="getIconUrlForCategory(cat.name)" [src]="getIconUrlForCategory(cat.name)!" alt="" class="cat-img-icon" style="width:15px;height:15px" />
+                <lucide-icon *ngIf="!getIconUrlForCategory(cat.name)" [img]="getIconForCategory(cat.name)" [size]="15"></lucide-icon>
+              </span>
+              <span class="exp-cat-picker-item-label">{{ cat.name }}</span>
+              <lucide-icon
+                *ngIf="(categoryPickerTarget === 'voucher' ? voucherForm : cartForm).get('category')?.value === cat.name"
+                [img]="iconCheck" [size]="16" class="exp-cat-picker-item-check">
+              </lucide-icon>
+            </button>
+          </div>
+        </div>
+      </ng-container>
+
+      <ng-container *ngIf="isProductPickerOpen && productPickerMode === 'cart'">
+        <div class="exp-pos-picker-header">
+          <span class="exp-pos-picker-title">{{ 'SELECT_PRODUCT' | translate }}</span>
+          <button type="button" class="exp-add-modal-close" (click)="closeProductPicker()" [title]="'BACK_BUTTON' | translate">
+            <lucide-icon [img]="iconX" [size]="18"></lucide-icon>
+          </button>
+        </div>
+        <div class="exp-cat-picker-body">
+          <div class="exp-cat-picker-search-row">
+            <div class="exp-cat-picker-search">
+              <lucide-icon [img]="iconSearch" [size]="15" class="exp-cat-picker-search-icon"></lucide-icon>
+              <input
+                type="text"
+                [(ngModel)]="productPickerSearch"
+                [ngModelOptions]="{standalone: true}"
+                [placeholder]="'CUSTOM_SELECT_SEARCH' | translate"
+                class="exp-cat-picker-search-input"
+              />
+            </div>
+            <button type="button" class="exp-cat-picker-add-btn" (click)="openProductModal()"
+              [title]="'ADD_PRODUCT_BTN' | translate">
+              <lucide-icon [img]="iconPlus" [size]="16"></lucide-icon>
+            </button>
+          </div>
+          <div class="exp-cat-picker-list">
+            <p class="exp-cat-picker-empty" *ngIf="filteredPickerProducts.length === 0">
+              {{ 'CUSTOM_SELECT_NO_RESULTS' | translate }}
+            </p>
+            <button
+              type="button"
+              class="exp-cat-picker-item"
+              *ngFor="let prod of filteredPickerProducts; trackBy: trackByProductId"
+              (click)="onPickProduct(prod)"
+            >
+              <span class="exp-cat-picker-item-icon">
+                <lucide-icon [img]="iconPackage" [size]="15"></lucide-icon>
+              </span>
+              <span class="exp-cat-picker-item-label">{{ prod.name }}</span>
+            </button>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+
+    <!-- ── SHARED DATE FILTER BAR ── -->
+    <div class="exp-filter-bar" [class.exp-filter-bar-expanded]="showCustomDatePicker">
+      <div class="exp-filter-top-row">
+        <div class="exp-seg-ctrl">
+          <div class="exp-seg-track">
+            <!-- sliding pill indicator -->
+            <span
+              class="exp-seg-indicator"
+              [style.transform]="'translateX(calc(' + getDateFilterIndex() + ' * 100%))'"
+              aria-hidden="true"
+            ></span>
+            <button
+              type="button"
+              class="exp-seg-btn"
+              [class.active]="dateFilterMode === 'today'"
+              (click)="setDateFilterMode('today')"
+            >{{ 'TODAY' | translate }}</button>
+            <button
+              type="button"
+              class="exp-seg-btn"
+              [class.active]="dateFilterMode === 'week'"
+              (click)="setDateFilterMode('week')"
+            >{{ 'THIS_WEEK' | translate }}</button>
+            <button
+              type="button"
+              class="exp-seg-btn"
+              [class.active]="dateFilterMode === 'month'"
+              (click)="setDateFilterMode('month')"
+            >{{ 'THIS_MONTH' | translate }}</button>
+            <button
+              type="button"
+              class="exp-seg-btn"
+              [class.active]="dateFilterMode === 'custom'"
+              (click)="setDateFilterMode('custom')"
+            >{{ 'CUSTOM' | translate }}</button>
+          </div>
+          <button
+            type="button"
+            class="exp-seg-reset"
+            (click)="resetFilter()"
+            [title]="'RESET_FILTER_BUTTON' | translate"
+          >
+            <lucide-icon [img]="iconRotateCcw" [size]="16"></lucide-icon>
+          </button>
+        </div>
+      </div>
+
+      <div class="exp-filter-bottom-row">
+        <div class="exp-filter-label">
+          <span class="exp-filter-label-date">
+            <lucide-icon [img]="iconCalendar" [size]="16" class="exp-filter-label-icon"></lucide-icon>
+            <span>{{ getFilterLabel() }}</span>
+          </span>
+        </div>
+      </div>
+    </div>
+    <!-- ── END SHARED DATE FILTER BAR ── -->
+
+    <!-- Date range picker lives OUTSIDE the sticky bar so the modal (z-index 9010)
+         is in the root stacking context and renders above the backdrop correctly. -->
+    <div class="exp-daterange-outer" *ngIf="showCustomDatePicker">
+      <app-date-range-input
+        [(startDate)]="customStartDate"
+        [(endDate)]="customEndDate"
+        (rangeChange)="onCustomDateChange()"
+        [showLabel]="false"
+        [startLabel]="'DATE_FROM' | translate"
+        [endLabel]="'DATE_TO' | translate">
+      </app-date-range-input>
+    </div>
+
+    <!-- ── VOUCHER LIST ── -->
+    <div class="exp-list-section">
+      <div class="exp-list-header">
+        <button type="button" class="exp-list-header-toggle" style="flex:1; display:flex; align-items:center; justify-content:space-between;" (click)="isSavedVoucherListOpen = !isSavedVoucherListOpen">
+          <h3 class="exp-section-title exp-section-title-warning">
+            <span class="exp-icon-badge exp-icon-badge-warning">
+              <lucide-icon [img]="iconArchive" [size]="16"></lucide-icon>
+            </span>
+            {{ "VOUCHER_SAVED_TITLE" | translate }}
+          </h3>
+          <div class="exp-list-header-right">
+            <span class="exp-voucher-count" *ngIf="displayedVouchers$ | async as vl">
+              {{ formatCount(vl.length) }}
+            </span>
+            <svg class="exp-collapse-chevron" [class.open]="isSavedVoucherListOpen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+        </button>
+      </div>
+
+      <div class="exp-voucher-collapse-body" [class.open]="isSavedVoucherListOpen">
+      <div>
+      <ng-container *ngIf="displayedVouchers$ | async as vouchers">
+        <div *ngIf="vouchers.length === 0" class="exp-empty-state">
+          <lucide-icon [img]="iconReceipt" [size]="34" class="exp-empty-state-icon"></lucide-icon>
+          <p>{{ "VOUCHER_EMPTY_HINT" | translate }}</p>
+        </div>
+
+        <div class="exp-voucher-list exp-voucher-list-standalone" *ngIf="vouchers.length > 0">
+          <div class="exp-voucher-item" *ngFor="let voucher of vouchers; trackBy: trackByVoucherId">
+            <button
+              type="button"
+              class="exp-voucher-thumb"
+              (click)="openLightbox(getVoucherImages(voucher), 0)"
+            >
+              <img
+                [src]="voucher.imageUrl"
+                [alt]="'VOUCHER_IMAGE_ALT' | translate"
+              />
+              <span
+                *ngIf="(voucher.imageCount || 1) > 1"
+                class="exp-voucher-multi-badge"
+              >
+                <lucide-icon [img]="iconImage" [size]="14"></lucide-icon>
+                {{ voucher.imageCount }}
+              </span>
+            </button>
+
+            <div class="exp-voucher-content">
+              <div class="exp-voucher-title">
+                {{ voucher.title || voucher.fileName }}
+              </div>
+              <div class="exp-item-meta">
+                <span *ngIf="voucher.category" class="exp-cat-badge" [style.--cat-hue]="getIconHueForCategory(voucher.category)">
+                  <img *ngIf="getIconUrlForCategory(voucher.category)" [src]="getIconUrlForCategory(voucher.category)!" alt="" class="cat-img-icon" style="width:11px;height:11px" />
+                  <lucide-icon *ngIf="!getIconUrlForCategory(voucher.category)" [img]="getIconForCategory(voucher.category)" [size]="11" style="flex-shrink:0"></lucide-icon>
+                  <span class="exp-cat-badge-text">{{ voucher.category }}</span>
+                </span>
+                <span *ngIf="voucher.category" class="exp-meta-dot">·</span>
+                <span class="exp-item-date">
+                  {{ formatService.formatLocalizedDate(voucher.date) }}
+                </span>
+                <span *ngIf="voucher.size" class="exp-meta-dot">·</span>
+                <span *ngIf="voucher.size" class="exp-item-qty">
+                  {{ formatFileSize(voucher.size) }}
+                </span>
+              </div>
+              <div *ngIf="voucher.note" class="exp-voucher-note">
+                {{ voucher.note }}
+              </div>
+            </div>
+
+            <div class="exp-voucher-actions">
+              <button
+                type="button"
+                class="exp-icon-btn"
+                (click)="openLightbox(getVoucherImages(voucher), 0)"
+                [title]="'VOUCHER_VIEW' | translate"
+              >
+                <lucide-icon [img]="iconEye" [size]="16"></lucide-icon>
+              </button>
+              <button
+                *ngIf="canDeleteVoucher(voucher)"
+                type="button"
+                class="exp-icon-btn exp-icon-btn-danger"
+                (click)="onDeleteVoucher(voucher)"
+                [title]="'DELETE_BUTTON_LABEL' | translate"
+              >
+                <lucide-icon [img]="iconTrash2" [size]="16"></lucide-icon>
+              </button>
+              <div
+                *ngIf="voucher.userDisplayName"
+                class="exp-avatar-btn"
+                role="button"
+                tabindex="0"
+                (click)="toggleVoucherAvatarName(voucher.id!, $event)"
+                (keydown.enter)="toggleVoucherAvatarName(voucher.id!, $event)"
+                (keydown.space)="toggleVoucherAvatarName(voucher.id!, $event); $event.preventDefault()"
+              >
+                <app-user-avatar
+                  [name]="voucher.userDisplayName || voucher.createdByName || 'Former Member'"
+                  [photoUrl]="voucher.userPhotoURL || voucher.createdByPhotoURL"
+                  [size]="26"
+                ></app-user-avatar>
+                <span
+                  class="exp-avatar-name-bubble"
+                  [class.visible]="activeAvatarVoucherId === voucher.id"
+                >
+                  <app-user-avatar
+                    [name]="voucher.userDisplayName || voucher.createdByName || 'Former Member'"
+                    [photoUrl]="voucher.userPhotoURL || voucher.createdByPhotoURL"
+                    [size]="20"
+                  ></app-user-avatar>
+                  <span class="exp-avatar-name-bubble-text">{{ voucher.userDisplayName || voucher.createdByName || 'Former Member' }}</span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+      </div>
+      </div>
+    </div>
+    <!-- ── END VOUCHER LIST ── -->
+
+    <!-- ── PURCHASE LIST ── -->
+    <div class="exp-list-section">
+      <!-- List Header -->
+      <div class="exp-list-header">
+        <h3 class="exp-section-title">
+          <span class="exp-icon-badge exp-icon-badge-success">
+            <lucide-icon [img]="iconListChecks" [size]="16"></lucide-icon>
+          </span>
+          {{ "PURCHASE_YOUR_PURCHASES_TITLE" | translate }}
+        </h3>
+      </div>
+
+      <!-- Currency Totals -->
+      <div class="exp-totals-row">
+        <ng-container *ngIf="totalExpensesByCurrency$ | async as totals">
+          <ng-container
+            *ngIf="(totals | keyvalue).length > 0; else noTotalsForDate"
+          >
+            <lucide-icon [img]="iconCoins" [size]="16" class="exp-icon-warning"></lucide-icon>
+            <button
+              type="button"
+              class="exp-total-chip"
+              *ngFor="let total of totals | keyvalue; trackBy: trackByKey"
+              (click)="filterByCurrency(total.key)"
+            >
+              {{ "TOTAL_FOR_CURRENCY" | translate : { currency: total.key } }}:
+              <span class="exp-total-amt"
+                [innerHTML]="formatService.formatAmountWithSymbolHtml(total.value, total.key)"
+              ></span>
+            </button>
+          </ng-container>
+        </ng-container>
+      </div>
+
+      <!-- List Items -->
+      <div *ngIf="groupedExpenses$ | async as dateGroups; else loading">
+        <div *ngIf="dateGroups.length === 0" class="exp-empty-state">
+          <lucide-icon [img]="iconListChecks" [size]="34" class="exp-empty-state-icon"></lucide-icon>
+          <p>{{ "PURCHASE_NO_PURCHASES_HINT" | translate }}</p>
+        </div>
+
+        <div class="exp-date-list" *ngIf="dateGroups.length > 0">
+          <section
+            *ngFor="let group of dateGroups; trackBy: trackByGroupDate"
+            class="exp-date-group"
+          >
+            <div class="exp-date-group-header">
+              <span class="exp-date-label">
+                {{ formatService.formatLocalizedDate(group.date) }}
+              </span>
+              <span class="exp-date-count">
+                {{ "EXPENSE_GROUP_COUNT" | translate: { count: formatCount(group.count) } }}
+              </span>
+              <div class="exp-date-totals">
+                <span
+                  class="exp-date-total"
+                  *ngFor="let total of group.totalsByCurrency | keyvalue; trackBy: trackByKey"
+                  [innerHTML]="formatService.formatAmountWithSymbolHtml(total.value, total.key)"
+                ></span>
+              </div>
+            </div>
+
+            <div class="exp-list">
+              <div *ngFor="let expense of group.expenses; trackBy: trackByExpenseId" class="exp-item" [style.--cat-hue]="getIconHueForCategory(expense.category)">
+                <div class="exp-item-inner">
+                  <div class="exp-item-top">
+                    <ng-container *ngIf="expense.lineItems && expense.lineItems.length > 0; else singleItemName">
+                      <ng-container *ngIf="expense.lineItems.length > 1; else singleLineItemName">
+                        <button type="button" class="exp-item-name exp-lineitems-toggle" (click)="toggleLineItems(expense.id!)">
+                          {{ 'PURCHASE_ITEMS_COUNT' | translate: { count: formatCount(expense.lineItems.length) } }}
+                          <lucide-icon [img]="expandedExpenseId === expense.id ? iconChevronUp : iconChevronDown" [size]="12"></lucide-icon>
+                        </button>
+                      </ng-container>
+                      <ng-template #singleLineItemName>
+                        <span class="exp-item-name" appShowFullText>
+                          {{ getLineItemName(expense.lineItems[0]) }}
+                        </span>
+                      </ng-template>
+                    </ng-container>
+                    <ng-template #singleItemName>
+                      <span class="exp-item-name" appShowFullText>{{ expense.itemName }}</span>
+                    </ng-template>
+                    <span class="exp-item-amount"
+                      [innerHTML]="formatService.formatAmountWithSymbolHtml(expense.totalCost, expense.currency)"
+                    ></span>
+                  </div>
+
+                  <div class="exp-lineitems-detail" *ngIf="expense.lineItems && expense.lineItems.length > 1 && expandedExpenseId === expense.id">
+                    <div class="exp-lineitems-row" *ngFor="let item of expense.lineItems">
+                      <span class="exp-lineitems-name">{{ getLineItemName(item) }} × {{ formatCount(item.quantity) }}</span>
+                      <span [innerHTML]="formatService.formatAmountShortHtml(item.subtotal, expense.currency)"></span>
+                    </div>
+                  </div>
+
+                  <div class="exp-item-meta">
+                    <span class="exp-cat-badge" [style.--cat-hue]="getIconHueForCategory(expense.category)">
+                      <img *ngIf="getIconUrlForCategory(expense.category)" [src]="getIconUrlForCategory(expense.category)!" alt="" class="cat-img-icon" style="width:11px;height:11px" />
+                      <lucide-icon *ngIf="!getIconUrlForCategory(expense.category)" [img]="getIconForCategory(expense.category)" [size]="11" style="flex-shrink:0"></lucide-icon>
+                      <span class="exp-cat-badge-text">{{ expense.category }}</span>
+                    </span>
+                    <span
+                      *ngIf="expense.quantity && expense.quantity > 1"
+                      class="exp-meta-dot"
+                      >·</span
+                    >
+                    <span
+                      *ngIf="expense.quantity && expense.quantity > 1"
+                      class="exp-item-qty"
+                    >
+                      {{ formatLocalizedNumber(expense.quantity) }} {{ expense.unit
+                      }} &#64; <span [innerHTML]="formatService.formatAmountWithSymbolHtml(expense.price ?? 0, expense.currency)"></span>
+                    </span>
+                  </div>
+
+                  <div class="exp-item-actions">
+                    <div class="exp-item-actions-left">
+                      <!-- Editing a cart (lineItems-based) purchase is out of scope, even
+                           a single-item one — delete and re-enter it instead; the legacy
+                           edit form only has fields for the flat productId shape. -->
+                      <button
+                        *ngIf="!expense.lineItems || expense.lineItems.length === 0"
+                        class="exp-btn exp-btn-sm exp-btn-outline-info"
+                        (click)="startEdit(expense)"
+                      >
+                        <lucide-icon [img]="iconPen" [size]="16" class="fa-regular-icon fa-edit-btn"></lucide-icon>
+                        {{ "EDIT_BUTTON_LABEL" | translate }}
+                      </button>
+                      <button
+                        *ngIf="canManageExpenseRecords"
+                        class="exp-btn exp-btn-sm exp-btn-outline-danger"
+                        (click)="onDelete(expense.id!)"
+                      >
+                        <lucide-icon [img]="iconTrash2" [size]="16" class="fa-regular-icon fa-delete-btn"></lucide-icon>
+                      </button>
+                    </div>
+                    <div class="exp-info-avatar-row">
+                      <lucide-icon
+                        [img]="iconInfo"
+                        [size]="16"
+                        class="exp-info-icon"
+                        role="button"
+                        tabindex="0"
+                        (click)="showExpenseInfo(expense)"
+                        (keydown.enter)="showExpenseInfo(expense)"
+                        (keydown.space)="showExpenseInfo(expense); $event.preventDefault()"
+                        [title]="'EXPENSE_INFO_TITLE' | translate"
+                      ></lucide-icon>
+                      <div
+                        *ngIf="expense.userDisplayName"
+                        class="exp-avatar-btn"
+                        role="button"
+                        tabindex="0"
+                        (click)="toggleAvatarName(expense.id!, $event)"
+                        (keydown.enter)="toggleAvatarName(expense.id!, $event)"
+                        (keydown.space)="toggleAvatarName(expense.id!, $event); $event.preventDefault()"
+                      >
+                        <app-user-avatar
+                          [name]="expense.userDisplayName || expense.createdByName || 'Former Member'"
+                          [photoUrl]="expense.userPhotoURL || expense.createdByPhotoURL"
+                          [size]="26"
+                        ></app-user-avatar>
+                        <span
+                          class="exp-avatar-name-bubble"
+                          [class.visible]="activeAvatarExpenseId === expense.id"
+                        >
+                          <app-user-avatar
+                            [name]="expense.userDisplayName || expense.createdByName || 'Former Member'"
+                            [photoUrl]="expense.userPhotoURL || expense.createdByPhotoURL"
+                            [size]="20"
+                          ></app-user-avatar>
+                          <span class="exp-avatar-name-bubble-text">{{ expense.userDisplayName || expense.createdByName || 'Former Member' }}</span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <ng-template #loading>
+        <div class="exp-loading">
+          <div class="exp-spinner-sm"></div>
+        </div>
+      </ng-template>
+
+      <ng-template #noTotalsForDate>
+        <span class="exp-no-totals"
+          >{{ "NO_TOTALS_FOR_DATE" | translate }}</span
+        >
+      </ng-template>
+    </div>
+    <!-- ── END PURCHASE LIST ── -->
+  </div>
+</div>
+
+<!-- ── Edit/Voucher modal — legacy single-item purchase editing, or adding
+     a receipt voucher (the cart above is the real "Add Purchase" flow). ── -->
+<div class="exp-add-modal-backdrop" [class.open]="isAddModalOpen"></div>
+<div class="exp-add-modal-sheet" [class.open]="isAddModalOpen">
+  <div class="exp-add-modal-handle"></div>
+  <div class="exp-add-modal-header" *ngIf="!isCategoryPickerOpen && !isProductPickerOpen && !isDatePickerOpen">
+    <span class="exp-add-modal-header-title">
+      {{ 'EDIT_BUTTON_LABEL' | translate }}
+    </span>
+    <button type="button" class="exp-add-modal-close" (click)="closeAddModal()" [title]="'CANCEL_BUTTON_LABEL' | translate">
+      <lucide-icon [img]="iconX" [size]="18"></lucide-icon>
+    </button>
+  </div>
+
+  <!-- Category picker header — replaces the title while drilled in -->
+  <div class="exp-add-modal-header" *ngIf="isCategoryPickerOpen && categoryPickerTarget === 'edit'">
+    <button type="button" class="exp-add-modal-back" (click)="closeCategoryPicker()">
+      <lucide-icon [img]="iconChevronDown" [size]="18" class="exp-add-modal-back-icon"></lucide-icon>
+    </button>
+    <span class="exp-add-modal-header-title">{{ 'EXPENSE_CATEGORY_LABEL' | translate }}</span>
+    <button type="button" class="exp-add-modal-close" (click)="closeCategoryPicker()" [title]="'BACK_BUTTON' | translate">
+      <lucide-icon [img]="iconX" [size]="18"></lucide-icon>
+    </button>
+  </div>
+
+  <!-- Date picker header — replaces the title while drilled in -->
+  <div class="exp-add-modal-header" *ngIf="isDatePickerOpen && datePickerTarget === 'edit'">
+    <button type="button" class="exp-add-modal-back" (click)="closeDatePicker()">
+      <lucide-icon [img]="iconChevronDown" [size]="18" class="exp-add-modal-back-icon"></lucide-icon>
+    </button>
+    <span class="exp-add-modal-header-title">{{ 'EXPENSE_DATE_LABEL' | translate }}</span>
+    <button type="button" class="exp-add-modal-close" (click)="closeDatePicker()" [title]="'BACK_BUTTON' | translate">
+      <lucide-icon [img]="iconX" [size]="18"></lucide-icon>
+    </button>
+  </div>
+
+  <!-- Date picker body — inline flatpickr calendar, swaps in place of the form.
+       Uses flatpickr directly (same as the shared app-date-input component)
+       but with no separate backdrop/sheet/history-based close of its own —
+       it just swaps into this modal's own body. -->
+  <div class="exp-add-modal-body exp-date-picker-body" *ngIf="isDatePickerOpen && datePickerTarget === 'edit'">
+    <div id="exp-date-picker-container"></div>
+  </div>
+
+  <!-- Category picker body — search + list, swaps in place of the form -->
+  <div class="exp-add-modal-body exp-cat-picker-body" *ngIf="isCategoryPickerOpen && categoryPickerTarget === 'edit'">
+    <div class="exp-cat-picker-search">
+      <lucide-icon [img]="iconSearch" [size]="15" class="exp-cat-picker-search-icon"></lucide-icon>
+      <input
+        type="text"
+        [(ngModel)]="categoryPickerSearch"
+        [ngModelOptions]="{standalone: true}"
+        [placeholder]="'CUSTOM_SELECT_SEARCH' | translate"
+        class="exp-cat-picker-search-input"
+      />
+    </div>
+    <div class="exp-cat-picker-list">
+      <p class="exp-cat-picker-empty" *ngIf="filteredPickerCategories.length === 0">
+        {{ 'CUSTOM_SELECT_NO_RESULTS' | translate }}
+      </p>
+      <button
+        type="button"
+        class="exp-cat-picker-item"
+        *ngFor="let cat of filteredPickerCategories; trackBy: trackByCategoryId"
+        [style.--cat-hue]="getIconHueForCategory(cat.name)"
+        (click)="selectCategory(cat.name)"
+      >
+        <span class="exp-cat-picker-item-icon">
+          <img *ngIf="getIconUrlForCategory(cat.name)" [src]="getIconUrlForCategory(cat.name)!" alt="" class="cat-img-icon" style="width:15px;height:15px" />
+          <lucide-icon *ngIf="!getIconUrlForCategory(cat.name)" [img]="getIconForCategory(cat.name)" [size]="15"></lucide-icon>
+        </span>
+        <span class="exp-cat-picker-item-label">{{ cat.name }}</span>
+        <lucide-icon
+          *ngIf="newExpenseForm.get('category')?.value === cat.name"
+          [img]="iconCheck" [size]="16" class="exp-cat-picker-item-check">
+        </lucide-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- Product picker header — replaces the title while drilled in -->
+  <div class="exp-add-modal-header" *ngIf="isProductPickerOpen && productPickerMode !== 'cart'">
+    <button type="button" class="exp-add-modal-back" (click)="closeProductPicker()">
+      <lucide-icon [img]="iconChevronDown" [size]="18" class="exp-add-modal-back-icon"></lucide-icon>
+    </button>
+    <span class="exp-add-modal-header-title">{{ 'SELECT_PRODUCT' | translate }}</span>
+    <button type="button" class="exp-add-modal-close" (click)="closeProductPicker()" [title]="'BACK_BUTTON' | translate">
+      <lucide-icon [img]="iconX" [size]="18"></lucide-icon>
+    </button>
+  </div>
+
+  <!-- Product picker body — search + list, swaps in place of the form -->
+  <div class="exp-add-modal-body exp-cat-picker-body" *ngIf="isProductPickerOpen && productPickerMode !== 'cart'">
+    <div class="exp-cat-picker-search-row">
+      <div class="exp-cat-picker-search">
+        <lucide-icon [img]="iconSearch" [size]="15" class="exp-cat-picker-search-icon"></lucide-icon>
+        <input
+          type="text"
+          [(ngModel)]="productPickerSearch"
+          [ngModelOptions]="{standalone: true}"
+          [placeholder]="'CUSTOM_SELECT_SEARCH' | translate"
+          class="exp-cat-picker-search-input"
+        />
+      </div>
+      <button type="button" class="exp-cat-picker-add-btn" (click)="openProductModal()"
+        [title]="'ADD_PRODUCT_BTN' | translate">
+        <lucide-icon [img]="iconPlus" [size]="16"></lucide-icon>
+      </button>
+    </div>
+    <div class="exp-cat-picker-list">
+      <p class="exp-cat-picker-empty" *ngIf="filteredPickerProducts.length === 0">
+        {{ 'CUSTOM_SELECT_NO_RESULTS' | translate }}
+      </p>
+      <button
+        type="button"
+        class="exp-cat-picker-item"
+        *ngFor="let prod of filteredPickerProducts; trackBy: trackByProductId"
+        (click)="onPickProduct(prod)"
+      >
+        <span class="exp-cat-picker-item-icon">
+          <lucide-icon [img]="iconArchive" [size]="15"></lucide-icon>
+        </span>
+        <span class="exp-cat-picker-item-label">{{ prod.name }}</span>
+        <lucide-icon
+          *ngIf="newExpenseForm.get('productId')?.value === prod.id"
+          [img]="iconCheck" [size]="16" class="exp-cat-picker-item-check">
+        </lucide-icon>
+      </button>
+    </div>
+  </div>
+
+  <div class="exp-add-modal-body" *ngIf="!isCategoryPickerOpen && !isProductPickerOpen && !isDatePickerOpen">
+
+    <!-- Legacy single-item edit form -->
+    <form *ngIf="editingExpense" [formGroup]="newExpenseForm" (ngSubmit)="onSubmitNewExpense()" class="exp-form">
+      <div class="exp-mode-date-row exp-mode-date-row-solo">
+        <button type="button" class="exp-date-pill" (click)="openDatePicker('edit')">
+          <lucide-icon [img]="iconCalendarDays" [size]="13"></lucide-icon>
+          <span>{{ formatService.formatLocalizedDate(newExpenseForm.get('date')?.value) }}</span>
+        </button>
+      </div>
+
+      <!-- Category -->
+      <div class="exp-float-field exp-float-group">
+        <button type="button" class="exp-cat-select-trigger" (click)="openCategoryPicker('edit')">
+          <ng-container *ngIf="newExpenseForm.get('category')?.value as catVal; else catEditPlaceholder">
+            <span class="exp-cat-select-trigger-icon" [style.--cat-hue]="getIconHueForCategory(catVal)">
+              <img *ngIf="getIconUrlForCategory(catVal)" [src]="getIconUrlForCategory(catVal)!" alt="" class="cat-img-icon" style="width:100%;height:100%" />
+              <lucide-icon *ngIf="!getIconUrlForCategory(catVal)" [img]="getIconForCategory(catVal)" [size]="14"></lucide-icon>
+            </span>
+            <span class="exp-cat-select-trigger-value">{{ catVal }}</span>
+          </ng-container>
+          <ng-template #catEditPlaceholder>
+            <span class="exp-cat-select-trigger-placeholder">{{ 'EXPENSE_CATEGORY_LABEL' | translate }}</span>
+          </ng-template>
+          <lucide-icon [img]="iconChevronDown" [size]="14" class="exp-cat-select-trigger-chevron"></lucide-icon>
+        </button>
+        <button type="button" class="exp-addon-btn" (click)="openCategoryModal()" [title]="'EXPENSE_ADD_CATEGORY_BTN' | translate">
+          <lucide-icon [img]="iconPlus" [size]="16"></lucide-icon>
+        </button>
+      </div>
+
+      <!-- Product -->
+      <div class="exp-float-field exp-float-group">
+        <button type="button" class="exp-cat-select-trigger" (click)="openProductPicker('edit')">
+          <ng-container *ngIf="newExpenseForm.get('productId')?.value as prodId; else prodEditPlaceholder">
+            <span class="exp-cat-select-trigger-value">{{ getSelectedProductName(prodId) }}</span>
+          </ng-container>
+          <ng-template #prodEditPlaceholder>
+            <span class="exp-cat-select-trigger-placeholder">{{ 'SELECT_PRODUCT' | translate }}</span>
+          </ng-template>
+          <lucide-icon [img]="iconChevronDown" [size]="14" class="exp-cat-select-trigger-chevron"></lucide-icon>
+        </button>
+        <button type="button" class="exp-addon-btn" (click)="openProductModal()" [title]="'ADD_PRODUCT_BTN' | translate">
+          <lucide-icon [img]="iconPlus" [size]="16"></lucide-icon>
+        </button>
+      </div>
+      <div class="exp-field-error" *ngIf="newExpenseForm.controls['productId'].invalid && newExpenseForm.controls['productId'].touched">
+        {{ 'INCOME_PRODUCT_REQUIRED' | translate }}
+      </div>
+
+      <div class="exp-form-row exp-form-row-qty-unit">
+        <div class="exp-float-field">
+          <input type="number" class="exp-float-input full-form-quantity" id="edit-quantity" formControlName="quantity"
+            min="0.01" max="99999" step="0.01" [placeholder]="'QUANTITY_LABEL' | translate"
+            [class.is-invalid]="newExpenseForm.controls['quantity'].invalid && newExpenseForm.controls['quantity'].touched" />
+          <div class="exp-field-error" *ngIf="newExpenseForm.controls['quantity'].invalid && newExpenseForm.controls['quantity'].touched">
+            {{ 'QUANTITY_REQUIRED' | translate }}
+          </div>
+        </div>
+        <div class="exp-float-field">
+          <input type="text" class="exp-float-input full-form-unit" id="edit-unit" formControlName="unit"
+            [placeholder]="'EXPENSE_UNIT_LABEL' | translate" maxlength="20" />
+        </div>
+      </div>
+
+      <div class="exp-amount-hero exp-float-field exp-float-group">
+        <span class="exp-currency-badge exp-amount-hero-currency">{{ userProfile?.currency || 'MMK' }}</span>
+        <div class="exp-float-field" style="flex: 1; min-width: 0">
+          <input type="text" inputmode="decimal" class="exp-float-input exp-float-input-joined exp-amount-hero-input"
+            id="edit-price"
+            [value]="priceDisplayValue"
+            (input)="onPriceInput($event, newExpenseForm, 'price')"
+            (focus)="priceDisplayValue = (newExpenseForm.get('price')?.value > 0 ? formatWithCommas(newExpenseForm.get('price')?.value) : ''); newExpenseForm.get('price')?.markAsTouched()"
+            placeholder="10,000"
+            [class.is-invalid]="newExpenseForm.controls['price'].invalid && newExpenseForm.controls['price'].touched" />
+        </div>
+      </div>
+      <div class="exp-field-error" *ngIf="newExpenseForm.controls['price'].invalid && newExpenseForm.controls['price'].touched">
+        {{ 'PRICE_REQUIRED' | translate }}
+      </div>
+
+      <div class="exp-total-hint" *ngIf="fullFormTotal !== null">
+        {{ 'TOTAL_COST_LABEL' | translate }}:
+        <span class="exp-total-hint-amount">{{ formatWithCommas(fullFormTotal) }} {{ userProfile?.currency || 'MMK' }}</span>
+      </div>
+
+      <div class="exp-form-footer">
+        <button type="submit" class="exp-btn exp-btn-primary" [disabled]="newExpenseForm.invalid">
+          <lucide-icon [img]="iconSave" [size]="16"></lucide-icon>
+          {{ "SAVE_BUTTON_LABEL" | translate }}
+        </button>
+      </div>
+    </form>
+
+  </div>
+</div>
+
+<app-category-modal (categoryAdded)="loadCategories()"></app-category-modal>
+<app-product-modal (productAdded)="onProductModalAdded($event)"></app-product-modal>

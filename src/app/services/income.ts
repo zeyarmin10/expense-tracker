@@ -21,6 +21,15 @@ import { getActiveGroupId, UserDataService, UserProfile, PublicUserProfile } fro
 import { SpaceDataService } from './space-data.service';
 import { SpaceSwitchLoadingService } from './space-switch-loading.service';
 
+export interface IncomeLineItem {
+  productId: string;
+  productName: string;
+  unit?: string;
+  quantity: number;
+  unitPrice: number;
+  subtotal: number;
+}
+
 export interface ServiceIIncome {
   id?: string;
   date: string;
@@ -28,9 +37,13 @@ export interface ServiceIIncome {
   currency: string;
   description?: string;
   isProductSale?: boolean;
+  // Legacy single-item shape — still written/read for a plain "this sale is
+  // one product" entry. A POS cart checkout (2+ items) writes `lineItems`
+  // instead and leaves these three unset; see getIncomeLineItems() below.
   productId?: string;
   quantity?: number;
   unitPrice?: number;
+  lineItems?: IncomeLineItem[];
   userId?: string;
   groupId?: string;
   createdAt?: string;
@@ -38,6 +51,33 @@ export interface ServiceIIncome {
   createdByPhotoURL?: string | null;
   device: string;
   editedDevice?: string;
+}
+
+// Every product-sale consumer (stock/profit math, the shop dashboard's
+// rankings, the Recorded Sales list) should read through this instead of
+// `income.productId`/`quantity` directly — it's the one place that knows
+// about both the legacy single-item shape and the newer POS `lineItems`
+// array, so a sale's line items never need to be re-derived ad hoc.
+export function getIncomeLineItems(income: ServiceIIncome): IncomeLineItem[] {
+  if (income.lineItems && income.lineItems.length > 0) {
+    return income.lineItems;
+  }
+  if (income.isProductSale && income.productId) {
+    const quantity = Number(income.quantity) || 0;
+    const unitPrice = Number(income.unitPrice) || 0;
+    // amount is the one field a single-item sale has always reliably had —
+    // prefer it over quantity*unitPrice, which older records may not have
+    // consistently stored (matches the pre-lineItems revenue calculation).
+    const subtotal = Number(income.amount) || quantity * unitPrice;
+    return [{
+      productId: income.productId,
+      productName: '',
+      quantity,
+      unitPrice,
+      subtotal,
+    }];
+  }
+  return [];
 }
 
 @Injectable({

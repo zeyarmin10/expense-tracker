@@ -320,6 +320,20 @@ body.light-mode .inv-seg-btn.active {
   justify-content: flex-end;
 }
 
+.inv-scan-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--accent, #0b74ff);
+  cursor: pointer;
+}
+
 .inv-action-btn {
   display: flex;
   align-items: center;

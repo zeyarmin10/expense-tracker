@@ -64,6 +64,24 @@
               </label>
             </div>
           </div>
+          <div class="pd-form-row">
+            <div class="pd-fl-wrap">
+              <input
+                type="text"
+                class="pd-fl-input"
+                formControlName="barcode"
+                placeholder=" "
+                id="pdBarcodeInput"
+                autocomplete="off" />
+              <label class="pd-fl-label" for="pdBarcodeInput">
+                {{ 'PRODUCT_BARCODE_LABEL' | translate }}
+              </label>
+            </div>
+            <button type="button" class="pd-scan-btn" *ngIf="canScanBarcode" (click)="onScanBarcode()"
+              [attr.aria-label]="'SCAN_BARCODE_BUTTON' | translate" [title]="'SCAN_BARCODE_BUTTON' | translate">
+              <lucide-icon [img]="iconScanLine" [size]="18"></lucide-icon>
+            </button>
+          </div>
         </div>
         <div class="pd-modal-error" *ngIf="productForm.controls['name'].touched && productForm.controls['name'].errors?.['required']">
           {{ 'PRODUCT_NAME_REQUIRED' | translate }}

@@ -45,6 +45,18 @@ export interface IEditHistoryEntry {
   };
 }
 
+// A POS-cart purchase (2+ products bought in one visit) writes `lineItems`
+// on the parent DataIExpense and leaves productId/quantity/price/itemName
+// unset — mirrors IncomeLineItem/ServiceIIncome.lineItems on the sales side.
+export interface ExpenseLineItem {
+  productId: string;
+  productName: string;
+  unit?: string;
+  quantity: number;
+  price: number;
+  subtotal: number;
+}
+
 export interface DataIExpense {
   id?: string;
   date: string;
@@ -52,12 +64,15 @@ export interface DataIExpense {
   categoryId?: string;
   productId?: string;
   itemName: string;
-  quantity: number;
+  // Unset (with lineItems populated instead) for a multi-item POS-style
+  // purchase — a single quantity/price pair only ever describes ONE line.
+  quantity?: number;
   unit?: string;
-  price: number;
+  price?: number;
   totalCost?: number;
   currency: string;
   description?: string;
+  lineItems?: ExpenseLineItem[];
   // Tracking
   userId?: string;         // createdById
   createdByName?: string;  // Creator's name at creation time

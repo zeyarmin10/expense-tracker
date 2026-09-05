@@ -25,6 +25,9 @@ export interface ServiceIProduct {
   // Default selling price — set at creation (or edited later) so the Sales
   // form can auto-fill Unit Price the moment this product is picked.
   sellingPrice?: number;
+  // Scanned/typed once at creation (or edited later) — looked up by the POS
+  // cart's barcode scanner to find which product was just scanned.
+  barcode?: string;
   userId?: string;
   groupId?: string;
   createdAt?: string;
@@ -39,6 +42,8 @@ export function getProductErrorMessage(error: any): string | null {
   switch (error?.message) {
     case 'Product name already exists.':
       return 'PRODUCT_ALREADY_EXISTS';
+    case 'Barcode already in use.':
+      return 'PRODUCT_BARCODE_ALREADY_EXISTS';
     default:
       return null;
   }
@@ -98,7 +103,45 @@ export class ProductService {
     }
   }
 
-  async addProduct(name: string, unit?: string, sellingPrice?: number): Promise<void> {
+  // A shared barcode across two products would make the POS scanner add the
+  // wrong item, so this is checked the same way name uniqueness already is.
+  private async assertBarcodeAvailable(
+    trimmedBarcode: string,
+    excludeProductId?: string,
+  ): Promise<void> {
+    const existingProducts = await firstValueFrom(this.getProducts().pipe(take(1)));
+    const isDuplicate = existingProducts.some(
+      (product) =>
+        product.id !== excludeProductId &&
+        !!product.barcode &&
+        product.barcode === trimmedBarcode,
+    );
+    if (isDuplicate) {
+      throw new Error('Barcode already in use.');
+    }
+  }
+
+  async getProductByBarcode(barcode: string): Promise<ServiceIProduct | null> {
+    const trimmedBarcode = barcode.trim();
+    if (!trimmedBarcode) {
+      return null;
+    }
+    const profile = await firstValueFrom(this.authService.userProfile$) as UserProfile | null;
+    if (!profile?.uid) {
+      throw new Error('User not authenticated.');
+    }
+    const { canonicalRef, legacyRef } = await this.spaceDataService.getActiveCollectionContext(profile, 'products');
+    const productsRef = canonicalRef || legacyRef;
+    const snapshot = await get(query(productsRef, orderByChild('barcode'), equalTo(trimmedBarcode)));
+    if (!snapshot.exists()) {
+      return null;
+    }
+    const val = snapshot.val() as Record<string, Omit<ServiceIProduct, 'id'>>;
+    const [id, product] = Object.entries(val)[0];
+    return { id, ...product };
+  }
+
+  async addProduct(name: string, unit?: string, sellingPrice?: number, barcode?: string): Promise<void> {
     const profile = await firstValueFrom(this.authService.userProfile$) as UserProfile | null;
     if (!profile?.uid) {
       throw new Error('User not authenticated.');
@@ -106,11 +149,16 @@ export class ProductService {
 
     const trimmedName = name.trim();
     await this.assertProductNameAvailable(trimmedName);
+    const trimmedBarcode = barcode?.trim();
+    if (trimmedBarcode) {
+      await this.assertBarcodeAvailable(trimmedBarcode);
+    }
 
     const newProduct: Omit<ServiceIProduct, 'id'> = {
       name: trimmedName,
       ...(unit ? { unit: unit.trim() } : {}),
       ...(sellingPrice && sellingPrice > 0 ? { sellingPrice } : {}),
+      ...(trimmedBarcode ? { barcode: trimmedBarcode } : {}),
       createdAt: new Date().toISOString(),
     };
 
@@ -126,7 +174,13 @@ export class ProductService {
     await push(productsRef, newProduct);
   }
 
-  async updateProduct(productId: string, newName: string, unit?: string, sellingPrice?: number | null): Promise<void> {
+  async updateProduct(
+    productId: string,
+    newName: string,
+    unit?: string,
+    sellingPrice?: number | null,
+    barcode?: string | null,
+  ): Promise<void> {
     const profile = await firstValueFrom(this.authService.userProfile$) as UserProfile | null;
     if (!profile?.uid) {
       throw new Error('User not authenticated.');
@@ -146,8 +200,12 @@ export class ProductService {
 
     const trimmedNewName = newName.trim();
     await this.assertProductNameAvailable(trimmedNewName, productId);
+    const trimmedBarcode = barcode?.trim();
+    if (trimmedBarcode) {
+      await this.assertBarcodeAvailable(trimmedBarcode, productId);
+    }
 
-    const updateData: { name: string; unit?: string; sellingPrice?: number | null } = { name: trimmedNewName };
+    const updateData: { name: string; unit?: string; sellingPrice?: number | null; barcode?: string | null } = { name: trimmedNewName };
     if (unit !== undefined) {
       updateData.unit = unit.trim();
     }
@@ -155,6 +213,9 @@ export class ProductService {
       // Firebase RTDB removes the key when set to null — used to clear a
       // previously-set selling price.
       updateData.sellingPrice = sellingPrice && sellingPrice > 0 ? sellingPrice : null;
+    }
+    if (barcode !== undefined) {
+      updateData.barcode = trimmedBarcode || null;
     }
     await update(productRef, updateData);
   }

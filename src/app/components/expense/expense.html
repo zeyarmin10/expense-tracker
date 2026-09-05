@@ -6,14 +6,14 @@
 <div class="exp-wrapper">
   <div class="exp-container mb-12">
     <!-- ── ADD (FAB + Bottom-sheet Modal) ── -->
-    <button type="button" class="exp-add-fab" (click)="openAddModal('expense')" [title]="(inventoryEnabled ? 'PURCHASE_ADD_TITLE' : 'EXPENSE_ADD_TITLE') | translate">
+    <button type="button" class="exp-add-fab" (click)="openAddModal('expense')" [title]="'EXPENSE_ADD_TITLE' | translate">
       <lucide-icon [img]="iconPlus" [size]="26"></lucide-icon>
     </button>
 
     <div class="exp-add-modal-backdrop" [class.open]="isAddModalOpen"></div>
     <div class="exp-add-modal-sheet" [class.open]="isAddModalOpen">
       <div class="exp-add-modal-handle"></div>
-      <div class="exp-add-modal-header" *ngIf="!isCategoryPickerOpen && !isProductPickerOpen && !isDatePickerOpen">
+      <div class="exp-add-modal-header" *ngIf="!isCategoryPickerOpen && !isDatePickerOpen">
         <!-- Edit mode: plain title instead of the add/voucher tabs -->
         <span class="exp-add-modal-header-title" *ngIf="editingExpense">
           {{ 'EDIT_BUTTON_LABEL' | translate }}
@@ -27,7 +27,7 @@
             ></span>
             <button type="button" class="exp-seg-btn" [class.active]="addModalTab === 'expense'" (click)="setAddModalTab('expense')">
               <lucide-icon [img]="iconWallet" [size]="13"></lucide-icon>
-              {{ (inventoryEnabled ? "PURCHASE_ADD_TITLE" : "EXPENSE_ADD_TITLE") | translate }}
+              {{ "EXPENSE_ADD_TITLE" | translate }}
             </button>
             <button type="button" class="exp-seg-btn" [class.active]="addModalTab === 'voucher'" (click)="setAddModalTab('voucher')">
               <lucide-icon [img]="iconReceipt" [size]="13"></lucide-icon>
@@ -119,64 +119,7 @@
         </div>
       </div>
 
-      <!-- Product picker header — replaces the tabs while drilled in -->
-      <div class="exp-add-modal-header" *ngIf="isProductPickerOpen">
-        <button type="button" class="exp-add-modal-back" (click)="closeProductPicker()">
-          <lucide-icon [img]="iconChevronDown" [size]="18" class="exp-add-modal-back-icon"></lucide-icon>
-        </button>
-        <span class="exp-add-modal-header-title">{{ 'SELECT_PRODUCT' | translate }}</span>
-        <button type="button" class="exp-add-modal-close" (click)="closeProductPicker()" [title]="'BACK_BUTTON' | translate">
-          <lucide-icon [img]="iconX" [size]="18"></lucide-icon>
-        </button>
-      </div>
-
-      <!-- Product picker body — search + list, swaps in place of the form -->
-      <div class="exp-add-modal-body exp-cat-picker-body" *ngIf="isProductPickerOpen">
-        <div class="exp-cat-picker-search">
-          <lucide-icon [img]="iconSearch" [size]="15" class="exp-cat-picker-search-icon"></lucide-icon>
-          <input
-            type="text"
-            [(ngModel)]="productPickerSearch"
-            [ngModelOptions]="{standalone: true}"
-            [placeholder]="'CUSTOM_SELECT_SEARCH' | translate"
-            class="exp-cat-picker-search-input"
-          />
-        </div>
-        <div class="exp-cat-picker-list">
-          <button
-            type="button"
-            class="exp-cat-picker-item"
-            *ngIf="!productPickerSearch"
-            (click)="selectProduct(null)"
-          >
-            <span class="exp-cat-picker-item-label">{{ 'OPTIONAL' | translate }}</span>
-            <lucide-icon
-              *ngIf="!newExpenseForm.get('productId')?.value"
-              [img]="iconCheck" [size]="16" class="exp-cat-picker-item-check">
-            </lucide-icon>
-          </button>
-          <p class="exp-cat-picker-empty" *ngIf="filteredPickerProducts.length === 0">
-            {{ 'CUSTOM_SELECT_NO_RESULTS' | translate }}
-          </p>
-          <button
-            type="button"
-            class="exp-cat-picker-item"
-            *ngFor="let prod of filteredPickerProducts; trackBy: trackByProductId"
-            (click)="selectProduct(prod)"
-          >
-            <span class="exp-cat-picker-item-icon">
-              <lucide-icon [img]="iconArchive" [size]="15"></lucide-icon>
-            </span>
-            <span class="exp-cat-picker-item-label">{{ prod.name }}</span>
-            <lucide-icon
-              *ngIf="newExpenseForm.get('productId')?.value === prod.id"
-              [img]="iconCheck" [size]="16" class="exp-cat-picker-item-check">
-            </lucide-icon>
-          </button>
-        </div>
-      </div>
-
-      <div class="exp-add-modal-body" *ngIf="!isCategoryPickerOpen && !isProductPickerOpen && !isDatePickerOpen">
+      <div class="exp-add-modal-body" *ngIf="!isCategoryPickerOpen && !isDatePickerOpen">
         <ng-container *ngIf="addModalTab === 'expense'">
 
         <form
@@ -256,30 +199,8 @@
               </button>
             </div>
 
-            <!-- Product (optional, only when the mini inventory feature is on) -->
-            <div class="exp-float-field exp-float-group" *ngIf="inventoryEnabled$ | async">
-              <button type="button" class="exp-cat-select-trigger" (click)="openProductPicker()">
-                <ng-container *ngIf="newExpenseForm.get('productId')?.value as prodId; else prodQuickPlaceholder">
-                  <span class="exp-cat-select-trigger-value">{{ getSelectedProductName(prodId) }}</span>
-                </ng-container>
-                <ng-template #prodQuickPlaceholder>
-                  <span class="exp-cat-select-trigger-placeholder">{{ inventoryEnabled ? ('SELECT_PRODUCT' | translate) : (('SELECT_PRODUCT' | translate) + ' (' + ('OPTIONAL' | translate) + ')') }}</span>
-                </ng-template>
-                <lucide-icon [img]="iconChevronDown" [size]="14" class="exp-cat-select-trigger-chevron"></lucide-icon>
-              </button>
-              <button
-                type="button"
-                class="exp-addon-btn"
-                (click)="openProductModal()"
-                [title]="'ADD_PRODUCT_BTN' | translate"
-              >
-                <lucide-icon [img]="iconPlus" [size]="16"></lucide-icon>
-              </button>
-            </div>
-
-            <!-- Item Name (optional; hidden in shop mode, where the required
-                 product selection above already identifies what was bought) -->
-            <div class="exp-float-field" *ngIf="!inventoryEnabled">
+            <!-- Item Name (optional) -->
+            <div class="exp-float-field">
               <input
                 type="text"
                 class="exp-float-input"
@@ -320,30 +241,8 @@
               </button>
             </div>
 
-            <!-- Product (optional, only when the mini inventory feature is on) -->
-            <div class="exp-float-field exp-float-group" *ngIf="inventoryEnabled$ | async">
-              <button type="button" class="exp-cat-select-trigger" (click)="openProductPicker()">
-                <ng-container *ngIf="newExpenseForm.get('productId')?.value as prodId; else prodFullPlaceholder">
-                  <span class="exp-cat-select-trigger-value">{{ getSelectedProductName(prodId) }}</span>
-                </ng-container>
-                <ng-template #prodFullPlaceholder>
-                  <span class="exp-cat-select-trigger-placeholder">{{ inventoryEnabled ? ('SELECT_PRODUCT' | translate) : (('SELECT_PRODUCT' | translate) + ' (' + ('OPTIONAL' | translate) + ')') }}</span>
-                </ng-template>
-                <lucide-icon [img]="iconChevronDown" [size]="14" class="exp-cat-select-trigger-chevron"></lucide-icon>
-              </button>
-              <button
-                type="button"
-                class="exp-addon-btn"
-                (click)="openProductModal()"
-                [title]="'ADD_PRODUCT_BTN' | translate"
-              >
-                <lucide-icon [img]="iconPlus" [size]="16"></lucide-icon>
-              </button>
-            </div>
-
-            <!-- Item Name (optional; hidden in shop mode, where the required
-                 product selection above already identifies what was bought) -->
-            <div class="exp-float-field" *ngIf="!inventoryEnabled">
+            <!-- Item Name (optional) -->
+            <div class="exp-float-field">
               <input
                 type="text"
                 class="exp-float-input full-form-item-name"
@@ -619,7 +518,7 @@
           (click)="openAddModal('expense')"
         >
           <lucide-icon [img]="iconPlus" [size]="15"></lucide-icon>
-          {{ (inventoryEnabled ? 'PURCHASE_ADD_TITLE' : 'EXPENSE_ADD_TITLE') | translate }}
+          {{ 'EXPENSE_ADD_TITLE' | translate }}
         </button>
       </div>
 
@@ -777,7 +676,7 @@
           <span class="exp-icon-badge exp-icon-badge-success">
             <lucide-icon [img]="iconListChecks" [size]="16"></lucide-icon>
           </span>
-          {{ (inventoryEnabled ? "PURCHASE_YOUR_PURCHASES_TITLE" : "EXPENSE_YOUR_EXPENSES_TITLE") | translate }}
+          {{ "EXPENSE_YOUR_EXPENSES_TITLE" | translate }}
         </h3>
       </div>
 
@@ -807,7 +706,7 @@
       <div *ngIf="groupedExpenses$ | async as dateGroups; else loading">
         <div *ngIf="dateGroups.length === 0" class="exp-empty-state">
           <lucide-icon [img]="iconListChecks" [size]="34" class="exp-empty-state-icon"></lucide-icon>
-          <p>{{ (inventoryEnabled ? "PURCHASE_NO_PURCHASES_HINT" : "EXPENSE_NO_EXPENSES_HINT") | translate }}</p>
+          <p>{{ "EXPENSE_NO_EXPENSES_HINT" | translate }}</p>
         </div>
 
         <div class="exp-date-list" *ngIf="dateGroups.length > 0">
@@ -857,7 +756,7 @@
                       class="exp-item-qty"
                     >
                       {{ formatLocalizedNumber(expense.quantity) }} {{ expense.unit
-                      }} &#64; <span [innerHTML]="formatService.formatAmountWithSymbolHtml(expense.price, expense.currency)"></span>
+                      }} &#64; <span [innerHTML]="formatService.formatAmountWithSymbolHtml(expense.price ?? 0, expense.currency)"></span>
                     </span>
                   </div>
 
@@ -942,5 +841,4 @@
 </div>
 
 <app-category-modal (categoryAdded)="loadCategories()"></app-category-modal>
-<app-product-modal *ngIf="inventoryEnabled$ | async" (productAdded)="loadProducts()"></app-product-modal>
 <app-lightbox></app-lightbox>

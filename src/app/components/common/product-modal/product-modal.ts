@@ -1,9 +1,10 @@
 import { Component, EventEmitter, OnInit, OnDestroy, Output, inject, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ProductService, ServiceIProduct, getProductErrorMessage } from '../../../services/product';
+import { BarcodeScannerService } from '../../../services/barcode-scanner.service';
 import { CommonModule } from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { LucideAngularModule, X, Plus, Package, Trash2 } from 'lucide-angular';
+import { LucideAngularModule, X, Plus, Package, Trash2, ScanLine } from 'lucide-angular';
 import { meaningfulTextValidator } from '../../../utils/form-validators';
 import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import Swal from 'sweetalert2';
@@ -30,12 +31,17 @@ const Toast = Swal.mixin({
   styleUrls: ['./product-modal.css']
 })
 export class ProductModalComponent implements OnInit, OnDestroy {
-  @Output() productAdded = new EventEmitter<void>();
+  // Emits the newly created product — lets a caller with an open cart
+  // (Sales/Purchase) add it straight in, e.g. after a scan-miss offers to
+  // create the product on the spot. Callers that only refresh their own
+  // product list on this event can keep ignoring the payload.
+  @Output() productAdded = new EventEmitter<ServiceIProduct>();
 
   productForm: FormGroup;
   productService = inject(ProductService);
   translateService = inject(TranslateService);
   private cdr = inject(ChangeDetectorRef);
+  private barcodeScanner = inject(BarcodeScannerService);
 
   products: ServiceIProduct[] = [];
   isModalOpen = false;
@@ -47,6 +53,8 @@ export class ProductModalComponent implements OnInit, OnDestroy {
   readonly iconPlus = Plus;
   readonly iconPackage = Package;
   readonly iconTrash2 = Trash2;
+  readonly iconScanLine = ScanLine;
+  readonly canScanBarcode = this.barcodeScanner.isSupported();
 
   trackByProductId(index: number, product: ServiceIProduct): string {
     return product.id ?? String(index);
@@ -73,7 +81,20 @@ export class ProductModalComponent implements OnInit, OnDestroy {
       name: ['', [Validators.required, Validators.maxLength(100), meaningfulTextValidator]],
       unit: ['', Validators.maxLength(20)],
       sellingPrice: ['', Validators.min(0.01)],
+      barcode: [''],
     });
+  }
+
+  async onScanBarcode(): Promise<void> {
+    try {
+      const scanned = await this.barcodeScanner.scan();
+      if (scanned) {
+        this.productForm.get('barcode')?.setValue(scanned);
+      }
+    } catch (error: any) {
+      const key = error?.message === 'Camera permission denied.' ? 'PERMISSION_CAMERA_DENIED' : 'DATA_LOAD_ERROR';
+      Toast.fire({ icon: 'error', title: this.translateService.instant(key) });
+    }
   }
 
   ngOnInit(): void {
@@ -91,9 +112,15 @@ export class ProductModalComponent implements OnInit, OnDestroy {
     document.body.classList.remove('pd-modal-open');
   }
 
-  async open(): Promise<void> {
+  // `prefillBarcode` seeds the barcode field — used when a Sales/Purchase
+  // cart's scan misses (no matching product) and offers to create one on
+  // the spot with the scanned code already filled in.
+  async open(prefillBarcode?: string): Promise<void> {
     await this.loadProducts();
     this.resetForm();
+    if (prefillBarcode) {
+      this.productForm.get('barcode')?.setValue(prefillBarcode);
+    }
     this.isModalOpen = true;
     document.body.classList.add('pd-modal-open');
     this.cdr.detectChanges();
@@ -134,13 +161,22 @@ export class ProductModalComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const { name, unit, sellingPrice } = this.productForm.value;
+    const { name, unit, sellingPrice, barcode } = this.productForm.value;
+    const trimmedBarcode = barcode || undefined;
 
     try {
-      await this.productService.addProduct(name, unit || undefined, Number(sellingPrice) || undefined);
+      await this.productService.addProduct(name, unit || undefined, Number(sellingPrice) || undefined, trimmedBarcode);
       Toast.fire({ icon: 'success', title: this.translateService.instant('PRODUCT_ADDED_SUCCESS') });
       await this.loadProducts();
-      this.productAdded.emit();
+      // addProduct() only returns void — read the just-created record back
+      // by barcode (or by name, when it wasn't scanned) so it can be handed
+      // to a caller's open cart.
+      const created = trimmedBarcode
+        ? this.products.find((p) => p.barcode === trimmedBarcode)
+        : this.products.find((p) => p.name === name.trim());
+      if (created) {
+        this.productAdded.emit(created);
+      }
       this.resetForm();
       this.closeModal();
     } catch (error: any) {

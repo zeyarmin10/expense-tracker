@@ -49,12 +49,12 @@ export const routes: Routes = [
       },
       {
         path: 'purchase',
-        loadComponent: () => import('./components/expense/expense').then((m) => m.Expense),
+        loadComponent: () => import('./components/purchase/purchase').then((m) => m.Purchase),
         data: { titleKey: 'PURCHASE_ADD_TITLE' },
       },
       {
         path: 'sales',
-        loadComponent: () => import('./components/profit/profit').then((m) => m.Profit),
+        loadComponent: () => import('./components/sales/sales').then((m) => m.Sales),
         data: { titleKey: 'SALES_ADD_TITLE' },
       },
       {

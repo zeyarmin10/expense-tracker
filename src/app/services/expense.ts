@@ -17,7 +17,7 @@ import {
 } from '@angular/fire/database';
 import { Observable, Subject, from, of, firstValueFrom } from 'rxjs';
 import { map, switchMap, catchError, filter } from 'rxjs/operators';
-import { DataIExpense as IExpense } from '../core/models/data';
+import { DataIExpense as IExpense, ExpenseLineItem } from '../core/models/data';
 import { AuthService } from './auth';
 import { UAParser } from 'ua-parser-js';
 import { getActiveGroupId, UserDataService, UserProfile, PublicUserProfile } from './user-data';
@@ -25,8 +25,8 @@ import { SpaceContextService } from './space-context.service';
 import { SpaceDataService } from './space-data.service';
 import { SpaceSwitchLoadingService } from './space-switch-loading.service';
 
-export type ServiceIExpense = IExpense & { 
-  id: string; 
+export type ServiceIExpense = IExpense & {
+  id: string;
   unit?: string;
   totalCost: number;
   updatedByName?: string;
@@ -36,6 +36,33 @@ export type ServiceIExpense = IExpense & {
   userDisplayName?: string;
   userPhotoURL?: string | null;
 };
+
+export type { ExpenseLineItem };
+
+// Every product-purchase consumer (stock/profit math, a multi-item Recorded
+// Purchases row) should read through this instead of `expense.productId`/
+// `quantity`/`price` directly — mirrors getIncomeLineItems() in income.ts.
+export function getExpenseLineItems(expense: ServiceIExpense): ExpenseLineItem[] {
+  if (expense.lineItems && expense.lineItems.length > 0) {
+    return expense.lineItems;
+  }
+  if (expense.productId) {
+    const quantity = Number(expense.quantity) || 0;
+    const price = Number(expense.price) || 0;
+    // totalCost is the one field a single-item purchase has always
+    // reliably had — prefer it over quantity*price, matching the same
+    // reasoning as getIncomeLineItems()'s amount fallback.
+    const subtotal = Number(expense.totalCost) || quantity * price;
+    return [{
+      productId: expense.productId,
+      productName: '',
+      quantity,
+      price,
+      subtotal,
+    }];
+  }
+  return [];
+}
 
 @Injectable({
   providedIn: 'root',
@@ -182,7 +209,9 @@ export class ExpenseService {
               return {
                 id: key,
                 ...expense,
-                totalCost: expense.quantity * expense.price,
+                totalCost: expense.lineItems?.length
+                  ? (expense.totalCost ?? expense.lineItems.reduce((sum, item) => sum + item.subtotal, 0))
+                  : (expense.quantity ?? 0) * (expense.price ?? 0),
                 createdByName,
                 createdByPhotoURL,
                 updatedByName: updatedByName,
@@ -224,7 +253,9 @@ export class ExpenseService {
     const result = parser.getResult();
     const device = `${result.browser.name} on ${result.os.name}, Model: ${result.device.model || 'Unknown'} (${result.device.vendor || 'Unknown'})`;
 
-    const totalCost = expenseData.quantity * expenseData.price;
+    const totalCost = expenseData.lineItems?.length
+      ? expenseData.lineItems.reduce((sum, item) => sum + item.subtotal, 0)
+      : (expenseData.quantity ?? 0) * (expenseData.price ?? 0);
     let currency: string;
     let expensesRef: DatabaseReference;
 
@@ -312,7 +343,7 @@ export class ExpenseService {
       editedDevice: editedDevice,
       updatedBy: profile.uid,
       updatedByPhotoURL: this.getProfilePhotoURL(profile) || currentUser?.photoURL || null,
-      totalCost: quantity * price,
+      totalCost: (quantity ?? 0) * (price ?? 0),
     };
 
     // ── Step 1: main fields update ──
@@ -405,7 +436,9 @@ export class ExpenseService {
                   resolve({
                     id: snapshot.key!,
                     ...expense,
-                    totalCost: expense.quantity * expense.price,
+                    totalCost: expense.lineItems?.length
+                      ? (expense.totalCost ?? expense.lineItems.reduce((sum, item) => sum + item.subtotal, 0))
+                      : (expense.quantity ?? 0) * (expense.price ?? 0),
                     createdByName: createdByName || 'Former Member',
                     createdByPhotoURL,
                     updatedByName: updatedByName,

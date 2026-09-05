@@ -167,7 +167,7 @@
         },
 
         "products": {
-          ".indexOn": "name"
+          ".indexOn": ["name", "barcode"]
         }
       }
     },
@@ -231,7 +231,7 @@
         },
 
         "products": {
-          ".indexOn": "name"
+          ".indexOn": ["name", "barcode"]
         }
       }
     },

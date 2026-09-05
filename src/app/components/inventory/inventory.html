@@ -37,6 +37,14 @@
               [value]="sellingPriceDisplay" (input)="onSellingPriceInput($event)"
               [placeholder]="'PRODUCT_SELLING_PRICE_LABEL' | translate" />
           </div>
+          <div class="inv-add-form-row2">
+            <input type="text" class="inv-input" formControlName="barcode" autocomplete="off"
+              [placeholder]="'PRODUCT_BARCODE_LABEL' | translate" />
+            <button type="button" class="inv-scan-btn" *ngIf="canScanBarcode" (click)="onScanBarcode()"
+              [attr.aria-label]="'SCAN_BARCODE_BUTTON' | translate" [title]="'SCAN_BARCODE_BUTTON' | translate">
+              <lucide-icon [img]="iconScanLine" [size]="18"></lucide-icon>
+            </button>
+          </div>
         </div>
         <button type="submit" class="inv-add-btn" [disabled]="addProductForm.invalid">
           <lucide-icon [img]="iconPlus" [size]="18"></lucide-icon>
@@ -89,6 +97,14 @@
                   <input type="text" inputmode="decimal" class="inv-input inv-edit-input inv-input-price"
                     [value]="editingSellingPriceDisplay" (input)="onEditingSellingPriceInput($event)"
                     [placeholder]="'PRODUCT_SELLING_PRICE_LABEL' | translate" />
+                </div>
+                <div class="inv-edit-row-fields-2">
+                  <input type="text" class="inv-input inv-edit-input" [formControl]="editingBarcodeControl!"
+                    [placeholder]="'PRODUCT_BARCODE_LABEL' | translate" />
+                  <button type="button" class="inv-scan-btn" *ngIf="canScanBarcode" (click)="onScanBarcodeForEdit()"
+                    [attr.aria-label]="'SCAN_BARCODE_BUTTON' | translate" [title]="'SCAN_BARCODE_BUTTON' | translate">
+                    <lucide-icon [img]="iconScanLine" [size]="18"></lucide-icon>
+                  </button>
                 </div>
                 <div class="inv-product-actions inv-edit-actions">
                   <button type="button" class="inv-action-btn inv-action-save" (click)="onUpdateInline(product.id!)"

@@ -12,6 +12,7 @@ import { Router } from '@angular/router';
 import { Observable, BehaviorSubject, Subject, firstValueFrom, of } from 'rxjs';
 import { switchMap, takeUntil } from 'rxjs/operators';
 import { ProductService, ServiceIProduct, getProductErrorMessage } from '../../services/product';
+import { BarcodeScannerService } from '../../services/barcode-scanner.service';
 import { ExpenseService } from '../../services/expense';
 import { IncomeService } from '../../services/income';
 import { InventoryService, ProductStockSummary } from '../../services/inventory.service';
@@ -23,7 +24,7 @@ import { FormatService } from '../../services/format.service';
 import { meaningfulTextValidator } from '../../utils/form-validators';
 import {
   LucideAngularModule, Package, Plus, Pencil, Trash2, X, Save, TriangleAlert,
-  ChevronDown, ChevronUp,
+  ChevronDown, ChevronUp, ScanLine,
 } from 'lucide-angular';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import Swal from 'sweetalert2';
@@ -57,6 +58,7 @@ export class Inventory implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private spaceContextService = inject(SpaceContextService);
   private dataManager = inject(DataManagerService);
+  private barcodeScanner = inject(BarcodeScannerService);
   public formatService = inject(FormatService);
   private translateService = inject(TranslateService);
   private cdr = inject(ChangeDetectorRef);
@@ -72,6 +74,10 @@ export class Inventory implements OnInit, OnDestroy {
   readonly iconWarning = TriangleAlert;
   readonly iconChevronDown = ChevronDown;
   readonly iconChevronUp = ChevronUp;
+  readonly iconScanLine = ScanLine;
+
+  // Only native builds can actually scan — the button hides on web/dev.
+  readonly canScanBarcode = this.barcodeScanner.isSupported();
 
   activeTab: 'products' | 'stock' = 'products';
   currency = 'MMK';
@@ -87,6 +93,7 @@ export class Inventory implements OnInit, OnDestroy {
   editingNameControl: FormControl | null = null;
   editingUnitControl: FormControl | null = null;
   editingSellingPriceControl: FormControl | null = null;
+  editingBarcodeControl: FormControl | null = null;
 
   // Selling price inputs are plain text (not type="number") so there's no
   // native spin-button — same comma-formatted, digits-only pattern used for
@@ -144,7 +151,35 @@ export class Inventory implements OnInit, OnDestroy {
       unit: ['', Validators.maxLength(20)],
       // Optional — settable now or later via inline edit, since prices change.
       sellingPrice: ['', Validators.min(0.01)],
+      barcode: [''],
     });
+  }
+
+  async onScanBarcode(): Promise<void> {
+    try {
+      const scanned = await this.barcodeScanner.scan();
+      if (scanned) {
+        this.addProductForm.get('barcode')?.setValue(scanned);
+      }
+    } catch (error: any) {
+      this.showBarcodeScanError(error);
+    }
+  }
+
+  async onScanBarcodeForEdit(): Promise<void> {
+    try {
+      const scanned = await this.barcodeScanner.scan();
+      if (scanned) {
+        this.editingBarcodeControl?.setValue(scanned);
+      }
+    } catch (error: any) {
+      this.showBarcodeScanError(error);
+    }
+  }
+
+  private showBarcodeScanError(error: any): void {
+    const key = error?.message === 'Camera permission denied.' ? 'PERMISSION_CAMERA_DENIED' : 'DATA_LOAD_ERROR';
+    Toast.fire({ icon: 'error', title: this.translateService.instant(key) });
   }
 
   ngOnInit(): void {
@@ -258,9 +293,9 @@ export class Inventory implements OnInit, OnDestroy {
       return;
     }
 
-    const { name, unit, sellingPrice } = this.addProductForm.value;
+    const { name, unit, sellingPrice, barcode } = this.addProductForm.value;
     try {
-      await this.productService.addProduct(name, unit || undefined, Number(sellingPrice) || undefined);
+      await this.productService.addProduct(name, unit || undefined, Number(sellingPrice) || undefined, barcode || undefined);
       Toast.fire({ icon: 'success', title: this.translateService.instant('PRODUCT_ADDED_SUCCESS') });
       this.addProductForm.reset();
       this.sellingPriceDisplay = '';
@@ -284,6 +319,7 @@ export class Inventory implements OnInit, OnDestroy {
     this.editingUnitControl = new FormControl(product.unit ?? '', Validators.maxLength(20));
     this.editingSellingPriceControl = new FormControl(product.sellingPrice ?? '', Validators.min(0.01));
     this.editingSellingPriceDisplay = product.sellingPrice ? this.formatWithCommas(product.sellingPrice) : '';
+    this.editingBarcodeControl = new FormControl(product.barcode ?? '');
   }
 
   cancelEdit(): void {
@@ -292,6 +328,7 @@ export class Inventory implements OnInit, OnDestroy {
     this.editingUnitControl = null;
     this.editingSellingPriceControl = null;
     this.editingSellingPriceDisplay = '';
+    this.editingBarcodeControl = null;
   }
 
   async onUpdateInline(productId: string): Promise<void> {
@@ -306,8 +343,9 @@ export class Inventory implements OnInit, OnDestroy {
     const newName = (this.editingNameControl.value || '').trim();
     const newUnit = (this.editingUnitControl?.value || '').trim();
     const newSellingPrice = Number(this.editingSellingPriceControl?.value) || null;
+    const newBarcode = (this.editingBarcodeControl?.value || '').trim() || null;
     try {
-      await this.productService.updateProduct(productId, newName, newUnit, newSellingPrice);
+      await this.productService.updateProduct(productId, newName, newUnit, newSellingPrice, newBarcode);
       Toast.fire({ icon: 'success', title: this.translateService.instant('PRODUCT_UPDATED_SUCCESS') });
       this.cancelEdit();
       await this.loadProducts();

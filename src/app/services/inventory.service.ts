@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { Observable, combineLatest, map } from 'rxjs';
 import { ServiceIProduct } from './product';
-import { ServiceIExpense } from './expense';
-import { ServiceIIncome } from './income';
+import { ServiceIExpense, getExpenseLineItems } from './expense';
+import { ServiceIIncome, getIncomeLineItems } from './income';
 
 export interface ProductStockSummary {
   productId: string;
@@ -61,23 +61,35 @@ export class InventoryService {
           return totals;
         };
 
-        expenses
-          .filter((expense) => !!expense.productId)
-          .forEach((expense) => {
-            const totals = getTotals(expense.productId!);
-            totals.totalPurchasedQty += Number(expense.quantity) || 0;
-            totals.totalPurchaseCost += Number(expense.totalCost ?? expense.quantity * expense.price) || 0;
+        expenses.forEach((expense) => {
+          // Handles both a legacy single-product purchase and a POS cart
+          // checkout's multiple line items — cost is attributed per line's
+          // own subtotal, so a multi-item purchase correctly splits credit
+          // across each product (same reasoning as the income side below).
+          getExpenseLineItems(expense).forEach((item) => {
+            if (!item.productId) return;
+            const totals = getTotals(item.productId);
+            totals.totalPurchasedQty += item.quantity;
+            totals.totalPurchaseCost += item.subtotal;
             if (expense.date && (!totals.firstPurchaseDate || expense.date < totals.firstPurchaseDate)) {
               totals.firstPurchaseDate = expense.date;
             }
           });
+        });
 
         incomes
-          .filter((income) => income.isProductSale && !!income.productId)
+          .filter((income) => income.isProductSale)
           .forEach((income) => {
-            const totals = getTotals(income.productId!);
-            totals.totalSoldQty += Number(income.quantity) || 0;
-            totals.totalRevenue += Number(income.amount) || 0;
+            // Handles both a legacy single-product sale and a POS cart
+            // checkout's multiple line items — revenue is attributed per
+            // line's own subtotal, not the sale's overall amount, so a
+            // multi-item sale correctly splits credit across each product.
+            getIncomeLineItems(income).forEach((item) => {
+              if (!item.productId) return;
+              const totals = getTotals(item.productId);
+              totals.totalSoldQty += item.quantity;
+              totals.totalRevenue += item.subtotal;
+            });
           });
 
         return products.map((product): ProductStockSummary => {

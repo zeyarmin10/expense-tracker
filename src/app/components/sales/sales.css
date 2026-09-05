@@ -109,6 +109,63 @@
   }
 }
 
+/* ── Add-Sale cart: inline on desktop, full-screen overlay on mobile ──
+   Reached via the FAB above on mobile; on desktop it's simply always
+   visible at the top of the page like before (no overlay chrome). */
+.pnl-cart-overlay-topbar {
+  display: none;
+}
+
+@media (max-width: 991.98px) {
+  .pnl-cart-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1040;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    transform: translateY(100%);
+    pointer-events: none;
+    transition: transform 0.28s cubic-bezier(0.34, 1.2, 0.64, 1);
+  }
+
+  .pnl-cart-overlay.pnl-cart-overlay-open {
+    transform: translateY(0);
+    pointer-events: all;
+  }
+
+  .pnl-cart-overlay-topbar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-shrink: 0;
+    padding: calc(env(safe-area-inset-top, 0px) + 0.75rem) 1rem 0.75rem;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .pnl-cart-overlay-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .pnl-cart-overlay-scroll {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 1rem 1rem calc(env(safe-area-inset-bottom, 0px) + 1rem);
+  }
+}
+
 body.pnl-add-modal-open {
   overflow: hidden;
 }
@@ -228,6 +285,44 @@ body.pnl-add-modal-open {
   padding: 0;
 }
 
+/* Date select trigger — replaces app-date-input for the date field inside
+   this modal (see profit.ts for why: nesting that component's own
+   bottom-sheet picker here left it stuck open on mobile). */
+.pnl-cat-select-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  height: 52px;
+  padding: 0 0.9rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s;
+}
+
+.pnl-cat-select-trigger:hover,
+.pnl-cat-select-trigger:focus-visible {
+  border-color: var(--accent);
+}
+
+.pnl-cat-select-trigger-value {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.88rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pnl-cat-select-trigger-chevron {
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
 .pnl-date-picker-body {
   display: flex;
   flex-direction: column;
@@ -246,134 +341,168 @@ body.pnl-add-modal-open {
   gap: 0.6rem;
 }
 
-/* ── Filter Bar ── */
+/* ══════════════════════════════════════════════
+   SHARED DATE FILTER BAR (segment control) — same
+   Today/Week/Month/Custom control as Purchase/Expense.
+   ══════════════════════════════════════════════ */
 .pnl-filter-bar {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 0.6rem 0.6rem 0.5rem;
   display: flex;
   flex-direction: column;
-  align-items: stretch;
-  gap: 0.75rem;
-  width: 100%;
+  gap: 0.45rem;
+  position: sticky;
+  top: calc(env(safe-area-inset-top, 0px) + 0.5rem);
+  z-index: 50;
+  /* margin-bottom: 1rem; */
 }
 
-/* align-items: stretch above stretches the date-filter select to the full
-   row width on mobile even in [fitContent] mode — width: auto on the
-   select itself doesn't override a flex container's cross-axis stretch,
-   only align-self does. Keep it out of the >=640px row layout, where the
-   container switches to align-items: flex-end and this isn't needed. */
-@media (max-width: 639px) {
-  .pnl-filter-bar > app-custom-select {
-    align-self: flex-start;
-  }
-}
-
-/* PC: select + date pickers တစ်ကြောင်းတည်း */
-@media (min-width: 640px) {
-  .pnl-filter-bar {
-    flex-direction: row;
-    align-items: flex-end;
-    width: auto;
-  }
-
-  .pnl-filter-bar .pnl-date-row {
-    display: contents;
-  }
-}
-
-/* Desktop-only "Add Income" toolbar button — the FAB (.pnl-add-fab) is
-   hidden at this breakpoint since there's no bottom nav to float above, so
-   this is the only entry point to the add modal on desktop. */
-.pnl-add-toolbar-btn {
-  display: none;
-}
-
-@media (min-width: 992px) {
-  .pnl-filter-bar {
-    width: 100%;
-  }
-
-  .pnl-add-toolbar-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    border: none;
-    border-radius: 999px;
-    padding: 0.45rem 1rem;
-    background: var(--accent, #0b74ff);
-    color: #fff;
-    font-size: 0.8rem;
-    font-weight: 600;
-    cursor: pointer;
-    box-shadow: 0 4px 14px rgba(11, 116, 255, 0.35);
-    transition: transform 0.15s, box-shadow 0.15s;
-    margin-left: auto;
-    white-space: nowrap;
-  }
-
-  .pnl-add-toolbar-btn:hover {
-    box-shadow: 0 6px 18px rgba(11, 116, 255, 0.45);
-  }
-
-  .pnl-add-toolbar-btn:active {
-    transform: scale(0.96);
-  }
-}
-
-/* Mobile: custom mode — select fit-content + date picker fills rest */
-@media (max-width: 639px) {
-  .pnl-filter-bar-custom {
-    flex-direction: row;
-    align-items: stretch;
-    flex-wrap: nowrap;
-    gap: 0.25rem;
-  }
-
-  .pnl-filter-bar-custom app-custom-select {
-    flex: 0 0 auto;
-    width: fit-content;
-    max-width: 44%;
-    min-width: 0;
-  }
-
-  .pnl-filter-bar-custom .pnl-date-row {
-    flex: 1;
-    min-width: 0;
-    width: auto;
-  }
-
-  .pnl-filter-bar-custom .pnl-date-row app-date-range-input {
-    width: 100% !important;
-    flex: 1 1 auto !important;
-  }
-}
-
-/* select wrapper */
-.pnl-fl-wrap {
-  position: relative;
-  min-width: 0;
-}
-
-/* date pickers: always side by side */
-.pnl-date-row {
+.pnl-filter-top-row {
   display: flex;
-  flex-direction: row;
-  gap: 0.75rem;
-  align-items: flex-start;
-  width: 100%;
+  align-items: center;
+  gap: 0.6rem;
 }
 
-.pnl-date-row .pnl-fl-wrap {
-  flex: 1 1 0;
+.pnl-filter-bottom-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+/* ── iOS-style Segmented Control ── */
+.pnl-seg-ctrl {
+  display: flex;
+  align-items: center;
+  background: var(--surface-2);
+  border-radius: 10px;
+  padding: 3px;
+  gap: 4px;
+  flex: 1;
   min-width: 0;
 }
 
-@media (min-width: 640px) {
-  .pnl-date-row .pnl-fl-wrap {
-    flex: 0 0 auto;
-  }
+.pnl-seg-track {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  border-radius: 8px;
+  overflow: hidden;
+}
 
-  .pnl-date-row .pnl-fl-input[type="date"] {
-    width: 150px;
-  }
+.pnl-seg-indicator {
+  position: absolute;
+  inset: 0;
+  width: 25%;
+  border-radius: 7px;
+  background: var(--surface);
+  box-shadow:
+    0 1px 6px rgba(0, 0, 0, 0.3),
+    0 0 0 0.5px rgba(11, 116, 255, 0.15);
+  transition: transform 0.42s cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: transform;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.pnl-seg-btn {
+  flex: 1;
+  min-height: 36px;
+  padding: 0.35rem 0.2rem;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+  z-index: 1;
+  transition: color 0.22s ease, transform 0.12s ease;
+  border-radius: 7px;
+}
+
+.pnl-seg-btn:active {
+  transform: scale(0.93);
+}
+
+.pnl-seg-btn.active {
+  color: var(--accent);
+  font-weight: 700;
+  background: transparent;
+  box-shadow: none;
+}
+
+.pnl-seg-reset {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s, transform 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pnl-seg-reset:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
+}
+
+.pnl-seg-reset:active {
+  transform: rotate(-45deg);
+  color: var(--accent);
+}
+
+.pnl-filter-bar-expanded {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-bottom-color: transparent;
+}
+
+.pnl-daterange-outer {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: none;
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
+  padding: 0.3rem 0.5rem 0.6rem;
+  margin-top: -1rem;
+  margin-bottom: 1rem;
+}
+
+.pnl-filter-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem;
+  padding: 0 4px 2px;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  flex: 1;
+  min-width: 0;
+}
+
+.pnl-filter-label-date {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.pnl-filter-label-icon {
+  font-size: 0.7rem;
+  opacity: 0.7;
 }
 
 /* ── Filter floating label inputs (pnl-fl-*) ── */
@@ -936,189 +1065,280 @@ body.pnl-add-modal-open {
   font-weight: 700;
 }
 
-.pnl-table-responsive {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  width: 100%;
+.pnl-lineitems-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--accent, #0b74ff);
+  font-size: inherit;
+  font-weight: 600;
+  cursor: pointer;
 }
 
-.pnl-income-table {
-  width: 100%;
-  min-width: 340px;
-  border-collapse: collapse;
-}
-
-/* Mobile: no horizontal scroll — columns get fixed widths so the
-   description truncates with an ellipsis instead of overflowing.
-   Tapping truncated text (appShowFullText) shows the full value. */
-@media (max-width: 639.98px) {
-  .pnl-table-responsive {
-    overflow-x: hidden;
-  }
-
-  .pnl-income-table {
-    table-layout: fixed;
-    min-width: 0;
-  }
-
-  /* Scoped under .pnl-income-table (not just the bare class) so these
-     widths reliably beat the base .pnl-td-amount/.pnl-td-actions rules
-     further down the file — same specificity + later source order would
-     otherwise let those win regardless of this media query. */
-  .pnl-income-table .pnl-td-date {
-    width: 27%;
-  }
-
-  .pnl-income-table .pnl-td-amount {
-    width: 30%;
-  }
-
-  .pnl-income-table .pnl-td-actions {
-    width: 40px;
-  }
-}
-
-.pnl-income-table thead tr {
+.pnl-lineitems-detail {
+  margin-top: 0.35rem;
+  padding: 0.5rem 0.6rem;
   background: var(--surface-2);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
 }
 
-.pnl-income-table th {
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+.pnl-lineitems-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.78rem;
   color: var(--text-muted);
-  padding: 0.6rem 0.75rem;
-  text-align: left;
-  border-bottom: 1px solid var(--border);
   white-space: nowrap;
+}
+
+.pnl-lineitems-name {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-@media (min-width: 640px) {
-  .pnl-income-table th {
-    padding: 0.7rem 1.3rem;
-  }
+/* ── Date-grouped card list (mirrors Purchase's .exp-date-group/.exp-item) ── */
+.pnl-date-list {
+  display: flex;
+  flex-direction: column;
 }
 
-/* Amount is targeted directly via .pnl-td-amount (shared by both <th> and
-   <td>) rather than :last-child — the trailing actions column means Amount
-   isn't actually the last cell once the delete button is shown. */
-
-.pnl-income-table td {
-  padding: 0.6rem 0.25rem 0.6rem 0.5rem;
-  font-size: 0.85rem;
+.pnl-date-group {
   border-bottom: 1px solid var(--border);
-  color: var(--text);
-  vertical-align: middle;
 }
 
-@media (min-width: 640px) {
-  .pnl-income-table td {
-    padding: 0.85rem 1.3rem;
-  }
-}
-
-.pnl-income-table tbody tr:last-child td {
+.pnl-date-group:last-child {
   border-bottom: none;
 }
 
+.pnl-date-group-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: nowrap;
+  padding: 0.45rem 1rem;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+  min-width: 0;
+}
 
-.pnl-td-date {
-  font-size: 0.8rem;
+.pnl-date-label {
+  font-size: 0.73rem;
+  font-weight: 800;
   color: var(--text-sub);
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
-.pnl-td-desc {
-  font-weight: 500;
-  min-width: 0;
-}
-
-.pnl-td-desc-text {
-  display: block;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.pnl-td-desc-sub {
-  display: block;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 0.75rem;
-  font-weight: 400;
+.pnl-date-count {
   color: var(--text-muted);
-  margin-top: 0.1rem;
+  font-size: 0.67rem;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
-/* Mobile: show creator name below the description, same as expense-overview */
-.pnl-td-name-creator {
-  display: none;
+.pnl-date-totals {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.3rem;
+  flex-shrink: 0;
 }
 
-@media (max-width: 639.98px) {
-  .pnl-td-name-creator {
-    display: flex;
-    align-items: center;
-    gap: 0.3rem;
-    width: 100%;
-    max-width: 100%;
-    margin-top: 0.15rem;
-    font-size: 0.6rem;
-    font-weight: 400;
-    color: var(--text-muted);
-  }
+.pnl-date-total {
+  border-radius: 999px;
+  border: 1px solid var(--income-dim);
+  background: var(--income-dim);
+  color: var(--income-color);
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.18rem 0.5rem;
+  white-space: nowrap;
 }
 
-.pnl-td-name-creator-text {
+.pnl-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.pnl-item {
+  border-bottom: 1px solid var(--border);
+  border-left: 3px solid var(--income-color);
+  transition: background 0.15s;
+}
+
+.pnl-item:last-child {
+  border-bottom: none;
+}
+
+.pnl-item:hover {
+  background: var(--surface-2);
+}
+
+.pnl-item-inner {
+  padding: 0.85rem 1.1rem 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.pnl-item-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.pnl-item-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+  flex: 1;
   min-width: 0;
   overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
-  vertical-align: middle;
+  text-overflow: ellipsis;
 }
 
-/* PC only: created-by column */
-.pnl-td-created-by {
-  display: none;
+.pnl-item-amount {
+  font-size: 0.95rem;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
-@media (min-width: 640px) {
-  .pnl-td-created-by {
-    display: table-cell;
-  }
+.pnl-item-desc-sub {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
-.pnl-created-by-badge {
+.pnl-item-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.25rem;
+}
+
+.pnl-item-actions-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.pnl-item-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  max-width: 100%;
-  font-size: 0.78rem;
-  color: var(--text-sub);
-  white-space: nowrap;
-}
-
-.pnl-created-by-name {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.pnl-td-amount {
-  text-align: right !important;
+  gap: 0.45rem;
+  font-size: 0.75rem;
   font-weight: 700;
+  padding: 0.4rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s;
   white-space: nowrap;
 }
 
-.pnl-td-actions {
-  width: 1%;
-  text-align: right !important;
+.pnl-item-btn-info {
+  background: transparent;
+  color: var(--info);
+  border-color: rgba(96, 165, 250, 0.3);
+}
+
+.pnl-item-btn-info:hover {
+  background: var(--info-dim);
+  border-color: var(--info);
+}
+
+.pnl-item-btn-danger {
+  background: transparent;
+  color: var(--accent-2);
+  border-color: rgba(248, 113, 113, 0.3);
+}
+
+.pnl-item-btn-danger:hover {
+  background: var(--accent-2-dim);
+  border-color: var(--accent-2);
+}
+
+.pnl-avatar-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.pnl-avatar-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.pnl-avatar-name-bubble {
+  position: absolute;
+  bottom: calc(100% + 9px);
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  transform: translateY(5px) scale(0.9);
+  transform-origin: bottom right;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-sub);
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+  padding: 5px 10px 5px 5px;
+  border-radius: 8px 8px 2px 8px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  z-index: 20;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.pnl-avatar-name-bubble-text {
+  line-height: 1.2;
+}
+
+.pnl-avatar-name-bubble::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  right: 5px;
+  border: 5px solid transparent;
+  border-top-color: var(--border);
+}
+
+.pnl-avatar-name-bubble::before {
+  content: '';
+  position: absolute;
+  top: calc(100% - 1px);
+  right: 5px;
+  border: 5px solid transparent;
+  border-top-color: var(--surface-2);
+  z-index: 1;
+}
+
+.pnl-avatar-name-bubble.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
 }
 
 /* ── Form ── */
@@ -1148,6 +1368,17 @@ app-date-input .di-trigger {
   .pnl-form-row {
     grid-template-columns: 1fr;
   }
+}
+
+/* Quantity/Unit Price: 25/75 split, kept side by side even on mobile — a
+   1-2 digit quantity doesn't need a full row to itself. Extra class in the
+   selector for specificity over the plain .pnl-form-row mobile rule above. */
+.pnl-form-row.pnl-form-row-qty-price {
+  grid-template-columns: 1fr 3fr;
+}
+
+.pnl-input.pnl-input-field.pnl-input-compact {
+  padding: 0 0.6rem;
 }
 
 /* Floating label */
@@ -1844,4 +2075,570 @@ app-date-input .di-trigger {
   color: var(--text-muted);
   font-style: italic;
   opacity: 0.7;
+}
+
+/* ── Product sale toggle + fields (mini inventory feature) ── */
+.pnl-product-sale-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.6rem 0.85rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 0.75rem;
+  color: var(--text);
+  cursor: pointer;
+  /* margin-bottom: 0.85rem; */
+}
+
+.pnl-switch {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.pnl-switch input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.pnl-switch-track {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(148, 163, 184, 0.22);
+  display: inline-flex;
+  align-items: center;
+  padding: 2px;
+  transition: background 0.18s, border-color 0.18s;
+}
+
+.pnl-switch-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: var(--text-muted);
+  transform: translateX(0);
+  transition: transform 0.18s, background 0.18s;
+}
+
+.pnl-switch input:checked + .pnl-switch-track {
+  border-color: var(--income-border);
+  background: var(--success-dim);
+}
+
+.pnl-switch input:checked + .pnl-switch-track .pnl-switch-thumb {
+  background: var(--success);
+  transform: translateX(20px);
+}
+
+.pnl-float-group > app-custom-select {
+  flex: 1;
+  min-width: 0;
+}
+
+.pnl-float-group .pnl-addon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--info);
+  border: 1px solid var(--border);
+  border-left: none;
+  border-radius: 0 10px 10px 0;
+  padding: 0 0.95rem;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+
+.pnl-float-group .pnl-addon-btn:hover {
+  background: var(--accent);
+}
+
+.pnl-total-hint {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  text-align: right;
+  margin: -0.4rem 0 0.6rem;
+}
+
+.pnl-total-hint-amount {
+  font-weight: 700;
+  color: var(--warning);
+}
+
+/* ── Product picker trigger + search/list (mirrors expense.css's
+   .exp-cat-select-trigger / .exp-cat-picker-* — a bespoke swap-in-place
+   picker instead of app-custom-select, which breaks positioning once
+   nested inside this modal's own transformed slide-up sheet). ── */
+.pnl-cat-select-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  height: 52px;
+  padding: 0 0.9rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s;
+}
+
+.pnl-cat-select-trigger:hover,
+.pnl-cat-select-trigger:focus-visible {
+  border-color: var(--accent);
+}
+
+.pnl-float-group > .pnl-cat-select-trigger {
+  flex: 1;
+  min-width: 0;
+  border-radius: 10px 0 0 10px;
+}
+
+.pnl-cat-select-trigger-value {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.88rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pnl-cat-select-trigger-placeholder {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+}
+
+.pnl-cat-select-trigger-chevron {
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+.pnl-cat-picker-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: 320px;
+}
+
+.pnl-cat-picker-search {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 0.85rem;
+  height: 46px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.pnl-cat-picker-search-icon {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.pnl-cat-picker-search-input {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-size: 0.88rem;
+}
+
+.pnl-cat-picker-search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.pnl-cat-picker-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  overflow-y: auto;
+}
+
+.pnl-cat-picker-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.65rem 0.7rem;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+  width: 100%;
+}
+
+.pnl-cat-picker-item:hover {
+  background: var(--surface-2);
+}
+
+.pnl-cat-picker-item-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  background: hsl(220 80% 55% / 0.15);
+  color: hsl(220 80% 70%);
+}
+
+.pnl-cat-picker-item-label {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.88rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pnl-cat-picker-item-check {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.pnl-cat-picker-empty {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  padding: 2rem 1rem;
+}
+
+/* ── Picker search row + inline "add new product" button — the picker's
+   search box didn't need its own flex:1 before since a flex-column parent
+   already stretched it; now it shares a row with the add button. ── */
+.pnl-cat-picker-search-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  padding: 0.5rem 0.85rem;
+}
+
+.pnl-cat-picker-search-row .pnl-cat-picker-search {
+  flex: 1;
+  min-width: 0;
+}
+
+.pnl-cat-picker-add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 46px;
+  height: 46px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--accent, #0b74ff);
+  cursor: pointer;
+}
+
+/* ── Cart (folded in from the old /sales/new page) ── */
+.pnl-pos-action-row {
+  display: flex;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.pnl-pos-scan-btn,
+.pnl-pos-manual-add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  height: 46px;
+  flex: 1;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.pnl-pos-scan-btn {
+  border: none;
+  background: var(--accent, #0b74ff);
+  color: #fff;
+}
+
+.pnl-pos-manual-add-btn {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.pnl-pos-cart-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 2.2rem 1rem;
+  color: var(--text-muted);
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  text-align: center;
+}
+
+.pnl-pos-cart-empty-icon {
+  opacity: 0.5;
+}
+
+.pnl-pos-cart-list {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.pnl-pos-cart-line {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.65rem 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.pnl-pos-cart-line-main {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.pnl-pos-cart-line-name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pnl-pos-cart-line-unit {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.pnl-pos-cart-line-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pnl-pos-qty-stepper {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--surface-2);
+  border-radius: 10px;
+  padding: 0.2rem 0.35rem;
+  flex-shrink: 0;
+}
+
+.pnl-pos-qty-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: none;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.pnl-pos-qty-value {
+  min-width: 1.3rem;
+  text-align: center;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.pnl-pos-unit-price-input {
+  width: 84px;
+  height: 34px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.8rem;
+  text-align: right;
+  padding: 0 0.45rem;
+  min-width: 0;
+}
+
+.pnl-pos-line-subtotal {
+  margin-left: auto;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.pnl-pos-remove-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid rgba(248, 113, 113, 0.25);
+  background: rgba(248, 113, 113, 0.08);
+  color: #f87171;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.pnl-pos-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.9rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--border);
+}
+
+.pnl-pos-total {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.pnl-pos-total-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.pnl-pos-total-value {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
+/* ── Cart section — the actual "Add Sale" experience, always visible at
+   the top of the page (no FAB/modal needed to reach it). ── */
+.pnl-pos-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.1rem 1.2rem 1.2rem;
+  margin-bottom: 1.1rem;
+}
+
+.pnl-pos-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-bottom: 0.9rem;
+}
+
+.pnl-pos-section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+}
+
+/* ── Cart's own date/product picker sheet (independent of the edit modal —
+   a fresh bottom-sheet overlay, not swapped in place like the modal's
+   internal pickers, since the cart section isn't a transformed container). ── */
+.pnl-pos-picker-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 1050;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+}
+
+.pnl-pos-picker-backdrop.open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.pnl-pos-picker-sheet {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  width: 100%;
+  max-width: 480px;
+  max-height: 80vh;
+  background: var(--surface, #12151c);
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: 20px 20px 0 0;
+  z-index: 1051;
+  translate: -50% 100%;
+  transition: translate 0.25s ease;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.pnl-pos-picker-sheet.open {
+  translate: -50% 0;
+}
+
+.pnl-pos-picker-handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--border);
+  margin: 0.65rem auto 0.4rem;
+  flex-shrink: 0;
+}
+
+.pnl-pos-picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.pnl-pos-picker-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
 }

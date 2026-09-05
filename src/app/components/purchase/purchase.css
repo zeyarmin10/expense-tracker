@@ -1,0 +1,2901 @@
+/* ============================================================
+   Expense Component — Dark Theme (matches navbar + overview)
+   Fonts: Syne + DM Mono via app-level import
+   ============================================================ */
+
+:host {
+  display: block;
+}
+
+.exp-svg-icon {
+  width: 1em;
+  height: 1em;
+  display: inline-block;
+  vertical-align: -0.125em;
+  flex-shrink: 0;
+}
+
+/* ── Wrapper ── */
+.exp-wrapper {
+  /* font-family: 'Syne', sans-serif; */
+  background: var(--bg);
+  min-height: 100vh;
+  padding: 1.5rem 1rem calc(9rem + env(safe-area-inset-bottom, 0px));
+  color: var(--text);
+}
+
+@media (max-width: 991px) {
+  .exp-wrapper {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 4.5rem);
+  }
+}
+
+.exp-container {
+  max-width: 760px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* ── Add FAB + Bottom-sheet Modal ── */
+/* Uses --expense-color (the same amber used for "Total Expenses" cards
+   throughout the app) instead of generic accent blue, so this FAB's color
+   matches the Budget (blue) / Income (green) FABs' pattern of reflecting
+   their own page's theme rather than all three looking alike. */
+.exp-add-fab {
+  position: fixed;
+  right: 1rem;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 68px + 1rem);
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  border: 2.5px solid rgba(255, 255, 255, 0.5);
+  background: linear-gradient(150deg, #ffcc4d, var(--expense-color, #f4b11a));
+  color: #0a1120;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 22px rgba(244, 177, 26, 0.45);
+  z-index: 900;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.exp-add-fab:active {
+  transform: scale(0.94);
+}
+
+.exp-add-fab:active::after {
+  animation-play-state: paused;
+}
+
+/* Gentle expanding-ring pulse so the primary "add expense" action is easy to
+   spot at a glance in both light and dark mode, not just a static flat dot.
+   Animates transform/opacity only (not box-shadow itself) on a pseudo-
+   element — animating box-shadow directly on a border-radius:50% element is
+   a known Android WebView rendering trap that can paint the corners/glow
+   solid black instead of the intended translucent color (same root cause
+   category as the overflow:visible→hidden fix already applied above in this
+   file; see git history "black rendering artifact on Android"). */
+.exp-add-fab::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px rgba(244, 177, 26, 0.65);
+  animation: exp-fab-pulse 2.6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes exp-fab-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+  75%, 100% {
+    transform: scale(1.55);
+    opacity: 0;
+  }
+}
+
+@media (min-width: 992px) {
+  .exp-add-fab {
+    display: none;
+  }
+}
+
+/* ── Add-Purchase cart: inline on desktop, full-screen overlay on mobile ──
+   Reached via the FAB on mobile; on desktop it's simply always visible at
+   the top of the page like before, just without full-screen chrome. Either
+   way, the topbar's Purchase/Voucher tabs are always shown — they're what
+   unifies the cart and the voucher form into one place. */
+.exp-cart-overlay-topbar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.75rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: 16px 16px 0 0;
+}
+
+.exp-cart-overlay-close {
+  display: none;
+}
+
+.exp-cart-overlay-tabs {
+  display: flex;
+  flex: 1;
+  gap: 0.35rem;
+}
+
+.exp-cart-overlay-tab {
+  flex: 1;
+  text-align: center;
+  padding: 0.5rem 0.6rem;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.exp-cart-overlay-tab.active {
+  background: var(--surface-2);
+  border-color: var(--border);
+  color: var(--expense-color, #f4b11a);
+}
+
+@media (max-width: 991.98px) {
+  .exp-cart-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1040;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    transform: translateY(100%);
+    pointer-events: none;
+    transition: transform 0.28s cubic-bezier(0.34, 1.2, 0.64, 1);
+  }
+
+  .exp-cart-overlay.exp-cart-overlay-open {
+    transform: translateY(0);
+    pointer-events: all;
+  }
+
+  .exp-cart-overlay-topbar {
+    flex-shrink: 0;
+    padding: calc(env(safe-area-inset-top, 0px) + 0.75rem) 0.75rem 0.6rem;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    border-radius: 0;
+  }
+
+  .exp-cart-overlay-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .exp-cart-overlay-scroll {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 1rem 1rem calc(env(safe-area-inset-bottom, 0px) + 1rem);
+  }
+}
+
+/* Desktop: the tab strip sits flush above the card content below it (the
+   cart or the voucher form/list), so square off their shared seam. */
+@media (min-width: 992px) {
+  .exp-cart-overlay .exp-pos-section,
+  .exp-cart-overlay .exp-voucher-tab-section {
+    border-radius: 0 0 16px 16px;
+    border-top: none;
+  }
+}
+
+body.exp-add-modal-open {
+  overflow: hidden;
+}
+
+.exp-add-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 1010;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+}
+
+.exp-add-modal-backdrop.open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* Always a centered dialog — on phone and desktop alike (no bottom-sheet slide-up).
+   Uses the standalone `translate`/`scale` CSS properties instead of `transform`:
+   `transform` on an ancestor creates a new containing block for descendant
+   `position: fixed` elements, which broke the nested date/category picker
+   sheets (they render as position:fixed and expect to be relative to the
+   viewport, not this dialog). translate/scale don't have that side effect. */
+.exp-add-modal-sheet {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 0.85rem);
+  left: 50%;
+  width: 92%;
+  max-width: 480px;
+  max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 1.7rem);
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface, #12151c);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.45);
+  z-index: 1020;
+  translate: -50% 0;
+  scale: 0.96;
+  opacity: 0;
+  pointer-events: none;
+  transition: scale 0.2s ease, opacity 0.2s ease;
+}
+
+.exp-add-modal-sheet.open {
+  scale: 1;
+  opacity: 1;
+  pointer-events: all;
+}
+
+.exp-add-modal-handle {
+  display: none;
+}
+
+.exp-add-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 0.6rem 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+/* Reuses the app's existing sliding segmented-control style (.exp-seg-*,
+   also used by the date filter bar) for a cohesive, modern tab look
+   instead of two loose pill buttons. */
+.exp-add-modal-tabs {
+  flex: 1;
+  min-width: 0;
+}
+
+.exp-add-modal-tabs .exp-seg-indicator {
+  width: 50%;
+}
+
+.exp-add-modal-tabs .exp-seg-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.32rem;
+  font-size: 0.76rem;
+}
+
+.exp-add-modal-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.exp-add-modal-close:hover {
+  background: var(--border);
+}
+
+.exp-add-modal-body {
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+/* Back button + title shown in the header while the category picker is drilled in */
+.exp-add-modal-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.exp-add-modal-back:hover {
+  background: var(--border);
+}
+
+.exp-add-modal-back-icon {
+  transform: rotate(90deg);
+}
+
+.exp-add-modal-header-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* Category select trigger — replaces app-custom-select for the category
+   field inside this modal (see expense.ts for why: nesting that component's
+   own bottom-sheet picker here left it stuck open on mobile). */
+.exp-cat-select-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  height: 52px;
+  padding: 0 0.9rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s;
+}
+
+.exp-cat-select-trigger:hover,
+.exp-cat-select-trigger:focus-visible {
+  border-color: var(--accent);
+}
+
+.exp-float-group > .exp-cat-select-trigger {
+  flex: 1;
+  min-width: 0;
+  border-radius: 10px 0 0 10px;
+}
+
+.exp-cat-select-trigger-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  background: hsl(var(--cat-hue, 220) 80% 55% / 0.15);
+  color: hsl(var(--cat-hue, 220) 80% 70%);
+}
+
+.exp-cat-select-trigger-value {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.88rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.exp-cat-select-trigger-placeholder {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+}
+
+.exp-cat-select-trigger-chevron {
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+/* Category picker — search + list, swapped into the modal body in place
+   of the form while drilled in */
+.exp-cat-picker-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: 320px;
+}
+
+.exp-cat-picker-search {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 0.85rem;
+  height: 46px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.exp-cat-picker-search-icon {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.exp-cat-picker-search-input {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-size: 0.88rem;
+}
+
+.exp-cat-picker-search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.exp-cat-picker-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  overflow-y: auto;
+}
+
+.exp-cat-picker-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.65rem 0rem;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+  width: 100%;
+}
+
+.exp-cat-picker-item:hover {
+  background: var(--surface-2);
+}
+
+.exp-cat-picker-item-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  background: hsl(var(--cat-hue, 220) 80% 55% / 0.15);
+  color: hsl(var(--cat-hue, 220) 80% 70%);
+}
+
+.exp-cat-picker-item-label {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.88rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.exp-cat-picker-item-check {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.exp-cat-picker-empty {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  padding: 2rem 1rem;
+}
+
+/* The form itself had padding tuned for the old accordion-panel wrapper;
+   the modal body already pads its content, so drop the duplicate padding
+   and tighten field spacing a bit for a more compact feel. */
+.exp-add-modal-body .exp-form {
+  padding: 0;
+  gap: 0.75rem;
+}
+
+.exp-add-modal-body .exp-form-row {
+  gap: 0.65rem;
+}
+
+/* Date picker body — inline flatpickr calendar, swapped into the modal body
+   in place of the form. flatpickr's own visual theme is already defined
+   globally (styles.css, shared with the rest of the app), so this just
+   needs to center/contain the calendar it renders into. */
+.exp-date-picker-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 320px;
+}
+
+/* Amount — prominent hero field, quick mode only.
+   Placeholder and typed value share the same large size (no floating label). */
+.exp-amount-hero {
+  /* margin-bottom: 0.5rem; */
+}
+
+.exp-field-error {
+  font-size: 0.72rem;
+  color: var(--danger);
+  padding-left: 0.2rem;
+  font-weight: 500;
+}
+
+.exp-amount-hero-currency {
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 0.5rem 0.8rem;
+  height: 4rem !important;
+}
+
+.exp-amount-hero-input {
+  font-size: 2rem !important;
+  font-weight: 800;
+  padding: 0.5rem 0.9rem !important;
+  height: 4rem !important;
+}
+
+/* At this size/weight, the placeholder reads almost like real content —
+   dim it further than the normal muted-text placeholder color.
+   (!important: this rule and .exp-float-input::placeholder have equal
+   specificity, and the general one sits later in this file and would win
+   the tie otherwise.) */
+.exp-amount-hero-input::placeholder {
+  color: var(--text-muted) !important;
+  opacity: 0.4 !important;
+}
+
+/* Live quantity × price total under the full-mode price field */
+.exp-total-hint {
+  /* margin-top: 0.35rem; */
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  text-align: right;
+}
+
+.exp-total-hint-amount {
+  font-weight: 700;
+  color: var(--warning);
+}
+
+/* ── Overlay / Spinner ── */
+.exp-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 12, 16, 0.75);
+  backdrop-filter: blur(6px);
+  z-index: 10000;
+}
+
+.exp-spinner {
+  width: 48px;
+  height: 48px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: exp-spin 0.8s linear infinite;
+}
+
+@keyframes exp-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.exp-spinner-sm {
+  width: 28px;
+  height: 28px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: exp-spin 0.8s linear infinite;
+  margin: 2rem auto;
+}
+
+.exp-icon-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  flex-shrink: 0;
+}
+
+.exp-icon-badge-accent {
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+
+.exp-icon-badge-warning {
+  background: rgba(251, 191, 36, 0.1);
+  color: var(--warning);
+}
+
+.exp-icon-badge-success {
+  background: rgba(52, 211, 153, 0.1);
+  color: var(--success);
+}
+
+.exp-voucher-collapse-body > * {
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* ── Form ── */
+.exp-form {
+  padding: 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.exp-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+}
+
+@media (max-width: 576px) {
+  .exp-form-row {
+    grid-template-columns: 1fr;
+  }
+
+  /* Quantity + Unit read fine side by side even on narrow screens —
+     keep them paired instead of falling back to one-per-row like the
+     other .exp-form-row usages. */
+  .exp-form-row-qty-unit {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .full-form-item-name, .full-form-quantity, .full-form-unit {
+    height: 2.5rem !important;
+  }
+
+  .exp-upload-card,
+  .exp-voucher-item {
+    grid-template-columns: 1fr;
+  }
+
+  .exp-upload-box,
+  .exp-voucher-thumb {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+  }
+
+  .exp-voucher-actions {
+    justify-content: flex-end;
+  }
+
+}
+
+.exp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.exp-label {
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.exp-input {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  /* font-family: 'Syne', sans-serif; */
+  font-size: 0.88rem;
+  padding: 0.6rem 0.9rem;
+  outline: none;
+  width: 100%;
+  transition: border-color 0.15s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.exp-input:focus {
+  border-color: var(--accent);
+}
+
+.exp-input.is-invalid {
+  border-color: var(--accent-2);
+}
+
+.exp-input::placeholder {
+  color: var(--text-muted);
+}
+
+/* date input color fix on dark */
+.exp-input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.6);
+}
+
+.exp-select {
+  background-repeat: no-repeat;
+  background-position: right 0.9rem center;
+  padding-right: 2.2rem;
+  cursor: pointer;
+}
+
+/* Option styling workaround */
+.exp-select option {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.exp-input-group {
+  display: flex;
+  align-items: stretch;
+}
+
+.exp-input-group .exp-input {
+  border-radius: 0 10px 10px 0;
+  border-left: none;
+}
+
+.exp-currency-badge,
+.exp-addon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  padding: 0 0.85rem;
+  /* font-family: 'DM Mono', monospace; */
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.exp-currency-badge {
+  border-radius: 10px 0 0 10px;
+}
+
+.exp-addon-btn {
+  cursor: pointer;
+  color: var(--info);
+  transition: background 0.15s, color 0.15s;
+  border-left: 1px solid var(--border);
+  border-radius: 0 10px 10px 0;
+}
+
+/* For addon btn that's after an input (not before) */
+.exp-input-group .exp-input+.exp-addon-btn {
+  border-radius: 0 10px 10px 0;
+  border-left: none;
+}
+
+/* Category group: select then button */
+.exp-input-group .exp-select {
+  border-radius: 10px 0 0 10px;
+  border-right: none;
+}
+
+.exp-input-group .exp-addon-btn:last-child {
+  border-left: 1px solid var(--border);
+  border-radius: 0 10px 10px 0;
+  background: var(--info-dim);
+}
+
+.exp-input-group .exp-addon-btn:last-child:hover {
+  background: var(--info);
+  color: #fff;
+}
+
+.exp-form-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 0.25rem;
+}
+
+.exp-float-input.exp-textarea {
+  min-height: 68px;
+  height: auto;
+  resize: vertical;
+  line-height: 1.35;
+  padding: 0.85rem 0.9rem;
+}
+
+.exp-file-input {
+  display: none;
+}
+
+/* ── Multi-image upload ── */
+.exp-upload-actions {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.exp-upload-btn {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.exp-upload-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 1rem 0.5rem;
+  border-radius: 12px;
+  border: 1.5px dashed rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.03);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.exp-upload-btn-camera {
+  border-color: rgba(52, 211, 153, 0.35);
+  background: rgba(52, 211, 153, 0.05);
+  color: rgb(52, 211, 153);
+}
+.exp-upload-btn-camera:hover {
+  border-color: rgba(52, 211, 153, 0.7);
+  background: rgba(52, 211, 153, 0.1);
+}
+
+.exp-upload-btn-gallery {
+  border-color: rgba(96, 165, 250, 0.35);
+  background: rgba(96, 165, 250, 0.05);
+  color: var(--info);
+}
+.exp-upload-btn-gallery:hover {
+  border-color: var(--info);
+  background: rgba(96, 165, 250, 0.1);
+}
+
+.exp-upload-btn-icon {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.exp-upload-btn-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.exp-upload-hint {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.exp-image-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+}
+
+@media (max-width: 400px) {
+  .exp-image-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.exp-image-thumb {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+.exp-image-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.exp-thumb-remove {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(10, 12, 16, 0.72);
+  color: #fff;
+  font-size: 0.65rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.exp-thumb-remove:hover {
+  background: var(--accent-2, #f87171);
+}
+
+.exp-image-add-more-wrap {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.exp-image-add-more {
+  flex: 1;
+  border-radius: 6px;
+  border: 1.5px dashed rgba(96, 165, 250, 0.3);
+  background: rgba(96, 165, 250, 0.05);
+  color: var(--info);
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s, background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.exp-image-add-camera {
+  border-color: rgba(52, 211, 153, 0.3);
+  background: rgba(52, 211, 153, 0.05);
+  color: rgb(52, 211, 153);
+}
+
+.exp-image-add-camera:hover {
+  border-color: rgba(52, 211, 153, 0.7);
+  background: rgba(52, 211, 153, 0.12);
+}
+
+.exp-image-add-gallery:hover {
+  border-color: var(--info);
+  background: rgba(96, 165, 250, 0.13);
+}
+
+.exp-image-info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.1rem;
+}
+
+.exp-image-counter {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+}
+
+/* multi-image badge on voucher list thumb */
+.exp-voucher-thumb {
+  position: relative;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.exp-voucher-multi-badge {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  background: rgba(10, 12, 16, 0.72);
+  color: #fff;
+  border-radius: 6px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 5px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  pointer-events: none;
+}
+
+.exp-upload-card {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr);
+  gap: 0.9rem;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+  padding: 0.75rem;
+}
+
+.exp-upload-box {
+  width: 112px;
+  aspect-ratio: 1;
+  border: 1px dashed rgba(96, 165, 250, 0.35);
+  border-radius: 8px;
+  background: rgba(96, 165, 250, 0.08);
+  color: var(--info);
+  cursor: pointer;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0.75rem;
+  text-align: center;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.exp-upload-box:hover {
+  border-color: var(--info);
+  background: rgba(96, 165, 250, 0.13);
+}
+
+.exp-upload-icon {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.exp-upload-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--text-sub);
+}
+
+.exp-voucher-preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.exp-upload-card.has-preview .exp-upload-box {
+  padding: 0;
+  border-style: solid;
+}
+
+.exp-upload-details {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.exp-upload-name {
+  color: var(--text);
+  font-size: 0.88rem;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.exp-upload-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* ── Buttons ── */
+.exp-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  /* font-family: 'Syne', sans-serif; */
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 0.55rem 1.1rem;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.exp-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.exp-btn-sm {
+  font-size: 0.75rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: 8px;
+}
+
+.exp-btn-primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+/* Disabled primary button was only dimmed via opacity while keeping the
+   same vivid accent background, so it still read as "active" at a glance.
+   Flip to a flat muted surface color instead so enabled vs. disabled is
+   unmistakable regardless of the accent hue or background contrast. */
+.exp-btn-primary:disabled {
+  background: var(--surface-2);
+  color: var(--text-muted);
+  border-color: var(--border);
+  box-shadow: none;
+  opacity: 1;
+}
+
+.exp-btn-primary:hover:not(:disabled) {
+  opacity: 0.88;
+  box-shadow: 0 0 16px rgba(11, 116, 255, 0.3);
+}
+
+.fa-regular-icon {
+  font-size: 1rem !important;
+}
+/* Shine pulse for primary */
+@keyframes exp-shine {
+
+  0%,
+  100% {
+    box-shadow: 0 0 6px rgba(11, 116, 255, 0.25);
+  }
+
+  50% {
+    box-shadow: 0 0 18px rgba(11, 116, 255, 0.5);
+  }
+}
+
+.exp-btn-primary:not(:disabled) {
+  animation: exp-shine 2s infinite ease-in-out;
+}
+
+.exp-btn-ghost {
+  background: var(--surface-2);
+  color: var(--text-sub);
+  border-color: var(--border);
+}
+
+.exp-btn-ghost:hover:not(:disabled) {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.exp-btn-outline-info {
+  background: transparent;
+  color: var(--info);
+  border-color: rgba(96, 165, 250, 0.3);
+}
+
+.exp-btn-outline-info:hover:not(:disabled) {
+  background: var(--info-dim);
+  border-color: var(--info);
+}
+
+.exp-btn-outline-danger {
+  background: transparent;
+  color: var(--accent-2);
+  border-color: rgba(248, 113, 113, 0.3);
+}
+
+.exp-btn-outline-danger:hover:not(:disabled) {
+  background: var(--accent-2-dim);
+  border-color: var(--accent-2);
+}
+
+/* ── List Section ── */
+.exp-list-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.exp-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.85rem .75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.exp-list-header-toggle {
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.exp-list-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.exp-collapse-chevron {
+  color: var(--text-muted);
+  transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+}
+
+.exp-collapse-chevron.open {
+  transform: rotate(180deg);
+}
+
+.exp-voucher-collapse-body {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.exp-voucher-collapse-body > * {
+  overflow: hidden;
+  min-height: 0;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+
+.exp-voucher-collapse-body.open {
+  grid-template-rows: 1fr;
+}
+
+.exp-voucher-collapse-body.open > * {
+  opacity: 1;
+  overflow: visible;
+  transition: opacity 0.3s ease 0.14s;
+}
+
+.exp-icon-badge-sm {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 0.4rem;
+  font-size: 0.72rem;
+}
+
+.exp-section-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--success);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.exp-section-title .exp-icon-badge {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 0.4rem;
+  font-size: 0.72rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.exp-section-title-warning {
+  color: var(--warning);
+}
+
+.exp-voucher-list-standalone {
+  padding: 0;
+}
+
+.exp-date-filter {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.exp-date-input {
+  /* width: auto; */
+  min-width: 150px;
+  font-size: 0.82rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.exp-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.exp-icon-btn:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+  color: var(--text);
+}
+
+a.exp-icon-btn {
+  text-decoration: none;
+}
+
+.exp-icon-btn-danger {
+  color: var(--accent-2);
+}
+
+.exp-icon-btn-danger:hover {
+  border-color: rgba(248, 113, 113, 0.35);
+  background: var(--accent-2-dim);
+  color: var(--accent-2);
+}
+
+.exp-filter-row {
+  padding: 0.9rem 0.75rem 0.9rem 1.4rem;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ── Totals Row ── */
+.exp-totals-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.9rem 1.4rem;
+  border-bottom: 1px solid var(--border);
+  min-height: 52px;
+}
+
+.exp-total-chip {
+  /* font-family: 'DM Mono', monospace; */
+  font-size: 0.9rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(244, 177, 26, 0.25);
+  background: rgba(244, 177, 26, 0.08);
+  color: var(--text-sub);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.exp-total-chip:hover {
+  border-color: var(--warning);
+  color: var(--warning);
+}
+
+.exp-total-amt {
+  color: var(--warning);
+  margin-left: 0.3rem;
+  font-weight: 600;
+}
+
+.exp-no-totals {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+/* ── Date Groups ── */
+.exp-date-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.exp-date-group {
+  border-bottom: 1px solid var(--border);
+}
+
+.exp-date-group:last-child {
+  border-bottom: none;
+}
+
+.exp-date-group-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: nowrap;
+  padding: 0.45rem 1rem;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+  min-width: 0;
+}
+
+.exp-date-label {
+  font-size: 0.73rem;
+  font-weight: 800;
+  color: var(--text-sub);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.exp-date-count {
+  color: var(--text-muted);
+  font-size: 0.67rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.exp-date-totals {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.3rem;
+  flex-shrink: 0;
+}
+
+.exp-date-total {
+  border-radius: 999px;
+  border: 1px solid rgba(244, 177, 26, 0.2);
+  background: rgba(244, 177, 26, 0.07);
+  color: var(--warning);
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.18rem 0.5rem;
+  white-space: nowrap;
+}
+
+
+/* ── Expense Items ── */
+.exp-category-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.exp-category-group {
+  border-bottom: 1px solid var(--border);
+  border-left: 3px solid hsla(var(--cat-hue), 90%, 55%, 0.9);
+  border-left: 3px solid oklch(0.65 0.21 var(--cat-hue) / 0.9);
+}
+
+.exp-category-group:last-child {
+  border-bottom: none;
+}
+
+.exp-category-group-header {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: nowrap;
+  padding: 0.55rem 1rem;
+  background: hsla(var(--cat-hue), 88%, 50%, 0.10);
+  background: oklch(0.68 0.16 var(--cat-hue) / 0.10);
+  min-width: 0;
+}
+
+.exp-category-title-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex-shrink: 0;
+  border-radius: 999px;
+  padding: 0.22rem 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+
+  /* HSL fallback */
+  border: 1px solid hsla(var(--cat-hue), 90%, 55%, 0.5);
+  background: hsla(var(--cat-hue), 90%, 52%, 0.14);
+  color: hsl(var(--cat-hue), 90%, 65%);
+  /* OKLCH override — perceptually equal brightness across all hues */
+  border: 1px solid oklch(0.65 0.2 var(--cat-hue) / 0.5);
+  background: oklch(0.68 0.15 var(--cat-hue) / 0.14);
+  color: oklch(0.74 0.2 var(--cat-hue));
+}
+
+.exp-category-title-chip:hover {
+  background: hsla(var(--cat-hue), 90%, 52%, 0.22);
+  background: oklch(0.68 0.15 var(--cat-hue) / 0.22);
+  border-color: hsla(var(--cat-hue), 90%, 60%, 0.8);
+  border-color: oklch(0.72 0.2 var(--cat-hue) / 0.8);
+}
+
+/* light mode — much darker for readability on light bg */
+body.light-mode .exp-category-title-chip {
+  color: hsl(var(--cat-hue), 85%, 34%);
+  color: oklch(0.42 0.18 var(--cat-hue));
+  border-color: hsla(var(--cat-hue), 85%, 40%, 0.55);
+  border-color: oklch(0.5 0.18 var(--cat-hue) / 0.55);
+  background: hsla(var(--cat-hue), 85%, 46%, 0.12);
+  background: oklch(0.68 0.15 var(--cat-hue) / 0.12);
+}
+
+body.light-mode .exp-category-title-chip:hover {
+  background: hsla(var(--cat-hue), 85%, 46%, 0.2);
+  background: oklch(0.68 0.15 var(--cat-hue) / 0.2);
+}
+
+.exp-category-count {
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.exp-category-totals {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.3rem;
+  flex-shrink: 0;
+}
+
+.exp-category-total {
+  border-radius: 999px;
+  border: 1px solid rgba(244, 177, 26, 0.25);
+  background: rgba(244, 177, 26, 0.08);
+  color: var(--warning);
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.2rem 0.5rem;
+  white-space: nowrap;
+}
+
+.exp-category-group .exp-list {
+  border-top: 1px solid var(--border);
+}
+
+.exp-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.exp-item {
+  border-bottom: 1px solid var(--border);
+  border-left: 3px solid hsl(var(--cat-hue, 220) 80% 55% / 0.55);
+  transition: background 0.15s;
+}
+
+.exp-item:last-child {
+  border-bottom: none;
+}
+
+.exp-item:hover {
+  background: var(--surface-2);
+}
+
+body.light-mode .exp-item {
+  border-left-color: hsl(var(--cat-hue, 220) 60% 45% / 0.6);
+}
+
+.exp-item-inner {
+  padding: 0.85rem 1.1rem 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.exp-item-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.exp-item-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.exp-item-amount {
+  /* font-family: 'DM Mono', monospace; */
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--accent);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.exp-item-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+}
+
+.exp-cat-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.68rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: 6px;
+  background: hsl(var(--cat-hue, 220) 80% 55% / 0.13);
+  border: 1px solid hsl(var(--cat-hue, 220) 80% 55% / 0.35);
+  color: hsl(var(--cat-hue, 220) 80% 70%);
+  max-width: 140px;
+  min-width: 0;
+}
+
+.exp-cat-badge-text {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.exp-meta-dot {
+  color: var(--text-muted);
+}
+
+.exp-item-date {
+  color: var(--text-sub);
+}
+
+.exp-item-qty {
+  /* font-family: 'DM Mono', monospace; */
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.exp-item-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.25rem;
+}
+
+.exp-item-actions-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.exp-info-avatar-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.exp-info-icon {
+  font-size: 26px;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--info);
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+
+.exp-info-icon:hover {
+  opacity: 1;
+}
+
+.exp-info-icon:focus-visible,
+.exp-avatar-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.exp-avatar-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.exp-avatar-name-bubble {
+  position: absolute;
+  bottom: calc(100% + 9px);
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  transform: translateY(5px) scale(0.9);
+  transform-origin: bottom right;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-sub);
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+  padding: 5px 10px 5px 5px;
+  border-radius: 8px 8px 2px 8px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  z-index: 20;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.exp-avatar-name-bubble-text {
+  line-height: 1.2;
+}
+
+.exp-avatar-name-bubble::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  right: 5px;
+  border: 5px solid transparent;
+  border-top-color: var(--border);
+}
+
+.exp-avatar-name-bubble::before {
+  content: '';
+  position: absolute;
+  top: calc(100% - 1px);
+  right: 5px;
+  border: 5px solid transparent;
+  border-top-color: var(--surface-2);
+  z-index: 1;
+}
+
+.exp-avatar-name-bubble.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.exp-created-by {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-align: right;
+  position: relative;
+  margin-top: -0.35rem;
+  min-width: 0;
+}
+
+.exp-created-by-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.exp-empty-compact {
+  padding: 1.4rem;
+}
+
+.exp-voucher-list-wrap {
+  border-top: 1px solid var(--border);
+  padding: 1rem 1.4rem 1.35rem;
+}
+
+.exp-voucher-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.8rem;
+  color: var(--text-sub);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.exp-voucher-count {
+  min-width: 28px;
+  height: 24px;
+  border-radius: 999px;
+  border: 1px solid rgba(244, 177, 26, 0.35);
+  background: rgba(244, 177, 26, 0.1);
+  color: var(--warning);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.45rem;
+  font-size: 0.72rem;
+}
+
+.exp-voucher-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.exp-voucher-item {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) auto;
+  gap: 0.8rem;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+  padding: 0.65rem;
+}
+
+.exp-voucher-thumb {
+  width: 72px;
+  height: 72px;
+  border-radius: 0;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  display: block;
+}
+
+.exp-voucher-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.exp-voucher-content {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.exp-voucher-title {
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.exp-voucher-note {
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  line-height: 1.35;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.exp-voucher-created-by {
+  justify-content: flex-start;
+  margin-top: 0;
+}
+
+.exp-voucher-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+/* ── Edit Form ── */
+.exp-edit-form {
+  padding: 1.2rem 1.4rem;
+  border-top: 1px solid var(--border);
+  background: var(--surface-2);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.exp-edit-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.exp-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+/* ── Empty / Loading ── */
+.exp-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 2.5rem 1.5rem;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  text-align: center;
+}
+
+.exp-empty-state-icon {
+  opacity: 0.2;
+  color: var(--success);
+}
+
+.exp-empty-state p {
+  margin: 0;
+}
+
+.exp-loading {
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+}
+
+/* ── Icon helpers ── */
+.exp-icon-accent {
+  color: var(--accent);
+}
+
+.exp-icon-success {
+  color: var(--success);
+}
+
+.exp-icon-warning {
+  color: var(--warning);
+  font-size: 1.25rem;
+}
+
+/* ══════════════════════════════
+   Floating Label Fields
+   ══════════════════════════════ */
+.exp-float-field {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* When used as a group (currency badge + input side by side) */
+.exp-float-group {
+  flex-direction: row;
+  align-items: stretch;
+  gap: 0;
+}
+
+.exp-float-input {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  /* font-family: 'Syne', sans-serif; */
+  font-size: 0.9rem;
+  padding: 0 0.9rem;
+  outline: none;
+  width: 100%;
+  transition: border-color 0.15s;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 52px;
+}
+
+
+
+.exp-float-input::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
+}
+
+.exp-float-input:focus {
+  border-color: var(--accent);
+}
+
+/* .exp-float-input.is-invalid {
+  border-color: var(--accent);
+} */
+
+/* Date input calendar icon */
+.exp-float-input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.5);
+  cursor: pointer;
+}
+
+/* Select arrow */
+.exp-float-select {
+  background-color: var(--surface-2) !important;
+  background-repeat: no-repeat;
+  background-position: right 0.9rem center;
+  padding-right: 2.2rem;
+  cursor: pointer;
+}
+
+.exp-float-select option {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+/* Joined input (after currency badge) */
+.exp-float-input-joined {
+  border-radius: 0 10px 10px 0;
+  /* border-left: none; */
+}
+
+/* Currency badge in float group */
+.exp-float-group .exp-currency-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--info-dim);
+  border: 1px solid var(--border);
+  border-right: none;
+  border-radius: 10px 0 0 10px;
+  padding: 0 0.85rem;
+  /* font-family: 'DM Mono', monospace; */
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+  height: 52px;
+  transition: border-color 0.15s;
+}
+
+/* The badge and the joined input meet at a borderless seam (badge's right
+   border is removed so they read as one pill) — without this, focusing the
+   input only turned *its own* border blue, leaving the badge's left/top/
+   bottom border stuck at the muted default and the pill's left edge
+   looking unhighlighted. */
+.exp-float-group:focus-within .exp-currency-badge {
+  border-color: var(--accent);
+}
+
+/* Addon button in float group */
+.exp-float-group .exp-addon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-dim);
+  border: 1px solid var(--border);
+  border-left: none;
+  border-radius: 0 10px 10px 0;
+  padding: 0 0.95rem;
+  font-size: 0.85rem;
+  color: #fff;
+  background: var(--info);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  /* height: 60px; */
+  flex-shrink: 0;
+}
+
+.exp-float-group .exp-addon-btn:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* Left part of float group */
+.exp-float-group>.exp-float-field {
+  flex: 1;
+  min-width: 0;
+}
+
+.exp-float-group>.exp-float-field>.exp-float-input {
+  border-radius: 10px 0 0 10px;
+  /* border-right: none; */
+  height: 52px;
+}
+
+/* For price field: left side is currency badge, so input loses left radius */
+.exp-float-group>.exp-currency-badge+.exp-float-field>.exp-float-input {
+  border-radius: 0 10px 10px 0;
+  /* border-left: none; */
+}
+
+/* ══════════════════════════════════════════════
+   QUICK MODE TOGGLE
+   ══════════════════════════════════════════════ */
+
+/* Mode toggle + Date pill share one row — both compact, content-sized
+   buttons instead of the date trigger stretching to fill a whole row. */
+.exp-mode-date-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  /* margin: 0 0 0.85rem; */
+}
+
+/* No mode-toggle sibling (Voucher form) — just pin the date pill to the
+   top-right corner on its own instead of letting it sit at flex-start. */
+.exp-mode-date-row-solo {
+  justify-content: flex-end;
+}
+
+.exp-quick-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 20px;
+  border: 1px solid rgba(11, 116, 255, 0.3);
+  background: rgba(11, 116, 255, 0.08);
+  color: var(--accent, #0b74ff);
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.exp-quick-toggle:hover {
+  background: rgba(11, 116, 255, 0.15);
+  border-color: var(--accent, #0b74ff);
+}
+
+/* Full mode active — different color */
+.exp-quick-toggle.active {
+  background: rgba(96, 165, 250, 0.1);
+  border-color: rgba(96, 165, 250, 0.3);
+  color: #60a5fa;
+}
+
+/* Date pill — same compact sizing as .exp-quick-toggle, neutral color */
+.exp-date-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-sub);
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.exp-date-pill:hover {
+  border-color: var(--accent, #0b74ff);
+  color: var(--text);
+}
+
+
+/* ══════════════════════════════════════════════
+   SHARED DATE FILTER BAR (segment control)
+   ══════════════════════════════════════════════ */
+
+.exp-filter-top-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.exp-filter-top-row .exp-seg-ctrl {
+  flex: 1;
+  min-width: 0;
+}
+
+.exp-filter-top-row .exp-add-toolbar-btn {
+  flex-shrink: 0;
+}
+
+.exp-filter-bottom-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.exp-filter-bottom-row .exp-filter-label {
+  flex: 1;
+  min-width: 0;
+}
+
+.exp-filter-bar {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 0.6rem 0.6rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  position: sticky;
+  top: calc(env(safe-area-inset-top, 0px) + 0.5rem);
+  z-index: 50;
+}
+
+/* ── iOS-style Segmented Control ── */
+.exp-seg-ctrl {
+  display: flex;
+  align-items: center;
+  background: var(--surface-2);
+  border-radius: 10px;
+  padding: 3px;
+  gap: 4px;
+}
+
+/* track: relative container for buttons + sliding indicator */
+.exp-seg-track {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* sliding pill — the iOS indicator */
+.exp-seg-indicator {
+  position: absolute;
+  inset: 0;
+  width: 25%;          /* 100% ÷ 4 tabs */
+  border-radius: 7px;
+  background: var(--surface);
+  box-shadow:
+    0 1px 6px rgba(0, 0, 0, 0.3),
+    0 0 0 0.5px rgba(11, 116, 255, 0.15);
+  transition: transform 0.42s cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: transform;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.exp-seg-btn {
+  flex: 1;
+  min-height: 36px;
+  padding: 0.35rem 0.2rem;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+  z-index: 1;
+  transition: color 0.22s ease, transform 0.12s ease;
+  border-radius: 7px;
+}
+
+.exp-seg-btn:active {
+  transform: scale(0.93);
+}
+
+.exp-seg-btn.active {
+  color: var(--accent);
+  font-weight: 700;
+  background: transparent;
+  box-shadow: none;
+}
+
+/* reset button */
+.exp-seg-reset {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s, transform 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.exp-seg-reset:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
+}
+
+.exp-seg-reset:active {
+  transform: rotate(-45deg);
+  color: var(--accent);
+}
+
+/* when picker is visible, flatten filter bar bottom so it connects to the picker below */
+.exp-filter-bar-expanded {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-bottom-color: transparent;
+}
+
+/* date range picker outer — connects to filter bar above, no stacking context (no transform/animation) */
+.exp-daterange-outer {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: none;
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
+  padding: 0.3rem 0.5rem 0.6rem;
+  margin-top: -1rem; /* cancel the parent container's gap so it butts up against the filter bar */
+}
+
+/* kept for reference but no longer used in HTML */
+.exp-daterange-wrap {
+  animation: exp-slide-down 0.22s ease forwards;
+  padding: 0 2px;
+}
+
+.exp-daterange-row {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: var(--surface-2);
+  border: 1px solid rgba(11, 116, 255, 0.28);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.exp-daterange-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 0.45rem 0.75rem 0.4rem;
+  min-width: 0;
+}
+
+.exp-daterange-col-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent, #0b74ff);
+  margin-bottom: 0.18rem;
+  line-height: 1;
+}
+
+.exp-daterange-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 600;
+  width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+  padding: 0;
+}
+
+.exp-daterange-input::-webkit-calendar-picker-indicator {
+  filter: invert(0.45) sepia(1) hue-rotate(200deg);
+  cursor: pointer;
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  margin-left: 4px;
+}
+
+.exp-daterange-sep {
+  width: 28px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  opacity: 0.6;
+  position: relative;
+}
+
+.exp-daterange-sep::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 60%;
+  background: var(--border);
+}
+
+.exp-daterange-sep::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 60%;
+  background: var(--border);
+}
+
+body.light-mode .exp-daterange-row {
+  border-color: rgba(0, 79, 199, 0.22);
+}
+
+body.light-mode .exp-daterange-col-label {
+  color: #004fc7;
+}
+
+body.light-mode .exp-daterange-input::-webkit-calendar-picker-indicator {
+  filter: invert(0.2) sepia(1) hue-rotate(200deg) saturate(1.5);
+}
+
+/* active filter label */
+.exp-filter-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem;
+  padding: 0 4px 2px;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.exp-filter-label-date {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+/* Only ever rendered on desktop — gated by *ngIf="isDesktopView" in the
+   template (matching this same 992px breakpoint), not just CSS-hidden. */
+.exp-add-toolbar-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: none;
+  border-radius: 10px;
+  padding: 0.65rem 1rem;
+  background: var(--accent, #0b74ff);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: normal;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(11, 116, 255, 0.35);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.exp-add-toolbar-btn:hover {
+  box-shadow: 0 6px 18px rgba(11, 116, 255, 0.45);
+}
+
+.exp-add-toolbar-btn:active {
+  transform: scale(0.96);
+}
+
+.exp-filter-label-icon {
+  font-size: 0.7rem;
+  opacity: 0.7;
+}
+
+/* Light mode overrides */
+body.light-mode .exp-seg-btn {
+  color: #9ca3af;
+}
+
+body.light-mode .exp-seg-btn.active {
+  background: #fff;
+  color: #004fc7;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,180,140,0.12);
+}
+
+body.light-mode .exp-seg-reset {
+  color: #9ca3af;
+}
+
+.exp-edit-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+
+/* slide-down animation (shared) */
+@keyframes exp-slide-down {
+  from { opacity: 0; transform: translateY(-6px) scaleY(0.92); }
+  to   { opacity: 1; transform: translateY(0) scaleY(1); }
+}
+
+/* ── Cart section — the actual "Add Purchase" experience, always visible
+   at the top of the page (no FAB/modal needed to reach it). ── */
+.exp-pos-section,
+.exp-voucher-tab-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.1rem 1.2rem 1.2rem;
+  margin-bottom: 1.1rem;
+}
+
+.exp-pos-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-bottom: 0.9rem;
+}
+
+.exp-pos-section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+}
+
+.exp-pos-action-row {
+  display: flex;
+  gap: 0.6rem;
+  margin: 0.85rem 0 1rem;
+}
+
+.exp-pos-scan-btn,
+.exp-pos-manual-add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  height: 46px;
+  flex: 1;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.exp-pos-scan-btn {
+  border: none;
+  background: var(--accent, #0b74ff);
+  color: #fff;
+}
+
+.exp-pos-manual-add-btn {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.exp-pos-cart-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 2.2rem 1rem;
+  color: var(--text-muted);
+  background: var(--bg);
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  text-align: center;
+}
+
+.exp-pos-cart-empty-icon {
+  opacity: 0.5;
+}
+
+.exp-pos-cart-list {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.exp-pos-cart-line {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.65rem 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.exp-pos-cart-line-main {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.exp-pos-cart-line-name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.exp-pos-cart-line-unit {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.exp-pos-cart-line-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.exp-pos-qty-stepper {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--surface-2);
+  border-radius: 10px;
+  padding: 0.2rem 0.35rem;
+  flex-shrink: 0;
+}
+
+.exp-pos-qty-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: none;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.exp-pos-qty-value {
+  min-width: 1.3rem;
+  text-align: center;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.exp-pos-unit-price-input {
+  width: 84px;
+  height: 34px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.8rem;
+  text-align: right;
+  padding: 0 0.45rem;
+  min-width: 0;
+}
+
+.exp-pos-unit-price-input-error {
+  border-color: var(--danger);
+}
+
+.exp-pos-line-subtotal {
+  margin-left: auto;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.exp-pos-remove-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid rgba(248, 113, 113, 0.25);
+  background: rgba(248, 113, 113, 0.08);
+  color: #f87171;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.exp-pos-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.9rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--border);
+}
+
+.exp-pos-total {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.exp-pos-total-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.exp-pos-total-value {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
+/* ── Picker search row + inline "add new product" button (shared by the
+   cart's product picker and the edit modal's) — the search box didn't
+   need its own flex:1 before since a flex-column parent already stretched
+   it; now it shares a row with the add button. ── */
+.exp-cat-picker-search-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  padding: 0.85rem 0
+}
+
+.exp-cat-picker-search-row .exp-cat-picker-search {
+  flex: 1;
+  min-width: 0;
+}
+
+.exp-cat-picker-add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 46px;
+  height: 46px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--accent, #0b74ff);
+  cursor: pointer;
+}
+
+/* ── Cart's own date/category/product picker sheet (independent of the
+   edit/voucher modal — a fresh bottom-sheet overlay, not swapped in place
+   like the modal's internal pickers, since the cart section isn't a
+   transformed container). ── */
+.exp-pos-picker-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 1050;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+}
+
+.exp-pos-picker-backdrop.open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.exp-pos-picker-sheet {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  width: 100%;
+  max-width: 480px;
+  max-height: 80vh;
+  background: var(--surface, #12151c);
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: 20px 20px 0 0;
+  z-index: 1051;
+  translate: -50% 100%;
+  transition: translate 0.25s ease;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.exp-pos-picker-sheet.open {
+  translate: -50% 0;
+}
+
+/* The cart/voucher picker's category+product bodies are bare (no
+   .exp-add-modal-body wrapper, unlike the edit modal's copy), so the
+   search row's solid background sat flush against the sheet's edges while
+   list items only looked inset thanks to their own transparent-background
+   padding. Give the body real horizontal breathing room, and pad the
+   bottom of the scrollable list by roughly one item's height so the last
+   row isn't flush against the sheet's rounded/safe-area edge. */
+.exp-pos-picker-sheet .exp-cat-picker-body {
+  padding: 0 1rem;
+}
+
+.exp-pos-picker-sheet .exp-cat-picker-list {
+  padding-bottom: 3.25rem;
+}
+
+.exp-pos-picker-handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--border);
+  margin: 0.65rem auto 0.4rem;
+  flex-shrink: 0;
+}
+
+.exp-pos-picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.exp-pos-picker-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* ── Recorded Purchases: multi-item (POS) breakdown ── */
+.exp-lineitems-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--accent, #0b74ff);
+  font-size: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.exp-lineitems-detail {
+  margin: 0.35rem 0 0.5rem;
+  padding: 0.5rem 0.6rem;
+  background: var(--bg);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.exp-lineitems-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.exp-lineitems-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

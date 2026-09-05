@@ -137,6 +137,20 @@ body.pd-modal-open {
   align-items: flex-end;
 }
 
+.pd-scan-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--accent, #0b74ff);
+  cursor: pointer;
+}
+
 .pd-modal-error {
   font-size: 0.75rem;
   color: var(--danger, #f87171);
