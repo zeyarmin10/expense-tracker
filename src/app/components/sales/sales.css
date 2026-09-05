@@ -285,6 +285,67 @@ body.pnl-add-modal-open {
   padding: 0;
 }
 
+/* ── Printable receipt (see .pnl-receipt-sheet reuse of the add-modal's
+   own backdrop/sheet/header CSS above — only the paper content is new). ── */
+.pnl-receipt-paper {
+  font-family: 'DM Mono', 'Courier New', monospace;
+  background: var(--surface-2);
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  padding: 1rem;
+}
+
+.pnl-receipt-shop {
+  text-align: center;
+  font-weight: 800;
+  font-size: 1rem;
+  margin-bottom: 0.2rem;
+}
+
+.pnl-receipt-date {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 0.6rem;
+}
+
+.pnl-receipt-sep {
+  border-top: 1px dashed var(--border);
+  margin: 0.6rem 0;
+}
+
+.pnl-receipt-line {
+  margin-bottom: 0.5rem;
+}
+
+.pnl-receipt-line-name {
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.pnl-receipt-line-detail {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.pnl-receipt-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.pnl-receipt-thanks {
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 0.8rem;
+}
+
 /* Date select trigger — replaces app-date-input for the date field inside
    this modal (see profit.ts for why: nesting that component's own
    bottom-sheet picker here left it stuck open on mobile). */
@@ -2616,6 +2677,21 @@ app-date-input .di-trigger {
 
 .pnl-pos-picker-sheet.open {
   translate: -50% 0;
+}
+
+/* The cart's product picker body is bare (no .pnl-add-modal-body wrapper,
+   unlike the edit modal's copy), so the search row's solid background sat
+   flush against the sheet's edges while list items only looked inset
+   thanks to their own transparent-background padding. Give the body real
+   horizontal breathing room, and pad the bottom of the scrollable list by
+   roughly one item's height so the last row isn't flush against the
+   sheet's rounded/safe-area edge — same fix as Purchase's picker sheet. */
+.pnl-pos-picker-sheet .pnl-cat-picker-body {
+  padding: 0 1rem;
+}
+
+.pnl-pos-picker-sheet .pnl-cat-picker-list {
+  padding-bottom: 3.25rem;
 }
 
 .pnl-pos-picker-handle {

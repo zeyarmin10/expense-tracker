@@ -40,7 +40,9 @@ import {
   ChartColumn, ChevronDown, ChevronUp, ChevronRight, Save, Trash2,
   Plus, Minus, X, CalendarDays, Pencil,
   Search, Check, Package, HandCoins, ScanLine, RotateCcw, Calendar,
+  Receipt, Share2,
 } from 'lucide-angular';
+import { Share } from '@capacitor/share';
 import { AuthService } from '../../services/auth';
 import {
   UserProfile,
@@ -251,6 +253,8 @@ export class Sales implements OnInit, OnDestroy {
   readonly iconPackage = Package;
   readonly iconScanLine = ScanLine;
   readonly iconMinus = Minus;
+  readonly iconReceipt = Receipt;
+  readonly iconShare2 = Share2;
 
   // Only native builds can actually scan — the button hides on web/dev,
   // same guard as inventory.ts's/product-modal.ts's.
@@ -267,6 +271,75 @@ export class Sales implements OnInit, OnDestroy {
 
   private hasCartLineWithoutPrice(): boolean {
     return this.cart.some(line => !line.unitPrice || line.unitPrice <= 0);
+  }
+
+  // ── Printable receipt — shown right after a successful checkout, shared
+  // as plain text via the native share sheet. No new native plugin needed
+  // this way; an image-formatted receipt would need html2canvas +
+  // @capacitor/filesystem added later if that's ever wanted instead. ──
+  showReceipt = false;
+  receiptShopName = '';
+  receiptDate = '';
+  receiptLines: { name: string; qtyUnit: string; unitPrice: string; subtotal: string }[] = [];
+  receiptTotal = '';
+  private receiptText = '';
+
+  private buildAndShowReceipt(lineItems: IncomeLineItem[], amount: number, currency: string, date: string): void {
+    this.receiptShopName = this.userProfile?.currentSpaceName || 'Kyat Wise';
+    this.receiptDate = this.formatService.formatLocalizedDate(date);
+    this.receiptLines = lineItems.map(item => ({
+      name: item.productName,
+      qtyUnit: this.formatCount(item.quantity) + (item.unit ? ' ' + item.unit : ''),
+      unitPrice: this.formatService.formatAmountWithSymbol(item.unitPrice, currency),
+      subtotal: this.formatService.formatAmountWithSymbol(item.subtotal, currency),
+    }));
+    this.receiptTotal = this.formatService.formatAmountWithSymbol(amount, currency);
+
+    const sep = '--------------------------------';
+    const rows = lineItems
+      .map(item => {
+        const qtyUnit = this.formatCount(item.quantity) + (item.unit ? ` ${item.unit}` : '');
+        const subtotal = this.formatService.formatAmountWithSymbol(item.subtotal, currency);
+        return `${item.productName}\n  ${qtyUnit} x ${this.formatService.formatAmountWithSymbol(item.unitPrice, currency)} = ${subtotal}`;
+      })
+      .join('\n');
+
+    this.receiptText =
+      `${this.receiptShopName}\n${sep}\n` +
+      `${this.translate.instant('DATE_LABEL')}: ${this.receiptDate}\n` +
+      `${sep}\n${rows}\n${sep}\n` +
+      `${this.translate.instant('POS_TOTAL_LABEL')}: ${this.receiptTotal}\n${sep}\n` +
+      `${this.translate.instant('SALE_RECEIPT_THANK_YOU')}`;
+
+    this.showReceipt = true;
+    this.cdr.markForCheck();
+  }
+
+  closeReceipt(): void {
+    this.showReceipt = false;
+  }
+
+  async shareReceipt(): Promise<void> {
+    try {
+      const { value: canShare } = await Share.canShare();
+      if (!canShare) {
+        throw new Error('Share not supported');
+      }
+      await Share.share({
+        title: this.translate.instant('SALE_RECEIPT_TITLE'),
+        text: this.receiptText,
+      });
+    } catch {
+      // Either sharing isn't supported here, or the user cancelled the share
+      // sheet — either way, fall back to clipboard rather than showing an
+      // error for what's usually just a cancel, not a real failure.
+      try {
+        await navigator.clipboard.writeText(this.receiptText);
+        Toast.fire({ icon: 'success', title: this.translate.instant('SALE_RECEIPT_COPIED') });
+      } catch {
+        // Nothing more we can do — the receipt stays visible on screen.
+      }
+    }
   }
 
   // ── Comma formatting ──────────────────────────
@@ -591,6 +664,7 @@ export class Sales implements OnInit, OnDestroy {
       this.refreshIncomes$.next();
       this.closeAddModal();
       this.closeAddCartOverlay();
+      this.buildAndShowReceipt(lineItems, amount, currency, date);
     } catch (error: any) {
       console.error('Error checking out sale:', error);
       Toast.fire({

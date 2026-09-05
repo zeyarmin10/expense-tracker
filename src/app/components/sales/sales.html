@@ -610,4 +610,44 @@
   </div>
 </div>
 
+<!-- ── Printable receipt — shown right after a successful checkout ── -->
+<div class="pnl-add-modal-backdrop" [class.open]="showReceipt" (click)="closeReceipt()"></div>
+<div class="pnl-add-modal-sheet pnl-receipt-sheet" [class.open]="showReceipt">
+  <div class="pnl-add-modal-header">
+    <span class="pnl-add-modal-header-title">
+      <lucide-icon [img]="iconReceipt" [size]="16"></lucide-icon>
+      {{ 'SALE_RECEIPT_TITLE' | translate }}
+    </span>
+    <button type="button" class="pnl-add-modal-close" (click)="closeReceipt()" [title]="'CLOSE_BUTTON_LABEL' | translate">
+      <lucide-icon [img]="iconX" [size]="18"></lucide-icon>
+    </button>
+  </div>
+  <div class="pnl-add-modal-body">
+    <div class="pnl-receipt-paper">
+      <div class="pnl-receipt-shop">{{ receiptShopName }}</div>
+      <div class="pnl-receipt-date">{{ 'DATE_LABEL' | translate }}: {{ receiptDate }}</div>
+      <div class="pnl-receipt-sep"></div>
+      <div class="pnl-receipt-line" *ngFor="let line of receiptLines">
+        <div class="pnl-receipt-line-name">{{ line.name }}</div>
+        <div class="pnl-receipt-line-detail">
+          <span>{{ line.qtyUnit }} &#215; {{ line.unitPrice }}</span>
+          <span>{{ line.subtotal }}</span>
+        </div>
+      </div>
+      <div class="pnl-receipt-sep"></div>
+      <div class="pnl-receipt-total">
+        <span>{{ 'POS_TOTAL_LABEL' | translate }}</span>
+        <span>{{ receiptTotal }}</span>
+      </div>
+      <div class="pnl-receipt-thanks">{{ 'SALE_RECEIPT_THANK_YOU' | translate }}</div>
+    </div>
+    <div class="pnl-form-footer">
+      <button type="button" class="pnl-btn pnl-btn-primary" (click)="shareReceipt()">
+        <lucide-icon [img]="iconShare2" [size]="15"></lucide-icon>
+        {{ 'SALE_RECEIPT_SHARE_BUTTON' | translate }}
+      </button>
+    </div>
+  </div>
+</div>
+
 <app-product-modal (productAdded)="onProductModalAdded($event)"></app-product-modal>
