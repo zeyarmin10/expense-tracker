@@ -970,6 +970,7 @@
   "STOCK_REMAINING_LABEL": "လက်ကျန်",
   "SALE_RECEIPT_SAVE_IMAGE_BUTTON": "ပုံကို သိမ်းမည်",
   "SALE_RECEIPT_IMAGE_ERROR": "ဘောက်ချာပုံကို သိမ်း၍မရပါ။ ထပ်ကြိုးစားပါ။",
+  "SALE_RECEIPT_IMAGE_SAVED": "ဘောက်ချာပုံကို Documents/Kyat Wise တွင် သိမ်းပြီးပါပြီ။",
   "CONFIRM_DELETE_SALE": "ရောင်းချမှုဖျက်သိမ်းခြင်းကို အတည်ပြုပါ",
   "SALE_DELETE_SUCCESS": "ရောင်းချမှုအောင်မြင်စွာဖျက်ပြီးပါပြီ။",
   "SALE_DELETE_ERROR": "ရောင်းချမှုဖျက်ရာတွင် အမှားဖြစ်ခဲ့သည်။",

@@ -443,16 +443,18 @@ export class Sales implements OnInit, OnDestroy {
 
   // Renders the on-screen receipt card to a PNG (html2canvas — pixel-faithful
   // to .pnl-receipt-paper's own styling, no need to hand-draw the layout on
-  // a canvas ourselves) and hands it off platform-appropriately: on a native
-  // build, written to the app's cache dir and opened in the native share
-  // sheet (files:) so the user can save it to Gallery/Files; on plain web,
-  // a normal browser download.
+  // a canvas ourselves). Native builds save directly to Documents/Kyat Wise
+  // instead of opening a share sheet; web builds use a normal browser download.
   async saveReceiptAsImage(): Promise<void> {
     const element = document.querySelector('.pnl-receipt-paper') as HTMLElement | null;
     if (!element || this.isSavingReceiptImage) return;
 
     this.isSavingReceiptImage = true;
-    this.cdr.markForCheck();
+    // html2canvas blocks the WebView's main thread while it captures. Force
+    // the spinner to render before beginning that work, rather than leaving
+    // the button looking inactive for several seconds after a tap.
+    this.cdr.detectChanges();
+    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
     let canvas: HTMLCanvasElement | null = null;
     try {
       const isNative = Capacitor.isNativePlatform();
@@ -468,12 +470,20 @@ export class Sales implements OnInit, OnDestroy {
       if (isNative) {
         const base64 = dataUrl.split(',')[1];
         const fileName = `receipt-${Date.now()}.png`;
-        const written = await Filesystem.writeFile({ path: fileName, data: base64, directory: Directory.Cache });
-        try {
-          await Share.share({ title: this.translate.instant('SALE_RECEIPT_TITLE'), files: [written.uri] });
-        } catch {
-          // User closed the share sheet without picking a target — not an error.
+        const permission = await Filesystem.checkPermissions();
+        const granted = permission.publicStorage === 'granted'
+          ? permission
+          : await Filesystem.requestPermissions();
+        if (granted.publicStorage !== 'granted') {
+          throw new Error('Storage permission was not granted');
         }
+        await Filesystem.writeFile({
+          path: `Kyat Wise/${fileName}`,
+          data: base64,
+          directory: Directory.Documents,
+          recursive: true,
+        });
+        Toast.fire({ icon: 'success', title: this.translate.instant('SALE_RECEIPT_IMAGE_SAVED') });
       } else {
         const link = document.createElement('a');
         link.href = dataUrl;

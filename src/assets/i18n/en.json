@@ -970,6 +970,7 @@
   "STOCK_REMAINING_LABEL": "Stock",
   "SALE_RECEIPT_SAVE_IMAGE_BUTTON": "Save as Image",
   "SALE_RECEIPT_IMAGE_ERROR": "Couldn't save the receipt image. Please try again.",
+  "SALE_RECEIPT_IMAGE_SAVED": "Receipt image saved to Documents/Kyat Wise.",
   "CONFIRM_DELETE_SALE": "Confirm Delete Sale",
   "SALE_DELETE_SUCCESS": "Sale deleted successfully!",
   "SALE_DELETE_ERROR": "An error occurred while deleting the sale.",

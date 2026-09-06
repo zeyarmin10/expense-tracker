@@ -970,6 +970,7 @@
   "STOCK_REMAINING_LABEL": "ស្តុកនៅសល់",
   "SALE_RECEIPT_SAVE_IMAGE_BUTTON": "រក្សាទុកជារូបភាព",
   "SALE_RECEIPT_IMAGE_ERROR": "មិនអាចរក្សាទុករូបភាពបង្កាន់ដៃបានទេ។ សូមសាកល្បងម្តងទៀត។",
+  "SALE_RECEIPT_IMAGE_SAVED": "បានរក្សាទុករូបភាពបង្កាន់ដៃក្នុង Documents/Kyat Wise។",
   "CONFIRM_DELETE_SALE": "បញ្ជាក់ការលុបការលក់",
   "SALE_DELETE_SUCCESS": "បានលុបការលក់ដោយជោគជ័យ!",
   "SALE_DELETE_ERROR": "មានបញ្ហាក្នុងការលុបការលក់។",
