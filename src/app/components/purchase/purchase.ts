@@ -425,10 +425,13 @@ export class Purchase implements OnInit, OnDestroy {
     this.expandedExpenseId = this.expandedExpenseId === expenseId ? null : expenseId;
   }
 
-  // A POS line item stores its own productName at checkout time; a legacy
-  // single-item purchase doesn't, so fall back to looking the product up live.
+  // A POS line item stores its own productName snapshot at checkout time —
+  // prefer a live lookup against the current product list instead, so a
+  // later rename in Inventory shows up here too; the snapshot is only a
+  // fallback for a product that's since been hard-deleted (a deactivated/
+  // hidden product still resolves live, since productList keeps those).
   getLineItemName(item: { productId: string; productName?: string }): string {
-    return item.productName || this.getSelectedProductName(item.productId) || '—';
+    return this.getSelectedProductName(item.productId) || item.productName || '—';
   }
   // ────────────────────────────────────────────────
 

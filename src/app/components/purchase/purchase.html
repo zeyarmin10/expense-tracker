@@ -78,8 +78,13 @@
       <ul class="exp-pos-cart-list" *ngIf="cart.length > 0">
         <li class="exp-pos-cart-line" *ngFor="let line of cart; trackBy: trackByCartLine">
           <div class="exp-pos-cart-line-main">
-            <span class="exp-pos-cart-line-name">{{ line.productName }}</span>
-            <span class="exp-pos-cart-line-unit" *ngIf="line.unit">{{ line.unit }}</span>
+            <div class="exp-pos-cart-line-info">
+              <span class="exp-pos-cart-line-name">{{ line.productName }}</span>
+              <span class="exp-pos-cart-line-unit" *ngIf="line.unit">{{ line.unit }}</span>
+            </div>
+            <button type="button" class="exp-pos-remove-btn" (click)="removeFromCart(line.productId)">
+              <lucide-icon [img]="iconTrash2" [size]="14"></lucide-icon>
+            </button>
           </div>
           <div class="exp-pos-cart-line-controls">
             <div class="exp-pos-qty-stepper">
@@ -99,9 +104,6 @@
               [value]="line.priceDisplay"
               (input)="onLineUnitPriceInput(line, $event)" />
             <span class="exp-pos-line-subtotal" [innerHTML]="formatService.formatAmountShortHtml(line.quantity * line.price, userProfile?.currency || 'MMK')"></span>
-            <button type="button" class="exp-pos-remove-btn" (click)="removeFromCart(line.productId)">
-              <lucide-icon [img]="iconTrash2" [size]="14"></lucide-icon>
-            </button>
           </div>
         </li>
       </ul>
@@ -116,7 +118,8 @@
           <span class="exp-pos-total-value" [innerHTML]="formatService.formatAmountWithSymbolHtml(cartTotal, userProfile?.currency || 'MMK')"></span>
         </div>
         <button type="button" class="exp-btn exp-btn-primary" [disabled]="isCheckingOut" (click)="onCheckout()">
-          <lucide-icon [img]="iconSave" [size]="16"></lucide-icon>
+          <span *ngIf="isCheckingOut" class="exp-btn-spinner"></span>
+          <lucide-icon *ngIf="!isCheckingOut" [img]="iconSave" [size]="16"></lucide-icon>
           {{ 'POS_CHECKOUT_BUTTON' | translate }}
         </button>
       </div>

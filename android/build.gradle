@@ -26,9 +26,16 @@ allprojects {
 
     configurations.all {
         resolutionStrategy {
-            force "org.jetbrains.kotlin:kotlin-stdlib:1.8.22"
-            force "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.22"
-            force "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.22"
+            // @capacitor/filesystem and @capacitor/camera are compiled against
+            // Kotlin 2.2.20 and use runtime helpers (e.g. SpillingKt for
+            // coroutine state) that don't exist in older stdlib releases —
+            // forcing 1.8.22 here (a leftover from before those plugins were
+            // added) caused a NoClassDefFoundError crash the moment a
+            // suspend function in FilesystemPlugin resumed. Pin to the same
+            // version those plugins already expect instead of an old one.
+            force "org.jetbrains.kotlin:kotlin-stdlib:2.2.20"
+            force "org.jetbrains.kotlin:kotlin-stdlib-jdk7:2.2.20"
+            force "org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.2.20"
         }
     }
 }

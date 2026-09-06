@@ -81,16 +81,18 @@ export class SalesReport implements OnInit, OnDestroy {
   }
 
   // Resolves a sale's display name the same way Sales' own list does:
-  // multi-item -> "N items", single lineItem -> its own productName (or a
-  // lookup by id for a legacy record where getIncomeLineItems() leaves
-  // productName blank), plain (non-product) sale -> its free-text description.
+  // multi-item -> "N items", single lineItem -> a live lookup against the
+  // current product list (so a rename in Inventory shows up here too),
+  // falling back to the line's own productName snapshot only if the
+  // product's since been hard-deleted, plain (non-product) sale -> its
+  // free-text description.
   getSaleDisplayName(income: ServiceIIncome): string {
     const lineItems = getIncomeLineItems(income);
     if (lineItems.length > 1) {
       return this.translate.instant('SALE_ITEMS_COUNT', { count: this.formatService.formatCount(lineItems.length) });
     }
     if (lineItems.length === 1) {
-      return lineItems[0].productName || this.getSelectedProductName(lineItems[0].productId) || '—';
+      return this.getSelectedProductName(lineItems[0].productId) || lineItems[0].productName || '—';
     }
     return income.description || '—';
   }
@@ -218,7 +220,7 @@ export class SalesReport implements OnInit, OnDestroy {
         if (selectedProduct) {
           filtered = filtered.filter(i =>
             getIncomeLineItems(i).some(li =>
-              (li.productName || this.getSelectedProductName(li.productId) || '').toLowerCase() === selectedProduct.toLowerCase()
+              (this.getSelectedProductName(li.productId) || li.productName || '').toLowerCase() === selectedProduct.toLowerCase()
             )
           );
         }
@@ -334,7 +336,7 @@ export class SalesReport implements OnInit, OnDestroy {
     for (const income of incomes) {
       if (!income.currency) continue;
       for (const li of getIncomeLineItems(income)) {
-        const name = li.productName || this.getSelectedProductName(li.productId) || this.translate.instant('DESCRIPTION');
+        const name = this.getSelectedProductName(li.productId) || li.productName || this.translate.instant('DESCRIPTION');
         const key = `${name}::${income.currency}`;
         if (!productTotalsMap[key]) {
           productTotalsMap[key] = { productName: name, total: 0, qty: 0, currency: income.currency };

@@ -6,6 +6,10 @@
          below and opens as a full-screen overlay (no modal box). ── -->
     <div class="pnl-cart-overlay" [class.pnl-cart-overlay-open]="showAddCartOverlay" *ngIf="canManageProfitActions">
       <div class="pnl-cart-overlay-topbar">
+        <h2 class="pnl-pos-section-title">
+          <lucide-icon [img]="iconHandCoins" [size]="18" class="pnl-icon-accent"></lucide-icon>
+          {{ 'ADD_SALE' | translate }}
+        </h2>
         <button type="button" class="pnl-cart-overlay-close" (click)="closeAddCartOverlay()"
           [title]="'CANCEL_BUTTON_LABEL' | translate">
           <lucide-icon [img]="iconX" [size]="20"></lucide-icon>

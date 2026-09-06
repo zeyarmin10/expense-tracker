@@ -355,6 +355,10 @@ export class Sales implements OnInit, OnDestroy {
       `${this.translate.instant('SALE_RECEIPT_THANK_YOU')}`;
 
     this.showReceipt = true;
+    // Matches every other modal's "-modal-open" body-class convention (see
+    // app.ts's canStartPullRefresh()) so a pull-to-refresh swipe starting on
+    // the receipt can't reload the page out from under it.
+    document.body.classList.add('pnl-receipt-modal-open');
     history.pushState(null, '');
     this.cdr.markForCheck();
   }
@@ -369,6 +373,7 @@ export class Sales implements OnInit, OnDestroy {
 
   private reallyCloseReceipt(): void {
     this.showReceipt = false;
+    document.body.classList.remove('pnl-receipt-modal-open');
   }
 
   @HostListener('window:popstate')
@@ -422,11 +427,19 @@ export class Sales implements OnInit, OnDestroy {
 
     this.isSavingReceiptImage = true;
     this.cdr.markForCheck();
+    let canvas: HTMLCanvasElement | null = null;
     try {
-      const canvas = await html2canvas(element, { backgroundColor: '#ffffff', scale: 2, useCORS: true });
+      const isNative = Capacitor.isNativePlatform();
+      // Android's WebView has a much smaller hardware bitmap budget than a
+      // desktop browser — scale:2 on a low-memory device was pushing the
+      // render + base64 round-trip (canvas -> dataURL -> raw bytes, each a
+      // full copy of the image in memory at once) far enough to get the
+      // whole app process killed by the OS right as the native Share sheet
+      // opened, which looks like the app just closing with no error shown.
+      canvas = await html2canvas(element, { backgroundColor: '#ffffff', scale: isNative ? 1 : 2, useCORS: true });
       const dataUrl = canvas.toDataURL('image/png');
 
-      if (Capacitor.isNativePlatform()) {
+      if (isNative) {
         const base64 = dataUrl.split(',')[1];
         const fileName = `receipt-${Date.now()}.png`;
         const written = await Filesystem.writeFile({ path: fileName, data: base64, directory: Directory.Cache });
@@ -447,6 +460,10 @@ export class Sales implements OnInit, OnDestroy {
       console.error('Error saving receipt image:', error);
       Swal.fire({ icon: 'error', text: this.translate.instant('SALE_RECEIPT_IMAGE_ERROR') });
     } finally {
+      // Drop the canvas's backing bitmap as soon as we're done with it,
+      // rather than waiting for GC, since it's the single largest chunk of
+      // memory in this whole flow.
+      if (canvas) { canvas.width = 0; canvas.height = 0; }
       this.isSavingReceiptImage = false;
       this.cdr.markForCheck();
     }
@@ -852,10 +869,13 @@ export class Sales implements OnInit, OnDestroy {
     this.expandedIncomeId = this.expandedIncomeId === incomeId ? null : incomeId;
   }
 
-  // A POS line item stores its own productName at checkout time; a legacy
-  // single-item sale doesn't, so fall back to looking the product up live.
+  // A POS line item stores its own productName snapshot at checkout time —
+  // prefer a live lookup against the current product list instead, so a
+  // later rename in Inventory shows up here too; the snapshot is only a
+  // fallback for a product that's since been hard-deleted (a deactivated/
+  // hidden product still resolves live, since productList keeps those).
   getLineItemName(item: { productId: string; productName?: string }): string {
-    return item.productName || this.getSelectedProductName(item.productId) || '—';
+    return this.getSelectedProductName(item.productId) || item.productName || '—';
   }
   // ────────────────────────────────────────────────
 

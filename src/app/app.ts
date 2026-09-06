@@ -506,6 +506,19 @@ export class App implements OnInit, AfterViewInit {
     });
   }
 
+  // Every modal/full-screen overlay in the app marks itself with a body
+  // class ending in "-modal-open" while it's open (cat-add-modal-open,
+  // pnl-add-modal-open, exp-add-modal-open, pd-modal-open, etc. — see each
+  // component's open()/close() pair) plus date-range-input's own
+  // "dri-scroll-locked". A pull gesture starting inside one of these reads
+  // as "scrolled to top" from the *window*'s point of view even though the
+  // overlay's own inner list isn't, which used to let a downward swipe
+  // trigger a reload mid-overlay and silently discard whatever the user was
+  // filling in (a purchase/sale cart, a receipt, a product/category form).
+  private isAnyModalOrOverlayOpen(): boolean {
+    return /-modal-open\b/.test(document.body.className) || document.body.classList.contains('dri-scroll-locked');
+  }
+
   private canStartPullRefresh(target: EventTarget | null): boolean {
     const isMobileViewport = window.matchMedia('(max-width: 991px)').matches;
     if (
@@ -513,6 +526,7 @@ export class App implements OnInit, AfterViewInit {
       this.mobileMenuOpen ||
       this.drawerSwiping ||
       this.isPullRefreshing ||
+      this.isAnyModalOrOverlayOpen() ||
       this.getPageScrollTop() > 2
     ) {
       return false;
