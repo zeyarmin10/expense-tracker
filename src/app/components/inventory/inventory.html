@@ -120,9 +120,8 @@
                 </button>
               </div>
 
-              <div class="inv-dropdown-menu"
-                [class.inv-dropdown-open]="openActionMenuProductId === product.id"
-                [class.inv-dropdown-menu-up]="openActionMenuUpward && openActionMenuProductId === product.id"
+              <div *ngIf="openActionMenuProductId === product.id" class="inv-dropdown-menu inv-dropdown-open"
+                [class.inv-dropdown-menu-up]="openActionMenuUpward"
                 (click)="$event.stopPropagation()">
                 <button class="inv-dropdown-item" type="button"
                   (click)="closeProductActions(); startEdit(product)">
@@ -179,28 +178,42 @@
 
     <!-- ── Stock & Profit tab ── -->
     <div *ngIf="activeTab === 'stock'">
-      <div class="inv-threshold-row">
-        <label for="inv-low-stock-threshold">{{ 'LOW_STOCK_THRESHOLD_LABEL' | translate }}</label>
-        <input id="inv-low-stock-threshold" type="number" min="0" step="1" class="inv-input inv-threshold-input"
-          [(ngModel)]="lowStockThreshold" />
-        <button type="button" class="inv-threshold-save-btn" [disabled]="isSavingThreshold" (click)="saveLowStockThreshold()">
-          {{ 'SAVE_BUTTON_LABEL' | translate }}
+      <div class="inv-shopinfo-card">
+        <button type="button" class="inv-shopinfo-header" (click)="isLowStockCardOpen = !isLowStockCardOpen"
+          [attr.aria-expanded]="isLowStockCardOpen">
+          <span class="inv-shopinfo-title">{{ 'LOW_STOCK_THRESHOLD_LABEL' | translate }}</span>
+          <lucide-icon [img]="isLowStockCardOpen ? iconChevronUp : iconChevronDown" [size]="16"></lucide-icon>
         </button>
+        <ng-container *ngIf="isLowStockCardOpen">
+          <div class="inv-threshold-row">
+            <input id="inv-low-stock-threshold" type="number" min="0" step="1" class="inv-input inv-threshold-input"
+              [(ngModel)]="lowStockThreshold" />
+            <button type="button" class="inv-threshold-save-btn" [disabled]="isSavingThreshold" (click)="saveLowStockThreshold()">
+              {{ 'SAVE_BUTTON_LABEL' | translate }}
+            </button>
+          </div>
+        </ng-container>
       </div>
 
       <!-- Printed on the Sales receipt below the shop name (space name —
            edit that from Profile & Settings). -->
       <div class="inv-shopinfo-card">
-        <div class="inv-shopinfo-title">{{ 'SHOP_INFO_TITLE' | translate }}</div>
-        <div class="inv-shopinfo-fields">
-          <input type="text" class="inv-input" [(ngModel)]="shopAddress" maxlength="200" autocomplete="off"
-            [placeholder]="'SHOP_ADDRESS_LABEL' | translate" />
-          <input type="text" class="inv-input" [(ngModel)]="shopPhone" maxlength="30" autocomplete="off"
-            [placeholder]="'SHOP_PHONE_LABEL' | translate" />
-        </div>
-        <button type="button" class="inv-threshold-save-btn" [disabled]="isSavingShopInfo" (click)="saveShopInfo()">
-          {{ 'SAVE_BUTTON_LABEL' | translate }}
+        <button type="button" class="inv-shopinfo-header" (click)="isShopInfoCardOpen = !isShopInfoCardOpen"
+          [attr.aria-expanded]="isShopInfoCardOpen">
+          <span class="inv-shopinfo-title">{{ 'SHOP_INFO_TITLE' | translate }}</span>
+          <lucide-icon [img]="isShopInfoCardOpen ? iconChevronUp : iconChevronDown" [size]="16"></lucide-icon>
         </button>
+        <ng-container *ngIf="isShopInfoCardOpen">
+          <div class="inv-shopinfo-fields">
+            <textarea class="inv-input inv-shopinfo-address" [(ngModel)]="shopAddress" maxlength="200" autocomplete="off"
+              rows="3" [placeholder]="'SHOP_ADDRESS_LABEL' | translate"></textarea>
+            <input type="text" class="inv-input inv-shopinfo-phone" [(ngModel)]="shopPhone" maxlength="30" autocomplete="off"
+              [placeholder]="'SHOP_PHONE_LABEL' | translate" />
+          </div>
+          <button type="button" class="inv-threshold-save-btn" [disabled]="isSavingShopInfo" (click)="saveShopInfo()">
+            {{ 'SAVE_BUTTON_LABEL' | translate }}
+          </button>
+        </ng-container>
       </div>
 
       <ng-container *ngIf="stockSummary$ | async as summary">

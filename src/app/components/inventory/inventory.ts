@@ -90,6 +90,11 @@ export class Inventory implements OnInit, OnDestroy {
   shopAddress = '';
   shopPhone = '';
   isSavingShopInfo = false;
+  // Both settings cards on the Stock & Profit tab start collapsed — they're
+  // rarely-changed settings, not something to see on every visit, and
+  // leaving them open pushed the actual stock table down the page.
+  isLowStockCardOpen = false;
+  isShopInfoCardOpen = false;
   // Mobile Stock & Profit view: which product's card is expanded to show
   // full detail — null means every card is collapsed to its summary line.
   expandedProductId: string | null = null;
@@ -190,6 +195,13 @@ export class Inventory implements OnInit, OnDestroy {
     if (this.showAddOverlay) {
       this.reallyCloseAddOverlay();
     }
+  }
+
+  // The action menu is anchored to a row's on-screen position. Close it on
+  // page scroll so it never appears detached from that row.
+  @HostListener('window:scroll')
+  onWindowScroll(): void {
+    this.closeProductActions();
   }
 
   async onScanBarcode(): Promise<void> {
