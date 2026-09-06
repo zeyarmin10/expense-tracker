@@ -25,6 +25,7 @@ import {
   map,
   switchMap,
   shareReplay,
+  of,
 } from 'rxjs';
 import { ServiceIExpense } from '../../services/expense'; // Assuming types are kept here
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -47,6 +48,7 @@ import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Capacitor } from '@capacitor/core';
 import html2canvas from 'html2canvas';
 import { AuthService } from '../../services/auth';
+import { getActiveGroupId } from '../../services/user-data';
 import {
   UserProfile,
   getCurrentSpaceRole,
@@ -305,7 +307,10 @@ export class Sales implements OnInit, OnDestroy {
   // viewReceiptForIncome()), shareable as plain text or a PNG image. ──
   showReceipt = false;
   receiptShopName = '';
+  receiptShopAddress = '';
+  receiptShopPhone = '';
   receiptDate = '';
+  receiptTime = '';
   receiptLines: { name: string; qtyUnit: string; unitPrice: string; subtotal: string }[] = [];
   receiptTotal = '';
   private receiptText = '';
@@ -324,12 +329,28 @@ export class Sales implements OnInit, OnDestroy {
           unitPrice: income.amount,
           subtotal: income.amount,
         }];
-    this.buildAndShowReceipt(effectiveLineItems, income.amount, income.currency, income.date);
+    // income.date is the (possibly backdated) transaction date and stays
+    // authoritative for the Date line; createdAt only supplies the time of
+    // day the sale was actually recorded (older records may lack it, in
+    // which case the time is simply left blank rather than guessed).
+    this.buildAndShowReceipt(effectiveLineItems, income.amount, income.currency, income.date, income.createdAt);
   }
 
-  private buildAndShowReceipt(lineItems: IncomeLineItem[], amount: number, currency: string, date: string): void {
+  private buildAndShowReceipt(
+    lineItems: IncomeLineItem[],
+    amount: number,
+    currency: string,
+    date: string,
+    createdAt?: string,
+  ): void {
     this.receiptShopName = this.userProfile?.currentSpaceName || 'Kyat Wise';
     this.receiptDate = this.formatService.formatLocalizedDate(date);
+    // createdAt supplies only the time of day — the date itself always
+    // comes from the record's own (possibly backdated) date field above,
+    // never from createdAt, so a backdated entry never shows a mismatched
+    // "today" date. Falls back to right now for a fresh checkout, where no
+    // createdAt exists yet (the service assigns it on write).
+    this.receiptTime = this.formatService.formatLocalizedTime(createdAt || new Date());
     this.receiptLines = lineItems.map(item => ({
       name: item.productName,
       qtyUnit: this.formatCount(item.quantity) + (item.unit ? ' ' + item.unit : ''),
@@ -347,9 +368,14 @@ export class Sales implements OnInit, OnDestroy {
       })
       .join('\n');
 
+    const shopInfoLines = [
+      this.receiptShopAddress,
+      this.receiptShopPhone ? `${this.translate.instant('SHOP_PHONE_LABEL')}: ${this.receiptShopPhone}` : '',
+    ].filter(Boolean).join('\n');
+
     this.receiptText =
-      `${this.receiptShopName}\n${sep}\n` +
-      `${this.translate.instant('DATE_LABEL')}: ${this.receiptDate}\n` +
+      `${this.receiptShopName}\n${shopInfoLines ? shopInfoLines + '\n' : ''}${sep}\n` +
+      `${this.translate.instant('DATE_LABEL')}: ${this.receiptDate}  ${this.receiptTime}\n` +
       `${sep}\n${rows}\n${sep}\n` +
       `${this.translate.instant('POS_TOTAL_LABEL')}: ${this.receiptTotal}\n${sep}\n` +
       `${this.translate.instant('SALE_RECEIPT_THANK_YOU')}`;
@@ -994,6 +1020,19 @@ export class Sales implements OnInit, OnDestroy {
         if (!enabled) {
           this.router.navigate(['/profit']);
         }
+      })
+    );
+    // Shop address/phone shown on the printed receipt — edited from
+    // Inventory's Stock & Profit tab, same as the low-stock threshold.
+    this.subscriptions.add(
+      this.authService.userProfile$.pipe(
+        switchMap(profile => {
+          const groupId = getActiveGroupId(profile);
+          return groupId ? this.spaceContextService.getSpace(groupId) : of(null);
+        }),
+      ).subscribe(space => {
+        this.receiptShopAddress = space?.shopAddress || '';
+        this.receiptShopPhone = space?.shopPhone || '';
       })
     );
     // Sets up the productId/quantity/unitPrice validators for the

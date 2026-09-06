@@ -16,6 +16,11 @@ export interface Space {
   /** Group spaces only — a product's currentStock at or below this counts
    *  as "low stock" for warnings/highlighting. Defaults to 0 when unset. */
   lowStockThreshold?: number;
+  /** Group spaces only — shown on the printable sales receipt below the
+   *  shop name (which reuses this.name). Both optional/free-text; `null`
+   *  clears a previously-set value (RTDB `update()` removes the key). */
+  shopAddress?: string | null;
+  shopPhone?: string | null;
   imageUrl?: string | null;
   avatarUrl?: string | null;
   logoUrl?: string | null;

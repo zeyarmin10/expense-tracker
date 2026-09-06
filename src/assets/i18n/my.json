@@ -983,5 +983,9 @@
   "SHOP_DASHBOARD_SLOW_MOVERS": "အနည်းဆုံးရောင်းရသောပစ္စည်းများ",
   "LOW_STOCK_THRESHOLD_LABEL": "လက်ကျန်နည်းနေကြောင်း သတိပေးမည့် အနည်းဆုံးအရေအတွက်",
   "LOW_STOCK_THRESHOLD_SAVED": "Low stock သတိပေးချက် အနည်းဆုံးအရေအတွက်ကို သိမ်းဆည်းပြီးပါပြီ။",
-  "STOCK_SUMMARY_LOW_STOCK_WARNING": "လက်ကျန်နည်းနေသည် — ပြန်ဖြည့်ရန် စဉ်းစားပါ"
+  "STOCK_SUMMARY_LOW_STOCK_WARNING": "လက်ကျန်နည်းနေသည် — ပြန်ဖြည့်ရန် စဉ်းစားပါ",
+  "SHOP_INFO_TITLE": "ဆိုင်အချက်အလက် (ဘောင်ချာပေါ်ပြပါမည်)",
+  "SHOP_ADDRESS_LABEL": "ဆိုင်လိပ်စာ",
+  "SHOP_PHONE_LABEL": "ဖုန်းနံပါတ်",
+  "SHOP_INFO_SAVED": "ဆိုင်အချက်အလက် သိမ်းဆည်းပြီးပါပြီ။"
 }

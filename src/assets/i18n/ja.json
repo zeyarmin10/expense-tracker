@@ -983,5 +983,9 @@
   "SHOP_DASHBOARD_SLOW_MOVERS": "動きの遅い商品",
   "LOW_STOCK_THRESHOLD_LABEL": "低在庫アラートのしきい値",
   "LOW_STOCK_THRESHOLD_SAVED": "低在庫のしきい値を保存しました！",
-  "STOCK_SUMMARY_LOW_STOCK_WARNING": "在庫が少なくなっています — 補充をご検討ください"
+  "STOCK_SUMMARY_LOW_STOCK_WARNING": "在庫が少なくなっています — 補充をご検討ください",
+  "SHOP_INFO_TITLE": "店舗情報（レシートに表示）",
+  "SHOP_ADDRESS_LABEL": "店舗住所",
+  "SHOP_PHONE_LABEL": "電話番号",
+  "SHOP_INFO_SAVED": "店舗情報を保存しました！"
 }

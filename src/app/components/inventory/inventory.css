@@ -338,6 +338,7 @@ body.light-mode .inv-seg-btn.active {
 }
 
 .inv-product-item {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -427,6 +428,104 @@ body.light-mode .inv-seg-btn.active {
    squeezed alongside the Unit/Price inputs. */
 .inv-edit-actions {
   justify-content: flex-end;
+}
+
+/* ── Three-dot row actions menu — same trigger/dropdown pattern as
+   onboarding.ts's space-list kebab menu, restyled with this page's own
+   surface/border/text tokens instead of onboarding's hardcoded dark
+   palette so it follows the app's normal light/dark theming. ── */
+.inv-action-menu-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+
+.inv-action-menu-trigger:hover,
+.inv-action-menu-trigger-open {
+  color: var(--text);
+  background: var(--surface-2);
+  border-color: var(--border);
+}
+
+.inv-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0.7rem;
+  /* Above the mobile bottom nav bar (z-index: 1000) and the Add-Product
+     FAB (z-index: 900) — otherwise, even correctly flipped to open
+     upward, the menu could still render visually underneath either one
+     wherever their fixed on-screen position happens to overlap it. */
+  z-index: 1010;
+  min-width: 160px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.4rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.28), 0 2px 8px rgba(0, 0, 0, 0.16);
+  opacity: 0;
+  transform: translateY(-6px) scale(0.97);
+  transform-origin: top right;
+  pointer-events: none;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+/* Flips the menu to open upward from the trigger instead — for a row near
+   the bottom of the list, where opening downward would get covered by the
+   bottom nav bar/FAB (see toggleProductActions()'s space-below check). */
+.inv-dropdown-menu-up {
+  top: auto;
+  bottom: calc(100% + 4px);
+  transform-origin: bottom right;
+  transform: translateY(6px) scale(0.97);
+}
+
+.inv-dropdown-open {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.inv-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  padding: 0.62rem 0.8rem;
+  border-radius: 8px;
+  border: none;
+  background: none;
+  color: var(--text);
+  font-size: 0.83rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s;
+}
+
+.inv-dropdown-item:hover {
+  background: var(--surface-2);
+}
+
+.inv-dropdown-item-danger {
+  color: #f87171;
+}
+
+.inv-dropdown-item-danger:hover {
+  background: rgba(248, 113, 113, 0.1);
+}
+
+.inv-dropdown-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 0.3rem 0.4rem;
 }
 
 .inv-scan-btn {
@@ -773,6 +872,32 @@ body.light-mode .inv-seg-btn.active {
 .inv-muted {
   color: var(--text-muted);
   font-size: 0.75rem;
+}
+
+/* ── Shop Info card — address/phone printed on the Sales receipt below the
+   shop name. Same visual language as .inv-add-form's card-free layout,
+   just grouped in its own bordered box since it sits below the threshold
+   row rather than at the very top of the tab. ── */
+.inv-shopinfo-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.9rem 1rem 1rem;
+  margin-bottom: 1.2rem;
+}
+
+.inv-shopinfo-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 0.65rem;
+}
+
+.inv-shopinfo-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.65rem;
 }
 
 .inv-table td.inv-never-purchased-cell {

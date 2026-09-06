@@ -983,5 +983,9 @@
   "SHOP_DASHBOARD_SLOW_MOVERS": "Slow Movers",
   "LOW_STOCK_THRESHOLD_LABEL": "Low stock alert level",
   "LOW_STOCK_THRESHOLD_SAVED": "Low stock alert level saved!",
-  "STOCK_SUMMARY_LOW_STOCK_WARNING": "Low stock — consider restocking"
+  "STOCK_SUMMARY_LOW_STOCK_WARNING": "Low stock — consider restocking",
+  "SHOP_INFO_TITLE": "Shop Info (shown on receipt)",
+  "SHOP_ADDRESS_LABEL": "Shop Address",
+  "SHOP_PHONE_LABEL": "Phone",
+  "SHOP_INFO_SAVED": "Shop info saved!"
 }

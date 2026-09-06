@@ -1,4 +1,4 @@
-<div class="inv-wrapper">
+<div class="inv-wrapper" (click)="closeProductActions()">
   <div class="inv-container mb-5">
 
     <div class="inv-page-header">
@@ -111,18 +111,34 @@
                 </span>
               </div>
               <div class="inv-product-actions">
-                <button type="button" class="inv-action-btn" (click)="startEdit(product)"
-                  [attr.aria-label]="'EDIT_PRODUCT' | translate">
+                <button type="button" class="inv-action-menu-trigger"
+                  (click)="toggleProductActions(product.id!, $event)"
+                  [class.inv-action-menu-trigger-open]="openActionMenuProductId === product.id"
+                  [attr.aria-expanded]="openActionMenuProductId === product.id"
+                  [attr.aria-label]="'ACTIONS_LABEL' | translate">
+                  <lucide-icon [img]="iconEllipsisVertical" [size]="18"></lucide-icon>
+                </button>
+              </div>
+
+              <div class="inv-dropdown-menu"
+                [class.inv-dropdown-open]="openActionMenuProductId === product.id"
+                [class.inv-dropdown-menu-up]="openActionMenuUpward && openActionMenuProductId === product.id"
+                (click)="$event.stopPropagation()">
+                <button class="inv-dropdown-item" type="button"
+                  (click)="closeProductActions(); startEdit(product)">
                   <lucide-icon [img]="iconPencil" [size]="15"></lucide-icon>
+                  <span>{{ 'EDIT_PRODUCT' | translate }}</span>
                 </button>
-                <button type="button" class="inv-action-btn" *ngIf="product.isActive === false"
-                  (click)="onReactivate(product.id!)" [attr.aria-label]="'PRODUCT_REACTIVATE_BUTTON' | translate"
-                  [title]="'PRODUCT_REACTIVATE_BUTTON' | translate">
+                <button class="inv-dropdown-item" type="button" *ngIf="product.isActive === false"
+                  (click)="closeProductActions(); onReactivate(product.id!)">
                   <lucide-icon [img]="iconEye" [size]="15"></lucide-icon>
+                  <span>{{ 'PRODUCT_REACTIVATE_BUTTON' | translate }}</span>
                 </button>
-                <button type="button" class="inv-action-btn inv-action-delete" (click)="onDelete(product.id!)"
-                  [attr.aria-label]="'DELETE_BUTTON_LABEL' | translate">
+                <div class="inv-dropdown-divider"></div>
+                <button class="inv-dropdown-item inv-dropdown-item-danger" type="button"
+                  (click)="closeProductActions(); onDelete(product.id!)">
                   <lucide-icon [img]="iconTrash2" [size]="15"></lucide-icon>
+                  <span>{{ 'DELETE_BUTTON_LABEL' | translate }}</span>
                 </button>
               </div>
             </ng-container>
@@ -168,6 +184,21 @@
         <input id="inv-low-stock-threshold" type="number" min="0" step="1" class="inv-input inv-threshold-input"
           [(ngModel)]="lowStockThreshold" />
         <button type="button" class="inv-threshold-save-btn" [disabled]="isSavingThreshold" (click)="saveLowStockThreshold()">
+          {{ 'SAVE_BUTTON_LABEL' | translate }}
+        </button>
+      </div>
+
+      <!-- Printed on the Sales receipt below the shop name (space name —
+           edit that from Profile & Settings). -->
+      <div class="inv-shopinfo-card">
+        <div class="inv-shopinfo-title">{{ 'SHOP_INFO_TITLE' | translate }}</div>
+        <div class="inv-shopinfo-fields">
+          <input type="text" class="inv-input" [(ngModel)]="shopAddress" maxlength="200" autocomplete="off"
+            [placeholder]="'SHOP_ADDRESS_LABEL' | translate" />
+          <input type="text" class="inv-input" [(ngModel)]="shopPhone" maxlength="30" autocomplete="off"
+            [placeholder]="'SHOP_PHONE_LABEL' | translate" />
+        </div>
+        <button type="button" class="inv-threshold-save-btn" [disabled]="isSavingShopInfo" (click)="saveShopInfo()">
           {{ 'SAVE_BUTTON_LABEL' | translate }}
         </button>
       </div>

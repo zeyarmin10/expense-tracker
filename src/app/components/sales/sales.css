@@ -306,6 +306,13 @@ body.pnl-add-modal-open {
   color: var(--text);
 }
 
+.pnl-receipt-shop-info {
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
 .pnl-receipt-date {
   text-align: center;
   font-size: 0.75rem;

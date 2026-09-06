@@ -588,7 +588,9 @@
   <div class="pnl-add-modal-body">
     <div class="pnl-receipt-paper">
       <div class="pnl-receipt-shop">{{ receiptShopName }}</div>
-      <div class="pnl-receipt-date">{{ 'DATE_LABEL' | translate }}: {{ receiptDate }}</div>
+      <div class="pnl-receipt-shop-info" *ngIf="receiptShopAddress">{{ receiptShopAddress }}</div>
+      <div class="pnl-receipt-shop-info" *ngIf="receiptShopPhone">{{ 'SHOP_PHONE_LABEL' | translate }}: {{ receiptShopPhone }}</div>
+      <div class="pnl-receipt-date">{{ 'DATE_LABEL' | translate }}: {{ receiptDate }}&nbsp;&nbsp;{{ receiptTime }}</div>
       <div class="pnl-receipt-sep"></div>
       <div class="pnl-receipt-line" *ngFor="let line of receiptLines">
         <div class="pnl-receipt-line-name">{{ line.name }}</div>

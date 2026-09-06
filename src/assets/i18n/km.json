@@ -983,5 +983,9 @@
   "SHOP_DASHBOARD_SLOW_MOVERS": "ផលិតផលលក់យឺត",
   "LOW_STOCK_THRESHOLD_LABEL": "កម្រិតជូនដំណឹងស្តុកទាប",
   "LOW_STOCK_THRESHOLD_SAVED": "បានរក្សាទុកកម្រិតជូនដំណឹងស្តុកទាប!",
-  "STOCK_SUMMARY_LOW_STOCK_WARNING": "ស្តុកទាប — សូមពិចារណាទិញបន្ថែម"
+  "STOCK_SUMMARY_LOW_STOCK_WARNING": "ស្តុកទាប — សូមពិចារណាទិញបន្ថែម",
+  "SHOP_INFO_TITLE": "ព័ត៌មានហាង (បង្ហាញនៅលើបង្កាន់ដៃ)",
+  "SHOP_ADDRESS_LABEL": "អាសយដ្ឋានហាង",
+  "SHOP_PHONE_LABEL": "លេខទូរស័ព្ទ",
+  "SHOP_INFO_SAVED": "បានរក្សាទុកព័ត៌មានហាង!"
 }

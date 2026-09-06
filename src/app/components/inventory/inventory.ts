@@ -24,7 +24,7 @@ import { FormatService } from '../../services/format.service';
 import { meaningfulTextValidator } from '../../utils/form-validators';
 import {
   LucideAngularModule, Package, Plus, Pencil, Trash2, X, Save, TriangleAlert,
-  ChevronDown, ChevronUp, ScanLine, EyeOff, Eye,
+  ChevronDown, ChevronUp, ScanLine, EyeOff, Eye, EllipsisVertical,
 } from 'lucide-angular';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import Swal from 'sweetalert2';
@@ -77,6 +77,7 @@ export class Inventory implements OnInit, OnDestroy {
   readonly iconScanLine = ScanLine;
   readonly iconEyeOff = EyeOff;
   readonly iconEye = Eye;
+  readonly iconEllipsisVertical = EllipsisVertical;
 
   // Only native builds can actually scan — the button hides on web/dev.
   readonly canScanBarcode = this.barcodeScanner.isSupported();
@@ -86,12 +87,18 @@ export class Inventory implements OnInit, OnDestroy {
   private activeGroupId: string | null = null;
   lowStockThreshold = 0;
   isSavingThreshold = false;
+  shopAddress = '';
+  shopPhone = '';
+  isSavingShopInfo = false;
   // Mobile Stock & Profit view: which product's card is expanded to show
   // full detail — null means every card is collapsed to its summary line.
   expandedProductId: string | null = null;
 
   addProductForm: FormGroup;
   editingProductId: string | null = null;
+  // Three-dot row actions menu — same open/close-on-outside-click pattern
+  // as onboarding.ts's space-list kebab menu.
+  openActionMenuProductId: string | null = null;
   editingNameControl: FormControl | null = null;
   editingUnitControl: FormControl | null = null;
   editingSellingPriceControl: FormControl | null = null;
@@ -230,6 +237,8 @@ export class Inventory implements OnInit, OnDestroy {
       )
       .subscribe((space) => {
         this.lowStockThreshold = space?.lowStockThreshold ?? 0;
+        this.shopAddress = space?.shopAddress || '';
+        this.shopPhone = space?.shopPhone || '';
         this.cdr.markForCheck();
       });
 
@@ -272,6 +281,30 @@ export class Inventory implements OnInit, OnDestroy {
       );
     } finally {
       this.isSavingThreshold = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  // Shown on the printed Sales receipt below the shop name (space.name,
+  // edited from Profile & Settings' existing group-rename flow — not
+  // duplicated here).
+  async saveShopInfo(): Promise<void> {
+    if (!this.activeGroupId) return;
+    this.isSavingShopInfo = true;
+    this.cdr.markForCheck();
+    try {
+      await this.dataManager.updateGroupSettings(this.activeGroupId, {
+        shopAddress: this.shopAddress.trim() || null,
+        shopPhone: this.shopPhone.trim() || null,
+      });
+      Toast.fire({ icon: 'success', title: this.translateService.instant('SHOP_INFO_SAVED') });
+    } catch (error: any) {
+      this.showErrorModal(
+        this.translateService.instant('ERROR_TITLE'),
+        error.message || this.translateService.instant('DATA_SAVE_ERROR'),
+      );
+    } finally {
+      this.isSavingShopInfo = false;
       this.cdr.markForCheck();
     }
   }
@@ -335,6 +368,29 @@ export class Inventory implements OnInit, OnDestroy {
       this.showErrorModal(this.translateService.instant('ERROR_TITLE'), this.translateService.instant(key));
       console.error('Product add error:', error);
     }
+  }
+
+  // Opens downward by default; flips upward when there isn't roughly enough
+  // room below the trigger (e.g. the last row(s) in the list, easily
+  // covered by the bottom nav bar + FAB on mobile) — a fixed estimate
+  // rather than measuring the actual rendered menu, since that isn't in
+  // the DOM yet at the moment we decide which way to open it.
+  openActionMenuUpward = false;
+  private readonly estimatedActionMenuHeight = 170;
+
+  toggleProductActions(productId: string, event: Event): void {
+    event.stopPropagation();
+    const opening = this.openActionMenuProductId !== productId;
+    this.openActionMenuProductId = opening ? productId : null;
+    if (opening) {
+      const trigger = event.currentTarget as HTMLElement;
+      const spaceBelow = window.innerHeight - trigger.getBoundingClientRect().bottom;
+      this.openActionMenuUpward = spaceBelow < this.estimatedActionMenuHeight;
+    }
+  }
+
+  closeProductActions(): void {
+    this.openActionMenuProductId = null;
   }
 
   startEdit(product: ServiceIProduct): void {

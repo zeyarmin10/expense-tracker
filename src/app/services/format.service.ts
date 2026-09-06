@@ -194,6 +194,26 @@ export class FormatService {
     return labelFirst ? `${labelHtml}${shortAmount}` : `${shortAmount} ${labelHtml}`;
   }
 
+  // Time-of-day only (24-hour, locale-aware digits) — same convention
+  // formatLocalizedDate's own 'longDateTime'/'medium' branches already use
+  // internally, exposed standalone for callers that need to show a
+  // record's time separately from its (possibly backdated) date field.
+  formatLocalizedTime(date: string | Date | null | undefined): string {
+    if (!date) return '';
+    const currentLang = this.translate.currentLang;
+    const d = new Date(date);
+    if (currentLang === 'my') {
+      const toMy = (n: number) =>
+        new Intl.NumberFormat('my-MM', {
+          numberingSystem: 'mymr',
+          useGrouping: false,
+          minimumIntegerDigits: 2,
+        }).format(n);
+      return `${toMy(d.getHours())}:${toMy(d.getMinutes())}`;
+    }
+    return this.datePipe.transform(d, 'HH:mm', undefined, currentLang) || '';
+  }
+
   formatLocalizedDate(
     date: string | Date | null | undefined,
     format?: string,
