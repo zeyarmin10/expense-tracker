@@ -348,6 +348,31 @@ body.light-mode .inv-seg-btn.active {
   border-radius: 12px;
 }
 
+/* Hidden products stay in the list for stock/history context, but are
+   deliberately subdued so active products remain the visual priority. */
+.inv-product-item-hidden {
+  background: var(--surface-2);
+}
+
+.inv-product-item-hidden .inv-product-avatar,
+.inv-product-item-hidden .inv-product-info {
+  opacity: 0.58;
+}
+
+.inv-product-item-hidden .inv-product-avatar {
+  background: var(--surface-alt, rgba(128, 128, 128, 0.15));
+  color: var(--text-muted);
+}
+
+/* Keep the hidden product's action affordance clear: the item is muted,
+   but its three-dot control remains visibly tappable for reactivating it. */
+.inv-product-item-hidden .inv-action-menu-trigger {
+  color: var(--text-muted);
+  background: var(--surface);
+  border-color: var(--border);
+  opacity: 1;
+}
+
 .inv-product-avatar {
   width: 32px;
   height: 32px;
@@ -422,6 +447,14 @@ body.light-mode .inv-seg-btn.active {
   display: flex;
   gap: 0.3rem;
   flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+/* Every row has an action stacking layer so its trigger stays accessible.
+   Lift only the open one above all of those sibling layers. */
+.inv-product-actions-open {
+  z-index: 1011;
 }
 
 /* Inline edit: Save/Cancel sit on their own row below the fields, not
@@ -458,7 +491,7 @@ body.light-mode .inv-seg-btn.active {
 .inv-dropdown-menu {
   position: absolute;
   top: calc(100% + 4px);
-  right: 0.7rem;
+  right: 0;
   /* Above the mobile bottom nav bar (z-index: 1000) and the Add-Product
      FAB (z-index: 900) — otherwise, even correctly flipped to open
      upward, the menu could still render visually underneath either one

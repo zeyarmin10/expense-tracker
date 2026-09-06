@@ -93,7 +93,8 @@
         </div>
 
         <ul class="inv-product-list">
-          <li *ngFor="let product of products; trackBy: trackByProductId" class="inv-product-item">
+          <li *ngFor="let product of products; trackBy: trackByProductId" class="inv-product-item"
+            [class.inv-product-item-hidden]="product.isActive === false">
             <ng-container *ngIf="editingProductId !== product.id; else editRow">
               <div class="inv-product-avatar">
                 <lucide-icon [img]="iconPackage" [size]="18"></lucide-icon>
@@ -110,7 +111,8 @@
                     [innerHTML]="formatService.formatAmountShortHtml(product.sellingPrice, currency)"></span>
                 </span>
               </div>
-              <div class="inv-product-actions">
+              <div class="inv-product-actions"
+                [class.inv-product-actions-open]="openActionMenuProductId === product.id">
                 <button type="button" class="inv-action-menu-trigger"
                   (click)="toggleProductActions(product.id!, $event)"
                   [class.inv-action-menu-trigger-open]="openActionMenuProductId === product.id"
@@ -118,27 +120,26 @@
                   [attr.aria-label]="'ACTIONS_LABEL' | translate">
                   <lucide-icon [img]="iconEllipsisVertical" [size]="18"></lucide-icon>
                 </button>
-              </div>
-
-              <div *ngIf="openActionMenuProductId === product.id" class="inv-dropdown-menu inv-dropdown-open"
-                [class.inv-dropdown-menu-up]="openActionMenuUpward"
-                (click)="$event.stopPropagation()">
-                <button class="inv-dropdown-item" type="button"
-                  (click)="closeProductActions(); startEdit(product)">
-                  <lucide-icon [img]="iconPencil" [size]="15"></lucide-icon>
-                  <span>{{ 'EDIT_PRODUCT' | translate }}</span>
-                </button>
-                <button class="inv-dropdown-item" type="button" *ngIf="product.isActive === false"
-                  (click)="closeProductActions(); onReactivate(product.id!)">
-                  <lucide-icon [img]="iconEye" [size]="15"></lucide-icon>
-                  <span>{{ 'PRODUCT_REACTIVATE_BUTTON' | translate }}</span>
-                </button>
-                <div class="inv-dropdown-divider"></div>
-                <button class="inv-dropdown-item inv-dropdown-item-danger" type="button"
-                  (click)="closeProductActions(); onDelete(product.id!)">
-                  <lucide-icon [img]="iconTrash2" [size]="15"></lucide-icon>
-                  <span>{{ 'DELETE_BUTTON_LABEL' | translate }}</span>
-                </button>
+                <div *ngIf="openActionMenuProductId === product.id" class="inv-dropdown-menu inv-dropdown-open"
+                  [class.inv-dropdown-menu-up]="openActionMenuUpward"
+                  (click)="$event.stopPropagation()">
+                  <button class="inv-dropdown-item" type="button"
+                    (click)="closeProductActions(); startEdit(product)">
+                    <lucide-icon [img]="iconPencil" [size]="15"></lucide-icon>
+                    <span>{{ 'EDIT_PRODUCT' | translate }}</span>
+                  </button>
+                  <button class="inv-dropdown-item" type="button" *ngIf="product.isActive === false"
+                    (click)="closeProductActions(); onReactivate(product.id!)">
+                    <lucide-icon [img]="iconEye" [size]="15"></lucide-icon>
+                    <span>{{ 'PRODUCT_REACTIVATE_BUTTON' | translate }}</span>
+                  </button>
+                  <div class="inv-dropdown-divider" *ngIf="product.isActive !== false"></div>
+                  <button class="inv-dropdown-item inv-dropdown-item-danger" type="button" *ngIf="product.isActive !== false"
+                    (click)="closeProductActions(); onDelete(product.id!)">
+                    <lucide-icon [img]="iconTrash2" [size]="15"></lucide-icon>
+                    <span>{{ 'DELETE_BUTTON_LABEL' | translate }}</span>
+                  </button>
+                </div>
               </div>
             </ng-container>
 
