@@ -145,7 +145,10 @@
                 </tr>
               </thead>
               <tbody>
-                <tr *ngFor="let income of incomes; trackBy: trackByIncomeId">
+                <tr *ngFor="let income of incomes; trackBy: trackByIncomeId" class="sales-table-row"
+                  role="button" tabindex="0" (click)="openSaleDetails(income)"
+                  (keydown.enter)="openSaleDetails(income)" (keydown.space)="$event.preventDefault(); openSaleDetails(income)"
+                  [attr.aria-label]="('SALE_DETAILS_TITLE' | translate) + ': ' + getSaleDisplayName(income)">
                   <td class="td-date pe-1">
                     <span class="d-none d-md-inline">{{ formatService.formatLocalizedDate(income.date) }}</span>
                     <span class="d-md-none">{{ formatService.formatMobileDate(income.date) }}</span>
@@ -181,3 +184,44 @@
     </ng-container>
   </div>
 </div>
+
+<ng-container *ngIf="selectedIncome as income">
+  <div class="sale-detail-backdrop" (click)="closeSaleDetails()"></div>
+  <section class="sale-detail-modal" role="dialog" aria-modal="true" aria-labelledby="sale-detail-title">
+    <header class="sale-detail-header">
+      <h2 id="sale-detail-title">{{ 'SALE_DETAILS_TITLE' | translate }}</h2>
+      <button type="button" class="sale-detail-close" (click)="closeSaleDetails()"
+        [attr.aria-label]="'CLOSE_BUTTON_LABEL' | translate">
+        <lucide-icon [img]="iconX" [size]="20"></lucide-icon>
+      </button>
+    </header>
+    <div class="sale-detail-body">
+      <div class="sale-detail-meta">
+        <span>{{ 'DATE_LABEL' | translate }}</span>
+        <strong>{{ formatService.formatLocalizedDate(income.date) }}</strong>
+      </div>
+      <div class="sale-detail-meta" *ngIf="income.createdByName">
+        <span>{{ 'ADDED_BY' | translate }}</span>
+        <strong>{{ income.createdByName }}</strong>
+      </div>
+
+      <div class="sale-detail-items" *ngIf="getSaleLineItems(income).length > 0; else plainSaleDetail">
+        <div class="sale-detail-item" *ngFor="let item of getSaleLineItems(income)">
+          <div>
+            <strong>{{ getSaleLineItemName(item) }}</strong>
+            <span>{{ formatService.formatCount(item.quantity) }} × {{ formatService.formatAmountWithSymbol(item.unitPrice, income.currency) }}</span>
+          </div>
+          <strong [innerHTML]="formatService.formatAmountShortHtml(item.subtotal, income.currency)"></strong>
+        </div>
+      </div>
+      <ng-template #plainSaleDetail>
+        <p class="sale-detail-description">{{ income.description || '—' }}</p>
+      </ng-template>
+
+      <div class="sale-detail-total">
+        <span>{{ 'POS_TOTAL_LABEL' | translate }}</span>
+        <strong [innerHTML]="formatService.formatAmountShortHtml(income.amount, income.currency)"></strong>
+      </div>
+    </div>
+  </section>
+</ng-container>

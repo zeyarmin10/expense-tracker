@@ -961,6 +961,7 @@
   "SALE_SAVE_SUCCESS": "ရောင်းချမှုအောင်မြင်စွာထည့်ပြီးပါပြီ။",
   "SALE_SAVE_ERROR": "ရောင်းချမှုသိမ်းဆည်းရာတွင် အမှားဖြစ်ခဲ့သည်။",
   "SALE_RECEIPT_TITLE": "ဘောက်ချာ",
+  "SALE_DETAILS_TITLE": "အရောင်းအသေးစိတ်",
   "SALE_RECEIPT_THANK_YOU": "ဝယ်ယူအားပေးမှုအတွက် ကျေးဇူးတင်ပါသည်!",
   "SALE_RECEIPT_COPIED": "ဘောက်ချာကို clipboard သို့ ကူးယူပြီးပါပြီ။",
   "SALE_RECEIPT_SHARE_BUTTON": "မျှဝေရန်",

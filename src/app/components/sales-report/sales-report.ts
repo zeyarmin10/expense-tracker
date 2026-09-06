@@ -1,7 +1,7 @@
 import { Component, inject, OnInit, OnDestroy, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IncomeService, ServiceIIncome, getIncomeLineItems } from '../../services/income';
+import { IncomeService, ServiceIIncome, IncomeLineItem, getIncomeLineItems } from '../../services/income';
 import { ProductService, ServiceIProduct } from '../../services/product';
 import {
   Observable,
@@ -20,7 +20,7 @@ import { FormatService } from '../../services/format.service';
 import { DateFilterService, DateRange } from '../../services/date-filter.service';
 import { AuthService } from '../../services/auth';
 import { UserDataService, UserProfile } from '../../services/user-data';
-import { LucideAngularModule, Search, ChartColumn, List, Trophy, Package } from 'lucide-angular';
+import { LucideAngularModule, Search, ChartColumn, List, Trophy, Package, X } from 'lucide-angular';
 import { UserAvatarComponent } from '../common/user-avatar/user-avatar.component';
 import { CustomSelectComponent, SelectOption } from '../common/custom-select/custom-select.component';
 import { DateRangeInputComponent } from '../common/date-range-input/date-range-input.component';
@@ -73,6 +73,7 @@ export class SalesReport implements OnInit, OnDestroy {
   readonly iconList = List;
   readonly iconTrophy = Trophy;
   readonly iconPackage = Package;
+  readonly iconX = X;
 
   productList: ServiceIProduct[] = [];
 
@@ -95,6 +96,24 @@ export class SalesReport implements OnInit, OnDestroy {
       return this.getSelectedProductName(lineItems[0].productId) || lineItems[0].productName || '—';
     }
     return income.description || '—';
+  }
+
+  selectedIncome: ServiceIIncome | null = null;
+
+  openSaleDetails(income: ServiceIIncome): void {
+    this.selectedIncome = income;
+  }
+
+  closeSaleDetails(): void {
+    this.selectedIncome = null;
+  }
+
+  getSaleLineItems(income: ServiceIIncome): IncomeLineItem[] {
+    return getIncomeLineItems(income);
+  }
+
+  getSaleLineItemName(item: IncomeLineItem): string {
+    return this.getSelectedProductName(item.productId) || item.productName || '—';
   }
 
   // --- Filtering and Search Properties ---

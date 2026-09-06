@@ -961,6 +961,7 @@
   "SALE_SAVE_SUCCESS": "販売を追加しました！",
   "SALE_SAVE_ERROR": "販売の保存中にエラーが発生しました。",
   "SALE_RECEIPT_TITLE": "領収書",
+  "SALE_DETAILS_TITLE": "販売詳細",
   "SALE_RECEIPT_THANK_YOU": "ご購入ありがとうございました!",
   "SALE_RECEIPT_COPIED": "領収書をクリップボードにコピーしました。",
   "SALE_RECEIPT_SHARE_BUTTON": "領収書を共有",
