@@ -9,7 +9,7 @@
     <!-- ── Cart section — the real "Add Purchase" experience. Inline at the
          top of the page on desktop; on mobile it's reached via the FAB
          below and opens as a full-screen overlay (no modal box). ── -->
-    <div class="exp-cart-overlay" [class.exp-cart-overlay-open]="showAddCartOverlay" *ngIf="canManageExpenseRecords">
+    <div class="exp-cart-overlay" [class.exp-cart-overlay-open]="showAddCartOverlay" *ngIf="canCreateExpenseRecords">
       <div class="exp-cart-overlay-topbar">
         <div class="exp-seg-ctrl exp-cart-overlay-tabs">
           <div class="exp-seg-track">
@@ -277,7 +277,7 @@
     <!-- Mobile-only FAB — opens the cart above as a full-screen overlay.
          Hidden at desktop widths (.exp-add-fab's own media query) and
          while the overlay is already open. -->
-    <button type="button" class="exp-add-fab" *ngIf="canManageExpenseRecords && !showAddCartOverlay" (click)="openAddCartOverlay()" [title]="'PURCHASE_ADD_TITLE' | translate">
+    <button type="button" class="exp-add-fab" *ngIf="canCreateExpenseRecords && !showAddCartOverlay" (click)="openAddCartOverlay()" [title]="'PURCHASE_ADD_TITLE' | translate">
       <lucide-icon [img]="iconPlus" [size]="24"></lucide-icon>
     </button>
 

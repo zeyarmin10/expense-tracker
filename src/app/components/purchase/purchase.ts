@@ -183,6 +183,10 @@ export class Purchase implements OnInit, OnDestroy {
   voucherPreviewUrls: string[] = [];
   readonly MAX_VOUCHER_IMAGES = 10;
   private activeSpaceModeKey: string | null = null;
+  // Every signed-in space member may record a new purchase. Editing or
+  // voiding existing shared records remains restricted to admin/owner via
+  // canManageExpenseRecords below.
+  get canCreateExpenseRecords(): boolean { return !!this.userProfile; }
   get canManageExpenseRecords(): boolean { return canManageSharedSpace(this.userProfile); }
 
   // Only native builds can actually scan — the button hides on web/dev.
@@ -351,7 +355,7 @@ export class Purchase implements OnInit, OnDestroy {
   }
 
   async onCheckout(): Promise<void> {
-    if (!this.canManageExpenseRecords || this.isCheckingOut || this.cart.length === 0) {
+    if (!this.canCreateExpenseRecords || this.isCheckingOut || this.cart.length === 0) {
       return;
     }
     if (this.hasCartLineWithoutPrice()) {
