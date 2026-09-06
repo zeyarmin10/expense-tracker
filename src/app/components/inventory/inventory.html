@@ -26,31 +26,62 @@
 
     <!-- ── Products tab ── -->
     <div *ngIf="activeTab === 'products'">
-      <form [formGroup]="addProductForm" (ngSubmit)="onAddSubmit()" class="inv-add-form">
-        <div class="inv-add-form-fields">
-          <input type="text" class="inv-input" formControlName="name" maxlength="100" autocomplete="off"
-            [placeholder]="'PRODUCT_NAME_LABEL' | translate" />
-          <div class="inv-add-form-row2">
-            <input type="text" class="inv-input inv-input-unit" formControlName="unit" maxlength="20" autocomplete="off"
-              [placeholder]="'PRODUCT_UNIT_LABEL' | translate" />
-            <input type="text" inputmode="decimal" class="inv-input inv-input-price" autocomplete="off"
-              [value]="sellingPriceDisplay" (input)="onSellingPriceInput($event)"
-              [placeholder]="'PRODUCT_SELLING_PRICE_LABEL' | translate" />
-          </div>
-          <div class="inv-add-form-row2">
-            <input type="text" class="inv-input" formControlName="barcode" autocomplete="off"
-              [placeholder]="'PRODUCT_BARCODE_LABEL' | translate" />
-            <button type="button" class="inv-scan-btn" *ngIf="canScanBarcode" (click)="onScanBarcode()"
-              [attr.aria-label]="'SCAN_BARCODE_BUTTON' | translate" [title]="'SCAN_BARCODE_BUTTON' | translate">
-              <lucide-icon [img]="iconScanLine" [size]="18"></lucide-icon>
-            </button>
-          </div>
+      <!-- Add-Product form: inline on desktop, full-screen overlay on
+           mobile (reached via the FAB below) — same shell pattern as
+           Purchase/Sales' cart overlay. -->
+      <div class="inv-add-overlay" [class.inv-add-overlay-open]="showAddOverlay">
+        <div class="inv-add-overlay-topbar">
+          <span class="inv-add-overlay-title">
+            <lucide-icon [img]="iconPlus" [size]="16" class="inv-icon-accent"></lucide-icon>
+            {{ 'ADD_PRODUCT' | translate }}
+          </span>
+          <button type="button" class="inv-add-overlay-close" (click)="closeAddOverlay()"
+            [title]="'CANCEL_BUTTON_LABEL' | translate">
+            <lucide-icon [img]="iconTimes" [size]="20"></lucide-icon>
+          </button>
         </div>
-        <button type="submit" class="inv-add-btn" [disabled]="addProductForm.invalid">
-          <lucide-icon [img]="iconPlus" [size]="18"></lucide-icon>
-          {{ 'ADD_PRODUCT' | translate }}
-        </button>
-      </form>
+        <div class="inv-add-overlay-scroll">
+          <form [formGroup]="addProductForm" (ngSubmit)="onAddSubmit()" class="inv-add-form">
+            <div class="inv-add-form-fields">
+              <input type="text" class="inv-input" formControlName="name" maxlength="100" autocomplete="off"
+                [placeholder]="'PRODUCT_NAME_LABEL' | translate" />
+              <div class="inv-add-form-row2">
+                <input type="text" class="inv-input inv-input-unit" formControlName="unit" maxlength="20" autocomplete="off"
+                  [placeholder]="'PRODUCT_UNIT_LABEL' | translate" />
+                <input type="text" inputmode="decimal" class="inv-input inv-input-price" autocomplete="off"
+                  [value]="sellingPriceDisplay" (input)="onSellingPriceInput($event)"
+                  [placeholder]="'PRODUCT_SELLING_PRICE_LABEL' | translate" />
+              </div>
+              <div class="inv-add-form-row2">
+                <input type="text" class="inv-input" formControlName="barcode" autocomplete="off"
+                  [placeholder]="'PRODUCT_BARCODE_LABEL' | translate" />
+              </div>
+              <!-- Its own row, clearly apart from the barcode text field and
+                   the Add Product submit button below, so a mis-tap between
+                   the two can't happen — was previously squeezed right next
+                   to the barcode input with the submit button sitting almost
+                   directly beneath it. -->
+              <button type="button" class="inv-scan-btn" *ngIf="canScanBarcode" (click)="onScanBarcode()"
+                [attr.aria-label]="'SCAN_BARCODE_BUTTON' | translate">
+                <lucide-icon [img]="iconScanLine" [size]="18"></lucide-icon>
+                {{ 'SCAN_BARCODE_BUTTON' | translate }}
+              </button>
+            </div>
+            <button type="submit" class="inv-add-btn" [disabled]="addProductForm.invalid">
+              <lucide-icon [img]="iconPlus" [size]="18"></lucide-icon>
+              {{ 'ADD_PRODUCT' | translate }}
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Mobile-only FAB — opens the form above as a full-screen overlay.
+           Hidden at desktop widths (.inv-add-fab's own media query) and
+           while the overlay is already open. -->
+      <button type="button" class="inv-add-fab" *ngIf="!showAddOverlay" (click)="openAddOverlay()"
+        [title]="'ADD_PRODUCT' | translate">
+        <lucide-icon [img]="iconPlus" [size]="24"></lucide-icon>
+      </button>
 
       <ng-container *ngIf="products$ | async as products">
         <div class="inv-empty" *ngIf="!isLoadingProducts && products.length === 0">

@@ -131,6 +131,104 @@ body.light-mode .inv-seg-btn.active {
   }
 }
 
+/* ── Add-Product: inline on desktop, full-screen overlay on mobile ──
+   Reached via the FAB on mobile; on desktop it's simply always visible at
+   the top of the Products tab like before. Mirrors Purchase/Sales' own
+   cart overlay pattern exactly (same shell, no dimmed backdrop, sliding
+   full-screen panel via `translate` — not `transform`, to avoid creating a
+   containing block for any nested `position: fixed` picker). */
+.inv-add-overlay-topbar {
+  display: none;
+}
+
+.inv-add-overlay-close {
+  display: none;
+}
+
+@media (max-width: 991.98px) {
+  .inv-add-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1040;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    translate: 0 100%;
+    pointer-events: none;
+    transition: translate 0.28s cubic-bezier(0.34, 1.2, 0.64, 1);
+  }
+
+  .inv-add-overlay.inv-add-overlay-open {
+    translate: 0 0;
+    pointer-events: all;
+  }
+
+  .inv-add-overlay-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+    flex-shrink: 0;
+    padding: calc(env(safe-area-inset-top, 0px) + 0.75rem) 1rem 0.6rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .inv-add-overlay-title {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .inv-add-overlay-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .inv-add-overlay-scroll {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 1rem 1rem calc(env(safe-area-inset-bottom, 0px) + 1rem);
+  }
+}
+
+/* Mobile-only FAB — opens the Add-Product overlay above. */
+.inv-add-fab {
+  position: fixed;
+  right: 1rem;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 68px + 1rem);
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  border: 2.5px solid rgba(255, 255, 255, 0.5);
+  background: linear-gradient(150deg, #4da3ff, var(--accent, #0b74ff));
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 22px rgba(11, 116, 255, 0.45);
+  z-index: 900;
+  cursor: pointer;
+}
+
+@media (min-width: 992px) {
+  .inv-add-fab {
+    display: none;
+  }
+}
+
 .inv-add-form {
   display: flex;
   flex-direction: column;
@@ -343,6 +441,40 @@ body.light-mode .inv-seg-btn.active {
   background: var(--surface);
   color: var(--accent, #0b74ff);
   cursor: pointer;
+}
+
+/* Add-Product form's own scan button: a full-width, filled, labeled action
+   on its own row — not a small icon square sitting flush against the
+   barcode field, with the Add Product submit button right below it. That
+   proximity (all three within a tap or two of each other, all near the
+   same right edge) was the real cause of accidental taps. A clearly
+   separate, differently-colored row plus extra margin removes the
+   ambiguity in either direction. */
+.inv-add-form .inv-scan-btn {
+  width: 100%;
+  height: 46px;
+  gap: 0.45rem;
+  margin-top: 0.3rem;
+  border-radius: 10px;
+  border: 1px solid var(--accent, #0b74ff);
+  background: var(--accent-dim, rgba(11, 116, 255, 0.14));
+  color: var(--accent, #0b74ff);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.inv-add-form .inv-scan-btn:active {
+  background: var(--accent, #0b74ff);
+  color: #fff;
+}
+
+/* Extra clearance above the primary Add Product action so it reads as a
+   distinct, deliberate final step rather than the next item in the same
+   tightly-packed stack of buttons. */
+.inv-add-form .inv-add-btn {
+  margin-top: 0.75rem;
+  width: 100%;
+  justify-content: center;
 }
 
 .inv-action-btn {

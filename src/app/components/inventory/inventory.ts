@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -155,6 +155,34 @@ export class Inventory implements OnInit, OnDestroy {
       sellingPrice: ['', Validators.min(0.01)],
       barcode: [''],
     });
+  }
+
+  // ── Add-Product form: inline on desktop, full-screen overlay on mobile —
+  // same pattern as Purchase/Sales' cart overlay (FAB-triggered, phone back
+  // button closes it instead of navigating away). ──
+  showAddOverlay = false;
+
+  openAddOverlay(): void {
+    this.showAddOverlay = true;
+    document.body.classList.add('inv-add-modal-open');
+    history.pushState(null, '');
+  }
+
+  closeAddOverlay(): void {
+    if (!this.showAddOverlay) return;
+    history.back();
+  }
+
+  private reallyCloseAddOverlay(): void {
+    this.showAddOverlay = false;
+    document.body.classList.remove('inv-add-modal-open');
+  }
+
+  @HostListener('window:popstate')
+  onPopState(): void {
+    if (this.showAddOverlay) {
+      this.reallyCloseAddOverlay();
+    }
   }
 
   async onScanBarcode(): Promise<void> {
