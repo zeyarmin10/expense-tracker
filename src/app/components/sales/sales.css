@@ -2644,7 +2644,7 @@ app-date-input .di-trigger {
     z-index: 5;
     background: var(--surface);
     margin: 0.9rem -1.2rem -1.2rem;
-    padding: 0.5rem 1.2rem calc(env(safe-area-inset-bottom, 0px) + 0.5rem);
+    padding: 1rem 1.2rem calc(env(safe-area-inset-bottom, 0px) + 1rem);
     border-radius: 0 0 14px 14px;
   }
 
@@ -2653,8 +2653,8 @@ app-date-input .di-trigger {
   }
 
   .pnl-pos-footer .pnl-btn-primary {
-    padding: 0.42rem 0.85rem;
-    font-size: 0.76rem;
+    padding: 0.75rem 0.85rem;
+    font-size: 0.8rem;
   }
 }
 
@@ -2675,7 +2675,9 @@ app-date-input .di-trigger {
 .pnl-pos-total-value {
   font-size: 1.05rem;
   font-weight: 800;
-  color: var(--text);
+  /* Sales total is money coming in — same green token used for Income
+     everywhere else in the app (dashboard cards, shop-dashboard stats). */
+  color: var(--income-color);
 }
 
 /* ── Cart section — the actual "Add Sale" experience, always visible at

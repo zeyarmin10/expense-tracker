@@ -2758,8 +2758,8 @@ body.light-mode .exp-seg-reset {
   }
 
   .exp-pos-footer .exp-btn-primary {
-    padding: 0.42rem 0.85rem;
-    font-size: 0.76rem;
+    padding: 0.75rem 0.85rem;
+    font-size: 0.8rem;
   }
 }
 
@@ -2790,7 +2790,9 @@ body.light-mode .exp-seg-reset {
 .exp-pos-total-value {
   font-size: 1.05rem;
   font-weight: 800;
-  color: var(--text);
+  /* Purchase total is money going out — same amber token used for Expense
+     everywhere else in the app (dashboard cards, shop-dashboard stats). */
+  color: var(--expense-color);
 }
 
 /* ── Picker search row + inline "add new product" button (shared by the
