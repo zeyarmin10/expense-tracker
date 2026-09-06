@@ -2788,3 +2788,38 @@ app-date-input .di-trigger {
   font-weight: 700;
   color: var(--text);
 }
+
+/* Mobile: full-screen panel instead of a floating rounded bottom sheet —
+   the cart overlay itself is already a full-screen panel at this width
+   (see .pnl-cart-overlay above), so a drill-in date/product picker on top
+   of it should look the same way Expense/Budget/Income's own
+   modal-internal pickers do (no dimmed backdrop, no drag handle, just the
+   next screen sliding in), not like a separate smaller dialog. */
+@media (max-width: 991.98px) {
+  .pnl-pos-picker-backdrop {
+    display: none;
+  }
+
+  .pnl-pos-picker-sheet {
+    left: 0;
+    width: 100%;
+    max-width: none;
+    height: 100dvh;
+    max-height: none;
+    border: none;
+    border-radius: 0;
+    translate: 0 100%;
+  }
+
+  .pnl-pos-picker-sheet.open {
+    translate: 0 0;
+  }
+
+  .pnl-pos-picker-handle {
+    display: none;
+  }
+
+  .pnl-pos-picker-header {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 0.75rem);
+  }
+}

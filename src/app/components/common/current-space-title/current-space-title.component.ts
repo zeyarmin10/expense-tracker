@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { Component, EventEmitter, HostBinding, HostListener, Input, OnDestroy, OnInit, Output, inject } from '@angular/core';
 import { LucideAngularModule, Check, User, Plus } from 'lucide-angular';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -426,6 +426,7 @@ export class CurrentSpaceTitleComponent implements OnInit, OnDestroy {
   private readonly spaceSwitchLoadingService = inject(SpaceSwitchLoadingService);
   private readonly toastService = inject(ToastService);
   private readonly translate = inject(TranslateService);
+  private readonly router = inject(Router);
 
   readonly iconCheck = Check;
   readonly iconUser = User;
@@ -594,6 +595,18 @@ export class CurrentSpaceTitleComponent implements OnInit, OnDestroy {
       );
       this.menuOpen = false;
       this.spaceSwitched.emit();
+      // Whatever page was open before the switch may not exist (or make
+      // sense) in the new space — e.g. staying on /purchase after switching
+      // to a personal space, or a personal page after switching into a
+      // shop space. /dashboard itself already picks Shop vs personal
+      // Dashboard based on the (now-current) space's inventoryEnabled$, so
+      // routing there always lands on the right one. Mirrors app.ts's own
+      // switchSpace() (used by the mobile drawer's space list).
+      if (this.router.url !== '/dashboard') {
+        await this.spaceSwitchLoadingService.trackPromise(
+          this.router.navigate(['/dashboard']),
+        );
+      }
     } catch (error) {
       console.error('Space switch failed', error);
       this.spaceSwitchLoadingService.cancelSwitch(loadingToken);

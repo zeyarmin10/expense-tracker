@@ -195,6 +195,53 @@ body.bgt-add-modal-open {
   padding: 1rem;
 }
 
+/* Mobile: full-screen overlay instead of a floating centered dialog — no
+   dimmed backdrop (there's nothing left showing behind it to dim), the
+   sheet itself covers the whole viewport and slides up from the bottom,
+   matching Purchase/Sales' own full-screen cart overlay. Desktop keeps the
+   original centered-dialog treatment above untouched. */
+@media (max-width: 991.98px) {
+  .bgt-add-modal-backdrop {
+    display: none;
+  }
+
+  .bgt-add-modal-sheet {
+    top: 0;
+    left: 0;
+    translate: 0 0;
+    scale: 1;
+    opacity: 1;
+    width: 100%;
+    max-width: none;
+    height: 100dvh;
+    max-height: none;
+    margin: 0;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    /* Standalone `translate` (not `transform`) — `transform` on this sheet
+       would create a new containing block for any descendant
+       `position: fixed` element, breaking the nested date/category picker
+       sheets the same way the desktop rule's own comment above warns
+       about (they expect to be positioned relative to the real viewport). */
+    translate: 0 100%;
+    transition: translate 0.28s cubic-bezier(0.34, 1.2, 0.64, 1);
+  }
+
+  .bgt-add-modal-sheet.open {
+    translate: 0 0;
+  }
+
+  .bgt-add-modal-header {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 0.75rem);
+  }
+
+  .bgt-add-modal-body {
+    flex: 1;
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem);
+  }
+}
+
 .bgt-add-modal-back {
   display: flex;
   align-items: center;
@@ -910,7 +957,14 @@ app-date-input .di-trigger {
 
 .bgt-form-footer {
   display: flex;
-  justify-content: flex-end;
+}
+
+/* Save fills the whole row instead of sitting small and right-aligned —
+   easier to hit and reads as the form's one clear primary action, now that
+   the surrounding overlay itself is full-screen on mobile. */
+.bgt-form-footer .bgt-btn-primary {
+  flex: 1;
+  justify-content: center;
 }
 
 /* ── Date pill (pinned top-right, like Add Expense's mode-toggle row) ── */

@@ -11,13 +11,22 @@
          below and opens as a full-screen overlay (no modal box). ── -->
     <div class="exp-cart-overlay" [class.exp-cart-overlay-open]="showAddCartOverlay" *ngIf="canManageExpenseRecords">
       <div class="exp-cart-overlay-topbar">
-        <div class="exp-cart-overlay-tabs">
-          <button type="button" class="exp-cart-overlay-tab" [class.active]="overlayTab === 'purchase'" (click)="overlayTab = 'purchase'">
-            {{ 'PURCHASE_ADD_TITLE' | translate }}
-          </button>
-          <button type="button" class="exp-cart-overlay-tab" [class.active]="overlayTab === 'voucher'" (click)="overlayTab = 'voucher'">
-            {{ 'VOUCHER_ADD_TITLE' | translate }}
-          </button>
+        <div class="exp-seg-ctrl exp-cart-overlay-tabs">
+          <div class="exp-seg-track">
+            <span
+              class="exp-seg-indicator"
+              [style.transform]="'translateX(calc(' + (overlayTab === 'voucher' ? 1 : 0) + ' * 100%))'"
+              aria-hidden="true"
+            ></span>
+            <button type="button" class="exp-seg-btn" [class.active]="overlayTab === 'purchase'" (click)="overlayTab = 'purchase'">
+              <lucide-icon [img]="iconShoppingCart" [size]="13"></lucide-icon>
+              {{ 'PURCHASE_ADD_TITLE' | translate }}
+            </button>
+            <button type="button" class="exp-seg-btn" [class.active]="overlayTab === 'voucher'" (click)="overlayTab = 'voucher'">
+              <lucide-icon [img]="iconReceipt" [size]="13"></lucide-icon>
+              {{ 'VOUCHER_ADD_TITLE' | translate }}
+            </button>
+          </div>
         </div>
         <button type="button" class="exp-cart-overlay-close" (click)="closeAddCartOverlay()" [title]="'CANCEL_BUTTON_LABEL' | translate">
           <lucide-icon [img]="iconX" [size]="20"></lucide-icon>

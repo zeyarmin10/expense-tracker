@@ -125,29 +125,27 @@
   display: none;
 }
 
+/* Sliding segmented control (.exp-seg-*, shared with the date filter bar and
+   Expense's own Add modal tabs) instead of two loose pill buttons — same
+   iOS-style animated indicator throughout the app. */
 .exp-cart-overlay-tabs {
-  display: flex;
   flex: 1;
-  gap: 0.35rem;
+  min-width: 0;
 }
 
-.exp-cart-overlay-tab {
-  flex: 1;
-  text-align: center;
-  padding: 0.5rem 0.6rem;
-  border-radius: 9px;
-  border: 1px solid transparent;
-  background: transparent;
-  color: var(--text-muted);
-  font-weight: 700;
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: all 0.15s;
+.exp-cart-overlay-tabs .exp-seg-indicator {
+  width: 50%;
 }
 
-.exp-cart-overlay-tab.active {
-  background: var(--surface-2);
-  border-color: var(--border);
+.exp-cart-overlay-tabs .exp-seg-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.32rem;
+  font-size: 0.8rem;
+}
+
+.exp-cart-overlay-tabs .exp-seg-btn.active {
   color: var(--expense-color, #f4b11a);
 }
 
@@ -656,7 +654,7 @@ body.exp-add-modal-open {
 
 /* ── Form ── */
 .exp-form {
-  padding: 1.4rem;
+  /* padding: 1.4rem; */
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -2906,6 +2904,41 @@ body.light-mode .exp-seg-reset {
   font-size: 0.95rem;
   font-weight: 700;
   color: var(--text);
+}
+
+/* Mobile: full-screen panel instead of a floating rounded bottom sheet —
+   the cart overlay itself is already a full-screen panel at this width
+   (see .exp-cart-overlay above), so a drill-in date/category/product
+   picker on top of it should look the same way Expense/Budget/Income's
+   own modal-internal pickers do (no dimmed backdrop, no drag handle, just
+   the next screen sliding in), not like a separate smaller dialog. */
+@media (max-width: 991.98px) {
+  .exp-pos-picker-backdrop {
+    display: none;
+  }
+
+  .exp-pos-picker-sheet {
+    left: 0;
+    width: 100%;
+    max-width: none;
+    height: 100dvh;
+    max-height: none;
+    border: none;
+    border-radius: 0;
+    translate: 0 100%;
+  }
+
+  .exp-pos-picker-sheet.open {
+    translate: 0 0;
+  }
+
+  .exp-pos-picker-handle {
+    display: none;
+  }
+
+  .exp-pos-picker-header {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 0.75rem);
+  }
 }
 
 /* ── Recorded Purchases: multi-item (POS) breakdown ── */
