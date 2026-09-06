@@ -209,6 +209,15 @@ export class Inventory implements OnInit, OnDestroy {
       const scanned = await this.barcodeScanner.scan();
       if (scanned) {
         this.addProductForm.get('barcode')?.setValue(scanned);
+        // A barcode only encodes an identifier; it does not inherently carry
+        // a product name. When it belongs to a product already saved in this
+        // space, however, use that local record to fill the blank name field.
+        // Keep a name the user has already typed intact.
+        const nameControl = this.addProductForm.get('name');
+        const knownProduct = await this.productService.getProductByBarcode(scanned);
+        if (knownProduct && !String(nameControl?.value || '').trim()) {
+          nameControl?.setValue(knownProduct.name);
+        }
       }
     } catch (error: any) {
       this.showBarcodeScanError(error);
