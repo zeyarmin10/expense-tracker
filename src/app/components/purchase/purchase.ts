@@ -745,7 +745,12 @@ export class Purchase implements OnInit, OnDestroy {
     if (q) {
       list = list.filter(p => p.name.toLowerCase().includes(q));
     }
-    return list;
+    // The Add Item sheet is primarily used for creating a new purchase, so
+    // keep recently created products at the top. Copy before sorting because
+    // edit mode uses productList's original order for legacy records.
+    return this.productPickerMode === 'cart'
+      ? [...list].sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''))
+      : list;
   }
 
   getSelectedProductName(productId: string): string | null {

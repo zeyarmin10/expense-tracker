@@ -175,6 +175,16 @@
   text-decoration: none;
 }
 
+.shopdash-stock-warning-low {
+  border-color: rgba(245, 158, 11, 0.35);
+  background: rgba(245, 158, 11, 0.1);
+  color: #d97706;
+}
+
+.shopdash-stock-ok[href] {
+  text-decoration: none;
+}
+
 .shopdash-stock-ok {
   display: flex;
   align-items: center;

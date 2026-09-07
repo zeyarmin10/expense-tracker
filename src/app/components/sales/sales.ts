@@ -687,7 +687,11 @@ export class Sales implements OnInit, OnDestroy {
     if (q) {
       list = list.filter(p => p.name.toLowerCase().includes(q));
     }
-    return list;
+    // Newer products are the most likely next item to sell. Sort only the
+    // Add Item cart picker, leaving the legacy edit picker untouched.
+    return this.productPickerMode === 'cart'
+      ? [...list].sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''))
+      : list;
   }
 
   getProductStock(productId: string): number | null {
