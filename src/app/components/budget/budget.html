@@ -13,31 +13,9 @@
     <div class="bgt-add-modal-sheet" [class.open]="isAddModalOpen">
       <div class="bgt-add-modal-handle"></div>
 
-      <div class="bgt-add-modal-header" *ngIf="!isCategoryPickerOpen && !isDatePickerOpen && !isTypePickerOpen">
+      <div class="bgt-add-modal-header" *ngIf="!isDatePickerOpen">
         <span class="bgt-add-modal-header-title">{{ 'ADD_BUDGET' | translate }}</span>
         <button type="button" class="bgt-add-modal-close" (click)="closeAddModal()" [title]="'CANCEL_BUTTON_LABEL' | translate">
-          <lucide-icon [img]="iconX" [size]="18"></lucide-icon>
-        </button>
-      </div>
-
-      <!-- Budget-type picker header — replaces the title while drilled in -->
-      <div class="bgt-add-modal-header" *ngIf="isTypePickerOpen">
-        <button type="button" class="bgt-add-modal-back" (click)="closeTypePicker()">
-          <lucide-icon [img]="iconChevronDown" [size]="18" class="bgt-add-modal-back-icon"></lucide-icon>
-        </button>
-        <span class="bgt-add-modal-header-title">{{ 'BUDGET_TYPE' | translate }}</span>
-        <button type="button" class="bgt-add-modal-close" (click)="closeTypePicker()" [title]="'BACK_BUTTON' | translate">
-          <lucide-icon [img]="iconX" [size]="18"></lucide-icon>
-        </button>
-      </div>
-
-      <!-- Category picker header — replaces the title while drilled in -->
-      <div class="bgt-add-modal-header" *ngIf="isCategoryPickerOpen">
-        <button type="button" class="bgt-add-modal-back" (click)="closeCategoryPicker()">
-          <lucide-icon [img]="iconChevronDown" [size]="18" class="bgt-add-modal-back-icon"></lucide-icon>
-        </button>
-        <span class="bgt-add-modal-header-title">{{ 'CATEGORY' | translate }}</span>
-        <button type="button" class="bgt-add-modal-close" (click)="closeCategoryPicker()" [title]="'BACK_BUTTON' | translate">
           <lucide-icon [img]="iconX" [size]="18"></lucide-icon>
         </button>
       </div>
@@ -58,8 +36,18 @@
         <div id="bgt-date-picker-container"></div>
       </div>
 
-      <!-- Category picker body — search + list, swaps in place of the form -->
-      <div class="bgt-add-modal-body bgt-cat-picker-body" *ngIf="isCategoryPickerOpen">
+      <!-- Category list overlays the still-visible Add Budget form. -->
+      <div class="bgt-selection-picker-backdrop" *ngIf="isCategoryPickerOpen"
+        (click)="closeCategoryPicker()"></div>
+      <div class="bgt-selection-bottom-sheet" *ngIf="isCategoryPickerOpen">
+        <div class="bgt-selection-sheet-handle"></div>
+        <div class="bgt-add-modal-header">
+          <span class="bgt-add-modal-header-title">{{ 'CATEGORY' | translate }}</span>
+          <button type="button" class="bgt-add-modal-close" (click)="closeCategoryPicker()" [title]="'BACK_BUTTON' | translate">
+            <lucide-icon [img]="iconX" [size]="18"></lucide-icon>
+          </button>
+        </div>
+        <div class="bgt-add-modal-body bgt-cat-picker-body">
         <div class="bgt-cat-picker-search">
           <lucide-icon [img]="iconSearch" [size]="15" class="bgt-cat-picker-search-icon"></lucide-icon>
           <input
@@ -92,11 +80,22 @@
             </lucide-icon>
           </button>
         </div>
+        </div>
       </div>
 
-      <!-- Budget-type picker body — simple list, swaps in place of the form -->
-      <div class="bgt-add-modal-body bgt-cat-picker-body" *ngIf="isTypePickerOpen">
-        <div class="bgt-cat-picker-list">
+      <!-- Budget type list also overlays the base form as a bottom sheet. -->
+      <div class="bgt-selection-picker-backdrop" *ngIf="isTypePickerOpen"
+        (click)="closeTypePicker()"></div>
+      <div class="bgt-selection-bottom-sheet" *ngIf="isTypePickerOpen">
+        <div class="bgt-selection-sheet-handle"></div>
+        <div class="bgt-add-modal-header">
+          <span class="bgt-add-modal-header-title">{{ 'BUDGET_TYPE' | translate }}</span>
+          <button type="button" class="bgt-add-modal-close" (click)="closeTypePicker()" [title]="'BACK_BUTTON' | translate">
+            <lucide-icon [img]="iconX" [size]="18"></lucide-icon>
+          </button>
+        </div>
+        <div class="bgt-add-modal-body bgt-cat-picker-body">
+          <div class="bgt-cat-picker-list">
           <button
             type="button"
             class="bgt-cat-picker-item"
@@ -112,10 +111,11 @@
               [img]="iconCheck" [size]="16" class="bgt-cat-picker-item-check">
             </lucide-icon>
           </button>
+          </div>
         </div>
       </div>
 
-      <div class="bgt-add-modal-body" *ngIf="!isCategoryPickerOpen && !isDatePickerOpen && !isTypePickerOpen">
+      <div class="bgt-add-modal-body" *ngIf="!isDatePickerOpen">
         <form [formGroup]="budgetForm" (ngSubmit)="onSubmitBudget()" class="bgt-form">
 
           <!-- Budget type (left) + date (right) — one compact pill row -->

@@ -9,7 +9,7 @@ import {
   FormControl,
 } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Observable, BehaviorSubject, Subject, firstValueFrom, of } from 'rxjs';
+import { Observable, BehaviorSubject, Subject, firstValueFrom, of, map } from 'rxjs';
 import { switchMap, takeUntil } from 'rxjs/operators';
 import { ProductService, ServiceIProduct, getProductErrorMessage } from '../../services/product';
 import { BarcodeScannerService } from '../../services/barcode-scanner.service';
@@ -153,8 +153,10 @@ export class Inventory implements OnInit, OnDestroy {
   private _productsSubject = new BehaviorSubject<ServiceIProduct[]>([]);
   products$: Observable<ServiceIProduct[]> = this._productsSubject.asObservable();
 
+  // Hidden products remain in the Products tab so they can be restored, but
+  // must not affect the customer-facing Stock & Profit overview or its totals.
   stockSummary$: Observable<ProductStockSummary[]> = this.inventoryService.getStockSummary(
-    this.products$,
+    this.products$.pipe(map((products) => products.filter((product) => product.isActive !== false))),
     this.expenseService.getExpenses(),
     this.incomeService.getIncomes(),
   );

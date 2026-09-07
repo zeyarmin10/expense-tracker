@@ -9,6 +9,7 @@
     <!-- ── Cart section — the real "Add Purchase" experience. Inline at the
          top of the page on desktop; on mobile it's reached via the FAB
          below and opens as a full-screen overlay (no modal box). ── -->
+    <div class="exp-cart-overlay-backdrop" [class.open]="showAddCartOverlay"></div>
     <div class="exp-cart-overlay" [class.exp-cart-overlay-open]="showAddCartOverlay" *ngIf="canCreateExpenseRecords">
       <div class="exp-cart-overlay-topbar">
         <div class="exp-seg-ctrl exp-cart-overlay-tabs">
@@ -286,8 +287,11 @@
          isCategoryPickerOpen/isProductPickerOpen state, but the *Target/
          *Mode being 'cart' vs 'edit'/'voucher' keeps exactly one of the
          two renderers active at a time). -->
-    <div class="exp-pos-picker-backdrop" [class.open]="isCartPickerOpen" (click)="closeDatePicker(); closeCategoryPicker(); closeProductPicker()"></div>
-    <div class="exp-pos-picker-sheet" [class.open]="isCartPickerOpen">
+    <div class="exp-pos-picker-backdrop" [class.open]="isCartPickerOpen"
+      [class.exp-pos-picker-backdrop-date]="isDatePickerOpen && (datePickerTarget === 'cart' || datePickerTarget === 'voucher')"
+      (click)="closeDatePicker(); closeCategoryPicker(); closeProductPicker()"></div>
+    <div class="exp-pos-picker-sheet" [class.open]="isCartPickerOpen"
+      [class.exp-pos-picker-sheet-date]="isDatePickerOpen && (datePickerTarget === 'cart' || datePickerTarget === 'voucher')">
       <div class="exp-pos-picker-handle"></div>
 
       <ng-container *ngIf="isDatePickerOpen && (datePickerTarget === 'cart' || datePickerTarget === 'voucher')">
@@ -446,6 +450,11 @@
             <lucide-icon [img]="iconRotateCcw" [size]="16"></lucide-icon>
           </button>
         </div>
+        <button type="button" class="exp-add-toolbar-btn exp-purchase-add-toolbar-btn" *ngIf="canCreateExpenseRecords"
+          (click)="openAddCartOverlay()">
+          <lucide-icon [img]="iconPlus" [size]="15"></lucide-icon>
+          {{ 'PURCHASE_ADD_TITLE' | translate }}
+        </button>
       </div>
 
       <div class="exp-filter-bottom-row">

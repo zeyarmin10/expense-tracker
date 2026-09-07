@@ -13,7 +13,7 @@
     <div class="exp-add-modal-backdrop" [class.open]="isAddModalOpen"></div>
     <div class="exp-add-modal-sheet" [class.open]="isAddModalOpen">
       <div class="exp-add-modal-handle"></div>
-      <div class="exp-add-modal-header" *ngIf="!isCategoryPickerOpen && !isDatePickerOpen">
+      <div class="exp-add-modal-header" *ngIf="!isDatePickerOpen">
         <!-- Edit mode: plain title instead of the add/voucher tabs -->
         <span class="exp-add-modal-header-title" *ngIf="editingExpense">
           {{ 'EDIT_BUTTON_LABEL' | translate }}
@@ -40,17 +40,6 @@
         </button>
       </div>
 
-      <!-- Category picker header — replaces the tabs while drilled in -->
-      <div class="exp-add-modal-header" *ngIf="isCategoryPickerOpen">
-        <button type="button" class="exp-add-modal-back" (click)="closeCategoryPicker()">
-          <lucide-icon [img]="iconChevronDown" [size]="18" class="exp-add-modal-back-icon"></lucide-icon>
-        </button>
-        <span class="exp-add-modal-header-title">{{ 'EXPENSE_CATEGORY_LABEL' | translate }}</span>
-        <button type="button" class="exp-add-modal-close" (click)="closeCategoryPicker()" [title]="'BACK_BUTTON' | translate">
-          <lucide-icon [img]="iconX" [size]="18"></lucide-icon>
-        </button>
-      </div>
-
       <!-- Date picker header — replaces the tabs while drilled in -->
       <div class="exp-add-modal-header" *ngIf="isDatePickerOpen">
         <button type="button" class="exp-add-modal-back" (click)="closeDatePicker()">
@@ -71,9 +60,19 @@
         <div id="exp-date-picker-container"></div>
       </div>
 
-      <!-- Category picker body — search + list, swaps in place of the form -->
-      <div class="exp-add-modal-body exp-cat-picker-body" *ngIf="isCategoryPickerOpen">
-        <div class="exp-cat-picker-search">
+      <!-- Category picker is layered over the still-visible add form on mobile. -->
+      <div class="exp-category-picker-backdrop" *ngIf="isCategoryPickerOpen"
+        (click)="closeCategoryPicker()"></div>
+      <div class="exp-category-bottom-sheet" *ngIf="isCategoryPickerOpen">
+        <div class="exp-pos-picker-handle"></div>
+        <div class="exp-add-modal-header">
+          <span class="exp-add-modal-header-title">{{ 'EXPENSE_CATEGORY_LABEL' | translate }}</span>
+          <button type="button" class="exp-add-modal-close" (click)="closeCategoryPicker()" [title]="'BACK_BUTTON' | translate">
+            <lucide-icon [img]="iconX" [size]="18"></lucide-icon>
+          </button>
+        </div>
+        <div class="exp-add-modal-body exp-cat-picker-body">
+          <div class="exp-cat-picker-search">
           <lucide-icon [img]="iconSearch" [size]="15" class="exp-cat-picker-search-icon"></lucide-icon>
           <input
             type="text"
@@ -83,7 +82,7 @@
             class="exp-cat-picker-search-input"
           />
         </div>
-        <div class="exp-cat-picker-list">
+          <div class="exp-cat-picker-list">
           <button
             type="button"
             class="exp-cat-picker-item"
@@ -116,10 +115,11 @@
               [img]="iconCheck" [size]="16" class="exp-cat-picker-item-check">
             </lucide-icon>
           </button>
+          </div>
         </div>
       </div>
 
-      <div class="exp-add-modal-body" *ngIf="!isCategoryPickerOpen && !isDatePickerOpen">
+      <div class="exp-add-modal-body" *ngIf="!isDatePickerOpen">
         <ng-container *ngIf="addModalTab === 'expense'">
 
         <form

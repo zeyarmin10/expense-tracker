@@ -137,7 +137,15 @@
       "$spaceId": {
         ".read": "root.child('space_members').child($spaceId).child(auth.uid).exists() || root.child('group_members').child($spaceId).child(auth.uid).exists()",
         ".write": "(!data.exists() && newData.child('ownerId').val() === auth.uid) || (data.exists() && (data.child('ownerId').val() === auth.uid || root.child('space_members').child($spaceId).child(auth.uid).child('role').val() === 'owner' || root.child('space_members').child($spaceId).child(auth.uid).child('role').val() === 'admin' || root.child('group_members').child($spaceId).child(auth.uid).child('role').val() === 'admin' || root.child('group_members').child($spaceId).child(auth.uid).child('role').val() === 'owner'))",
-        ".validate": "!newData.exists() || newData.hasChildren(['type', 'name', 'ownerId', 'currency'])"
+        ".validate": "!newData.exists() || newData.hasChildren(['type', 'name', 'ownerId', 'currency'])",
+        "shopAddress": {
+          ".write": "root.child('space_members').child($spaceId).child(auth.uid).exists() || root.child('group_members').child($spaceId).child(auth.uid).exists()",
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 200)"
+        },
+        "shopPhone": {
+          ".write": "root.child('space_members').child($spaceId).child(auth.uid).exists() || root.child('group_members').child($spaceId).child(auth.uid).exists()",
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 30)"
+        }
       }
     },
 

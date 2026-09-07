@@ -33,6 +33,10 @@ interface ShopDashboardStats {
   todaySoldItems: SoldItemRow[];
   outOfStockProducts: ProductStockSummary[];
   outOfStockNames: string;
+  lowStockProducts: ProductStockSummary[];
+  lowStockNames: string;
+  hasProducts: boolean;
+  hasStockedProducts: boolean;
   topSellers: RankedProductRow[];
   slowMovers: RankedProductRow[];
 }
@@ -180,13 +184,19 @@ export class ShopDashboardComponent implements OnInit {
       todaySales$, todayPurchases$, todaySoldItems$, stockSummary$, topSellers$, slowMovers$, lowStockThreshold$,
     ]).pipe(
       map(([todaySales, todayPurchases, todaySoldItems, summary, topSellers, slowMovers, lowStockThreshold]) => {
-        const outOfStockProducts = summary.filter(
-          (row) => row.totalPurchasedQty > 0 && row.currentStock <= lowStockThreshold,
+        // A zero balance means the item is out of stock. Items with a
+        // positive balance at or below the configured threshold are merely
+        // low, so users can tell the two states apart.
+        const stockedProducts = summary.filter((row) => row.totalPurchasedQty > 0);
+        const outOfStockProducts = stockedProducts.filter((row) => row.currentStock <= 0);
+        const lowStockProducts = stockedProducts.filter(
+          (row) => row.currentStock > 0 && row.currentStock <= lowStockThreshold,
         );
-        const shownNames = outOfStockProducts
+        const formatNames = (products: ProductStockSummary[]) => products
           .slice(0, 5)
           .map((row) => `${row.productName} (${this.formatService.formatCount(row.currentStock)})`);
-        const outOfStockNames = shownNames.join(', ') + (outOfStockProducts.length > 5 ? '…' : '');
+        const outOfStockNames = formatNames(outOfStockProducts).join(', ') + (outOfStockProducts.length > 5 ? '…' : '');
+        const lowStockNames = formatNames(lowStockProducts).join(', ') + (lowStockProducts.length > 5 ? '…' : '');
         return {
           todaySales,
           todayPurchases,
@@ -194,6 +204,10 @@ export class ShopDashboardComponent implements OnInit {
           todaySoldItems,
           outOfStockProducts,
           outOfStockNames,
+          lowStockProducts,
+          lowStockNames,
+          hasProducts: summary.length > 0,
+          hasStockedProducts: stockedProducts.length > 0,
           topSellers,
           slowMovers,
         };

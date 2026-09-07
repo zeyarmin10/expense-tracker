@@ -47,11 +47,27 @@
   <a routerLink="/inventory" class="shopdash-stock-warning" *ngIf="stats.outOfStockProducts.length > 0">
     <lucide-icon [img]="iconWarning" [size]="18"></lucide-icon>
     <div class="shopdash-stock-warning-body">
-      <span>{{ 'SHOP_DASHBOARD_LOW_STOCK_WARNING' | translate: { count: stats.outOfStockProducts.length } }}</span>
+      <span>{{ 'SHOP_DASHBOARD_OUT_OF_STOCK_WARNING' | translate: { count: stats.outOfStockProducts.length } }}</span>
       <span class="shopdash-stock-warning-names">{{ stats.outOfStockNames }}</span>
     </div>
   </a>
-  <div class="shopdash-stock-ok" *ngIf="stats.outOfStockProducts.length === 0">
+  <a routerLink="/inventory" class="shopdash-stock-warning shopdash-stock-warning-low"
+     *ngIf="stats.outOfStockProducts.length === 0 && stats.lowStockProducts.length > 0">
+    <lucide-icon [img]="iconWarning" [size]="18"></lucide-icon>
+    <div class="shopdash-stock-warning-body">
+      <span>{{ 'SHOP_DASHBOARD_LOW_STOCK_WARNING' | translate: { count: stats.lowStockProducts.length } }}</span>
+      <span class="shopdash-stock-warning-names">{{ stats.lowStockNames }}</span>
+    </div>
+  </a>
+  <a routerLink="/inventory" class="shopdash-stock-ok" *ngIf="!stats.hasProducts">
+    <lucide-icon [img]="iconPackage" [size]="18"></lucide-icon>
+    <span>{{ 'SHOP_DASHBOARD_NO_PRODUCTS' | translate }}</span>
+  </a>
+  <a routerLink="/purchase" class="shopdash-stock-ok" *ngIf="stats.hasProducts && !stats.hasStockedProducts">
+    <lucide-icon [img]="iconPackage" [size]="18"></lucide-icon>
+    <span>{{ 'SHOP_DASHBOARD_NO_STOCK_RECORDED' | translate }}</span>
+  </a>
+  <div class="shopdash-stock-ok" *ngIf="stats.hasStockedProducts && stats.outOfStockProducts.length === 0 && stats.lowStockProducts.length === 0">
     <lucide-icon [img]="iconPackage" [size]="18"></lucide-icon>
     <span>{{ 'SHOP_DASHBOARD_NO_LOW_STOCK' | translate }}</span>
   </div>

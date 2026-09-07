@@ -4,6 +4,7 @@
     <!-- ── Cart section — the real "Add Sale" experience. Inline at the
          top of the page on desktop; on mobile it's reached via the FAB
          below and opens as a full-screen overlay (no modal box). ── -->
+    <div class="pnl-cart-overlay-backdrop" [class.open]="showAddCartOverlay"></div>
     <div class="pnl-cart-overlay" [class.pnl-cart-overlay-open]="showAddCartOverlay" *ngIf="canManageProfitActions">
       <div class="pnl-cart-overlay-topbar">
         <h2 class="pnl-pos-section-title">
@@ -125,6 +126,11 @@
             <lucide-icon [img]="iconRotateCcw" [size]="16"></lucide-icon>
           </button>
         </div>
+        <button type="button" class="pnl-add-toolbar-btn" *ngIf="canManageProfitActions"
+          (click)="openAddCartOverlay()">
+          <lucide-icon [img]="iconPlus" [size]="15"></lucide-icon>
+          {{ 'ADD_SALE' | translate }}
+        </button>
       </div>
 
       <div class="pnl-filter-bottom-row">
@@ -325,8 +331,10 @@
      but editingIncome is only ever truthy while that OTHER modal is open,
      so exactly one of the two ever renders its content at a time). -->
 <div class="pnl-pos-picker-backdrop" [class.open]="!editingIncome && (isDatePickerOpen || isProductPickerOpen)"
+  [class.pnl-pos-picker-backdrop-date]="!editingIncome && isDatePickerOpen"
   (click)="closeDatePicker(); closeProductPicker()"></div>
-<div class="pnl-pos-picker-sheet" [class.open]="!editingIncome && (isDatePickerOpen || isProductPickerOpen)">
+<div class="pnl-pos-picker-sheet" [class.open]="!editingIncome && (isDatePickerOpen || isProductPickerOpen)"
+  [class.pnl-pos-picker-sheet-date]="!editingIncome && isDatePickerOpen">
   <div class="pnl-pos-picker-handle"></div>
 
   <ng-container *ngIf="!editingIncome && isDatePickerOpen">
@@ -589,7 +597,7 @@
     <div class="pnl-receipt-paper">
       <div class="pnl-receipt-shop">{{ receiptShopName }}</div>
       <div class="pnl-receipt-shop-info" *ngIf="receiptShopAddress">{{ receiptShopAddress }}</div>
-      <div class="pnl-receipt-shop-info" *ngIf="receiptShopPhone">{{ 'SHOP_PHONE_LABEL' | translate }}: {{ receiptShopPhone }}</div>
+      <div class="pnl-receipt-shop-info pnl-receipt-shop-phone" *ngIf="receiptShopPhone">{{ 'SHOP_PHONE_LABEL' | translate }}: {{ receiptShopPhone }}</div>
       <div class="pnl-receipt-date">{{ 'DATE_LABEL' | translate }}: {{ receiptDate }}&nbsp;&nbsp;{{ receiptTime }}</div>
       <div class="pnl-receipt-sep"></div>
       <div class="pnl-receipt-line" *ngFor="let line of receiptLines">
