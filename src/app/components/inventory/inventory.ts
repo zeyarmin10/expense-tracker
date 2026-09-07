@@ -87,6 +87,8 @@ export class Inventory implements OnInit, OnDestroy {
   private activeGroupId: string | null = null;
   lowStockThreshold = 0;
   isSavingThreshold = false;
+  shopName = '';
+  private savedShopName = '';
   shopAddress = '';
   shopPhone = '';
   isSavingShopInfo = false;
@@ -177,6 +179,10 @@ export class Inventory implements OnInit, OnDestroy {
   showAddOverlay = false;
 
   openAddOverlay(): void {
+    // The toolbar button stays visible/clickable even while the modal is
+    // already open (matches Expense's own toolbar button) — guard against
+    // stacking a second, unmatched history entry if it's clicked again.
+    if (this.showAddOverlay) return;
     this.showAddOverlay = true;
     document.body.classList.add('inv-add-modal-open');
     history.pushState(null, '');
@@ -260,6 +266,8 @@ export class Inventory implements OnInit, OnDestroy {
       )
       .subscribe((space) => {
         this.lowStockThreshold = space?.lowStockThreshold ?? 0;
+        this.shopName = space?.name || '';
+        this.savedShopName = this.shopName;
         this.shopAddress = space?.shopAddress || '';
         this.shopPhone = space?.shopPhone || '';
         this.cdr.markForCheck();
@@ -308,14 +316,26 @@ export class Inventory implements OnInit, OnDestroy {
     }
   }
 
-  // Shown on the printed Sales receipt below the shop name (space.name,
-  // edited from Profile & Settings' existing group-rename flow — not
-  // duplicated here).
+  // Shop name, address and phone are printed on the Sales receipt.
   async saveShopInfo(): Promise<void> {
     if (!this.activeGroupId) return;
+    const nextShopName = this.shopName.trim();
+    if (!nextShopName) {
+      this.showErrorModal(
+        this.translateService.instant('ERROR_TITLE'),
+        this.translateService.instant('SHOP_NAME_REQUIRED'),
+      );
+      return;
+    }
     this.isSavingShopInfo = true;
     this.cdr.markForCheck();
     try {
+      // Use renameGroup rather than updating only the space record: it also
+      // refreshes every active member's currentSpaceName in the header.
+      if (nextShopName !== this.savedShopName) {
+        await this.dataManager.renameGroup(this.activeGroupId, nextShopName);
+        this.savedShopName = nextShopName;
+      }
       await this.dataManager.updateGroupSettings(this.activeGroupId, {
         shopAddress: this.shopAddress.trim() || null,
         shopPhone: this.shopPhone.trim() || null,

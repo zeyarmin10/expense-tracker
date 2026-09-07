@@ -988,6 +988,8 @@
   "LOW_STOCK_THRESHOLD_SAVED": "บันทึกระดับแจ้งเตือนสต็อกต่ำแล้ว!",
   "STOCK_SUMMARY_LOW_STOCK_WARNING": "สต็อกต่ำ — ควรพิจารณาสั่งซื้อเพิ่ม",
   "SHOP_INFO_TITLE": "ข้อมูลร้านค้า (แสดงบนใบเสร็จ)",
+  "SHOP_NAME_LABEL": "ชื่อร้าน",
+  "SHOP_NAME_REQUIRED": "กรุณาระบุชื่อร้าน",
   "SHOP_ADDRESS_LABEL": "ที่อยู่ร้านค้า",
   "SHOP_PHONE_LABEL": "เบอร์โทรศัพท์",
   "SHOP_INFO_SAVED": "บันทึกข้อมูลร้านค้าแล้ว!"

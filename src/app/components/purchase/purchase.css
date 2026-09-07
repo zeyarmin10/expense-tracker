@@ -2396,13 +2396,6 @@ body.light-mode .exp-item {
   color: var(--accent);
 }
 
-/* when picker is visible, flatten filter bar bottom so it connects to the picker below */
-.exp-filter-bar-expanded {
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
-  border-bottom-color: transparent;
-}
-
 /* date range picker outer — connects to filter bar above, no stacking context (no transform/animation) */
 .exp-daterange-outer {
   background: var(--surface);

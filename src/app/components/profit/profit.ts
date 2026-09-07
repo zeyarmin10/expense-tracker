@@ -37,7 +37,7 @@ import { getIconData } from '../../utils/category-icons';
 import {
   TrendingUp, TrendingDown, Banknote, ShoppingCart, ChartLine,
   ChartColumn, ChevronDown, ChevronRight, Save, Trash2,
-  Plus, X, CalendarDays, EllipsisVertical, Pencil,
+  Plus, X, CalendarDays, EllipsisVertical, Pencil, RotateCcw,
   LucideIconData,
 } from 'lucide-angular';
 import { AuthService } from '../../services/auth';
@@ -80,6 +80,13 @@ const Toast = Swal.mixin({
 // Type alias for clarity
 type CurrencyMap = { [currency: string]: number };
 
+interface IncomeDateGroup {
+  date: string;
+  incomes: ServiceIIncome[];
+  count: number;
+  totalsByCurrency: CurrencyMap;
+}
+
 @Component({
   selector: 'app-profit',
   standalone: true,
@@ -97,7 +104,7 @@ type CurrencyMap = { [currency: string]: number };
   ],
   providers: [DatePipe],
   templateUrl: './profit.html',
-  styleUrls: ['./profit.css'],
+  styleUrls: ['./profit.css', '../expense/expense.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Profit implements OnInit, OnDestroy {
@@ -135,6 +142,7 @@ export class Profit implements OnInit, OnDestroy {
 
   // Observables for filtered data (likely provided by ProfitLossService)
   incomes$!: Observable<ServiceIIncome[]>;
+  groupedIncomes$!: Observable<IncomeDateGroup[]>;
 
   // Observables for calculated totals (likely provided by ProfitLossService)
   totalExpensesByCurrency$!: Observable<CurrencyMap>;
@@ -154,6 +162,7 @@ export class Profit implements OnInit, OnDestroy {
   private _endDate$ = new BehaviorSubject<string>('');
 
   selectedDateFilter: string = 'currentMonth';
+  showCustomDatePicker = false;
   dateFilterOptions: SelectOption[] = [];
   startDate: string = '';
   endDate: string = '';
@@ -161,7 +170,9 @@ export class Profit implements OnInit, OnDestroy {
   // --- State for Modals/Visibility ---
   private subscriptions: Subscription = new Subscription();
 
-  isRecordedIncomesCollapsed: boolean = true;
+  // Income now follows Expense's list-first layout, so its records are
+  // immediately available rather than hidden behind a collapsed panel.
+  isRecordedIncomesCollapsed: boolean = false;
 
   // ── Add/Edit Income FAB + Bottom-sheet Modal ──
   isAddModalOpen = false;
@@ -238,6 +249,7 @@ export class Profit implements OnInit, OnDestroy {
   readonly iconShoppingCart = ShoppingCart;
   readonly iconChevronDown = ChevronDown;
   readonly iconChevronRight = ChevronRight;
+  readonly iconRotateCcw = RotateCcw;
   readonly iconSave = Save;
   readonly iconTrash2 = Trash2;
   readonly iconMoreVertical = EllipsisVertical;
@@ -339,6 +351,24 @@ export class Profit implements OnInit, OnDestroy {
         [...data.incomes]
           .sort((a, b) => (new Date(b.date ?? 0).getTime()) - (new Date(a.date ?? 0).getTime()))
       )
+    );
+    this.groupedIncomes$ = this.incomes$.pipe(
+      map((incomes) => {
+        const groups = new Map<string, IncomeDateGroup>();
+        incomes.forEach((income) => {
+          const date = income.date || '';
+          let group = groups.get(date);
+          if (!group) {
+            group = { date, incomes: [], count: 0, totalsByCurrency: {} };
+            groups.set(date, group);
+          }
+          group.incomes.push(income);
+          group.count += 1;
+          const currency = income.currency || this.userProfile?.currency || 'MMK';
+          group.totalsByCurrency[currency] = (group.totalsByCurrency[currency] || 0) + (Number(income.amount) || 0);
+        });
+        return [...groups.values()].sort((a, b) => b.date.localeCompare(a.date));
+      }),
     );
     this.totalExpensesByCurrency$ = profitLossData$.pipe(
       map((data) => data.totalExpenses)
@@ -523,6 +553,9 @@ export class Profit implements OnInit, OnDestroy {
 
   setDateFilter(filter: string, isInitialLoad: boolean = false): void {
     this.selectedDateFilter = filter;
+    // This is also called during initial custom-budget-period setup, not
+    // only from a tab click, so keep the picker visible in both paths.
+    this.showCustomDatePicker = filter === 'custom';
 
     if (filter === 'custom' && !isInitialLoad) {
       if (!this.startDate) {
@@ -551,6 +584,51 @@ export class Profit implements OnInit, OnDestroy {
       this._endDate$.next(dateRange.end);
       this._selectedDateRange$.next(filter);
     }
+    this.cdr.markForCheck();
+  }
+
+  setIncomeDateFilterMode(mode: 'today' | 'week' | 'month' | 'custom'): void {
+    const filterByMode = {
+      today: 'today',
+      week: 'currentWeek',
+      month: 'currentMonth',
+      custom: 'custom',
+    } as const;
+    this.showCustomDatePicker = mode === 'custom';
+    this.setDateFilter(filterByMode[mode]);
+    this.cdr.markForCheck();
+  }
+
+  getIncomeDateFilterIndex(): number {
+    switch (this.selectedDateFilter) {
+      case 'today': return 0;
+      case 'currentWeek': return 1;
+      case 'currentMonth': return 2;
+      default: return 3;
+    }
+  }
+
+  isIncomeCustomFilter(): boolean {
+    return !['today', 'currentWeek', 'currentMonth'].includes(this.selectedDateFilter);
+  }
+
+  resetIncomeDateFilter(): void {
+    this.setIncomeDateFilterMode('today');
+  }
+
+  onIncomeCustomDateChange(): void {
+    this.setDateFilter('custom');
+  }
+
+  getIncomeFilterLabel(): string {
+    const range = this.dateFilterService.getDateRange(
+      this.datePipe,
+      this.selectedDateFilter,
+      this.startDate,
+      this.endDate,
+    );
+    if (range.start === range.end) return this.formatService.formatLocalizedDate(range.start);
+    return `${this.formatService.formatLocalizedDate(range.start)} – ${this.formatService.formatLocalizedDate(range.end)}`;
   }
 
   private initChartSubscription(): void {
@@ -868,6 +946,10 @@ export class Profit implements OnInit, OnDestroy {
 
   trackByIncomeId(index: number, income: ServiceIIncome): string {
     return income.id ?? String(index);
+  }
+
+  trackByIncomeGroupDate(index: number, group: IncomeDateGroup): string {
+    return group.date || String(index);
   }
 
 }

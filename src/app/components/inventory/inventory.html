@@ -26,9 +26,18 @@
 
     <!-- ── Products tab ── -->
     <div *ngIf="activeTab === 'products'">
-      <!-- Add-Product form: inline on desktop, full-screen overlay on
-           mobile (reached via the FAB below) — same shell pattern as
-           Purchase/Sales' cart overlay. -->
+      <!-- Desktop-only toolbar button — opens the modal below. -->
+      <div class="inv-toolbar-row">
+        <button type="button" class="inv-add-toolbar-btn" (click)="openAddOverlay()">
+          <lucide-icon [img]="iconPlus" [size]="15"></lucide-icon>
+          {{ 'ADD_PRODUCT' | translate }}
+        </button>
+      </div>
+
+      <!-- Add-Product form: a centered modal on desktop, full-screen
+           overlay on mobile (reached via the FAB below) — same two-mode
+           shell Expense/Budget/Income's own Add modal uses. -->
+      <div class="inv-add-overlay-backdrop" [class.open]="showAddOverlay"></div>
       <div class="inv-add-overlay" [class.inv-add-overlay-open]="showAddOverlay">
         <div class="inv-add-overlay-topbar">
           <span class="inv-add-overlay-title">
@@ -104,10 +113,10 @@
                 <span class="inv-product-hidden-badge" *ngIf="product.isActive === false">
                   {{ 'PRODUCT_HIDDEN_BADGE' | translate }}
                 </span>
-                <span class="inv-product-meta" *ngIf="product.unit || product.sellingPrice">
+                <span class="inv-product-meta" *ngIf="product.unit || (product.sellingPrice && product.isActive !== false)">
                   <span *ngIf="product.unit">{{ product.unit }}</span>
-                  <span *ngIf="product.unit && product.sellingPrice"> · </span>
-                  <span *ngIf="product.sellingPrice" class="inv-product-price"
+                  <span *ngIf="product.unit && product.sellingPrice && product.isActive !== false"> · </span>
+                  <span *ngIf="product.sellingPrice && product.isActive !== false" class="inv-product-price"
                     [innerHTML]="formatService.formatAmountShortHtml(product.sellingPrice, currency)"></span>
                 </span>
               </div>
@@ -196,8 +205,7 @@
         </ng-container>
       </div>
 
-      <!-- Printed on the Sales receipt below the shop name (space name —
-           edit that from Profile & Settings). -->
+      <!-- Shop name, address and phone are printed on the Sales receipt. -->
       <div class="inv-shopinfo-card">
         <button type="button" class="inv-shopinfo-header" (click)="isShopInfoCardOpen = !isShopInfoCardOpen"
           [attr.aria-expanded]="isShopInfoCardOpen">
@@ -206,6 +214,8 @@
         </button>
         <ng-container *ngIf="isShopInfoCardOpen">
           <div class="inv-shopinfo-fields">
+            <input type="text" class="inv-input inv-shopinfo-name" [(ngModel)]="shopName" maxlength="50" autocomplete="organization"
+              [placeholder]="'SHOP_NAME_LABEL' | translate" />
             <textarea class="inv-input inv-shopinfo-address" [(ngModel)]="shopAddress" maxlength="200" autocomplete="off"
               rows="3" [placeholder]="'SHOP_ADDRESS_LABEL' | translate"></textarea>
             <input type="text" class="inv-input inv-shopinfo-phone" [(ngModel)]="shopPhone" maxlength="30" autocomplete="off"

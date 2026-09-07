@@ -148,8 +148,30 @@
 
 /* search row below in custom mode */
 .ov-search-row {
+  clear: both;
+  margin-top: 0.85rem;
   margin-bottom: 1.25rem;
   width: 100%;
+}
+
+/* The Expense-style filter is now followed by Overview's own search field.
+   Keep them as distinct vertical blocks at every breakpoint; the old filter
+   used an inline flex row and otherwise allowed the search to sit against
+   the filter/card edge after the markup was switched. */
+.expense-container > .exp-filter-bar {
+  margin-bottom: 0.85rem;
+}
+
+.expense-container > .exp-daterange-outer {
+  /* Expense's parent is a flex column with a gap, so its -1rem margin
+     joins the two filter pieces. Overview's parent is not; retaining that
+     negative margin placed the custom date controls under the search row. */
+  margin-top: 0;
+  margin-bottom: 0.85rem;
+}
+
+.expense-container > .exp-daterange-outer + .ov-search-row {
+  margin-top: 0.85rem;
 }
 
 .ov-fl-wrap {
@@ -222,7 +244,7 @@
 /* PC: search bar ကို 60% width သတ်မှတ် */
 @media (min-width: 640px) {
   .search-group {
-    width: 70%;
+    width: 100%;
   }
 }
 

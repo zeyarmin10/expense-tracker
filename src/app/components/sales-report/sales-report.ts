@@ -20,9 +20,8 @@ import { FormatService } from '../../services/format.service';
 import { DateFilterService, DateRange } from '../../services/date-filter.service';
 import { AuthService } from '../../services/auth';
 import { UserDataService, UserProfile } from '../../services/user-data';
-import { LucideAngularModule, Search, ChartColumn, List, Trophy, Package, X } from 'lucide-angular';
+import { LucideAngularModule, Search, ChartColumn, List, Trophy, Package, X, CalendarDays } from 'lucide-angular';
 import { UserAvatarComponent } from '../common/user-avatar/user-avatar.component';
-import { CustomSelectComponent, SelectOption } from '../common/custom-select/custom-select.component';
 import { DateRangeInputComponent } from '../common/date-range-input/date-range-input.component';
 
 interface CurrencySummary {
@@ -47,12 +46,11 @@ interface ProductTotal {
     TranslateModule,
     UserAvatarComponent,
     LucideAngularModule,
-    CustomSelectComponent,
     DateRangeInputComponent,
   ],
   providers: [DatePipe],
   templateUrl: './sales-report.html',
-  styleUrls: ['./sales-report.css'],
+  styleUrls: ['./sales-report.css', '../expense/expense.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SalesReport implements OnInit, OnDestroy {
@@ -74,6 +72,7 @@ export class SalesReport implements OnInit, OnDestroy {
   readonly iconTrophy = Trophy;
   readonly iconPackage = Package;
   readonly iconX = X;
+  readonly iconCalendar = CalendarDays;
 
   productList: ServiceIProduct[] = [];
 
@@ -135,7 +134,8 @@ export class SalesReport implements OnInit, OnDestroy {
   );
   filteredIncomes$: Observable<ServiceIIncome[]> = of([]);
   selectedDateFilter: string = 'currentMonth';
-  dateFilterOptions: SelectOption[] = [];
+  dateFilterMode: 'today' | 'week' | 'month' | 'custom' = 'month';
+  showCustomDatePicker = false;
   startDate: string = '';
   endDate: string = '';
   searchTerm: string = '';
@@ -162,28 +162,11 @@ export class SalesReport implements OnInit, OnDestroy {
   searchFilter$ = new BehaviorSubject<string>('');
 
   ngOnInit(): void {
-    this.translate.stream([
-      'CURRENT_WEEK', 'LAST_30_DAYS', 'CURRENT_MONTH', 'LAST_MONTH',
-      'LAST_SIX_MONTHS', 'CURRENT_YEAR', 'LAST_YEAR', 'CUSTOM_DATE',
-    ]).pipe(takeUntil(this.destroy$)).subscribe(t => {
-      this.dateFilterOptions = [
-        { value: 'currentWeek',   label: t['CURRENT_WEEK']      },
-        { value: 'last30Days',    label: t['LAST_30_DAYS']       },
-        { value: 'currentMonth',  label: t['CURRENT_MONTH']      },
-        { value: 'lastMonth',     label: t['LAST_MONTH']         },
-        { value: 'lastSixMonths', label: t['LAST_SIX_MONTHS']    },
-        { value: 'currentYear',   label: t['CURRENT_YEAR']       },
-        { value: 'lastYear',      label: t['LAST_YEAR']          },
-        { value: 'custom',        label: t['CUSTOM_DATE']        },
-      ];
-      this.cdr.markForCheck();
-    });
-
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     this.startDate = this.datePipe.transform(startOfMonth, 'yyyy-MM-dd') || '';
     this.endDate   = this.datePipe.transform(now,          'yyyy-MM-dd') || '';
-    this.setDateFilter('currentMonth');
+    this.setDateFilterMode('month');
 
     this.userProfile$ = this.authService.userProfile$;
 
@@ -298,6 +281,28 @@ export class SalesReport implements OnInit, OnDestroy {
     }
   }
 
+  getDateFilterIndex(): number {
+    return ['today', 'week', 'month', 'custom'].indexOf(this.dateFilterMode);
+  }
+
+  setDateFilterMode(mode: 'today' | 'week' | 'month' | 'custom'): void {
+    this.dateFilterMode = mode;
+    this.showCustomDatePicker = mode === 'custom';
+    const filter = mode === 'today' ? 'today'
+      : mode === 'week' ? 'currentWeek'
+      : mode === 'month' ? 'currentMonth'
+      : 'custom';
+    this.setDateFilter(filter);
+    this.cdr.markForCheck();
+  }
+
+  onCustomDateChange(): void {
+    if (this.startDate && this.endDate) {
+      this.setDateFilter('custom');
+      this.cdr.markForCheck();
+    }
+  }
+
   updateCurrentPeriodLabel(filter: string): void {
     if (filter === 'custom') {
       if (this.startDate && this.endDate) {
@@ -309,8 +314,9 @@ export class SalesReport implements OnInit, OnDestroy {
       }
     } else {
       const keyMap: { [key: string]: string } = {
-        'currentWeek':    'BUDGET_PERIOD.WEEKLY',
-        'currentMonth':   'BUDGET_PERIOD.MONTHLY',
+        'today':          'TODAY',
+        'currentWeek':    'THIS_WEEK',
+        'currentMonth':   'THIS_MONTH',
         'currentYear':    'BUDGET_PERIOD.YEARLY',
         'last30Days':     'LAST_30_DAYS',
         'lastMonth':      'LAST_MONTH',

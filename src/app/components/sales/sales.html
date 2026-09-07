@@ -105,50 +105,43 @@
 
     <!-- ── SHARED DATE FILTER BAR (same Today/Week/Month/Custom segmented
          control as Purchase/Expense) ── -->
-    <div class="pnl-filter-bar" [class.pnl-filter-bar-expanded]="showCustomDatePicker">
-      <div class="pnl-filter-top-row">
-        <div class="pnl-seg-ctrl">
-          <div class="pnl-seg-track">
+    <div class="exp-filter-bar" [class.exp-filter-bar-expanded]="showCustomDatePicker">
+      <div class="exp-filter-top-row">
+        <div class="exp-seg-ctrl">
+          <div class="exp-seg-track">
             <!-- sliding pill indicator -->
-            <span class="pnl-seg-indicator" [style.transform]="'translateX(calc(' + getDateFilterIndex() + ' * 100%))'"
+            <span class="exp-seg-indicator" [style.transform]="'translateX(calc(' + getDateFilterIndex() + ' * 100%))'"
               aria-hidden="true"></span>
-            <button type="button" class="pnl-seg-btn" [class.active]="dateFilterMode === 'today'"
+            <button type="button" class="exp-seg-btn" [class.active]="dateFilterMode === 'today'"
               (click)="setDateFilterMode('today')">{{ 'TODAY' | translate }}</button>
-            <button type="button" class="pnl-seg-btn" [class.active]="dateFilterMode === 'week'"
+            <button type="button" class="exp-seg-btn" [class.active]="dateFilterMode === 'week'"
               (click)="setDateFilterMode('week')">{{ 'THIS_WEEK' | translate }}</button>
-            <button type="button" class="pnl-seg-btn" [class.active]="dateFilterMode === 'month'"
+            <button type="button" class="exp-seg-btn" [class.active]="dateFilterMode === 'month'"
               (click)="setDateFilterMode('month')">{{ 'THIS_MONTH' | translate }}</button>
-            <button type="button" class="pnl-seg-btn" [class.active]="dateFilterMode === 'custom'"
+            <button type="button" class="exp-seg-btn" [class.active]="dateFilterMode === 'custom'"
               (click)="setDateFilterMode('custom')">{{ 'CUSTOM' | translate }}</button>
           </div>
-          <button type="button" class="pnl-seg-reset" (click)="resetFilter()"
-            [title]="'RESET_FILTER_BUTTON' | translate">
-            <lucide-icon [img]="iconRotateCcw" [size]="16"></lucide-icon>
-          </button>
         </div>
-        <button type="button" class="pnl-add-toolbar-btn" *ngIf="canManageProfitActions"
+        <button type="button" class="exp-add-toolbar-btn" *ngIf="canManageProfitActions"
           (click)="openAddCartOverlay()">
           <lucide-icon [img]="iconPlus" [size]="15"></lucide-icon>
           {{ 'ADD_SALE' | translate }}
         </button>
       </div>
 
-      <div class="pnl-filter-bottom-row">
-        <div class="pnl-filter-label">
-          <span class="pnl-filter-label-date">
-            <lucide-icon [img]="iconCalendar" [size]="16" class="pnl-filter-label-icon"></lucide-icon>
+      <div class="exp-filter-bottom-row">
+        <ng-container *ngIf="showCustomDatePicker; else salesFilterLabel">
+          <app-date-range-input [(startDate)]="startDate" [(endDate)]="endDate" (rangeChange)="onCustomDateChange()"
+            [showLabel]="false" [startLabel]="'DATE_FROM' | translate" [endLabel]="'DATE_TO' | translate">
+          </app-date-range-input>
+        </ng-container>
+        <ng-template #salesFilterLabel><div class="exp-filter-label">
+          <span class="exp-filter-label-date">
+            <lucide-icon [img]="iconCalendar" [size]="16" class="exp-filter-label-icon"></lucide-icon>
             <span>{{ getFilterLabel() }}</span>
           </span>
-        </div>
+        </div></ng-template>
       </div>
-    </div>
-
-    <!-- Date range picker lives OUTSIDE the sticky bar so it renders above
-         the backdrop correctly (matches Purchase/Expense's pattern). -->
-    <div class="pnl-daterange-outer" *ngIf="showCustomDatePicker">
-      <app-date-range-input [(startDate)]="startDate" [(endDate)]="endDate" (rangeChange)="onCustomDateChange()"
-        [showLabel]="false" [startLabel]="'DATE_FROM' | translate" [endLabel]="'DATE_TO' | translate">
-      </app-date-range-input>
     </div>
 
     <!-- Recorded Incomes -->

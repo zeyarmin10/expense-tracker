@@ -119,7 +119,7 @@ interface IncomeDateGroup {
   ],
   providers: [DatePipe],
   templateUrl: './sales.html',
-  styleUrls: ['./sales.css'],
+  styleUrls: ['./sales.css', '../expense/expense.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Sales implements OnInit, OnDestroy {

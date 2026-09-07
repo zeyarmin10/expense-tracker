@@ -181,38 +181,25 @@
     </div>
 
     <!-- ── Date Filter Bar ── -->
-    <div class="bgt-filter-bar" [class.bgt-filter-bar-custom]="selectedDateFilter === 'custom'">
-
-      <app-custom-select
-        [(ngModel)]="selectedDateFilter"
-        (ngModelChange)="setDateFilter($event)"
-        [options]="dateFilterOptions"
-        [sheetTitle]="'DATE_FILTER' | translate"
-        [fitContent]="true"
-        [showSearch]="false">
-      </app-custom-select>
-
-      <ng-container *ngIf="selectedDateFilter === 'custom'">
-        <div class="bgt-date-row">
-          <app-date-range-input
-            [fitContent]="true"
-            [startDate]="startDate ?? ''"
-            (startDateChange)="startDate = $event"
-            [endDate]="endDate ?? ''"
-            (endDateChange)="endDate = $event"
-            (rangeChange)="setDateFilter('custom')"
-            [showLabel]="false"
-            [startLabel]="'START_DATE' | translate"
-            [endLabel]="'END_DATE' | translate">
-          </app-date-range-input>
+    <div class="exp-filter-bar" [class.exp-filter-bar-expanded]="showCustomDatePicker">
+      <div class="exp-filter-top-row">
+        <div class="exp-seg-ctrl">
+          <div class="exp-seg-track">
+            <span class="exp-seg-indicator" [style.transform]="'translateX(calc(' + getBudgetDateFilterIndex() + ' * 100%))'" aria-hidden="true"></span>
+            <button type="button" class="exp-seg-btn" [class.active]="selectedDateFilter === 'today'" (click)="setBudgetDateFilterMode('today')">{{ 'TODAY' | translate }}</button>
+            <button type="button" class="exp-seg-btn" [class.active]="selectedDateFilter === 'currentWeek'" (click)="setBudgetDateFilterMode('week')">{{ 'THIS_WEEK' | translate }}</button>
+            <button type="button" class="exp-seg-btn" [class.active]="selectedDateFilter === 'currentMonth'" (click)="setBudgetDateFilterMode('month')">{{ 'THIS_MONTH' | translate }}</button>
+            <button type="button" class="exp-seg-btn" [class.active]="isBudgetCustomFilter()" (click)="setBudgetDateFilterMode('custom')">{{ 'CUSTOM' | translate }}</button>
+          </div>
         </div>
-      </ng-container>
-
-      <!-- Desktop only — the FAB is hidden at this breakpoint (see .bgt-add-fab) -->
-      <button *ngIf="canManageBudgets" type="button" class="bgt-add-toolbar-btn" (click)="openAddModal()">
-        <lucide-icon [img]="iconPlus" [size]="15"></lucide-icon>
-        {{ 'ADD_BUDGET' | translate }}
-      </button>
+        <button *ngIf="canManageBudgets" type="button" class="bgt-add-toolbar-btn" (click)="openAddModal()"><lucide-icon [img]="iconPlus" [size]="15"></lucide-icon>{{ 'ADD_BUDGET' | translate }}</button>
+      </div>
+      <div class="exp-filter-bottom-row">
+        <ng-container *ngIf="showCustomDatePicker || isBudgetCustomFilter(); else budgetFilterLabel">
+          <app-date-range-input [startDate]="startDate ?? ''" (startDateChange)="startDate = $event" [endDate]="endDate ?? ''" (endDateChange)="endDate = $event" (rangeChange)="onBudgetCustomDateChange()" [showLabel]="false" [startLabel]="'DATE_FROM' | translate" [endLabel]="'DATE_TO' | translate"></app-date-range-input>
+        </ng-container>
+        <ng-template #budgetFilterLabel><div class="exp-filter-label"><span class="exp-filter-label-date"><lucide-icon [img]="iconCalendarDays" [size]="16" class="exp-filter-label-icon"></lucide-icon><span>{{ getBudgetFilterLabel() }}</span></span></div></ng-template>
+      </div>
     </div>
 
     <!-- ── Summary Cards — data ရှိမှသာ ── -->

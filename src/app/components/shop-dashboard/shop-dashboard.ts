@@ -193,10 +193,9 @@ export class ShopDashboardComponent implements OnInit {
           (row) => row.currentStock > 0 && row.currentStock <= lowStockThreshold,
         );
         const formatNames = (products: ProductStockSummary[]) => products
-          .slice(0, 5)
           .map((row) => `${row.productName} (${this.formatService.formatCount(row.currentStock)})`);
-        const outOfStockNames = formatNames(outOfStockProducts).join(', ') + (outOfStockProducts.length > 5 ? '…' : '');
-        const lowStockNames = formatNames(lowStockProducts).join(', ') + (lowStockProducts.length > 5 ? '…' : '');
+        const outOfStockNames = formatNames(outOfStockProducts).join(', ');
+        const lowStockNames = formatNames(lowStockProducts).join(', ');
         return {
           todaySales,
           todayPurchases,
