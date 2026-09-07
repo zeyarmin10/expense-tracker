@@ -458,13 +458,21 @@ export class Sales implements OnInit, OnDestroy {
     let canvas: HTMLCanvasElement | null = null;
     try {
       const isNative = Capacitor.isNativePlatform();
-      // Android's WebView has a much smaller hardware bitmap budget than a
-      // desktop browser — scale:2 on a low-memory device was pushing the
-      // render + base64 round-trip (canvas -> dataURL -> raw bytes, each a
-      // full copy of the image in memory at once) far enough to get the
-      // whole app process killed by the OS right as the native Share sheet
-      // opened, which looks like the app just closing with no error shown.
-      canvas = await html2canvas(element, { backgroundColor: '#ffffff', scale: isNative ? 1 : 2, useCORS: true });
+      // Render at 2× so the exported PNG stays crisp when opened or shared,
+      // much like a phone screenshot. Keep very long receipts below a safe
+      // canvas-pixel budget so a large order cannot exhaust Android WebView
+      // memory during the canvas/base64 conversion.
+      const receiptPixels = element.offsetWidth * element.offsetHeight;
+      const maxCanvasPixels = 3_000_000;
+      const captureScale = isNative
+        ? Math.max(1, Math.min(2, Math.sqrt(maxCanvasPixels / receiptPixels)))
+        : 2;
+      canvas = await html2canvas(element, {
+        backgroundColor: '#ffffff',
+        scale: captureScale,
+        useCORS: true,
+        logging: false,
+      });
       const dataUrl = canvas.toDataURL('image/png');
 
       if (isNative) {
