@@ -1,4 +1,4 @@
-<div class="pnl-wrapper">
+<div class="pnl-wrapper pnl-income-page">
   <div class="pnl-container mb-5">
 
     <!-- ── ADD (FAB + Bottom-sheet Modal) ── -->
@@ -78,35 +78,35 @@
       </div>
     </div>
 
-    <!-- Date Filter Bar -->
-    <div class="pnl-filter-bar" [class.pnl-filter-bar-custom]="selectedDateFilter === 'custom'">
-
-      <app-custom-select
-        [(ngModel)]="selectedDateFilter"
-        (ngModelChange)="setDateFilter($event)"
-        [options]="dateFilterOptions"
-        [sheetTitle]="'DATE_FILTER' | translate"
-        [fitContent]="true"
-        [showSearch]="false">
-      </app-custom-select>
-
-      <div class="pnl-date-row" *ngIf="selectedDateFilter === 'custom'">
-        <app-date-range-input
-          [fitContent]="true"
-          [(startDate)]="startDate"
-          [(endDate)]="endDate"
-          (rangeChange)="setDateFilter('custom')"
-          [showLabel]="false"
-          [startLabel]="'START_DATE' | translate"
-          [endLabel]="'END_DATE' | translate">
-        </app-date-range-input>
+    <!-- Expense-style date filter: income records use the same time ranges
+         and list-first hierarchy as expenses. -->
+    <div class="exp-filter-bar" [class.exp-filter-bar-expanded]="showCustomDatePicker">
+      <div class="exp-filter-top-row">
+        <div class="exp-seg-ctrl">
+          <div class="exp-seg-track">
+            <span class="exp-seg-indicator" [style.transform]="'translateX(calc(' + getIncomeDateFilterIndex() + ' * 100%))'" aria-hidden="true"></span>
+            <button type="button" class="exp-seg-btn" [class.active]="selectedDateFilter === 'today'" (click)="setIncomeDateFilterMode('today')">{{ 'TODAY' | translate }}</button>
+            <button type="button" class="exp-seg-btn" [class.active]="selectedDateFilter === 'currentWeek'" (click)="setIncomeDateFilterMode('week')">{{ 'THIS_WEEK' | translate }}</button>
+            <button type="button" class="exp-seg-btn" [class.active]="selectedDateFilter === 'currentMonth'" (click)="setIncomeDateFilterMode('month')">{{ 'THIS_MONTH' | translate }}</button>
+            <button type="button" class="exp-seg-btn" [class.active]="isIncomeCustomFilter()" (click)="setIncomeDateFilterMode('custom')">{{ 'CUSTOM' | translate }}</button>
+          </div>
+        </div>
+        <button *ngIf="canManageProfitActions" type="button" class="exp-add-toolbar-btn" (click)="openAddModal()">
+          <lucide-icon [img]="iconPlus" [size]="15"></lucide-icon>
+          {{ 'ADD_INCOME' | translate }}
+        </button>
       </div>
-
-      <!-- Desktop only — the FAB is hidden at this breakpoint (see .pnl-add-fab) -->
-      <button *ngIf="canManageProfitActions" type="button" class="pnl-add-toolbar-btn" (click)="openAddModal()">
-        <lucide-icon [img]="iconPlus" [size]="15"></lucide-icon>
-        {{ 'ADD_INCOME' | translate }}
-      </button>
+      <div class="exp-filter-bottom-row">
+        <ng-container *ngIf="showCustomDatePicker || isIncomeCustomFilter(); else incomeFilterLabel">
+          <app-date-range-input [(startDate)]="startDate" [(endDate)]="endDate" (rangeChange)="onIncomeCustomDateChange()" [showLabel]="false" [startLabel]="'DATE_FROM' | translate" [endLabel]="'DATE_TO' | translate"></app-date-range-input>
+        </ng-container>
+        <ng-template #incomeFilterLabel><div class="exp-filter-label">
+          <span class="exp-filter-label-date">
+            <lucide-icon [img]="iconCalendarDays" [size]="16" class="exp-filter-label-icon"></lucide-icon>
+            <span>{{ getIncomeFilterLabel() }}</span>
+          </span>
+        </div></ng-template>
+      </div>
     </div>
 
     <!-- Summary Cards -->
@@ -215,110 +215,78 @@
       </div>
     </div>
 
-    <!-- Recorded Incomes -->
-    <div class="pnl-panel">
-      <button class="pnl-panel-toggle" type="button" (click)="toggleVisibility('recordedIncomes', $event)">
-        <span class="pnl-panel-toggle-left">
-          <span class="pnl-toggle-pill pnl-toggle-pill-income">
-            <lucide-icon [img]="iconBanknote" [size]="13"></lucide-icon>
+    <!-- Income records follow the exact date-grouped card layout used by
+         the Expense page, rather than a separate responsive table. -->
+    <div class="exp-list-section pnl-income-list-section">
+      <div class="exp-list-header">
+        <h3 class="exp-section-title">
+          <span class="exp-icon-badge exp-icon-badge-success">
+            <lucide-icon [img]="iconBanknote" [size]="16"></lucide-icon>
           </span>
           {{ 'RECORDED_INCOMES' | translate }}
-        </span>
-        <span class="grid grid-cols-2 gap-2">
-          <span class="pnl-table-count" *ngIf="incomes$ | async as headerIncomes">{{ formatCount(headerIncomes.length) }}</span>
-          <lucide-icon [img]="iconChevronDown" [size]="15" class="pnl-chevron" [class.open]="!isRecordedIncomesCollapsed"></lucide-icon>
-        </span>
-      </button>
-      <div class="pnl-panel-body" [class.open]="!isRecordedIncomesCollapsed">
-        <div class="pnl-panel-inner">
-          <!-- Sum of exactly what's listed below (same profitLossData$
-               source as incomes$/totalIncomesByCurrency$), shown right at
-               the list instead of only in the summary card up top. -->
-          <ng-container *ngIf="totalIncomesByCurrency$ | async as incomeTotals">
-            <div class="pnl-list-total" *ngIf="(incomeTotals | keyvalue).length > 0">
-              <span class="pnl-list-total-label">{{ 'TOTAL' | translate }}</span>
-              <span *ngFor="let t of incomeTotals | keyvalue; trackBy: trackByKey" class="pnl-list-total-amount pnl-amount-income"
-                [innerHTML]="formatService.formatAmountWithSymbolHtml(t.value, t.key)"
-              ></span>
-            </div>
-          </ng-container>
-          <ng-container *ngIf="incomes$ | async as incomes; else listLoading">
-            <ng-container *ngIf="incomes.length > 0; else listEmpty">
-              <div class="pnl-table-responsive">
-                <table class="pnl-income-table">
-                  <thead>
-                    <tr>
-                      <th class="pnl-td-date">{{ 'DATE_LABEL' | translate }}</th>
-                      <th class="pnl-td-created-by" *ngIf="isGroupUser">{{ 'ADDED_BY' | translate }}</th>
-                      <th>{{ 'DESCRIPTION' | translate }}</th>
-                      <th class="pnl-td-amount">{{ 'AMOUNT' | translate }}</th>
-                      <th class="pnl-td-actions" *ngIf="canManageProfitActions"></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr *ngFor="let income of incomes; trackBy: trackByIncomeId">
-                      <td class="pnl-td-date">
-                        <span class="d-none d-md-inline">{{ formatService.formatLocalizedDate(income.date) }}</span>
-                        <span class="d-md-none">{{ formatService.formatMobileDate(income.date) }}</span>
-                      </td>
-                      <td class="pnl-td-created-by" *ngIf="isGroupUser">
-                        <span class="pnl-created-by-badge">
-                          <app-user-avatar [name]="income.createdByName || 'Former Member'"
-                            [photoUrl]="income.createdByPhotoURL || null" [size]="20"></app-user-avatar>
-                          <span class="pnl-created-by-name">{{ income.createdByName || '—' }}</span>
-                        </span>
-                      </td>
-                      <td class="pnl-td-desc">
-                        <span class="pnl-td-desc-text" appShowFullText (click)="$event.stopPropagation()">{{ income.description || '—' }}</span>
-                        <span class="pnl-td-name-creator" *ngIf="isGroupUser">
-                          <app-user-avatar [name]="income.createdByName || 'Former Member'"
-                            [photoUrl]="income.createdByPhotoURL || null" [size]="20"></app-user-avatar>
-                          <span class="pnl-td-name-creator-text">{{ income.createdByName || '' }}</span>
-                        </span>
-                      </td>
-                      <td class="pnl-td-amount pnl-amount-income"
-                        [innerHTML]="formatService.formatAmountShortHtml(income.amount, income.currency)"
-                      ></td>
-                      <td class="pnl-td-actions pnl-menu-wrap" *ngIf="canManageProfitActions">
-                        <button class="pnl-more-btn" type="button"
-                          (click)="toggleIncomeMenu(income.id!, $event)"
-                          [attr.aria-label]="'ACTIONS_LABEL' | translate">
-                          <lucide-icon [img]="iconMoreVertical" [size]="16"></lucide-icon>
-                        </button>
-                        <div class="pnl-float-menu"
-                          *ngIf="openMenuId === income.id"
-                          [style.top.px]="menuY"
-                          [style.left.px]="menuX"
-                          (click)="$event.stopPropagation()">
-                          <button class="pnl-float-item pnl-float-edit" type="button"
-                            (click)="startEditIncome(income); openMenuId = null">
-                            <lucide-icon [img]="iconPen" [size]="14"></lucide-icon>
-                            <span>{{ 'EDIT_BUTTON_LABEL' | translate }}</span>
-                          </button>
-                          <button class="pnl-float-item pnl-float-delete" type="button" *ngIf="canDeleteIncome"
-                            (click)="confirmDeleteIncome(income.id); openMenuId = null">
-                            <lucide-icon [img]="iconTrash2" [size]="14"></lucide-icon>
-                            <span>{{ 'DELETE_BUTTON_LABEL' | translate }}</span>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </ng-container>
-            <ng-template #listEmpty>
-              <div class="pnl-list-empty">
-                <lucide-icon [img]="iconBanknote" [size]="28" class="pnl-list-empty-icon"></lucide-icon>
-                <p>{{ 'NO_INCOME_DATA' | translate }}</p>
-              </div>
-            </ng-template>
-          </ng-container>
-          <ng-template #listLoading>
-            <div class="exp-loading"><span class="exp-spinner-sm"></span></div>
-          </ng-template>
-        </div>
+        </h3>
       </div>
+
+      <div class="exp-totals-row">
+        <ng-container *ngIf="totalIncomesByCurrency$ | async as incomeTotals">
+          <ng-container *ngIf="(incomeTotals | keyvalue).length > 0">
+            <span *ngFor="let total of incomeTotals | keyvalue; trackBy: trackByKey" class="exp-total-chip pnl-income-total-chip">
+              {{ 'TOTAL_FOR_CURRENCY' | translate : { currency: total.key } }}:
+              <span class="exp-total-amt" [innerHTML]="formatService.formatAmountWithSymbolHtml(total.value, total.key)"></span>
+            </span>
+          </ng-container>
+        </ng-container>
+      </div>
+
+      <ng-container *ngIf="groupedIncomes$ | async as dateGroups; else listLoading">
+        <div *ngIf="dateGroups.length === 0" class="exp-empty-state">
+          <lucide-icon [img]="iconBanknote" [size]="34" class="exp-empty-state-icon"></lucide-icon>
+          <p>{{ 'NO_INCOME_DATA' | translate }}</p>
+        </div>
+
+        <div class="exp-date-list" *ngIf="dateGroups.length > 0">
+          <section *ngFor="let group of dateGroups; trackBy: trackByIncomeGroupDate" class="exp-date-group">
+            <div class="exp-date-group-header">
+              <span class="exp-date-label">{{ formatService.formatLocalizedDate(group.date) }}</span>
+              <span class="exp-date-count">{{ 'EXPENSE_GROUP_COUNT' | translate: { count: formatCount(group.count) } }}</span>
+              <div class="exp-date-totals">
+                <span class="exp-date-total" *ngFor="let total of group.totalsByCurrency | keyvalue; trackBy: trackByKey"
+                  [innerHTML]="formatService.formatAmountWithSymbolHtml(total.value, total.key)"></span>
+              </div>
+            </div>
+
+            <div class="exp-list">
+              <div *ngFor="let income of group.incomes; trackBy: trackByIncomeId" class="exp-item pnl-income-item">
+                <div class="exp-item-inner">
+                  <div class="exp-item-top">
+                    <span class="exp-item-name" appShowFullText>{{ income.description || '—' }}</span>
+                    <span class="exp-item-amount pnl-income-item-amount"
+                      [innerHTML]="formatService.formatAmountWithSymbolHtml(income.amount, income.currency)"></span>
+                  </div>
+                  <div class="pnl-income-item-member" *ngIf="isGroupUser && income.createdByName">
+                    <app-user-avatar [name]="income.createdByName" [photoUrl]="income.createdByPhotoURL || null" [size]="20"></app-user-avatar>
+                    <span>{{ income.createdByName }}</span>
+                  </div>
+                  <div class="exp-item-actions" *ngIf="canManageProfitActions">
+                    <div class="exp-item-actions-left">
+                      <button class="exp-btn exp-btn-sm exp-btn-outline-info" type="button" (click)="startEditIncome(income)">
+                        <lucide-icon [img]="iconPen" [size]="16"></lucide-icon>
+                        {{ 'EDIT_BUTTON_LABEL' | translate }}
+                      </button>
+                      <button *ngIf="canDeleteIncome" class="exp-btn exp-btn-sm exp-btn-outline-danger" type="button" (click)="confirmDeleteIncome(income.id)">
+                        <lucide-icon [img]="iconTrash2" [size]="16"></lucide-icon>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </ng-container>
+      <ng-template #listLoading>
+        <div class="exp-loading"><span class="exp-spinner-sm"></span></div>
+      </ng-template>
     </div>
 
     <!-- Cash Flow (now its own page) -->

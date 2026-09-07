@@ -28,8 +28,7 @@ import { FormatService } from '../../services/format.service';
 import { DailyCashFlowData, ProfitLossService } from '../../services/profit-loss.service';
 import { UserProfile } from '../../services/user-data';
 import { Chart, registerables } from 'chart.js';
-import { LucideAngularModule, LucideIconData, TrendingUp, TrendingDown, Banknote, ShoppingCart, Wallet } from 'lucide-angular';
-import { CustomSelectComponent, SelectOption } from '../common/custom-select/custom-select.component';
+import { LucideAngularModule, LucideIconData, TrendingUp, TrendingDown, Banknote, ShoppingCart, Wallet, CalendarDays } from 'lucide-angular';
 import { DateRangeInputComponent } from '../common/date-range-input/date-range-input.component';
 
 Chart.register(...registerables);
@@ -50,12 +49,11 @@ interface DailyCashFlowSummary {
     FormsModule,
     TranslateModule,
     LucideAngularModule,
-    CustomSelectComponent,
     DateRangeInputComponent,
   ],
   providers: [DatePipe],
   templateUrl: './cash-flow.html',
-  styleUrls: ['./cash-flow.css'],
+  styleUrls: ['./cash-flow.css', '../expense/expense.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CashFlow implements OnInit, OnDestroy {
@@ -88,7 +86,8 @@ export class CashFlow implements OnInit, OnDestroy {
   private _endDate$ = new BehaviorSubject<string>('');
 
   selectedDateFilter: string = 'currentMonth';
-  dateFilterOptions: SelectOption[] = [];
+  dateFilterMode: 'today' | 'week' | 'month' | 'custom' = 'month';
+  showCustomDatePicker = false;
   startDate: string = '';
   endDate: string = '';
 
@@ -97,6 +96,7 @@ export class CashFlow implements OnInit, OnDestroy {
   readonly iconWallet = Wallet;
   readonly iconBanknote = Banknote;
   readonly iconShoppingCart = ShoppingCart;
+  readonly iconCalendar = CalendarDays;
 
   constructor() {
     const initialRange = this.dateFilterService.getDateRange(this.datePipe, this.selectedDateFilter);
@@ -145,25 +145,6 @@ export class CashFlow implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.subscriptions.add(
-      this.translate.stream([
-        'CURRENT_WEEK', 'LAST_30_DAYS', 'CURRENT_MONTH', 'LAST_MONTH',
-        'LAST_SIX_MONTHS', 'CURRENT_YEAR', 'LAST_YEAR', 'CUSTOM_DATE',
-      ]).subscribe(t => {
-        this.dateFilterOptions = [
-          { value: 'currentWeek',   label: t['CURRENT_WEEK'] },
-          { value: 'last30Days',    label: t['LAST_30_DAYS'] },
-          { value: 'currentMonth',  label: t['CURRENT_MONTH'] },
-          { value: 'lastMonth',     label: t['LAST_MONTH'] },
-          { value: 'lastSixMonths', label: t['LAST_SIX_MONTHS'] },
-          { value: 'currentYear',   label: t['CURRENT_YEAR'] },
-          { value: 'lastYear',      label: t['LAST_YEAR'] },
-          { value: 'custom',        label: t['CUSTOM_DATE'] },
-        ];
-        this.cdr.markForCheck();
-      })
-    );
-
     Chart.defaults.font.family = 'MyanmarUIFont, Arial, sans-serif';
     Chart.defaults.color = '#6b7280';
 
@@ -229,6 +210,21 @@ export class CashFlow implements OnInit, OnDestroy {
   }
 
   setDateFilter(filter: string, isInitialLoad: boolean = false): void {
+    const mode = filter === 'today' ? 'today'
+      : filter === 'currentWeek' ? 'week'
+      : filter === 'currentMonth' ? 'month'
+      : 'custom';
+    this.dateFilterMode = mode;
+    this.showCustomDatePicker = mode === 'custom';
+
+    // Older budget-period presets (yearly, last month, etc.) no longer have
+    // their own tab. Preserve their exact range and expose it as Custom.
+    if (mode === 'custom' && filter !== 'custom') {
+      const presetRange = this.dateFilterService.getDateRange(this.datePipe, filter, this.startDate, this.endDate);
+      this.startDate = presetRange.start;
+      this.endDate = presetRange.end;
+      filter = 'custom';
+    }
     this.selectedDateFilter = filter;
 
     if (filter === 'custom' && !isInitialLoad) {
@@ -258,6 +254,41 @@ export class CashFlow implements OnInit, OnDestroy {
       this._endDate$.next(dateRange.end);
       this._selectedDateRange$.next(filter);
     }
+    this.cdr.markForCheck();
+  }
+
+  getDateFilterIndex(): number {
+    return ['today', 'week', 'month', 'custom'].indexOf(this.dateFilterMode);
+  }
+
+  setDateFilterMode(mode: 'today' | 'week' | 'month' | 'custom'): void {
+    const filter = mode === 'today' ? 'today'
+      : mode === 'week' ? 'currentWeek'
+      : mode === 'month' ? 'currentMonth'
+      : 'custom';
+    this.setDateFilter(filter);
+  }
+
+  onCustomDateChange(): void {
+    if (this.startDate && this.endDate) {
+      this.setDateFilter('custom');
+    }
+  }
+
+  getFilterLabel(): string {
+    const format = (value: string, includeYear = true) => {
+      const date = new Date(`${value}T00:00:00`);
+      return this.datePipe.transform(date, includeYear ? 'MMM d, yyyy' : 'MMM d') || '';
+    };
+
+    const range = this.dateFilterService.getDateRange(
+      this.datePipe, this.selectedDateFilter, this.startDate, this.endDate
+    );
+    if (range.start === range.end) return format(range.start);
+    if (this.dateFilterMode === 'month') {
+      return this.datePipe.transform(new Date(), 'MMMM yyyy') || '';
+    }
+    return `${format(range.start, false)} – ${format(range.end)}`;
   }
 
   trackByKey(index: number, item: { key: string }): string {

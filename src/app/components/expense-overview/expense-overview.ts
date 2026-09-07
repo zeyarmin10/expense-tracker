@@ -21,7 +21,7 @@ import { DateFilterService, DateRange } from '../../services/date-filter.service
 import { AuthService } from '../../services/auth';
 import { UserDataService, UserProfile } from '../../services/user-data';
 import { CategoryService, ServiceICategory } from '../../services/category';
-import { LucideAngularModule, Search, ChartColumn, List, Flame } from 'lucide-angular';
+import { LucideAngularModule, Search, ChartColumn, List, Flame, CalendarDays, RotateCcw } from 'lucide-angular';
 import { getIconData, getIconHue } from '../../utils/category-icons';
 import { UserAvatarComponent } from '../common/user-avatar/user-avatar.component';
 import { CustomSelectComponent, SelectOption } from '../common/custom-select/custom-select.component';
@@ -53,7 +53,7 @@ interface CategoryTotal {
   ],
   providers: [DatePipe],
   templateUrl: './expense-overview.html',
-  styleUrls: ['./expense-overview.css'],
+  styleUrls: ['./expense-overview.css', '../expense/expense.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ExpenseOverview implements OnInit, OnDestroy {
@@ -82,6 +82,8 @@ export class ExpenseOverview implements OnInit, OnDestroy {
   readonly iconChartColumn = ChartColumn;
   readonly iconList = List;
   readonly iconFlame = Flame;
+  readonly iconCalendarDays = CalendarDays;
+  readonly iconRotateCcw = RotateCcw;
 
   // --- Filtering and Search Properties ---
   // Tracked separately from filteredExpenses$'s emissions so the template can
@@ -124,6 +126,7 @@ export class ExpenseOverview implements OnInit, OnDestroy {
   );
   filteredExpenses$: Observable<IExpense[]> = of([]);
   selectedDateFilter: string = 'currentMonth';
+  showCustomDatePicker = false;
   dateFilterOptions: SelectOption[] = [];
   startDate: string = '';
   endDate: string = '';
@@ -330,9 +333,11 @@ export class ExpenseOverview implements OnInit, OnDestroy {
 
   setDateFilter(filter: string): void {
     this.selectedDateFilter = filter;
+    this.showCustomDatePicker = filter === 'custom';
     this.updateCurrentPeriodLabel(filter);
 
     const presetFilters = [
+      'today',
       'last30Days', 'currentMonth', 'lastMonth',
       'lastSixMonths', 'currentYear', 'lastYear', 'currentWeek',
     ];
@@ -349,6 +354,38 @@ export class ExpenseOverview implements OnInit, OnDestroy {
         this.setDateFilter('currentMonth');
       }
     }
+    this.cdr.markForCheck();
+  }
+
+  setOverviewDateFilterMode(mode: 'today' | 'week' | 'month' | 'custom'): void {
+    const filterByMode = { today: 'today', week: 'currentWeek', month: 'currentMonth', custom: 'custom' } as const;
+    this.setDateFilter(filterByMode[mode]);
+  }
+
+  getOverviewDateFilterIndex(): number {
+    if (this.selectedDateFilter === 'today') return 0;
+    if (this.selectedDateFilter === 'currentWeek') return 1;
+    if (this.selectedDateFilter === 'currentMonth') return 2;
+    return 3;
+  }
+
+  isOverviewCustomFilter(): boolean {
+    return !['today', 'currentWeek', 'currentMonth'].includes(this.selectedDateFilter);
+  }
+
+  resetOverviewDateFilter(): void {
+    this.setOverviewDateFilterMode('today');
+  }
+
+  onOverviewCustomDateChange(): void {
+    this.setDateFilter('custom');
+  }
+
+  getOverviewFilterLabel(): string {
+    const range = this.dateFilterService.getDateRange(this.datePipe, this.selectedDateFilter, this.startDate, this.endDate);
+    return range.start === range.end
+      ? this.formatService.formatLocalizedDate(range.start)
+      : `${this.formatService.formatLocalizedDate(range.start)} – ${this.formatService.formatLocalizedDate(range.end)}`;
   }
 
   updateCurrentPeriodLabel(filter: string): void {

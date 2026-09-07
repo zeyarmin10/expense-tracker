@@ -24,7 +24,7 @@ import {
   LucideAngularModule, LucideIconData,
   Trash2, Save, ChevronDown, TriangleAlert, CircleCheck,
   PiggyBank, ShoppingCart, ChartLine, ListChecks,
-  ChartColumn, Wallet, Plus, X, Search, Check, CalendarDays, CalendarRange,
+  ChartColumn, Wallet, Plus, X, Search, Check, CalendarDays, CalendarRange, RotateCcw,
 } from 'lucide-angular';
 import { Chart, registerables } from 'chart.js';
 import { AuthService } from '../../services/auth';
@@ -128,7 +128,7 @@ interface BudgetPeriodGroup {
   ],
   providers: [DatePipe],
   templateUrl: './budget.html',
-  styleUrls: ['./budget.css'],
+  styleUrls: ['./budget.css', '../expense/expense.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BudgetComponent implements OnInit, OnDestroy {
@@ -192,6 +192,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
   readonly iconCheck = Check;
   readonly iconCalendarDays = CalendarDays;
   readonly iconCalendarRange = CalendarRange;
+  readonly iconRotateCcw = RotateCcw;
 
   hasChartData: boolean = false;
   isChartDataLoaded: boolean = false;
@@ -406,6 +407,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
   userProfile$: Observable<UserProfile | null> = of(null);
 
   public selectedDateFilter: string = 'currentMonth';
+  public showCustomDatePicker = false;
   public dateFilterOptions: SelectOption[] = [];
   public startDate: string | null = null;
   public endDate: string | null = null;
@@ -1409,13 +1411,16 @@ export class BudgetComponent implements OnInit, OnDestroy {
     this.startDate = this.datePipe.transform(rangeStart, 'yyyy-MM-dd') || '';
     this.endDate = this.datePipe.transform(rangeEnd, 'yyyy-MM-dd') || '';
     this.selectedDateFilter = 'custom';
+    this.showCustomDatePicker = true;
     this.dateFilter$.next({ start: this.startDate, end: this.endDate });
   }
 
   setDateFilter(filter: string): void {
     this.selectedDateFilter = filter;
+    this.showCustomDatePicker = filter === 'custom';
 
     const serviceFilters = [
+      'today',
       'last30Days',
       'currentMonth',
       'lastMonth',
@@ -1443,6 +1448,39 @@ export class BudgetComponent implements OnInit, OnDestroy {
         this.setDateFilter('currentMonth');
       }
     }
+    this.cdr.markForCheck();
+  }
+
+  setBudgetDateFilterMode(mode: 'today' | 'week' | 'month' | 'custom'): void {
+    const filterByMode = { today: 'today', week: 'currentWeek', month: 'currentMonth', custom: 'custom' } as const;
+    this.showCustomDatePicker = mode === 'custom';
+    this.setDateFilter(filterByMode[mode]);
+  }
+
+  getBudgetDateFilterIndex(): number {
+    if (this.selectedDateFilter === 'today') return 0;
+    if (this.selectedDateFilter === 'currentWeek') return 1;
+    if (this.selectedDateFilter === 'currentMonth') return 2;
+    return 3;
+  }
+
+  isBudgetCustomFilter(): boolean {
+    return !['today', 'currentWeek', 'currentMonth'].includes(this.selectedDateFilter);
+  }
+
+  resetBudgetDateFilter(): void {
+    this.setBudgetDateFilterMode('today');
+  }
+
+  onBudgetCustomDateChange(): void {
+    this.setDateFilter('custom');
+  }
+
+  getBudgetFilterLabel(): string {
+    const range = this.dateFilterService.getDateRange(this.datePipe, this.selectedDateFilter, this.startDate, this.endDate);
+    return range.start === range.end
+      ? this.formatService.formatLocalizedDate(range.start)
+      : `${this.formatService.formatLocalizedDate(range.start)} – ${this.formatService.formatLocalizedDate(range.end)}`;
   }
 
   private chartInstance: Chart | undefined;

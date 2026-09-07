@@ -131,28 +131,119 @@ body.light-mode .inv-seg-btn.active {
   }
 }
 
-/* ── Add-Product: inline on desktop, full-screen overlay on mobile ──
-   Reached via the FAB on mobile; on desktop it's simply always visible at
-   the top of the Products tab like before. Mirrors Purchase/Sales' own
-   cart overlay pattern exactly (same shell, no dimmed backdrop, sliding
-   full-screen panel via `translate` — not `transform`, to avoid creating a
-   containing block for any nested `position: fixed` picker). */
+/* ── Add-Product: a centered modal dialog on desktop (opened via the
+   toolbar button below), a full-screen overlay on mobile (opened via the
+   FAB) — same two-mode shell Expense/Budget/Income's own Add modal uses,
+   just under the pre-existing .inv-add-overlay* class names so the
+   open/close/back-button TS logic didn't need to change. Sliding
+   full-screen panel on mobile via `translate` — not `transform`, to avoid
+   creating a containing block for any nested `position: fixed` picker. */
+body.inv-add-modal-open {
+  overflow: hidden;
+}
+
+.inv-add-overlay-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 1010;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+}
+
+.inv-add-overlay-backdrop.open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.inv-add-overlay {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 0.85rem);
+  left: 50%;
+  width: 92%;
+  max-width: 480px;
+  max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 1.7rem);
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.45);
+  z-index: 1020;
+  translate: -50% 0;
+  scale: 0.96;
+  opacity: 0;
+  pointer-events: none;
+  transition: scale 0.2s ease, opacity 0.2s ease;
+}
+
+.inv-add-overlay.inv-add-overlay-open {
+  scale: 1;
+  opacity: 1;
+  pointer-events: all;
+}
+
 .inv-add-overlay-topbar {
-  display: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.85rem 0.6rem 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.inv-add-overlay-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text);
 }
 
 .inv-add-overlay-close {
-  display: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.inv-add-overlay-scroll {
+  overflow-y: auto;
+  padding: 1rem;
 }
 
 @media (max-width: 991.98px) {
+  .inv-add-overlay-backdrop {
+    display: none;
+  }
+
   .inv-add-overlay {
-    position: fixed;
+    top: 0;
+    left: 0;
     inset: 0;
     z-index: 1040;
+    width: 100%;
+    max-width: none;
+    height: 100dvh;
+    max-height: none;
+    margin: 0;
     background: var(--bg);
-    display: flex;
-    flex-direction: column;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    scale: 1;
+    opacity: 1;
     translate: 0 100%;
     pointer-events: none;
     transition: translate 0.28s cubic-bezier(0.34, 1.2, 0.64, 1);
@@ -164,44 +255,53 @@ body.light-mode .inv-seg-btn.active {
   }
 
   .inv-add-overlay-topbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.6rem;
-    flex-shrink: 0;
     padding: calc(env(safe-area-inset-top, 0px) + 0.75rem) 1rem 0.6rem;
-    border-bottom: 1px solid var(--border);
   }
 
   .inv-add-overlay-title {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
     font-size: 0.95rem;
-    font-weight: 700;
-    color: var(--text);
   }
 
   .inv-add-overlay-close {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
     width: 36px;
     height: 36px;
-    border-radius: 50%;
-    background: var(--surface-2);
     border: 1px solid var(--border);
-    color: var(--text);
-    cursor: pointer;
-    flex-shrink: 0;
   }
 
   .inv-add-overlay-scroll {
     flex: 1;
-    overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     padding: 1rem 1rem calc(env(safe-area-inset-bottom, 0px) + 1rem);
   }
+}
+
+/* Desktop-only "Add Product" toolbar button — opens the modal above.
+   Mirrors Expense's .exp-add-toolbar-btn. */
+.inv-toolbar-row {
+  display: none;
+}
+
+@media (min-width: 992px) {
+  .inv-toolbar-row {
+    display: flex;
+    justify-content: flex-end;
+    /* margin-bottom: 1rem; */
+  }
+}
+
+.inv-add-toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: 40px;
+  padding: 0 1.1rem;
+  background: var(--accent, #0b74ff);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 /* Mobile-only FAB — opens the Add-Product overlay above. */
@@ -221,6 +321,39 @@ body.light-mode .inv-seg-btn.active {
   box-shadow: 0 8px 22px rgba(11, 116, 255, 0.45);
   z-index: 900;
   cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+/* Expanding ring animation, matching the Purchase FAB while retaining the
+   Inventory action's blue accent. Transform/opacity avoids Android WebView
+   artifacts caused by animating box-shadow directly. */
+.inv-add-fab::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px rgba(11, 116, 255, 0.65);
+  animation: inv-fab-pulse 2.6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.inv-add-fab:active {
+  transform: scale(0.94);
+}
+
+.inv-add-fab:active::after {
+  animation-play-state: paused;
+}
+
+@keyframes inv-fab-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+  75%, 100% {
+    transform: scale(1.55);
+    opacity: 0;
+  }
 }
 
 @media (min-width: 992px) {
@@ -240,7 +373,7 @@ body.light-mode .inv-seg-btn.active {
 .inv-add-form-fields {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 1rem;
   width: 100%;
 }
 
@@ -371,6 +504,24 @@ body.light-mode .inv-seg-btn.active {
   background: var(--surface);
   border-color: var(--border);
   opacity: 1;
+}
+
+/* In the dark palette --surface-2 is lighter than an ordinary product card,
+   which made hidden items appear selected instead of subdued. Give them a
+   darker, lower-contrast treatment while keeping the action trigger clear. */
+body:not(.light-mode) .inv-product-item-hidden {
+  background: #020713;
+  border-color: rgba(113, 131, 165, 0.05);
+}
+
+body:not(.light-mode) .inv-product-item-hidden .inv-product-avatar,
+body:not(.light-mode) .inv-product-item-hidden .inv-product-info {
+  opacity: 0.22;
+}
+
+body:not(.light-mode) .inv-product-item-hidden .inv-product-avatar,
+body:not(.light-mode) .inv-product-item-hidden .inv-product-hidden-badge {
+  background: rgba(113, 131, 165, 0.1);
 }
 
 .inv-product-avatar {
@@ -669,13 +820,11 @@ body.light-mode .inv-seg-btn.active {
 
 .inv-total-profit-positive {
   background: var(--profit-dim);
-  border: 1px solid var(--profit-border);
   color: var(--profit-color);
 }
 
 .inv-total-profit-negative {
   background: var(--loss-dim);
-  border: 1px solid var(--loss-border);
   color: var(--loss-color);
 }
 

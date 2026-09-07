@@ -52,7 +52,7 @@
     </div>
   </a>
   <a routerLink="/inventory" class="shopdash-stock-warning shopdash-stock-warning-low"
-     *ngIf="stats.outOfStockProducts.length === 0 && stats.lowStockProducts.length > 0">
+     *ngIf="stats.lowStockProducts.length > 0">
     <lucide-icon [img]="iconWarning" [size]="18"></lucide-icon>
     <div class="shopdash-stock-warning-body">
       <span>{{ 'SHOP_DASHBOARD_LOW_STOCK_WARNING' | translate: { count: stats.lowStockProducts.length } }}</span>

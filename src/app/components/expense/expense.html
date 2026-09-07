@@ -501,14 +501,6 @@
               (click)="setDateFilterMode('custom')"
             >{{ 'CUSTOM' | translate }}</button>
           </div>
-          <button
-            type="button"
-            class="exp-seg-reset"
-            (click)="resetFilter()"
-            [title]="'RESET_FILTER_BUTTON' | translate"
-          >
-            <lucide-icon [img]="iconRotateCcw" [size]="16"></lucide-icon>
-          </button>
         </div>
 
         <button
@@ -523,28 +515,28 @@
       </div>
 
       <div class="exp-filter-bottom-row">
-        <div class="exp-filter-label">
+        <ng-container *ngIf="showCustomDatePicker; else expenseFilterLabel">
+          <app-date-range-input
+            [(startDate)]="customStartDate"
+            [(endDate)]="customEndDate"
+            (rangeChange)="onCustomDateChange()"
+            [showLabel]="false"
+            [startLabel]="'DATE_FROM' | translate"
+            [endLabel]="'DATE_TO' | translate">
+          </app-date-range-input>
+        </ng-container>
+        <ng-template #expenseFilterLabel><div class="exp-filter-label">
           <span class="exp-filter-label-date">
             <lucide-icon [img]="iconCalendar" [size]="16" class="exp-filter-label-icon"></lucide-icon>
             <span>{{ getFilterLabel() }}</span>
           </span>
-        </div>
+        </div></ng-template>
       </div>
     </div>
     <!-- ── END SHARED DATE FILTER BAR ── -->
 
     <!-- Date range picker lives OUTSIDE the sticky bar so the modal (z-index 9010)
          is in the root stacking context and renders above the backdrop correctly. -->
-    <div class="exp-daterange-outer" *ngIf="showCustomDatePicker">
-      <app-date-range-input
-        [(startDate)]="customStartDate"
-        [(endDate)]="customEndDate"
-        (rangeChange)="onCustomDateChange()"
-        [showLabel]="false"
-        [startLabel]="'DATE_FROM' | translate"
-        [endLabel]="'DATE_TO' | translate">
-      </app-date-range-input>
-    </div>
 
     <!-- ── VOUCHER LIST ── -->
     <div class="exp-list-section">

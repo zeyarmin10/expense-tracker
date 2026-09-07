@@ -1,41 +1,44 @@
 <div class="srpt-wrapper">
   <div class="srpt-container mb-5">
 
-    <!-- Row 1: date select + (custom: 2 date pickers) | (normal: search) -->
-    <div class="ov-filter-row" [class.ov-filter-row-custom]="selectedDateFilter === 'custom'">
-
-      <app-custom-select
-        [(ngModel)]="selectedDateFilter"
-        (ngModelChange)="setDateFilter($event)"
-        [options]="dateFilterOptions"
-        [sheetTitle]="'DATE_FILTER' | translate"
-        [fitContent]="true"
-        [showSearch]="false">
-      </app-custom-select>
-
-      <div class="ov-date-row" *ngIf="selectedDateFilter === 'custom'">
-        <app-date-range-input
-          [fitContent]="true"
-          [(startDate)]="startDate"
-          [(endDate)]="endDate"
-          (rangeChange)="setDateFilter('custom')"
-          [showLabel]="false"
-          [startLabel]="'START_DATE' | translate"
-          [endLabel]="'END_DATE' | translate">
-        </app-date-range-input>
+    <!-- Same shared Today / Week / Month / Custom date filter as Sales. -->
+    <div class="exp-filter-bar" [class.exp-filter-bar-expanded]="showCustomDatePicker">
+      <div class="exp-filter-top-row">
+        <div class="exp-seg-ctrl">
+          <div class="exp-seg-track">
+            <span class="exp-seg-indicator"
+              [style.transform]="'translateX(calc(' + getDateFilterIndex() + ' * 100%))'" aria-hidden="true"></span>
+            <button type="button" class="exp-seg-btn" [class.active]="dateFilterMode === 'today'"
+              (click)="setDateFilterMode('today')">{{ 'TODAY' | translate }}</button>
+            <button type="button" class="exp-seg-btn" [class.active]="dateFilterMode === 'week'"
+              (click)="setDateFilterMode('week')">{{ 'THIS_WEEK' | translate }}</button>
+            <button type="button" class="exp-seg-btn" [class.active]="dateFilterMode === 'month'"
+              (click)="setDateFilterMode('month')">{{ 'THIS_MONTH' | translate }}</button>
+            <button type="button" class="exp-seg-btn" [class.active]="dateFilterMode === 'custom'"
+              (click)="setDateFilterMode('custom')">{{ 'CUSTOM' | translate }}</button>
+          </div>
+        </div>
       </div>
 
-      <div class="search-group" *ngIf="selectedDateFilter !== 'custom'">
-        <input type="text" class="search-input" placeholder="{{ 'SEARCH_PLACEHOLDER' | translate }}"
-          [(ngModel)]="searchTerm" (keyup.enter)="onSearch()" />
-        <button class="search-btn" type="button" (click)="onSearch()" [title]="'SEARCH' | translate">
-          <lucide-icon [img]="iconSearch" [size]="15"></lucide-icon>
-        </button>
+      <div class="exp-filter-bottom-row">
+        <ng-container *ngIf="showCustomDatePicker; else salesReportFilterLabel">
+          <app-date-range-input [(startDate)]="startDate" [(endDate)]="endDate"
+            (rangeChange)="onCustomDateChange()" [showLabel]="false"
+            [startLabel]="'START_DATE' | translate" [endLabel]="'END_DATE' | translate">
+          </app-date-range-input>
+        </ng-container>
+        <ng-template #salesReportFilterLabel>
+          <div class="exp-filter-label">
+            <span class="exp-filter-label-date">
+              <lucide-icon [img]="iconCalendar" [size]="16" class="exp-filter-label-icon"></lucide-icon>
+              <span>{{ currentPeriodLabel }}</span>
+            </span>
+          </div>
+        </ng-template>
       </div>
-
     </div>
 
-    <div class="ov-search-row" *ngIf="selectedDateFilter === 'custom'">
+    <div class="ov-search-row">
       <div class="search-group">
         <input type="text" class="search-input" placeholder="{{ 'SEARCH_PLACEHOLDER' | translate }}"
           [(ngModel)]="searchTerm" (keyup.enter)="onSearch()" />

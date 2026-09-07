@@ -990,6 +990,8 @@
   "LOW_STOCK_THRESHOLD_SAVED": "Low stock သတိပေးချက် အနည်းဆုံးအရေအတွက်ကို သိမ်းဆည်းပြီးပါပြီ။",
   "STOCK_SUMMARY_LOW_STOCK_WARNING": "လက်ကျန်နည်းနေသည် — ပြန်ဖြည့်ရန် စဉ်းစားပါ",
   "SHOP_INFO_TITLE": "ဆိုင်အချက်အလက် (ဘောင်ချာပေါ်ပြပါမည်)",
+  "SHOP_NAME_LABEL": "ဆိုင်အမည်",
+  "SHOP_NAME_REQUIRED": "ဆိုင်အမည် ဖြည့်ရန်လိုအပ်ပါသည်။",
   "SHOP_ADDRESS_LABEL": "ဆိုင်လိပ်စာ",
   "SHOP_PHONE_LABEL": "ဖုန်းနံပါတ်",
   "SHOP_INFO_SAVED": "ဆိုင်အချက်အလက် သိမ်းဆည်းပြီးပါပြီ။"
