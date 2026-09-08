@@ -173,10 +173,11 @@
                 <div class="inv-product-actions inv-edit-actions">
                   <button type="button" class="inv-action-btn inv-action-save" (click)="onUpdateInline(product.id!)"
                     [disabled]="editingNameControl?.invalid">
-                    <lucide-icon [img]="iconSave" [size]="15"></lucide-icon>
+                    <lucide-icon [img]="iconSave" [size]="16"></lucide-icon>
+                     {{ "SAVE_BUTTON_LABEL" | translate }}
                   </button>
                   <button type="button" class="inv-action-btn" (click)="cancelEdit()">
-                    <lucide-icon [img]="iconTimes" [size]="15"></lucide-icon>
+                    <lucide-icon [img]="iconTimes" [size]="16"></lucide-icon>
                   </button>
                 </div>
               </div>
@@ -267,7 +268,7 @@
                   </td>
                   <td [class.inv-negative]="row.currentStock < 0"
                       [class.inv-low-stock]="isLowStock(row)">
-                    {{ formatService.formatCount(row.currentStock) }}
+                    {{ formatService.formatQuantity(row.currentStock, row.unit) }}
                     <lucide-icon *ngIf="row.currentStock < 0" [img]="iconWarning" [size]="13"
                       [title]="'STOCK_SUMMARY_NEGATIVE_STOCK_WARNING' | translate"></lucide-icon>
                     <lucide-icon *ngIf="isLowStock(row)" [img]="iconWarning" [size]="13"
@@ -281,7 +282,7 @@
                   <ng-template #purchasedCols>
                     <td [innerHTML]="formatService.formatAmountShortHtml(row.avgCost!, currency)"></td>
                     <td [innerHTML]="formatService.formatAmountShortHtml(row.stockValue, currency)"></td>
-                    <td>{{ formatService.formatCount(row.totalSoldQty) }}</td>
+                    <td>{{ formatService.formatQuantity(row.totalSoldQty, row.unit) }}</td>
                     <td [innerHTML]="formatService.formatAmountShortHtml(row.totalRevenue, currency)"></td>
                     <td class="inv-cogs-cell" [innerHTML]="formatService.formatAmountShortHtml(row.estCOGS, currency)"></td>
                     <td [class.inv-profit-positive]="row.estProfit > 0" [class.inv-profit-negative]="row.estProfit <= 0"
@@ -306,7 +307,7 @@
                 <span class="inv-stock-card-stock"
                       [class.inv-negative]="row.currentStock < 0"
                       [class.inv-low-stock]="isLowStock(row)">
-                  {{ formatService.formatCount(row.currentStock) }}
+                  {{ formatService.formatQuantity(row.currentStock, row.unit) }}
                   <lucide-icon *ngIf="row.currentStock < 0 || (isLowStock(row))"
                     [img]="iconWarning" [size]="13"></lucide-icon>
                 </span>
@@ -328,7 +329,7 @@
                   </div>
                   <div class="inv-stock-card-detail-row">
                     <span>{{ 'STOCK_SUMMARY_TOTAL_SOLD_COL' | translate }}</span>
-                    <span>{{ formatService.formatCount(row.totalSoldQty) }}</span>
+                    <span>{{ formatService.formatQuantity(row.totalSoldQty, row.unit) }}</span>
                   </div>
                   <div class="inv-stock-card-detail-row">
                     <span>{{ 'STOCK_SUMMARY_REVENUE_COL' | translate }}</span>

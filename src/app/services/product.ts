@@ -12,7 +12,7 @@ import {
   DatabaseReference,
   get,
 } from '@angular/fire/database';
-import { Observable, switchMap, firstValueFrom, of, take } from 'rxjs';
+import { Observable, switchMap, firstValueFrom, of, take, map } from 'rxjs';
 import { AuthService } from './auth';
 import { getActiveGroupId, UserProfile } from './user-data';
 import { SpaceDataService } from './space-data.service';
@@ -23,6 +23,10 @@ import { getIncomeLineItems, ServiceIIncome } from './income';
 export interface ServiceIProduct {
   id?: string;
   name: string;
+  // A product belongs to one currency catalog. It is set when the product is
+  // created and intentionally never edited, so its selling price and stock
+  // history cannot be mixed with another currency.
+  currency?: string;
   unit?: string;
   // Default selling price — set at creation (or edited later) so the Sales
   // form can auto-fill Unit Price the moment this product is picked.
@@ -66,6 +70,13 @@ export class ProductService {
 
   constructor() {}
 
+  private getProductCurrency(product: ServiceIProduct): string {
+    // Products created before currency-scoped catalogs existed are treated
+    // as MMK, the app's historical default, instead of appearing in every
+    // currency catalog.
+    return product.currency || 'MMK';
+  }
+
   getProducts(): Observable<ServiceIProduct[]> {
     return this.authService.userProfile$.pipe(
       switchMap((profile: UserProfile | null) => {
@@ -86,6 +97,10 @@ export class ProductService {
             );
             return this.spaceSwitchLoadingService.track(
               listVal<ServiceIProduct>(canonicalRef || legacyRef, { keyField: 'id' }),
+            ).pipe(
+              map((products) => products.filter(
+                (product) => this.getProductCurrency(product) === (currentProfile.currency || 'MMK'),
+              )),
             );
           }),
           switchMap((stream) => stream),
@@ -143,8 +158,10 @@ export class ProductService {
       return null;
     }
     const val = snapshot.val() as Record<string, Omit<ServiceIProduct, 'id'>>;
-    const [id, product] = Object.entries(val)[0];
-    return { id, ...product };
+    const matchingProduct = Object.entries(val)
+      .map(([id, product]) => ({ id, ...product }))
+      .find((product) => this.getProductCurrency(product) === (profile.currency || 'MMK'));
+    return matchingProduct || null;
   }
 
   async addProduct(name: string, unit?: string, sellingPrice?: number, barcode?: string): Promise<void> {
@@ -162,6 +179,7 @@ export class ProductService {
 
     const newProduct: Omit<ServiceIProduct, 'id'> = {
       name: trimmedName,
+      currency: profile.currency || 'MMK',
       ...(unit ? { unit: unit.trim() } : {}),
       ...(sellingPrice && sellingPrice > 0 ? { sellingPrice } : {}),
       ...(trimmedBarcode ? { barcode: trimmedBarcode } : {}),

@@ -9,7 +9,7 @@ import {
   FormControl,
 } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Observable, BehaviorSubject, Subject, firstValueFrom, of, map } from 'rxjs';
+import { Observable, BehaviorSubject, Subject, firstValueFrom, of, map, combineLatest } from 'rxjs';
 import { switchMap, takeUntil } from 'rxjs/operators';
 import { ProductService, ServiceIProduct, getProductErrorMessage } from '../../services/product';
 import { BarcodeScannerService } from '../../services/barcode-scanner.service';
@@ -84,6 +84,7 @@ export class Inventory implements OnInit, OnDestroy {
 
   activeTab: 'products' | 'stock' = 'products';
   currency = 'MMK';
+  private loadedCurrency: string | null = null;
   private activeGroupId: string | null = null;
   lowStockThreshold = 0;
   isSavingThreshold = false;
@@ -159,8 +160,12 @@ export class Inventory implements OnInit, OnDestroy {
   // must not affect the customer-facing Stock & Profit overview or its totals.
   stockSummary$: Observable<ProductStockSummary[]> = this.inventoryService.getStockSummary(
     this.products$.pipe(map((products) => products.filter((product) => product.isActive !== false))),
-    this.expenseService.getExpenses(),
-    this.incomeService.getIncomes(),
+    combineLatest([this.expenseService.getExpenses(), this.authService.userProfile$]).pipe(
+      map(([expenses, profile]) => expenses.filter((expense) => expense.currency === (profile?.currency || 'MMK'))),
+    ),
+    combineLatest([this.incomeService.getIncomes(), this.authService.userProfile$]).pipe(
+      map(([incomes, profile]) => incomes.filter((income) => income.currency === (profile?.currency || 'MMK'))),
+    ),
   );
 
   constructor(private fb: FormBuilder) {
@@ -254,6 +259,9 @@ export class Inventory implements OnInit, OnDestroy {
       .subscribe((profile) => {
         this.currency = profile?.currency || 'MMK';
         this.activeGroupId = getActiveGroupId(profile);
+        if (this.loadedCurrency !== null && this.loadedCurrency !== this.currency) {
+          void this.loadProducts();
+        }
       });
 
     this.authService.userProfile$
@@ -382,6 +390,7 @@ export class Inventory implements OnInit, OnDestroy {
       // was tracked) fall back to '' and sink to the bottom.
       const sorted = [...products].sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
       this._productsSubject.next(sorted);
+      this.loadedCurrency = this.currency;
     } catch (error) {
       this.showErrorModal(
         this.translateService.instant('ERROR_TITLE'),
@@ -437,9 +446,9 @@ export class Inventory implements OnInit, OnDestroy {
   }
 
   startEdit(product: ServiceIProduct): void {
-    if (this.editingProductId !== null) {
-      return;
-    }
+    // Only one row can be edited at a time. Starting another edit intentionally
+    // discards the unsaved controls from the previous row and initializes this
+    // row instead, so users do not need to press Cancel before switching.
     this.editingProductId = product.id!;
     this.editingNameControl = new FormControl(
       product.name,

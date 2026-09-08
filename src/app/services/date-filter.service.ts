@@ -7,6 +7,19 @@ export interface DateRange {
   end: string;
 }
 
+/**
+ * Returns the calendar date the user sees in their own timezone. Business
+ * records use this YYYY-MM-DD key for their selected sale/purchase date; it
+ * must not use toISOString(), which first shifts the value to UTC and can
+ * turn local midnight into the previous day.
+ */
+export function toLocalDateKey(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 @Injectable({
   providedIn: 'root',
 })

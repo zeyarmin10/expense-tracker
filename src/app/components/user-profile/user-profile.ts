@@ -91,6 +91,12 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   private notificationService = inject(NotificationService);
   public formatService = inject(FormatService);
 
+  // Budget periods are a personal-expense planning feature. Inventory-enabled
+  // shop spaces use transaction date filters and stock snapshots instead.
+  readonly isInventorySpace$ = this.authService.userProfile$.pipe(
+    switchMap(profile => this.spaceContextService.isInventoryEnabled$(profile)),
+  );
+
   userProfileForm: FormGroup;
   userDisplayData$: Observable<any>;
   userPhotoUrl$: Observable<string | null>;

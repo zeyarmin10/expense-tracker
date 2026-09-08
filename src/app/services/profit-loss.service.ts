@@ -2,6 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { combineLatest, map, Observable } from 'rxjs';
 import { ServiceIExpense } from './expense'; // Assuming path
 import { ServiceIIncome } from './income';   // Assuming path
+import { toLocalDateKey } from './date-filter.service';
 
 // Interface for the date range object provided by DateFilterService
 interface DateRange {
@@ -53,18 +54,14 @@ export class ProfitLossService {
   ): Observable<ProfitLossData> {
     return combineLatest([expenses$, incomes$, dateRange$]).pipe(
       map(([expenses, incomes, range]) => {
-        const start = new Date(range.start);
-        const end = new Date(range.end);
-        end.setHours(23, 59, 59, 999);
-
         const filteredExpenses = expenses.filter((e) => {
-          const expenseDate = new Date(e.date);
-          return expenseDate >= start && expenseDate <= end;
+          const expenseDate = this.normalizeDateKey(e.date);
+          return expenseDate >= range.start && expenseDate <= range.end;
         });
 
         const filteredIncomes = incomes.filter((i) => {
-          const incomeDate = new Date(i.date);
-          return incomeDate >= start && incomeDate <= end;
+          const incomeDate = this.normalizeDateKey(i.date);
+          return incomeDate >= range.start && incomeDate <= range.end;
         });
 
         const totalExpenses = this.calculateTotal(filteredExpenses, 'totalCost');
@@ -149,7 +146,7 @@ export class ProfitLossService {
       return '';
     }
 
-    return parsedDate.toISOString().split('T')[0];
+    return toLocalDateKey(parsedDate);
   }
 
   /**

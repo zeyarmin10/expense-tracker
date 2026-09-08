@@ -24,6 +24,7 @@ import { getActiveGroupId, UserDataService, UserProfile, PublicUserProfile } fro
 import { SpaceContextService } from './space-context.service';
 import { SpaceDataService } from './space-data.service';
 import { SpaceSwitchLoadingService } from './space-switch-loading.service';
+import { toLocalDateKey } from './date-filter.service';
 
 export type ServiceIExpense = IExpense & {
   id: string;
@@ -156,8 +157,11 @@ export class ExpenseService {
             let expensesQuery: Query = baseRef;
 
             if (startDate && endDate) {
-              const start = startDate.toISOString().split('T')[0];
-              const end = endDate.toISOString().split('T')[0];
+              // Keep the query on the selected local calendar days. The
+              // database's `date` field is a business-date key, while audit
+              // timestamps such as createdAt are stored separately in UTC.
+              const start = toLocalDateKey(startDate);
+              const end = toLocalDateKey(endDate);
               expensesQuery = query(baseRef, orderByChild('date'), startAt(start), endAt(end));
             }
 

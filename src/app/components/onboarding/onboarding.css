@@ -868,6 +868,37 @@
   border-color: var(--accent, #0b74ff);
 }
 
+.ob-join-modal-icon {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 0.65rem;
+  border-radius: 50%;
+  color: #a78bfa;
+  background: rgba(167, 139, 250, 0.12);
+}
+
+.ob-join-modal-copy {
+  margin: 0 0 1rem;
+  color: var(--text-muted, #9ca3af);
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+.ob-modal-invite-code {
+  text-align: center;
+  letter-spacing: 0.14em;
+  font-family: 'DM Mono', 'Courier New', monospace;
+  text-transform: uppercase;
+}
+
+.ob-join-modal-meta {
+  margin-bottom: 1rem;
+  color: var(--text-muted, #9ca3af);
+  font-size: 0.72rem;
+}
+
 .ob-modal-meta-row {
   width: 100%;
   display: flex;
@@ -992,6 +1023,13 @@
   flex: 1 1 0;
   min-width: 0;
   padding-inline: 0.65rem;
+}
+
+/* Invite-code actions use their translated label widths as the base instead
+   of two equal cells, while still filling the available modal width. */
+.ob-join-modal .ob-modal-actions .ob-btn {
+  flex: 1 1 auto;
+  white-space: nowrap;
 }
 
 .ob-modal-actions .ob-btn-outline {

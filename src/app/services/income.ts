@@ -20,6 +20,7 @@ import { AuthService } from './auth';
 import { getActiveGroupId, UserDataService, UserProfile, PublicUserProfile } from './user-data';
 import { SpaceDataService } from './space-data.service';
 import { SpaceSwitchLoadingService } from './space-switch-loading.service';
+import { toLocalDateKey } from './date-filter.service';
 
 export interface IncomeLineItem {
   productId: string;
@@ -160,8 +161,11 @@ export class IncomeService {
             let incomesQuery: Query = baseRef;
 
             if (startDate && endDate) {
-              const start = startDate.toISOString().split('T')[0];
-              const end = endDate.toISOString().split('T')[0];
+              // `date` is a local business-date key, not a UTC timestamp.
+              // toISOString() would move an Asia timezone midnight into the
+              // prior UTC day and include yesterday's sales in today's query.
+              const start = toLocalDateKey(startDate);
+              const end = toLocalDateKey(endDate);
               incomesQuery = query(baseRef, orderByChild('date'), startAt(start), endAt(end));
             }
 

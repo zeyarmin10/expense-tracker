@@ -61,7 +61,11 @@
                   <button type="button" class="pnl-pos-qty-btn" (click)="decrementQty(line)">
                     <lucide-icon [img]="iconMinus" [size]="13"></lucide-icon>
                   </button>
-                  <span class="pnl-pos-qty-value">{{ line.quantity }}</span>
+                  <input type="text" inputmode="decimal" class="pnl-pos-qty-input"
+                    [value]="line.quantityDisplay" (input)="onLineQuantityInput(line, $event)"
+                    (focus)="selectLineQuantity($event)" (blur)="onLineQuantityBlur(line)"
+                    [attr.size]="getQuantityInputSize(line.quantityDisplay)"
+                    [attr.aria-label]="'QUANTITY_LABEL' | translate" />
                   <button type="button" class="pnl-pos-qty-btn" (click)="incrementQty(line)">
                     <lucide-icon [img]="iconPlus" [size]="13"></lucide-icon>
                   </button>
@@ -214,7 +218,7 @@
                           <ng-container *ngIf="income.isProductSale && income.productId; else plainDescText">
                             <span class="pnl-item-name" appShowFullText>
                               {{ getSelectedProductName(income.productId) || '—' }}
-                              <span *ngIf="income.quantity"> × {{ formatCount(income.quantity) }}</span>
+                              <span *ngIf="income.quantity"> × {{ formatQuantity(income.quantity, getSelectedProductUnit(income.productId)) }}</span>
                             </span>
                           </ng-container>
                           <ng-template #plainDescText>
@@ -228,7 +232,7 @@
                       <div class="pnl-lineitems-detail"
                         *ngIf="income.lineItems && income.lineItems.length > 1 && expandedIncomeId === income.id">
                         <div class="pnl-lineitems-row" *ngFor="let item of income.lineItems">
-                          <span class="pnl-lineitems-name">{{ getLineItemName(item) }} × {{ formatCount(item.quantity)
+                          <span class="pnl-lineitems-name">{{ getLineItemName(item) }} × {{ formatQuantity(item.quantity, item.unit)
                             }}</span>
                           <span
                             [innerHTML]="formatService.formatAmountShortHtml(item.subtotal, income.currency)"></span>
@@ -373,7 +377,7 @@
           </span>
           <span class="pnl-cat-picker-item-label">{{ prod.name }}</span>
           <span class="pnl-cat-picker-item-stock">{{ 'STOCK_REMAINING_LABEL' | translate }}: {{
-            formatCount(getProductStock(prod.id!) ?? 0) }}</span>
+            formatQuantity(getProductStock(prod.id!) ?? 0, prod.unit) }}</span>
         </button>
       </div>
     </div>

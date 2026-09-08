@@ -72,20 +72,6 @@
     <span>{{ 'SHOP_DASHBOARD_NO_LOW_STOCK' | translate }}</span>
   </div>
 
-  <!-- Today's sold items -->
-  <div class="shopdash-panel shopdash-panel-good" *ngIf="stats.todaySoldItems.length > 0">
-    <h3 class="shopdash-panel-title shopdash-panel-title-good">
-      <lucide-icon [img]="iconHandCoins" [size]="15"></lucide-icon>
-      {{ 'SHOP_DASHBOARD_TODAY_SOLD_ITEMS' | translate }}
-    </h3>
-    <ul class="shopdash-item-list">
-      <li *ngFor="let row of stats.todaySoldItems; trackBy: trackBySoldItem">
-        <span class="shopdash-item-name">{{ row.productName }}</span>
-        <span class="shopdash-item-qty">{{ formatService.formatCount(row.quantity) }}<span *ngIf="row.unit"> {{ row.unit }}</span></span>
-      </li>
-    </ul>
-  </div>
-
   <!-- Top sellers (last 12 months) / slow movers (unsold, purchased 3+ months ago) -->
   <div class="shopdash-rankings-row" *ngIf="stats.topSellers.length > 0 || stats.slowMovers.length > 0">
     <div class="shopdash-panel shopdash-panel-good" *ngIf="stats.topSellers.length > 0">
@@ -99,7 +85,7 @@
             <lucide-icon *ngIf="i === 0" [img]="iconTrophy" [size]="14" class="shopdash-item-top-icon"></lucide-icon>
             {{ row.productName }}
           </span>
-          <span class="shopdash-item-qty">{{ formatService.formatCount(row.quantity) }}<span *ngIf="row.unit"> {{ row.unit }}</span></span>
+          <span class="shopdash-item-qty">{{ formatService.formatQuantity(row.quantity, row.unit) }}</span>
         </li>
       </ul>
     </div>
@@ -111,10 +97,25 @@
       <ul class="shopdash-item-list">
         <li *ngFor="let row of stats.slowMovers; trackBy: trackByProductId">
           <span class="shopdash-item-name">{{ row.productName }}</span>
-          <span class="shopdash-item-qty">{{ formatService.formatCount(row.quantity) }}<span *ngIf="row.unit"> {{ row.unit }}</span></span>
+          <span class="shopdash-item-qty">{{ formatService.formatQuantity(row.quantity, row.unit) }}</span>
         </li>
       </ul>
     </div>
+  </div>
+
+  <!-- Today's sold items stay at the bottom so the stock and longer-term
+       rankings are read first. -->
+  <div class="shopdash-panel shopdash-panel-good" *ngIf="stats.todaySoldItems.length > 0">
+    <h3 class="shopdash-panel-title shopdash-panel-title-good">
+      <lucide-icon [img]="iconHandCoins" [size]="15"></lucide-icon>
+      {{ 'SHOP_DASHBOARD_TODAY_SOLD_ITEMS' | translate }}
+    </h3>
+    <ul class="shopdash-item-list">
+      <li *ngFor="let row of stats.todaySoldItems; trackBy: trackBySoldItem">
+        <span class="shopdash-item-name">{{ row.productName }}</span>
+        <span class="shopdash-item-qty">{{ formatService.formatQuantity(row.quantity, row.unit) }}</span>
+      </li>
+    </ul>
   </div>
 
 </div>

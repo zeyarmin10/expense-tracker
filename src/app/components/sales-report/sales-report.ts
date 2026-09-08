@@ -20,9 +20,10 @@ import { FormatService } from '../../services/format.service';
 import { DateFilterService, DateRange } from '../../services/date-filter.service';
 import { AuthService } from '../../services/auth';
 import { UserDataService, UserProfile } from '../../services/user-data';
-import { LucideAngularModule, Search, ChartColumn, List, Trophy, Package, X, CalendarDays } from 'lucide-angular';
+import { LucideAngularModule, Search, ChartColumn, List, Trophy, Package, CalendarDays } from 'lucide-angular';
 import { UserAvatarComponent } from '../common/user-avatar/user-avatar.component';
 import { DateRangeInputComponent } from '../common/date-range-input/date-range-input.component';
+import Swal from 'sweetalert2';
 
 interface CurrencySummary {
   currency: string;
@@ -32,6 +33,7 @@ interface CurrencySummary {
 
 interface ProductTotal {
   productName: string;
+  unit?: string;
   total: number;
   qty: number;
   currency: string;
@@ -71,7 +73,6 @@ export class SalesReport implements OnInit, OnDestroy {
   readonly iconList = List;
   readonly iconTrophy = Trophy;
   readonly iconPackage = Package;
-  readonly iconX = X;
   readonly iconCalendar = CalendarDays;
 
   productList: ServiceIProduct[] = [];
@@ -97,14 +98,17 @@ export class SalesReport implements OnInit, OnDestroy {
     return income.description || '—';
   }
 
-  selectedIncome: ServiceIIncome | null = null;
-
   openSaleDetails(income: ServiceIIncome): void {
-    this.selectedIncome = income;
-  }
-
-  closeSaleDetails(): void {
-    this.selectedIncome = null;
+    void Swal.fire({
+      title: this.translate.instant('SALE_DETAILS_TITLE'),
+      html: this.buildSaleDetailsHtml(income),
+      showConfirmButton: true,
+      confirmButtonText: this.translate.instant('CLOSE_BUTTON_LABEL'),
+      customClass: {
+        popup: 'sales-report-detail-swal',
+      },
+      width: 'min(520px, calc(100vw - 2rem))',
+    });
   }
 
   getSaleLineItems(income: ServiceIIncome): IncomeLineItem[] {
@@ -113,6 +117,54 @@ export class SalesReport implements OnInit, OnDestroy {
 
   getSaleLineItemName(item: IncomeLineItem): string {
     return this.getSelectedProductName(item.productId) || item.productName || '—';
+  }
+
+  private buildSaleDetailsHtml(income: ServiceIIncome): string {
+    const text = 'var(--text)';
+    const muted = 'var(--text-muted)';
+    const border = 'var(--border)';
+    const surface = 'var(--surface-2)';
+    const incomeColor = 'var(--income-color)';
+    const lineItems = this.getSaleLineItems(income);
+    const label = (key: string) => this.escapeHtml(this.translate.instant(key));
+    const metaRow = (key: string, value: string) => `
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:.7rem;color:${text};font-size:.88rem;">
+        <span style="color:${muted};">${label(key)}</span>
+        <strong style="text-align:right;color:${text};font-weight:650;">${this.escapeHtml(value)}</strong>
+      </div>`;
+
+    const itemsHtml = lineItems.length
+      ? `<div style="margin:1rem 0;border-top:1px solid ${border};">
+          ${lineItems.map(item => `
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.85rem 0;border-bottom:1px solid ${border};">
+              <div style="display:grid;gap:.25rem;min-width:0;text-align:left;">
+                <strong style="color:${text};font-size:.93rem;overflow-wrap:anywhere;">${this.escapeHtml(this.getSaleLineItemName(item))}</strong>
+                <span style="color:${muted};font-size:.82rem;">${this.escapeHtml(this.formatQuantity(item.quantity, item.unit))} × ${this.escapeHtml(this.formatService.formatAmountWithSymbol(item.unitPrice, income.currency))}</span>
+              </div>
+              <strong style="flex:0 0 auto;color:${incomeColor};white-space:nowrap;">${this.escapeHtml(this.formatService.formatAmountWithSymbol(item.subtotal, income.currency))}</strong>
+            </div>`).join('')}
+        </div>`
+      : `<p style="margin:1rem 0;padding:.85rem;text-align:left;color:${text};background:${surface};border-radius:10px;overflow-wrap:anywhere;">${this.escapeHtml(income.description || '—')}</p>`;
+
+    return `<div style="text-align:left;">
+      ${metaRow('DATE_LABEL', this.formatService.formatLocalizedDate(income.date))}
+      ${income.createdByName ? metaRow('ADDED_BY', income.createdByName) : ''}
+      ${itemsHtml}
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;padding-top:.25rem;color:${text};font-size:1rem;">
+        <span style="color:${muted};">${label('POS_TOTAL_LABEL')}</span>
+        <strong style="color:${incomeColor};white-space:nowrap;font-size:1.08rem;">${this.escapeHtml(this.formatService.formatAmountWithSymbol(income.amount, income.currency))}</strong>
+      </div>
+    </div>`;
+  }
+
+  private escapeHtml(value: unknown): string {
+    return String(value ?? '').replace(/[&<>'"]/g, char => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      "'": '&#39;',
+      '"': '&quot;',
+    })[char]!);
   }
 
   // --- Filtering and Search Properties ---
@@ -162,6 +214,10 @@ export class SalesReport implements OnInit, OnDestroy {
   searchFilter$ = new BehaviorSubject<string>('');
 
   ngOnInit(): void {
+    this.translate.onLangChange.pipe(takeUntil(this.destroy$)).subscribe(() => {
+      this.cdr.markForCheck();
+    });
+
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     this.startDate = this.datePipe.transform(startOfMonth, 'yyyy-MM-dd') || '';
@@ -193,8 +249,9 @@ export class SalesReport implements OnInit, OnDestroy {
       this.dateFilter$,
       this.searchFilter$,
       this._selectedProduct$,
+      this.userProfile$,
     ]).pipe(
-      map(([incomes, { start, end }, searchTerm, selectedProduct]) => {
+      map(([incomes, { start, end }, searchTerm, selectedProduct, profile]) => {
         const startDate = this.parseLocalDate(start);
         const originalEndDate = this.parseLocalDate(end);
         const today = new Date();
@@ -212,7 +269,9 @@ export class SalesReport implements OnInit, OnDestroy {
           totalDays = Math.floor(ms / (1000 * 60 * 60 * 24)) + 1;
         }
 
-        let filtered = incomes.filter(i => i.date >= start && i.date <= end);
+        let filtered = incomes
+          .filter(i => i.currency === (profile?.currency || 'MMK'))
+          .filter(i => i.date >= start && i.date <= end);
 
         if (searchTerm) {
           const lower = searchTerm.toLowerCase();
@@ -231,7 +290,12 @@ export class SalesReport implements OnInit, OnDestroy {
           (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
         );
 
-        this.calculateSummary(incomes.filter(i => i.date >= start && i.date <= end), totalDays);
+        this.calculateSummary(
+          incomes
+            .filter(i => i.currency === (profile?.currency || 'MMK'))
+            .filter(i => i.date >= start && i.date <= end),
+          totalDays,
+        );
         return filtered;
       }),
       shareReplay(1)
@@ -334,6 +398,10 @@ export class SalesReport implements OnInit, OnDestroy {
     }
   }
 
+  formatQuantity(n: number, unit?: string | null): string {
+    return this.formatService.formatQuantity(n, unit);
+  }
+
   calculateSummary(incomes: ServiceIIncome[], totalDays: number): void {
     if (!incomes || incomes.length === 0) {
       this.currencySummaries  = [];
@@ -361,10 +429,11 @@ export class SalesReport implements OnInit, OnDestroy {
     for (const income of incomes) {
       if (!income.currency) continue;
       for (const li of getIncomeLineItems(income)) {
-        const name = this.getSelectedProductName(li.productId) || li.productName || this.translate.instant('DESCRIPTION');
+        const product = this.productList.find(p => p.id === li.productId);
+        const name = product?.name || li.productName || this.translate.instant('DESCRIPTION');
         const key = `${name}::${income.currency}`;
         if (!productTotalsMap[key]) {
-          productTotalsMap[key] = { productName: name, total: 0, qty: 0, currency: income.currency };
+          productTotalsMap[key] = { productName: name, unit: product?.unit || li.unit, total: 0, qty: 0, currency: income.currency };
         }
         productTotalsMap[key].total += li.subtotal;
         productTotalsMap[key].qty += li.quantity;

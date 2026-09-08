@@ -415,6 +415,11 @@ body.pnl-add-modal-open {
   margin-bottom: 0.6rem;
 }
 
+/* Give the shop contact block a little breathing room before the timestamp. */
+.pnl-receipt-shop-info + .pnl-receipt-date {
+  margin-top: 0.35rem;
+}
+
 .pnl-receipt-sep {
   border-top: 1px dashed var(--border);
   margin: 0.6rem 0;
@@ -2690,8 +2695,16 @@ app-date-input .di-trigger {
   cursor: pointer;
 }
 
-.pnl-pos-qty-value {
+.pnl-pos-qty-input {
+  width: auto;
   min-width: 1.3rem;
+  max-width: 4rem;
+  flex: 0 1 auto;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
   text-align: center;
   font-size: 0.82rem;
   font-weight: 700;
@@ -2752,8 +2765,8 @@ app-date-input .di-trigger {
     bottom: 0;
     z-index: 5;
     background: var(--surface);
-    margin: 0.9rem -1.2rem -1.2rem;
-    padding: 1rem 1.2rem calc(env(safe-area-inset-bottom, 0px) + 1rem);
+    margin: 0.9rem -0.75rem -1.2rem;
+    padding: 1rem 0.75rem calc(env(safe-area-inset-bottom, 0px) + 1rem);
     border-radius: 0 0 14px 14px;
   }
 
@@ -2795,7 +2808,7 @@ app-date-input .di-trigger {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 14px;
-  padding: 1.1rem 1.2rem 1.2rem;
+  padding: 1.1rem 0.75rem 1.2rem;
   margin-bottom: 1.1rem;
 }
 

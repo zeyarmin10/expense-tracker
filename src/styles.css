@@ -309,6 +309,18 @@ body {
   font-size: 0.88rem !important;
 }
 
+/* Sale detail content may be longer than a small mobile viewport. */
+.sales-report-detail-swal,
+.purchase-detail-swal {
+  max-height: calc(100dvh - 2rem) !important;
+}
+
+.sales-report-detail-swal .swal2-html-container,
+.purchase-detail-swal .swal2-html-container {
+  max-height: calc(100dvh - 15rem);
+  overflow-y: auto;
+}
+
 /* Icons */
 .swal2-icon.swal2-warning {
   border-color: #f4b11a !important;

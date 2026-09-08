@@ -150,23 +150,7 @@
               </div>
             </div>
             <div class="ob-input-row">
-              <div class="ob-fl-wrap">
-                <input
-                  type="text"
-                  class="ob-fl-input ob-fl-mono"
-                  id="ob-invite-code"
-                  [(ngModel)]="inviteCode"
-                  [attr.maxlength]="inviteCodeLength"
-                  placeholder=" "
-                  autocomplete="off" />
-                <label class="ob-fl-label" for="ob-invite-code">
-                  {{ 'ONBOARDING.ENTER_INVITE_CODE' | translate }}
-                </label>
-              </div>
-              <div class="ob-input-meta">
-                {{ 'INVITE_CODE_LENGTH_HINT' | translate:{ length: inviteCodeLength } }}
-              </div>
-              <button class="ob-btn ob-btn-outline" (click)="joinGroup()" [disabled]="!isInviteCodeValid()">
+              <button class="ob-btn ob-btn-outline" (click)="openJoinSpaceModal()">
                 {{ 'ONBOARDING.JOIN_GROUP_BUTTON' | translate }}
               </button>
             </div>
@@ -240,6 +224,42 @@
         <button type="button" class="ob-btn ob-btn-outline"
           (click)="closeCreateSpaceModal()" [disabled]="isCreatingSpace">
           {{ 'CANCEL_BUTTON' | translate }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Join-space uses the same modal flow as Create Space. -->
+  <div class="ob-modal-backdrop" *ngIf="isJoinSpaceModalOpen"></div>
+  <div class="ob-modal ob-join-modal" *ngIf="isJoinSpaceModalOpen" role="dialog" aria-modal="true"
+    aria-labelledby="ob-join-space-title">
+    <div class="ob-modal-header">
+      <span class="ob-modal-title" id="ob-join-space-title">{{ 'ONBOARDING.JOIN_EXISTING_GROUP' | translate }}</span>
+      <button type="button" class="ob-modal-close" (click)="closeJoinSpaceModal()"
+        [disabled]="isJoiningSpace" [title]="'CANCEL_BUTTON' | translate">
+        <lucide-icon [img]="iconX" [size]="18"></lucide-icon>
+      </button>
+    </div>
+    <div class="ob-modal-body">
+      <span class="ob-join-modal-icon"><lucide-icon [img]="iconLink" [size]="24"></lucide-icon></span>
+      <p class="ob-join-modal-copy">{{ 'ONBOARDING.USE_INVITE_CODE' | translate }}</p>
+      <input id="ob-join-invite-code" type="text" class="ob-modal-input ob-modal-invite-code"
+        [(ngModel)]="inviteCode" [attr.maxlength]="inviteCodeLength"
+        [placeholder]="'ONBOARDING.ENTER_INVITE_CODE' | translate" [disabled]="isJoiningSpace"
+        autocomplete="one-time-code" autocapitalize="characters" spellcheck="false"
+        (keyup.enter)="joinGroup()" />
+      <div class="ob-modal-meta-row ob-join-modal-meta">
+        <span>{{ 'INVITE_CODE_LENGTH_HINT' | translate:{ length: inviteCodeLength } }}</span>
+        <span>{{ inviteCode.trim().length }} / {{ inviteCodeLength }}</span>
+      </div>
+      <div class="ob-modal-actions">
+        <button type="button" class="ob-btn ob-btn-outline" (click)="closeJoinSpaceModal()" [disabled]="isJoiningSpace">
+          {{ 'CANCEL_BUTTON' | translate }}
+        </button>
+        <button type="button" class="ob-btn ob-btn-accent ob-modal-submit" (click)="joinGroup()"
+          [disabled]="!isInviteCodeValid() || isJoiningSpace">
+          <span *ngIf="isJoiningSpace" class="ob-modal-spinner" aria-hidden="true"></span>
+          {{ 'ONBOARDING.JOIN_GROUP_BUTTON' | translate }}
         </button>
       </div>
     </div>

@@ -91,6 +91,7 @@ interface CartLine {
   productName: string;
   unit?: string;
   quantity: number;
+  quantityDisplay: string;
   unitPrice: number;
   unitPriceDisplay: string;
 }
@@ -721,6 +722,11 @@ export class Sales implements OnInit, OnDestroy {
     return this.productList.find(p => p.id === productId)?.name ?? null;
   }
 
+  getSelectedProductUnit(productId?: string): string | undefined {
+    if (!productId) return undefined;
+    return this.productList.find(p => p.id === productId)?.unit;
+  }
+
   trackByProductId(index: number, product: ServiceIProduct): string {
     return product.id ?? String(index);
   }
@@ -732,6 +738,7 @@ export class Sales implements OnInit, OnDestroy {
     const existing = this.cart.find((line) => line.productId === product.id);
     if (existing) {
       existing.quantity += 1;
+      existing.quantityDisplay = this.formatWithCommas(existing.quantity);
     } else {
       const unitPrice = product.sellingPrice || 0;
       this.cart = [
@@ -741,6 +748,7 @@ export class Sales implements OnInit, OnDestroy {
           productName: product.name,
           unit: product.unit,
           quantity: 1,
+          quantityDisplay: '1',
           unitPrice,
           unitPriceDisplay: unitPrice ? this.formatWithCommas(unitPrice) : '',
         },
@@ -760,6 +768,7 @@ export class Sales implements OnInit, OnDestroy {
 
   incrementQty(line: CartLine): void {
     line.quantity += 1;
+    line.quantityDisplay = this.formatWithCommas(line.quantity);
     this.cdr.markForCheck();
   }
 
@@ -769,7 +778,35 @@ export class Sales implements OnInit, OnDestroy {
       return;
     }
     line.quantity -= 1;
+    line.quantityDisplay = this.formatWithCommas(line.quantity);
     this.cdr.markForCheck();
+  }
+
+  onLineQuantityInput(line: CartLine, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    let raw = input.value.replace(/[^\d.]/g, '');
+    const parts = raw.split('.');
+    if (parts.length > 2) raw = parts[0] + '.' + parts.slice(1).join('');
+
+    line.quantityDisplay = raw;
+    const quantity = Number(raw);
+    if (Number.isFinite(quantity) && quantity > 0) {
+      line.quantity = quantity;
+    }
+    this.cdr.markForCheck();
+  }
+
+  onLineQuantityBlur(line: CartLine): void {
+    line.quantityDisplay = this.formatWithCommas(line.quantity);
+    this.cdr.markForCheck();
+  }
+
+  selectLineQuantity(event: Event): void {
+    (event.target as HTMLInputElement).select();
+  }
+
+  getQuantityInputSize(value: string): number {
+    return Math.min(Math.max(String(value || '').length, 1), 7);
   }
 
   removeFromCart(productId: string): void {
@@ -931,6 +968,10 @@ export class Sales implements OnInit, OnDestroy {
     return this.formatService.formatCount(n);
   }
 
+  formatQuantity(n: number, unit?: string | null): string {
+    return this.formatService.formatQuantity(n, unit);
+  }
+
   constructor() {
     this.incomeForm = this.fb.group({
       description: ['', Validators.maxLength(250)],
@@ -1014,6 +1055,9 @@ export class Sales implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.subscriptions.add(
+      this.translate.onLangChange.subscribe(() => this.cdr.markForCheck()),
+    );
+    this.subscriptions.add(
       this.categoryService.getCategories().subscribe(cats => { this.categoryList = cats; this.cdr.markForCheck(); })
     );
     this.loadProducts();
@@ -1025,8 +1069,12 @@ export class Sales implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.inventoryService.getStockSummary(
         this.productService.getProducts(),
-        this.expenseService.getExpenses(),
-        this.incomeService.getIncomes(),
+        combineLatest([this.expenseService.getExpenses(), this.authService.userProfile$]).pipe(
+          map(([expenses, profile]) => expenses.filter((expense) => expense.currency === (profile?.currency || 'MMK'))),
+        ),
+        combineLatest([this.incomeService.getIncomes(), this.authService.userProfile$]).pipe(
+          map(([incomes, profile]) => incomes.filter((income) => income.currency === (profile?.currency || 'MMK'))),
+        ),
       ).subscribe(summary => {
         this.stockByProductId = new Map(summary.map(row => [row.productId, row]));
         this.cdr.markForCheck();
