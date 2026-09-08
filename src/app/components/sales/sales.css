@@ -2752,8 +2752,8 @@ app-date-input .di-trigger {
     bottom: 0;
     z-index: 5;
     background: var(--surface);
-    margin: 0.9rem -1.2rem -1.2rem;
-    padding: 1rem 1.2rem calc(env(safe-area-inset-bottom, 0px) + 1rem);
+    margin: 0.9rem -0.75rem -1.2rem;
+    padding: 1rem 0.75rem calc(env(safe-area-inset-bottom, 0px) + 1rem);
     border-radius: 0 0 14px 14px;
   }
 
@@ -2795,7 +2795,7 @@ app-date-input .di-trigger {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 14px;
-  padding: 1.1rem 1.2rem 1.2rem;
+  padding: 1.1rem 0.75rem 1.2rem;
   margin-bottom: 1.1rem;
 }
 

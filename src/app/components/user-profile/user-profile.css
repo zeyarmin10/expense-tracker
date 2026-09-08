@@ -559,8 +559,13 @@
 }
 
 .prof-segment-btn {
-  flex: 1;
-  padding: 0.48rem 0.4rem;
+  /* Theme labels vary substantially across app languages.  Let each button
+     take the width of its own content rather than forcing three equal cells. */
+  /* Start from each translated label's intrinsic width, then share remaining
+     space so the segmented control still fills its full row. */
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0.48rem 0.65rem;
   border-radius: 8px;
   border: none;
   background: transparent;
@@ -571,6 +576,7 @@
   transition: all 0.15s;
   text-align: center;
   line-height: 1.3;
+  white-space: nowrap;
 }
 
 .prof-segment-btn:hover {

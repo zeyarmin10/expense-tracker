@@ -80,7 +80,7 @@
         </div>
 
         <!-- ── Budget Period ── -->
-        <div class="prof-list-card" *ngIf="canEditSettings">
+        <div class="prof-list-card" *ngIf="canEditSettings && !(isInventorySpace$ | async)">
           <div class="prof-card-header-row">
             <div class="prof-card-header-left">
               <span class="prof-section-pill prof-section-pill-accent">
@@ -188,7 +188,8 @@
         </div>
 
         <!-- ── Notifications ── -->
-        <div class="prof-section prof-notification-section" [class.prof-noti-section-loading]="isNotificationBusy">
+        <div *ngIf="!(isInventorySpace$ | async)" class="prof-section prof-notification-section"
+          [class.prof-noti-section-loading]="isNotificationBusy">
           <div class="prof-noti-header">
             <div class="prof-noti-title">
               <span class="prof-section-pill prof-section-pill-accent">

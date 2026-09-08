@@ -87,10 +87,23 @@ export class ShopDashboardComponent implements OnInit {
     const now = Date.now();
 
     const products$ = this.productService.getProducts();
-    const todayIncomes$ = this.incomeService.getIncomes(todayStart, todayEnd);
-    const todayExpenses$ = this.expenseService.getExpenses(todayStart, todayEnd);
-    const allExpenses$ = this.expenseService.getExpenses();
-    const allIncomes$ = this.incomeService.getIncomes();
+    const profileCurrency$ = this.authService.userProfile$.pipe(
+      map((profile) => profile?.currency || 'MMK'),
+    );
+    const onlyProfileCurrency = <T extends { currency?: string }>(records: T[], currency: string) =>
+      records.filter((record) => record.currency === currency);
+    const todayIncomes$ = combineLatest([
+      this.incomeService.getIncomes(todayStart, todayEnd), profileCurrency$,
+    ]).pipe(map(([incomes, currency]) => onlyProfileCurrency(incomes, currency)));
+    const todayExpenses$ = combineLatest([
+      this.expenseService.getExpenses(todayStart, todayEnd), profileCurrency$,
+    ]).pipe(map(([expenses, currency]) => onlyProfileCurrency(expenses, currency)));
+    const allExpenses$ = combineLatest([
+      this.expenseService.getExpenses(), profileCurrency$,
+    ]).pipe(map(([expenses, currency]) => onlyProfileCurrency(expenses, currency)));
+    const allIncomes$ = combineLatest([
+      this.incomeService.getIncomes(), profileCurrency$,
+    ]).pipe(map(([incomes, currency]) => onlyProfileCurrency(incomes, currency)));
 
     const lowStockThreshold$ = this.authService.userProfile$.pipe(
       switchMap((profile) => {
@@ -193,7 +206,7 @@ export class ShopDashboardComponent implements OnInit {
           (row) => row.currentStock > 0 && row.currentStock <= lowStockThreshold,
         );
         const formatNames = (products: ProductStockSummary[]) => products
-          .map((row) => `${row.productName} (${this.formatService.formatCount(row.currentStock)})`);
+          .map((row) => `${row.productName} (${this.formatService.formatQuantity(row.currentStock, row.unit)})`);
         const outOfStockNames = formatNames(outOfStockProducts).join(', ');
         const lowStockNames = formatNames(lowStockProducts).join(', ');
         return {

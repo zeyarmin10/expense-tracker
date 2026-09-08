@@ -5,6 +5,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { CalendarRange, LucideAngularModule, Save, X } from 'lucide-angular';
 import { DateInputComponent } from '../date-input/date-input.component';
 import { DateRangeInputComponent } from '../date-range-input/date-range-input.component';
+import { toLocalDateKey } from '../../../services/date-filter.service';
 
 @Component({
   selector: 'app-custom-budget-period-modal',
@@ -39,8 +40,8 @@ export class CustomBudgetPeriodModalComponent implements OnDestroy {
     const sixMonthsHence = new Date();
     sixMonthsHence.setMonth(today.getMonth() + 6);
 
-    const sixMonthsAgoString = sixMonthsAgo.toISOString().split('T')[0];
-    const sixMonthsHenceString = sixMonthsHence.toISOString().split('T')[0];
+    const sixMonthsAgoString = toLocalDateKey(sixMonthsAgo);
+    const sixMonthsHenceString = toLocalDateKey(sixMonthsHence);
 
     this.budgetPeriodForm.reset({
       name: '',

@@ -596,7 +596,7 @@ body:not(.light-mode) .inv-product-item-hidden .inv-product-hidden-badge {
 
 .inv-product-actions {
   display: flex;
-  gap: 0.3rem;
+  gap: 1rem;
   flex-shrink: 0;
   position: relative;
   z-index: 1;
@@ -724,6 +724,7 @@ body:not(.light-mode) .inv-product-item-hidden .inv-product-hidden-badge {
   background: var(--surface);
   color: var(--accent, #0b74ff);
   cursor: pointer;
+  margin-bottom: 0.5rem;
 }
 
 /* Add-Product form's own scan button: a full-width, filled, labeled action
@@ -762,9 +763,10 @@ body:not(.light-mode) .inv-product-item-hidden .inv-product-hidden-badge {
 
 .inv-action-btn {
   display: flex;
+  gap: 0.3rem;
   align-items: center;
   justify-content: center;
-  width: 38px;
+  width: fit-content;
   height: 38px;
   border-radius: 8px;
   border: 1px solid transparent;
@@ -772,6 +774,7 @@ body:not(.light-mode) .inv-product-item-hidden .inv-product-hidden-badge {
   color: var(--text-muted);
   cursor: pointer;
   transition: all 0.15s;
+  font-size: 0.78rem;
 }
 
 .inv-action-btn:hover {

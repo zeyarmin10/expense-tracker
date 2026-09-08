@@ -101,7 +101,7 @@
               <button type="button" class="exp-pos-qty-btn" (click)="decrementQty(line)">
                 <lucide-icon [img]="iconMinus" [size]="13"></lucide-icon>
               </button>
-              <span class="exp-pos-qty-value">{{ line.quantity }}</span>
+              <span class="exp-pos-qty-value">{{ formatQuantity(line.quantity, line.unit) }}</span>
               <button type="button" class="exp-pos-qty-btn" (click)="incrementQty(line)">
                 <lucide-icon [img]="iconPlus" [size]="13"></lucide-icon>
               </button>
@@ -684,7 +684,7 @@
 
                   <div class="exp-lineitems-detail" *ngIf="expense.lineItems && expense.lineItems.length > 1 && expandedExpenseId === expense.id">
                     <div class="exp-lineitems-row" *ngFor="let item of expense.lineItems">
-                      <span class="exp-lineitems-name">{{ getLineItemName(item) }} × {{ formatCount(item.quantity) }}</span>
+                      <span class="exp-lineitems-name">{{ getLineItemName(item) }} × {{ formatQuantity(item.quantity, item.unit) }}</span>
                       <span [innerHTML]="formatService.formatAmountShortHtml(item.subtotal, expense.currency)"></span>
                     </div>
                   </div>
@@ -704,8 +704,7 @@
                       *ngIf="expense.quantity && expense.quantity > 1"
                       class="exp-item-qty"
                     >
-                      {{ formatLocalizedNumber(expense.quantity) }} {{ expense.unit
-                      }} &#64; <span [innerHTML]="formatService.formatAmountWithSymbolHtml(expense.price ?? 0, expense.currency)"></span>
+                      {{ formatQuantity(expense.quantity, expense.unit) }} &#64; <span [innerHTML]="formatService.formatAmountWithSymbolHtml(expense.price ?? 0, expense.currency)"></span>
                     </span>
                   </div>
 
@@ -734,7 +733,7 @@
                     <div class="exp-info-avatar-row">
                       <lucide-icon
                         [img]="iconInfo"
-                        [size]="16"
+                        [size]="20"
                         class="exp-info-icon"
                         role="button"
                         tabindex="0"

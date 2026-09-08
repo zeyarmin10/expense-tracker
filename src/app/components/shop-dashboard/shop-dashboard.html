@@ -81,7 +81,7 @@
     <ul class="shopdash-item-list">
       <li *ngFor="let row of stats.todaySoldItems; trackBy: trackBySoldItem">
         <span class="shopdash-item-name">{{ row.productName }}</span>
-        <span class="shopdash-item-qty">{{ formatService.formatCount(row.quantity) }}<span *ngIf="row.unit"> {{ row.unit }}</span></span>
+        <span class="shopdash-item-qty">{{ formatService.formatQuantity(row.quantity, row.unit) }}</span>
       </li>
     </ul>
   </div>
@@ -99,7 +99,7 @@
             <lucide-icon *ngIf="i === 0" [img]="iconTrophy" [size]="14" class="shopdash-item-top-icon"></lucide-icon>
             {{ row.productName }}
           </span>
-          <span class="shopdash-item-qty">{{ formatService.formatCount(row.quantity) }}<span *ngIf="row.unit"> {{ row.unit }}</span></span>
+          <span class="shopdash-item-qty">{{ formatService.formatQuantity(row.quantity, row.unit) }}</span>
         </li>
       </ul>
     </div>
@@ -111,7 +111,7 @@
       <ul class="shopdash-item-list">
         <li *ngFor="let row of stats.slowMovers; trackBy: trackByProductId">
           <span class="shopdash-item-name">{{ row.productName }}</span>
-          <span class="shopdash-item-qty">{{ formatService.formatCount(row.quantity) }}<span *ngIf="row.unit"> {{ row.unit }}</span></span>
+          <span class="shopdash-item-qty">{{ formatService.formatQuantity(row.quantity, row.unit) }}</span>
         </li>
       </ul>
     </div>

@@ -580,6 +580,13 @@ export class Purchase implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    // Quantity values are rendered through methods rather than a pure pipe.
+    // With OnPush, explicitly re-check them whenever the app language changes
+    // so `× 1` becomes `× ၁` immediately after switching to Burmese.
+    this.translate.onLangChange.pipe(takeUntil(this.destroy$)).subscribe(() => {
+      this.cdr.markForCheck();
+    });
+
     this.loadExpenses();
     this.loadVouchers();
     this.dateFilterMode = 'today';
@@ -1353,9 +1360,11 @@ export class Purchase implements OnInit, OnDestroy {
   }
 
   formatCount(n: number): string {
-    if (this.translate.currentLang !== 'my') return String(n);
-    const mm = ['၀','၁','၂','၃','၄','၅','၆','၇','၈','၉'];
-    return String(n).replace(/\d/g, d => mm[+d]);
+    return this.formatService.formatCount(n);
+  }
+
+  formatQuantity(n: number, unit?: string | null): string {
+    return this.formatService.formatQuantity(n, unit);
   }
 
   // ── Edit — reuses this modal (same custom category/date pickers as
@@ -1491,119 +1500,65 @@ export class Purchase implements OnInit, OnDestroy {
   }
 
   showExpenseInfo(expense: IExpense): void {
-    const isDark = !document.body.classList.contains('light-mode');
-    const bg = isDark ? '#12151c' : '#ffffff';
-    const textColor = isDark ? '#e5e7eb' : '#111827';
-    const subColor = isDark ? '#9ca3af' : '#6b7280';
-    const border = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.08)';
-    const surfaceAlt = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)';
-    const accent = '#0b74ff';
-    const iconFilter = isDark ? 'invert(1) brightness(2)' : 'none';
+    const text = 'var(--text)';
+    const muted = 'var(--text-muted)';
+    const border = 'var(--border)';
+    const surface = 'var(--surface-2)';
+    const purchaseColor = 'var(--expense-color)';
+    const lineItems = expense.lineItems || [];
+    const safe = (value: unknown) => this.escapeHtml(String(value ?? ''));
+    const label = (key: string) => safe(this.translate.instant(key));
+    const metaRow = (key: string, value: string) => `
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:.7rem;color:${text};font-size:.88rem;">
+        <span style="color:${muted};">${label(key)}</span>
+        <strong style="text-align:right;color:${text};font-weight:650;">${safe(value)}</strong>
+      </div>`;
 
-    const row = (iconSvg: string, label: string, value: string, color = textColor, noBorder = false) => `
-    <div style="display:flex;align-items:flex-start;gap:0.6rem;padding:0.55rem 0;${noBorder ? '' : `border-bottom:1px solid ${border};`}">
-      <span style="font-size:1rem;flex-shrink:0;line-height:1.5;">${iconSvg}</span>
-      <div style="flex:1;min-width:0;">
-        <div style="font-size:0.6rem;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;color:${subColor};margin-bottom:0.1rem;">${label}</div>
-        <div style="font-size:0.85rem;font-weight:600;color:${color};word-break:break-word;">${value}</div>
+    const itemRows = lineItems.length
+      ? lineItems.map(item => `
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.85rem 0;border-bottom:1px solid ${border};">
+            <div style="display:grid;gap:.25rem;min-width:0;text-align:left;">
+              <strong style="color:${text};font-size:.93rem;overflow-wrap:anywhere;">${safe(this.getLineItemName(item))}</strong>
+              <span style="color:${muted};font-size:.82rem;">${safe(this.formatQuantity(item.quantity, item.unit))} × ${safe(this.formatService.formatAmountWithSymbol(item.price, expense.currency))}</span>
+            </div>
+            <strong style="flex:0 0 auto;color:${purchaseColor};white-space:nowrap;">${safe(this.formatService.formatAmountWithSymbol(item.subtotal, expense.currency))}</strong>
+          </div>`).join('')
+      : `
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.85rem 0;border-bottom:1px solid ${border};">
+            <div style="display:grid;gap:.25rem;min-width:0;text-align:left;">
+              <strong style="color:${text};font-size:.93rem;overflow-wrap:anywhere;">${safe(expense.itemName || '—')}</strong>
+              <span style="color:${muted};font-size:.82rem;">${safe(this.formatQuantity(expense.quantity || 0, expense.unit))} × ${safe(this.formatService.formatAmountWithSymbol(expense.price || 0, expense.currency))}</span>
+            </div>
+            <strong style="flex:0 0 auto;color:${purchaseColor};white-space:nowrap;">${safe(this.formatService.formatAmountWithSymbol(expense.totalCost, expense.currency))}</strong>
+          </div>`;
+
+    const description = expense.description
+      ? `<p style="margin:1rem 0 0;padding:.85rem;text-align:left;color:${text};background:${surface};border-radius:10px;overflow-wrap:anywhere;">${safe(expense.description)}</p>`
+      : '';
+
+    const html = `<div style="text-align:left;">
+      ${metaRow('EXPENSE_DATE_LABEL', this.formatService.formatLocalizedDate(expense.date))}
+      ${metaRow('EXPENSE_CATEGORY_LABEL', expense.category || '—')}
+      ${expense.createdByName ? metaRow('CREATED_BY_LABEL', this.getExpenseCreatorName(expense)) : ''}
+      <div style="margin:1rem 0;border-top:1px solid ${border};">${itemRows}</div>
+      ${description}
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;padding-top:1rem;color:${text};font-size:1rem;">
+        <span style="color:${muted};">${label('POS_TOTAL_LABEL')}</span>
+        <strong style="color:${purchaseColor};white-space:nowrap;font-size:1.08rem;">${safe(this.formatService.formatAmountWithSymbol(expense.totalCost, expense.currency))}</strong>
       </div>
     </div>`;
 
-    const fieldLabel = (field: string): string => {
-      const map: Record<string, string> = {
-        itemName: this.translate.instant('EXPENSE_ITEM_NAME_LABEL'),
-        price: this.translate.instant('PRICE_LABEL'),
-        quantity: this.translate.instant('QUANTITY_LABEL'),
-        unit: this.translate.instant('EXPENSE_UNIT_LABEL'),
-        category: this.translate.instant('EXPENSE_CATEGORY_LABEL'),
-        date: this.translate.instant('EXPENSE_DATE_LABEL'),
-      };
-      return map[field] || field;
-    };
-
-    const rawHistory = (expense as any).editHistory;
-    type HistoryEntry = {
-      editedAt: string; editedByName: string; editedBy: string;
-      changes: Record<string, { from: any; to: any }>;
-    };
-    const historyEntries: HistoryEntry[] = rawHistory
-      ? (Object.values(rawHistory) as HistoryEntry[]).sort((a, b) =>
-        new Date(a.editedAt).getTime() - new Date(b.editedAt).getTime()
-      )
-      : [];
-
-    let rows = '';
-
-    rows += row(`<img src="../../assets/icons/shopping-bag.png" alt="bill" style="width:25px;height:25px;filter:${iconFilter};vertical-align:middle;">`, this.translate.instant('EXPENSE_ITEM_NAME_LABEL'), expense.itemName || '—');
-    rows += row(`<img src="../../assets/icons/price-tag.png" alt="tag" style="width:25px;height:25px;filter:${iconFilter};vertical-align:middle;">`, this.translate.instant('EXPENSE_CATEGORY_LABEL'), expense.category || '—', accent);
-    const quantityValue = Number(expense.quantity);
-    const priceValue = Number(expense.price);
-    const hasQuantity = Number.isFinite(quantityValue) && quantityValue > 1;
-    const hasPrice = hasQuantity && Number.isFinite(priceValue) && priceValue > 0;
-
-    if (hasQuantity) {
-      const quantityText = `${this.formatLocalizedNumber(quantityValue)}${expense.unit ? ' ' + expense.unit : ''}`;
-      rows += row(`<img src="../../assets/icons/item.png" alt="quantity" style="width:25px;height:25px;filter:${iconFilter};vertical-align:middle;">`, this.translate.instant('QUANTITY_LABEL'), quantityText);
-    }
-
-    if (hasPrice) {
-      rows += row(`<img src="../../assets/icons/bill.svg" alt="price" style="width:25px;height:25px;filter:${iconFilter};vertical-align:middle;">`, this.translate.instant('PRICE_LABEL'), this.formatService.formatAmountWithSymbol(priceValue, expense.currency));
-    }
-
-    const amt = this.formatService.formatAmountWithSymbol(expense.totalCost, expense.currency);
-    rows += row(`<img src="../../assets/icons/money-bag.png" alt="money-bag" style="width:25px;height:25px;filter:${iconFilter};vertical-align:middle;">`, this.translate.instant('TOTAL_COST_LABEL'), amt, accent);
-
-    if (expense.createdByName) {
-      const dt = expense.createdAt ? this.formatService.formatLocalizedDate(expense.createdAt, 'longDateTime') : '';
-      const creatorName = this.getExpenseCreatorName(expense);
-      const creatorAvatar = this.getUserAvatarHtml(
-        creatorName,
-        this.getExpenseCreatorPhotoURL(expense),
-      );
-      rows += row(creatorAvatar, this.translate.instant('CREATED_BY_LABEL'), `${this.escapeHtml(creatorName)}${dt ? ' · ' + this.escapeHtml(dt) : ''}`);
-    }
-
-    if (historyEntries.length > 0) {
-      rows += `<div style="margin-top:0.6rem;margin-bottom:0.3rem;font-size:0.6rem;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;color:${subColor};">
-        ── ${this.translate.instant('EDIT_HISTORY_LABEL')} ──
-      </div>`;
-
-      historyEntries.forEach((entry, idx) => {
-        const isLast = idx === historyEntries.length - 1;
-        const dt = this.formatService.formatLocalizedDate(entry.editedAt, 'longDateTime');
-        const whoWhen = `${entry.editedByName} · ${dt}`;
-
-        const changeLines = Object.entries(entry.changes)
-          .map(([field, { from, to }]) =>
-            `<span style="color:${subColor};">${fieldLabel(field)}:</span> ` +
-            `<span style="text-decoration:line-through;opacity:0.5;">${from}</span> ` +
-            `→ <span style="color:${accent};">${to}</span>`
-          ).join('<br>');
-
-        rows += `
-          <div style="background:${surfaceAlt};border-radius:8px;padding:0.55rem 0.7rem;margin-bottom:0.35rem;${isLast ? '' : `border-bottom:1px solid ${border};`}">
-            <div style="font-size:0.72rem;color:${subColor};margin-bottom:0.3rem;"><img src="../../assets/icons/pencil-crayon.svg" alt="pencil" style="width:15px;height:15px;filter:${iconFilter};vertical-align:middle;"> ${whoWhen}</div>
-            <div style="font-size:0.82rem;line-height:1.6;">${changeLines}</div>
-          </div>`;
-      });
-    }
-
-    const html = `<div style="text-align:left;">${rows}</div>`;
-
-    Swal.fire({
+    void Swal.fire({
+      title: this.translate.instant('EXPENSE_INFO_TITLE'),
       html,
-      background: bg,
-      color: textColor,
+      showConfirmButton: true,
       confirmButtonText: this.translate.instant('OK_BUTTON'),
-      confirmButtonColor: accent,
-      customClass: { popup: 'exp-info-swal' },
-      width: '380px',
+      customClass: { popup: 'purchase-detail-swal' },
+      width: 'min(520px, calc(100vw - 2rem))',
     });
   }
 
   formatLocalizedNumber(amount: number): string {
-    const lang = this.translate.currentLang;
-    if (lang === 'my') return new Intl.NumberFormat('my-MM', { numberingSystem: 'mymr' }).format(amount);
-    return amount.toLocaleString(lang);
+    return this.formatCount(amount);
   }
 }

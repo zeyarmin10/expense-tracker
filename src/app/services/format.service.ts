@@ -76,10 +76,31 @@ export class FormatService {
 
   // Plain integer counts (quantities, list counts) — not a currency amount,
   // just digits rendered in the app's current numbering system.
-  formatCount(n: number): string {
-    if (this.translate.currentLang !== 'my') return String(n);
-    const mm = ['၀', '၁', '၂', '၃', '၄', '၅', '၆', '၇', '၈', '၉'];
-    return String(n).replace(/\d/g, (d) => mm[+d]);
+  formatCount(n: number, preferredLanguage?: string | null): string {
+    // The active ngx-translate language is the UI source of truth. A user's
+    // profile language can be stale after changing language in the app, so
+    // it must never override the language currently rendered on screen.
+    const storedLanguage = typeof localStorage === 'undefined' ? '' : localStorage.getItem('selectedLanguage') || '';
+    const lang = (this.translate.currentLang || preferredLanguage || storedLanguage || this.translate.getDefaultLang() || 'en')
+      .toLowerCase()
+      .split('-')[0];
+    const value = Number(n);
+    if (!Number.isFinite(value)) return '0';
+    const raw = String(value);
+    const digitsByLanguage: Record<string, string> = {
+      my: '၀၁၂၃၄၅၆၇၈၉',
+      th: '๐๑๒๓๔๕๖๗๘๙',
+      km: '០១២៣៤៥៦៧៨៩',
+    };
+    const digits = digitsByLanguage[lang];
+    return digits ? raw.replace(/\d/g, (digit) => digits[Number(digit)]) : raw;
+  }
+
+  /** Product quantity with its optional stock/sales unit, e.g. `၅ kg`. */
+  formatQuantity(n: number, unit?: string | null, preferredLanguage?: string | null): string {
+    const normalizedUnit = unit?.trim();
+    const quantity = this.formatCount(n, preferredLanguage);
+    return normalizedUnit ? `${quantity} ${normalizedUnit}` : quantity;
   }
 
   private buildAmountShortParts(

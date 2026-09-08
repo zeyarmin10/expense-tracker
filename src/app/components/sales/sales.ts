@@ -721,6 +721,11 @@ export class Sales implements OnInit, OnDestroy {
     return this.productList.find(p => p.id === productId)?.name ?? null;
   }
 
+  getSelectedProductUnit(productId?: string): string | undefined {
+    if (!productId) return undefined;
+    return this.productList.find(p => p.id === productId)?.unit;
+  }
+
   trackByProductId(index: number, product: ServiceIProduct): string {
     return product.id ?? String(index);
   }
@@ -931,6 +936,10 @@ export class Sales implements OnInit, OnDestroy {
     return this.formatService.formatCount(n);
   }
 
+  formatQuantity(n: number, unit?: string | null): string {
+    return this.formatService.formatQuantity(n, unit);
+  }
+
   constructor() {
     this.incomeForm = this.fb.group({
       description: ['', Validators.maxLength(250)],
@@ -1014,6 +1023,9 @@ export class Sales implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.subscriptions.add(
+      this.translate.onLangChange.subscribe(() => this.cdr.markForCheck()),
+    );
+    this.subscriptions.add(
       this.categoryService.getCategories().subscribe(cats => { this.categoryList = cats; this.cdr.markForCheck(); })
     );
     this.loadProducts();
@@ -1025,8 +1037,12 @@ export class Sales implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.inventoryService.getStockSummary(
         this.productService.getProducts(),
-        this.expenseService.getExpenses(),
-        this.incomeService.getIncomes(),
+        combineLatest([this.expenseService.getExpenses(), this.authService.userProfile$]).pipe(
+          map(([expenses, profile]) => expenses.filter((expense) => expense.currency === (profile?.currency || 'MMK'))),
+        ),
+        combineLatest([this.incomeService.getIncomes(), this.authService.userProfile$]).pipe(
+          map(([incomes, profile]) => incomes.filter((income) => income.currency === (profile?.currency || 'MMK'))),
+        ),
       ).subscribe(summary => {
         this.stockByProductId = new Map(summary.map(row => [row.productId, row]));
         this.cdr.markForCheck();
