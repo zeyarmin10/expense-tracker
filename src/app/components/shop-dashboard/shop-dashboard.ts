@@ -44,7 +44,6 @@ interface ShopDashboardStats {
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const SLOW_MOVER_MIN_AGE_DAYS = 90; // ~3 months
 const TOP_SELLER_WINDOW_DAYS = 365;
-const TOP_SELLER_MAX = 10;
 const SLOW_MOVER_MAX = 10;
 
 @Component({
@@ -86,7 +85,11 @@ export class ShopDashboardComponent implements OnInit {
     todayEnd.setHours(23, 59, 59, 999);
     const now = Date.now();
 
-    const products$ = this.productService.getProducts();
+    // Hidden products remain in the underlying catalog and transaction
+    // history, but must not surface in any dashboard product-based panel.
+    const products$ = this.productService.getProducts().pipe(
+      map((products) => products.filter((product) => product.isActive !== false)),
+    );
     const profileCurrency$ = this.authService.userProfile$.pipe(
       map((profile) => profile?.currency || 'MMK'),
     );
@@ -136,6 +139,7 @@ export class ShopDashboardComponent implements OnInit {
         const rows: SoldItemRow[] = [];
         quantityByProductId.forEach((quantity, productId) => {
           const product = products.find((p) => p.id === productId);
+          if (!product) return;
           rows.push({ productName: product?.name || '—', unit: product?.unit, quantity });
         });
         return rows.sort((a, b) => b.quantity - a.quantity);
@@ -144,7 +148,9 @@ export class ShopDashboardComponent implements OnInit {
 
     // Top sellers: quantity sold within the last year — a product's
     // lifetime totalSoldQty (from stockSummary$) isn't what "best seller
-    // right now" means for a shop that's been running a while.
+    // right now" means for a shop that's been running a while. Show the
+    // top 10% of the current product catalog (round up so a small catalog
+    // still has one useful result): 100 products -> 10, 50 -> 5.
     const topSellers$ = combineLatest([allIncomes$, products$]).pipe(
       map(([incomes, products]) => {
         const windowStart = now - TOP_SELLER_WINDOW_DAYS * MS_PER_DAY;
@@ -167,9 +173,11 @@ export class ShopDashboardComponent implements OnInit {
         quantityByProductId.forEach((quantity, productId) => {
           if (quantity <= 0) return;
           const product = products.find((p) => p.id === productId);
+          if (!product) return;
           rows.push({ productId, productName: product?.name || '—', unit: product?.unit, quantity });
         });
-        return rows.sort((a, b) => b.quantity - a.quantity).slice(0, TOP_SELLER_MAX);
+        const topSellerCount = Math.ceil(products.length / 10);
+        return rows.sort((a, b) => b.quantity - a.quantity).slice(0, topSellerCount);
       }),
     );
 

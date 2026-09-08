@@ -415,6 +415,11 @@ body.pnl-add-modal-open {
   margin-bottom: 0.6rem;
 }
 
+/* Give the shop contact block a little breathing room before the timestamp. */
+.pnl-receipt-shop-info + .pnl-receipt-date {
+  margin-top: 0.35rem;
+}
+
 .pnl-receipt-sep {
   border-top: 1px dashed var(--border);
   margin: 0.6rem 0;
