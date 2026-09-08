@@ -101,7 +101,11 @@
               <button type="button" class="exp-pos-qty-btn" (click)="decrementQty(line)">
                 <lucide-icon [img]="iconMinus" [size]="13"></lucide-icon>
               </button>
-              <span class="exp-pos-qty-value">{{ formatQuantity(line.quantity, line.unit) }}</span>
+              <input type="text" inputmode="decimal" class="exp-pos-qty-input"
+                [value]="line.quantityDisplay" (input)="onLineQuantityInput(line, $event)"
+                (focus)="selectLineQuantity($event)" (blur)="onLineQuantityBlur(line)"
+                [attr.size]="getQuantityInputSize(line.quantityDisplay)"
+                [attr.aria-label]="'QUANTITY_LABEL' | translate" />
               <button type="button" class="exp-pos-qty-btn" (click)="incrementQty(line)">
                 <lucide-icon [img]="iconPlus" [size]="13"></lucide-icon>
               </button>

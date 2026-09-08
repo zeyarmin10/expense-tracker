@@ -91,6 +91,7 @@ interface CartLine {
   productName: string;
   unit?: string;
   quantity: number;
+  quantityDisplay: string;
   price: number;
   priceDisplay: string;
 }
@@ -262,6 +263,7 @@ export class Purchase implements OnInit, OnDestroy {
     const existing = this.cart.find((line) => line.productId === product.id);
     if (existing) {
       existing.quantity += 1;
+      existing.quantityDisplay = this.formatWithCommas(existing.quantity);
     } else {
       this.cart = [
         ...this.cart,
@@ -270,6 +272,7 @@ export class Purchase implements OnInit, OnDestroy {
           productName: product.name,
           unit: product.unit,
           quantity: 1,
+          quantityDisplay: '1',
           price: 0,
           priceDisplay: '',
         },
@@ -281,6 +284,7 @@ export class Purchase implements OnInit, OnDestroy {
 
   incrementQty(line: CartLine): void {
     line.quantity += 1;
+    line.quantityDisplay = this.formatWithCommas(line.quantity);
     this.cdr.markForCheck();
   }
 
@@ -290,7 +294,35 @@ export class Purchase implements OnInit, OnDestroy {
       return;
     }
     line.quantity -= 1;
+    line.quantityDisplay = this.formatWithCommas(line.quantity);
     this.cdr.markForCheck();
+  }
+
+  onLineQuantityInput(line: CartLine, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    let raw = input.value.replace(/[^\d.]/g, '');
+    const parts = raw.split('.');
+    if (parts.length > 2) raw = parts[0] + '.' + parts.slice(1).join('');
+
+    line.quantityDisplay = raw;
+    const quantity = Number(raw);
+    if (Number.isFinite(quantity) && quantity > 0) {
+      line.quantity = quantity;
+    }
+    this.cdr.markForCheck();
+  }
+
+  onLineQuantityBlur(line: CartLine): void {
+    line.quantityDisplay = this.formatWithCommas(line.quantity);
+    this.cdr.markForCheck();
+  }
+
+  selectLineQuantity(event: Event): void {
+    (event.target as HTMLInputElement).select();
+  }
+
+  getQuantityInputSize(value: string): number {
+    return Math.min(Math.max(String(value || '').length, 1), 7);
   }
 
   removeFromCart(productId: string): void {

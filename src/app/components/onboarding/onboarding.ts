@@ -374,6 +374,8 @@ export class OnboardingComponent implements OnInit, OnDestroy {
   //    HTML form, matching the app's other custom modal sheets) ──
   isCreateSpaceModalOpen = false;
   isCreatingSpace = false;
+  isJoinSpaceModalOpen = false;
+  isJoiningSpace = false;
   createSpaceName = '';
   createSpaceError: string | null = null;
   createSpaceImageFile: File | null = null;
@@ -414,10 +416,38 @@ export class OnboardingComponent implements OnInit, OnDestroy {
     history.back();
   }
 
+  async openJoinSpaceModal(): Promise<void> {
+    const user = await firstValueFrom(this.authService.currentUser$);
+    if (!user) {
+      Swal.fire({
+        icon: 'error',
+        title: this.translate.instant('ERROR_TITLE'),
+        text: this.translate.instant('ONBOARDING_MUST_BE_LOGGED_IN'),
+      });
+      return;
+    }
+
+    this.inviteCode = '';
+    history.pushState(null, '');
+    this.modalStateService.modalOpened();
+    this.isJoinSpaceModalOpen = true;
+    setTimeout(() => {
+      (document.getElementById('ob-join-invite-code') as HTMLInputElement | null)?.focus();
+    }, 80);
+  }
+
+  closeJoinSpaceModal(): void {
+    if (this.isJoiningSpace || !this.isJoinSpaceModalOpen) return;
+    history.back();
+  }
+
   @HostListener('window:popstate')
   onPopState(): void {
-    if (!this.isCreateSpaceModalOpen) return;
-    this.resetCreateSpaceModalState();
+    if (this.isCreateSpaceModalOpen) {
+      this.resetCreateSpaceModalState();
+    } else if (this.isJoinSpaceModalOpen) {
+      this.resetJoinSpaceModalState();
+    }
   }
 
   // history.back() (used by closeCreateSpaceModal()) is asynchronous — its
@@ -436,8 +466,15 @@ export class OnboardingComponent implements OnInit, OnDestroy {
     this.modalStateService.modalClosed();
   }
 
+  private resetJoinSpaceModalState(): void {
+    this.isJoinSpaceModalOpen = false;
+    this.isJoiningSpace = false;
+    this.inviteCode = '';
+    this.modalStateService.modalClosed();
+  }
+
   ngOnDestroy(): void {
-    if (this.isCreateSpaceModalOpen) {
+    if (this.isCreateSpaceModalOpen || this.isJoinSpaceModalOpen) {
       this.modalStateService.modalClosed();
     }
   }
@@ -509,7 +546,7 @@ export class OnboardingComponent implements OnInit, OnDestroy {
 
   async joinGroup(): Promise<void> {
     const code = this.inviteCode.trim();
-    if (code.length !== this.inviteCodeLength) return;
+    if (this.isJoiningSpace || code.length !== this.inviteCodeLength) return;
 
     const user = await firstValueFrom(this.authService.currentUser$);
     if (!user) {
@@ -521,6 +558,7 @@ export class OnboardingComponent implements OnInit, OnDestroy {
       return;
     }
 
+    this.isJoiningSpace = true;
     try {
       const invitation = await firstValueFrom(this.invitationService.getInvitation(code));
       if (invitation && invitation.status === 'pending') {
@@ -530,6 +568,7 @@ export class OnboardingComponent implements OnInit, OnDestroy {
           title: this.translate.instant('SUCCESS_TITLE'),
           text: this.translate.instant('ONBOARDING_JOIN_GROUP_SUCCESS')
         });
+        this.resetJoinSpaceModalState();
         this.router.navigate(['/dashboard'], { replaceUrl: true });
       } else {
         // Invalid/used/expired code — this field is typed manually (unlike
@@ -549,6 +588,8 @@ export class OnboardingComponent implements OnInit, OnDestroy {
         title: this.translate.instant('ERROR_TITLE'),
         text: this.translate.instant('ONBOARDING_INVITATION_PROCESS_FAILED')
       });
+    } finally {
+      this.isJoiningSpace = false;
     }
   }
 
