@@ -162,6 +162,44 @@
   margin-bottom: 0.85rem;
 }
 
+/* Android WebView can keep a stale composited size for this sticky filter
+   after the custom range input is inserted or removed. Keep the phone layout
+   in normal flow so the period label, range trigger, and search row cannot
+   paint over one another.  Removing the local stacking context also lets the
+   fixed date-picker sheet appear above its body-level backdrop. */
+@media (max-width: 991px) {
+  .expense-container {
+    overflow-x: visible;
+  }
+
+  @supports (overflow: clip) {
+    .expense-container {
+      overflow-x: clip;
+    }
+  }
+
+  .expense-container > .exp-filter-bar {
+    position: relative;
+    top: auto;
+    z-index: auto;
+    flex-shrink: 0;
+    margin-bottom: 1rem;
+  }
+
+  .expense-container > .exp-filter-bar .exp-filter-bottom-row {
+    min-height: 1.35rem;
+  }
+
+  .expense-container > .exp-filter-bar .exp-filter-label {
+    line-height: 1.35;
+  }
+
+  .expense-container > .ov-search-row {
+    position: relative;
+    margin-top: 0;
+  }
+}
+
 .expense-container > .exp-daterange-outer {
   /* Expense's parent is a flex column with a gap, so its -1rem margin
      joins the two filter pieces. Overview's parent is not; retaining that
