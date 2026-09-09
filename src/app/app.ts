@@ -1147,12 +1147,19 @@ export class App implements OnInit, AfterViewInit {
         return;
       }
 
-      // Dashboard / Login / Onboarding မှာဆိုရင် app ထွက် — except when an
+      // Onboarding မှာ back နှိပ်လျှင် app မထွက်စေဘဲ dashboard သို့ပြန်ပါ —
+      // except when an in-page modal has its own history entry to consume.
+      if (url === '/onboarding' && !this.modalStateService.isModalOpen) {
+        this.router.navigate(['/dashboard']);
+        return;
+      }
+
+      // Dashboard / Login မှာဆိုရင် app ထွက် — except when an
       // in-page modal (e.g. onboarding's create-space sheet) has pushed its
       // own history entry; then fall through to the generic branch below so
       // the modal closes instead of exiting the whole app.
       if (
-        (url === '/dashboard' || url === '/login' || url === '/onboarding') &&
+        (url === '/dashboard' || url === '/login') &&
         !this.modalStateService.isModalOpen
       ) {
         CapacitorApp.exitApp();

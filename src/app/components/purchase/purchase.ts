@@ -26,6 +26,7 @@ import { SpaceContextService } from '../../services/space-context.service';
 import flatpickr from 'flatpickr';
 import type { Instance as FlatpickrInstance } from 'flatpickr/dist/types/instance';
 import { Burmese } from 'flatpickr/dist/l10n/my';
+import { FlatpickrMonthMenu, installFlatpickrMonthMenu } from '../../utils/flatpickr-month-menu';
 import {
   Observable,
   BehaviorSubject,
@@ -814,6 +815,7 @@ export class Purchase implements OnInit, OnDestroy {
   isDatePickerOpen = false;
   datePickerTarget: 'edit' | 'cart' | 'voucher' = 'cart';
   private datePickerFp: FlatpickrInstance | null = null;
+  private datePickerMonthMenu: FlatpickrMonthMenu | null = null;
 
   openDatePicker(target: 'edit' | 'cart' | 'voucher'): void {
     this.datePickerTarget = target;
@@ -856,6 +858,7 @@ export class Purchase implements OnInit, OnDestroy {
       maxDate: this.expenseDateMax || undefined,
       disableMobile: true,
       locale: isMy ? Burmese : undefined,
+      onReady: (_dates, _dateStr, instance) => { this.datePickerMonthMenu = installFlatpickrMonthMenu(instance as FlatpickrInstance); },
       onDayCreate: (_dates, _dateStr, _fp, dayElem) => {
         if (!isMy) return;
         dayElem.textContent = (dayElem.textContent ?? '').replace(/\d/g, (d: string) => myDigits[+d]);
@@ -872,6 +875,8 @@ export class Purchase implements OnInit, OnDestroy {
   }
 
   private destroyDatePickerFlatpickr(): void {
+    this.datePickerMonthMenu?.destroy();
+    this.datePickerMonthMenu = null;
     if (this.datePickerFp) {
       this.datePickerFp.destroy();
       this.datePickerFp = null;

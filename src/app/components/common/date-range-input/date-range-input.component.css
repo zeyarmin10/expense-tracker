@@ -220,6 +220,15 @@
   transition: transform 0.2s cubic-bezier(0.4, 0, 1, 1), opacity 0.16s ease-in;
 }
 
+/* Use the available phone width instead of a fixed card width. The
+   flatpickr grid is expanded in global styles (it is created dynamically),
+   so both the sheet and calendar stay proportionate on wider Android phones. */
+@media (max-width: 767px) {
+  .dri-sheet {
+    width: min(480px, calc(100vw - 24px));
+  }
+}
+
 .dri-handle { display: none; }
 
 .dri-sheet-header {

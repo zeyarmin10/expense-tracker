@@ -904,9 +904,27 @@ body.light-mode .ov-bar-fill {
   align-items: center;
 }
 
+/* The range-picker sheet can be wider than flatpickr's stock 307px
+   calendar on real Android devices. Let the inline calendar and its grid
+   fill that sheet so it does not look like a narrow card floating in an
+   otherwise empty dialog. Scoped to the mobile date-range sheet: standalone
+   date inputs and desktop floating panels keep their compact dimensions. */
+@media (max-width: 767px) {
+  .dri-sheet .fp-container {
+    align-items: stretch;
+    padding-inline: 0.65rem;
+  }
+
+  .dri-sheet .flatpickr-calendar.inline {
+    width: 100% !important;
+    max-width: none !important;
+  }
+}
+
 .flatpickr-months {
   display: flex !important;
   position: relative !important;
+  min-height: 42px;
   padding: 0.25rem 0;
   width: 100%;
 }
@@ -942,6 +960,13 @@ body.light-mode .ov-bar-fill {
 }
 
 .flatpickr-current-month {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  z-index: 40;
+  gap: 0.3rem;
+  height: 34px !important;
+  padding: 0 !important;
   color: var(--text) !important;
   font-size: 0.95rem !important;
   font-weight: 600 !important;
@@ -962,14 +987,244 @@ body.light-mode .ov-bar-fill {
 }
 
 .flatpickr-current-month .flatpickr-monthDropdown-months {
-  background: var(--surface) !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  min-width: 6.4rem;
+  height: 32px !important;
+  margin: 0 !important;
+  padding: 0 1.8rem 0 0.7rem !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 9px !important;
+  background-color: var(--surface-2) !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23708098' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") !important;
+  background-position: right 0.6rem center !important;
+  background-repeat: no-repeat !important;
   color: var(--text) !important;
   font-family: inherit !important;
+  font-size: 0.84rem !important;
+  font-weight: 600 !important;
+  line-height: 30px !important;
+  text-align: center;
+  text-align-last: center;
+  transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s;
 }
 
 .flatpickr-current-month input.cur-year {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  height: 30px !important;
+  margin: 0 !important;
+  padding: 0 1.15rem 0 0.45rem !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  background: transparent !important;
   color: var(--text) !important;
   font-family: inherit !important;
+  font-size: 0.9rem !important;
+  font-weight: 700 !important;
+  line-height: 30px !important;
+  text-align: center !important;
+  caret-color: var(--accent) !important;
+}
+
+.flatpickr-current-month .numInputWrapper {
+  width: 5.6rem !important;
+  height: 32px !important;
+  margin-left: 0.35rem;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--surface-2);
+  transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s;
+}
+
+.flatpickr-current-month .numInputWrapper:focus-within,
+.flatpickr-current-month .flatpickr-monthDropdown-months:focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px var(--accent-dim) !important;
+}
+
+/* Replace the browser-looking year spinner with compact, tappable controls.
+   The Myanmar-year overlay is excluded so it continues to render localized
+   digits above the numeric value. */
+.flatpickr-current-month .numInputWrapper > span:not(.fp-my-year) {
+  right: 0 !important;
+  width: 18px !important;
+  height: 50% !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-left: 1px solid var(--border) !important;
+  background: var(--surface) !important;
+  opacity: 1 !important;
+}
+
+.flatpickr-current-month .numInputWrapper > span.arrowUp {
+  top: 0 !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+.flatpickr-current-month .numInputWrapper > span:not(.fp-my-year):hover {
+  background: var(--accent-dim) !important;
+}
+
+.flatpickr-current-month .numInputWrapper > span.arrowUp::after {
+  top: 5px !important;
+  border-bottom-color: var(--text-muted) !important;
+}
+
+.flatpickr-current-month .numInputWrapper > span.arrowDown::after {
+  top: 4px !important;
+  border-top-color: var(--text-muted) !important;
+}
+
+.flatpickr-current-month .fp-my-year {
+  position: absolute !important;
+  top: 0 !important;
+  right: 18px !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: auto !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border-radius: 8px 0 0 8px;
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 0.9rem !important;
+  font-weight: 700 !important;
+  line-height: 30px !important;
+  pointer-events: none !important;
+}
+
+.flatpickr-current-month .flatpickr-monthDropdown-months:hover,
+.flatpickr-current-month .numInputWrapper:hover {
+  border-color: var(--accent);
+}
+
+/* Floating month chooser. It replaces the browser-owned <select> popup so
+   the months stay inside the calendar on Android and look the same in every
+   app theme. */
+.fp-month-trigger {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 6.4rem;
+  height: 32px;
+  padding: 0 1.8rem 0 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.fp-month-trigger::after {
+  content: '';
+  position: absolute;
+  right: 0.65rem;
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid var(--text-muted);
+  border-bottom: 2px solid var(--text-muted);
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform 0.15s;
+}
+
+.fp-month-trigger[aria-expanded='true'] {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+.fp-month-trigger[aria-expanded='true']::after {
+  transform: translateY(2px) rotate(225deg);
+}
+
+.fp-month-menu {
+  position: fixed;
+  z-index: 10050;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.4rem;
+  width: min(17rem, calc(100vw - 2rem));
+  padding: 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  transform: translate(-50%, -5px) scale(0.97);
+  pointer-events: none;
+  transition: opacity 0.15s, transform 0.15s;
+}
+
+.fp-month-menu-open {
+  visibility: visible;
+  opacity: 1;
+  transform: translate(-50%, 0) scale(1);
+  pointer-events: auto;
+}
+
+.fp-month-menu-above {
+  transform: translate(-50%, calc(-100% + 5px)) scale(0.97);
+}
+
+.fp-month-menu-above.fp-month-menu-open {
+  transform: translate(-50%, -100%) scale(1);
+}
+
+/* Inline calendars are normally compact, but the custom month menu must be
+   allowed to overlap the weekday/date grid while it is open. */
+.flatpickr-calendar.inline,
+.flatpickr-months {
+  overflow: visible !important;
+}
+
+.fp-month-option {
+  min-height: 36px;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.fp-month-option:hover,
+.fp-month-option-active {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+
+/* Full-screen add/edit overlays have more horizontal room than the compact
+   filter picker. Let their inline calendar size itself from its container
+   (rather than flatpickr's fixed 307px default) and keep it readable on both
+   narrow phones and tablets. */
+:is(.exp-date-picker-body, .pnl-date-picker-body, .bgt-date-picker-body) > div {
+  width: min(100%, 620px);
+  margin-inline: auto;
+}
+
+:is(.exp-date-picker-body, .pnl-date-picker-body, .bgt-date-picker-body) .flatpickr-calendar.inline {
+  width: 100% !important;
+  max-width: none !important;
+}
+
+:is(.exp-date-picker-body, .pnl-date-picker-body, .bgt-date-picker-body) .flatpickr-day {
+  max-width: none !important;
+  height: clamp(39px, 10vw, 52px) !important;
+  line-height: clamp(39px, 10vw, 52px) !important;
 }
 
 .flatpickr-weekdays {

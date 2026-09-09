@@ -993,5 +993,6 @@
   "SHOP_ADDRESS_LABEL": "ที่อยู่ร้านค้า",
   "SHOP_PHONE_LABEL": "เบอร์โทรศัพท์",
   "SHOP_INFO_SAVED": "บันทึกข้อมูลร้านค้าแล้ว!",
-  "SALE_PRICE_BELOW_COST_WARNING": "ราคาขายต่ำกว่าต้นทุนซื้อเฉลี่ย ({{cost}})"
+  "SALE_PRICE_BELOW_COST_WARNING": "ราคาขายต่ำกว่าต้นทุนซื้อเฉลี่ย ({{cost}})",
+  "EXPENSE_DATE_MONTH_ADJUSTED": "ไม่สามารถเลือกเดือนนี้ได้ จึงเลือกเดือนที่ใกล้ที่สุดที่ใช้งานได้แล้ว"
 }

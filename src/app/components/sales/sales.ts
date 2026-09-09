@@ -68,6 +68,7 @@ import { ShowFullTextDirective } from '../../directives/show-full-text.directive
 import flatpickr from 'flatpickr';
 import type { Instance as FlatpickrInstance } from 'flatpickr/dist/types/instance';
 import { Burmese } from 'flatpickr/dist/l10n/my';
+import { FlatpickrMonthMenu, installFlatpickrMonthMenu } from '../../utils/flatpickr-month-menu';
 
 const Toast = Swal.mixin({
   toast: true,
@@ -229,6 +230,7 @@ export class Sales implements OnInit, OnDestroy {
     this.resetForm();
   }
   private datePickerFp: FlatpickrInstance | null = null;
+  private datePickerMonthMenu: FlatpickrMonthMenu | null = null;
   get canManageProfitActions(): boolean {
     if (!this.userProfile) return false;
     if (this.userProfile.accountType === 'personal') return true;
@@ -1524,6 +1526,7 @@ export class Sales implements OnInit, OnDestroy {
       defaultDate: currentValue || undefined,
       disableMobile: true,
       locale: isMy ? Burmese : undefined,
+      onReady: (_dates, _dateStr, instance) => { this.datePickerMonthMenu = installFlatpickrMonthMenu(instance as FlatpickrInstance); },
       onDayCreate: (_dates, _dateStr, _fp, dayElem) => {
         if (!isMy) return;
         dayElem.textContent = (dayElem.textContent ?? '').replace(/\d/g, (d: string) => myDigits[+d]);
@@ -1540,6 +1543,8 @@ export class Sales implements OnInit, OnDestroy {
   }
 
   private destroyDatePickerFlatpickr(): void {
+    this.datePickerMonthMenu?.destroy();
+    this.datePickerMonthMenu = null;
     if (this.datePickerFp) {
       this.datePickerFp.destroy();
       this.datePickerFp = null;

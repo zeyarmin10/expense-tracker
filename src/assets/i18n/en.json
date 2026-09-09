@@ -995,5 +995,6 @@
   "SHOP_ADDRESS_LABEL": "Shop Address",
   "SHOP_PHONE_LABEL": "Phone",
   "SHOP_INFO_SAVED": "Shop info saved!",
-  "SALE_PRICE_BELOW_COST_WARNING": "Selling price is below the average purchase cost ({{cost}})."
+  "SALE_PRICE_BELOW_COST_WARNING": "Selling price is below the average purchase cost ({{cost}}).",
+  "EXPENSE_DATE_MONTH_ADJUSTED": "That month is unavailable. The nearest available month was selected."
 }

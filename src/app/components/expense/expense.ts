@@ -23,6 +23,7 @@ import { ServiceICategory, CategoryService } from '../../services/category';
 import flatpickr from 'flatpickr';
 import type { Instance as FlatpickrInstance } from 'flatpickr/dist/types/instance';
 import { Burmese } from 'flatpickr/dist/l10n/my';
+import { FlatpickrMonthMenu, installFlatpickrMonthMenu } from '../../utils/flatpickr-month-menu';
 import {
   Observable,
   BehaviorSubject,
@@ -160,6 +161,7 @@ export class Expense implements OnInit, OnDestroy {
   isDesktopView = typeof window !== 'undefined' ? window.innerWidth >= DESKTOP_BREAKPOINT : false;
   isSaving = false;
   isAddModalOpen = false;
+  private addModalHistoryActive = false;
   addModalTab: 'expense' | 'voucher' = 'expense';
   // Non-null while the add modal is editing an existing record instead.
   editingExpense: IExpense | null = null;
@@ -174,7 +176,9 @@ export class Expense implements OnInit, OnDestroy {
 
   // ── Date picker bounds for expense / voucher forms ──
   readonly expenseDateMax: string = (() => {
-    const t = new Date(); return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
+    const t = new Date();
+    t.setFullYear(t.getFullYear() + 3);
+    return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
   })();
   readonly expenseDateMin: string = (() => {
     const t = new Date(); t.setFullYear(t.getFullYear() - 2);
@@ -359,6 +363,7 @@ export class Expense implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    if (this.datePickerAdjustmentNoticeTimer) clearTimeout(this.datePickerAdjustmentNoticeTimer);
     this.destroy$.next();
     this.destroy$.complete();
     this.clearAllVoucherFiles();
@@ -369,12 +374,16 @@ export class Expense implements OnInit, OnDestroy {
   openAddModal(tab: 'expense' | 'voucher' = 'expense'): void {
     this.addModalTab = tab;
     this.isAddModalOpen = true;
+    this.addModalHistoryActive = true;
+    history.pushState(null, '');
     this.isCategoryPickerOpen = false;
     this.closeDatePicker();
     document.body.classList.add('exp-add-modal-open');
   }
 
   closeAddModal(): void {
+    const shouldPopHistory = this.addModalHistoryActive;
+    this.addModalHistoryActive = false;
     this.isAddModalOpen = false;
     this.isCategoryPickerOpen = false;
     this.closeDatePicker();
@@ -384,6 +393,21 @@ export class Expense implements OnInit, OnDestroy {
     // state never carry over into the next time the modal opens.
     this.editingExpense = null;
     this.resetNewExpenseForm();
+    if (shouldPopHistory) history.back();
+  }
+
+  @HostListener('window:popstate')
+  onPopState(): void {
+    if (this.isDatePickerOpen) {
+      this.closeDatePicker();
+      history.pushState(null, '');
+    } else if (this.isCategoryPickerOpen) {
+      this.closeCategoryPicker();
+      history.pushState(null, '');
+    } else if (this.isAddModalOpen) {
+      this.addModalHistoryActive = false;
+      this.closeAddModal();
+    }
   }
 
   private resetNewExpenseForm(): void {
@@ -440,8 +464,11 @@ export class Expense implements OnInit, OnDestroy {
   // global flatpickr theme in styles.css) with no separate backdrop/sheet
   // and no history manipulation of its own.
   isDatePickerOpen = false;
+  datePickerAdjustmentNotice = false;
+  private datePickerAdjustmentNoticeTimer: number | null = null;
   datePickerTarget: 'expense' | 'voucher' = 'expense';
   private datePickerFp: FlatpickrInstance | null = null;
+  private datePickerMonthMenu: FlatpickrMonthMenu | null = null;
 
   openDatePicker(target: 'expense' | 'voucher'): void {
     this.datePickerTarget = target;
@@ -478,6 +505,12 @@ export class Expense implements OnInit, OnDestroy {
       maxDate: this.expenseDateMax || undefined,
       disableMobile: true,
       locale: isMy ? Burmese : undefined,
+      onReady: (_dates, _dateStr, instance) => {
+        this.datePickerMonthMenu = installFlatpickrMonthMenu(instance as FlatpickrInstance, {
+          showAllMonths: true,
+          onMonthAdjusted: () => this.showDatePickerAdjustmentNotice(),
+        });
+      },
       onDayCreate: (_dates, _dateStr, _fp, dayElem) => {
         if (!isMy) return;
         dayElem.textContent = (dayElem.textContent ?? '').replace(/\d/g, (d: string) => myDigits[+d]);
@@ -499,10 +532,22 @@ export class Expense implements OnInit, OnDestroy {
   }
 
   private destroyDatePickerFlatpickr(): void {
+    this.datePickerMonthMenu?.destroy();
+    this.datePickerMonthMenu = null;
     if (this.datePickerFp) {
       this.datePickerFp.destroy();
       this.datePickerFp = null;
     }
+  }
+
+  private showDatePickerAdjustmentNotice(): void {
+    if (this.datePickerAdjustmentNoticeTimer) clearTimeout(this.datePickerAdjustmentNoticeTimer);
+    this.datePickerAdjustmentNotice = true;
+    this.cdr.markForCheck();
+    this.datePickerAdjustmentNoticeTimer = window.setTimeout(() => {
+      this.datePickerAdjustmentNotice = false;
+      this.cdr.markForCheck();
+    }, 3000);
   }
 
   toggleQuickMode(): void {
