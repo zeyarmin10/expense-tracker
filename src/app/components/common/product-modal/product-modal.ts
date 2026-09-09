@@ -8,6 +8,7 @@ import { LucideAngularModule, X, Plus, Package, Trash2, ScanLine, Eye } from 'lu
 import { meaningfulTextValidator } from '../../../utils/form-validators';
 import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import Swal from 'sweetalert2';
+import { FormatService } from '../../../services/format.service';
 
 const Toast = Swal.mixin({
   toast: true,
@@ -42,6 +43,7 @@ export class ProductModalComponent implements OnInit, OnDestroy {
   translateService = inject(TranslateService);
   private cdr = inject(ChangeDetectorRef);
   private barcodeScanner = inject(BarcodeScannerService);
+  public formatService = inject(FormatService);
 
   products: ServiceIProduct[] = [];
   isModalOpen = false;

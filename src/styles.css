@@ -1196,6 +1196,14 @@ body.dri-scroll-locked {
   overscroll-behavior: none;
 }
 
+/* The date-range sheet stays in its component tree while its mobile
+   backdrop is appended to <body>. Filter bars are sticky and therefore make
+   their own stacking context; temporarily lifting the active bar prevents
+   the body-level backdrop from covering the sheet in Android WebView. */
+body.dri-scroll-locked .exp-filter-bar {
+  z-index: 9010 !important;
+}
+
 @keyframes dri-body-fade-in {
   from { opacity: 0; }
   to   { opacity: 1; }

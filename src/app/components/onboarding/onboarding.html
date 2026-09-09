@@ -198,7 +198,7 @@
         <span class="ob-modal-error" *ngIf="createSpaceError">{{ createSpaceError }}</span>
         <span class="ob-modal-count"
           [class.ob-modal-count-limit]="createSpaceName.length >= maxSpaceNameLength">
-          {{ createSpaceName.length }} / {{ maxSpaceNameLength }}
+          {{ formatService.formatCount(createSpaceName.length) }} / {{ formatService.formatCount(maxSpaceNameLength) }}
         </span>
       </div>
 
@@ -249,8 +249,8 @@
         autocomplete="one-time-code" autocapitalize="characters" spellcheck="false"
         (keyup.enter)="joinGroup()" />
       <div class="ob-modal-meta-row ob-join-modal-meta">
-        <span>{{ 'INVITE_CODE_LENGTH_HINT' | translate:{ length: inviteCodeLength } }}</span>
-        <span>{{ inviteCode.trim().length }} / {{ inviteCodeLength }}</span>
+        <span>{{ 'INVITE_CODE_LENGTH_HINT' | translate:{ length: formatService.formatCount(inviteCodeLength) } }}</span>
+        <span>{{ formatService.formatCount(inviteCode.trim().length) }} / {{ formatService.formatCount(inviteCodeLength) }}</span>
       </div>
       <div class="ob-modal-actions">
         <button type="button" class="ob-btn ob-btn-outline" (click)="closeJoinSpaceModal()" [disabled]="isJoiningSpace">

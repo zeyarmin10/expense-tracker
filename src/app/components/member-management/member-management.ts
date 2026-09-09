@@ -16,6 +16,7 @@ import { Router } from '@angular/router';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
 import { UserAvatarComponent } from '../common/user-avatar/user-avatar.component';
 import { LightboxComponent } from '../common/lightbox/lightbox.component';
+import { FormatService } from '../../services/format.service';
 
 const Toast = Swal.mixin({
   toast: true,
@@ -45,6 +46,7 @@ export class MemberManagementComponent implements OnInit {
   private invitationService = inject(InvitationService);
   private translate = inject(TranslateService);
   private router = inject(Router);
+  public formatService = inject(FormatService);
 
   readonly iconUsers = Users;
   readonly iconUserPlus = UserPlus;

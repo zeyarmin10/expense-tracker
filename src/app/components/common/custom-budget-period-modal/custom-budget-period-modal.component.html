@@ -32,7 +32,7 @@
               {{ 'BUDGET_PERIOD_NAME_MAX_LENGTH_ERROR' | translate }}
             </span>
             <span class="cbp-char-count" [class.cbp-char-at-limit]="(budgetPeriodForm.get('name')?.value?.length ?? 0) >= 50">
-              {{ budgetPeriodForm.get('name')?.value?.length ?? 0 }} / 50
+              {{ formatService.formatCount(budgetPeriodForm.get('name')?.value?.length ?? 0) }} / {{ formatService.formatCount(50) }}
             </span>
           </div>
 

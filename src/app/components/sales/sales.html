@@ -72,9 +72,13 @@
                 </div>
                 <input type="text" inputmode="decimal" class="pnl-pos-unit-price-input"
                   [class.pnl-pos-unit-price-input-error]="cartPriceError && (!line.unitPrice || line.unitPrice <= 0)"
+                  [class.pnl-pos-unit-price-input-warning]="isSalePriceBelowPurchaseCost(line.productId, line.unitPrice)"
                   [value]="line.unitPriceDisplay" (input)="onLineUnitPriceInput(line, $event)" />
                 <span class="pnl-pos-line-subtotal"
                   [innerHTML]="formatService.formatAmountShortHtml(line.quantity * line.unitPrice, userProfile?.currency || 'MMK')"></span>
+              </div>
+              <div class="pnl-pos-price-warning" *ngIf="isSalePriceBelowPurchaseCost(line.productId, line.unitPrice)">
+                {{ 'SALE_PRICE_BELOW_COST_WARNING' | translate: { cost: formatPurchaseCost(line.productId) } }}
               </div>
             </li>
           </ul>
@@ -534,6 +538,11 @@
               {{ 'INCOME_UNIT_PRICE_REQUIRED' | translate }}
             </div>
           </div>
+        </div>
+
+        <div class="pnl-pos-price-warning pnl-form-price-warning"
+          *ngIf="isSalePriceBelowPurchaseCost(incomeForm.get('productId')?.value, incomeForm.get('unitPrice')?.value)">
+          {{ 'SALE_PRICE_BELOW_COST_WARNING' | translate: { cost: formatPurchaseCost(incomeForm.get('productId')?.value) } }}
         </div>
 
         <div class="pnl-total-hint" *ngIf="incomeForm.get('amount')?.value">

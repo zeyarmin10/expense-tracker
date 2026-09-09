@@ -135,7 +135,7 @@
               <lucide-icon [img]="iconList" [size]="15"></lucide-icon>
               {{ "RECORDED_SALES" | translate }}
             </h5>
-            <span class="table-count">{{ 'EXPENSE_GROUP_COUNT' | translate: { count: incomes.length } }}</span>
+            <span class="table-count">{{ 'EXPENSE_GROUP_COUNT' | translate: { count: formatService.formatCount(incomes.length) } }}</span>
           </div>
           <div class="table-responsive">
             <table class="sales-table">

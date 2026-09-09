@@ -301,6 +301,17 @@
   background: var(--surface-2);
 }
 
+/* Make the signed-in member easy to identify without changing the row's
+   layout or obscuring the owner/admin role badges. */
+.mm-item.mm-item-current {
+  background: var(--accent-dim);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.mm-item.mm-item-current:hover {
+  background: color-mix(in srgb, var(--accent-dim) 82%, var(--surface-2));
+}
+
 .mm-item-left {
   display: flex;
   align-items: center;

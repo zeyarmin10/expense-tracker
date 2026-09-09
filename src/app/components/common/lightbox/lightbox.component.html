@@ -9,7 +9,7 @@
   <!-- Top bar -->
   <div class="lb-topbar">
     <span class="lb-counter" *ngIf="images.length > 1">
-      {{ idx + 1 }}<span class="lb-counter-sep">/</span>{{ images.length }}
+      {{ formatService.formatCount(idx + 1) }}<span class="lb-counter-sep">/</span>{{ formatService.formatCount(images.length) }}
     </span>
     <span *ngIf="images.length <= 1"></span>
 

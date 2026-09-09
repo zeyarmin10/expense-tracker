@@ -994,5 +994,6 @@
   "SHOP_NAME_REQUIRED": "សូមបំពេញឈ្មោះហាង។",
   "SHOP_ADDRESS_LABEL": "អាសយដ្ឋានហាង",
   "SHOP_PHONE_LABEL": "លេខទូរស័ព្ទ",
-  "SHOP_INFO_SAVED": "បានរក្សាទុកព័ត៌មានហាង!"
+  "SHOP_INFO_SAVED": "បានរក្សាទុកព័ត៌មានហាង!",
+  "SALE_PRICE_BELOW_COST_WARNING": "តម្លៃលក់ទាបជាងតម្លៃទិញមធ្យម ({{cost}})។"
 }

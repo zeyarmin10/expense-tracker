@@ -994,5 +994,6 @@
   "SHOP_NAME_REQUIRED": "ဆိုင်အမည် ဖြည့်ရန်လိုအပ်ပါသည်။",
   "SHOP_ADDRESS_LABEL": "ဆိုင်လိပ်စာ",
   "SHOP_PHONE_LABEL": "ဖုန်းနံပါတ်",
-  "SHOP_INFO_SAVED": "ဆိုင်အချက်အလက် သိမ်းဆည်းပြီးပါပြီ။"
+  "SHOP_INFO_SAVED": "ဆိုင်အချက်အလက် သိမ်းဆည်းပြီးပါပြီ။",
+  "SALE_PRICE_BELOW_COST_WARNING": "ရောင်းဈေးသည် ပျမ်းမျှဝယ်ဈေး ({{cost}}) ထက်နည်းနေပါသည်။"
 }

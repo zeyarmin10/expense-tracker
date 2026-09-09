@@ -11,6 +11,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { NgZone } from '@angular/core';
 import { TranslateModule } from '@ngx-translate/core';
+import { FormatService } from '../../../services/format.service';
 
 @Component({
   selector: 'app-lightbox',
@@ -22,6 +23,7 @@ import { TranslateModule } from '@ngx-translate/core';
 export class LightboxComponent implements AfterViewInit, OnDestroy {
   private ngZone = inject(NgZone);
   private cdr = inject(ChangeDetectorRef);
+  public formatService = inject(FormatService);
 
   images: string[] = [];
   idx = 0;

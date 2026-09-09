@@ -244,6 +244,19 @@ export class Purchase implements OnInit, OnDestroy {
 
   @HostListener('window:popstate')
   onPopState(): void {
+    // The picker sheets are a child layer of the cart/edit overlay. Back
+    // must close that child first while keeping a history entry for the
+    // parent, otherwise Android closes the parent and leaves its sheet on
+    // screen.
+    if (this.isDatePickerOpen || this.isCategoryPickerOpen || this.isProductPickerOpen) {
+      this.closeDatePicker();
+      this.closeCategoryPicker();
+      this.closeProductPicker();
+      if (this.isAddModalOpen || this.showAddCartOverlay) {
+        history.pushState(null, '');
+      }
+      return;
+    }
     if (this.isAddModalOpen) {
       this.reallyCloseAddModal();
       return;

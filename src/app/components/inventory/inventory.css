@@ -612,6 +612,8 @@ body:not(.light-mode) .inv-product-item-hidden .inv-product-hidden-badge {
    squeezed alongside the Unit/Price inputs. */
 .inv-edit-actions {
   justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.15rem;
 }
 
 /* ── Three-dot row actions menu — same trigger/dropdown pattern as
@@ -766,15 +768,17 @@ body:not(.light-mode) .inv-product-item-hidden .inv-product-hidden-badge {
   gap: 0.3rem;
   align-items: center;
   justify-content: center;
-  width: fit-content;
-  height: 38px;
+  min-height: 40px;
+  padding: 0.45rem 0.9rem;
   border-radius: 8px;
-  border: 1px solid transparent;
-  background: transparent;
-  color: var(--text-muted);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-sub, var(--text-muted));
   cursor: pointer;
   transition: all 0.15s;
   font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .inv-action-btn:hover {
@@ -793,9 +797,27 @@ body:not(.light-mode) .inv-product-item-hidden .inv-product-hidden-badge {
 }
 
 .inv-action-save {
-  border-color: rgba(11, 116, 255, 0.25);
-  background: rgba(11, 116, 255, 0.08);
-  color: var(--accent, #0b74ff);
+  border-color: var(--accent, #0b74ff);
+  background: var(--accent, #0b74ff);
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(11, 116, 255, 0.22);
+}
+
+.inv-action-save:hover:not(:disabled) {
+  opacity: 0.88;
+}
+
+.inv-action-save:disabled {
+  background: var(--surface-2);
+  border-color: var(--border);
+  color: var(--text-muted);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.inv-edit-cancel:hover {
+  background: var(--surface);
+  color: var(--text);
 }
 
 .inv-total-profit-banner {

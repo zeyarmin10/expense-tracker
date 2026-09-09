@@ -62,6 +62,10 @@ export class DateRangeInputComponent implements OnChanges, OnDestroy {
   @Output() isOpenChange = new EventEmitter<boolean>();
 
   isOpen = false;
+  // Keep the complete sheet mounted during its exit transition.  Previously
+  // flatpickr was destroyed as soon as `isOpen` became false, which removed
+  // the calendar first and left only the sheet header visible briefly.
+  isClosing = false;
   isMobile = typeof window !== 'undefined' ? window.innerWidth < MOBILE_BP : true;
 
   private _backdropEl: HTMLDivElement | null = null;
@@ -112,6 +116,18 @@ export class DateRangeInputComponent implements OnChanges, OnDestroy {
   get hasValue(): boolean { return !!(this.startDate || this.endDate); }
 
   open(): void {
+    if (this.isOpen) return;
+    // A quick re-tap while the exit animation is still running starts a
+    // fresh picker instance/backdrop instead of reviving the fading one.
+    if (this.isClosing) {
+      this.destroyFlatpickr();
+      this._removeBodyBackdrop();
+    }
+    if (this._closeTimer) {
+      clearTimeout(this._closeTimer);
+      this._closeTimer = null;
+    }
+    this.isClosing = false;
     this.rangeError = '';
     this.pendingStart = null;
     if (!this.isMobile) {
@@ -129,12 +145,14 @@ export class DateRangeInputComponent implements OnChanges, OnDestroy {
     if (!this.isOpen) return;
     const insideModal = this._insideModal();
     this.isOpen = false;
-    this.pendingStart = null;
-    this.rangeError = '';
-    this.destroyFlatpickr();
+    this.isClosing = true;
     this._animateBackdropOut();
     if (this._closeTimer) clearTimeout(this._closeTimer);
     this._closeTimer = window.setTimeout(() => {
+      this.isClosing = false;
+      this.pendingStart = null;
+      this.rangeError = '';
+      this.destroyFlatpickr();
       this._removeBodyBackdrop();
       if (this.isMobile && !insideModal) {
         history.back();
@@ -308,6 +326,7 @@ export class DateRangeInputComponent implements OnChanges, OnDestroy {
       this._removeBodyBackdrop();
       this.destroyFlatpickr();
       this.isOpen = false;
+      this.isClosing = false;
       this.isOpenChange.emit(false);
       if (this.isMobile) history.back();
     }
@@ -318,12 +337,17 @@ export class DateRangeInputComponent implements OnChanges, OnDestroy {
   onPopState(): void {
     if (this.isOpen && this.isMobile) {
       this.isOpen = false;
-      this.pendingStart = null;
-      this.rangeError = '';
-      this.destroyFlatpickr();
+      this.isClosing = true;
       this.isOpenChange.emit(false);
       this._animateBackdropOut();
-      setTimeout(() => this._removeBodyBackdrop(), 220);
+      if (this._closeTimer) clearTimeout(this._closeTimer);
+      this._closeTimer = window.setTimeout(() => {
+        this.isClosing = false;
+        this.pendingStart = null;
+        this.rangeError = '';
+        this.destroyFlatpickr();
+        this._removeBodyBackdrop();
+      }, 220);
     }
   }
 

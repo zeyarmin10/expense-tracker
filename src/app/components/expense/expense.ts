@@ -1066,9 +1066,7 @@ export class Expense implements OnInit, OnDestroy {
   }
 
   formatCount(n: number): string {
-    if (this.translate.currentLang !== 'my') return String(n);
-    const mm = ['၀','၁','၂','၃','၄','၅','၆','၇','၈','၉'];
-    return String(n).replace(/\d/g, d => mm[+d]);
+    return this.formatService.formatCount(n);
   }
 
   // ── Swal-based Edit ────────────────────────────────────────────────────────
