@@ -52,7 +52,7 @@
               {{ 'CATEGORY_NAME_MAX_LENGTH_ERROR' | translate }}
             </span>
             <span class="cat-char-count" [class.cat-char-at-limit]="(categoryForm.get('name')?.value?.length ?? 0) >= 50">
-              {{ categoryForm.get('name')?.value?.length ?? 0 }} / 50
+              {{ formatService.formatCount(categoryForm.get('name')?.value?.length ?? 0) }} / {{ formatService.formatCount(50) }}
             </span>
           </div>
           <div class="cat-modal-error" *ngIf="categoryForm.controls['name'].touched && categoryForm.controls['name'].errors?.['required']">
@@ -84,7 +84,7 @@
         <div class="cat-list-wrap">
           <div class="cat-list-header">
             <span class="cat-list-title">{{ 'EXISTING_CATEGORIES' | translate }}</span>
-            <span class="cat-list-count">{{ categories.length }}</span>
+            <span class="cat-list-count">{{ formatService.formatCount(categories.length) }}</span>
           </div>
 
           <div class="cat-list-empty" *ngIf="categories.length === 0">

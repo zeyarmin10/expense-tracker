@@ -68,6 +68,7 @@ import { ShowFullTextDirective } from '../../directives/show-full-text.directive
 import flatpickr from 'flatpickr';
 import type { Instance as FlatpickrInstance } from 'flatpickr/dist/types/instance';
 import { Burmese } from 'flatpickr/dist/l10n/my';
+import { FlatpickrMonthMenu, installFlatpickrMonthMenu } from '../../utils/flatpickr-month-menu';
 
 const Toast = Swal.mixin({
   toast: true,
@@ -229,6 +230,7 @@ export class Sales implements OnInit, OnDestroy {
     this.resetForm();
   }
   private datePickerFp: FlatpickrInstance | null = null;
+  private datePickerMonthMenu: FlatpickrMonthMenu | null = null;
   get canManageProfitActions(): boolean {
     if (!this.userProfile) return false;
     if (this.userProfile.accountType === 'personal') return true;
@@ -405,6 +407,19 @@ export class Sales implements OnInit, OnDestroy {
 
   @HostListener('window:popstate')
   onPopState(): void {
+    // The cart/editor's date and product panels are a drill-down layer on
+    // top of the full-screen overlay. They do not own a separate history
+    // entry, so preserve the parent overlay's entry after consuming Back.
+    // This makes Android Back dismiss the sheet first, then the overlay on
+    // the following press.
+    if (this.isDatePickerOpen || this.isProductPickerOpen) {
+      this.closeDatePicker();
+      this.closeProductPicker();
+      if (this.isAddModalOpen || this.showAddCartOverlay) {
+        history.pushState(null, '');
+      }
+      return;
+    }
     if (this.showReceipt) {
       this.reallyCloseReceipt();
       return;
@@ -697,6 +712,24 @@ export class Sales implements OnInit, OnDestroy {
 
   getProductStock(productId: string): number | null {
     return this.stockByProductId.get(productId)?.currentStock ?? null;
+  }
+
+  getAveragePurchaseCost(productId: string | null | undefined): number | null {
+    if (!productId) return null;
+    return this.stockByProductId.get(productId)?.avgCost ?? null;
+  }
+
+  isSalePriceBelowPurchaseCost(productId: string | null | undefined, unitPrice: number | null | undefined): boolean {
+    const averageCost = this.getAveragePurchaseCost(productId);
+    return averageCost !== null && averageCost > 0 && Number(unitPrice) > 0 && Number(unitPrice) < averageCost;
+  }
+
+  formatPurchaseCost(productId: string | null | undefined): string {
+    const averageCost = this.getAveragePurchaseCost(productId);
+    return averageCost === null ? '' : this.formatService.formatAmountWithSymbol(
+      averageCost,
+      this.userProfile?.currency || 'MMK',
+    );
   }
 
   private getInsufficientStockLines(): { productName: string; available: number; requested: number }[] {
@@ -1493,6 +1526,7 @@ export class Sales implements OnInit, OnDestroy {
       defaultDate: currentValue || undefined,
       disableMobile: true,
       locale: isMy ? Burmese : undefined,
+      onReady: (_dates, _dateStr, instance) => { this.datePickerMonthMenu = installFlatpickrMonthMenu(instance as FlatpickrInstance); },
       onDayCreate: (_dates, _dateStr, _fp, dayElem) => {
         if (!isMy) return;
         dayElem.textContent = (dayElem.textContent ?? '').replace(/\d/g, (d: string) => myDigits[+d]);
@@ -1509,6 +1543,8 @@ export class Sales implements OnInit, OnDestroy {
   }
 
   private destroyDatePickerFlatpickr(): void {
+    this.datePickerMonthMenu?.destroy();
+    this.datePickerMonthMenu = null;
     if (this.datePickerFp) {
       this.datePickerFp.destroy();
       this.datePickerFp = null;

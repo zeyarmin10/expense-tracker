@@ -253,7 +253,7 @@
 
           <!-- Counter + clear -->
           <div class="exp-image-info-row" *ngIf="selectedVoucherFiles.length > 0">
-            <span class="exp-image-counter">{{ selectedVoucherFiles.length }} / {{ MAX_VOUCHER_IMAGES }}</span>
+            <span class="exp-image-counter">{{ formatCount(selectedVoucherFiles.length) }} / {{ formatCount(MAX_VOUCHER_IMAGES) }}</span>
             <button
               type="button"
               class="exp-btn exp-btn-sm exp-btn-ghost"

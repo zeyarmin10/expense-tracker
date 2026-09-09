@@ -16,6 +16,7 @@ import { ModalStateService } from '../../services/modal-state.service';
 import Swal from 'sweetalert2';
 import { LucideAngularModule, CircleCheck, Link, EllipsisVertical, Pencil, Trash2, User, Users, X } from 'lucide-angular';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
+import { FormatService } from '../../services/format.service';
 
 @Component({
   selector: 'app-onboarding',
@@ -34,6 +35,7 @@ export class OnboardingComponent implements OnInit, OnDestroy {
   private spaceContextService = inject(SpaceContextService);
   private imageUploadService = inject(ImageUploadService);
   private modalStateService = inject(ModalStateService);
+  public formatService = inject(FormatService);
 
   readonly iconUser = User;
   readonly iconUsers = Users;

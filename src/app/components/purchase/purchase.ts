@@ -26,6 +26,7 @@ import { SpaceContextService } from '../../services/space-context.service';
 import flatpickr from 'flatpickr';
 import type { Instance as FlatpickrInstance } from 'flatpickr/dist/types/instance';
 import { Burmese } from 'flatpickr/dist/l10n/my';
+import { FlatpickrMonthMenu, installFlatpickrMonthMenu } from '../../utils/flatpickr-month-menu';
 import {
   Observable,
   BehaviorSubject,
@@ -244,6 +245,19 @@ export class Purchase implements OnInit, OnDestroy {
 
   @HostListener('window:popstate')
   onPopState(): void {
+    // The picker sheets are a child layer of the cart/edit overlay. Back
+    // must close that child first while keeping a history entry for the
+    // parent, otherwise Android closes the parent and leaves its sheet on
+    // screen.
+    if (this.isDatePickerOpen || this.isCategoryPickerOpen || this.isProductPickerOpen) {
+      this.closeDatePicker();
+      this.closeCategoryPicker();
+      this.closeProductPicker();
+      if (this.isAddModalOpen || this.showAddCartOverlay) {
+        history.pushState(null, '');
+      }
+      return;
+    }
     if (this.isAddModalOpen) {
       this.reallyCloseAddModal();
       return;
@@ -801,6 +815,7 @@ export class Purchase implements OnInit, OnDestroy {
   isDatePickerOpen = false;
   datePickerTarget: 'edit' | 'cart' | 'voucher' = 'cart';
   private datePickerFp: FlatpickrInstance | null = null;
+  private datePickerMonthMenu: FlatpickrMonthMenu | null = null;
 
   openDatePicker(target: 'edit' | 'cart' | 'voucher'): void {
     this.datePickerTarget = target;
@@ -843,6 +858,7 @@ export class Purchase implements OnInit, OnDestroy {
       maxDate: this.expenseDateMax || undefined,
       disableMobile: true,
       locale: isMy ? Burmese : undefined,
+      onReady: (_dates, _dateStr, instance) => { this.datePickerMonthMenu = installFlatpickrMonthMenu(instance as FlatpickrInstance); },
       onDayCreate: (_dates, _dateStr, _fp, dayElem) => {
         if (!isMy) return;
         dayElem.textContent = (dayElem.textContent ?? '').replace(/\d/g, (d: string) => myDigits[+d]);
@@ -859,6 +875,8 @@ export class Purchase implements OnInit, OnDestroy {
   }
 
   private destroyDatePickerFlatpickr(): void {
+    this.datePickerMonthMenu?.destroy();
+    this.datePickerMonthMenu = null;
     if (this.datePickerFp) {
       this.datePickerFp.destroy();
       this.datePickerFp = null;

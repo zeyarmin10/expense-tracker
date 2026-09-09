@@ -108,7 +108,7 @@
       <div class="pd-list-wrap">
         <div class="pd-list-header">
           <span class="pd-list-title">{{ 'EXISTING_PRODUCTS' | translate }}</span>
-          <span class="pd-list-count">{{ products.length }}</span>
+          <span class="pd-list-count">{{ formatService.formatCount(products.length) }}</span>
         </div>
 
         <div class="pd-list-empty" *ngIf="products.length === 0">

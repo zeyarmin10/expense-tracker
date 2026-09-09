@@ -31,6 +31,7 @@ import { ImageCropperComponent } from '../common/image-cropper/image-cropper.com
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import Swal from 'sweetalert2';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
+import { FormatService } from '../../services/format.service';
 
 const Toast = Swal.mixin({
   toast: true,
@@ -82,6 +83,7 @@ export class Category implements OnInit, OnDestroy {
   translateService = inject(TranslateService);
   private cdr = inject(ChangeDetectorRef);
   private authService = inject(AuthService);
+  public formatService = inject(FormatService);
   private activeSpaceModeKey: string | null = null;
 
   readonly iconPlus = Plus;

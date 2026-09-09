@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, OnDestroy, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, inject, OnDestroy, ChangeDetectorRef, ChangeDetectionStrategy, HostListener } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import {
   FormBuilder,
@@ -54,6 +54,7 @@ import { ShowFullTextDirective } from '../../directives/show-full-text.directive
 import flatpickr from 'flatpickr';
 import type { Instance as FlatpickrInstance } from 'flatpickr/dist/types/instance';
 import { Burmese } from 'flatpickr/dist/l10n/my';
+import { FlatpickrMonthMenu, installFlatpickrMonthMenu } from '../../utils/flatpickr-month-menu';
 
 Chart.register(...registerables);
 
@@ -202,12 +203,14 @@ export class BudgetComponent implements OnInit, OnDestroy {
 
   // ── Add Budget FAB + Bottom-sheet Modal ──
   isAddModalOpen = false;
+  private addModalHistoryActive = false;
   isSubmittingBudget = false;
   isCategoryPickerOpen = false;
   categoryPickerSearch = '';
   isDatePickerOpen = false;
   isTypePickerOpen = false;
   private datePickerFp: FlatpickrInstance | null = null;
+  private datePickerMonthMenu: FlatpickrMonthMenu | null = null;
 
   get isRecordedOpen(): boolean { return !this.isRecordedBudgetsCollapsed; }
   get canManageBudgets(): boolean {
@@ -246,6 +249,8 @@ export class BudgetComponent implements OnInit, OnDestroy {
       return;
     }
     this.isAddModalOpen = true;
+    this.addModalHistoryActive = true;
+    history.pushState(null, '');
     this.isCategoryPickerOpen = false;
     this.isTypePickerOpen = false;
     this.closeDatePicker();
@@ -253,11 +258,31 @@ export class BudgetComponent implements OnInit, OnDestroy {
   }
 
   closeAddModal(): void {
+    const shouldPopHistory = this.addModalHistoryActive;
+    this.addModalHistoryActive = false;
     this.isAddModalOpen = false;
     this.isCategoryPickerOpen = false;
     this.isTypePickerOpen = false;
     this.closeDatePicker();
     document.body.classList.remove('bgt-add-modal-open');
+    if (shouldPopHistory) history.back();
+  }
+
+  @HostListener('window:popstate')
+  onPopState(): void {
+    if (this.isDatePickerOpen) {
+      this.closeDatePicker();
+      history.pushState(null, '');
+    } else if (this.isCategoryPickerOpen) {
+      this.closeCategoryPicker();
+      history.pushState(null, '');
+    } else if (this.isTypePickerOpen) {
+      this.closeTypePicker();
+      history.pushState(null, '');
+    } else if (this.isAddModalOpen) {
+      this.addModalHistoryActive = false;
+      this.closeAddModal();
+    }
   }
 
   // ── Budget-type picker (drill-down within the Add-Budget modal) ──
@@ -373,6 +398,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
       defaultDate: currentValue || undefined,
       disableMobile: true,
       locale: isMy ? Burmese : undefined,
+      onReady: (_dates, _dateStr, instance) => { this.datePickerMonthMenu = installFlatpickrMonthMenu(instance as FlatpickrInstance); },
       onDayCreate: (_dates, _dateStr, _fp, dayElem) => {
         if (!isMy) return;
         dayElem.textContent = (dayElem.textContent ?? '').replace(/\d/g, (d: string) => myDigits[+d]);
@@ -389,6 +415,8 @@ export class BudgetComponent implements OnInit, OnDestroy {
   }
 
   private destroyDatePickerFlatpickr(): void {
+    this.datePickerMonthMenu?.destroy();
+    this.datePickerMonthMenu = null;
     if (this.datePickerFp) {
       this.datePickerFp.destroy();
       this.datePickerFp = null;
@@ -1056,9 +1084,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
   }
 
   formatCount(n: number): string {
-    if (this.translate.currentLang !== 'my') return String(n);
-    const mm = ['၀', '၁', '၂', '၃', '၄', '၅', '၆', '၇', '၈', '၉'];
-    return String(n).replace(/\d/g, d => mm[+d]);
+    return this.formatService.formatCount(n);
   }
 
   formatBudgetPeriodLabel(group: BudgetPeriodGroup): string {

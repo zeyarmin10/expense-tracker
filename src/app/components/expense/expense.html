@@ -58,6 +58,9 @@
            category picker above. -->
       <div class="exp-add-modal-body exp-date-picker-body" *ngIf="isDatePickerOpen">
         <div id="exp-date-picker-container"></div>
+        <div class="exp-date-adjustment-notice" *ngIf="datePickerAdjustmentNotice" role="status">
+          {{ 'EXPENSE_DATE_MONTH_ADJUSTED' | translate }}
+        </div>
       </div>
 
       <!-- Category picker is layered over the still-visible add form on mobile. -->
@@ -438,7 +441,7 @@
 
           <!-- Counter + clear -->
           <div class="exp-image-info-row" *ngIf="selectedVoucherFiles.length > 0">
-            <span class="exp-image-counter">{{ selectedVoucherFiles.length }} / {{ MAX_VOUCHER_IMAGES }}</span>
+            <span class="exp-image-counter">{{ formatCount(selectedVoucherFiles.length) }} / {{ formatCount(MAX_VOUCHER_IMAGES) }}</span>
             <button
               type="button"
               class="exp-btn exp-btn-sm exp-btn-ghost"

@@ -6,6 +6,7 @@ import { CalendarRange, LucideAngularModule, Save, X } from 'lucide-angular';
 import { DateInputComponent } from '../date-input/date-input.component';
 import { DateRangeInputComponent } from '../date-range-input/date-range-input.component';
 import { toLocalDateKey } from '../../../services/date-filter.service';
+import { FormatService } from '../../../services/format.service';
 
 @Component({
   selector: 'app-custom-budget-period-modal',
@@ -18,6 +19,7 @@ export class CustomBudgetPeriodModalComponent implements OnDestroy {
   @Output() periodSaved = new EventEmitter<{ name: string; startDate: string; endDate: string }>();
 
   private formBuilder = inject(FormBuilder);
+  public formatService = inject(FormatService);
   budgetPeriodForm: FormGroup;
   isModalOpen = false;
 

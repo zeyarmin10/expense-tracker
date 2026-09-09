@@ -14,6 +14,7 @@ import { ImageCropperComponent } from '../image-cropper/image-cropper.component'
 import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import { ServiceICategory } from '../../../services/category';
 import Swal from 'sweetalert2';
+import { FormatService } from '../../../services/format.service';
 
 const Toast = Swal.mixin({
   toast: true,
@@ -43,6 +44,7 @@ export class CategoryModalComponent implements OnInit, OnDestroy {
   categoryService = inject(CategoryService);
   translateService = inject(TranslateService);
   private cdr = inject(ChangeDetectorRef);
+  public formatService = inject(FormatService);
 
   categories: ServiceICategory[] = [];
   isModalOpen = false;

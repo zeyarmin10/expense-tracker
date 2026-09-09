@@ -47,7 +47,7 @@
   <a routerLink="/inventory" class="shopdash-stock-warning" *ngIf="stats.outOfStockProducts.length > 0">
     <lucide-icon [img]="iconWarning" [size]="18"></lucide-icon>
     <div class="shopdash-stock-warning-body">
-      <span>{{ 'SHOP_DASHBOARD_OUT_OF_STOCK_WARNING' | translate: { count: stats.outOfStockProducts.length } }}</span>
+      <span>{{ 'SHOP_DASHBOARD_OUT_OF_STOCK_WARNING' | translate: { count: formatService.formatCount(stats.outOfStockProducts.length) } }}</span>
       <span class="shopdash-stock-warning-names">{{ stats.outOfStockNames }}</span>
     </div>
   </a>
@@ -55,7 +55,7 @@
      *ngIf="stats.lowStockProducts.length > 0">
     <lucide-icon [img]="iconWarning" [size]="18"></lucide-icon>
     <div class="shopdash-stock-warning-body">
-      <span>{{ 'SHOP_DASHBOARD_LOW_STOCK_WARNING' | translate: { count: stats.lowStockProducts.length } }}</span>
+      <span>{{ 'SHOP_DASHBOARD_LOW_STOCK_WARNING' | translate: { count: formatService.formatCount(stats.lowStockProducts.length) } }}</span>
       <span class="shopdash-stock-warning-names">{{ stats.lowStockNames }}</span>
     </div>
   </a>

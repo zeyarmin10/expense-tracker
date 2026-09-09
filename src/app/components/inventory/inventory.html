@@ -171,13 +171,14 @@
                   </button>
                 </div>
                 <div class="inv-product-actions inv-edit-actions">
+                  <button type="button" class="inv-action-btn inv-edit-cancel" (click)="cancelEdit()">
+                    <lucide-icon [img]="iconTimes" [size]="16"></lucide-icon>
+                    {{ "CANCEL_BUTTON_LABEL" | translate }}
+                  </button>
                   <button type="button" class="inv-action-btn inv-action-save" (click)="onUpdateInline(product.id!)"
                     [disabled]="editingNameControl?.invalid">
                     <lucide-icon [img]="iconSave" [size]="16"></lucide-icon>
                      {{ "SAVE_BUTTON_LABEL" | translate }}
-                  </button>
-                  <button type="button" class="inv-action-btn" (click)="cancelEdit()">
-                    <lucide-icon [img]="iconTimes" [size]="16"></lucide-icon>
                   </button>
                 </div>
               </div>

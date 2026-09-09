@@ -60,6 +60,7 @@ import { ShowFullTextDirective } from '../../directives/show-full-text.directive
 import flatpickr from 'flatpickr';
 import type { Instance as FlatpickrInstance } from 'flatpickr/dist/types/instance';
 import { Burmese } from 'flatpickr/dist/l10n/my';
+import { FlatpickrMonthMenu, installFlatpickrMonthMenu } from '../../utils/flatpickr-month-menu';
 
 Chart.register(...registerables);
 
@@ -176,12 +177,14 @@ export class Profit implements OnInit, OnDestroy {
 
   // ── Add/Edit Income FAB + Bottom-sheet Modal ──
   isAddModalOpen = false;
+  private addModalHistoryActive = false;
   isSubmittingIncome = false;
   isDatePickerOpen = false;
   // Non-null while the modal is editing an existing record instead of
   // adding a new one — same pattern as expense.ts's editingExpense.
   editingIncome: ServiceIIncome | null = null;
   private datePickerFp: FlatpickrInstance | null = null;
+  private datePickerMonthMenu: FlatpickrMonthMenu | null = null;
   get canManageProfitActions(): boolean {
     if (!this.userProfile) return false;
     if (this.userProfile.accountType === 'personal') return true;
@@ -709,6 +712,8 @@ export class Profit implements OnInit, OnDestroy {
       date: income.date,
     });
     this.isAddModalOpen = true;
+    this.addModalHistoryActive = true;
+    history.pushState(null, '');
     this.closeDatePicker();
     document.body.classList.add('pnl-add-modal-open');
   }
@@ -793,11 +798,15 @@ export class Profit implements OnInit, OnDestroy {
     }
     this.editingIncome = null;
     this.isAddModalOpen = true;
+    this.addModalHistoryActive = true;
+    history.pushState(null, '');
     this.closeDatePicker();
     document.body.classList.add('pnl-add-modal-open');
   }
 
   closeAddModal(): void {
+    const shouldPopHistory = this.addModalHistoryActive;
+    this.addModalHistoryActive = false;
     this.isAddModalOpen = false;
     this.closeDatePicker();
     document.body.classList.remove('pnl-add-modal-open');
@@ -805,6 +814,18 @@ export class Profit implements OnInit, OnDestroy {
     // in-progress add — so leftover values and touched/invalid validation
     // state never carry over into the next time the modal opens.
     this.resetForm();
+    if (shouldPopHistory) history.back();
+  }
+
+  @HostListener('window:popstate')
+  onPopState(): void {
+    if (this.isDatePickerOpen) {
+      this.closeDatePicker();
+      history.pushState(null, '');
+    } else if (this.isAddModalOpen) {
+      this.addModalHistoryActive = false;
+      this.closeAddModal();
+    }
   }
 
   // ── Date picker (drill-down within the Add-Income modal) ──
@@ -843,6 +864,7 @@ export class Profit implements OnInit, OnDestroy {
       defaultDate: currentValue || undefined,
       disableMobile: true,
       locale: isMy ? Burmese : undefined,
+      onReady: (_dates, _dateStr, instance) => { this.datePickerMonthMenu = installFlatpickrMonthMenu(instance as FlatpickrInstance); },
       onDayCreate: (_dates, _dateStr, _fp, dayElem) => {
         if (!isMy) return;
         dayElem.textContent = (dayElem.textContent ?? '').replace(/\d/g, (d: string) => myDigits[+d]);
@@ -859,6 +881,8 @@ export class Profit implements OnInit, OnDestroy {
   }
 
   private destroyDatePickerFlatpickr(): void {
+    this.datePickerMonthMenu?.destroy();
+    this.datePickerMonthMenu = null;
     if (this.datePickerFp) {
       this.datePickerFp.destroy();
       this.datePickerFp = null;

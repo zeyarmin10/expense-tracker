@@ -85,7 +85,7 @@
               {{ 'CATEGORY_NAME_MAX_LENGTH_ERROR' | translate }}
             </span>
             <span class="cat-char-count" [class.cat-char-at-limit]="(addCategoryForm.get('name')?.value?.length ?? 0) >= 50">
-              {{ addCategoryForm.get('name')?.value?.length ?? 0 }} / 50
+              {{ formatService.formatCount(addCategoryForm.get('name')?.value?.length ?? 0) }} / {{ formatService.formatCount(50) }}
             </span>
           </div>
           <div *ngIf="addCategoryForm.controls['name'].touched && addCategoryForm.controls['name'].errors?.['required']"
@@ -112,7 +112,7 @@
           {{ "EXISTING_CATEGORIES_TITLE" | translate }}
         </h3>
         <span class="cat-count-badge" *ngIf="(categories$ | async) as cats">
-          {{ cats.length }}
+          {{ formatService.formatCount(cats.length) }}
         </span>
       </div>
 
@@ -232,7 +232,7 @@
                   {{ 'CATEGORY_NAME_MAX_LENGTH_ERROR' | translate }}
                 </span>
                 <span class="cat-char-count" [class.cat-char-at-limit]="(editingCategoryFormControl?.value?.length ?? 0) >= 50">
-                  {{ editingCategoryFormControl?.value?.length ?? 0 }} / 50
+                  {{ formatService.formatCount(editingCategoryFormControl?.value?.length ?? 0) }} / {{ formatService.formatCount(50) }}
                 </span>
               </div>
               <div *ngIf="editingCategoryFormControl!.touched && editingCategoryFormControl!.errors?.['required']"

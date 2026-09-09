@@ -9,6 +9,7 @@ import { TranslateService } from '@ngx-translate/core';
 import flatpickr from 'flatpickr';
 import type { Instance } from 'flatpickr/dist/types/instance';
 import { Burmese } from 'flatpickr/dist/l10n/my';
+import { FlatpickrMonthMenu, installFlatpickrMonthMenu } from '../../../utils/flatpickr-month-menu';
 
 function pad(n: number): string { return String(n).padStart(2, '0'); }
 
@@ -58,6 +59,7 @@ export class DateInputComponent implements ControlValueAccessor, OnDestroy {
   readonly iconX = X;
 
   private fp: Instance | null = null;
+  private monthMenu: FlatpickrMonthMenu | null = null;
   private translate = inject(TranslateService);
   private onChange: (val: string) => void = () => {};
   private onTouched: () => void = () => {};
@@ -124,20 +126,14 @@ export class DateInputComponent implements ControlValueAccessor, OnDestroy {
     const lang = this.translate.currentLang || this.translate.getDefaultLang();
     const isMy = lang === 'my';
 
-    const applyYearOverlay = () => {
-      if (!isMy) return;
-      const yearInput = this.fp?.calendarContainer?.querySelector('.cur-year') as HTMLInputElement | null;
+    const applyYearOverlay = (picker: Instance | null = this.fp) => {
+      if (!picker) return;
+      const yearInput = picker?.calendarContainer?.querySelector('.cur-year') as HTMLInputElement | null;
       if (!yearInput) return;
       const wrapper = yearInput.parentElement;
       if (!wrapper) return;
-      let overlay = wrapper.querySelector<HTMLSpanElement>('.fp-my-year');
-      if (!overlay) {
-        overlay = document.createElement('span');
-        overlay.className = 'fp-my-year';
-        yearInput.style.color = 'transparent';
-        wrapper.appendChild(overlay);
-      }
-      overlay.textContent = toMy(+yearInput.value);
+      wrapper.querySelector('.fp-my-year')?.remove();
+      yearInput.style.removeProperty('color');
     };
 
     this.fp = flatpickr(input, {
@@ -151,8 +147,15 @@ export class DateInputComponent implements ControlValueAccessor, OnDestroy {
         if (!isMy) return;
         dayElem.textContent = (dayElem.textContent ?? '').replace(/\d/g, (d: string) => MY_DIGITS[+d]);
       },
-      onReady: () => applyYearOverlay(),
-      onMonthChange: () => applyYearOverlay(),
+      onReady: (_dates, _dateStr, instance) => {
+        this.monthMenu = installFlatpickrMonthMenu(instance as Instance);
+        applyYearOverlay(instance as Instance);
+        setTimeout(() => applyYearOverlay(instance as Instance), 0);
+      },
+      onMonthChange: () => {
+        this.monthMenu?.sync();
+        applyYearOverlay();
+      },
       onYearChange: () => applyYearOverlay(),
       onChange: (dates) => {
         if (!dates[0]) return;
@@ -167,6 +170,8 @@ export class DateInputComponent implements ControlValueAccessor, OnDestroy {
   }
 
   private destroyFlatpickr(): void {
+    this.monthMenu?.destroy();
+    this.monthMenu = null;
     if (this.fp) {
       this.fp.destroy();
       this.fp = null;

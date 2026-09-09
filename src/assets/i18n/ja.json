@@ -994,5 +994,7 @@
   "SHOP_NAME_REQUIRED": "店舗名を入力してください。",
   "SHOP_ADDRESS_LABEL": "店舗住所",
   "SHOP_PHONE_LABEL": "電話番号",
-  "SHOP_INFO_SAVED": "店舗情報を保存しました！"
+  "SHOP_INFO_SAVED": "店舗情報を保存しました！",
+  "SALE_PRICE_BELOW_COST_WARNING": "販売価格が平均仕入原価（{{cost}}）を下回っています。",
+  "EXPENSE_DATE_MONTH_ADJUSTED": "この月は選択できません。最も近い選択可能な月を選択しました。"
 }

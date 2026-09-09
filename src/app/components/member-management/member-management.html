@@ -77,7 +77,7 @@
           <lucide-icon [img]="iconMail" [size]="15"></lucide-icon>
           {{ 'PENDING_INVITATIONS' | translate }}
         </span>
-        <span class="mm-badge mm-badge-warning">{{ (pendingInvites$ | async)?.length }}</span>
+        <span class="mm-badge mm-badge-warning">{{ formatService.formatCount((pendingInvites$ | async)?.length ?? 0) }}</span>
       </div>
       <div class="mm-list">
         <div *ngFor="let invite of pendingInvites$ | async; trackBy: trackByInviteKey" class="mm-item">
@@ -110,10 +110,11 @@
           <lucide-icon [img]="iconInbox" [size]="15"></lucide-icon>
           {{ 'CURRENT_MEMBERS' | translate }}
         </span>
-        <span class="mm-badge mm-badge-success">{{ (members$ | async)?.length }}</span>
+        <span class="mm-badge mm-badge-success">{{ formatService.formatCount((members$ | async)?.length ?? 0) }}</span>
       </div>
       <div class="mm-list">
-        <div *ngFor="let member of members$ | async; trackBy: trackByMemberUid" class="mm-item">
+        <div *ngFor="let member of members$ | async; trackBy: trackByMemberUid" class="mm-item"
+          [class.mm-item-current]="member.uid === (userProfile$ | async)?.uid">
           <div class="mm-item-left">
             <app-user-avatar
               [name]="member.displayName || '?'"
@@ -150,4 +151,3 @@
 </div>
 
 <app-lightbox></app-lightbox>
-

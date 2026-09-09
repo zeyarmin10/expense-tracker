@@ -73,6 +73,55 @@
   margin-bottom: 0.85rem;
 }
 
+/*
+ * On Android WebView a sticky element that contains a control which is added
+ * and removed (the custom range input) can retain an old composited height.
+ * The next sibling is then painted through the filter, which is why the
+ * period label and search field overlap on a real device even though browser
+ * device emulation looks correct.  The filter only needs to be sticky on the
+ * wider report layout; keep the phone layout in normal document flow.
+ *
+ * `overflow: clip` avoids making the report container a scroll container
+ * while still guarding against accidental horizontal overflow.  The global
+ * page root remains the horizontal-overflow guard for older WebViews that do
+ * not support `clip`.
+ */
+@media (max-width: 991px) {
+  .srpt-container {
+    overflow-x: visible;
+  }
+
+  @supports (overflow: clip) {
+    .srpt-container {
+      overflow-x: clip;
+    }
+  }
+
+  .srpt-container > .exp-filter-bar {
+    position: relative;
+    top: auto;
+    /* Do not create a stacking context here. The date picker sheet is a
+       fixed child while its backdrop is attached to body; a local z-index
+       would trap the sheet underneath that backdrop on Android WebView. */
+    z-index: auto;
+    flex-shrink: 0;
+    margin-bottom: 1rem;
+  }
+
+  .srpt-container > .exp-filter-bar .exp-filter-bottom-row {
+    min-height: 1.35rem;
+  }
+
+  .srpt-container > .exp-filter-bar .exp-filter-label {
+    line-height: 1.35;
+  }
+
+  .srpt-container > .ov-search-row {
+    position: relative;
+    margin-top: 0;
+  }
+}
+
 @media (max-width: 639px) {
   .ov-filter-row-custom {
     flex-direction: row;
