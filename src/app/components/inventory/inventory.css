@@ -479,6 +479,14 @@ body.inv-add-modal-open {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.inv-product-item.inv-product-item-selected {
+  border-color: rgba(59, 130, 246, 0.62);
+  background: linear-gradient(90deg, var(--accent-dim), var(--surface) 72%);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.13);
 }
 
 /* Hidden products stay in the list for stock/history context, but are
@@ -880,6 +888,12 @@ body:not(.light-mode) .inv-product-item-hidden .inv-product-hidden-badge {
   border-radius: 12px;
   background: var(--surface);
   overflow: hidden;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.inv-stock-card.inv-stock-card-selected {
+  border-color: rgba(59, 130, 246, 0.68);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.14);
 }
 
 .inv-stock-card.inv-row-low-stock {
@@ -984,6 +998,14 @@ body:not(.light-mode) .inv-product-item-hidden .inv-product-hidden-badge {
 
 .inv-table tbody tr:last-child td {
   border-bottom: none;
+}
+
+.inv-table tbody tr {
+  cursor: pointer;
+}
+
+.inv-table tbody tr.inv-stock-row-selected td {
+  background: var(--accent-dim);
 }
 
 .inv-row-low-stock td:first-child {
