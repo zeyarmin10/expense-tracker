@@ -87,7 +87,7 @@
             {{ 'PRICE_REQUIRED' | translate }}
           </div>
 
-          <div class="pnl-pos-footer" *ngIf="cart.length > 0">
+          <div class="pnl-pos-footer pnl-pos-footer-inline" *ngIf="cart.length > 0">
             <div class="pnl-pos-total">
               <span class="pnl-pos-total-label">{{ 'POS_TOTAL_LABEL' | translate }}</span>
               <span class="pnl-pos-total-value"
@@ -100,6 +100,18 @@
             </button>
           </div>
         </div>
+      </div>
+      <div class="pnl-pos-footer pnl-pos-footer-mobile" *ngIf="cart.length > 0">
+        <div class="pnl-pos-total">
+          <span class="pnl-pos-total-label">{{ 'POS_TOTAL_LABEL' | translate }}</span>
+          <span class="pnl-pos-total-value"
+            [innerHTML]="formatService.formatAmountWithSymbolHtml(cartTotal, userProfile?.currency || 'MMK')"></span>
+        </div>
+        <button type="button" class="pnl-btn pnl-btn-primary" [disabled]="isCheckingOut" (click)="onCheckout()">
+          <span *ngIf="isCheckingOut" class="pnl-btn-spinner"></span>
+          <lucide-icon *ngIf="!isCheckingOut" [img]="iconSave" [size]="15"></lucide-icon>
+          {{ 'POS_CHECKOUT_BUTTON' | translate }}
+        </button>
       </div>
     </div>
 

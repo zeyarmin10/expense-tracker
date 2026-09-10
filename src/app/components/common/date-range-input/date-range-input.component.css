@@ -29,14 +29,29 @@
 }
 
 
-/* ── Range validation error (inside sheet / panel) ── */
+/* ── Range validation error (inside sheet / panel) ──
+   Keep the warning centered, but let its surface dissolve at both sides so
+   it reads as an inline notice instead of a separate bordered card. */
 .dri-range-error {
-  margin: 0 1rem 0.5rem;
-  padding: 0.45rem 0.75rem;
-  border-radius: 8px;
-  background: var(--danger-dim);
+  margin: 0 0 0.5rem;
+  padding: 0.5rem 1.5rem;
+  border: 0;
+  border-radius: 0;
+  /* Static center-to-sides color spread — this is a background treatment,
+     not a fade animation or a bordered notification card. */
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(248, 113, 113, 0.045) 16%,
+    rgba(248, 113, 113, 0.11) 34%,
+    rgba(248, 113, 113, 0.16) 50%,
+    rgba(248, 113, 113, 0.11) 66%,
+    rgba(248, 113, 113, 0.045) 84%,
+    transparent 100%
+  );
   color: var(--danger);
   font-size: 0.8rem;
+  line-height: 1.45;
   text-align: center;
 }
 
