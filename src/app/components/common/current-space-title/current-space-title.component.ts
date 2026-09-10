@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
-import { Component, EventEmitter, HostBinding, HostListener, Input, OnDestroy, OnInit, Output, inject } from '@angular/core';
+import { Component, ElementRef, EventEmitter, HostBinding, HostListener, Input, OnDestroy, OnInit, Output, inject } from '@angular/core';
 import { LucideAngularModule, Check, User, Plus } from 'lucide-angular';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import {
@@ -85,9 +85,10 @@ type SpaceImageSource = {
             class="space-title-option"
             type="button"
             *ngFor="let space of vm.spaces"
-            (click)="switchSpace(space, $event)"
+            (click)="switchSpace(space, vm.currentSpaceId, $event)"
             [class.space-title-option-active]="space.id === vm.currentSpaceId"
-            [disabled]="isSwitching || space.id === vm.currentSpaceId"
+            [disabled]="isSwitching"
+            [attr.aria-current]="space.id === vm.currentSpaceId ? 'true' : null"
           >
             <span
               class="space-title-avatar space-title-avatar-sm"
@@ -421,6 +422,7 @@ type SpaceImageSource = {
   `],
 })
 export class CurrentSpaceTitleComponent implements OnInit, OnDestroy {
+  private readonly hostElement = inject(ElementRef<HTMLElement>);
   private readonly authService = inject(AuthService);
   private readonly spaceContextService = inject(SpaceContextService);
   private readonly spaceSwitchLoadingService = inject(SpaceSwitchLoadingService);
@@ -544,9 +546,15 @@ export class CurrentSpaceTitleComponent implements OnInit, OnDestroy {
     if (this.labelIntervalId !== null) clearInterval(this.labelIntervalId);
   }
 
-  @HostListener('document:click')
-  closeMenu(): void {
-    this.menuOpen = false;
+  @HostListener('document:pointerdown', ['$event'])
+  closeMenuOnOutsidePointer(event: PointerEvent): void {
+    if (!this.menuOpen || !(event.target instanceof Node)) {
+      return;
+    }
+
+    if (!this.hostElement.nativeElement.contains(event.target)) {
+      this.menuOpen = false;
+    }
   }
 
   toggleMenu(event: MouseEvent): void {
@@ -575,10 +583,20 @@ export class CurrentSpaceTitleComponent implements OnInit, OnDestroy {
     this.imageLoadFailures.add(this.getImageFailureKey(spaceId, imageUrl));
   }
 
-  async switchSpace(space: SpaceOption, event: MouseEvent): Promise<void> {
+  async switchSpace(
+    space: SpaceOption,
+    currentSpaceId: string | null,
+    event: MouseEvent,
+  ): Promise<void> {
     event.stopPropagation();
 
     if (!space.id || this.isSwitching) {
+      return;
+    }
+
+    // The active item remains clickable so it can dismiss the menu too.
+    if (space.id === currentSpaceId) {
+      this.menuOpen = false;
       return;
     }
 

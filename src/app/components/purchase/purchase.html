@@ -126,7 +126,7 @@
         {{ 'PRICE_REQUIRED' | translate }}
       </div>
 
-      <div class="exp-pos-footer" *ngIf="cart.length > 0">
+      <div class="exp-pos-footer exp-pos-footer-inline" *ngIf="cart.length > 0">
         <div class="exp-pos-total">
           <span class="exp-pos-total-label">{{ 'POS_TOTAL_LABEL' | translate }}</span>
           <span class="exp-pos-total-value" [innerHTML]="formatService.formatAmountWithSymbolHtml(cartTotal, userProfile?.currency || 'MMK')"></span>
@@ -276,6 +276,17 @@
           </div>
         </form>
       </div>
+      </div>
+      <div class="exp-pos-footer exp-pos-footer-mobile" *ngIf="overlayTab === 'purchase' && cart.length > 0">
+        <div class="exp-pos-total">
+          <span class="exp-pos-total-label">{{ 'POS_TOTAL_LABEL' | translate }}</span>
+          <span class="exp-pos-total-value" [innerHTML]="formatService.formatAmountWithSymbolHtml(cartTotal, userProfile?.currency || 'MMK')"></span>
+        </div>
+        <button type="button" class="exp-btn exp-btn-primary" [disabled]="isCheckingOut" (click)="onCheckout()">
+          <span *ngIf="isCheckingOut" class="exp-btn-spinner"></span>
+          <lucide-icon *ngIf="!isCheckingOut" [img]="iconSave" [size]="16"></lucide-icon>
+          {{ 'POS_CHECKOUT_BUTTON' | translate }}
+        </button>
       </div>
     </div>
 

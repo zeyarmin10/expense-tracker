@@ -101,6 +101,11 @@ export class Inventory implements OnInit, OnDestroy {
   // Mobile Stock & Profit view: which product's card is expanded to show
   // full detail — null means every card is collapsed to its summary line.
   expandedProductId: string | null = null;
+  // The most recently touched item in each inventory list. These are kept
+  // separate because Products and Stock & Profit are different views of the
+  // same catalogue and can be visited independently.
+  selectedProductId: string | null = null;
+  selectedStockProductId: string | null = null;
 
   addProductForm: FormGroup;
   editingProductId: string | null = null;
@@ -380,7 +385,16 @@ export class Inventory implements OnInit, OnDestroy {
   }
 
   toggleRowExpand(productId: string): void {
+    this.selectedStockProductId = productId;
     this.expandedProductId = this.expandedProductId === productId ? null : productId;
+  }
+
+  selectProductItem(productId: string): void {
+    this.selectedProductId = productId;
+  }
+
+  selectStockRow(productId: string): void {
+    this.selectedStockProductId = productId;
   }
 
   async loadProducts(): Promise<void> {

@@ -2770,19 +2770,36 @@ app-date-input .di-trigger {
   border-top: 1px solid var(--border);
 }
 
-/* Mobile only: pin the total+checkout bar to the bottom of the full-screen
-   cart overlay (sticky within .pnl-cart-overlay-scroll's own scroll area)
-   and shrink it — so it never gets pushed off-screen as the cart list
-   grows, without touching the desktop inline-cart layout at all. */
+/* Mobile only: use the checkout action as the cart's bottom navigation bar.
+   Unlike sticky, this stays at the viewport edge even while the cart content
+   is scrolled. The overlay is the containing block because it is transformed
+   while opening, so fixed positioning remains scoped to this full-screen
+   cart instead of leaking onto the page below. */
 @media (max-width: 991.98px) {
-  .pnl-pos-footer {
-    position: sticky;
+  .pnl-cart-overlay-scroll {
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 6rem);
+  }
+
+  .pnl-pos-footer-inline {
+    display: none;
+  }
+
+  .pnl-cart-overlay .pnl-pos-footer-mobile {
+    display: flex;
+  }
+
+  .pnl-pos-footer-mobile {
+    position: absolute;
+    right: 0;
+    left: 0;
     bottom: 0;
-    z-index: 5;
-    background: var(--surface);
-    margin: 0.9rem -0.75rem -1.2rem;
-    padding: 1rem 0.75rem calc(env(safe-area-inset-bottom, 0px) + 1rem);
-    border-radius: 0 0 14px 14px;
+    z-index: 10;
+    background: var(--nav-bg, var(--surface));
+    margin: 0;
+    padding: 0.7rem 1rem calc(env(safe-area-inset-bottom, 0px) + 0.7rem);
+    border-top: 1px solid var(--nav-border, var(--border));
+    border-radius: 0;
+    box-shadow: 0 -5px 16px rgba(0, 0, 0, 0.16);
   }
 
   .pnl-pos-footer .pnl-pos-total-value {
@@ -2793,6 +2810,10 @@ app-date-input .di-trigger {
     padding: 0.75rem 0.85rem;
     font-size: 0.8rem;
   }
+}
+
+.pnl-pos-footer-mobile {
+  display: none;
 }
 
 .pnl-pos-total {
@@ -2954,5 +2975,29 @@ app-date-input .di-trigger {
 
   .pnl-pos-picker-sheet-date .pnl-pos-picker-header {
     padding-top: calc(env(safe-area-inset-top, 0px) + 0.75rem);
+  }
+}
+
+/* A landscape phone has very little vertical room. The picker body's normal
+   320px minimum then exceeds the sheet's 80vh cap, which leaves its last
+   items outside the sheet instead of inside the list's scroll area. */
+@media (max-width: 991.98px) and (orientation: landscape) {
+  .pnl-pos-picker-sheet:not(.pnl-pos-picker-sheet-date) {
+    height: 80vh;
+    height: 80dvh;
+    max-height: calc(100dvh - env(safe-area-inset-top, 0px) - 0.5rem);
+    overflow: hidden;
+  }
+
+  .pnl-pos-picker-sheet .pnl-cat-picker-body {
+    min-height: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+  }
+
+  .pnl-pos-picker-sheet .pnl-cat-picker-list {
+    min-height: 0;
+    flex: 1 1 auto;
+    overscroll-behavior: contain;
   }
 }
