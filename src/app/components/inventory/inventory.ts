@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef, HostListener, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -13,7 +13,7 @@ import { Observable, BehaviorSubject, Subject, firstValueFrom, of, map, combineL
 import { switchMap, takeUntil } from 'rxjs/operators';
 import { ProductService, ServiceIProduct, getProductErrorMessage } from '../../services/product';
 import { BarcodeScannerService } from '../../services/barcode-scanner.service';
-import { ExpenseService } from '../../services/expense';
+import { ExpenseService, getExpenseLineItems } from '../../services/expense';
 import { IncomeService } from '../../services/income';
 import { InventoryService, ProductStockSummary } from '../../services/inventory.service';
 import { AuthService } from '../../services/auth';
@@ -24,7 +24,7 @@ import { FormatService } from '../../services/format.service';
 import { meaningfulTextValidator } from '../../utils/form-validators';
 import {
   LucideAngularModule, Package, Plus, Pencil, Trash2, X, Save, TriangleAlert,
-  ChevronDown, ChevronUp, ScanLine, EyeOff, Eye, EllipsisVertical,
+  ChevronDown, ChevronUp, ScanLine, EyeOff, Eye, EllipsisVertical, Search, Settings,
 } from 'lucide-angular';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import Swal from 'sweetalert2';
@@ -51,6 +51,8 @@ const Toast = Swal.mixin({
   styleUrls: ['./inventory.css'],
 })
 export class Inventory implements OnInit, OnDestroy {
+  @ViewChild('productSearchInput') productSearchInput?: ElementRef<HTMLInputElement>;
+
   private productService = inject(ProductService);
   private expenseService = inject(ExpenseService);
   private incomeService = inject(IncomeService);
@@ -78,6 +80,8 @@ export class Inventory implements OnInit, OnDestroy {
   readonly iconEyeOff = EyeOff;
   readonly iconEye = Eye;
   readonly iconEllipsisVertical = EllipsisVertical;
+  readonly iconSearch = Search;
+  readonly iconSettings = Settings;
 
   // Only native builds can actually scan — the button hides on web/dev.
   readonly canScanBarcode = this.barcodeScanner.isSupported();
@@ -93,11 +97,6 @@ export class Inventory implements OnInit, OnDestroy {
   shopAddress = '';
   shopPhone = '';
   isSavingShopInfo = false;
-  // Both settings cards on the Stock & Profit tab start collapsed — they're
-  // rarely-changed settings, not something to see on every visit, and
-  // leaving them open pushed the actual stock table down the page.
-  isLowStockCardOpen = false;
-  isShopInfoCardOpen = false;
   // Mobile Stock & Profit view: which product's card is expanded to show
   // full detail — null means every card is collapsed to its summary line.
   expandedProductId: string | null = null;
@@ -106,6 +105,14 @@ export class Inventory implements OnInit, OnDestroy {
   // same catalogue and can be visited independently.
   selectedProductId: string | null = null;
   selectedStockProductId: string | null = null;
+
+  // A product may have been purchased under more than one category. Keep all
+  // of those categories so filtering never hides a valid matching product.
+  selectedProductCategory = '';
+  productSearchQuery = '';
+  isProductSearchOpen = false;
+  private productCategoriesById = new Map<string, Set<string>>();
+  readonly uncategorizedFilterValue = '__uncategorized__';
 
   addProductForm: FormGroup;
   editingProductId: string | null = null;
@@ -187,6 +194,7 @@ export class Inventory implements OnInit, OnDestroy {
   // same pattern as Purchase/Sales' cart overlay (FAB-triggered, phone back
   // button closes it instead of navigating away). ──
   showAddOverlay = false;
+  showSettingsOverlay = false;
 
   openAddOverlay(): void {
     // The toolbar button stays visible/clickable even while the modal is
@@ -208,10 +216,29 @@ export class Inventory implements OnInit, OnDestroy {
     document.body.classList.remove('inv-add-modal-open');
   }
 
+  openSettingsOverlay(): void {
+    if (this.showSettingsOverlay) return;
+    this.showSettingsOverlay = true;
+    document.body.classList.add('inv-settings-modal-open');
+    history.pushState(null, '');
+  }
+
+  closeSettingsOverlay(): void {
+    if (!this.showSettingsOverlay) return;
+    history.back();
+  }
+
+  private reallyCloseSettingsOverlay(): void {
+    this.showSettingsOverlay = false;
+    document.body.classList.remove('inv-settings-modal-open');
+  }
+
   @HostListener('window:popstate')
   onPopState(): void {
     if (this.showAddOverlay) {
       this.reallyCloseAddOverlay();
+    } else if (this.showSettingsOverlay) {
+      this.reallyCloseSettingsOverlay();
     }
   }
 
@@ -297,10 +324,37 @@ export class Inventory implements OnInit, OnDestroy {
         }
       });
 
+    // Products do not duplicate a category field. Build the filter index from
+    // purchase records, supporting both old one-product entries and POS carts.
+    combineLatest([this.expenseService.getExpenses(), this.authService.userProfile$])
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(([expenses, profile]) => {
+        const categoriesByProductId = new Map<string, Set<string>>();
+        const currency = profile?.currency || 'MMK';
+
+        expenses
+          .filter((expense) => expense.currency === currency)
+          .forEach((expense) => {
+            const category = expense.category?.trim();
+            if (!category) return;
+
+            getExpenseLineItems(expense).forEach((item) => {
+              if (!item.productId) return;
+              const categories = categoriesByProductId.get(item.productId) ?? new Set<string>();
+              categories.add(category);
+              categoriesByProductId.set(item.productId, categories);
+            });
+          });
+
+        this.productCategoriesById = categoriesByProductId;
+        this.cdr.markForCheck();
+      });
+
     this.loadProducts();
   }
 
   ngOnDestroy(): void {
+    document.body.classList.remove('inv-add-modal-open', 'inv-settings-modal-open');
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -375,6 +429,54 @@ export class Inventory implements OnInit, OnDestroy {
 
   getTotalEstProfit(summary: ProductStockSummary[]): number {
     return summary.reduce((sum, row) => sum + (row.estProfit || 0), 0);
+  }
+
+  get productCategoryOptions(): string[] {
+    const names = new Set<string>();
+    this.productCategoriesById.forEach((categories) => {
+      categories.forEach((category) => names.add(category));
+    });
+    return Array.from(names).sort((a, b) => a.localeCompare(b));
+  }
+
+  get hasUncategorizedProducts(): boolean {
+    return this._productsSubject.value.some((product) =>
+      !product.id || !this.productCategoriesById.get(product.id)?.size,
+    );
+  }
+
+  filteredProducts(products: ServiceIProduct[]): ServiceIProduct[] {
+    return products.filter((product) => this.matchesProductFilter(product.id, product.name));
+  }
+
+  filteredStockSummary(summary: ProductStockSummary[]): ProductStockSummary[] {
+    return summary.filter((row) => this.matchesProductFilter(row.productId, row.productName));
+  }
+
+  openProductSearch(): void {
+    this.isProductSearchOpen = true;
+    // Let the expanding search field enter the view before requesting focus.
+    setTimeout(() => this.productSearchInput?.nativeElement.focus(), 140);
+  }
+
+  closeProductSearch(): void {
+    this.productSearchQuery = '';
+    this.isProductSearchOpen = false;
+  }
+
+  private matchesProductFilter(productId: string | undefined, productName: string): boolean {
+    const search = this.productSearchQuery.trim().toLocaleLowerCase();
+    if (search && !productName.toLocaleLowerCase().includes(search)) {
+      return false;
+    }
+
+    if (!this.selectedProductCategory) return true;
+
+    const categories = productId ? this.productCategoriesById.get(productId) : undefined;
+    if (this.selectedProductCategory === this.uncategorizedFilterValue) {
+      return !categories?.size;
+    }
+    return !!categories?.has(this.selectedProductCategory);
   }
 
   // A product that's never been purchased naturally has currentStock 0 —

@@ -6,6 +6,10 @@
         <lucide-icon [img]="iconPackage" [size]="25" class="inv-icon-accent"></lucide-icon>
         {{ 'INVENTORY_TITLE' | translate }}
       </h2>
+      <button type="button" class="inv-stock-settings-btn" (click)="openSettingsOverlay()" [title]="'INVENTORY_SETTINGS_TITLE' | translate"
+        [attr.aria-label]="'INVENTORY_SETTINGS_TITLE' | translate">
+        <lucide-icon [img]="iconSettings" [size]="18"></lucide-icon>
+      </button>
     </div>
 
     <div class="inv-seg-ctrl">
@@ -93,16 +97,46 @@
       </button>
 
       <ng-container *ngIf="products$ | async as products">
-        <div class="inv-empty" *ngIf="!isLoadingProducts && products.length === 0">
-          {{ 'INVENTORY_EMPTY_PRODUCTS' | translate }}
+        <div class="inv-list-filters" [class.inv-list-filters-search-open]="isProductSearchOpen" *ngIf="products.length > 0">
+          <div class="inv-category-filter-wrap">
+            <select class="inv-filter-control inv-category-filter" [(ngModel)]="selectedProductCategory"
+              [attr.aria-label]="'CATEGORY_LABEL' | translate" [tabindex]="isProductSearchOpen ? -1 : 0">
+              <option value="">{{ 'ALL_CATEGORIES' | translate }}</option>
+              <option *ngFor="let category of productCategoryOptions" [value]="category">{{ category }}</option>
+              <option *ngIf="hasUncategorizedProducts" [value]="uncategorizedFilterValue">
+                {{ 'UNCATEGORIZED' | translate }}
+              </option>
+            </select>
+            <lucide-icon [img]="iconChevronDown" [size]="16" class="inv-category-filter-chevron" aria-hidden="true"></lucide-icon>
+          </div>
+          <button type="button" class="inv-filter-control inv-search-trigger" (click)="openProductSearch()"
+            [attr.aria-label]="'SEARCH' | translate" [tabindex]="isProductSearchOpen ? -1 : 0">
+            <lucide-icon [img]="iconSearch" [size]="17" aria-hidden="true"></lucide-icon>
+          </button>
+          <div class="inv-filter-control inv-product-search" [attr.aria-hidden]="!isProductSearchOpen">
+            <lucide-icon [img]="iconSearch" [size]="17" aria-hidden="true"></lucide-icon>
+            <input #productSearchInput type="search" [(ngModel)]="productSearchQuery" autocomplete="off"
+              [placeholder]="'SEARCH' | translate" [attr.aria-label]="'SEARCH' | translate"
+              [tabindex]="isProductSearchOpen ? 0 : -1" />
+            <button type="button" class="inv-search-close" (click)="closeProductSearch()"
+              [attr.aria-label]="'CANCEL_BUTTON_LABEL' | translate" [tabindex]="isProductSearchOpen ? 0 : -1">
+              <lucide-icon [img]="iconTimes" [size]="16"></lucide-icon>
+            </button>
+          </div>
         </div>
 
-        <div class="inv-list-summary" *ngIf="products.length > 0">
-          {{ 'INVENTORY_TOTAL_PRODUCTS_LABEL' | translate }}: <strong>{{ formatService.formatCount(products.length) }}</strong>
-        </div>
+        <ng-container *ngIf="filteredProducts(products) as filteredProducts">
+          <div class="inv-empty" *ngIf="!isLoadingProducts && filteredProducts.length === 0">
+            {{ (products.length === 0 ? 'INVENTORY_EMPTY_PRODUCTS' : 'CUSTOM_SELECT_NO_RESULTS') | translate }}
+          </div>
 
-        <ul class="inv-product-list">
-          <li *ngFor="let product of products; trackBy: trackByProductId" class="inv-product-item"
+          <div class="inv-list-summary" *ngIf="filteredProducts.length > 0">
+            {{ 'INVENTORY_TOTAL_PRODUCTS_LABEL' | translate }}:
+            <strong class="inv-product-count-badge">{{ formatService.formatCount(filteredProducts.length) }} {{ 'INVENTORY_PRODUCT_KIND_SUFFIX' | translate }}</strong>
+          </div>
+
+          <ul class="inv-product-list" *ngIf="filteredProducts.length > 0">
+          <li *ngFor="let product of filteredProducts; trackBy: trackByProductId" class="inv-product-item"
             [class.inv-product-item-hidden]="product.isActive === false"
             [class.inv-product-item-selected]="selectedProductId === product.id"
             (click)="selectProductItem(product.id!)">
@@ -187,63 +221,54 @@
             </ng-template>
           </li>
         </ul>
+        </ng-container>
       </ng-container>
     </div>
 
     <!-- ── Stock & Profit tab ── -->
     <div *ngIf="activeTab === 'stock'">
-      <div class="inv-shopinfo-card">
-        <button type="button" class="inv-shopinfo-header" (click)="isLowStockCardOpen = !isLowStockCardOpen"
-          [attr.aria-expanded]="isLowStockCardOpen">
-          <span class="inv-shopinfo-title">{{ 'LOW_STOCK_THRESHOLD_LABEL' | translate }}</span>
-          <lucide-icon [img]="isLowStockCardOpen ? iconChevronUp : iconChevronDown" [size]="16"></lucide-icon>
-        </button>
-        <ng-container *ngIf="isLowStockCardOpen">
-          <div class="inv-threshold-row">
-            <input id="inv-low-stock-threshold" type="number" min="0" step="1" class="inv-input inv-threshold-input"
-              [(ngModel)]="lowStockThreshold" />
-            <button type="button" class="inv-threshold-save-btn" [disabled]="isSavingThreshold" (click)="saveLowStockThreshold()">
-              {{ 'SAVE_BUTTON_LABEL' | translate }}
+      <ng-container *ngIf="stockSummary$ | async as summary">
+        <div class="inv-list-filters" [class.inv-list-filters-search-open]="isProductSearchOpen" *ngIf="summary.length > 0">
+          <div class="inv-category-filter-wrap">
+            <select class="inv-filter-control inv-category-filter" [(ngModel)]="selectedProductCategory"
+              [attr.aria-label]="'CATEGORY_LABEL' | translate" [tabindex]="isProductSearchOpen ? -1 : 0">
+              <option value="">{{ 'ALL_CATEGORIES' | translate }}</option>
+              <option *ngFor="let category of productCategoryOptions" [value]="category">{{ category }}</option>
+              <option *ngIf="hasUncategorizedProducts" [value]="uncategorizedFilterValue">
+                {{ 'UNCATEGORIZED' | translate }}
+              </option>
+            </select>
+            <lucide-icon [img]="iconChevronDown" [size]="16" class="inv-category-filter-chevron" aria-hidden="true"></lucide-icon>
+          </div>
+          <button type="button" class="inv-filter-control inv-search-trigger" (click)="openProductSearch()"
+            [attr.aria-label]="'SEARCH' | translate" [tabindex]="isProductSearchOpen ? -1 : 0">
+            <lucide-icon [img]="iconSearch" [size]="17" aria-hidden="true"></lucide-icon>
+          </button>
+          <div class="inv-filter-control inv-product-search" [attr.aria-hidden]="!isProductSearchOpen">
+            <lucide-icon [img]="iconSearch" [size]="17" aria-hidden="true"></lucide-icon>
+            <input #productSearchInput type="search" [(ngModel)]="productSearchQuery" autocomplete="off"
+              [placeholder]="'SEARCH' | translate" [attr.aria-label]="'SEARCH' | translate"
+              [tabindex]="isProductSearchOpen ? 0 : -1" />
+            <button type="button" class="inv-search-close" (click)="closeProductSearch()"
+              [attr.aria-label]="'CANCEL_BUTTON_LABEL' | translate" [tabindex]="isProductSearchOpen ? 0 : -1">
+              <lucide-icon [img]="iconTimes" [size]="16"></lucide-icon>
             </button>
           </div>
-        </ng-container>
-      </div>
-
-      <!-- Shop name, address and phone are printed on the Sales receipt. -->
-      <div class="inv-shopinfo-card">
-        <button type="button" class="inv-shopinfo-header" (click)="isShopInfoCardOpen = !isShopInfoCardOpen"
-          [attr.aria-expanded]="isShopInfoCardOpen">
-          <span class="inv-shopinfo-title">{{ 'SHOP_INFO_TITLE' | translate }}</span>
-          <lucide-icon [img]="isShopInfoCardOpen ? iconChevronUp : iconChevronDown" [size]="16"></lucide-icon>
-        </button>
-        <ng-container *ngIf="isShopInfoCardOpen">
-          <div class="inv-shopinfo-fields">
-            <input type="text" class="inv-input inv-shopinfo-name" [(ngModel)]="shopName" maxlength="50" autocomplete="organization"
-              [placeholder]="'SHOP_NAME_LABEL' | translate" />
-            <textarea class="inv-input inv-shopinfo-address" [(ngModel)]="shopAddress" maxlength="200" autocomplete="off"
-              rows="3" [placeholder]="'SHOP_ADDRESS_LABEL' | translate"></textarea>
-            <input type="text" class="inv-input inv-shopinfo-phone" [(ngModel)]="shopPhone" maxlength="30" autocomplete="off"
-              [placeholder]="'SHOP_PHONE_LABEL' | translate" />
-          </div>
-          <button type="button" class="inv-threshold-save-btn" [disabled]="isSavingShopInfo" (click)="saveShopInfo()">
-            {{ 'SAVE_BUTTON_LABEL' | translate }}
-          </button>
-        </ng-container>
-      </div>
-
-      <ng-container *ngIf="stockSummary$ | async as summary">
-        <div class="inv-empty" *ngIf="summary.length === 0">
-          {{ 'INVENTORY_EMPTY_STOCK_SUMMARY' | translate }}
         </div>
 
-        <ng-container *ngIf="summary.length > 0">
+        <ng-container *ngIf="filteredStockSummary(summary) as filteredSummary">
+          <div class="inv-empty" *ngIf="filteredSummary.length === 0">
+            {{ (summary.length === 0 ? 'INVENTORY_EMPTY_STOCK_SUMMARY' : 'CUSTOM_SELECT_NO_RESULTS') | translate }}
+          </div>
+
+        <ng-container *ngIf="filteredSummary.length > 0">
           <!-- Total estimated profit — shown above the table so it's the
                first thing seen, colored green/red by profit vs loss. -->
           <div class="inv-total-profit-banner"
-               [class.inv-total-profit-positive]="getTotalEstProfit(summary) > 0"
-               [class.inv-total-profit-negative]="getTotalEstProfit(summary) <= 0">
+               [class.inv-total-profit-positive]="getTotalEstProfit(filteredSummary) > 0"
+               [class.inv-total-profit-negative]="getTotalEstProfit(filteredSummary) <= 0">
             <span class="inv-total-profit-label">{{ 'STOCK_SUMMARY_TOTAL_EST_PROFIT_LABEL' | translate }}</span>
-            <span class="inv-total-profit-value" [innerHTML]="formatService.formatAmountShortHtml(getTotalEstProfit(summary), currency)"></span>
+            <span class="inv-total-profit-value" [innerHTML]="formatService.formatAmountShortHtml(getTotalEstProfit(filteredSummary), currency)"></span>
           </div>
 
           <!-- Desktop / tablet: full table -->
@@ -262,7 +287,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr *ngFor="let row of summary; trackBy: trackByStockRow"
+                <tr *ngFor="let row of filteredSummary; trackBy: trackByStockRow"
                     [class.inv-row-negative]="row.currentStock < 0"
                     [class.inv-row-low-stock]="isLowStock(row)"
                     [class.inv-stock-row-selected]="selectedStockProductId === row.productId"
@@ -300,7 +325,7 @@
 
           <!-- Mobile: summary cards, tap to expand full detail inline (no modal) -->
           <div class="inv-stock-cards inv-stock-mobile">
-            <div class="inv-stock-card" *ngFor="let row of summary; trackBy: trackByStockRow"
+            <div class="inv-stock-card" *ngFor="let row of filteredSummary; trackBy: trackByStockRow"
                  [class.inv-row-negative]="row.currentStock < 0"
                  [class.inv-row-low-stock]="isLowStock(row)"
                  [class.inv-stock-card-selected]="selectedStockProductId === row.productId">
@@ -355,10 +380,54 @@
             </div>
           </div>
         </ng-container>
+        </ng-container>
       </ng-container>
 
       <p class="inv-method-note">{{ 'STOCK_SUMMARY_METHOD_NOTE' | translate }}</p>
     </div>
+
+    <div class="inv-settings-backdrop" [class.open]="showSettingsOverlay" (click)="closeSettingsOverlay()"></div>
+    <section class="inv-settings-modal" [class.open]="showSettingsOverlay" role="dialog" aria-modal="true"
+      [attr.aria-label]="'INVENTORY_SETTINGS_TITLE' | translate">
+      <header class="inv-settings-modal-header">
+        <span class="inv-settings-modal-title">
+          <lucide-icon [img]="iconSettings" [size]="18" class="inv-icon-accent"></lucide-icon>
+          {{ 'INVENTORY_SETTINGS_TITLE' | translate }}
+        </span>
+        <button type="button" class="inv-settings-modal-close" (click)="closeSettingsOverlay()"
+          [attr.aria-label]="'CANCEL_BUTTON_LABEL' | translate">
+          <lucide-icon [img]="iconTimes" [size]="18"></lucide-icon>
+        </button>
+      </header>
+
+      <div class="inv-settings-modal-body">
+        <section class="inv-settings-section">
+          <h3 class="inv-settings-section-title">{{ 'LOW_STOCK_THRESHOLD_LABEL' | translate }}</h3>
+          <div class="inv-threshold-row">
+            <input id="inv-low-stock-threshold" type="number" min="0" step="1" class="inv-input inv-threshold-input"
+              [(ngModel)]="lowStockThreshold" />
+            <button type="button" class="inv-threshold-save-btn" [disabled]="isSavingThreshold" (click)="saveLowStockThreshold()">
+              {{ 'SAVE_BUTTON_LABEL' | translate }}
+            </button>
+          </div>
+        </section>
+
+        <section class="inv-settings-section">
+          <h3 class="inv-settings-section-title">{{ 'SHOP_INFO_TITLE' | translate }}</h3>
+          <div class="inv-shopinfo-fields">
+            <input type="text" class="inv-input inv-shopinfo-name" [(ngModel)]="shopName" maxlength="50" autocomplete="organization"
+              [placeholder]="'SHOP_NAME_LABEL' | translate" />
+            <textarea class="inv-input inv-shopinfo-address" [(ngModel)]="shopAddress" maxlength="200" autocomplete="off"
+              rows="3" [placeholder]="'SHOP_ADDRESS_LABEL' | translate"></textarea>
+            <input type="text" class="inv-input inv-shopinfo-phone" [(ngModel)]="shopPhone" maxlength="30" autocomplete="off"
+              [placeholder]="'SHOP_PHONE_LABEL' | translate" />
+          </div>
+          <button type="button" class="inv-threshold-save-btn" [disabled]="isSavingShopInfo" (click)="saveShopInfo()">
+            {{ 'SAVE_BUTTON_LABEL' | translate }}
+          </button>
+        </section>
+      </div>
+    </section>
 
   </div>
 </div>

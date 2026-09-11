@@ -37,6 +37,8 @@ export interface ServiceIIncome {
   amount: number;
   currency: string;
   description?: string;
+  /** Stable, human-searchable numeric code printed on a sale receipt. */
+  receiptCode?: string;
   isProductSale?: boolean;
   // Legacy single-item shape — still written/read for a plain "this sale is
   // one product" entry. A POS cart checkout (2+ items) writes `lineItems`

@@ -813,6 +813,8 @@ export class Purchase implements OnInit, OnDestroy {
   // ── Date picker (drill-down within the modal) — shared by the edit
   // form, the cart, and the voucher form. ──
   isDatePickerOpen = false;
+  datePickerAdjustmentNotice = false;
+  private datePickerAdjustmentNoticeTimer: number | null = null;
   datePickerTarget: 'edit' | 'cart' | 'voucher' = 'cart';
   private datePickerFp: FlatpickrInstance | null = null;
   private datePickerMonthMenu: FlatpickrMonthMenu | null = null;
@@ -858,7 +860,12 @@ export class Purchase implements OnInit, OnDestroy {
       maxDate: this.expenseDateMax || undefined,
       disableMobile: true,
       locale: isMy ? Burmese : undefined,
-      onReady: (_dates, _dateStr, instance) => { this.datePickerMonthMenu = installFlatpickrMonthMenu(instance as FlatpickrInstance); },
+      onReady: (_dates, _dateStr, instance) => {
+        this.datePickerMonthMenu = installFlatpickrMonthMenu(instance as FlatpickrInstance, {
+          showAllMonths: true,
+          onMonthAdjusted: () => this.showDatePickerAdjustmentNotice(),
+        });
+      },
       onDayCreate: (_dates, _dateStr, _fp, dayElem) => {
         if (!isMy) return;
         dayElem.textContent = (dayElem.textContent ?? '').replace(/\d/g, (d: string) => myDigits[+d]);
@@ -881,6 +888,16 @@ export class Purchase implements OnInit, OnDestroy {
       this.datePickerFp.destroy();
       this.datePickerFp = null;
     }
+  }
+
+  private showDatePickerAdjustmentNotice(): void {
+    if (this.datePickerAdjustmentNoticeTimer) clearTimeout(this.datePickerAdjustmentNoticeTimer);
+    this.datePickerAdjustmentNotice = true;
+    this.cdr.markForCheck();
+    this.datePickerAdjustmentNoticeTimer = window.setTimeout(() => {
+      this.datePickerAdjustmentNotice = false;
+      this.cdr.markForCheck();
+    }, 3000);
   }
 
   private getSpaceModeKey(profile: UserProfile | null): string {

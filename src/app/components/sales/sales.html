@@ -194,6 +194,11 @@
             </div>
           </ng-container>
           <ng-container *ngIf="groupedIncomes$ | async as dateGroups; else listLoading">
+            <label class="pnl-receipt-search" *ngIf="(incomes$ | async)?.length">
+              <lucide-icon [img]="iconSearch" [size]="15"></lucide-icon>
+              <input type="search" [(ngModel)]="receiptSearchQuery" (ngModelChange)="receiptSearch$.next($event)"
+                inputmode="numeric" autocomplete="off" placeholder="Receipt code" />
+            </label>
             <div class="pnl-list-empty" *ngIf="dateGroups.length === 0">
               <lucide-icon [img]="iconBanknote" [size]="28" class="pnl-list-empty-icon"></lucide-icon>
               <p>{{ 'NO_SALES_DATA' | translate }}</p>
@@ -216,31 +221,34 @@
                   <div *ngFor="let income of group.incomes; trackBy: trackByIncomeId" class="pnl-item">
                     <div class="pnl-item-inner">
                       <div class="pnl-item-top">
-                        <ng-container *ngIf="income.lineItems && income.lineItems.length > 0; else singleItemOrPlain">
-                          <ng-container *ngIf="income.lineItems.length > 1; else singleLineItem">
-                            <button type="button" class="pnl-item-name pnl-lineitems-toggle"
-                              (click)="toggleLineItems(income.id!)">
-                              {{ 'SALE_ITEMS_COUNT' | translate: { count: formatCount(income.lineItems.length) } }}
-                              <lucide-icon [img]="expandedIncomeId === income.id ? iconChevronUp : iconChevronDown"
-                                [size]="12"></lucide-icon>
-                            </button>
+                        <div class="pnl-item-main">
+                          <ng-container *ngIf="income.lineItems && income.lineItems.length > 0; else singleItemOrPlain">
+                            <ng-container *ngIf="income.lineItems.length > 1; else singleLineItem">
+                              <button type="button" class="pnl-item-name pnl-lineitems-toggle"
+                                (click)="toggleLineItems(income.id!)">
+                                {{ 'SALE_ITEMS_COUNT' | translate: { count: formatCount(income.lineItems.length) } }}
+                                <lucide-icon [img]="expandedIncomeId === income.id ? iconChevronUp : iconChevronDown"
+                                  [size]="12"></lucide-icon>
+                              </button>
+                            </ng-container>
+                            <ng-template #singleLineItem>
+                              <span class="pnl-item-name" appShowFullText>{{ getLineItemName(income.lineItems[0])
+                                }}</span>
+                            </ng-template>
                           </ng-container>
-                          <ng-template #singleLineItem>
-                            <span class="pnl-item-name" appShowFullText>{{ getLineItemName(income.lineItems[0])
-                              }}</span>
+                          <ng-template #singleItemOrPlain>
+                            <ng-container *ngIf="income.isProductSale && income.productId; else plainDescText">
+                              <span class="pnl-item-name" appShowFullText>
+                                {{ getSelectedProductName(income.productId) || '—' }}
+                                <span *ngIf="income.quantity"> × {{ formatQuantity(income.quantity, getSelectedProductUnit(income.productId)) }}</span>
+                              </span>
+                            </ng-container>
+                            <ng-template #plainDescText>
+                              <span class="pnl-item-name" appShowFullText>{{ income.description || '—' }}</span>
+                            </ng-template>
                           </ng-template>
-                        </ng-container>
-                        <ng-template #singleItemOrPlain>
-                          <ng-container *ngIf="income.isProductSale && income.productId; else plainDescText">
-                            <span class="pnl-item-name" appShowFullText>
-                              {{ getSelectedProductName(income.productId) || '—' }}
-                              <span *ngIf="income.quantity"> × {{ formatQuantity(income.quantity, getSelectedProductUnit(income.productId)) }}</span>
-                            </span>
-                          </ng-container>
-                          <ng-template #plainDescText>
-                            <span class="pnl-item-name" appShowFullText>{{ income.description || '—' }}</span>
-                          </ng-template>
-                        </ng-template>
+                          <span class="pnl-receipt-code">#{{ getReceiptCode(income) }}</span>
+                        </div>
                         <span class="pnl-item-amount pnl-amount-income"
                           [innerHTML]="formatService.formatAmountWithSymbolHtml(income.amount, income.currency)"></span>
                       </div>
@@ -359,6 +367,9 @@
     </div>
     <div class="pnl-date-picker-body">
       <div id="pnl-date-picker-container"></div>
+      <div class="app-date-adjustment-notice" *ngIf="datePickerAdjustmentNotice" role="status">
+        {{ 'EXPENSE_DATE_MONTH_ADJUSTED' | translate }}
+      </div>
     </div>
   </ng-container>
 
@@ -403,7 +414,7 @@
 <!-- Edit modal — legacy single-item sale editing only (see the row menu's
      Edit guard above; Add is handled by the cart section on the page). -->
 <div class="pnl-add-modal-backdrop" [class.open]="isAddModalOpen"></div>
-<div class="pnl-add-modal-sheet" [class.open]="isAddModalOpen">
+<div class="pnl-add-modal-sheet" [class.open]="isAddModalOpen" [class.date-picker-open]="isDatePickerOpen">
   <div class="pnl-add-modal-handle"></div>
 
   <div class="pnl-add-modal-header" *ngIf="!isDatePickerOpen && !isProductPickerOpen">
@@ -428,6 +439,9 @@
   <!-- Date picker body — inline flatpickr calendar, swaps in place of the form -->
   <div class="pnl-add-modal-body pnl-date-picker-body" *ngIf="isDatePickerOpen">
     <div id="pnl-date-picker-container"></div>
+    <div class="app-date-adjustment-notice" *ngIf="datePickerAdjustmentNotice" role="status">
+      {{ 'EXPENSE_DATE_MONTH_ADJUSTED' | translate }}
+    </div>
   </div>
 
   <!-- Product picker header — replaces the title while drilled in -->
@@ -617,6 +631,7 @@
       <div class="pnl-receipt-shop-info" *ngIf="receiptShopAddress">{{ receiptShopAddress }}</div>
       <div class="pnl-receipt-shop-info pnl-receipt-shop-phone" *ngIf="receiptShopPhone">{{ 'SHOP_PHONE_LABEL' | translate }}: {{ receiptShopPhone }}</div>
       <div class="pnl-receipt-date">{{ 'DATE_LABEL' | translate }}: {{ receiptDate }}&nbsp;&nbsp;{{ receiptTime }}</div>
+      <div class="pnl-receipt-date pnl-receipt-code-line" *ngIf="receiptCode">#{{ receiptCode }}</div>
       <div class="pnl-receipt-sep"></div>
       <div class="pnl-receipt-line" *ngFor="let line of receiptLines">
         <div class="pnl-receipt-line-name">{{ line.name }}</div>

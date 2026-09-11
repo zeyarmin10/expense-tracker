@@ -166,6 +166,8 @@ export class Sales implements OnInit, OnDestroy {
   public userRole: string | null = null;
 
   private refreshIncomes$ = new BehaviorSubject<void>(undefined);
+  readonly receiptSearch$ = new BehaviorSubject<string>('');
+  receiptSearchQuery = '';
 
   // Observables for filtered data (likely provided by ProfitLossService)
   incomes$!: Observable<ServiceIIncome[]>;
@@ -198,6 +200,8 @@ export class Sales implements OnInit, OnDestroy {
   isAddModalOpen = false;
   isSubmittingIncome = false;
   isDatePickerOpen = false;
+  datePickerAdjustmentNotice = false;
+  private datePickerAdjustmentNoticeTimer: number | null = null;
   // Non-null while the modal is editing an existing record instead of
   // adding a new one — same pattern as expense.ts's editingExpense.
   editingIncome: ServiceIIncome | null = null;
@@ -316,6 +320,7 @@ export class Sales implements OnInit, OnDestroy {
   receiptTime = '';
   receiptLines: { name: string; qtyUnit: string; unitPrice: string; subtotal: string }[] = [];
   receiptTotal = '';
+  receiptCode = '';
   private receiptText = '';
 
   // Reopens the same receipt modal for an already-recorded sale — a plain
@@ -336,7 +341,7 @@ export class Sales implements OnInit, OnDestroy {
     // authoritative for the Date line; createdAt only supplies the time of
     // day the sale was actually recorded (older records may lack it, in
     // which case the time is simply left blank rather than guessed).
-    this.buildAndShowReceipt(effectiveLineItems, income.amount, income.currency, income.date, income.createdAt);
+    this.buildAndShowReceipt(effectiveLineItems, income.amount, income.currency, income.date, income.createdAt, this.getReceiptCode(income));
   }
 
   private buildAndShowReceipt(
@@ -345,7 +350,9 @@ export class Sales implements OnInit, OnDestroy {
     currency: string,
     date: string,
     createdAt?: string,
+    receiptCode?: string,
   ): void {
+    this.receiptCode = receiptCode || '';
     this.receiptShopName = this.userProfile?.currentSpaceName || 'Kyat Wise';
     this.receiptDate = this.formatService.formatLocalizedDate(date);
     // createdAt supplies only the time of day — the date itself always
@@ -376,9 +383,10 @@ export class Sales implements OnInit, OnDestroy {
       this.receiptShopPhone ? `${this.translate.instant('SHOP_PHONE_LABEL')}: ${this.receiptShopPhone}` : '',
     ].filter(Boolean).join('\n');
 
+    const receiptCodeLine = this.receiptCode ? `#${this.receiptCode}\n` : '';
     this.receiptText =
       `${this.receiptShopName}\n${shopInfoLines ? shopInfoLines + '\n' : ''}${sep}\n` +
-      `${this.translate.instant('DATE_LABEL')}: ${this.receiptDate}  ${this.receiptTime}\n` +
+      `${this.translate.instant('DATE_LABEL')}: ${this.receiptDate}  ${this.receiptTime}\n${receiptCodeLine}` +
       `${sep}\n${rows}\n${sep}\n` +
       `${this.translate.instant('POS_TOTAL_LABEL')}: ${this.receiptTotal}\n${sep}\n` +
       `${this.translate.instant('SALE_RECEIPT_THANK_YOU')}`;
@@ -403,6 +411,35 @@ export class Sales implements OnInit, OnDestroy {
   private reallyCloseReceipt(): void {
     this.showReceipt = false;
     document.body.classList.remove('pnl-receipt-modal-open');
+  }
+
+  private createReceiptCode(): string {
+    // The last ten milliseconds digits are compact, numeric, and unique for
+    // normal sequential checkouts while keeping a receipt number easy to read.
+    return String(Date.now() % 10_000_000_000).padStart(10, '0');
+  }
+
+  /**
+   * New sales persist a receipt code. Older sales predate that field, so give
+   * each one a deterministic numeric display/search code from its timestamp
+   * and Firebase id instead of leaving the list and its re-opened voucher
+   * blank. The value stays stable without mutating historic records.
+   */
+  getReceiptCode(income: ServiceIIncome): string {
+    if (income.receiptCode) {
+      // Existing records may have been written before the ten-digit format.
+      // Show/search their stable last ten numeric digits consistently too.
+      const digits = income.receiptCode.replace(/\D/g, '');
+      return digits.slice(-10).padStart(10, '0');
+    }
+
+    const timestamp = Date.parse(income.createdAt || `${income.date}T00:00:00`) || 0;
+    const source = income.id || `${income.date}-${income.amount}-${income.currency}`;
+    let hash = 0;
+    for (let index = 0; index < source.length; index += 1) {
+      hash = (hash * 31 + source.charCodeAt(index)) >>> 0;
+    }
+    return `${Math.abs(timestamp % 10_000_000).toString().padStart(7, '0')}${(hash % 1000).toString().padStart(3, '0')}`;
   }
 
   @HostListener('window:popstate')
@@ -947,12 +984,14 @@ export class Sales implements OnInit, OnDestroy {
     const amount = lineItems.reduce((sum, item) => sum + item.subtotal, 0);
     const currency = this.userProfile?.currency || 'MMK';
     const date = this.incomeForm.get('date')?.value || this.datePipe.transform(new Date(), 'yyyy-MM-dd');
+    const receiptCode = this.createReceiptCode();
 
     try {
       await this.incomeService.addIncome({
         date,
         amount,
         currency,
+        receiptCode,
         isProductSale: true,
         lineItems,
       });
@@ -966,7 +1005,7 @@ export class Sales implements OnInit, OnDestroy {
       // same URL, no visible effect; same trade-off onboarding.ts documents
       // for its own history.back()-vs-navigate() race).
       this.reallyCloseAddCartOverlay();
-      this.buildAndShowReceipt(lineItems, amount, currency, date);
+      this.buildAndShowReceipt(lineItems, amount, currency, date, undefined, receiptCode);
     } catch (error: any) {
       console.error('Error checking out sale:', error);
       Toast.fire({
@@ -1070,8 +1109,10 @@ export class Sales implements OnInit, OnDestroy {
     );
     // Date-grouped, card-style list — same shape as Purchase's
     // groupedExpenses$/ExpenseDateGroup.
-    this.groupedIncomes$ = this.incomes$.pipe(
-      map((incomes) => this.groupIncomesByDate(incomes))
+    this.groupedIncomes$ = combineLatest([this.incomes$, this.receiptSearch$]).pipe(
+      map(([incomes, search]) => this.groupIncomesByDate(incomes.filter((income) =>
+        !search.trim() || this.getReceiptCode(income).includes(search.trim()),
+      )))
     );
     this.totalExpensesByCurrency$ = profitLossData$.pipe(
       map((data) => data.totalExpenses)
@@ -1335,6 +1376,7 @@ export class Sales implements OnInit, OnDestroy {
       productId: isProductSale ? this.incomeForm.value.productId : null,
       quantity: isProductSale ? this.incomeForm.value.quantity : null,
       unitPrice: isProductSale ? this.incomeForm.value.unitPrice : null,
+      ...(this.editingIncome ? {} : { receiptCode: this.createReceiptCode() }),
     };
 
     const editingId = this.editingIncome?.id;
@@ -1524,9 +1566,15 @@ export class Sales implements OnInit, OnDestroy {
     this.datePickerFp = flatpickr(hiddenInput, {
       inline: true,
       defaultDate: currentValue || undefined,
+      maxDate: 'today',
       disableMobile: true,
       locale: isMy ? Burmese : undefined,
-      onReady: (_dates, _dateStr, instance) => { this.datePickerMonthMenu = installFlatpickrMonthMenu(instance as FlatpickrInstance); },
+      onReady: (_dates, _dateStr, instance) => {
+        this.datePickerMonthMenu = installFlatpickrMonthMenu(instance as FlatpickrInstance, {
+          showAllMonths: true,
+          onMonthAdjusted: () => this.showDatePickerAdjustmentNotice(),
+        });
+      },
       onDayCreate: (_dates, _dateStr, _fp, dayElem) => {
         if (!isMy) return;
         dayElem.textContent = (dayElem.textContent ?? '').replace(/\d/g, (d: string) => myDigits[+d]);
@@ -1549,6 +1597,16 @@ export class Sales implements OnInit, OnDestroy {
       this.datePickerFp.destroy();
       this.datePickerFp = null;
     }
+  }
+
+  private showDatePickerAdjustmentNotice(): void {
+    if (this.datePickerAdjustmentNoticeTimer) clearTimeout(this.datePickerAdjustmentNoticeTimer);
+    this.datePickerAdjustmentNotice = true;
+    this.cdr.markForCheck();
+    this.datePickerAdjustmentNoticeTimer = window.setTimeout(() => {
+      this.datePickerAdjustmentNotice = false;
+      this.cdr.markForCheck();
+    }, 3000);
   }
 
   // --- Helper Methods for UI Classes ---

@@ -10,7 +10,7 @@
     </button>
 
     <div class="bgt-add-modal-backdrop" [class.open]="isAddModalOpen"></div>
-    <div class="bgt-add-modal-sheet" [class.open]="isAddModalOpen">
+    <div class="bgt-add-modal-sheet" [class.open]="isAddModalOpen" [class.date-picker-open]="isDatePickerOpen">
       <div class="bgt-add-modal-handle"></div>
 
       <div class="bgt-add-modal-header" *ngIf="!isDatePickerOpen">
@@ -34,6 +34,9 @@
       <!-- Date picker body — inline flatpickr calendar, swaps in place of the form -->
       <div class="bgt-add-modal-body bgt-date-picker-body" *ngIf="isDatePickerOpen">
         <div id="bgt-date-picker-container"></div>
+        <div class="app-date-adjustment-notice" *ngIf="datePickerAdjustmentNotice" role="status">
+          {{ 'EXPENSE_DATE_MONTH_ADJUSTED' | translate }}
+        </div>
       </div>
 
       <!-- Category list overlays the still-visible Add Budget form. -->

@@ -205,7 +205,7 @@ export class DateRangeInputComponent implements OnChanges, OnDestroy {
         dayElem.textContent = (dayElem.textContent ?? '').replace(/\d/g, (d: string) => MY_DIGITS[+d]);
       },
       onReady: (_dates, _dateStr, instance) => {
-        this.monthMenu = installFlatpickrMonthMenu(instance as Instance);
+        this.monthMenu = installFlatpickrMonthMenu(instance as Instance, { showAllMonths: true });
         applyYearOverlay(instance as Instance);
         // Flatpickr finalizes the month header after onReady on some Android
         // WebViews; run once more after that paint so the localized label is
