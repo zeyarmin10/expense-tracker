@@ -11,7 +11,7 @@
     </button>
 
     <div class="exp-add-modal-backdrop" [class.open]="isAddModalOpen"></div>
-    <div class="exp-add-modal-sheet" [class.open]="isAddModalOpen">
+    <div class="exp-add-modal-sheet" [class.open]="isAddModalOpen" [class.date-picker-open]="isDatePickerOpen">
       <div class="exp-add-modal-handle"></div>
       <div class="exp-add-modal-header" *ngIf="!isDatePickerOpen">
         <!-- Edit mode: plain title instead of the add/voucher tabs -->
@@ -58,7 +58,7 @@
            category picker above. -->
       <div class="exp-add-modal-body exp-date-picker-body" *ngIf="isDatePickerOpen">
         <div id="exp-date-picker-container"></div>
-        <div class="exp-date-adjustment-notice" *ngIf="datePickerAdjustmentNotice" role="status">
+        <div class="app-date-adjustment-notice" *ngIf="datePickerAdjustmentNotice" role="status">
           {{ 'EXPENSE_DATE_MONTH_ADJUSTED' | translate }}
         </div>
       </div>

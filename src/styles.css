@@ -26,6 +26,8 @@
 
 /* ── Global Design Tokens ── */
 :root {
+  /* Set from app.ts while the native keyboard is visible. */
+  --keyboard-inset: 0px;
   --bg: #020817;
   --surface: #07162f;
   --surface-2: #0f2348;
@@ -99,6 +101,115 @@ body {
 
 body {
   margin: 0;
+}
+
+/* Month menus keep unavailable months visible and snap to the nearest valid
+   one. This centered notice explains that change without a hard outline: its
+   warning colour is concentrated in the middle and dissolves at both edges. */
+.app-date-adjustment-notice {
+  position: fixed;
+  z-index: 10060;
+  top: 50%;
+  left: 50%;
+  width: min(300px, calc(100vw - 3rem));
+  padding: 0.8rem 1rem;
+  border: none;
+  border-radius: 14px;
+  /* Keep the familiar compact notice, with only its left/right edges
+     dissolving into the page instead of forming a visible border. */
+  background: linear-gradient(90deg,
+    rgba(254, 226, 226, 0) 0%,
+    rgba(254, 226, 226, 0.52) 11%,
+    rgba(254, 226, 226, 0.94) 27%,
+    rgba(254, 226, 226, 0.97) 50%,
+    rgba(254, 226, 226, 0.94) 73%,
+    rgba(254, 226, 226, 0.52) 89%,
+    rgba(254, 226, 226, 0) 100%);
+  box-shadow: 0 14px 32px rgba(127, 29, 29, 0.14);
+  color: #b91c1c;
+  font-size: 0.84rem;
+  font-weight: 650;
+  line-height: 1.4;
+  text-align: center;
+  transform: translate(-50%, -50%);
+  animation: app-date-notice-fade 3s ease forwards;
+  pointer-events: none;
+}
+
+/* The light warning wash above turns almost white on the navy dark surface.
+   Keep the same horizontal falloff in dark mode, but build it from deep red
+   and navy tones so it reads as a warning without becoming a white card. */
+body:not(.light-mode) .app-date-adjustment-notice {
+  background: linear-gradient(90deg,
+    rgba(51, 18, 33, 0) 0%,
+    rgba(75, 24, 42, 0.52) 11%,
+    rgba(91, 29, 47, 0.92) 27%,
+    rgba(101, 31, 49, 0.96) 50%,
+    rgba(91, 29, 47, 0.92) 73%,
+    rgba(75, 24, 42, 0.52) 89%,
+    rgba(51, 18, 33, 0) 100%);
+  box-shadow: 0 14px 32px rgba(248, 113, 113, 0.11);
+  color: #fecaca;
+}
+
+@keyframes app-date-notice-fade {
+  0%, 78% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -52%) scale(0.97); }
+}
+
+/* On phones, the date picker is a drilled-in view above the page.  Its
+   calendar and header remain readable surfaces, but the unused lower portion
+   of the former full-screen form must not leave a large opaque white block. */
+@media (max-width: 991.98px) {
+  :is(.exp-add-modal-sheet, .pnl-add-modal-sheet, .bgt-add-modal-sheet).date-picker-open {
+    background: transparent;
+  }
+
+  :is(.exp-add-modal-sheet, .pnl-add-modal-sheet, .bgt-add-modal-sheet).date-picker-open >
+    :is(.exp-add-modal-header, .pnl-add-modal-header, .bgt-add-modal-header) {
+    background: var(--surface);
+  }
+}
+
+/* Searchable picker sheets need to remain above the mobile keyboard.  The
+   inset only represents the keyboard area that is still covering the WebView;
+   on devices that resize the viewport it becomes zero, while the reduced dvh
+   supplies the available height. */
+body.keyboard-visible .exp-pos-picker-sheet.open:not(.exp-pos-picker-sheet-date),
+body.keyboard-visible .pnl-pos-picker-sheet.open:not(.pnl-pos-picker-sheet-date) {
+  bottom: var(--keyboard-inset);
+  height: min(80dvh, calc(100dvh - var(--keyboard-inset) - env(safe-area-inset-top, 0px) - 0.75rem));
+  max-height: calc(100dvh - var(--keyboard-inset) - env(safe-area-inset-top, 0px) - 0.75rem);
+  overflow: hidden;
+  transition: translate 0.28s cubic-bezier(0.34, 1.2, 0.64, 1), bottom 0.18s ease, max-height 0.18s ease;
+}
+
+body.keyboard-visible .exp-pos-picker-sheet .exp-cat-picker-body,
+body.keyboard-visible .pnl-pos-picker-sheet .pnl-cat-picker-body,
+body.keyboard-visible .exp-category-bottom-sheet .exp-cat-picker-body,
+body.keyboard-visible .bgt-selection-bottom-sheet .bgt-cat-picker-body {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+}
+
+body.keyboard-visible .exp-pos-picker-sheet .exp-cat-picker-list,
+body.keyboard-visible .pnl-pos-picker-sheet .pnl-cat-picker-list,
+body.keyboard-visible .exp-category-bottom-sheet .exp-cat-picker-list,
+body.keyboard-visible .bgt-selection-bottom-sheet .bgt-cat-picker-list {
+  min-height: 0;
+  flex: 1 1 auto;
+  overscroll-behavior: contain;
+}
+
+/* Expense and Budget have their category selector nested in a full-screen
+   form sheet, so the same inset is applied relative to that sheet. */
+body.keyboard-visible .exp-category-bottom-sheet,
+body.keyboard-visible .bgt-selection-bottom-sheet {
+  bottom: var(--keyboard-inset);
+  height: min(80%, calc(100% - var(--keyboard-inset) - env(safe-area-inset-top, 0px) - 0.75rem));
+  max-height: calc(100% - var(--keyboard-inset) - env(safe-area-inset-top, 0px) - 0.75rem);
+  overflow: hidden;
 }
 
 /* Without this, mobile browsers hold every tap on an interactive element

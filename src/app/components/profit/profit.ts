@@ -180,6 +180,8 @@ export class Profit implements OnInit, OnDestroy {
   private addModalHistoryActive = false;
   isSubmittingIncome = false;
   isDatePickerOpen = false;
+  datePickerAdjustmentNotice = false;
+  private datePickerAdjustmentNoticeTimer: number | null = null;
   // Non-null while the modal is editing an existing record instead of
   // adding a new one — same pattern as expense.ts's editingExpense.
   editingIncome: ServiceIIncome | null = null;
@@ -862,9 +864,15 @@ export class Profit implements OnInit, OnDestroy {
     this.datePickerFp = flatpickr(hiddenInput, {
       inline: true,
       defaultDate: currentValue || undefined,
+      maxDate: 'today',
       disableMobile: true,
       locale: isMy ? Burmese : undefined,
-      onReady: (_dates, _dateStr, instance) => { this.datePickerMonthMenu = installFlatpickrMonthMenu(instance as FlatpickrInstance); },
+      onReady: (_dates, _dateStr, instance) => {
+        this.datePickerMonthMenu = installFlatpickrMonthMenu(instance as FlatpickrInstance, {
+          showAllMonths: true,
+          onMonthAdjusted: () => this.showDatePickerAdjustmentNotice(),
+        });
+      },
       onDayCreate: (_dates, _dateStr, _fp, dayElem) => {
         if (!isMy) return;
         dayElem.textContent = (dayElem.textContent ?? '').replace(/\d/g, (d: string) => myDigits[+d]);
@@ -887,6 +895,16 @@ export class Profit implements OnInit, OnDestroy {
       this.datePickerFp.destroy();
       this.datePickerFp = null;
     }
+  }
+
+  private showDatePickerAdjustmentNotice(): void {
+    if (this.datePickerAdjustmentNoticeTimer) clearTimeout(this.datePickerAdjustmentNoticeTimer);
+    this.datePickerAdjustmentNotice = true;
+    this.cdr.markForCheck();
+    this.datePickerAdjustmentNoticeTimer = window.setTimeout(() => {
+      this.datePickerAdjustmentNotice = false;
+      this.cdr.markForCheck();
+    }, 3000);
   }
 
   // --- Formatting and Chart Rendering ---

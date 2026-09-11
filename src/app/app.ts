@@ -789,10 +789,14 @@ export class App implements OnInit, AfterViewInit {
       reverseButtons: true,
       background: bgColor,
       color: titleColor,
-      allowOutsideClick: true,
+      // An update prompt must be resolved deliberately with one of its two
+      // actions. It is the only SweetAlert that Android Back must not close.
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      allowEnterKey: false,
       showClass: { popup: 'swal2-show' },
       customClass: {
-        popup: isDark ? 'swal-dark' : 'swal-light',
+        popup: `swal-app-update-popup ${isDark ? 'swal-dark' : 'swal-light'}`,
       }
     }).then((result) => {
       if (!result.isConfirmed) return;
@@ -865,10 +869,14 @@ export class App implements OnInit, AfterViewInit {
       reverseButtons: true,
       background: bgColor,
       color: titleColor,
-      allowOutsideClick: true,
+      // Same non-dismissable contract as the initial update prompt: users
+      // choose Restart Now or Later, rather than losing this state via Back.
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      allowEnterKey: false,
       showClass: { popup: 'swal2-show' },
       customClass: {
-        popup: isDark ? 'swal-dark' : 'swal-light',
+        popup: `swal-app-update-popup ${isDark ? 'swal-dark' : 'swal-light'}`,
       }
     }).then((result) => {
       if (result.isConfirmed) {
@@ -1085,6 +1093,44 @@ export class App implements OnInit, AfterViewInit {
       if (nav) nav.classList.remove('nav-hidden-keyboard');
     };
 
+    // Some Android WebViews resize the viewport for the IME while others
+    // leave it in place and overlay the keyboard. Keep a CSS inset for only
+    // the part that still overlaps the page, so fixed bottom sheets work in
+    // either mode without being lifted twice.
+    let keyboardVisible = false;
+    let reportedKeyboardHeight = 0;
+    let restingViewportHeight = window.visualViewport?.height ?? window.innerHeight;
+
+    const updateKeyboardInset = () => {
+      const currentViewportHeight = window.visualViewport?.height ?? window.innerHeight;
+      const viewportResize = Math.max(0, restingViewportHeight - currentViewportHeight);
+      const keyboardInset = keyboardVisible
+        ? Math.max(0, reportedKeyboardHeight - viewportResize)
+        : 0;
+
+      document.documentElement.style.setProperty('--keyboard-inset', `${Math.round(keyboardInset)}px`);
+      document.body.classList.toggle('keyboard-visible', keyboardVisible);
+    };
+
+    const setKeyboardState = (visible: boolean, keyboardHeight = 0) => {
+      keyboardVisible = visible;
+      reportedKeyboardHeight = Math.max(0, keyboardHeight);
+      if (!visible) {
+        restingViewportHeight = window.visualViewport?.height ?? window.innerHeight;
+      }
+      updateKeyboardInset();
+    };
+
+    const refreshKeyboardInset = () => {
+      if (!keyboardVisible) {
+        restingViewportHeight = window.visualViewport?.height ?? window.innerHeight;
+      }
+      updateKeyboardInset();
+    };
+
+    window.visualViewport?.addEventListener('resize', refreshKeyboardInset);
+    window.addEventListener('resize', refreshKeyboardInset);
+
     // keyboard တကယ်တက်မဲ့ input တွေကိုသာ true ပြန်တယ်
     const isTextInput = (el: Element | null): boolean => {
       if (!el) return false;
@@ -1105,13 +1151,20 @@ export class App implements OnInit, AfterViewInit {
 
     if (Capacitor.isNativePlatform()) {
       // Android/iOS native — Capacitor keyboard events သုံး
-      Keyboard.addListener('keyboardWillShow', () => hideNav());
-      Keyboard.addListener('keyboardWillHide', () => showNav());
+      Keyboard.addListener('keyboardWillShow', ({ keyboardHeight }) => {
+        setKeyboardState(true, keyboardHeight);
+        hideNav();
+      });
+      Keyboard.addListener('keyboardWillHide', () => {
+        setKeyboardState(false);
+        showNav();
+      });
     } else {
       // Mobile web browser — focusin/focusout သုံး
       // text input တွေမှာသာ hide လုပ်မယ် (date/select မဟုတ်ရင်)
       document.addEventListener('focusin', (e: FocusEvent) => {
         if (isTextInput(e.target as Element)) {
+          setKeyboardState(true);
           hideNav();
         }
         // date, select တွေ focus ဝင်ရင် nav ကို မထိဘူး → ပေါ်နေဆဲ
@@ -1123,6 +1176,7 @@ export class App implements OnInit, AfterViewInit {
           setTimeout(() => {
             // focus သည် တခြား text input ကို မရောက်ဘူးဆိုမှ show လုပ်
             if (!isTextInput(document.activeElement)) {
+              setKeyboardState(false);
               showNav();
             }
           }, 100);
@@ -1140,6 +1194,19 @@ export class App implements OnInit, AfterViewInit {
 
     CapacitorApp.addListener('backButton', ({ canGoBack }) => {
       const url = this.router.url;
+
+      // SweetAlert sits outside Angular's route/modal state. Always dismiss a
+      // normal alert before considering navigation, so Android Back behaves
+      // like the alert's Cancel/Close action rather than leaving the page.
+      // App-update prompts deliberately opt out: their two visible buttons
+      // are the only allowed way to dismiss them.
+      if (Swal.isVisible()) {
+        const popup = Swal.getPopup();
+        if (!popup?.classList.contains('swal-app-update-popup')) {
+          Swal.close();
+        }
+        return;
+      }
 
       // Drawer ဖွင့်ထားရင် အရင်ပိတ်
       if (this.mobileMenuOpen) {

@@ -10,7 +10,7 @@
     </button>
 
     <div class="pnl-add-modal-backdrop" [class.open]="isAddModalOpen"></div>
-    <div class="pnl-add-modal-sheet" [class.open]="isAddModalOpen">
+    <div class="pnl-add-modal-sheet" [class.open]="isAddModalOpen" [class.date-picker-open]="isDatePickerOpen">
       <div class="pnl-add-modal-handle"></div>
 
       <div class="pnl-add-modal-header" *ngIf="!isDatePickerOpen">
@@ -34,6 +34,9 @@
       <!-- Date picker body — inline flatpickr calendar, swaps in place of the form -->
       <div class="pnl-add-modal-body pnl-date-picker-body" *ngIf="isDatePickerOpen">
         <div id="pnl-date-picker-container"></div>
+        <div class="app-date-adjustment-notice" *ngIf="datePickerAdjustmentNotice" role="status">
+          {{ 'EXPENSE_DATE_MONTH_ADJUSTED' | translate }}
+        </div>
       </div>
 
       <div class="pnl-add-modal-body" *ngIf="!isDatePickerOpen">

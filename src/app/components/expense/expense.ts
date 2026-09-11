@@ -177,7 +177,6 @@ export class Expense implements OnInit, OnDestroy {
   // ── Date picker bounds for expense / voucher forms ──
   readonly expenseDateMax: string = (() => {
     const t = new Date();
-    t.setFullYear(t.getFullYear() + 3);
     return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
   })();
   readonly expenseDateMin: string = (() => {

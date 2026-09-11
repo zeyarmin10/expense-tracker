@@ -208,6 +208,8 @@ export class BudgetComponent implements OnInit, OnDestroy {
   isCategoryPickerOpen = false;
   categoryPickerSearch = '';
   isDatePickerOpen = false;
+  datePickerAdjustmentNotice = false;
+  private datePickerAdjustmentNoticeTimer: number | null = null;
   isTypePickerOpen = false;
   private datePickerFp: FlatpickrInstance | null = null;
   private datePickerMonthMenu: FlatpickrMonthMenu | null = null;
@@ -396,9 +398,15 @@ export class BudgetComponent implements OnInit, OnDestroy {
     this.datePickerFp = flatpickr(hiddenInput, {
       inline: true,
       defaultDate: currentValue || undefined,
+      maxDate: 'today',
       disableMobile: true,
       locale: isMy ? Burmese : undefined,
-      onReady: (_dates, _dateStr, instance) => { this.datePickerMonthMenu = installFlatpickrMonthMenu(instance as FlatpickrInstance); },
+      onReady: (_dates, _dateStr, instance) => {
+        this.datePickerMonthMenu = installFlatpickrMonthMenu(instance as FlatpickrInstance, {
+          showAllMonths: true,
+          onMonthAdjusted: () => this.showDatePickerAdjustmentNotice(),
+        });
+      },
       onDayCreate: (_dates, _dateStr, _fp, dayElem) => {
         if (!isMy) return;
         dayElem.textContent = (dayElem.textContent ?? '').replace(/\d/g, (d: string) => myDigits[+d]);
@@ -421,6 +429,16 @@ export class BudgetComponent implements OnInit, OnDestroy {
       this.datePickerFp.destroy();
       this.datePickerFp = null;
     }
+  }
+
+  private showDatePickerAdjustmentNotice(): void {
+    if (this.datePickerAdjustmentNoticeTimer) clearTimeout(this.datePickerAdjustmentNoticeTimer);
+    this.datePickerAdjustmentNotice = true;
+    this.cdr.markForCheck();
+    this.datePickerAdjustmentNoticeTimer = window.setTimeout(() => {
+      this.datePickerAdjustmentNotice = false;
+      this.cdr.markForCheck();
+    }, 3000);
   }
 
   private refreshBudgets$ = new BehaviorSubject<void>(undefined);

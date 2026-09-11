@@ -415,6 +415,38 @@ body.pnl-add-modal-open {
   margin-bottom: 0.6rem;
 }
 
+.pnl-receipt-search {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 40px;
+  /* Align with the total card and keep the field off the panel edges. */
+  margin: 0.35rem 0.75rem 0.75rem;
+  padding: 0 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-2);
+  color: var(--text-muted);
+}
+
+.pnl-receipt-search input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--text); }
+.pnl-receipt-code {
+  display: block;
+  margin-top: 0.12rem;
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.pnl-receipt-code-line {
+  color: var(--accent);
+  font-family: 'DM Mono', 'Courier New', monospace;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
 /* Give the shop contact block a little breathing room before the timestamp. */
 .pnl-receipt-shop-info + .pnl-receipt-date {
   margin-top: 0.35rem;
@@ -1376,6 +1408,17 @@ body.pnl-add-modal-open {
   align-items: flex-start;
   justify-content: space-between;
   gap: 0.5rem;
+}
+
+.pnl-item-main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.pnl-item-main .pnl-item-name {
+  flex: none;
 }
 
 .pnl-item-name {
@@ -2796,7 +2839,7 @@ app-date-input .di-trigger {
     z-index: 10;
     background: var(--nav-bg, var(--surface));
     margin: 0;
-    padding: 0.7rem 1rem calc(env(safe-area-inset-bottom, 0px) + 0.7rem);
+    padding: 0.7rem 1rem calc(env(safe-area-inset-bottom, 0px) + 1.5rem);
     border-top: 1px solid var(--nav-border, var(--border));
     border-radius: 0;
     box-shadow: 0 -5px 16px rgba(0, 0, 0, 0.16);

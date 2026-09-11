@@ -524,32 +524,6 @@ body.exp-add-modal-open {
   min-height: 320px;
 }
 
-.exp-date-adjustment-notice {
-  position: fixed;
-  z-index: 10060;
-  top: 50%;
-  left: 50%;
-  width: min(300px, calc(100vw - 3rem));
-  padding: 0.8rem 1rem;
-  border: 1px solid rgba(220, 38, 38, 0.22);
-  border-radius: 12px;
-  background: rgba(254, 226, 226, 0.96);
-  box-shadow: 0 10px 30px rgba(127, 29, 29, 0.18);
-  color: #b91c1c;
-  font-size: 0.84rem;
-  font-weight: 650;
-  line-height: 1.4;
-  text-align: center;
-  transform: translate(-50%, -50%);
-  animation: exp-date-notice-fade 3s ease forwards;
-  pointer-events: none;
-}
-
-@keyframes exp-date-notice-fade {
-  0%, 78% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-  100% { opacity: 0; transform: translate(-50%, -52%) scale(0.97); }
-}
-
 /* Amount — prominent hero field, quick mode only.
    Placeholder and typed value share the same large size (no floating label). */
 .exp-amount-hero {

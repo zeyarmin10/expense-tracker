@@ -92,19 +92,23 @@
         </a>
         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="spaceDropdown">
           <li class="dropdown-space-title">{{ 'SPACE_SECTION_TITLE' | translate }}</li>
-          <li *ngFor="let space of spaces; trackBy: trackBySpaceId">
-            <button class="dropdown-item dropdown-space-item" type="button" (click)="switchSpace(space.id!)"
-              [class.dropdown-space-item-active]="(currentSpaceId$ | async) === space.id">
-              <span class="dropdown-space-main">
-                <span class="dropdown-space-avatar" *ngIf="space.imageUrl">
-                  <img [src]="space.imageUrl" alt="">
-                </span>
-                <lucide-icon *ngIf="!space.imageUrl" [img]="space.type === 'personal' ? iconUser : iconUsers" [size]="16" class="dropdown-space-type-icon"></lucide-icon>
-                <span>{{ getDisplaySpaceName(space) }}</span>
-              </span>
-              <span class="dropdown-space-badge" *ngIf="(currentSpaceId$ | async) === space.id">{{ 'SPACE_ACTIVE_BADGE'
-                | translate }}</span>
-            </button>
+          <li class="dropdown-space-scroll">
+            <ul class="dropdown-space-list">
+              <li *ngFor="let space of spaces; trackBy: trackBySpaceId">
+                <button class="dropdown-item dropdown-space-item" type="button" (click)="switchSpace(space.id!)"
+                  [class.dropdown-space-item-active]="(currentSpaceId$ | async) === space.id">
+                  <span class="dropdown-space-main">
+                    <span class="dropdown-space-avatar" *ngIf="space.imageUrl">
+                      <img [src]="space.imageUrl" alt="">
+                    </span>
+                    <lucide-icon *ngIf="!space.imageUrl" [img]="space.type === 'personal' ? iconUser : iconUsers" [size]="16" class="dropdown-space-type-icon"></lucide-icon>
+                    <span>{{ getDisplaySpaceName(space) }}</span>
+                  </span>
+                  <span class="dropdown-space-badge" *ngIf="(currentSpaceId$ | async) === space.id">{{ 'SPACE_ACTIVE_BADGE'
+                    | translate }}</span>
+                </button>
+              </li>
+            </ul>
           </li>
           <li>
             <hr class="dropdown-divider" />

@@ -142,7 +142,7 @@ body.light-mode .pull-refresh-orb {
   border-width: 4px;
   border-color: rgba(186, 230, 253, 0.76);
   border-top-color: #7dd3fc;
-  border-right-color: #38bdf8;
+  border-right-color: #0b74ff;
   box-shadow: 0 0 24px rgba(56, 189, 248, 0.82);
 }
 
@@ -306,6 +306,18 @@ body.light-mode .space-switch-loading-overlay .exp-spinner::after {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #6b7280;
+}
+
+/* Keep the title and Create/Join action in place. The list uses all available
+   viewport height first, then becomes scrollable only when needed. */
+.dropdown-space-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: calc(100dvh - 10rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .dropdown-space-item {

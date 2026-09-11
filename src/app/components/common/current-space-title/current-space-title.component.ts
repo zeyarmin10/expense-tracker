@@ -304,6 +304,7 @@ type SpaceImageSource = {
       overflow-x: hidden;
       flex: 1 1 auto;
       min-height: 0;
+      overscroll-behavior: contain;
       -webkit-overflow-scrolling: touch;
     }
 
@@ -408,10 +409,16 @@ type SpaceImageSource = {
     }
 
     :host.cst-inline .space-title-menu {
-      position: absolute;
-      top: calc(100% + 0.4rem);
-      right: 0;
+      /* The title-bar menu is a viewport-level floating panel on mobile.
+         Its height stops above the fixed bottom navigation, so a long space
+         list scrolls inside the menu instead of disappearing beneath it. */
+      position: fixed;
+      top: calc(env(safe-area-inset-top, 0px) + 66px);
+      right: calc(env(safe-area-inset-right, 0px) + 0.75rem);
       left: auto;
+      max-height: calc(
+        100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 146px
+      );
     }
 
     @media (min-width: 992px) {

@@ -2839,7 +2839,7 @@ body.light-mode .exp-seg-reset {
     z-index: 10;
     background: var(--nav-bg, var(--surface));
     margin: 0;
-    padding: 0.7rem 1rem calc(env(safe-area-inset-bottom, 0px) + 1rem);
+    padding: 0.7rem 1rem calc(env(safe-area-inset-bottom, 0px) + 1.5rem);
     border-top: 1px solid var(--nav-border, var(--border));
     border-radius: 0;
     box-shadow: 0 -5px 16px rgba(0, 0, 0, 0.16);

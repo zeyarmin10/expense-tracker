@@ -318,6 +318,9 @@
         </div>
         <div class="exp-date-picker-body">
           <div id="exp-date-picker-container"></div>
+          <div class="app-date-adjustment-notice" *ngIf="datePickerAdjustmentNotice" role="status">
+            {{ 'EXPENSE_DATE_MONTH_ADJUSTED' | translate }}
+          </div>
         </div>
       </ng-container>
 
@@ -811,7 +814,7 @@
 <!-- ── Edit/Voucher modal — legacy single-item purchase editing, or adding
      a receipt voucher (the cart above is the real "Add Purchase" flow). ── -->
 <div class="exp-add-modal-backdrop" [class.open]="isAddModalOpen"></div>
-<div class="exp-add-modal-sheet" [class.open]="isAddModalOpen">
+<div class="exp-add-modal-sheet" [class.open]="isAddModalOpen" [class.date-picker-open]="isDatePickerOpen">
   <div class="exp-add-modal-handle"></div>
   <div class="exp-add-modal-header" *ngIf="!isCategoryPickerOpen && !isProductPickerOpen && !isDatePickerOpen">
     <span class="exp-add-modal-header-title">
@@ -850,6 +853,9 @@
        it just swaps into this modal's own body. -->
   <div class="exp-add-modal-body exp-date-picker-body" *ngIf="isDatePickerOpen && datePickerTarget === 'edit'">
     <div id="exp-date-picker-container"></div>
+    <div class="app-date-adjustment-notice" *ngIf="datePickerAdjustmentNotice" role="status">
+      {{ 'EXPENSE_DATE_MONTH_ADJUSTED' | translate }}
+    </div>
   </div>
 
   <!-- Category picker body — search + list, swaps in place of the form -->
