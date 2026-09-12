@@ -150,6 +150,11 @@
 }
 
 @media (max-width: 991.98px) {
+  .exp-cart-overlay-date-picker .exp-cart-overlay-topbar,
+  .exp-cart-overlay-date-picker .exp-cart-overlay-scroll,
+  .exp-cart-overlay-date-picker .exp-pos-footer-mobile { display: none; }
+  .exp-cart-date-picker-content { display: flex; flex: 1; min-height: 0; flex-direction: column; }
+  .exp-cart-date-picker-content .exp-date-picker-body { flex: 1; overflow-y: auto; padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem); }
   .exp-cart-overlay {
     position: fixed;
     inset: 0;
@@ -3018,14 +3023,18 @@ body.light-mode .exp-seg-reset {
     background: rgba(0, 0, 0, 0.42);
   }
 
+  .exp-pos-picker-backdrop.exp-pos-picker-backdrop-date.open {
+    background: rgba(0, 0, 0, 0.42);
+  }
+
   .exp-pos-picker-sheet {
     top: var(--exp-picker-top, 6rem);
     bottom: auto;
     left: var(--exp-picker-left, 1rem);
-    width: min(360px, calc(100vw - 2rem));
+    width: min(var(--exp-picker-width, 360px), calc(100vw - 2rem));
     max-height: min(480px, calc(100dvh - var(--exp-picker-top, 6rem) - 1rem));
     border: 1px solid var(--border);
-    border-radius: 14px;
+    border-radius: 12px;
     translate: 0 -6px;
     transform-origin: top left;
     opacity: 0;
@@ -3038,16 +3047,63 @@ body.light-mode .exp-seg-reset {
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.24);
   }
 
+  /* Category is an anchored dropdown on desktop, matching Expense/Budget;
+     the product variant below remains a centered selection dialog. */
+  .exp-pos-picker-sheet:not(.exp-pos-picker-sheet-product):not(.exp-pos-picker-sheet-date) .exp-pos-picker-handle,
+  .exp-pos-picker-sheet:not(.exp-pos-picker-sheet-product):not(.exp-pos-picker-sheet-date) .exp-pos-picker-header {
+    display: none;
+  }
+
+  .exp-pos-picker-sheet:not(.exp-pos-picker-sheet-product):not(.exp-pos-picker-sheet-date) .exp-cat-picker-body {
+    padding: .55rem 1rem;
+  }
+
+  .exp-pos-picker-sheet:not(.exp-pos-picker-sheet-product):not(.exp-pos-picker-sheet-date) .exp-cat-picker-list {
+    padding-bottom: 0;
+    max-height: min(340px, calc(100dvh - var(--exp-picker-top, 6rem) - 1rem));
+  }
+
   .exp-pos-picker-sheet-product {
     top: 50%;
     left: 50%;
     width: min(560px, calc(100vw - 2rem));
     max-height: min(640px, calc(100dvh - 4rem));
+    translate: -50% -50%;
+    transform-origin: center;
+    scale: .96;
+    opacity: 0;
+    transition: scale .2s ease, opacity .2s ease;
+  }
+
+  .exp-pos-picker-sheet-product.open {
+    translate: -50% -50%;
+    scale: 1;
+    opacity: 1;
+  }
+
+  /* Keep the product dialog centered through its exit. Without this closing
+     state it reverted to the category dropdown's anchored coordinates first,
+     which made the dialog travel diagonally across the screen. */
+  .exp-pos-picker-sheet-product.exp-pos-picker-sheet-product-closing {
+    translate: -50% 100%;
+    scale: 1;
+    opacity: 1;
+    pointer-events: none;
+    transition: translate .28s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .exp-pos-picker-sheet-date {
+    top: 50%;
+    bottom: auto;
+    left: 50%;
+    width: min(480px, calc(100vw - 2rem));
+    max-height: min(640px, calc(100dvh - 4rem));
+    border-radius: 16px;
     translate: -50% -48%;
     transform-origin: center;
   }
 
-  .exp-pos-picker-sheet-product.open {
+  .exp-pos-picker-sheet-date.open {
     translate: -50% -50%;
   }
 }

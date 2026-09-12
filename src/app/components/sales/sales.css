@@ -208,6 +208,11 @@
 }
 
 @media (max-width: 991.98px) {
+  .pnl-cart-overlay-date-picker .pnl-cart-overlay-topbar,
+  .pnl-cart-overlay-date-picker .pnl-cart-overlay-scroll,
+  .pnl-cart-overlay-date-picker .pnl-pos-footer-mobile { display: none; }
+  .pnl-cart-date-picker-content { display: flex; flex: 1; min-height: 0; flex-direction: column; }
+  .pnl-cart-date-picker-content .pnl-date-picker-body { flex: 1; overflow-y: auto; padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem); }
   .pnl-cart-overlay {
     position: fixed;
     inset: 0;
@@ -3000,6 +3005,10 @@ app-date-input .di-trigger {
     background: rgba(0, 0, 0, 0.42);
   }
 
+  .pnl-pos-picker-backdrop.pnl-pos-picker-backdrop-date.open {
+    background: rgba(0, 0, 0, 0.42);
+  }
+
   .pnl-pos-picker-sheet.pnl-pos-picker-sheet-product {
     top: 50%;
     bottom: auto;
@@ -3008,12 +3017,43 @@ app-date-input .di-trigger {
     max-height: min(640px, calc(100dvh - 4rem));
     border: 1px solid var(--border);
     border-radius: 16px;
+    translate: -50% -50%;
+    opacity: 0;
+    scale: .96;
+    transition: scale .2s ease, opacity .2s ease;
+  }
+
+  .pnl-pos-picker-sheet.pnl-pos-picker-sheet-product.open {
+    translate: -50% -50%;
+    scale: 1;
+    opacity: 1;
+    box-shadow: 0 16px 42px rgba(0, 0, 0, 0.34);
+  }
+
+  /* Preserve the modal's centered coordinates while it exits. This avoids
+     switching back to the base sheet layout before the downward slide ends. */
+  .pnl-pos-picker-sheet.pnl-pos-picker-sheet-product.pnl-pos-picker-sheet-product-closing {
+    translate: -50% 100%;
+    scale: 1;
+    opacity: 1;
+    pointer-events: none;
+    transition: translate .28s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .pnl-pos-picker-sheet.pnl-pos-picker-sheet-date {
+    top: 50%;
+    bottom: auto;
+    left: 50%;
+    width: min(480px, calc(100vw - 2rem));
+    max-height: min(640px, calc(100dvh - 4rem));
+    border: 1px solid var(--border);
+    border-radius: 16px;
     translate: -50% -48%;
     opacity: 0;
     transition: translate 0.18s ease, opacity 0.18s ease;
   }
 
-  .pnl-pos-picker-sheet.pnl-pos-picker-sheet-product.open {
+  .pnl-pos-picker-sheet.pnl-pos-picker-sheet-date.open {
     translate: -50% -50%;
     opacity: 1;
     box-shadow: 0 16px 42px rgba(0, 0, 0, 0.34);

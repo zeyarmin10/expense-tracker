@@ -1,7 +1,7 @@
 .mfo-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 1050;
+  z-index: var(--mfo-backdrop-z, 1010);
   background: rgba(0, 0, 0, 0.6);
   opacity: 0;
   pointer-events: none;

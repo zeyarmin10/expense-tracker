@@ -41,7 +41,8 @@
       <!-- Add-Product form: a centered modal on desktop, full-screen
            overlay on mobile (reached via the FAB below) — same two-mode
            shell Expense/Budget/Income's own Add modal uses. -->
-      <app-mobile-fullscreen-overlay class="inv-add-overlay" [open]="showAddOverlay" (dismiss)="closeAddOverlay()">
+      <div class="inv-add-overlay-backdrop" [class.open]="showAddOverlay"></div>
+      <div class="inv-add-overlay" [class.inv-add-overlay-open]="showAddOverlay">
         <div class="inv-add-overlay-topbar">
           <span class="inv-add-overlay-title">
             <lucide-icon [img]="iconPlus" [size]="16" class="inv-icon-accent"></lucide-icon>
@@ -79,7 +80,7 @@
             </button>
           </form>
         </div>
-      </app-mobile-fullscreen-overlay>
+      </div>
 
       <!-- Mobile-only FAB — opens the form above as a full-screen overlay.
            Hidden at desktop widths (.inv-add-fab's own media query) and

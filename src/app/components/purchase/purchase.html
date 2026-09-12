@@ -10,7 +10,7 @@
          top of the page on desktop; on mobile it's reached via the FAB
          below and opens as a full-screen overlay (no modal box). ── -->
     <div class="exp-cart-overlay-backdrop" [class.open]="showAddCartOverlay"></div>
-    <div class="exp-cart-overlay" [class.exp-cart-overlay-open]="showAddCartOverlay" *ngIf="canCreateExpenseRecords">
+    <div class="exp-cart-overlay" [class.exp-cart-overlay-open]="showAddCartOverlay" [class.exp-cart-overlay-date-picker]="isMobileViewport && isDatePickerOpen && (datePickerTarget === 'cart' || datePickerTarget === 'voucher')" *ngIf="canCreateExpenseRecords">
       <div class="exp-cart-overlay-topbar">
         <div class="exp-seg-ctrl exp-cart-overlay-tabs">
           <div class="exp-seg-track">
@@ -33,6 +33,12 @@
           <lucide-icon [img]="iconX" [size]="20"></lucide-icon>
         </button>
       </div>
+      <ng-container *ngIf="isMobileViewport && isDatePickerOpen && (datePickerTarget === 'cart' || datePickerTarget === 'voucher')">
+        <div class="exp-cart-date-picker-content">
+          <div class="exp-add-modal-header"><button type="button" class="exp-add-modal-back" (click)="closeDatePicker()"><lucide-icon [img]="iconChevronDown" [size]="18" class="exp-add-modal-back-icon"></lucide-icon></button><span class="exp-add-modal-header-title">{{ 'EXPENSE_DATE_LABEL' | translate }}</span><button type="button" class="exp-add-modal-close" (click)="closeDatePicker()"><lucide-icon [img]="iconX" [size]="18"></lucide-icon></button></div>
+          <div class="exp-add-modal-body exp-date-picker-body"><div id="exp-date-picker-container"></div><div class="app-date-adjustment-notice" *ngIf="datePickerAdjustmentNotice" role="status">{{ 'EXPENSE_DATE_MONTH_ADJUSTED' | translate }}</div></div>
+        </div>
+      </ng-container>
       <div class="exp-cart-overlay-scroll">
       <div class="exp-pos-section" *ngIf="overlayTab === 'purchase'">
       <div class="exp-pos-section-header">
@@ -302,11 +308,12 @@
          isCategoryPickerOpen/isProductPickerOpen state, but the *Target/
          *Mode being 'cart' vs 'edit'/'voucher' keeps exactly one of the
          two renderers active at a time). -->
-    <app-mobile-fullscreen-overlay
-      class="exp-pos-picker-sheet exp-pos-picker-sheet-date"
-      [open]="isDatePickerOpen && (datePickerTarget === 'cart' || datePickerTarget === 'voucher')"
-      (dismiss)="closeDatePicker()">
-      <ng-container *ngIf="isDatePickerOpen && (datePickerTarget === 'cart' || datePickerTarget === 'voucher')">
+    <div class="exp-pos-picker-backdrop exp-pos-picker-backdrop-date"
+      [class.open]="!isMobileViewport && isDatePickerOpen && (datePickerTarget === 'cart' || datePickerTarget === 'voucher')"
+      (click)="closeDatePicker()"></div>
+    <div class="exp-pos-picker-sheet exp-pos-picker-sheet-date"
+      [class.open]="!isMobileViewport && isDatePickerOpen && (datePickerTarget === 'cart' || datePickerTarget === 'voucher')">
+      <ng-container *ngIf="!isMobileViewport && isDatePickerOpen && (datePickerTarget === 'cart' || datePickerTarget === 'voucher')">
       <div class="exp-add-modal-header">
         <button type="button" class="exp-add-modal-back" (click)="closeDatePicker()" [title]="'BACK_BUTTON' | translate">
           <lucide-icon [img]="iconChevronDown" [size]="18" class="exp-add-modal-back-icon"></lucide-icon>
@@ -323,15 +330,17 @@
         </div>
       </div>
       </ng-container>
-    </app-mobile-fullscreen-overlay>
+    </div>
 
     <div class="exp-pos-picker-backdrop" [class.open]="isCartNonDatePickerOpen"
       [class.exp-pos-picker-backdrop-product]="isProductPickerOpen && productPickerMode === 'cart'"
       (click)="closeCategoryPicker(); closeProductPicker()"></div>
     <div class="exp-pos-picker-sheet" [class.open]="isCartNonDatePickerOpen"
-      [class.exp-pos-picker-sheet-product]="isProductPickerOpen && productPickerMode === 'cart'"
+      [class.exp-pos-picker-sheet-product]="productPickerMode === 'cart' && (isProductPickerOpen || (isCartPickerClosing && cartPickerView === 'product'))"
+      [class.exp-pos-picker-sheet-product-closing]="isCartPickerClosing && cartPickerView === 'product'"
       [style.--exp-picker-top.px]="cartPickerMenuTop"
-      [style.--exp-picker-left.px]="cartPickerMenuLeft">
+      [style.--exp-picker-left.px]="cartPickerMenuLeft"
+      [style.--exp-picker-width.px]="cartPickerMenuWidth">
       <div class="exp-pos-picker-handle"></div>
 
       <ng-container *ngIf="isCartNonDatePickerRendered && cartPickerView === 'category'">

@@ -122,6 +122,7 @@ interface CartLine {
   styleUrls: ['./purchase.css'],
 })
 export class Purchase implements OnInit, OnDestroy {
+  get isMobileViewport(): boolean { return typeof window !== 'undefined' && window.innerWidth < 992; }
   @ViewChild(CategoryModalComponent) categoryModal!: CategoryModalComponent;
   @ViewChild(ProductModalComponent) productModal!: ProductModalComponent;
   @ViewChild(LightboxComponent) lightbox!: LightboxComponent;
@@ -727,6 +728,7 @@ export class Purchase implements OnInit, OnDestroy {
   categoryPickerSearch = '';
   cartPickerMenuTop = 0;
   cartPickerMenuLeft = 0;
+  cartPickerMenuWidth = 0;
   cartPickerView: 'category' | 'product' | null = null;
   isCartPickerClosing = false;
   private cartPickerCloseTimer: number | null = null;
@@ -787,9 +789,10 @@ export class Purchase implements OnInit, OnDestroy {
     const trigger = event.currentTarget as HTMLElement | null;
     if (!trigger) return;
     const rect = trigger.getBoundingClientRect();
-    const menuWidth = Math.min(360, window.innerWidth - 32);
-    this.cartPickerMenuTop = Math.min(rect.bottom + 8, window.innerHeight - 180);
+    const menuWidth = Math.min(rect.width, window.innerWidth - 32);
+    this.cartPickerMenuTop = Math.min(rect.bottom + 4, window.innerHeight - 180);
     this.cartPickerMenuLeft = Math.max(16, Math.min(rect.left, window.innerWidth - menuWidth - 16));
+    this.cartPickerMenuWidth = menuWidth;
   }
 
   closeProductPicker(): void {

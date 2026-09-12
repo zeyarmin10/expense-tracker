@@ -27,6 +27,7 @@ import {
   ChartColumn, Wallet, Plus, X, Search, Check, CalendarDays, CalendarRange, RotateCcw,
 } from 'lucide-angular';
 import { Chart, registerables } from 'chart.js';
+import { MobileFullscreenOverlayComponent } from '../common/mobile-fullscreen-overlay/mobile-fullscreen-overlay.component';
 import { AuthService } from '../../services/auth';
 import {
   UserDataService,
@@ -126,6 +127,7 @@ interface BudgetPeriodGroup {
     ShowFullTextDirective,
     CustomSelectComponent,
     DateRangeInputComponent,
+    MobileFullscreenOverlayComponent,
   ],
   providers: [DatePipe],
   templateUrl: './budget.html',
@@ -133,6 +135,9 @@ interface BudgetPeriodGroup {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BudgetComponent implements OnInit, OnDestroy {
+  budgetPickerMenuTop = 0;
+  budgetPickerMenuLeft = 0;
+  budgetPickerMenuWidth = 0;
   private fb = inject(FormBuilder);
   private dateFilterService = inject(DateFilterService);
   public datePipe = inject(DatePipe);
@@ -295,7 +300,12 @@ export class BudgetComponent implements OnInit, OnDestroy {
     { value: 'yearly', labelKey: 'YEARLY_BUDGET' },
   ];
 
-  openTypePicker(): void {
+  openTypePicker(event?: MouseEvent): void {
+    event?.stopPropagation();
+    if (this.isTypePickerOpen) { this.closeTypePicker(); return; }
+    // The compact type pill is intentionally narrow; give its menu enough
+    // room for the translated option labels instead of inheriting that width.
+    this.positionBudgetPicker(event, 150);
     this.isTypePickerOpen = true;
     this.isCategoryPickerOpen = false;
     this.closeDatePicker();
@@ -322,7 +332,10 @@ export class BudgetComponent implements OnInit, OnDestroy {
   // manages its own history-based close on mobile, and nesting it inside
   // this modal left the picker/backdrop stuck open after selecting an item
   // (same issue documented in expense.ts).
-  openCategoryPicker(): void {
+  openCategoryPicker(event?: MouseEvent): void {
+    event?.stopPropagation();
+    if (this.isCategoryPickerOpen) { this.closeCategoryPicker(); return; }
+    this.positionBudgetPicker(event);
     this.categoryPickerSearch = '';
     this.isCategoryPickerOpen = true;
     this.isTypePickerOpen = false;
@@ -331,6 +344,27 @@ export class BudgetComponent implements OnInit, OnDestroy {
 
   closeCategoryPicker(): void {
     this.isCategoryPickerOpen = false;
+  }
+
+  private positionBudgetPicker(event?: MouseEvent, extraWidth = 0): void {
+    const trigger = event?.currentTarget as HTMLElement | null;
+    const dialog = document.querySelector('.bgt-add-modal-sheet') as HTMLElement | null;
+    if (!trigger || !dialog || window.innerWidth < 992) return;
+    const triggerRect = trigger.getBoundingClientRect();
+    const dialogRect = dialog.getBoundingClientRect();
+    this.budgetPickerMenuTop = triggerRect.bottom - dialogRect.top + 4;
+    this.budgetPickerMenuLeft = triggerRect.left - dialogRect.left;
+    this.budgetPickerMenuWidth = triggerRect.width + extraWidth;
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (window.innerWidth < 992) return;
+    const target = event.target as Element | null;
+    if (!target?.closest('.bgt-selection-bottom-sheet, .bgt-cat-select-trigger, .bgt-type-pill')) {
+      this.closeCategoryPicker();
+      this.closeTypePicker();
+    }
   }
 
   selectBudgetCategory(categoryId: string): void {

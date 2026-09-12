@@ -127,6 +127,7 @@ interface IncomeDateGroup {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Sales implements OnInit, OnDestroy {
+  get isMobileViewport(): boolean { return typeof window !== 'undefined' && window.innerWidth < 992; }
   // --- Dependency Injection ---
   private fb = inject(FormBuilder);
   public datePipe = inject(DatePipe);

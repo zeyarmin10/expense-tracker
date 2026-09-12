@@ -5,7 +5,7 @@
          top of the page on desktop; on mobile it's reached via the FAB
          below and opens as a full-screen overlay (no modal box). ── -->
     <div class="pnl-cart-overlay-backdrop" [class.open]="showAddCartOverlay"></div>
-    <div class="pnl-cart-overlay" [class.pnl-cart-overlay-open]="showAddCartOverlay" *ngIf="canManageProfitActions">
+    <div class="pnl-cart-overlay" [class.pnl-cart-overlay-open]="showAddCartOverlay" [class.pnl-cart-overlay-date-picker]="isMobileViewport && !editingIncome && isDatePickerOpen" *ngIf="canManageProfitActions">
       <div class="pnl-cart-overlay-topbar">
         <h2 class="pnl-pos-section-title">
           <lucide-icon [img]="iconHandCoins" [size]="18" class="pnl-icon-accent"></lucide-icon>
@@ -16,6 +16,9 @@
           <lucide-icon [img]="iconX" [size]="20"></lucide-icon>
         </button>
       </div>
+      <ng-container *ngIf="isMobileViewport && !editingIncome && isDatePickerOpen">
+        <div class="pnl-cart-date-picker-content"><div class="pnl-add-modal-header"><button type="button" class="pnl-add-modal-back" (click)="closeDatePicker()"><lucide-icon [img]="iconChevronDown" [size]="18" class="pnl-add-modal-back-icon"></lucide-icon></button><span class="pnl-add-modal-header-title">{{ 'INCOME_DATE_LABEL' | translate }}</span><button type="button" class="pnl-add-modal-close" (click)="closeDatePicker()"><lucide-icon [img]="iconX" [size]="18"></lucide-icon></button></div><div class="pnl-add-modal-body pnl-date-picker-body"><div id="pnl-date-picker-container"></div><div class="app-date-adjustment-notice" *ngIf="datePickerAdjustmentNotice" role="status">{{ 'EXPENSE_DATE_MONTH_ADJUSTED' | translate }}</div></div></div>
+      </ng-container>
       <div class="pnl-cart-overlay-scroll">
         <div class="pnl-pos-section">
           <div class="pnl-pos-section-header">
@@ -351,11 +354,12 @@
      below (both share the same isDatePickerOpen/isProductPickerOpen state,
      but editingIncome is only ever truthy while that OTHER modal is open,
      so exactly one of the two ever renders its content at a time). -->
-<app-mobile-fullscreen-overlay
-  class="pnl-pos-picker-sheet pnl-pos-picker-sheet-date"
-  [open]="!editingIncome && isDatePickerOpen"
-  (dismiss)="closeDatePicker()">
-  <ng-container *ngIf="!editingIncome && isDatePickerOpen">
+<div class="pnl-pos-picker-backdrop pnl-pos-picker-backdrop-date"
+  [class.open]="!isMobileViewport && !editingIncome && isDatePickerOpen"
+  (click)="closeDatePicker()"></div>
+<div class="pnl-pos-picker-sheet pnl-pos-picker-sheet-date"
+  [class.open]="!isMobileViewport && !editingIncome && isDatePickerOpen">
+  <ng-container *ngIf="!isMobileViewport && !editingIncome && isDatePickerOpen">
   <div class="pnl-add-modal-header">
     <button type="button" class="pnl-add-modal-back" (click)="closeDatePicker()" [title]="'BACK_BUTTON' | translate">
       <lucide-icon [img]="iconChevronDown" [size]="18" class="pnl-add-modal-back-icon"></lucide-icon>
@@ -372,12 +376,13 @@
     </div>
   </div>
   </ng-container>
-</app-mobile-fullscreen-overlay>
+</div>
 
 <div class="pnl-pos-picker-backdrop" [class.open]="!editingIncome && isProductPickerOpen"
   (click)="closeProductPicker()"></div>
 <div class="pnl-pos-picker-sheet" [class.open]="!editingIncome && isProductPickerOpen"
-  [class.pnl-pos-picker-sheet-product]="!editingIncome && isProductPickerOpen && productPickerMode === 'cart'">
+  [class.pnl-pos-picker-sheet-product]="!editingIncome && productPickerMode === 'cart' && (isProductPickerOpen || isCartProductPickerClosing)"
+  [class.pnl-pos-picker-sheet-product-closing]="!editingIncome && isCartProductPickerClosing">
   <div class="pnl-pos-picker-handle"></div>
 
   <ng-container *ngIf="isCartProductPickerRendered">

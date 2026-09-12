@@ -146,6 +146,9 @@ body.inv-settings-modal-open {
   overflow: hidden;
 }
 
+.inv-add-overlay-backdrop { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6); z-index: 1010; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
+.inv-add-overlay-backdrop.open { opacity: 1; pointer-events: all; }
+
 .inv-add-overlay {
   position: fixed;
   top: calc(env(safe-area-inset-top, 0px) + 0.85rem);
@@ -160,7 +163,7 @@ body.inv-settings-modal-open {
   border: 1px solid var(--border);
   border-radius: 20px;
   box-shadow: 0 12px 48px rgba(0, 0, 0, 0.45);
-  z-index: 1051;
+  z-index: 1020;
   translate: -50% 0;
   scale: 0.96;
   opacity: 0;
@@ -168,7 +171,7 @@ body.inv-settings-modal-open {
   transition: scale 0.2s ease, opacity 0.2s ease;
 }
 
-.inv-add-overlay.open {
+.inv-add-overlay.inv-add-overlay-open {
   scale: 1;
   opacity: 1;
   pointer-events: all;
@@ -213,6 +216,7 @@ body.inv-settings-modal-open {
 }
 
 @media (max-width: 991.98px) {
+  .inv-add-overlay-backdrop { display: none; }
   .inv-add-overlay {
     top: 0;
     left: 0;
@@ -234,7 +238,7 @@ body.inv-settings-modal-open {
     transition: translate 0.28s cubic-bezier(0.34, 1.2, 0.64, 1);
   }
 
-  .inv-add-overlay.open {
+  .inv-add-overlay.inv-add-overlay-open {
     translate: 0 0;
     pointer-events: all;
   }
