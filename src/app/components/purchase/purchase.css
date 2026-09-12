@@ -154,6 +154,9 @@
   .exp-cart-overlay-date-picker .exp-cart-overlay-scroll,
   .exp-cart-overlay-date-picker .exp-pos-footer-mobile { display: none; }
   .exp-cart-date-picker-content { display: flex; flex: 1; min-height: 0; flex-direction: column; }
+  .exp-cart-date-picker-content .exp-add-modal-header {
+    padding-top: calc(max(env(safe-area-inset-top, 0px), var(--native-status-bar-inset)) + 0.75rem);
+  }
   .exp-cart-date-picker-content .exp-date-picker-body { flex: 1; overflow-y: auto; padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem); }
   .exp-cart-overlay {
     position: fixed;
@@ -174,7 +177,7 @@
 
   .exp-cart-overlay-topbar {
     flex-shrink: 0;
-    padding: calc(env(safe-area-inset-top, 0px) + 0.75rem) 0.75rem 0.6rem;
+    padding: calc(max(env(safe-area-inset-top, 0px), var(--native-status-bar-inset)) + 0.75rem) 0.75rem 0.6rem;
     border: none;
     border-bottom: 1px solid var(--border);
     border-radius: 0;

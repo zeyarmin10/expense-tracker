@@ -200,7 +200,7 @@
             <label class="pnl-receipt-search" *ngIf="(incomes$ | async)?.length">
               <lucide-icon [img]="iconSearch" [size]="15"></lucide-icon>
               <input type="search" [(ngModel)]="receiptSearchQuery" (ngModelChange)="receiptSearch$.next($event)"
-                inputmode="numeric" autocomplete="off" placeholder="Receipt code" />
+                inputmode="numeric" autocomplete="off" [placeholder]="'SALE_RECEIPT_SEARCH_PLACEHOLDER' | translate" />
             </label>
             <div class="pnl-list-empty" *ngIf="dateGroups.length === 0">
               <lucide-icon [img]="iconBanknote" [size]="28" class="pnl-list-empty-icon"></lucide-icon>

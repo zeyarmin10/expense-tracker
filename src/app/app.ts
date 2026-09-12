@@ -551,6 +551,13 @@ export class App implements OnInit, AfterViewInit {
   }
 
   async ngOnInit(): Promise<void> {
+    // Android's edge-to-edge WebView may expose a zero CSS safe-area inset.
+    // Mark it explicitly so full-screen overlays can keep their controls out
+    // of the native status bar's visual and touch area.
+    document.documentElement.classList.toggle(
+      'native-android',
+      Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android'
+    );
     this.initPullToRefreshTouchHandlers();
     if (Capacitor.isNativePlatform()) {
       // Configure status bar early — splash hide is deferred to ngAfterViewInit

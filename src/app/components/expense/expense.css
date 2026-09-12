@@ -253,7 +253,7 @@ body.exp-add-modal-open {
   }
 
   .exp-add-modal-header {
-    padding-top: calc(env(safe-area-inset-top, 0px) + 0.75rem);
+    padding-top: calc(max(env(safe-area-inset-top, 0px), var(--native-status-bar-inset)) + 0.75rem);
   }
 
   .exp-add-modal-body {

@@ -212,6 +212,9 @@
   .pnl-cart-overlay-date-picker .pnl-cart-overlay-scroll,
   .pnl-cart-overlay-date-picker .pnl-pos-footer-mobile { display: none; }
   .pnl-cart-date-picker-content { display: flex; flex: 1; min-height: 0; flex-direction: column; }
+  .pnl-cart-date-picker-content .pnl-add-modal-header {
+    padding-top: calc(max(env(safe-area-inset-top, 0px), var(--native-status-bar-inset)) + 0.75rem);
+  }
   .pnl-cart-date-picker-content .pnl-date-picker-body { flex: 1; overflow-y: auto; padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem); }
   .pnl-cart-overlay {
     position: fixed;
@@ -236,7 +239,7 @@
     align-items: center;
     gap: 0.75rem;
     flex-shrink: 0;
-    padding: calc(env(safe-area-inset-top, 0px) + 0.75rem) 1rem 0.75rem;
+    padding: calc(max(env(safe-area-inset-top, 0px), var(--native-status-bar-inset)) + 0.75rem) 1rem 0.75rem;
     background: var(--surface);
     border-bottom: 1px solid var(--border);
   }
