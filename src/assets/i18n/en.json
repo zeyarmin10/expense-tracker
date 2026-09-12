@@ -930,6 +930,7 @@
   "NAV_SALES_REPORT": "Sales Report",
   "SALES_REPORT_TITLE": "Sales Report",
   "TOP_SELLING_PRODUCT": "Top-Selling Product",
+  "SALES_REVENUE": "Sales Amount",
   "PRODUCT_BREAKDOWN": "Product Breakdown",
   "ALL_PRODUCTS": "All Products",
   "SALES_LOAD_ERROR": "Couldn't load your sales. Check your connection and try again.",

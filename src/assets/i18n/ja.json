@@ -930,6 +930,7 @@
   "NAV_SALES_REPORT": "販売レポート",
   "SALES_REPORT_TITLE": "販売レポート",
   "TOP_SELLING_PRODUCT": "最も売れている商品",
+  "SALES_REVENUE": "売上額",
   "PRODUCT_BREAKDOWN": "商品別内訳",
   "ALL_PRODUCTS": "すべての商品",
   "SALES_LOAD_ERROR": "販売データを読み込めませんでした。接続を確認してもう一度お試しください。",

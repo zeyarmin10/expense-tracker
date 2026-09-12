@@ -200,11 +200,17 @@ export class SalesReport implements OnInit, OnDestroy {
   productTotals: ProductTotal[] = [];
   productTotalsSum = 0;
   allProductsTotal: { amount: number; currency: string }[] = [];
+  topSellingSort: 'quantity' | 'revenue' = 'quantity';
 
   currentPeriodLabel: string = '';
 
-  getProductPercent(total: number): number {
-    return this.productTotalsSum > 0 ? (total / this.productTotalsSum) * 100 : 0;
+  get topSellingProductTotal(): ProductTotal | null {
+    return this.productTotals[0] || null;
+  }
+
+  getProductPercent(product: ProductTotal): number {
+    const value = this.topSellingSort === 'quantity' ? product.qty : product.total;
+    return this.productTotalsSum > 0 ? (value / this.productTotalsSum) * 100 : 0;
   }
 
   public _selectedProduct$ = new BehaviorSubject<string>('');
@@ -440,8 +446,7 @@ export class SalesReport implements OnInit, OnDestroy {
       }
     }
 
-    this.productTotals = Object.values(productTotalsMap).sort((a, b) => b.total - a.total);
-    this.productTotalsSum = this.productTotals.reduce((s, p) => s + p.total, 0);
+    this.productTotals = Object.values(productTotalsMap);
 
     const currencyMap: { [currency: string]: number } = {};
     for (const p of this.productTotals) {
@@ -449,6 +454,26 @@ export class SalesReport implements OnInit, OnDestroy {
     }
     this.allProductsTotal = Object.entries(currencyMap).map(([currency, amount]) => ({ amount, currency }));
 
+    this.sortProductTotals();
+  }
+
+  setTopSellingSort(sort: 'quantity' | 'revenue'): void {
+    if (this.topSellingSort === sort) return;
+    this.topSellingSort = sort;
+    this.sortProductTotals();
+    this.cdr.markForCheck();
+  }
+
+  private sortProductTotals(): void {
+    const metric = (product: ProductTotal) =>
+      this.topSellingSort === 'quantity' ? product.qty : product.total;
+    const tieBreaker = (a: ProductTotal, b: ProductTotal) =>
+      this.topSellingSort === 'quantity' ? b.total - a.total : b.qty - a.qty;
+
+    this.productTotals = [...this.productTotals].sort((a, b) =>
+      metric(b) - metric(a) || tieBreaker(a, b) || a.productName.localeCompare(b.productName),
+    );
+    this.productTotalsSum = this.productTotals.reduce((sum, product) => sum + metric(product), 0);
     this.topSellingProduct = this.productTotals[0]?.productName || 'N/A';
   }
 

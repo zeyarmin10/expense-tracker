@@ -930,6 +930,7 @@
   "NAV_SALES_REPORT": "รายงานการขาย",
   "SALES_REPORT_TITLE": "รายงานการขาย",
   "TOP_SELLING_PRODUCT": "สินค้าขายดีที่สุด",
+  "SALES_REVENUE": "ยอดขาย",
   "PRODUCT_BREAKDOWN": "สรุปตามสินค้า",
   "ALL_PRODUCTS": "สินค้าทั้งหมด",
   "SALES_LOAD_ERROR": "ไม่สามารถโหลดข้อมูลการขายได้ กรุณาตรวจสอบการเชื่อมต่อแล้วลองใหม่อีกครั้ง",
