@@ -2993,38 +2993,36 @@ app-date-input .di-trigger {
   color: var(--text);
 }
 
+/* Desktop item selection is a conventional centered dialog, not a mobile
+   bottom sheet. The existing ProductModal remains the add-new-product form. */
+@media (min-width: 992px) {
+  .pnl-pos-picker-backdrop.open {
+    background: rgba(0, 0, 0, 0.42);
+  }
+
+  .pnl-pos-picker-sheet.pnl-pos-picker-sheet-product {
+    top: 50%;
+    bottom: auto;
+    left: 50%;
+    width: min(560px, calc(100vw - 2rem));
+    max-height: min(640px, calc(100dvh - 4rem));
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    translate: -50% -48%;
+    opacity: 0;
+    transition: translate 0.18s ease, opacity 0.18s ease;
+  }
+
+  .pnl-pos-picker-sheet.pnl-pos-picker-sheet-product.open {
+    translate: -50% -50%;
+    opacity: 1;
+    box-shadow: 0 16px 42px rgba(0, 0, 0, 0.34);
+  }
+}
+
 /* Date selection keeps its existing full-screen drill-in. The product
    picker, by contrast, stays a compact bottom sheet on mobile. */
 @media (max-width: 991.98px) {
-  .pnl-pos-picker-backdrop.pnl-pos-picker-backdrop-date {
-    display: none;
-  }
-
-  .pnl-pos-picker-sheet.pnl-pos-picker-sheet-date {
-    top: 0;
-    bottom: auto;
-    left: 0;
-    width: 100%;
-    max-width: none;
-    height: 100dvh;
-    max-height: none;
-    margin: 0;
-    border: none;
-    border-radius: 0;
-    box-shadow: none;
-    padding-bottom: 0;
-    translate: 0 100%;
-  }
-
-  .pnl-pos-picker-sheet.pnl-pos-picker-sheet-date.open {
-    translate: 0 0;
-    box-shadow: none;
-  }
-
-  .pnl-pos-picker-sheet-date .pnl-pos-picker-handle {
-    display: none;
-  }
-
   .pnl-pos-picker-sheet-date .pnl-add-modal-header {
     padding: calc(env(safe-area-inset-top, 0px) + 0.5rem) 0.6rem 0.45rem 1rem;
   }

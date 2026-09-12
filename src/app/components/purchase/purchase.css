@@ -3007,38 +3007,54 @@ body.light-mode .exp-seg-reset {
   color: var(--text);
 }
 
+/* Desktop: categories behave like Inventory's anchored floating menu, while
+   choosing an item is a roomy modal rather than a phone bottom sheet. */
+@media (min-width: 992px) {
+  .exp-pos-picker-backdrop.open {
+    background: transparent;
+  }
+
+  .exp-pos-picker-backdrop.exp-pos-picker-backdrop-product.open {
+    background: rgba(0, 0, 0, 0.42);
+  }
+
+  .exp-pos-picker-sheet {
+    top: var(--exp-picker-top, 6rem);
+    bottom: auto;
+    left: var(--exp-picker-left, 1rem);
+    width: min(360px, calc(100vw - 2rem));
+    max-height: min(480px, calc(100dvh - var(--exp-picker-top, 6rem) - 1rem));
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    translate: 0 -6px;
+    transform-origin: top left;
+    opacity: 0;
+    transition: translate 0.16s ease, opacity 0.16s ease;
+  }
+
+  .exp-pos-picker-sheet.open {
+    translate: 0 0;
+    opacity: 1;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.24);
+  }
+
+  .exp-pos-picker-sheet-product {
+    top: 50%;
+    left: 50%;
+    width: min(560px, calc(100vw - 2rem));
+    max-height: min(640px, calc(100dvh - 4rem));
+    translate: -50% -48%;
+    transform-origin: center;
+  }
+
+  .exp-pos-picker-sheet-product.open {
+    translate: -50% -50%;
+  }
+}
+
 /* Date selection keeps its previous full-screen drill-in flow. Only the
    category and product pickers use the compact bottom-sheet treatment. */
 @media (max-width: 991.98px) {
-  .exp-pos-picker-backdrop.exp-pos-picker-backdrop-date {
-    display: none;
-  }
-
-  .exp-pos-picker-sheet.exp-pos-picker-sheet-date {
-    top: 0;
-    bottom: auto;
-    left: 0;
-    width: 100%;
-    max-width: none;
-    height: 100dvh;
-    max-height: none;
-    margin: 0;
-    border: none;
-    border-radius: 0;
-    box-shadow: none;
-    padding-bottom: 0;
-    translate: 0 100%;
-  }
-
-  .exp-pos-picker-sheet.exp-pos-picker-sheet-date.open {
-    translate: 0 0;
-    box-shadow: none;
-  }
-
-  .exp-pos-picker-sheet-date .exp-pos-picker-handle {
-    display: none;
-  }
-
   .exp-pos-picker-sheet-date .exp-add-modal-header {
     padding: calc(env(safe-area-inset-top, 0px) + 0.5rem) 0.6rem 0.45rem 1rem;
   }

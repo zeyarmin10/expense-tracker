@@ -28,6 +28,7 @@ import {
 } from 'lucide-angular';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import Swal from 'sweetalert2';
+import { MobileFullscreenOverlayComponent } from '../common/mobile-fullscreen-overlay/mobile-fullscreen-overlay.component';
 
 const Toast = Swal.mixin({
   toast: true,
@@ -46,7 +47,7 @@ const Toast = Swal.mixin({
 @Component({
   selector: 'app-inventory',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, TranslateModule, LucideAngularModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, TranslateModule, LucideAngularModule, MobileFullscreenOverlayComponent],
   templateUrl: './inventory.html',
   styleUrls: ['./inventory.css'],
 })

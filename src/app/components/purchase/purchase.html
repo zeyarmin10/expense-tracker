@@ -47,7 +47,7 @@
       </div>
 
       <div class="exp-float-field exp-float-group">
-        <button type="button" class="exp-cat-select-trigger" (click)="openCategoryPicker('cart')">
+        <button type="button" class="exp-cat-select-trigger" (click)="openCategoryPicker('cart', $event)">
           <ng-container *ngIf="cartForm.get('category')?.value as catVal; else catCartPlaceholder">
             <span class="exp-cat-select-trigger-icon" [style.--cat-hue]="getIconHueForCategory(catVal)">
               <img *ngIf="getIconUrlForCategory(catVal)" [src]="getIconUrlForCategory(catVal)!" alt="" class="cat-img-icon" style="width:100%;height:100%" />
@@ -74,7 +74,7 @@
           <lucide-icon [img]="iconScanLine" [size]="18"></lucide-icon>
           {{ 'SCAN_BARCODE_BUTTON' | translate }}
         </button>
-        <button type="button" class="exp-pos-manual-add-btn" (click)="openProductPicker('cart')">
+        <button type="button" class="exp-pos-manual-add-btn" (click)="openProductPicker('cart', $event)">
           <lucide-icon [img]="iconPlus" [size]="16"></lucide-icon>
           {{ 'POS_ADD_ITEM_MANUAL' | translate }}
         </button>
@@ -158,7 +158,7 @@
           </div>
 
           <div class="exp-float-field">
-            <button type="button" class="exp-cat-select-trigger" (click)="openCategoryPicker('voucher')">
+            <button type="button" class="exp-cat-select-trigger" (click)="openCategoryPicker('voucher', $event)">
               <ng-container *ngIf="voucherForm.get('category')?.value as catVal; else catVoucherPlaceholder">
                 <span class="exp-cat-select-trigger-icon" [style.--cat-hue]="getIconHueForCategory(catVal)">
                   <img *ngIf="getIconUrlForCategory(catVal)" [src]="getIconUrlForCategory(catVal)!" alt="" class="cat-img-icon" style="width:100%;height:100%" />
@@ -302,32 +302,39 @@
          isCategoryPickerOpen/isProductPickerOpen state, but the *Target/
          *Mode being 'cart' vs 'edit'/'voucher' keeps exactly one of the
          two renderers active at a time). -->
-    <div class="exp-pos-picker-backdrop" [class.open]="isCartPickerOpen"
-      [class.exp-pos-picker-backdrop-date]="isDatePickerOpen && (datePickerTarget === 'cart' || datePickerTarget === 'voucher')"
-      (click)="closeDatePicker(); closeCategoryPicker(); closeProductPicker()"></div>
-    <div class="exp-pos-picker-sheet" [class.open]="isCartPickerOpen"
-      [class.exp-pos-picker-sheet-date]="isDatePickerOpen && (datePickerTarget === 'cart' || datePickerTarget === 'voucher')">
+    <app-mobile-fullscreen-overlay
+      class="exp-pos-picker-sheet exp-pos-picker-sheet-date"
+      [open]="isDatePickerOpen && (datePickerTarget === 'cart' || datePickerTarget === 'voucher')"
+      (dismiss)="closeDatePicker()">
+      <ng-container *ngIf="isDatePickerOpen && (datePickerTarget === 'cart' || datePickerTarget === 'voucher')">
+      <div class="exp-add-modal-header">
+        <button type="button" class="exp-add-modal-back" (click)="closeDatePicker()" [title]="'BACK_BUTTON' | translate">
+          <lucide-icon [img]="iconChevronDown" [size]="18" class="exp-add-modal-back-icon"></lucide-icon>
+        </button>
+        <span class="exp-add-modal-header-title">{{ 'EXPENSE_DATE_LABEL' | translate }}</span>
+        <button type="button" class="exp-add-modal-close" (click)="closeDatePicker()" [title]="'BACK_BUTTON' | translate">
+          <lucide-icon [img]="iconX" [size]="18"></lucide-icon>
+        </button>
+      </div>
+      <div class="exp-add-modal-body exp-date-picker-body">
+        <div id="exp-date-picker-container"></div>
+        <div class="app-date-adjustment-notice" *ngIf="datePickerAdjustmentNotice" role="status">
+          {{ 'EXPENSE_DATE_MONTH_ADJUSTED' | translate }}
+        </div>
+      </div>
+      </ng-container>
+    </app-mobile-fullscreen-overlay>
+
+    <div class="exp-pos-picker-backdrop" [class.open]="isCartNonDatePickerOpen"
+      [class.exp-pos-picker-backdrop-product]="isProductPickerOpen && productPickerMode === 'cart'"
+      (click)="closeCategoryPicker(); closeProductPicker()"></div>
+    <div class="exp-pos-picker-sheet" [class.open]="isCartNonDatePickerOpen"
+      [class.exp-pos-picker-sheet-product]="isProductPickerOpen && productPickerMode === 'cart'"
+      [style.--exp-picker-top.px]="cartPickerMenuTop"
+      [style.--exp-picker-left.px]="cartPickerMenuLeft">
       <div class="exp-pos-picker-handle"></div>
 
-      <ng-container *ngIf="isDatePickerOpen && (datePickerTarget === 'cart' || datePickerTarget === 'voucher')">
-        <div class="exp-add-modal-header">
-          <button type="button" class="exp-add-modal-back" (click)="closeDatePicker()" [title]="'BACK_BUTTON' | translate">
-            <lucide-icon [img]="iconChevronDown" [size]="18" class="exp-add-modal-back-icon"></lucide-icon>
-          </button>
-          <span class="exp-add-modal-header-title">{{ 'EXPENSE_DATE_LABEL' | translate }}</span>
-          <button type="button" class="exp-add-modal-close" (click)="closeDatePicker()" [title]="'BACK_BUTTON' | translate">
-            <lucide-icon [img]="iconX" [size]="18"></lucide-icon>
-          </button>
-        </div>
-        <div class="exp-add-modal-body exp-date-picker-body">
-          <div id="exp-date-picker-container"></div>
-          <div class="app-date-adjustment-notice" *ngIf="datePickerAdjustmentNotice" role="status">
-            {{ 'EXPENSE_DATE_MONTH_ADJUSTED' | translate }}
-          </div>
-        </div>
-      </ng-container>
-
-      <ng-container *ngIf="isCategoryPickerOpen && (categoryPickerTarget === 'cart' || categoryPickerTarget === 'voucher')">
+      <ng-container *ngIf="isCartNonDatePickerRendered && cartPickerView === 'category'">
         <div class="exp-pos-picker-header">
           <span class="exp-pos-picker-title">{{ 'EXPENSE_CATEGORY_LABEL' | translate }}</span>
           <button type="button" class="exp-add-modal-close" (click)="closeCategoryPicker()" [title]="'BACK_BUTTON' | translate">
@@ -382,7 +389,8 @@
         </div>
       </ng-container>
 
-      <ng-container *ngIf="isProductPickerOpen && productPickerMode === 'cart'">
+
+      <ng-container *ngIf="isCartNonDatePickerRendered && cartPickerView === 'product'">
         <div class="exp-pos-picker-header">
           <span class="exp-pos-picker-title">{{ 'SELECT_PRODUCT' | translate }}</span>
           <button type="button" class="exp-add-modal-close" (click)="closeProductPicker()" [title]="'BACK_BUTTON' | translate">

@@ -34,7 +34,7 @@
               <lucide-icon [img]="iconScanLine" [size]="18"></lucide-icon>
               {{ 'SCAN_BARCODE_BUTTON' | translate }}
             </button>
-            <button type="button" class="pnl-pos-manual-add-btn" (click)="openProductPicker('cart')">
+            <button type="button" class="pnl-pos-manual-add-btn" (click)="openProductPicker('cart', $event)">
               <lucide-icon [img]="iconPlus" [size]="16"></lucide-icon>
               {{ 'POS_ADD_ITEM_MANUAL' | translate }}
             </button>
@@ -351,32 +351,36 @@
      below (both share the same isDatePickerOpen/isProductPickerOpen state,
      but editingIncome is only ever truthy while that OTHER modal is open,
      so exactly one of the two ever renders its content at a time). -->
-<div class="pnl-pos-picker-backdrop" [class.open]="!editingIncome && (isDatePickerOpen || isProductPickerOpen)"
-  [class.pnl-pos-picker-backdrop-date]="!editingIncome && isDatePickerOpen"
-  (click)="closeDatePicker(); closeProductPicker()"></div>
-<div class="pnl-pos-picker-sheet" [class.open]="!editingIncome && (isDatePickerOpen || isProductPickerOpen)"
-  [class.pnl-pos-picker-sheet-date]="!editingIncome && isDatePickerOpen">
+<app-mobile-fullscreen-overlay
+  class="pnl-pos-picker-sheet pnl-pos-picker-sheet-date"
+  [open]="!editingIncome && isDatePickerOpen"
+  (dismiss)="closeDatePicker()">
+  <ng-container *ngIf="!editingIncome && isDatePickerOpen">
+  <div class="pnl-add-modal-header">
+    <button type="button" class="pnl-add-modal-back" (click)="closeDatePicker()" [title]="'BACK_BUTTON' | translate">
+      <lucide-icon [img]="iconChevronDown" [size]="18" class="pnl-add-modal-back-icon"></lucide-icon>
+    </button>
+    <span class="pnl-add-modal-header-title">{{ 'INCOME_DATE_LABEL' | translate }}</span>
+    <button type="button" class="pnl-add-modal-close" (click)="closeDatePicker()" [title]="'BACK_BUTTON' | translate">
+      <lucide-icon [img]="iconX" [size]="18"></lucide-icon>
+    </button>
+  </div>
+  <div class="pnl-add-modal-body pnl-date-picker-body">
+    <div id="pnl-date-picker-container"></div>
+    <div class="app-date-adjustment-notice" *ngIf="datePickerAdjustmentNotice" role="status">
+      {{ 'EXPENSE_DATE_MONTH_ADJUSTED' | translate }}
+    </div>
+  </div>
+  </ng-container>
+</app-mobile-fullscreen-overlay>
+
+<div class="pnl-pos-picker-backdrop" [class.open]="!editingIncome && isProductPickerOpen"
+  (click)="closeProductPicker()"></div>
+<div class="pnl-pos-picker-sheet" [class.open]="!editingIncome && isProductPickerOpen"
+  [class.pnl-pos-picker-sheet-product]="!editingIncome && isProductPickerOpen && productPickerMode === 'cart'">
   <div class="pnl-pos-picker-handle"></div>
 
-  <ng-container *ngIf="!editingIncome && isDatePickerOpen">
-    <div class="pnl-add-modal-header">
-      <button type="button" class="pnl-add-modal-back" (click)="closeDatePicker()" [title]="'BACK_BUTTON' | translate">
-        <lucide-icon [img]="iconChevronDown" [size]="18" class="pnl-add-modal-back-icon"></lucide-icon>
-      </button>
-      <span class="pnl-add-modal-header-title">{{ 'INCOME_DATE_LABEL' | translate }}</span>
-      <button type="button" class="pnl-add-modal-close" (click)="closeDatePicker()" [title]="'BACK_BUTTON' | translate">
-        <lucide-icon [img]="iconX" [size]="18"></lucide-icon>
-      </button>
-    </div>
-    <div class="pnl-add-modal-body pnl-date-picker-body">
-      <div id="pnl-date-picker-container"></div>
-      <div class="app-date-adjustment-notice" *ngIf="datePickerAdjustmentNotice" role="status">
-        {{ 'EXPENSE_DATE_MONTH_ADJUSTED' | translate }}
-      </div>
-    </div>
-  </ng-container>
-
-  <ng-container *ngIf="!editingIncome && isProductPickerOpen">
+  <ng-container *ngIf="isCartProductPickerRendered">
     <div class="pnl-pos-picker-header">
       <span class="pnl-pos-picker-title">{{ 'SELECT_PRODUCT' | translate }}</span>
       <button type="button" class="pnl-add-modal-close" (click)="closeProductPicker()"

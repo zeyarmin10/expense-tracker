@@ -65,6 +65,7 @@ import { FormatService } from '../../services/format.service';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
 import { UserAvatarComponent } from '../common/user-avatar/user-avatar.component';
 import { ShowFullTextDirective } from '../../directives/show-full-text.directive';
+import { MobileFullscreenOverlayComponent } from '../common/mobile-fullscreen-overlay/mobile-fullscreen-overlay.component';
 
 const Toast = Swal.mixin({
   toast: true,
@@ -113,6 +114,7 @@ interface CartLine {
     UserAvatarComponent,
     ShowFullTextDirective,
     DateRangeInputComponent,
+    MobileFullscreenOverlayComponent,
   ],
   providers: [DatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -468,6 +470,11 @@ export class Purchase implements OnInit, OnDestroy {
       || (this.isProductPickerOpen && this.productPickerMode === 'cart');
   }
 
+  get isCartNonDatePickerOpen(): boolean {
+    return (this.isCategoryPickerOpen && (this.categoryPickerTarget === 'cart' || this.categoryPickerTarget === 'voucher'))
+      || (this.isProductPickerOpen && this.productPickerMode === 'cart');
+  }
+
   // ── Recorded Purchases: multi-item (POS) breakdown ──
   expandedExpenseId: string | null = null;
 
@@ -718,15 +725,26 @@ export class Purchase implements OnInit, OnDestroy {
   isCategoryPickerOpen = false;
   categoryPickerTarget: 'edit' | 'cart' | 'voucher' = 'cart';
   categoryPickerSearch = '';
+  cartPickerMenuTop = 0;
+  cartPickerMenuLeft = 0;
+  cartPickerView: 'category' | 'product' | null = null;
+  isCartPickerClosing = false;
+  private cartPickerCloseTimer: number | null = null;
 
-  openCategoryPicker(target: 'edit' | 'cart' | 'voucher'): void {
+  openCategoryPicker(target: 'edit' | 'cart' | 'voucher', event?: MouseEvent): void {
     this.categoryPickerTarget = target;
     this.categoryPickerSearch = '';
+    this.positionCartPicker(event);
+    if (target !== 'edit') this.showCartPickerView('category');
     this.isCategoryPickerOpen = true;
     this.closeDatePicker();
   }
 
   closeCategoryPicker(): void {
+    if (this.categoryPickerTarget !== 'edit') {
+      this.closeCartPickerWithAnimation();
+      return;
+    }
     this.isCategoryPickerOpen = false;
   }
 
@@ -755,15 +773,57 @@ export class Purchase implements OnInit, OnDestroy {
   productPickerSearch = '';
   productPickerMode: 'edit' | 'cart' = 'cart';
 
-  openProductPicker(mode: 'edit' | 'cart' = 'cart'): void {
+  openProductPicker(mode: 'edit' | 'cart' = 'cart', event?: MouseEvent): void {
     this.productPickerMode = mode;
     this.productPickerSearch = '';
+    this.positionCartPicker(event);
+    if (mode === 'cart') this.showCartPickerView('product');
     this.isProductPickerOpen = true;
     this.closeDatePicker();
   }
 
+  private positionCartPicker(event?: MouseEvent): void {
+    if (window.innerWidth < 992 || !event) return;
+    const trigger = event.currentTarget as HTMLElement | null;
+    if (!trigger) return;
+    const rect = trigger.getBoundingClientRect();
+    const menuWidth = Math.min(360, window.innerWidth - 32);
+    this.cartPickerMenuTop = Math.min(rect.bottom + 8, window.innerHeight - 180);
+    this.cartPickerMenuLeft = Math.max(16, Math.min(rect.left, window.innerWidth - menuWidth - 16));
+  }
+
   closeProductPicker(): void {
+    if (this.productPickerMode === 'cart') {
+      this.closeCartPickerWithAnimation();
+      return;
+    }
     this.isProductPickerOpen = false;
+  }
+
+  get isCartNonDatePickerRendered(): boolean {
+    return this.isCartNonDatePickerOpen || this.isCartPickerClosing;
+  }
+
+  private showCartPickerView(view: 'category' | 'product'): void {
+    if (this.cartPickerCloseTimer !== null) {
+      window.clearTimeout(this.cartPickerCloseTimer);
+      this.cartPickerCloseTimer = null;
+    }
+    this.cartPickerView = view;
+    this.isCartPickerClosing = false;
+  }
+
+  private closeCartPickerWithAnimation(): void {
+    if (!this.isCartNonDatePickerOpen || this.isCartPickerClosing) return;
+    this.isCategoryPickerOpen = false;
+    this.isProductPickerOpen = false;
+    this.isCartPickerClosing = true;
+    this.cartPickerCloseTimer = window.setTimeout(() => {
+      this.isCartPickerClosing = false;
+      this.cartPickerView = null;
+      this.cartPickerCloseTimer = null;
+      this.cdr.markForCheck();
+    }, 300);
   }
 
   onPickProduct(product: ServiceIProduct): void {
