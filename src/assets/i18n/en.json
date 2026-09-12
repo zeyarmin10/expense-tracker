@@ -316,6 +316,8 @@
   "END_DATE": "End Date",
   "DAILY_AVERAGE": "Daily Average",
   "ALL_CATEGORIES": "All Categories",
+  "INVENTORY_FILTER_OUT_OF_STOCK": "Out of stock",
+  "INVENTORY_FILTER_LOW_STOCK": "Low stock",
   "BUDGET_TITLE": "Budget",
   "ADD_BUDGET": "Add Budget",
   "RECORDED_BUDGETS": "Recorded Budgets",

@@ -316,6 +316,8 @@
   "END_DATE": "วันที่สิ้นสุด",
   "DAILY_AVERAGE": "เฉลี่ยต่อวัน",
   "ALL_CATEGORIES": "ทุกหมวดหมู่",
+  "INVENTORY_FILTER_OUT_OF_STOCK": "สินค้าหมดสต็อก",
+  "INVENTORY_FILTER_LOW_STOCK": "สินค้าใกล้หมด",
   "BUDGET_TITLE": "งบประมาณ",
   "ADD_BUDGET": "เพิ่มงบประมาณ",
   "RECORDED_BUDGETS": "งบประมาณที่บันทึกไว้",

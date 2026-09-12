@@ -316,6 +316,8 @@
   "END_DATE": "កាលបរិច្ឆេទបញ្ចប់",
   "DAILY_AVERAGE": "មធ្យមប្រចាំថ្ងៃ",
   "ALL_CATEGORIES": "ប្រភេទទាំងអស់",
+  "INVENTORY_FILTER_OUT_OF_STOCK": "អស់ស្តុក",
+  "INVENTORY_FILTER_LOW_STOCK": "ស្តុកទាប",
   "BUDGET_TITLE": "ថវិកា",
   "ADD_BUDGET": "បន្ថែមថវិកា",
   "RECORDED_BUDGETS": "ថវិកាដែលបានកត់ត្រា",

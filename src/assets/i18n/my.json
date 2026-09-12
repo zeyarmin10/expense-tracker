@@ -316,6 +316,8 @@
   "END_DATE": "ပြီးဆုံးရက်စွဲ",
   "DAILY_AVERAGE": "နေ့စဉ်ပျမ်းမျှအသုံးစရိတ်",
   "ALL_CATEGORIES": "အမျိုးအစားအားလုံး",
+  "INVENTORY_FILTER_OUT_OF_STOCK": "လက်ကျန်ကုန်နေသောပစ္စည်း",
+  "INVENTORY_FILTER_LOW_STOCK": "လက်ကျန်နည်းနေသောပစ္စည်း",
   "BUDGET_TITLE": "ဘတ်ဂျက်",
   "ADD_BUDGET": "ဘတ်ဂျက်ထည့်ရန်",
   "RECORDED_BUDGETS": "သတ်မှတ်ဘတ်ဂျက်များ",

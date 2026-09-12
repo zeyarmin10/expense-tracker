@@ -107,6 +107,7 @@ export class FormatService {
     amount: number,
     currencyCode?: string,
     showSymbol = true,
+    wholeHighDenomination = false,
   ): { shortAmount: string; label: string | null; labelFirst: boolean } {
     const locale = this.translate.currentLang;
     const isBurmese = locale === 'my';
@@ -147,14 +148,18 @@ export class FormatService {
       suffixKey = '';
     }
 
-    const precision = value % 1 === 0 ? 0 : 2;
+    const precision = wholeHighDenomination && isHighDenomination
+      ? 0
+      : value % 1 === 0 ? 0 : 2;
 
     // Truncate rather than round — e.g. 1,261,800 MMK (12.618 Lakh) should
     // read "12.61 Lakh", not "12.62 Lakh". Math.trunc cuts toward zero
     // instead of Intl.NumberFormat's own round-half-away-from-zero.
     const displayValue = precision > 0
       ? Math.trunc(value * 10 ** precision) / 10 ** precision
-      : value;
+      : wholeHighDenomination && isHighDenomination
+        ? Math.trunc(value)
+        : value;
 
     const formattedNumber = new Intl.NumberFormat(numberLocale, {
       minimumFractionDigits: precision,
@@ -210,6 +215,14 @@ export class FormatService {
     showSymbol = true,
   ): string {
     const { shortAmount, label, labelFirst } = this.buildAmountShortParts(amount, currencyCode, showSymbol);
+    if (label === null) return shortAmount;
+    const labelHtml = `<span class="fmt-currency-unit">${label}</span>`;
+    return labelFirst ? `${labelHtml}${shortAmount}` : `${shortAmount} ${labelHtml}`;
+  }
+
+  /** Compact headline output without fractions for high-denomination currencies. */
+  formatAmountShortWholeHighDenominationHtml(amount: number, currencyCode?: string): string {
+    const { shortAmount, label, labelFirst } = this.buildAmountShortParts(amount, currencyCode, true, true);
     if (label === null) return shortAmount;
     const labelHtml = `<span class="fmt-currency-unit">${label}</span>`;
     return labelFirst ? `${labelHtml}${shortAmount}` : `${shortAmount} ${labelHtml}`;

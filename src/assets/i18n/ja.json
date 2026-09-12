@@ -316,6 +316,8 @@
   "END_DATE": "終了日",
   "DAILY_AVERAGE": "1日平均",
   "ALL_CATEGORIES": "すべてのカテゴリー",
+  "INVENTORY_FILTER_OUT_OF_STOCK": "在庫切れ",
+  "INVENTORY_FILTER_LOW_STOCK": "在庫わずか",
   "BUDGET_TITLE": "予算",
   "ADD_BUDGET": "予算を追加",
   "RECORDED_BUDGETS": "記録された予算",
