@@ -1195,6 +1195,14 @@ export class App implements OnInit, AfterViewInit {
     CapacitorApp.addListener('backButton', ({ canGoBack }) => {
       const url = this.router.url;
 
+      // The image viewer is a lightweight overlay, not a route or modal
+      // history layer. Close it first so Android Back never navigates away
+      // (or closes the screen underneath) while a photo is being viewed.
+      if (document.querySelector('.lb-overlay.lb-open')) {
+        window.dispatchEvent(new Event('app-close-lightbox'));
+        return;
+      }
+
       // SweetAlert sits outside Angular's route/modal state. Always dismiss a
       // normal alert before considering navigation, so Android Back behaves
       // like the alert's Cancel/Close action rather than leaving the page.

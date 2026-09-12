@@ -64,9 +64,9 @@
       </div>
 
       <!-- Category picker is layered over the still-visible add form on mobile. -->
-      <div class="exp-category-picker-backdrop" *ngIf="isCategoryPickerOpen"
+      <div class="exp-category-picker-backdrop" [class.open]="isCategoryPickerOpen"
         (click)="closeCategoryPicker()"></div>
-      <div class="exp-category-bottom-sheet" *ngIf="isCategoryPickerOpen">
+      <div class="exp-category-bottom-sheet" [class.open]="isCategoryPickerOpen">
         <div class="exp-pos-picker-handle"></div>
         <div class="exp-add-modal-header">
           <span class="exp-add-modal-header-title">{{ 'EXPENSE_CATEGORY_LABEL' | translate }}</span>

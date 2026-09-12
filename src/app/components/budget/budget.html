@@ -40,9 +40,9 @@
       </div>
 
       <!-- Category list overlays the still-visible Add Budget form. -->
-      <div class="bgt-selection-picker-backdrop" *ngIf="isCategoryPickerOpen"
+      <div class="bgt-selection-picker-backdrop" [class.open]="isCategoryPickerOpen"
         (click)="closeCategoryPicker()"></div>
-      <div class="bgt-selection-bottom-sheet" *ngIf="isCategoryPickerOpen">
+      <div class="bgt-selection-bottom-sheet" [class.open]="isCategoryPickerOpen">
         <div class="bgt-selection-sheet-handle"></div>
         <div class="bgt-add-modal-header">
           <span class="bgt-add-modal-header-title">{{ 'CATEGORY' | translate }}</span>
@@ -87,9 +87,9 @@
       </div>
 
       <!-- Budget type list also overlays the base form as a bottom sheet. -->
-      <div class="bgt-selection-picker-backdrop" *ngIf="isTypePickerOpen"
+      <div class="bgt-selection-picker-backdrop" [class.open]="isTypePickerOpen"
         (click)="closeTypePicker()"></div>
-      <div class="bgt-selection-bottom-sheet" *ngIf="isTypePickerOpen">
+      <div class="bgt-selection-bottom-sheet" [class.open]="isTypePickerOpen">
         <div class="bgt-selection-sheet-handle"></div>
         <div class="bgt-add-modal-header">
           <span class="bgt-add-modal-header-title">{{ 'BUDGET_TYPE' | translate }}</span>

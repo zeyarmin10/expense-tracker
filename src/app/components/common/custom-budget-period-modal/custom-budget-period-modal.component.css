@@ -268,3 +268,51 @@ body.cbp-modal-open {
     box-shadow: 0 0 18px rgba(11, 116, 255, 0.45);
   }
 }
+
+/* Phone: use the same full-screen overlay shell as the add flows. Keep the
+   compact dialog above untouched for desktop. This block stays last so its
+   safe-area and edge-to-edge overrides win over the desktop base styles. */
+@media (max-width: 991.98px) {
+  .cbp-backdrop {
+    display: none;
+  }
+
+  .cbp-dialog {
+    top: 0;
+    left: 0;
+    width: 100%;
+    max-width: none;
+    height: 100dvh;
+    max-height: none;
+    margin: 0;
+    translate: 0 100%;
+    scale: 1;
+    opacity: 1;
+    transition: translate 0.28s cubic-bezier(0.34, 1.2, 0.64, 1);
+  }
+
+  .cbp-dialog.open {
+    translate: 0 0;
+  }
+
+  .cbp-content {
+    height: 100%;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .cbp-header {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 0.75rem);
+  }
+
+  .cbp-body {
+    flex: 0 0 auto;
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem);
+  }
+
+  .cbp-footer {
+    margin-top: 0.5rem;
+    padding: 0 1.4rem calc(env(safe-area-inset-bottom, 0px) + 1.25rem);
+  }
+}

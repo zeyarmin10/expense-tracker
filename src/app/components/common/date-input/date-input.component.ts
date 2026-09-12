@@ -48,6 +48,8 @@ export class DateInputComponent implements ControlValueAccessor, OnDestroy {
     this.openedChange.emit(val);
   }
   isMobile = typeof window !== 'undefined' ? window.innerWidth < MOBILE_BP : true;
+  isClosing = false;
+  private closeTimer: number | null = null;
 
   panelTop = 0;
   panelLeft = 0;
@@ -88,24 +90,30 @@ export class DateInputComponent implements ControlValueAccessor, OnDestroy {
     // rendered — that pushed a second history entry per tap, and closing
     // (which pops exactly one entry per close()) could never fully unwind
     // it, leaving isOpen effectively stuck open.
-    if (this.isDisabled || this.isOpen) return;
+    if (this.isDisabled || this.isOpen || this.isClosing) return;
     if (!this.isMobile) this.calcPanelPos();
     else history.pushState(null, '');
     this.isOpen = true;
     setTimeout(() => this.initFlatpickr(), 0);
   }
 
-  close(): void {
+  close(fromHistory = false): void {
     if (!this.isOpen) return;
-    this.destroyFlatpickr();
     // Set isOpen synchronously here rather than waiting on the popstate
     // that history.back() below is expected to trigger — that round trip
     // wasn't always resolving (e.g. when nested inside another component
     // that also reacts to popstate/history), leaving isOpen stuck true
     // and the sheet/backdrop stuck on screen with nothing closing it.
     this.isOpen = false;
+    this.isClosing = true;
     this.onTouched();
-    if (this.isMobile) {
+    if (this.closeTimer) clearTimeout(this.closeTimer);
+    this.closeTimer = window.setTimeout(() => {
+      this.isClosing = false;
+      this.destroyFlatpickr();
+      this.closeTimer = null;
+    }, 300);
+    if (this.isMobile && !fromHistory) {
       // Pop the entry pushed in open() purely for history-stack hygiene
       // (so the device back button/gesture doesn't later land on a stale,
       // do-nothing entry) — correctness no longer depends on this firing.
@@ -179,6 +187,7 @@ export class DateInputComponent implements ControlValueAccessor, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    if (this.closeTimer) clearTimeout(this.closeTimer);
     this.destroyFlatpickr();
   }
 
@@ -211,7 +220,7 @@ export class DateInputComponent implements ControlValueAccessor, OnDestroy {
 
   @HostListener('window:popstate')
   onPopState(): void {
-    if (this.isOpen && this.isMobile) { this.isOpen = false; this.destroyFlatpickr(); this.onTouched(); }
+    if (this.isOpen && this.isMobile) this.close(true);
   }
 
   @HostListener('document:keydown.escape')

@@ -22,7 +22,7 @@
      MOBILE — Centered Modal
      ════════════════════════════════ -->
 <ng-container *ngIf="isMobile">
-  <div class="di-backdrop" *ngIf="isOpen" (click)="close()"></div>
+  <div class="di-backdrop" [class.di-backdrop-open]="isOpen" (click)="close()"></div>
 
   <div class="di-sheet" [class.di-sheet-open]="isOpen" (click)="$event.stopPropagation()">
     <div class="di-handle"></div>
@@ -42,7 +42,7 @@
      DESKTOP — Floating Panel
      ════════════════════════════════ -->
 <ng-container *ngIf="!isMobile && isOpen">
-  <div class="di-backdrop di-backdrop-desktop" (click)="close()"></div>
+  <div class="di-backdrop di-backdrop-desktop" [class.di-backdrop-open]="isOpen" (click)="close()"></div>
 
   <div class="di-panel"
        [class.di-panel-above]="panelAbove"

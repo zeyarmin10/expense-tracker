@@ -245,9 +245,9 @@ body.bgt-add-modal-open {
 
 .bgt-selection-bottom-sheet {
   position: absolute;
-  right: 0;
   bottom: 0;
-  left: 0;
+  left: 50%;
+  width: min(100%, 480px);
   z-index: 2;
   display: flex;
   flex-direction: column;
@@ -256,6 +256,14 @@ body.bgt-add-modal-open {
   border: 1px solid var(--border);
   border-bottom: none;
   border-radius: 20px 20px 0 0;
+  translate: -50% 100%;
+  pointer-events: none;
+  transition: translate 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+
+.bgt-selection-bottom-sheet.open {
+  translate: -50% 0;
+  pointer-events: auto;
   box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.28);
 }
 
@@ -264,6 +272,14 @@ body.bgt-add-modal-open {
   inset: 0;
   z-index: 1;
   background: rgba(0, 0, 0, 0.48);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.24s ease;
+}
+
+.bgt-selection-picker-backdrop.open {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .bgt-selection-sheet-handle {

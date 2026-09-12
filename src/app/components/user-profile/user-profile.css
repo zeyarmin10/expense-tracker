@@ -946,6 +946,44 @@ body.prof-pw-modal-open {
   pointer-events: all;
 }
 
+/* Match the rest of the mobile sheet flows: the password form enters from
+   below and exits back below the viewport. Desktop keeps the compact dialog
+   above unchanged. */
+@media (max-width: 991.98px) {
+  .prof-pw-modal-backdrop {
+    display: none;
+  }
+
+  .prof-pw-modal-sheet {
+    top: 0;
+    left: 0;
+    width: 100%;
+    max-width: none;
+    height: 100dvh;
+    max-height: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    translate: 0 100%;
+    scale: 1;
+    opacity: 1;
+    transition: translate 0.28s cubic-bezier(0.34, 1.2, 0.64, 1);
+  }
+
+  .prof-pw-modal-sheet.open {
+    translate: 0 0;
+  }
+
+  .prof-pw-modal-header {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 0.75rem);
+  }
+
+  .prof-pw-modal-body {
+    flex: 1;
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem);
+  }
+}
+
 .prof-pw-modal-header {
   display: flex;
   align-items: center;

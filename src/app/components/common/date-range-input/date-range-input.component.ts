@@ -275,7 +275,15 @@ export class DateRangeInputComponent implements OnChanges, OnDestroy {
   }
 
   private _insideModal(): boolean {
-    return !!this.elRef.nativeElement.closest('.modal');
+    return !!this.getOverlayAncestor();
+  }
+
+  private getOverlayAncestor(): HTMLElement | null {
+    // Custom Budget Period is a component-owned full-screen overlay rather
+    // than Bootstrap's `.modal`. Keep the range picker/backdrop inside that
+    // overlay so its sheet can sit above the dimmer instead of being trapped
+    // beneath a body-level backdrop by the overlay's stacking context.
+    return this.elRef.nativeElement.closest('.modal, .cbp-dialog') as HTMLElement | null;
   }
 
   private _createBodyBackdrop(): void {
@@ -284,9 +292,9 @@ export class DateRangeInputComponent implements OnChanges, OnDestroy {
     el.className = 'dri-body-backdrop';
     el.addEventListener('click', () => this.close());
     el.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
-    const modalAncestor = this.elRef.nativeElement.closest('.modal') as HTMLElement;
-    if (modalAncestor) {
-      modalAncestor.appendChild(el);
+    const overlayAncestor = this.getOverlayAncestor();
+    if (overlayAncestor) {
+      overlayAncestor.appendChild(el);
     } else {
       document.body.appendChild(el);
       this._lockBodyScroll();

@@ -310,13 +310,16 @@
       <div class="exp-pos-picker-handle"></div>
 
       <ng-container *ngIf="isDatePickerOpen && (datePickerTarget === 'cart' || datePickerTarget === 'voucher')">
-        <div class="exp-pos-picker-header">
-          <span class="exp-pos-picker-title">{{ 'EXPENSE_DATE_LABEL' | translate }}</span>
+        <div class="exp-add-modal-header">
+          <button type="button" class="exp-add-modal-back" (click)="closeDatePicker()" [title]="'BACK_BUTTON' | translate">
+            <lucide-icon [img]="iconChevronDown" [size]="18" class="exp-add-modal-back-icon"></lucide-icon>
+          </button>
+          <span class="exp-add-modal-header-title">{{ 'EXPENSE_DATE_LABEL' | translate }}</span>
           <button type="button" class="exp-add-modal-close" (click)="closeDatePicker()" [title]="'BACK_BUTTON' | translate">
             <lucide-icon [img]="iconX" [size]="18"></lucide-icon>
           </button>
         </div>
-        <div class="exp-date-picker-body">
+        <div class="exp-add-modal-body exp-date-picker-body">
           <div id="exp-date-picker-container"></div>
           <div class="app-date-adjustment-notice" *ngIf="datePickerAdjustmentNotice" role="status">
             {{ 'EXPENSE_DATE_MONTH_ADJUSTED' | translate }}
@@ -1044,3 +1047,4 @@
 
 <app-category-modal (categoryAdded)="loadCategories()"></app-category-modal>
 <app-product-modal (productAdded)="onProductModalAdded($event)"></app-product-modal>
+<app-lightbox></app-lightbox>

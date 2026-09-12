@@ -359,13 +359,16 @@
   <div class="pnl-pos-picker-handle"></div>
 
   <ng-container *ngIf="!editingIncome && isDatePickerOpen">
-    <div class="pnl-pos-picker-header">
-      <span class="pnl-pos-picker-title">{{ 'INCOME_DATE_LABEL' | translate }}</span>
+    <div class="pnl-add-modal-header">
+      <button type="button" class="pnl-add-modal-back" (click)="closeDatePicker()" [title]="'BACK_BUTTON' | translate">
+        <lucide-icon [img]="iconChevronDown" [size]="18" class="pnl-add-modal-back-icon"></lucide-icon>
+      </button>
+      <span class="pnl-add-modal-header-title">{{ 'INCOME_DATE_LABEL' | translate }}</span>
       <button type="button" class="pnl-add-modal-close" (click)="closeDatePicker()" [title]="'BACK_BUTTON' | translate">
         <lucide-icon [img]="iconX" [size]="18"></lucide-icon>
       </button>
     </div>
-    <div class="pnl-date-picker-body">
+    <div class="pnl-add-modal-body pnl-date-picker-body">
       <div id="pnl-date-picker-container"></div>
       <div class="app-date-adjustment-notice" *ngIf="datePickerAdjustmentNotice" role="status">
         {{ 'EXPENSE_DATE_MONTH_ADJUSTED' | translate }}
