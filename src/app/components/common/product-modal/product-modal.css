@@ -30,17 +30,23 @@ body.pd-modal-open {
   max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 1.7rem);
   margin: 0;
   z-index: 1051;
-  translate: -50% 0;
-  scale: 0.96;
-  opacity: 0;
+  /* Keep the dialog visible while it travels down on dismissal, then hide
+     it only after the slide finishes (rather than fading it away in place). */
+  translate: -50% 1.75rem;
+  scale: 1;
+  opacity: 1;
+  visibility: hidden;
   pointer-events: none;
-  transition: scale 0.2s ease, opacity 0.2s ease;
+  transition: translate 0.28s cubic-bezier(0.22, 1, 0.36, 1), visibility 0s linear 0.28s;
 }
 
 .pd-modal-dialog.open {
+  translate: -50% 0;
   scale: 1;
   opacity: 1;
+  visibility: visible;
   pointer-events: all;
+  transition-delay: 0s;
 }
 
 .pd-modal-content {

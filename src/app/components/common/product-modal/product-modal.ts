@@ -48,6 +48,7 @@ export class ProductModalComponent implements OnInit, OnDestroy {
   products: ServiceIProduct[] = [];
   isModalOpen = false;
   deletingStates: { [key: string]: boolean } = {};
+  private closeAnimationTimer: number | null = null;
 
   private products$ = new BehaviorSubject<ServiceIProduct[]>([]);
 
@@ -96,7 +97,6 @@ export class ProductModalComponent implements OnInit, OnDestroy {
   selectExistingProduct(product: ServiceIProduct): void {
     this.showNameSuggestions = false;
     this.productAdded.emit(product);
-    this.resetForm();
     this.closeModal();
   }
 
@@ -162,6 +162,7 @@ export class ProductModalComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    if (this.closeAnimationTimer !== null) window.clearTimeout(this.closeAnimationTimer);
     document.body.classList.remove('pd-modal-open');
   }
 
@@ -169,6 +170,10 @@ export class ProductModalComponent implements OnInit, OnDestroy {
   // cart's scan misses (no matching product) and offers to create one on
   // the spot with the scanned code already filled in.
   async open(prefillBarcode?: string): Promise<void> {
+    if (this.closeAnimationTimer !== null) {
+      window.clearTimeout(this.closeAnimationTimer);
+      this.closeAnimationTimer = null;
+    }
     await this.loadProducts();
     this.resetForm();
     if (prefillBarcode) {
@@ -182,10 +187,19 @@ export class ProductModalComponent implements OnInit, OnDestroy {
   }
 
   closeModal(): void {
+    if (!this.isModalOpen) return;
     this.isModalOpen = false;
-    document.body.classList.remove('pd-modal-open');
-    this.resetForm();
     this.cdr.detectChanges();
+
+    // Preserve the form and the page scroll lock while the dialog scales and
+    // fades away. Resetting immediately made the exit visibly collapse before
+    // the CSS transition had finished.
+    this.closeAnimationTimer = window.setTimeout(() => {
+      this.closeAnimationTimer = null;
+      this.resetForm();
+      document.body.classList.remove('pd-modal-open');
+      this.cdr.detectChanges();
+    }, 280);
   }
 
   private async loadProducts(): Promise<void> {
@@ -233,7 +247,6 @@ export class ProductModalComponent implements OnInit, OnDestroy {
       if (created) {
         this.productAdded.emit(created);
       }
-      this.resetForm();
       this.closeModal();
     } catch (error: any) {
       const key = getProductErrorMessage(error) || 'DATA_SAVE_ERROR';

@@ -64,9 +64,12 @@
       </div>
 
       <!-- Category picker is layered over the still-visible add form on mobile. -->
-      <div class="exp-category-picker-backdrop" *ngIf="isCategoryPickerOpen"
+      <div class="exp-category-picker-backdrop" [class.open]="isCategoryPickerOpen"
         (click)="closeCategoryPicker()"></div>
-      <div class="exp-category-bottom-sheet" *ngIf="isCategoryPickerOpen">
+      <div class="exp-category-bottom-sheet" [class.open]="isCategoryPickerOpen"
+        [style.--exp-picker-top.px]="categoryPickerMenuTop"
+        [style.--exp-picker-left.px]="categoryPickerMenuLeft"
+        [style.--exp-picker-width.px]="categoryPickerMenuWidth">
         <div class="exp-pos-picker-handle"></div>
         <div class="exp-add-modal-header">
           <span class="exp-add-modal-header-title">{{ 'EXPENSE_CATEGORY_LABEL' | translate }}</span>
@@ -179,7 +182,7 @@
 
             <!-- Category -->
             <div class="exp-float-field exp-float-group">
-              <button type="button" class="exp-cat-select-trigger" (click)="openCategoryPicker('expense')">
+              <button type="button" class="exp-cat-select-trigger" (click)="openCategoryPicker('expense', $event)">
                 <ng-container *ngIf="newExpenseForm.get('category')?.value as catVal; else catQuickPlaceholder">
                   <span class="exp-cat-select-trigger-icon" [style.--cat-hue]="getIconHueForCategory(catVal)">
                     <img *ngIf="getIconUrlForCategory(catVal)" [src]="getIconUrlForCategory(catVal)!" alt="" class="cat-img-icon" style="width:100%;height:100%" />
@@ -221,7 +224,7 @@
           >
             <!-- Category -->
             <div class="exp-float-field exp-float-group">
-              <button type="button" class="exp-cat-select-trigger" (click)="openCategoryPicker('expense')">
+              <button type="button" class="exp-cat-select-trigger" (click)="openCategoryPicker('expense', $event)">
                 <ng-container *ngIf="newExpenseForm.get('category')?.value as catVal; else catFullPlaceholder">
                   <span class="exp-cat-select-trigger-icon" [style.--cat-hue]="getIconHueForCategory(catVal)">
                     <img *ngIf="getIconUrlForCategory(catVal)" [src]="getIconUrlForCategory(catVal)!" alt="" class="cat-img-icon" style="width:100%;height:100%" />
@@ -346,7 +349,7 @@
           </div>
 
           <div class="exp-float-field">
-            <button type="button" class="exp-cat-select-trigger" (click)="openCategoryPicker('voucher')">
+            <button type="button" class="exp-cat-select-trigger" (click)="openCategoryPicker('voucher', $event)">
               <ng-container *ngIf="voucherForm.get('category')?.value as catVal; else catVoucherPlaceholder">
                 <span class="exp-cat-select-trigger-icon" [style.--cat-hue]="getIconHueForCategory(catVal)">
                   <img *ngIf="getIconUrlForCategory(catVal)" [src]="getIconUrlForCategory(catVal)!" alt="" class="cat-img-icon" style="width:100%;height:100%" />

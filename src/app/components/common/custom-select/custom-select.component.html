@@ -41,7 +41,7 @@
      ════════════════════════════════ -->
 <ng-container *ngIf="isMobile">
 
-  <div class="csl-backdrop" *ngIf="isOpen" (click)="close()"></div>
+  <div class="csl-backdrop" [class.csl-backdrop-open]="isOpen" (click)="close()"></div>
 
   <div class="csl-sheet" [class.csl-sheet-open]="isOpen" (click)="$event.stopPropagation()">
     <div class="csl-handle"></div>
@@ -89,7 +89,7 @@
 <ng-container *ngIf="!isMobile && isOpen">
 
   <!-- Transparent backdrop to capture outside clicks -->
-  <div class="csl-backdrop csl-backdrop-desktop" (click)="close()"></div>
+  <div class="csl-backdrop csl-backdrop-desktop" [class.csl-backdrop-open]="isOpen" (click)="close()"></div>
 
   <!-- Floating panel — position: fixed, coords set from JS -->
   <div class="csl-panel"

@@ -21,6 +21,7 @@ import { FormatService } from '../../../services/format.service';
   styleUrls: ['./lightbox.component.css'],
 })
 export class LightboxComponent implements AfterViewInit, OnDestroy {
+  private static readonly ZOOM_LEVELS = [1, 1.5, 2, 2.5] as const;
   private ngZone = inject(NgZone);
   private cdr = inject(ChangeDetectorRef);
   public formatService = inject(FormatService);
@@ -101,6 +102,7 @@ export class LightboxComponent implements AfterViewInit, OnDestroy {
   }
 
   hide(): void {
+    if (!this.visible) return;
     this.visible = false;
     this.restoreScroll();
   }
@@ -148,7 +150,7 @@ export class LightboxComponent implements AfterViewInit, OnDestroy {
     e.preventDefault();
 
     if (e.touches.length === 2) {
-      const s1 = Math.min(5, Math.max(1, this.s0 * this.pinchDist(e) / this.dist0));
+      const s1 = Math.min(2.5, Math.max(1, this.s0 * this.pinchDist(e) / this.dist0));
       const ratio = s1 / this.s0;
       this.tx = this.cx * (1 - ratio) + this.tx0 * ratio;
       this.ty = this.cy * (1 - ratio) + this.ty0 * ratio;
@@ -180,15 +182,20 @@ export class LightboxComponent implements AfterViewInit, OnDestroy {
     const t = e.changedTouches[0];
     const now = Date.now();
 
-    if (this.n === 1 && now - this.lastTap < 280) {
+    // Pinch can move freely while the fingers are down, then settles onto
+    // the same 100/150/200/250% levels as double-tap when released.
+    if (this.n >= 2) {
+      this.snapZoomToLevel(true);
+      this.n = e.touches.length;
+      return;
+    }
+
+    const tapDistance = Math.hypot(t.clientX - this.sx0, t.clientY - this.sy0);
+    if (this.n === 1 && tapDistance < 20 && now - this.lastTap < 280) {
       this.lastTap = 0;
       this.dragX = 0;
       this.applyDragTransform(1, false);
-      if (this.scale > 1) {
-        this.resetZoom(true);
-      } else {
-        this.zoomToPoint(t.clientX, t.clientY, 2.5, true);
-      }
+      this.advanceZoom(t.clientX, t.clientY);
       return;
     }
     this.lastTap = now;
@@ -286,6 +293,46 @@ export class LightboxComponent implements AfterViewInit, OnDestroy {
     this.applyZoomBadge();
   }
 
+  onDoubleClick(event: MouseEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.advanceZoom(event.clientX, event.clientY);
+  }
+
+  private advanceZoom(clientX: number, clientY: number): void {
+    const levels = LightboxComponent.ZOOM_LEVELS;
+    const currentIndex = levels.findIndex(level => Math.abs(level - this.scale) < 0.04);
+    const nextScale = currentIndex >= 0
+      ? levels[(currentIndex + 1) % levels.length]
+      : this.getNearestZoomLevel(this.scale) === 2.5 ? 1 : this.getNearestZoomLevel(this.scale) + 0.5;
+
+    if (nextScale === 1) {
+      this.resetZoom(true);
+    } else {
+      this.zoomToPoint(clientX, clientY, nextScale, true);
+    }
+  }
+
+  private snapZoomToLevel(animate = false): void {
+    const targetScale = this.getNearestZoomLevel(this.scale);
+    if (targetScale === 1) {
+      this.resetZoom(animate);
+      return;
+    }
+    // Pinch focal coordinates are already reflected in tx/ty. Update the
+    // scale in-place instead of re-centring it around an arbitrary point.
+    this.scale = targetScale;
+    this.clamp();
+    this.applyImgTransform(animate);
+    this.applyZoomBadge();
+  }
+
+  private getNearestZoomLevel(scale: number): 1 | 1.5 | 2 | 2.5 {
+    return LightboxComponent.ZOOM_LEVELS.reduce((closest, level) =>
+      Math.abs(level - scale) < Math.abs(closest - scale) ? level : closest,
+    );
+  }
+
   private navigate(newIdx: number): void {
     this.fading = true;
     setTimeout(() => {
@@ -379,6 +426,11 @@ export class LightboxComponent implements AfterViewInit, OnDestroy {
       case 'ArrowLeft':   this.prev(); break;
       case 'ArrowRight':  this.next(); break;
     }
+  }
+
+  @HostListener('window:app-close-lightbox')
+  onNativeBack(): void {
+    this.hide();
   }
 
   private pinchDist(e: TouchEvent): number {

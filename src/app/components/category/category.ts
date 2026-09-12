@@ -27,6 +27,7 @@ import { CATEGORY_ICONS, getIconData, getIconHue } from '../../utils/category-ic
 import { meaningfulTextValidator } from '../../utils/form-validators';
 import { ImageUploadService } from '../../services/image-upload.service';
 import { ImageCropperComponent } from '../common/image-cropper/image-cropper.component';
+import { MobileFullscreenOverlayComponent } from '../common/mobile-fullscreen-overlay/mobile-fullscreen-overlay.component';
 
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import Swal from 'sweetalert2';
@@ -57,6 +58,7 @@ const Toast = Swal.mixin({
     CurrentSpaceTitleComponent,
     LucideAngularModule,
     ImageCropperComponent,
+    MobileFullscreenOverlayComponent,
   ],
   templateUrl: './category.html',
   styleUrls: ['./category.css'],

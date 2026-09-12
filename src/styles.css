@@ -28,6 +28,10 @@
 :root {
   /* Set from app.ts while the native keyboard is visible. */
   --keyboard-inset: 0px;
+  /* Android edge-to-edge WebViews can report a zero CSS safe-area inset even
+     while the system status bar is over the page. This value is enabled only
+     for the native Android shell below. */
+  --native-status-bar-inset: 0px;
   --bg: #020817;
   --surface: #07162f;
   --surface-2: #0f2348;
@@ -90,6 +94,13 @@
   --nav-surface: #0b1d3d;
   --nav-surface-2: #102b57;
   --nav-accent-dim: rgba(11, 116, 255, 0.14);
+}
+
+/* Keep controls out of Android's system-status-bar touch area when the
+   WebView is intentionally edge-to-edge. iOS continues to use its reported
+   safe-area inset, and browser layouts retain the zero fallback above. */
+html.native-android {
+  --native-status-bar-inset: 28px;
 }
 
 html,

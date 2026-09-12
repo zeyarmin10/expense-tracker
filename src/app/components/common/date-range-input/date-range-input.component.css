@@ -63,7 +63,7 @@
 
 .dri-trigger {
   width: 100%;
-  height: 42px;
+  height: 50px;
   background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -180,22 +180,27 @@
   background: rgba(0, 0, 0, 0.48);
   backdrop-filter: blur(3px);
   -webkit-backdrop-filter: blur(3px);
-  animation: dri-fade-in 0.2s ease;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.24s ease;
+}
+
+.dri-backdrop.dri-backdrop-open {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .dri-backdrop.dri-backdrop-desktop {
   background: transparent;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
-  animation: none;
+  transition: none;
 }
 
-@keyframes dri-fade-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-/* ── Mobile Centered Modal ── */
+/* ── Mobile Centered Dialog ──
+   A custom date range needs enough room for its calendar grid and is used
+   from sticky date filters, so it deliberately stays a centered dialog on
+   phones rather than following the compact select/category bottom sheets. */
 .dri-sheet {
   position: fixed;
   top: 50%;
@@ -214,7 +219,6 @@
   transform: translate(-50%, -50%) scale(0.92);
   opacity: 0;
   pointer-events: none;
-  /* fires on OPEN (source = closed state): smooth ease-out expo — fast start, silky settle */
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease-out;
 }
 
@@ -231,20 +235,12 @@
   transform: translate(-50%, -50%) scale(1);
   opacity: 1;
   pointer-events: auto;
-  /* fires on CLOSE (source = open state): quick ease-in — snappy, decisive dismiss */
   transition: transform 0.2s cubic-bezier(0.4, 0, 1, 1), opacity 0.16s ease-in;
 }
 
-/* Use the available phone width instead of a fixed card width. The
-   flatpickr grid is expanded in global styles (it is created dynamically),
-   so both the sheet and calendar stay proportionate on wider Android phones. */
-@media (max-width: 767px) {
-  .dri-sheet {
-    width: min(480px, calc(100vw - 24px));
-  }
+.dri-handle {
+  display: none;
 }
-
-.dri-handle { display: none; }
 
 .dri-sheet-header {
   display: flex;

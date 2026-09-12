@@ -1,0 +1,9 @@
+<div
+  class="mfo-backdrop"
+  [class.open]="open"
+  [class.mfo-backdrop-hidden-mobile]="hideBackdropOnMobile"
+  (click)="onBackdropClick()"
+  aria-hidden="true">
+</div>
+
+<ng-content></ng-content>

@@ -75,8 +75,15 @@
           <div class="summary-card product-highlight-card">
             <div class="product-icon"><lucide-icon [img]="iconTrophy" [size]="25" style="vertical-align:middle;color:#f5b301"></lucide-icon></div>
             <div>
-              <div class="summary-label">{{ "TOP_SELLING_PRODUCT" | translate }}</div>
+              <div class="summary-label">
+                {{ "TOP_SELLING_PRODUCT" | translate }} ·
+                {{ topSellingSort === 'quantity' ? ('QUANTITY_SHORT_LABEL' | translate) : ('SALES_REVENUE' | translate) }}
+              </div>
               <span class="summary-amount">{{ topSellingProduct }}</span>
+              <div class="top-product-stats" *ngIf="topSellingProductTotal as topProduct">
+                <span>{{ 'QUANTITY_SHORT_LABEL' | translate }}: {{ formatQuantity(topProduct.qty, topProduct.unit) }}</span>
+                <span [innerHTML]="formatService.formatAmountShortHtml(topProduct.total, topProduct.currency)"></span>
+              </div>
             </div>
           </div>
         </div>
@@ -84,8 +91,16 @@
         <!-- Product Breakdown Bars -->
         <div class="ov-breakdown-panel" *ngIf="productTotals.length > 0">
           <div class="ov-breakdown-header">
-            <lucide-icon [img]="iconChartColumn" [size]="15"></lucide-icon>
-            <span>{{ 'PRODUCT_BREAKDOWN' | translate }}</span>
+            <div class="ov-breakdown-title">
+              <lucide-icon [img]="iconChartColumn" [size]="15"></lucide-icon>
+              <span>{{ 'PRODUCT_BREAKDOWN' | translate }}</span>
+            </div>
+            <div class="srpt-rank-toggle" role="group" [attr.aria-label]="'TOP_SELLING_PRODUCT' | translate">
+              <button type="button" [class.active]="topSellingSort === 'quantity'" [attr.aria-pressed]="topSellingSort === 'quantity'"
+                (click)="setTopSellingSort('quantity')">{{ 'QUANTITY_SHORT_LABEL' | translate }}</button>
+              <button type="button" [class.active]="topSellingSort === 'revenue'" [attr.aria-pressed]="topSellingSort === 'revenue'"
+                (click)="setTopSellingSort('revenue')">{{ 'SALES_REVENUE' | translate }}</button>
+            </div>
           </div>
           <div class="ov-bar-list">
             <div class="ov-bar-row ov-bar-row-all"
@@ -120,9 +135,9 @@
               </div>
               <div class="ov-bar-footer">
                 <div class="ov-bar-track">
-                  <div class="ov-bar-fill" [style.width.%]="getProductPercent(p.total)"></div>
+                  <div class="ov-bar-fill" [style.width.%]="getProductPercent(p)"></div>
                 </div>
-                <span class="ov-bar-pct">{{ getProductPercent(p.total) | number:'1.0-0' }}%</span>
+                <span class="ov-bar-pct">{{ getProductPercent(p) | number:'1.0-0' }}%</span>
               </div>
             </div>
           </div>

@@ -6,9 +6,9 @@
         <lucide-icon [img]="iconPackage" [size]="25" class="inv-icon-accent"></lucide-icon>
         {{ 'INVENTORY_TITLE' | translate }}
       </h2>
-      <button type="button" class="inv-stock-settings-btn" (click)="openSettingsOverlay()" [title]="'INVENTORY_SETTINGS_TITLE' | translate"
-        [attr.aria-label]="'INVENTORY_SETTINGS_TITLE' | translate">
-        <lucide-icon [img]="iconSettings" [size]="18"></lucide-icon>
+      <button type="button" class="inv-stock-settings-btn" (click)="openSettingsOverlay()"
+        [title]="'INVENTORY_SETTINGS_TITLE' | translate" [attr.aria-label]="'INVENTORY_SETTINGS_TITLE' | translate">
+        <lucide-icon [img]="iconSettings" [size]="24"></lucide-icon>
       </button>
     </div>
 
@@ -59,8 +59,8 @@
               <input type="text" class="inv-input" formControlName="name" maxlength="100" autocomplete="off"
                 [placeholder]="'PRODUCT_NAME_LABEL' | translate" />
               <div class="inv-add-form-row2">
-                <input type="text" class="inv-input inv-input-unit" formControlName="unit" maxlength="20" autocomplete="off"
-                  [placeholder]="'PRODUCT_UNIT_LABEL' | translate" />
+                <input type="text" class="inv-input inv-input-unit" formControlName="unit" maxlength="20"
+                  autocomplete="off" [placeholder]="'PRODUCT_UNIT_LABEL' | translate" />
                 <input type="text" inputmode="decimal" class="inv-input inv-input-price" autocomplete="off"
                   [value]="sellingPriceDisplay" (input)="onSellingPriceInput($event)"
                   [placeholder]="'PRODUCT_SELLING_PRICE_LABEL' | translate" />
@@ -68,17 +68,11 @@
               <div class="inv-add-form-row2">
                 <input type="text" class="inv-input" formControlName="barcode" autocomplete="off"
                   [placeholder]="'PRODUCT_BARCODE_LABEL' | translate" />
+                <button type="button" class="inv-scan-btn" *ngIf="canScanBarcode" (click)="onScanBarcode()"
+                  [attr.aria-label]="'SCAN_BARCODE_BUTTON' | translate" [title]="'SCAN_BARCODE_BUTTON' | translate">
+                  <lucide-icon [img]="iconScanLine" [size]="18"></lucide-icon>
+                </button>
               </div>
-              <!-- Its own row, clearly apart from the barcode text field and
-                   the Add Product submit button below, so a mis-tap between
-                   the two can't happen — was previously squeezed right next
-                   to the barcode input with the submit button sitting almost
-                   directly beneath it. -->
-              <button type="button" class="inv-scan-btn" *ngIf="canScanBarcode" (click)="onScanBarcode()"
-                [attr.aria-label]="'SCAN_BARCODE_BUTTON' | translate">
-                <lucide-icon [img]="iconScanLine" [size]="18"></lucide-icon>
-                {{ 'SCAN_BARCODE_BUTTON' | translate }}
-              </button>
             </div>
             <button type="submit" class="inv-add-btn" [disabled]="addProductForm.invalid">
               <lucide-icon [img]="iconPlus" [size]="18"></lucide-icon>
@@ -97,130 +91,138 @@
       </button>
 
       <ng-container *ngIf="products$ | async as products">
-        <div class="inv-list-filters" [class.inv-list-filters-search-open]="isProductSearchOpen" *ngIf="products.length > 0">
+        <div class="inv-loading-state" *ngIf="isLoadingProducts" role="status">
+          <span class="inv-loading-spinner" aria-hidden="true"></span>
+          <span>{{ 'LOADING_DATA' | translate }}</span>
+        </div>
+        <ng-container *ngIf="!isLoadingProducts">
+          <div class="inv-list-filters" [class.inv-list-filters-search-open]="isProductSearchOpen"
+            *ngIf="products.length > 0">
           <div class="inv-category-filter-wrap">
-            <select class="inv-filter-control inv-category-filter" [(ngModel)]="selectedProductCategory"
+            <button type="button" class="inv-filter-control inv-category-filter" (click)="openInventoryFilterSheet($event)"
               [attr.aria-label]="'CATEGORY_LABEL' | translate" [tabindex]="isProductSearchOpen ? -1 : 0">
-              <option value="">{{ 'ALL_CATEGORIES' | translate }}</option>
-              <option *ngFor="let category of productCategoryOptions" [value]="category">{{ category }}</option>
-              <option *ngIf="hasUncategorizedProducts" [value]="uncategorizedFilterValue">
-                {{ 'UNCATEGORIZED' | translate }}
-              </option>
-            </select>
-            <lucide-icon [img]="iconChevronDown" [size]="16" class="inv-category-filter-chevron" aria-hidden="true"></lucide-icon>
-          </div>
-          <button type="button" class="inv-filter-control inv-search-trigger" (click)="openProductSearch()"
-            [attr.aria-label]="'SEARCH' | translate" [tabindex]="isProductSearchOpen ? -1 : 0">
-            <lucide-icon [img]="iconSearch" [size]="17" aria-hidden="true"></lucide-icon>
-          </button>
+              {{ selectedInventoryFilterLabel }}
+            </button>
+              <lucide-icon [img]="iconChevronDown" [size]="16" class="inv-category-filter-chevron"
+                aria-hidden="true"></lucide-icon>
+            </div>
+            <button type="button" class="inv-filter-control inv-search-trigger" (click)="openProductSearch()"
+              [attr.aria-label]="'SEARCH' | translate" [tabindex]="isProductSearchOpen ? -1 : 0">
+              <lucide-icon [img]="iconSearch" [size]="17" aria-hidden="true"></lucide-icon>
+            </button>
           <div class="inv-filter-control inv-product-search" [attr.aria-hidden]="!isProductSearchOpen">
             <lucide-icon [img]="iconSearch" [size]="17" aria-hidden="true"></lucide-icon>
             <input #productSearchInput type="search" [(ngModel)]="productSearchQuery" autocomplete="off"
               [placeholder]="'SEARCH' | translate" [attr.aria-label]="'SEARCH' | translate"
               [tabindex]="isProductSearchOpen ? 0 : -1" />
-            <button type="button" class="inv-search-close" (click)="closeProductSearch()"
-              [attr.aria-label]="'CANCEL_BUTTON_LABEL' | translate" [tabindex]="isProductSearchOpen ? 0 : -1">
-              <lucide-icon [img]="iconTimes" [size]="16"></lucide-icon>
-            </button>
           </div>
-        </div>
-
-        <ng-container *ngIf="filteredProducts(products) as filteredProducts">
-          <div class="inv-empty" *ngIf="!isLoadingProducts && filteredProducts.length === 0">
-            {{ (products.length === 0 ? 'INVENTORY_EMPTY_PRODUCTS' : 'CUSTOM_SELECT_NO_RESULTS') | translate }}
+          <button type="button" class="inv-search-close" (click)="closeProductSearch()"
+            [attr.aria-label]="'CANCEL_BUTTON_LABEL' | translate" [tabindex]="isProductSearchOpen ? 0 : -1">
+            <lucide-icon [img]="iconTimes" [size]="16"></lucide-icon>
+          </button>
           </div>
 
-          <div class="inv-list-summary" *ngIf="filteredProducts.length > 0">
-            {{ 'INVENTORY_TOTAL_PRODUCTS_LABEL' | translate }}:
-            <strong class="inv-product-count-badge">{{ formatService.formatCount(filteredProducts.length) }} {{ 'INVENTORY_PRODUCT_KIND_SUFFIX' | translate }}</strong>
-          </div>
+          <ng-container *ngIf="filteredProducts(products) as filteredProducts">
+            <div class="inv-empty" *ngIf="!isLoadingProducts && filteredProducts.length === 0">
+              {{ (products.length === 0 ? 'INVENTORY_EMPTY_PRODUCTS' : 'CUSTOM_SELECT_NO_RESULTS') | translate }}
+            </div>
 
-          <ul class="inv-product-list" *ngIf="filteredProducts.length > 0">
-          <li *ngFor="let product of filteredProducts; trackBy: trackByProductId" class="inv-product-item"
-            [class.inv-product-item-hidden]="product.isActive === false"
-            [class.inv-product-item-selected]="selectedProductId === product.id"
-            (click)="selectProductItem(product.id!)">
-            <ng-container *ngIf="editingProductId !== product.id; else editRow">
-              <div class="inv-product-avatar">
-                <lucide-icon [img]="iconPackage" [size]="18"></lucide-icon>
-              </div>
-              <div class="inv-product-info">
-                <span class="inv-product-name">{{ product.name }}</span>
-                <span class="inv-product-hidden-badge" *ngIf="product.isActive === false">
-                  {{ 'PRODUCT_HIDDEN_BADGE' | translate }}
-                </span>
-                <span class="inv-product-meta" *ngIf="product.unit || (product.sellingPrice && product.isActive !== false)">
-                  <span *ngIf="product.unit">{{ product.unit }}</span>
-                  <span *ngIf="product.unit && product.sellingPrice && product.isActive !== false"> · </span>
-                  <span *ngIf="product.sellingPrice && product.isActive !== false" class="inv-product-price"
-                    [innerHTML]="formatService.formatAmountShortHtml(product.sellingPrice, currency)"></span>
-                </span>
-              </div>
-              <div class="inv-product-actions"
-                [class.inv-product-actions-open]="openActionMenuProductId === product.id">
-                <button type="button" class="inv-action-menu-trigger"
-                  (click)="toggleProductActions(product.id!, $event)"
-                  [class.inv-action-menu-trigger-open]="openActionMenuProductId === product.id"
-                  [attr.aria-expanded]="openActionMenuProductId === product.id"
-                  [attr.aria-label]="'ACTIONS_LABEL' | translate">
-                  <lucide-icon [img]="iconEllipsisVertical" [size]="18"></lucide-icon>
-                </button>
-                <div *ngIf="openActionMenuProductId === product.id" class="inv-dropdown-menu inv-dropdown-open"
-                  [class.inv-dropdown-menu-up]="openActionMenuUpward"
-                  (click)="$event.stopPropagation()">
-                  <button class="inv-dropdown-item" type="button"
-                    (click)="closeProductActions(); startEdit(product)">
-                    <lucide-icon [img]="iconPencil" [size]="15"></lucide-icon>
-                    <span>{{ 'EDIT_PRODUCT' | translate }}</span>
-                  </button>
-                  <button class="inv-dropdown-item" type="button" *ngIf="product.isActive === false"
-                    (click)="closeProductActions(); onReactivate(product.id!)">
-                    <lucide-icon [img]="iconEye" [size]="15"></lucide-icon>
-                    <span>{{ 'PRODUCT_REACTIVATE_BUTTON' | translate }}</span>
-                  </button>
-                  <div class="inv-dropdown-divider" *ngIf="product.isActive !== false"></div>
-                  <button class="inv-dropdown-item inv-dropdown-item-danger" type="button" *ngIf="product.isActive !== false"
-                    (click)="closeProductActions(); onDelete(product.id!)">
-                    <lucide-icon [img]="iconTrash2" [size]="15"></lucide-icon>
-                    <span>{{ 'DELETE_BUTTON_LABEL' | translate }}</span>
-                  </button>
-                </div>
-              </div>
-            </ng-container>
+            <div class="inv-list-summary" *ngIf="filteredProducts.length > 0">
+              {{ 'INVENTORY_TOTAL_PRODUCTS_LABEL' | translate }}:
+              <strong class="inv-product-count-badge">{{ formatService.formatCount(filteredProducts.length) }} {{
+                'INVENTORY_PRODUCT_KIND_SUFFIX' | translate }}</strong>
+            </div>
 
-            <ng-template #editRow>
-              <div class="inv-edit-row-fields">
-                <input type="text" class="inv-input inv-edit-input" [formControl]="editingNameControl!" maxlength="100" />
-                <div class="inv-edit-row-fields-2">
-                  <input type="text" class="inv-input inv-edit-input inv-input-unit" [formControl]="editingUnitControl!" maxlength="20"
-                    [placeholder]="'PRODUCT_UNIT_LABEL' | translate" />
-                  <input type="text" inputmode="decimal" class="inv-input inv-edit-input inv-input-price"
-                    [value]="editingSellingPriceDisplay" (input)="onEditingSellingPriceInput($event)"
-                    [placeholder]="'PRODUCT_SELLING_PRICE_LABEL' | translate" />
-                </div>
-                <div class="inv-edit-row-fields-2">
-                  <input type="text" class="inv-input inv-edit-input" [formControl]="editingBarcodeControl!"
-                    [placeholder]="'PRODUCT_BARCODE_LABEL' | translate" />
-                  <button type="button" class="inv-scan-btn" *ngIf="canScanBarcode" (click)="onScanBarcodeForEdit()"
-                    [attr.aria-label]="'SCAN_BARCODE_BUTTON' | translate" [title]="'SCAN_BARCODE_BUTTON' | translate">
-                    <lucide-icon [img]="iconScanLine" [size]="18"></lucide-icon>
-                  </button>
-                </div>
-                <div class="inv-product-actions inv-edit-actions">
-                  <button type="button" class="inv-action-btn inv-edit-cancel" (click)="cancelEdit()">
-                    <lucide-icon [img]="iconTimes" [size]="16"></lucide-icon>
-                    {{ "CANCEL_BUTTON_LABEL" | translate }}
-                  </button>
-                  <button type="button" class="inv-action-btn inv-action-save" (click)="onUpdateInline(product.id!)"
-                    [disabled]="editingNameControl?.invalid">
-                    <lucide-icon [img]="iconSave" [size]="16"></lucide-icon>
-                     {{ "SAVE_BUTTON_LABEL" | translate }}
-                  </button>
-                </div>
-              </div>
-            </ng-template>
-          </li>
-        </ul>
+            <ul class="inv-product-list" *ngIf="filteredProducts.length > 0">
+              <li *ngFor="let product of filteredProducts; trackBy: trackByProductId" class="inv-product-item"
+                [class.inv-product-item-hidden]="product.isActive === false"
+                [class.inv-product-item-selected]="selectedProductId === product.id"
+                (click)="selectProductItem(product.id!)">
+                <ng-container *ngIf="editingProductId !== product.id; else editRow">
+                  <div class="inv-product-avatar">
+                    <lucide-icon [img]="iconPackage" [size]="18"></lucide-icon>
+                  </div>
+                  <div class="inv-product-info">
+                    <span class="inv-product-name">{{ product.name }}</span>
+                    <span class="inv-product-hidden-badge" *ngIf="product.isActive === false">
+                      {{ 'PRODUCT_HIDDEN_BADGE' | translate }}
+                    </span>
+                    <span class="inv-product-meta"
+                      *ngIf="product.unit || (product.sellingPrice && product.isActive !== false)">
+                      <span *ngIf="product.unit">{{ product.unit }}</span>
+                      <span *ngIf="product.unit && product.sellingPrice && product.isActive !== false"> · </span>
+                      <span *ngIf="product.sellingPrice && product.isActive !== false" class="inv-product-price"
+                        [innerHTML]="formatService.formatAmountShortHtml(product.sellingPrice, currency)"></span>
+                    </span>
+                  </div>
+                  <div class="inv-product-actions"
+                    [class.inv-product-actions-open]="openActionMenuProductId === product.id">
+                    <button type="button" class="inv-action-menu-trigger"
+                      (click)="toggleProductActions(product.id!, $event)"
+                      [class.inv-action-menu-trigger-open]="openActionMenuProductId === product.id"
+                      [attr.aria-expanded]="openActionMenuProductId === product.id"
+                      [attr.aria-label]="'ACTIONS_LABEL' | translate">
+                      <lucide-icon [img]="iconEllipsisVertical" [size]="18"></lucide-icon>
+                    </button>
+                    <div *ngIf="openActionMenuProductId === product.id" class="inv-dropdown-menu inv-dropdown-open"
+                      [class.inv-dropdown-menu-up]="openActionMenuUpward" (click)="$event.stopPropagation()">
+                      <button class="inv-dropdown-item" type="button"
+                        (click)="closeProductActions(); startEdit(product)">
+                        <lucide-icon [img]="iconPencil" [size]="15"></lucide-icon>
+                        <span>{{ 'EDIT_PRODUCT' | translate }}</span>
+                      </button>
+                      <button class="inv-dropdown-item" type="button" *ngIf="product.isActive === false"
+                        (click)="closeProductActions(); onReactivate(product.id!)">
+                        <lucide-icon [img]="iconEye" [size]="15"></lucide-icon>
+                        <span>{{ 'PRODUCT_REACTIVATE_BUTTON' | translate }}</span>
+                      </button>
+                      <div class="inv-dropdown-divider" *ngIf="product.isActive !== false"></div>
+                      <button class="inv-dropdown-item inv-dropdown-item-danger" type="button"
+                        *ngIf="product.isActive !== false" (click)="closeProductActions(); onDelete(product.id!)">
+                        <lucide-icon [img]="iconTrash2" [size]="15"></lucide-icon>
+                        <span>{{ 'DELETE_BUTTON_LABEL' | translate }}</span>
+                      </button>
+                    </div>
+                  </div>
+                </ng-container>
+
+                <ng-template #editRow>
+                  <div class="inv-edit-row-fields">
+                    <input type="text" class="inv-input inv-edit-input" [formControl]="editingNameControl!"
+                      maxlength="100" />
+                    <div class="inv-edit-row-fields-2">
+                      <input type="text" class="inv-input inv-edit-input inv-input-unit"
+                        [formControl]="editingUnitControl!" maxlength="20"
+                        [placeholder]="'PRODUCT_UNIT_LABEL' | translate" />
+                      <input type="text" inputmode="decimal" class="inv-input inv-edit-input inv-input-price"
+                        [value]="editingSellingPriceDisplay" (input)="onEditingSellingPriceInput($event)"
+                        [placeholder]="'PRODUCT_SELLING_PRICE_LABEL' | translate" />
+                    </div>
+                    <div class="inv-edit-row-fields-2">
+                      <input type="text" class="inv-input inv-edit-input" [formControl]="editingBarcodeControl!"
+                        [placeholder]="'PRODUCT_BARCODE_LABEL' | translate" />
+                      <button type="button" class="inv-scan-btn" *ngIf="canScanBarcode" (click)="onScanBarcodeForEdit()"
+                        [attr.aria-label]="'SCAN_BARCODE_BUTTON' | translate"
+                        [title]="'SCAN_BARCODE_BUTTON' | translate">
+                        <lucide-icon [img]="iconScanLine" [size]="18"></lucide-icon>
+                      </button>
+                    </div>
+                    <div class="inv-product-actions inv-edit-actions">
+                      <button type="button" class="inv-action-btn inv-edit-cancel" (click)="cancelEdit()">
+                        <lucide-icon [img]="iconTimes" [size]="16"></lucide-icon>
+                        {{ "CANCEL_BUTTON_LABEL" | translate }}
+                      </button>
+                      <button type="button" class="inv-action-btn inv-action-save" (click)="onUpdateInline(product.id!)"
+                        [disabled]="editingNameControl?.invalid">
+                        <lucide-icon [img]="iconSave" [size]="16"></lucide-icon>
+                        {{ "SAVE_BUTTON_LABEL" | translate }}
+                      </button>
+                    </div>
+                  </div>
+                </ng-template>
+              </li>
+            </ul>
+          </ng-container>
         </ng-container>
       </ng-container>
     </div>
@@ -228,163 +230,191 @@
     <!-- ── Stock & Profit tab ── -->
     <div *ngIf="activeTab === 'stock'">
       <ng-container *ngIf="stockSummary$ | async as summary">
-        <div class="inv-list-filters" [class.inv-list-filters-search-open]="isProductSearchOpen" *ngIf="summary.length > 0">
+        <div class="inv-loading-state" *ngIf="isLoadingProducts || isLoadingStock" role="status">
+          <span class="inv-loading-spinner" aria-hidden="true"></span>
+          <span>{{ 'LOADING_DATA' | translate }}</span>
+        </div>
+        <ng-container *ngIf="!isLoadingProducts && !isLoadingStock">
+          <div class="inv-list-filters" [class.inv-list-filters-search-open]="isProductSearchOpen"
+            *ngIf="summary.length > 0">
           <div class="inv-category-filter-wrap">
-            <select class="inv-filter-control inv-category-filter" [(ngModel)]="selectedProductCategory"
+            <button type="button" class="inv-filter-control inv-category-filter" (click)="openInventoryFilterSheet($event)"
               [attr.aria-label]="'CATEGORY_LABEL' | translate" [tabindex]="isProductSearchOpen ? -1 : 0">
-              <option value="">{{ 'ALL_CATEGORIES' | translate }}</option>
-              <option *ngFor="let category of productCategoryOptions" [value]="category">{{ category }}</option>
-              <option *ngIf="hasUncategorizedProducts" [value]="uncategorizedFilterValue">
-                {{ 'UNCATEGORIZED' | translate }}
-              </option>
-            </select>
-            <lucide-icon [img]="iconChevronDown" [size]="16" class="inv-category-filter-chevron" aria-hidden="true"></lucide-icon>
-          </div>
-          <button type="button" class="inv-filter-control inv-search-trigger" (click)="openProductSearch()"
-            [attr.aria-label]="'SEARCH' | translate" [tabindex]="isProductSearchOpen ? -1 : 0">
-            <lucide-icon [img]="iconSearch" [size]="17" aria-hidden="true"></lucide-icon>
-          </button>
+              {{ selectedInventoryFilterLabel }}
+            </button>
+              <lucide-icon [img]="iconChevronDown" [size]="16" class="inv-category-filter-chevron"
+                aria-hidden="true"></lucide-icon>
+            </div>
+            <button type="button" class="inv-filter-control inv-search-trigger" (click)="openProductSearch()"
+              [attr.aria-label]="'SEARCH' | translate" [tabindex]="isProductSearchOpen ? -1 : 0">
+              <lucide-icon [img]="iconSearch" [size]="17" aria-hidden="true"></lucide-icon>
+            </button>
           <div class="inv-filter-control inv-product-search" [attr.aria-hidden]="!isProductSearchOpen">
             <lucide-icon [img]="iconSearch" [size]="17" aria-hidden="true"></lucide-icon>
             <input #productSearchInput type="search" [(ngModel)]="productSearchQuery" autocomplete="off"
               [placeholder]="'SEARCH' | translate" [attr.aria-label]="'SEARCH' | translate"
               [tabindex]="isProductSearchOpen ? 0 : -1" />
-            <button type="button" class="inv-search-close" (click)="closeProductSearch()"
-              [attr.aria-label]="'CANCEL_BUTTON_LABEL' | translate" [tabindex]="isProductSearchOpen ? 0 : -1">
-              <lucide-icon [img]="iconTimes" [size]="16"></lucide-icon>
-            </button>
           </div>
-        </div>
-
-        <ng-container *ngIf="filteredStockSummary(summary) as filteredSummary">
-          <div class="inv-empty" *ngIf="filteredSummary.length === 0">
-            {{ (summary.length === 0 ? 'INVENTORY_EMPTY_STOCK_SUMMARY' : 'CUSTOM_SELECT_NO_RESULTS') | translate }}
+          <button type="button" class="inv-search-close" (click)="closeProductSearch()"
+            [attr.aria-label]="'CANCEL_BUTTON_LABEL' | translate" [tabindex]="isProductSearchOpen ? 0 : -1">
+            <lucide-icon [img]="iconTimes" [size]="16"></lucide-icon>
+          </button>
           </div>
 
-        <ng-container *ngIf="filteredSummary.length > 0">
-          <!-- Total estimated profit — shown above the table so it's the
-               first thing seen, colored green/red by profit vs loss. -->
-          <div class="inv-total-profit-banner"
-               [class.inv-total-profit-positive]="getTotalEstProfit(filteredSummary) > 0"
-               [class.inv-total-profit-negative]="getTotalEstProfit(filteredSummary) <= 0">
-            <span class="inv-total-profit-label">{{ 'STOCK_SUMMARY_TOTAL_EST_PROFIT_LABEL' | translate }}</span>
-            <span class="inv-total-profit-value" [innerHTML]="formatService.formatAmountShortHtml(getTotalEstProfit(filteredSummary), currency)"></span>
-          </div>
-
-          <!-- Desktop / tablet: full table -->
-          <div class="inv-table-scroll inv-stock-desktop">
-            <table class="inv-table">
-              <thead>
-                <tr>
-                  <th>{{ 'STOCK_SUMMARY_PRODUCT_COL' | translate }}</th>
-                  <th>{{ 'STOCK_SUMMARY_CURRENT_STOCK_COL' | translate }}</th>
-                  <th>{{ 'STOCK_SUMMARY_AVG_COST_COL' | translate }}</th>
-                  <th>{{ 'STOCK_SUMMARY_STOCK_VALUE_COL' | translate }}</th>
-                  <th>{{ 'STOCK_SUMMARY_TOTAL_SOLD_COL' | translate }}</th>
-                  <th>{{ 'STOCK_SUMMARY_REVENUE_COL' | translate }}</th>
-                  <th>{{ 'STOCK_SUMMARY_EST_COGS_COL' | translate }}</th>
-                  <th>{{ 'STOCK_SUMMARY_EST_PROFIT_COL' | translate }}</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let row of filteredSummary; trackBy: trackByStockRow"
-                    [class.inv-row-negative]="row.currentStock < 0"
-                    [class.inv-row-low-stock]="isLowStock(row)"
-                    [class.inv-stock-row-selected]="selectedStockProductId === row.productId"
-                    (click)="selectStockRow(row.productId)">
-                  <td class="inv-table-product-cell">
-                    {{ row.productName }}
-                    <span class="inv-table-unit" *ngIf="row.unit">({{ row.unit }})</span>
-                  </td>
-                  <td [class.inv-negative]="row.currentStock < 0"
-                      [class.inv-low-stock]="isLowStock(row)">
-                    {{ formatService.formatQuantity(row.currentStock, row.unit) }}
-                    <lucide-icon *ngIf="row.currentStock < 0" [img]="iconWarning" [size]="13"
-                      [title]="'STOCK_SUMMARY_NEGATIVE_STOCK_WARNING' | translate"></lucide-icon>
-                    <lucide-icon *ngIf="isLowStock(row)" [img]="iconWarning" [size]="13"
-                      [title]="'STOCK_SUMMARY_LOW_STOCK_WARNING' | translate"></lucide-icon>
-                  </td>
-                  <ng-container *ngIf="row.avgCost === null; else purchasedCols">
-                    <td colspan="6" class="inv-muted inv-never-purchased-cell">
-                      {{ 'STOCK_SUMMARY_NEVER_PURCHASED' | translate }}
-                    </td>
-                  </ng-container>
-                  <ng-template #purchasedCols>
-                    <td [innerHTML]="formatService.formatAmountShortHtml(row.avgCost!, currency)"></td>
-                    <td [innerHTML]="formatService.formatAmountShortHtml(row.stockValue, currency)"></td>
-                    <td>{{ formatService.formatQuantity(row.totalSoldQty, row.unit) }}</td>
-                    <td [innerHTML]="formatService.formatAmountShortHtml(row.totalRevenue, currency)"></td>
-                    <td class="inv-cogs-cell" [innerHTML]="formatService.formatAmountShortHtml(row.estCOGS, currency)"></td>
-                    <td [class.inv-profit-positive]="row.estProfit > 0" [class.inv-profit-negative]="row.estProfit <= 0"
-                        [innerHTML]="formatService.formatAmountShortHtml(row.estProfit, currency)"></td>
-                  </ng-template>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Mobile: summary cards, tap to expand full detail inline (no modal) -->
-          <div class="inv-stock-cards inv-stock-mobile">
-            <div class="inv-stock-card" *ngFor="let row of filteredSummary; trackBy: trackByStockRow"
-                 [class.inv-row-negative]="row.currentStock < 0"
-                 [class.inv-row-low-stock]="isLowStock(row)"
-                 [class.inv-stock-card-selected]="selectedStockProductId === row.productId">
-              <button type="button" class="inv-stock-card-summary" (click)="toggleRowExpand(row.productId)"
-                      [attr.aria-expanded]="expandedProductId === row.productId">
-                <span class="inv-stock-card-name">
-                  {{ row.productName }}
-                  <span class="inv-table-unit" *ngIf="row.unit">({{ row.unit }})</span>
-                </span>
-                <span class="inv-stock-card-stock"
-                      [class.inv-negative]="row.currentStock < 0"
-                      [class.inv-low-stock]="isLowStock(row)">
-                  {{ formatService.formatQuantity(row.currentStock, row.unit) }}
-                  <lucide-icon *ngIf="row.currentStock < 0 || (isLowStock(row))"
-                    [img]="iconWarning" [size]="13"></lucide-icon>
-                </span>
-                <lucide-icon [img]="expandedProductId === row.productId ? iconChevronUp : iconChevronDown" [size]="16" class="inv-stock-card-chevron"></lucide-icon>
-              </button>
-
-              <div class="inv-stock-card-detail" *ngIf="expandedProductId === row.productId">
-                <div class="inv-stock-card-detail-row" *ngIf="row.avgCost === null">
-                  <span class="inv-muted">{{ 'STOCK_SUMMARY_NEVER_PURCHASED' | translate }}</span>
-                </div>
-                <ng-container *ngIf="row.avgCost !== null">
-                  <div class="inv-stock-card-detail-row">
-                    <span>{{ 'STOCK_SUMMARY_AVG_COST_COL' | translate }}</span>
-                    <span [innerHTML]="formatService.formatAmountShortHtml(row.avgCost!, currency)"></span>
-                  </div>
-                  <div class="inv-stock-card-detail-row">
-                    <span>{{ 'STOCK_SUMMARY_STOCK_VALUE_COL' | translate }}</span>
-                    <span [innerHTML]="formatService.formatAmountShortHtml(row.stockValue, currency)"></span>
-                  </div>
-                  <div class="inv-stock-card-detail-row">
-                    <span>{{ 'STOCK_SUMMARY_TOTAL_SOLD_COL' | translate }}</span>
-                    <span>{{ formatService.formatQuantity(row.totalSoldQty, row.unit) }}</span>
-                  </div>
-                  <div class="inv-stock-card-detail-row">
-                    <span>{{ 'STOCK_SUMMARY_REVENUE_COL' | translate }}</span>
-                    <span [innerHTML]="formatService.formatAmountShortHtml(row.totalRevenue, currency)"></span>
-                  </div>
-                  <div class="inv-stock-card-detail-row">
-                    <span>{{ 'STOCK_SUMMARY_EST_COGS_COL' | translate }}</span>
-                    <span class="inv-cogs-cell" [innerHTML]="formatService.formatAmountShortHtml(row.estCOGS, currency)"></span>
-                  </div>
-                  <div class="inv-stock-card-detail-row inv-stock-card-detail-profit">
-                    <span>{{ 'STOCK_SUMMARY_EST_PROFIT_COL' | translate }}</span>
-                    <span [class.inv-profit-positive]="row.estProfit > 0" [class.inv-profit-negative]="row.estProfit <= 0"
-                          [innerHTML]="formatService.formatAmountShortHtml(row.estProfit, currency)"></span>
-                  </div>
-                </ng-container>
-              </div>
+          <ng-container *ngIf="filteredStockSummary(summary) as filteredSummary">
+            <div class="inv-empty" *ngIf="filteredSummary.length === 0">
+              {{ (summary.length === 0 ? 'INVENTORY_EMPTY_STOCK_SUMMARY' : 'CUSTOM_SELECT_NO_RESULTS') | translate }}
             </div>
-          </div>
-        </ng-container>
+
+            <ng-container *ngIf="filteredSummary.length > 0">
+              <!-- Total estimated profit — shown above the table so it's the
+               first thing seen, colored green/red by profit vs loss. -->
+              <div class="inv-total-profit-banner"
+                [class.inv-total-profit-positive]="getTotalEstProfit(filteredSummary) > 0"
+                [class.inv-total-profit-negative]="getTotalEstProfit(filteredSummary) <= 0">
+                <span class="inv-total-profit-label">{{ 'STOCK_SUMMARY_TOTAL_EST_PROFIT_LABEL' | translate }}</span>
+                <span class="inv-total-profit-value"
+                  [innerHTML]="formatService.formatAmountShortWholeHighDenominationHtml(getTotalEstProfit(filteredSummary), currency)"></span>
+              </div>
+
+              <!-- Desktop / tablet: full table -->
+              <div class="inv-table-scroll inv-stock-desktop">
+                <table class="inv-table">
+                  <thead>
+                    <tr>
+                      <th>{{ 'STOCK_SUMMARY_PRODUCT_COL' | translate }}</th>
+                      <th>{{ 'STOCK_SUMMARY_CURRENT_STOCK_COL' | translate }}</th>
+                      <th>{{ 'STOCK_SUMMARY_AVG_COST_COL' | translate }}</th>
+                      <th>{{ 'STOCK_SUMMARY_STOCK_VALUE_COL' | translate }}</th>
+                      <th>{{ 'STOCK_SUMMARY_TOTAL_SOLD_COL' | translate }}</th>
+                      <th>{{ 'STOCK_SUMMARY_REVENUE_COL' | translate }}</th>
+                      <th>{{ 'STOCK_SUMMARY_EST_COGS_COL' | translate }}</th>
+                      <th>{{ 'STOCK_SUMMARY_EST_PROFIT_COL' | translate }}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let row of filteredSummary; trackBy: trackByStockRow"
+                      [class.inv-row-negative]="row.currentStock < 0" [class.inv-row-out-of-stock]="isOutOfStock(row)"
+                      [class.inv-row-low-stock]="isLowStock(row)"
+                      [class.inv-stock-row-selected]="selectedStockProductId === row.productId"
+                      (click)="selectStockRow(row.productId)">
+                      <td class="inv-table-product-cell">
+                        {{ row.productName }}
+                        <span class="inv-table-unit" *ngIf="row.unit">({{ row.unit }})</span>
+                      </td>
+                      <td [class.inv-negative]="row.currentStock < 0" [class.inv-out-of-stock]="isOutOfStock(row)"
+                        [class.inv-low-stock]="isLowStock(row)">
+                        {{ formatService.formatQuantity(row.currentStock, row.unit) }}
+                        <lucide-icon *ngIf="row.currentStock < 0" [img]="iconWarning" [size]="13"
+                          [title]="'STOCK_SUMMARY_NEGATIVE_STOCK_WARNING' | translate"></lucide-icon>
+                        <lucide-icon *ngIf="isOutOfStock(row) || isLowStock(row)" [img]="iconWarning" [size]="13"
+                          [title]="'STOCK_SUMMARY_LOW_STOCK_WARNING' | translate"></lucide-icon>
+                      </td>
+                      <ng-container *ngIf="row.avgCost === null; else purchasedCols">
+                        <td colspan="6" class="inv-muted inv-never-purchased-cell">
+                          {{ 'STOCK_SUMMARY_NEVER_PURCHASED' | translate }}
+                        </td>
+                      </ng-container>
+                      <ng-template #purchasedCols>
+                        <td [innerHTML]="formatService.formatAmountShortHtml(row.avgCost!, currency)"></td>
+                        <td [innerHTML]="formatService.formatAmountShortHtml(row.stockValue, currency)"></td>
+                        <td>{{ formatService.formatQuantity(row.totalSoldQty, row.unit) }}</td>
+                        <td [innerHTML]="formatService.formatAmountShortHtml(row.totalRevenue, currency)"></td>
+                        <td class="inv-cogs-cell"
+                          [innerHTML]="formatService.formatAmountShortHtml(row.estCOGS, currency)"></td>
+                        <td [class.inv-profit-positive]="row.estProfit > 0"
+                          [class.inv-profit-negative]="row.estProfit <= 0"
+                          [innerHTML]="formatService.formatAmountShortHtml(row.estProfit, currency)"></td>
+                      </ng-template>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Mobile: summary cards, tap to expand full detail inline (no modal) -->
+              <div class="inv-stock-cards inv-stock-mobile">
+                <div class="inv-stock-card" *ngFor="let row of filteredSummary; trackBy: trackByStockRow"
+                  [class.inv-row-negative]="row.currentStock < 0" [class.inv-row-low-stock]="isLowStock(row)"
+                  [class.inv-row-out-of-stock]="isOutOfStock(row)"
+                  [class.inv-stock-card-selected]="selectedStockProductId === row.productId">
+                  <button type="button" class="inv-stock-card-summary" (click)="toggleRowExpand(row.productId)"
+                    [attr.aria-expanded]="expandedProductId === row.productId">
+                    <span class="inv-stock-card-name">
+                      {{ row.productName }}
+                      <span class="inv-table-unit" *ngIf="row.unit">({{ row.unit }})</span>
+                    </span>
+                    <span class="inv-stock-card-stock" [class.inv-negative]="row.currentStock < 0"
+                      [class.inv-out-of-stock]="isOutOfStock(row)"
+                      [class.inv-low-stock]="isLowStock(row)">
+                      {{ formatService.formatQuantity(row.currentStock, row.unit) }}
+                      <lucide-icon *ngIf="row.currentStock < 0 || isOutOfStock(row) || isLowStock(row)" [img]="iconWarning"
+                        [size]="13"></lucide-icon>
+                    </span>
+                    <lucide-icon [img]="expandedProductId === row.productId ? iconChevronUp : iconChevronDown"
+                      [size]="16" class="inv-stock-card-chevron"></lucide-icon>
+                  </button>
+
+                  <div class="inv-stock-card-detail" *ngIf="expandedProductId === row.productId">
+                    <div class="inv-stock-card-detail-row" *ngIf="row.avgCost === null">
+                      <span class="inv-muted inv-never-purchased">{{ 'STOCK_SUMMARY_NEVER_PURCHASED' | translate }}</span>
+                    </div>
+                    <ng-container *ngIf="row.avgCost !== null">
+                      <div class="inv-stock-card-detail-row">
+                        <span>{{ 'STOCK_SUMMARY_AVG_COST_COL' | translate }}</span>
+                        <span [innerHTML]="formatService.formatAmountShortHtml(row.avgCost!, currency)"></span>
+                      </div>
+                      <div class="inv-stock-card-detail-row">
+                        <span>{{ 'STOCK_SUMMARY_STOCK_VALUE_COL' | translate }}</span>
+                        <span [innerHTML]="formatService.formatAmountShortHtml(row.stockValue, currency)"></span>
+                      </div>
+                      <div class="inv-stock-card-detail-row">
+                        <span>{{ 'STOCK_SUMMARY_TOTAL_SOLD_COL' | translate }}</span>
+                        <span>{{ formatService.formatQuantity(row.totalSoldQty, row.unit) }}</span>
+                      </div>
+                      <div class="inv-stock-card-detail-row">
+                        <span>{{ 'STOCK_SUMMARY_REVENUE_COL' | translate }}</span>
+                        <span [innerHTML]="formatService.formatAmountShortHtml(row.totalRevenue, currency)"></span>
+                      </div>
+                      <div class="inv-stock-card-detail-row">
+                        <span>{{ 'STOCK_SUMMARY_EST_COGS_COL' | translate }}</span>
+                        <span class="inv-cogs-cell"
+                          [innerHTML]="formatService.formatAmountShortHtml(row.estCOGS, currency)"></span>
+                      </div>
+                      <div class="inv-stock-card-detail-row inv-stock-card-detail-profit">
+                        <span>{{ 'STOCK_SUMMARY_EST_PROFIT_COL' | translate }}</span>
+                        <span [class.inv-profit-positive]="row.estProfit > 0"
+                          [class.inv-profit-negative]="row.estProfit <= 0"
+                          [innerHTML]="formatService.formatAmountShortHtml(row.estProfit, currency)"></span>
+                      </div>
+                    </ng-container>
+                  </div>
+                </div>
+              </div>
+            </ng-container>
+          </ng-container>
         </ng-container>
       </ng-container>
 
       <p class="inv-method-note">{{ 'STOCK_SUMMARY_METHOD_NOTE' | translate }}</p>
     </div>
+
+    <div class="inv-filter-sheet-backdrop" [class.open]="isInventoryFilterSheetOpen" (click)="closeInventoryFilterSheet()"></div>
+    <section class="inv-filter-sheet" [class.open]="isInventoryFilterSheetOpen" role="dialog" [attr.aria-modal]="isInventoryFilterSheetOpen"
+      [style.--inv-filter-top.px]="inventoryFilterMenuTop" [style.--inv-filter-left.px]="inventoryFilterMenuLeft"
+      [style.--inv-filter-width.px]="inventoryFilterMenuWidth">
+      <div class="inv-filter-sheet-handle"></div>
+      <div class="inv-filter-sheet-header">
+        <span>{{ 'CATEGORY_LABEL' | translate }}</span>
+        <button type="button" (click)="closeInventoryFilterSheet()"><lucide-icon [img]="iconTimes" [size]="18"></lucide-icon></button>
+      </div>
+      <div class="inv-filter-sheet-list">
+        <button type="button" [class.active]="!selectedProductCategory" (click)="selectInventoryFilter('')">{{ 'ALL_CATEGORIES' | translate }}</button>
+        <button type="button" [class.active]="selectedProductCategory === outOfStockFilterValue" (click)="selectInventoryFilter(outOfStockFilterValue)">{{ 'INVENTORY_FILTER_OUT_OF_STOCK' | translate }}</button>
+        <button type="button" [class.active]="selectedProductCategory === lowStockFilterValue" (click)="selectInventoryFilter(lowStockFilterValue)">{{ 'INVENTORY_FILTER_LOW_STOCK' | translate }}</button>
+        <button type="button" *ngFor="let category of productCategoryOptions" [class.active]="selectedProductCategory === category" (click)="selectInventoryFilter(category)">{{ category }}</button>
+        <button type="button" *ngIf="hasUncategorizedProducts" [class.active]="selectedProductCategory === uncategorizedFilterValue" (click)="selectInventoryFilter(uncategorizedFilterValue)">{{ 'UNCATEGORIZED' | translate }}</button>
+      </div>
+    </section>
 
     <div class="inv-settings-backdrop" [class.open]="showSettingsOverlay" (click)="closeSettingsOverlay()"></div>
     <section class="inv-settings-modal" [class.open]="showSettingsOverlay" role="dialog" aria-modal="true"
@@ -406,21 +436,22 @@
           <div class="inv-threshold-row">
             <input id="inv-low-stock-threshold" type="number" min="0" step="1" class="inv-input inv-threshold-input"
               [(ngModel)]="lowStockThreshold" />
-            <button type="button" class="inv-threshold-save-btn" [disabled]="isSavingThreshold" (click)="saveLowStockThreshold()">
+            <button type="button" class="inv-threshold-save-btn" [disabled]="isSavingThreshold"
+              (click)="saveLowStockThreshold()">
               {{ 'SAVE_BUTTON_LABEL' | translate }}
             </button>
           </div>
         </section>
 
-        <section class="inv-settings-section">
+        <section class="inv-settings-section inv-shopinfo-section">
           <h3 class="inv-settings-section-title">{{ 'SHOP_INFO_TITLE' | translate }}</h3>
           <div class="inv-shopinfo-fields">
-            <input type="text" class="inv-input inv-shopinfo-name" [(ngModel)]="shopName" maxlength="50" autocomplete="organization"
-              [placeholder]="'SHOP_NAME_LABEL' | translate" />
-            <textarea class="inv-input inv-shopinfo-address" [(ngModel)]="shopAddress" maxlength="200" autocomplete="off"
-              rows="3" [placeholder]="'SHOP_ADDRESS_LABEL' | translate"></textarea>
-            <input type="text" class="inv-input inv-shopinfo-phone" [(ngModel)]="shopPhone" maxlength="30" autocomplete="off"
-              [placeholder]="'SHOP_PHONE_LABEL' | translate" />
+            <input type="text" class="inv-input inv-shopinfo-name" [(ngModel)]="shopName" maxlength="50"
+              autocomplete="organization" [placeholder]="'SHOP_NAME_LABEL' | translate" />
+            <textarea class="inv-input inv-shopinfo-address" [(ngModel)]="shopAddress" maxlength="200"
+              autocomplete="off" rows="3" [placeholder]="'SHOP_ADDRESS_LABEL' | translate"></textarea>
+            <input type="text" class="inv-input inv-shopinfo-phone" [(ngModel)]="shopPhone" maxlength="30"
+              autocomplete="off" [placeholder]="'SHOP_PHONE_LABEL' | translate" />
           </div>
           <button type="button" class="inv-threshold-save-btn" [disabled]="isSavingShopInfo" (click)="saveShopInfo()">
             {{ 'SAVE_BUTTON_LABEL' | translate }}

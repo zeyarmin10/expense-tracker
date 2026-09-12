@@ -551,6 +551,13 @@ export class App implements OnInit, AfterViewInit {
   }
 
   async ngOnInit(): Promise<void> {
+    // Android's edge-to-edge WebView may expose a zero CSS safe-area inset.
+    // Mark it explicitly so full-screen overlays can keep their controls out
+    // of the native status bar's visual and touch area.
+    document.documentElement.classList.toggle(
+      'native-android',
+      Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android'
+    );
     this.initPullToRefreshTouchHandlers();
     if (Capacitor.isNativePlatform()) {
       // Configure status bar early — splash hide is deferred to ngAfterViewInit
@@ -1194,6 +1201,14 @@ export class App implements OnInit, AfterViewInit {
 
     CapacitorApp.addListener('backButton', ({ canGoBack }) => {
       const url = this.router.url;
+
+      // The image viewer is a lightweight overlay, not a route or modal
+      // history layer. Close it first so Android Back never navigates away
+      // (or closes the screen underneath) while a photo is being viewed.
+      if (document.querySelector('.lb-overlay.lb-open')) {
+        window.dispatchEvent(new Event('app-close-lightbox'));
+        return;
+      }
 
       // SweetAlert sits outside Angular's route/modal state. Always dismiss a
       // normal alert before considering navigation, so Android Back behaves

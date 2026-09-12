@@ -40,9 +40,10 @@
       </div>
 
       <!-- Category list overlays the still-visible Add Budget form. -->
-      <div class="bgt-selection-picker-backdrop" *ngIf="isCategoryPickerOpen"
+      <div class="bgt-selection-picker-backdrop" [class.open]="isCategoryPickerOpen"
         (click)="closeCategoryPicker()"></div>
-      <div class="bgt-selection-bottom-sheet" *ngIf="isCategoryPickerOpen">
+      <div class="bgt-selection-bottom-sheet bgt-category-floating-menu" [class.open]="isCategoryPickerOpen"
+        [style.--bgt-picker-top.px]="budgetPickerMenuTop" [style.--bgt-picker-left.px]="budgetPickerMenuLeft" [style.--bgt-picker-width.px]="budgetPickerMenuWidth">
         <div class="bgt-selection-sheet-handle"></div>
         <div class="bgt-add-modal-header">
           <span class="bgt-add-modal-header-title">{{ 'CATEGORY' | translate }}</span>
@@ -87,9 +88,10 @@
       </div>
 
       <!-- Budget type list also overlays the base form as a bottom sheet. -->
-      <div class="bgt-selection-picker-backdrop" *ngIf="isTypePickerOpen"
+      <div class="bgt-selection-picker-backdrop" [class.open]="isTypePickerOpen"
         (click)="closeTypePicker()"></div>
-      <div class="bgt-selection-bottom-sheet" *ngIf="isTypePickerOpen">
+      <div class="bgt-selection-bottom-sheet bgt-type-floating-menu" [class.open]="isTypePickerOpen"
+        [style.--bgt-picker-top.px]="budgetPickerMenuTop" [style.--bgt-picker-left.px]="budgetPickerMenuLeft" [style.--bgt-picker-width.px]="budgetPickerMenuWidth">
         <div class="bgt-selection-sheet-handle"></div>
         <div class="bgt-add-modal-header">
           <span class="bgt-add-modal-header-title">{{ 'BUDGET_TYPE' | translate }}</span>
@@ -125,7 +127,7 @@
           <div class="bgt-date-pill-row">
             <button type="button" class="bgt-date-pill bgt-type-pill"
               [class.is-invalid]="budgetForm.controls['type'].invalid && budgetForm.controls['type'].touched"
-              (click)="openTypePicker()">
+              (click)="openTypePicker($event)">
               <lucide-icon [img]="budgetForm.get('type')?.value === 'yearly' ? iconCalendarRange : iconCalendarDays" [size]="13"></lucide-icon>
               <span [class.bgt-type-trigger-placeholder]="!selectedTypeLabelKey">
                 {{ (selectedTypeLabelKey || 'BUDGET_TYPE') | translate }}
@@ -139,7 +141,7 @@
           </div>
 
           <div class="bgt-float-field">
-            <button type="button" class="bgt-cat-select-trigger" (click)="openCategoryPicker()">
+            <button type="button" class="bgt-cat-select-trigger" (click)="openCategoryPicker($event)">
               <span class="bgt-cat-select-trigger-icon" [style.--cat-hue]="getIconHueForCategoryId(budgetForm.get('category')?.value)">
                 <img *ngIf="getIconUrlForCategoryId(budgetForm.get('category')?.value)" [src]="getIconUrlForCategoryId(budgetForm.get('category')?.value)!" alt="" class="cat-img-icon" style="width:100%;height:100%" />
                 <lucide-icon *ngIf="!getIconUrlForCategoryId(budgetForm.get('category')?.value)" [img]="getIconForCategoryId(budgetForm.get('category')?.value)" [size]="14"></lucide-icon>

@@ -65,6 +65,7 @@ import { ProductModalComponent } from '../common/product-modal/product-modal';
 import { SelectOption } from '../common/custom-select/custom-select.component';
 import { DateRangeInputComponent } from '../common/date-range-input/date-range-input.component';
 import { ShowFullTextDirective } from '../../directives/show-full-text.directive';
+import { MobileFullscreenOverlayComponent } from '../common/mobile-fullscreen-overlay/mobile-fullscreen-overlay.component';
 import flatpickr from 'flatpickr';
 import type { Instance as FlatpickrInstance } from 'flatpickr/dist/types/instance';
 import { Burmese } from 'flatpickr/dist/l10n/my';
@@ -118,6 +119,7 @@ interface IncomeDateGroup {
     DateRangeInputComponent,
     ShowFullTextDirective,
     ProductModalComponent,
+    MobileFullscreenOverlayComponent,
   ],
   providers: [DatePipe],
   templateUrl: './sales.html',
@@ -125,6 +127,7 @@ interface IncomeDateGroup {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Sales implements OnInit, OnDestroy {
+  get isMobileViewport(): boolean { return typeof window !== 'undefined' && window.innerWidth < 992; }
   // --- Dependency Injection ---
   private fb = inject(FormBuilder);
   public datePipe = inject(DatePipe);
@@ -694,16 +697,39 @@ export class Sales implements OnInit, OnDestroy {
   isProductPickerOpen = false;
   productPickerSearch = '';
   productPickerMode: 'edit' | 'cart' = 'cart';
+  isCartProductPickerClosing = false;
+  private cartProductPickerCloseTimer: number | null = null;
 
-  openProductPicker(mode: 'edit' | 'cart' = 'cart'): void {
+  openProductPicker(mode: 'edit' | 'cart' = 'cart', _event?: MouseEvent): void {
     this.productPickerMode = mode;
     this.productPickerSearch = '';
+    if (mode === 'cart') {
+      if (this.cartProductPickerCloseTimer !== null) {
+        window.clearTimeout(this.cartProductPickerCloseTimer);
+        this.cartProductPickerCloseTimer = null;
+      }
+      this.isCartProductPickerClosing = false;
+    }
     this.isProductPickerOpen = true;
     this.closeDatePicker();
   }
 
   closeProductPicker(): void {
+    if (this.productPickerMode === 'cart' && this.isProductPickerOpen) {
+      this.isProductPickerOpen = false;
+      this.isCartProductPickerClosing = true;
+      this.cartProductPickerCloseTimer = window.setTimeout(() => {
+        this.isCartProductPickerClosing = false;
+        this.cartProductPickerCloseTimer = null;
+        this.cdr.markForCheck();
+      }, 300);
+      return;
+    }
     this.isProductPickerOpen = false;
+  }
+
+  get isCartProductPickerRendered(): boolean {
+    return !this.editingIncome && (this.isProductPickerOpen || this.isCartProductPickerClosing);
   }
 
   onPickProduct(product: ServiceIProduct): void {

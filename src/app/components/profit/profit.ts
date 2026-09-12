@@ -57,6 +57,7 @@ import { UserAvatarComponent } from '../common/user-avatar/user-avatar.component
 import { CustomSelectComponent, SelectOption } from '../common/custom-select/custom-select.component';
 import { DateRangeInputComponent } from '../common/date-range-input/date-range-input.component';
 import { ShowFullTextDirective } from '../../directives/show-full-text.directive';
+import { MobileFullscreenOverlayComponent } from '../common/mobile-fullscreen-overlay/mobile-fullscreen-overlay.component';
 import flatpickr from 'flatpickr';
 import type { Instance as FlatpickrInstance } from 'flatpickr/dist/types/instance';
 import { Burmese } from 'flatpickr/dist/l10n/my';
@@ -102,6 +103,7 @@ interface IncomeDateGroup {
     CustomSelectComponent,
     DateRangeInputComponent,
     ShowFullTextDirective,
+    MobileFullscreenOverlayComponent,
   ],
   providers: [DatePipe],
   templateUrl: './profit.html',

@@ -57,7 +57,7 @@
      DESKTOP — Floating Panel
      ════════════════════════════════ -->
 <ng-container *ngIf="!isMobile && isOpen">
-  <div class="dri-backdrop dri-backdrop-desktop" (click)="close()"></div>
+  <div class="dri-backdrop dri-backdrop-desktop" [class.dri-backdrop-open]="isOpen" (click)="close()"></div>
 
   <div class="dri-panel"
        [class.dri-panel-above]="panelAbove"

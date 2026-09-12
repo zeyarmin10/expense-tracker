@@ -39,7 +39,8 @@
     (touchend)="onEnd($event)"
     (click)="hide()"
   >
-    <div #imgWrap class="lb-img-wrap" [class.lb-img-fade]="fading" [class.lb-img-wrap-shaped]="!!shapeBorderRadius" (click)="$event.stopPropagation()">
+    <div #imgWrap class="lb-img-wrap" [class.lb-img-fade]="fading" [class.lb-img-wrap-shaped]="!!shapeBorderRadius"
+      (click)="$event.stopPropagation()" (dblclick)="onDoubleClick($event)">
       <img
         #img
         class="lb-img"

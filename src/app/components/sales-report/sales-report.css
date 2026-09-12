@@ -336,6 +336,20 @@
   color: var(--text);
 }
 
+.top-product-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.65rem;
+  margin-top: 0.35rem;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+.top-product-stats span:last-child {
+  color: var(--income-color);
+  font-weight: 650;
+}
+
 /* ── Product Breakdown Bars ── */
 .ov-breakdown-panel {
   background: var(--surface);
@@ -348,13 +362,56 @@
 .ov-breakdown-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  min-height: 2rem;
+  margin-bottom: 0.85rem;
+}
+
+.ov-breakdown-title {
+  display: flex;
+  align-items: center;
   gap: 0.5rem;
   font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.07em;
   text-transform: uppercase;
   color: var(--text-muted);
-  margin-bottom: 0.85rem;
+}
+
+.srpt-rank-toggle {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem;
+  border-radius: 9px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+
+.srpt-rank-toggle button {
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 650;
+  line-height: 1;
+  padding: 0.42rem 0.6rem;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.srpt-rank-toggle button.active {
+  background: var(--surface);
+  color: var(--accent);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.srpt-rank-toggle button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
 }
 
 .ov-bar-list {

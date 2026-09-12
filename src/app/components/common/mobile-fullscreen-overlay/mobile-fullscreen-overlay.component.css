@@ -1,0 +1,46 @@
+.mfo-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--mfo-backdrop-z, 1010);
+  background: rgba(0, 0, 0, 0.6);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.24s ease;
+}
+
+.mfo-backdrop.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+@media (max-width: 991.98px) {
+  :host {
+    position: fixed !important;
+    top: 0 !important;
+    right: auto !important;
+    bottom: auto !important;
+    left: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    height: 100dvh !important;
+    max-height: none !important;
+    margin: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding-bottom: 0 !important;
+    translate: 0 100% !important;
+    pointer-events: none !important;
+    overflow: hidden;
+    transition: translate 0.28s cubic-bezier(0.22, 1, 0.36, 1) !important;
+  }
+
+  :host(.open) {
+    translate: 0 0 !important;
+    pointer-events: auto !important;
+  }
+
+  .mfo-backdrop.mfo-backdrop-hidden-mobile {
+    display: none;
+  }
+}

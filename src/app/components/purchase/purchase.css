@@ -150,6 +150,14 @@
 }
 
 @media (max-width: 991.98px) {
+  .exp-cart-overlay-date-picker .exp-cart-overlay-topbar,
+  .exp-cart-overlay-date-picker .exp-cart-overlay-scroll,
+  .exp-cart-overlay-date-picker .exp-pos-footer-mobile { display: none; }
+  .exp-cart-date-picker-content { display: flex; flex: 1; min-height: 0; flex-direction: column; }
+  .exp-cart-date-picker-content .exp-add-modal-header {
+    padding-top: calc(max(env(safe-area-inset-top, 0px), var(--native-status-bar-inset)) + 0.75rem);
+  }
+  .exp-cart-date-picker-content .exp-date-picker-body { flex: 1; overflow-y: auto; padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem); }
   .exp-cart-overlay {
     position: fixed;
     inset: 0;
@@ -169,7 +177,7 @@
 
   .exp-cart-overlay-topbar {
     flex-shrink: 0;
-    padding: calc(env(safe-area-inset-top, 0px) + 0.75rem) 0.75rem 0.6rem;
+    padding: calc(max(env(safe-area-inset-top, 0px), var(--native-status-bar-inset)) + 0.75rem) 0.75rem 0.6rem;
     border: none;
     border-bottom: 1px solid var(--border);
     border-radius: 0;
@@ -2933,7 +2941,7 @@ body.light-mode .exp-seg-reset {
   z-index: 1050;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.25s;
+  transition: opacity 0.24s ease;
 }
 
 .exp-pos-picker-backdrop.open {
@@ -2954,7 +2962,8 @@ body.light-mode .exp-seg-reset {
   border-radius: 20px 20px 0 0;
   z-index: 1051;
   translate: -50% 100%;
-  transition: translate 0.25s ease;
+  pointer-events: none;
+  transition: translate 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
   display: flex;
   flex-direction: column;
   padding-bottom: env(safe-area-inset-bottom, 0px);
@@ -2962,6 +2971,8 @@ body.light-mode .exp-seg-reset {
 
 .exp-pos-picker-sheet.open {
   translate: -50% 0;
+  pointer-events: auto;
+  box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.36);
 }
 
 /* The cart/voucher picker's category+product bodies are bare (no
@@ -3004,34 +3015,121 @@ body.light-mode .exp-seg-reset {
   color: var(--text);
 }
 
+/* Desktop: categories behave like Inventory's anchored floating menu, while
+   choosing an item is a roomy modal rather than a phone bottom sheet. */
+@media (min-width: 992px) {
+  .exp-pos-picker-backdrop.open {
+    background: transparent;
+  }
+
+  .exp-pos-picker-backdrop.exp-pos-picker-backdrop-product.open {
+    background: rgba(0, 0, 0, 0.42);
+  }
+
+  .exp-pos-picker-backdrop.exp-pos-picker-backdrop-date.open {
+    background: rgba(0, 0, 0, 0.42);
+  }
+
+  .exp-pos-picker-sheet {
+    top: var(--exp-picker-top, 6rem);
+    bottom: auto;
+    left: var(--exp-picker-left, 1rem);
+    width: min(var(--exp-picker-width, 360px), calc(100vw - 2rem));
+    max-height: min(480px, calc(100dvh - var(--exp-picker-top, 6rem) - 1rem));
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    translate: 0 -6px;
+    transform-origin: top left;
+    opacity: 0;
+    transition: translate 0.16s ease, opacity 0.16s ease;
+  }
+
+  .exp-pos-picker-sheet.open {
+    translate: 0 0;
+    opacity: 1;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.24);
+  }
+
+  /* Category is an anchored dropdown on desktop, matching Expense/Budget;
+     the product variant below remains a centered selection dialog. */
+  .exp-pos-picker-sheet:not(.exp-pos-picker-sheet-product):not(.exp-pos-picker-sheet-date) .exp-pos-picker-handle,
+  .exp-pos-picker-sheet:not(.exp-pos-picker-sheet-product):not(.exp-pos-picker-sheet-date) .exp-pos-picker-header {
+    display: none;
+  }
+
+  .exp-pos-picker-sheet:not(.exp-pos-picker-sheet-product):not(.exp-pos-picker-sheet-date) .exp-cat-picker-body {
+    padding: .55rem 1rem;
+  }
+
+  .exp-pos-picker-sheet:not(.exp-pos-picker-sheet-product):not(.exp-pos-picker-sheet-date) .exp-cat-picker-list {
+    padding-bottom: 0;
+    max-height: min(340px, calc(100dvh - var(--exp-picker-top, 6rem) - 1rem));
+  }
+
+  .exp-pos-picker-sheet-product {
+    top: 50%;
+    left: 50%;
+    width: min(560px, calc(100vw - 2rem));
+    max-height: min(640px, calc(100dvh - 4rem));
+    translate: -50% -50%;
+    transform-origin: center;
+    scale: .96;
+    opacity: 0;
+    transition: scale .2s ease, opacity .2s ease;
+  }
+
+  .exp-pos-picker-sheet-product.open {
+    translate: -50% -50%;
+    scale: 1;
+    opacity: 1;
+  }
+
+  /* Keep the product dialog centered through its exit. Without this closing
+     state it reverted to the category dropdown's anchored coordinates first,
+     which made the dialog travel diagonally across the screen. */
+  .exp-pos-picker-sheet-product.exp-pos-picker-sheet-product-closing {
+    translate: -50% 100%;
+    scale: 1;
+    opacity: 1;
+    pointer-events: none;
+    transition: translate .28s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .exp-pos-picker-sheet-date {
+    top: 50%;
+    bottom: auto;
+    left: 50%;
+    width: min(480px, calc(100vw - 2rem));
+    max-height: min(640px, calc(100dvh - 4rem));
+    border-radius: 16px;
+    translate: -50% -48%;
+    transform-origin: center;
+  }
+
+  .exp-pos-picker-sheet-date.open {
+    translate: -50% -50%;
+  }
+}
+
 /* Date selection keeps its previous full-screen drill-in flow. Only the
    category and product pickers use the compact bottom-sheet treatment. */
 @media (max-width: 991.98px) {
-  .exp-pos-picker-backdrop.exp-pos-picker-backdrop-date {
-    display: none;
+  .exp-pos-picker-sheet-date .exp-add-modal-header {
+    padding: calc(env(safe-area-inset-top, 0px) + 0.5rem) 0.6rem 0.45rem 1rem;
   }
 
-  .exp-pos-picker-sheet.exp-pos-picker-sheet-date {
-    left: 0;
-    width: 100%;
-    max-width: none;
-    height: 100dvh;
-    max-height: none;
-    border: none;
-    border-radius: 0;
-    translate: 0 100%;
+  .exp-pos-picker-sheet-date .exp-add-modal-close {
+    width: 40px;
+    height: 40px;
   }
 
-  .exp-pos-picker-sheet.exp-pos-picker-sheet-date.open {
-    translate: 0 0;
-  }
-
-  .exp-pos-picker-sheet-date .exp-pos-picker-handle {
-    display: none;
-  }
-
-  .exp-pos-picker-sheet-date .exp-pos-picker-header {
-    padding-top: calc(env(safe-area-inset-top, 0px) + 0.75rem);
+  /* Match Expense's full-screen date-picker body. The cart date picker is
+     bare (not inside .exp-add-modal-body), so it receives that shell's
+     content inset, scroll area and safe-area bottom padding explicitly. */
+  .exp-pos-picker-sheet-date .exp-date-picker-body {
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem);
   }
 }
 

@@ -208,6 +208,14 @@
 }
 
 @media (max-width: 991.98px) {
+  .pnl-cart-overlay-date-picker .pnl-cart-overlay-topbar,
+  .pnl-cart-overlay-date-picker .pnl-cart-overlay-scroll,
+  .pnl-cart-overlay-date-picker .pnl-pos-footer-mobile { display: none; }
+  .pnl-cart-date-picker-content { display: flex; flex: 1; min-height: 0; flex-direction: column; }
+  .pnl-cart-date-picker-content .pnl-add-modal-header {
+    padding-top: calc(max(env(safe-area-inset-top, 0px), var(--native-status-bar-inset)) + 0.75rem);
+  }
+  .pnl-cart-date-picker-content .pnl-date-picker-body { flex: 1; overflow-y: auto; padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem); }
   .pnl-cart-overlay {
     position: fixed;
     inset: 0;
@@ -231,7 +239,7 @@
     align-items: center;
     gap: 0.75rem;
     flex-shrink: 0;
-    padding: calc(env(safe-area-inset-top, 0px) + 0.75rem) 1rem 0.75rem;
+    padding: calc(max(env(safe-area-inset-top, 0px), var(--native-status-bar-inset)) + 0.75rem) 1rem 0.75rem;
     background: var(--surface);
     border-bottom: 1px solid var(--border);
   }
@@ -2919,7 +2927,7 @@ app-date-input .di-trigger {
   z-index: 1050;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.25s;
+  transition: opacity 0.24s ease;
 }
 
 .pnl-pos-picker-backdrop.open {
@@ -2940,7 +2948,8 @@ app-date-input .di-trigger {
   border-radius: 20px 20px 0 0;
   z-index: 1051;
   translate: -50% 100%;
-  transition: translate 0.25s ease;
+  pointer-events: none;
+  transition: translate 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
   display: flex;
   flex-direction: column;
   padding-bottom: env(safe-area-inset-bottom, 0px);
@@ -2948,6 +2957,8 @@ app-date-input .di-trigger {
 
 .pnl-pos-picker-sheet.open {
   translate: -50% 0;
+  pointer-events: auto;
+  box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.36);
 }
 
 /* The cart's product picker body is bare (no .pnl-add-modal-body wrapper,
@@ -2990,34 +3001,86 @@ app-date-input .di-trigger {
   color: var(--text);
 }
 
-/* Date selection keeps its existing full-screen drill-in. The product
-   picker, by contrast, stays a compact bottom sheet on mobile. */
-@media (max-width: 991.98px) {
-  .pnl-pos-picker-backdrop.pnl-pos-picker-backdrop-date {
-    display: none;
+/* Desktop item selection is a conventional centered dialog, not a mobile
+   bottom sheet. The existing ProductModal remains the add-new-product form. */
+@media (min-width: 992px) {
+  .pnl-pos-picker-backdrop.open {
+    background: rgba(0, 0, 0, 0.42);
+  }
+
+  .pnl-pos-picker-backdrop.pnl-pos-picker-backdrop-date.open {
+    background: rgba(0, 0, 0, 0.42);
+  }
+
+  .pnl-pos-picker-sheet.pnl-pos-picker-sheet-product {
+    top: 50%;
+    bottom: auto;
+    left: 50%;
+    width: min(560px, calc(100vw - 2rem));
+    max-height: min(640px, calc(100dvh - 4rem));
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    translate: -50% -50%;
+    opacity: 0;
+    scale: .96;
+    transition: scale .2s ease, opacity .2s ease;
+  }
+
+  .pnl-pos-picker-sheet.pnl-pos-picker-sheet-product.open {
+    translate: -50% -50%;
+    scale: 1;
+    opacity: 1;
+    box-shadow: 0 16px 42px rgba(0, 0, 0, 0.34);
+  }
+
+  /* Preserve the modal's centered coordinates while it exits. This avoids
+     switching back to the base sheet layout before the downward slide ends. */
+  .pnl-pos-picker-sheet.pnl-pos-picker-sheet-product.pnl-pos-picker-sheet-product-closing {
+    translate: -50% 100%;
+    scale: 1;
+    opacity: 1;
+    pointer-events: none;
+    transition: translate .28s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .pnl-pos-picker-sheet.pnl-pos-picker-sheet-date {
-    left: 0;
-    width: 100%;
-    max-width: none;
-    height: 100dvh;
-    max-height: none;
-    border: none;
-    border-radius: 0;
-    translate: 0 100%;
+    top: 50%;
+    bottom: auto;
+    left: 50%;
+    width: min(480px, calc(100vw - 2rem));
+    max-height: min(640px, calc(100dvh - 4rem));
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    translate: -50% -48%;
+    opacity: 0;
+    transition: translate 0.18s ease, opacity 0.18s ease;
   }
 
   .pnl-pos-picker-sheet.pnl-pos-picker-sheet-date.open {
-    translate: 0 0;
+    translate: -50% -50%;
+    opacity: 1;
+    box-shadow: 0 16px 42px rgba(0, 0, 0, 0.34);
+  }
+}
+
+/* Date selection keeps its existing full-screen drill-in. The product
+   picker, by contrast, stays a compact bottom sheet on mobile. */
+@media (max-width: 991.98px) {
+  .pnl-pos-picker-sheet-date .pnl-add-modal-header {
+    padding: calc(env(safe-area-inset-top, 0px) + 0.5rem) 0.6rem 0.45rem 1rem;
   }
 
-  .pnl-pos-picker-sheet-date .pnl-pos-picker-handle {
-    display: none;
+  .pnl-pos-picker-sheet-date .pnl-add-modal-close {
+    width: 40px;
+    height: 40px;
   }
 
-  .pnl-pos-picker-sheet-date .pnl-pos-picker-header {
-    padding-top: calc(env(safe-area-inset-top, 0px) + 0.75rem);
+  /* Same full-screen date-picker body spacing as Expense. Sales' cart
+     picker is bare, so it needs the modal body's inset/safe-area rules. */
+  .pnl-pos-picker-sheet-date .pnl-date-picker-body {
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem);
   }
 }
 

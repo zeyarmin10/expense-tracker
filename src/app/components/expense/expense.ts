@@ -64,6 +64,7 @@ import { FormatService } from '../../services/format.service';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
 import { UserAvatarComponent } from '../common/user-avatar/user-avatar.component';
 import { ShowFullTextDirective } from '../../directives/show-full-text.directive';
+import { MobileFullscreenOverlayComponent } from '../common/mobile-fullscreen-overlay/mobile-fullscreen-overlay.component';
 
 // Matches the existing `min-width: 992px` breakpoint in expense.css that
 // switches from the mobile FAB to the desktop toolbar "Add Expense" button.
@@ -105,6 +106,7 @@ interface ExpenseDateGroup {
     UserAvatarComponent,
     ShowFullTextDirective,
     DateRangeInputComponent,
+    MobileFullscreenOverlayComponent,
   ],
   providers: [DatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -430,8 +432,17 @@ export class Expense implements OnInit, OnDestroy {
   isCategoryPickerOpen = false;
   categoryPickerTarget: 'expense' | 'voucher' = 'expense';
   categoryPickerSearch = '';
+  categoryPickerMenuTop = 0;
+  categoryPickerMenuLeft = 0;
+  categoryPickerMenuWidth = 0;
 
-  openCategoryPicker(target: 'expense' | 'voucher'): void {
+  openCategoryPicker(target: 'expense' | 'voucher', event?: MouseEvent): void {
+    event?.stopPropagation();
+    if (this.isCategoryPickerOpen && this.categoryPickerTarget === target) {
+      this.closeCategoryPicker();
+      return;
+    }
+    this.positionCategoryPicker(event);
     this.categoryPickerTarget = target;
     this.categoryPickerSearch = '';
     this.isCategoryPickerOpen = true;
@@ -440,6 +451,29 @@ export class Expense implements OnInit, OnDestroy {
 
   closeCategoryPicker(): void {
     this.isCategoryPickerOpen = false;
+  }
+
+  /** Keep the desktop menu attached to its trigger even when validation
+   * messages or the quick/full form layout change the trigger's position. */
+  private positionCategoryPicker(event?: MouseEvent): void {
+    const trigger = event?.currentTarget as HTMLElement | null;
+    const dialog = document.querySelector('.exp-add-modal-sheet') as HTMLElement | null;
+    if (!trigger || !dialog || window.innerWidth < 992) return;
+
+    const triggerRect = trigger.getBoundingClientRect();
+    const dialogRect = dialog.getBoundingClientRect();
+    this.categoryPickerMenuTop = triggerRect.bottom - dialogRect.top + 4;
+    this.categoryPickerMenuLeft = triggerRect.left - dialogRect.left;
+    this.categoryPickerMenuWidth = triggerRect.width;
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (window.innerWidth < 992 || !this.isCategoryPickerOpen) return;
+    const target = event.target as Element | null;
+    if (!target?.closest('.exp-category-bottom-sheet, .exp-cat-select-trigger')) {
+      this.closeCategoryPicker();
+    }
   }
 
   selectCategory(name: string): void {

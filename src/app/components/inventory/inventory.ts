@@ -10,7 +10,7 @@ import {
 } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Observable, BehaviorSubject, Subject, firstValueFrom, of, map, combineLatest } from 'rxjs';
-import { switchMap, takeUntil } from 'rxjs/operators';
+import { switchMap, takeUntil, tap, shareReplay } from 'rxjs/operators';
 import { ProductService, ServiceIProduct, getProductErrorMessage } from '../../services/product';
 import { BarcodeScannerService } from '../../services/barcode-scanner.service';
 import { ExpenseService, getExpenseLineItems } from '../../services/expense';
@@ -28,6 +28,7 @@ import {
 } from 'lucide-angular';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import Swal from 'sweetalert2';
+import { MobileFullscreenOverlayComponent } from '../common/mobile-fullscreen-overlay/mobile-fullscreen-overlay.component';
 
 const Toast = Swal.mixin({
   toast: true,
@@ -46,7 +47,7 @@ const Toast = Swal.mixin({
 @Component({
   selector: 'app-inventory',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, TranslateModule, LucideAngularModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, TranslateModule, LucideAngularModule, MobileFullscreenOverlayComponent],
   templateUrl: './inventory.html',
   styleUrls: ['./inventory.css'],
 })
@@ -109,9 +110,16 @@ export class Inventory implements OnInit, OnDestroy {
   // A product may have been purchased under more than one category. Keep all
   // of those categories so filtering never hides a valid matching product.
   selectedProductCategory = '';
+  readonly outOfStockFilterValue = '__out_of_stock__';
+  readonly lowStockFilterValue = '__low_stock__';
+  isInventoryFilterSheetOpen = false;
+  inventoryFilterMenuTop = 0;
+  inventoryFilterMenuLeft = 0;
+  inventoryFilterMenuWidth = 0;
   productSearchQuery = '';
   isProductSearchOpen = false;
   private productCategoriesById = new Map<string, Set<string>>();
+  private stockByProductId = new Map<string, ProductStockSummary>();
   readonly uncategorizedFilterValue = '__uncategorized__';
 
   addProductForm: FormGroup;
@@ -165,6 +173,7 @@ export class Inventory implements OnInit, OnDestroy {
   }
 
   isLoadingProducts = true;
+  isLoadingStock = true;
   private _productsSubject = new BehaviorSubject<ServiceIProduct[]>([]);
   products$: Observable<ServiceIProduct[]> = this._productsSubject.asObservable();
 
@@ -178,6 +187,13 @@ export class Inventory implements OnInit, OnDestroy {
     combineLatest([this.incomeService.getIncomes(), this.authService.userProfile$]).pipe(
       map(([incomes, profile]) => incomes.filter((income) => income.currency === (profile?.currency || 'MMK'))),
     ),
+  ).pipe(
+    tap(() => {
+      this.isLoadingStock = false;
+      this.cdr.markForCheck();
+    }),
+    tap((summary) => this.stockByProductId = new Map(summary.map((row) => [row.productId, row]))),
+    shareReplay({ bufferSize: 1, refCount: true }),
   );
 
   constructor(private fb: FormBuilder) {
@@ -244,9 +260,28 @@ export class Inventory implements OnInit, OnDestroy {
 
   // The action menu is anchored to a row's on-screen position. Close it on
   // page scroll so it never appears detached from that row.
-  @HostListener('window:scroll')
-  onWindowScroll(): void {
+  @HostListener('window:scroll', ['$event'])
+  onWindowScroll(event: Event): void {
     this.closeProductActions();
+    const scrollTarget = event.target as Element | null;
+    // The floating menu owns a scrollable option list. Its own scrolling
+    // must remain usable; only a page/outer scroll should dismiss the menu.
+    if (scrollTarget?.closest?.('.inv-filter-sheet')) return;
+    // Mobile uses this control as a bottom sheet, where a pull/overscroll is
+    // a normal way to navigate its option list. Only desktop's floating menu
+    // should dismiss when the surrounding page is scrolled.
+    if (window.innerWidth >= 992) this.closeInventoryFilterSheet();
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (!this.isInventoryFilterSheetOpen) return;
+    const target = event.target as Element | null;
+    // The trigger itself toggles the menu, while interactions inside the
+    // menu select an option. Every other desktop click dismisses it.
+    if (!target?.closest('.inv-category-filter-wrap, .inv-filter-sheet')) {
+      this.closeInventoryFilterSheet();
+    }
   }
 
   async onScanBarcode(): Promise<void> {
@@ -351,6 +386,7 @@ export class Inventory implements OnInit, OnDestroy {
       });
 
     this.loadProducts();
+    this.stockSummary$.pipe(takeUntil(this.destroy$)).subscribe();
   }
 
   ngOnDestroy(): void {
@@ -360,7 +396,14 @@ export class Inventory implements OnInit, OnDestroy {
   }
 
   setActiveTab(tab: 'products' | 'stock'): void {
+    if (this.activeTab === tab) return;
     this.activeTab = tab;
+    // Filters belong to the view currently being inspected. Reset them on a
+    // tab change so a hidden category/query never makes the next view appear
+    // empty, and collapse the animated search field back to its default row.
+    this.selectedProductCategory = '';
+    this.productSearchQuery = '';
+    this.isProductSearchOpen = false;
   }
 
   async saveLowStockThreshold(): Promise<void> {
@@ -459,6 +502,31 @@ export class Inventory implements OnInit, OnDestroy {
     setTimeout(() => this.productSearchInput?.nativeElement.focus(), 140);
   }
 
+  openInventoryFilterSheet(event?: MouseEvent): void {
+    if (this.isInventoryFilterSheetOpen) {
+      this.closeInventoryFilterSheet();
+      return;
+    }
+    const trigger = event?.currentTarget as HTMLElement | null;
+    if (trigger) {
+      const rect = trigger.getBoundingClientRect();
+      this.inventoryFilterMenuTop = rect.bottom + 6;
+      this.inventoryFilterMenuLeft = rect.left;
+      this.inventoryFilterMenuWidth = rect.width;
+    }
+    this.isInventoryFilterSheetOpen = true;
+  }
+  closeInventoryFilterSheet(): void { this.isInventoryFilterSheetOpen = false; }
+  selectInventoryFilter(value: string): void { this.selectedProductCategory = value; this.closeInventoryFilterSheet(); }
+
+  get selectedInventoryFilterLabel(): string {
+    if (!this.selectedProductCategory) return this.translateService.instant('ALL_CATEGORIES');
+    if (this.selectedProductCategory === this.outOfStockFilterValue) return this.translateService.instant('INVENTORY_FILTER_OUT_OF_STOCK');
+    if (this.selectedProductCategory === this.lowStockFilterValue) return this.translateService.instant('INVENTORY_FILTER_LOW_STOCK');
+    if (this.selectedProductCategory === this.uncategorizedFilterValue) return this.translateService.instant('UNCATEGORIZED');
+    return this.selectedProductCategory;
+  }
+
   closeProductSearch(): void {
     this.productSearchQuery = '';
     this.isProductSearchOpen = false;
@@ -472,6 +540,10 @@ export class Inventory implements OnInit, OnDestroy {
 
     if (!this.selectedProductCategory) return true;
 
+    const stock = productId ? this.stockByProductId.get(productId) : undefined;
+    if (this.selectedProductCategory === this.outOfStockFilterValue) return !!stock && this.isOutOfStock(stock);
+    if (this.selectedProductCategory === this.lowStockFilterValue) return !!stock && this.isLowStock(stock);
+
     const categories = productId ? this.productCategoriesById.get(productId) : undefined;
     if (this.selectedProductCategory === this.uncategorizedFilterValue) {
       return !categories?.size;
@@ -480,10 +552,15 @@ export class Inventory implements OnInit, OnDestroy {
   }
 
   // A product that's never been purchased naturally has currentStock 0 —
-  // that's "not yet stocked", not "running low" (same distinction already
-  // made for the shop dashboard's out-of-stock warning list).
+  // that's "not yet stocked", not an alert. Stocked items at exactly zero
+  // use the dashboard's red out-of-stock treatment; only positive balances
+  // below the threshold use the yellow low-stock treatment.
+  isOutOfStock(row: ProductStockSummary): boolean {
+    return row.totalPurchasedQty > 0 && row.currentStock === 0;
+  }
+
   isLowStock(row: ProductStockSummary): boolean {
-    return row.totalPurchasedQty > 0 && row.currentStock >= 0 && row.currentStock <= this.lowStockThreshold;
+    return row.totalPurchasedQty > 0 && row.currentStock > 0 && row.currentStock <= this.lowStockThreshold;
   }
 
   toggleRowExpand(productId: string): void {
@@ -500,6 +577,9 @@ export class Inventory implements OnInit, OnDestroy {
   }
 
   async loadProducts(): Promise<void> {
+    this.isLoadingProducts = true;
+    this.isLoadingStock = true;
+    this.cdr.markForCheck();
     try {
       const products = await firstValueFrom(this.productService.getProducts());
       // Most recently added first — older products (from before createdAt
