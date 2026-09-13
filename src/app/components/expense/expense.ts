@@ -175,6 +175,7 @@ export class Expense implements OnInit, OnDestroy {
   readonly MAX_VOUCHER_IMAGES = 10;
   private activeSpaceModeKey: string | null = null;
   get canManageExpenseRecords(): boolean { return canManageSharedSpace(this.userProfile); }
+  get isPersonalExpenseSpace(): boolean { return isPersonalContext(this.userProfile); }
 
   // ── Date picker bounds for expense / voucher forms ──
   readonly expenseDateMax: string = (() => {
@@ -608,6 +609,9 @@ export class Expense implements OnInit, OnDestroy {
     if (this.isQuickMode) {
       this.newExpenseForm.patchValue({ quantity: 1, unit: '' });
     }
+    // This method is also called from the mobile mode toggle. Mark explicitly
+    // so the alternate form is rendered immediately under OnPush detection.
+    this.cdr.markForCheck();
   }
 
   loadExpenses(): void {
@@ -1301,7 +1305,9 @@ export class Expense implements OnInit, OnDestroy {
     const fieldLabel = (field: string): string => {
       const map: Record<string, string> = {
         itemName: this.translate.instant('EXPENSE_ITEM_NAME_LABEL'),
-        price: this.translate.instant('PRICE_LABEL'),
+        // `price` is the persisted field name; in the personal experience it
+        // represents the complete expense, so never expose that storage term.
+        price: this.translate.instant(isPersonal ? 'AMOUNT' : 'PRICE_LABEL'),
         quantity: this.translate.instant('QUANTITY_LABEL'),
         unit: this.translate.instant('EXPENSE_UNIT_LABEL'),
         category: this.translate.instant('EXPENSE_CATEGORY_LABEL'),
@@ -1336,11 +1342,11 @@ export class Expense implements OnInit, OnDestroy {
     }
 
     if (hasPrice) {
-      rows += row(`<img src="../../assets/icons/bill.svg" alt="price" style="width:25px;height:25px;filter:${iconFilter};vertical-align:middle;">`, this.translate.instant('PRICE_LABEL'), this.formatService.formatAmountWithSymbol(priceValue, expense.currency));
+      rows += row(`<img src="../../assets/icons/bill.svg" alt="amount" style="width:25px;height:25px;filter:${iconFilter};vertical-align:middle;">`, this.translate.instant(isPersonal ? 'AMOUNT' : 'PRICE_LABEL'), this.formatService.formatAmountWithSymbol(priceValue, expense.currency));
     }
 
     const amt = this.formatService.formatAmountWithSymbol(expense.totalCost, expense.currency);
-    rows += row(`<img src="../../assets/icons/money-bag.png" alt="money-bag" style="width:25px;height:25px;filter:${iconFilter};vertical-align:middle;">`, this.translate.instant('TOTAL_COST_LABEL'), amt, accent);
+    rows += row(`<img src="../../assets/icons/money-bag.png" alt="money-bag" style="width:25px;height:25px;filter:${iconFilter};vertical-align:middle;">`, this.translate.instant(isPersonal ? 'AMOUNT' : 'TOTAL_COST_LABEL'), amt, accent);
 
     if (!isPersonal && expense.createdByName) {
       const dt = expense.createdAt ? this.formatService.formatLocalizedDate(expense.createdAt, 'longDateTime') : '';

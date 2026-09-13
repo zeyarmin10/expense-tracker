@@ -268,7 +268,8 @@ body.exp-add-modal-open {
   bottom: 0;
   left: 50%;
   width: min(100%, 480px);
-  z-index: 2;
+  /* Must sit above the mobile form's sticky Save button while open. */
+  z-index: 30;
   display: flex;
   flex-direction: column;
   max-height: 80%;
@@ -290,7 +291,7 @@ body.exp-add-modal-open {
 .exp-category-picker-backdrop {
   position: absolute;
   inset: 0;
-  z-index: 1;
+  z-index: 29;
   background: rgba(0, 0, 0, 0.48);
   opacity: 0;
   pointer-events: none;
@@ -628,6 +629,132 @@ body.exp-add-modal-open {
 .exp-amount-hero-input::placeholder {
   color: var(--text-muted) !important;
   opacity: 0.4 !important;
+}
+
+/* ── Personal expense quick add ──────────────────────────────────────────
+   The personal path is deliberately a short, amount-first form. It uses
+   large individual touch targets rather than making a phone user work
+   through a dense desktop-style row of inputs. */
+.exp-personal-quick-form {
+  gap: 0.9rem !important;
+}
+
+.exp-personal-mode-bar {
+  padding: 0.35rem;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--surface-2) 76%, transparent);
+}
+
+.exp-personal-mode-bar .exp-quick-toggle,
+.exp-personal-mode-bar .exp-date-pill {
+  min-height: 38px;
+  padding: 0.4rem 0.72rem;
+  border-radius: 10px;
+}
+
+.exp-personal-amount-card {
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 0.85rem;
+  background: var(--surface-2);
+}
+
+.exp-personal-amount-card {
+  border-color: color-mix(in srgb, var(--accent) 38%, var(--border));
+  background:
+    radial-gradient(circle at 100% 0, color-mix(in srgb, var(--accent) 18%, transparent), transparent 48%),
+    var(--surface-2);
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.exp-personal-field-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 0 0 0.48rem 0.15rem;
+  color: var(--text-sub);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.055em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.exp-personal-currency-code {
+  color: var(--accent);
+  letter-spacing: 0.025em;
+}
+
+.exp-personal-amount-card .exp-amount-hero-input {
+  height: 4.5rem !important;
+}
+
+.exp-personal-amount-card .exp-amount-hero-input {
+  font-size: clamp(1.8rem, 8vw, 2.45rem) !important;
+  border-radius: 12px;
+  border-color: color-mix(in srgb, var(--accent) 42%, var(--border));
+  background: color-mix(in srgb, var(--surface) 74%, transparent);
+}
+
+.exp-personal-detail-field .exp-cat-select-trigger,
+.exp-personal-detail-field .exp-addon-btn,
+.exp-personal-note-field .exp-float-input {
+  min-height: 56px;
+}
+
+.exp-personal-detail-field .exp-cat-select-trigger {
+  border-color: color-mix(in srgb, var(--accent) 20%, var(--border));
+  background: color-mix(in srgb, var(--surface) 58%, var(--surface-2));
+}
+
+.exp-personal-detail-field .exp-cat-select-trigger-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+}
+
+.exp-personal-detail-field .exp-cat-select-trigger-value,
+.exp-personal-detail-field .exp-cat-select-trigger-placeholder {
+  font-size: 0.95rem;
+  font-weight: 650;
+}
+
+.exp-personal-detail-field .exp-addon-btn {
+  width: 56px;
+  padding: 0;
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+}
+
+.exp-personal-note-field .exp-float-input {
+  border-color: color-mix(in srgb, var(--text-muted) 30%, var(--border));
+  background: color-mix(in srgb, var(--surface-2) 82%, transparent);
+}
+
+.exp-personal-quick-form .exp-form-footer .exp-btn-primary {
+  min-height: 52px;
+  border-radius: 14px;
+  font-size: 0.9rem;
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--accent) 24%, transparent);
+}
+
+@media (max-width: 991.98px) {
+  .exp-personal-quick-form .exp-form-footer {
+    position: sticky;
+    z-index: 2;
+    bottom: -1rem;
+    margin-top: 0.15rem;
+    padding: 0.9rem 0 calc(env(safe-area-inset-bottom, 0px) + 0.9rem);
+    background: linear-gradient(to bottom, transparent 0%, var(--surface) 22%);
+  }
+
+  .exp-personal-mode-bar .exp-quick-toggle,
+  .exp-personal-mode-bar .exp-date-pill {
+    min-height: 42px;
+    padding-inline: 0.8rem;
+    font-size: 0.76rem;
+  }
 }
 
 /* Live quantity × price total under the full-mode price field */

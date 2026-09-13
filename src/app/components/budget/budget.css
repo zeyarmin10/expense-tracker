@@ -1117,6 +1117,44 @@ app-date-input .di-trigger {
   opacity: 0.4 !important;
 }
 
+/* Budget amount mirrors the focused, amount-first Personal Expense card. */
+.bgt-amount-card {
+  border: 1px solid color-mix(in srgb, var(--accent) 38%, var(--border));
+  border-radius: 18px;
+  padding: 0.85rem;
+  background:
+    radial-gradient(circle at 100% 0, color-mix(in srgb, var(--accent) 18%, transparent), transparent 48%),
+    var(--surface-2);
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.bgt-amount-card-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 0 0 0.48rem 0.15rem;
+  color: var(--text-sub);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.055em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.bgt-amount-card-heading span:last-child {
+  color: var(--accent);
+  letter-spacing: 0.025em;
+}
+
+.bgt-amount-card .bgt-amount-hero-input {
+  height: 4.5rem !important;
+  font-size: clamp(1.8rem, 8vw, 2.45rem) !important;
+  border-radius: 12px;
+  border-color: color-mix(in srgb, var(--accent) 42%, var(--border));
+  background: color-mix(in srgb, var(--surface) 74%, transparent);
+}
+
 /* ── Buttons ── */
 .bgt-btn {
   display: inline-flex;
