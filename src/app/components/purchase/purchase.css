@@ -203,6 +203,14 @@
     -webkit-overflow-scrolling: touch;
     padding: 1rem 1rem calc(env(safe-area-inset-bottom, 0px) + 1rem);
   }
+
+  /* A category/product picker sits above this full-screen cart. Do not let
+     a drag on its list chain through and scroll the cart underneath. */
+  .exp-cart-overlay.exp-cart-overlay-picker-open .exp-cart-overlay-scroll {
+    overflow: hidden;
+    overscroll-behavior: none;
+    touch-action: none;
+  }
 }
 
 /* Desktop: the tab strip sits flush above the card content below it (the
@@ -2679,7 +2687,8 @@ body.light-mode .exp-seg-reset {
 
 .exp-pos-cart-list {
   list-style: none;
-  margin: 0 0 1rem;
+  /* Separate selected cart lines from the category selector above them. */
+  margin: 0.9rem 0 1rem;
   padding: 0;
   display: flex;
   flex-direction: column;
@@ -2690,7 +2699,8 @@ body.light-mode .exp-seg-reset {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 0.65rem 0.8rem;
+  position: relative;
+  padding: 0.65rem 0.8rem 1.8rem;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -2729,9 +2739,15 @@ body.light-mode .exp-seg-reset {
 }
 
 .exp-pos-cart-line-controls {
-  display: flex;
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
   align-items: center;
   gap: 0.35rem;
+}
+
+.exp-pos-unit-price-stack {
+  display: block;
+  min-width: 0;
 }
 
 .exp-pos-qty-stepper {
@@ -2742,6 +2758,7 @@ body.light-mode .exp-seg-reset {
   border-radius: 10px;
   padding: 0.15rem 0.2rem;
   flex-shrink: 0;
+  width: fit-content;
 }
 
 .exp-pos-qty-btn {
@@ -2759,7 +2776,7 @@ body.light-mode .exp-seg-reset {
 
 .exp-pos-qty-input {
   width: auto;
-  min-width: 1.1rem;
+  min-width: 2rem;
   max-width: 2.8rem;
   flex: 0 1 auto;
   padding: 0;
@@ -2773,13 +2790,14 @@ body.light-mode .exp-seg-reset {
 }
 
 .exp-pos-unit-price-input {
-  width: 84px;
+  width: 100%;
+  box-sizing: border-box;
   height: 34px;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--bg);
   color: var(--text);
-  font-size: 0.8rem;
+  font-size: 0.95rem;
   text-align: right;
   padding: 0 0.45rem;
   min-width: 0;
@@ -2790,11 +2808,18 @@ body.light-mode .exp-seg-reset {
 }
 
 .exp-pos-line-subtotal {
-  margin-left: auto;
+  margin: 0;
   font-size: 0.85rem;
   font-weight: 700;
-  color: var(--text);
+  color: var(--warning);
+  line-height: 1.2;
   white-space: nowrap;
+}
+
+.exp-pos-cart-line-summary {
+  position: absolute;
+  right: 0.8rem;
+  bottom: 0.48rem;
 }
 
 .exp-pos-remove-btn {

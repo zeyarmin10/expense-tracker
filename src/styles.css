@@ -182,45 +182,73 @@ body:not(.light-mode) .app-date-adjustment-notice {
   }
 }
 
+/* Mobile full-screen forms must own the gesture surface. Some Android
+   WebViews scroll the document element (rather than body), so locking body
+   alone still lets the page behind an overlay move. The existing modal-open
+   classes cover every phone full-screen add/settings flow. */
+@media (max-width: 991.98px) {
+  html:has(body.exp-add-modal-open),
+  html:has(body.pnl-add-modal-open),
+  html:has(body.bgt-add-modal-open),
+  html:has(body.cat-add-modal-open),
+  html:has(body.inv-add-modal-open),
+  html:has(body.inv-settings-modal-open),
+  body.exp-add-modal-open,
+  body.pnl-add-modal-open,
+  body.bgt-add-modal-open,
+  body.cat-add-modal-open,
+  body.inv-add-modal-open,
+  body.inv-settings-modal-open {
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+}
+
 /* Searchable picker sheets need to remain above the mobile keyboard.  The
    inset only represents the keyboard area that is still covering the WebView;
    on devices that resize the viewport it becomes zero, while the reduced dvh
    supplies the available height. */
-body.keyboard-visible .exp-pos-picker-sheet.open:not(.exp-pos-picker-sheet-date),
-body.keyboard-visible .pnl-pos-picker-sheet.open:not(.pnl-pos-picker-sheet-date) {
-  bottom: var(--keyboard-inset);
-  height: min(80dvh, calc(100dvh - var(--keyboard-inset) - env(safe-area-inset-top, 0px) - 0.75rem));
-  max-height: calc(100dvh - var(--keyboard-inset) - env(safe-area-inset-top, 0px) - 0.75rem);
-  overflow: hidden;
-  transition: translate 0.28s cubic-bezier(0.34, 1.2, 0.64, 1), bottom 0.18s ease, max-height 0.18s ease;
-}
+@media (max-width: 991.98px) {
+  /* Once a searchable picker receives focus, use the whole available area:
+     from just below the status bar down to the keyboard. This leaves the
+     list as the only scrollable surface instead of squeezing it into 80vh. */
+  body.keyboard-visible .exp-pos-picker-sheet.open:not(.exp-pos-picker-sheet-date),
+  body.keyboard-visible .pnl-pos-picker-sheet.open:not(.pnl-pos-picker-sheet-date) {
+    top: calc(max(env(safe-area-inset-top, 0px), var(--native-status-bar-inset)) + 0.5rem);
+    bottom: var(--keyboard-inset);
+    height: auto;
+    max-height: none;
+    overflow: hidden;
+    transition: translate 0.28s cubic-bezier(0.34, 1.2, 0.64, 1), top 0.18s ease, bottom 0.18s ease;
+  }
 
-body.keyboard-visible .exp-pos-picker-sheet .exp-cat-picker-body,
-body.keyboard-visible .pnl-pos-picker-sheet .pnl-cat-picker-body,
-body.keyboard-visible .exp-category-bottom-sheet .exp-cat-picker-body,
-body.keyboard-visible .bgt-selection-bottom-sheet .bgt-cat-picker-body {
-  min-height: 0;
-  flex: 1 1 auto;
-  overflow: hidden;
-}
+  body.keyboard-visible .exp-pos-picker-sheet .exp-cat-picker-body,
+  body.keyboard-visible .pnl-pos-picker-sheet .pnl-cat-picker-body,
+  body.keyboard-visible .exp-category-bottom-sheet .exp-cat-picker-body,
+  body.keyboard-visible .bgt-selection-bottom-sheet .bgt-cat-picker-body {
+    min-height: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+  }
 
-body.keyboard-visible .exp-pos-picker-sheet .exp-cat-picker-list,
-body.keyboard-visible .pnl-pos-picker-sheet .pnl-cat-picker-list,
-body.keyboard-visible .exp-category-bottom-sheet .exp-cat-picker-list,
-body.keyboard-visible .bgt-selection-bottom-sheet .bgt-cat-picker-list {
-  min-height: 0;
-  flex: 1 1 auto;
-  overscroll-behavior: contain;
-}
+  body.keyboard-visible .exp-pos-picker-sheet .exp-cat-picker-list,
+  body.keyboard-visible .pnl-pos-picker-sheet .pnl-cat-picker-list,
+  body.keyboard-visible .exp-category-bottom-sheet .exp-cat-picker-list,
+  body.keyboard-visible .bgt-selection-bottom-sheet .bgt-cat-picker-list {
+    min-height: 0;
+    flex: 1 1 auto;
+    overscroll-behavior: contain;
+  }
 
-/* Expense and Budget have their category selector nested in a full-screen
-   form sheet, so the same inset is applied relative to that sheet. */
-body.keyboard-visible .exp-category-bottom-sheet,
-body.keyboard-visible .bgt-selection-bottom-sheet {
-  bottom: var(--keyboard-inset);
-  height: min(80%, calc(100% - var(--keyboard-inset) - env(safe-area-inset-top, 0px) - 0.75rem));
-  max-height: calc(100% - var(--keyboard-inset) - env(safe-area-inset-top, 0px) - 0.75rem);
-  overflow: hidden;
+  /* Expense and Budget have their category selector nested in a full-screen
+     form sheet, so the same inset is applied relative to that sheet. */
+  body.keyboard-visible .exp-category-bottom-sheet,
+  body.keyboard-visible .bgt-selection-bottom-sheet {
+    bottom: var(--keyboard-inset);
+    height: min(80%, calc(100% - var(--keyboard-inset) - env(safe-area-inset-top, 0px) - 0.75rem));
+    max-height: calc(100% - var(--keyboard-inset) - env(safe-area-inset-top, 0px) - 0.75rem);
+    overflow: hidden;
+  }
 }
 
 /* Without this, mobile browsers hold every tap on an interactive element

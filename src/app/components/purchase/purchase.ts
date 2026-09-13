@@ -297,6 +297,16 @@ export class Purchase implements OnInit, OnDestroy {
     }
     this.closeProductPicker();
     this.cdr.markForCheck();
+    this.scrollCartToLatestItem();
+  }
+
+  private scrollCartToLatestItem(): void {
+    // Wait for Angular to paint the added line and the action row that follows
+    // it, then keep the next add/scan action within reach on a long cart.
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const scroller = document.querySelector<HTMLElement>('.exp-cart-overlay-scroll');
+      scroller?.scrollTo({ top: scroller.scrollHeight, behavior: 'smooth' });
+    }));
   }
 
   incrementQty(line: CartLine): void {
