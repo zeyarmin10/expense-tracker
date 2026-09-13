@@ -5,7 +5,7 @@
          top of the page on desktop; on mobile it's reached via the FAB
          below and opens as a full-screen overlay (no modal box). ── -->
     <div class="pnl-cart-overlay-backdrop" [class.open]="showAddCartOverlay"></div>
-    <div class="pnl-cart-overlay" [class.pnl-cart-overlay-open]="showAddCartOverlay" [class.pnl-cart-overlay-date-picker]="isMobileViewport && !editingIncome && isDatePickerOpen" *ngIf="canManageProfitActions">
+    <div class="pnl-cart-overlay" [class.pnl-cart-overlay-open]="showAddCartOverlay" [class.pnl-cart-overlay-date-picker]="isMobileViewport && !editingIncome && isDatePickerOpen" [class.pnl-cart-overlay-picker-open]="isMobileViewport && !editingIncome && isProductPickerOpen" *ngIf="canManageProfitActions">
       <div class="pnl-cart-overlay-topbar">
         <h2 class="pnl-pos-section-title">
           <lucide-icon [img]="iconHandCoins" [size]="18" class="pnl-icon-accent"></lucide-icon>
@@ -32,7 +32,7 @@
             </button>
           </div>
 
-          <div class="pnl-pos-action-row">
+          <div class="pnl-pos-action-row" *ngIf="cart.length === 0">
             <button type="button" class="pnl-pos-scan-btn" *ngIf="canScanBarcode" (click)="onScanBarcode()">
               <lucide-icon [img]="iconScanLine" [size]="18"></lucide-icon>
               {{ 'SCAN_BARCODE_BUTTON' | translate }}
@@ -55,8 +55,8 @@
                   <span class="pnl-pos-cart-line-name">{{ line.productName }}</span>
                   <span class="pnl-pos-cart-line-unit" *ngIf="line.unit">{{ line.unit }}</span>
                 </div>
-                <button type="button" class="pnl-pos-remove-btn" (click)="removeFromCart(line.productId)">
-                  <lucide-icon [img]="iconTrash2" [size]="14"></lucide-icon>
+                <button type="button" class="pnl-pos-remove-btn" (click)="removeFromCart(line.productId)" [title]="'DELETE_BUTTON_LABEL' | translate">
+                  <lucide-icon [img]="iconTrash2" [size]="16"></lucide-icon>
                 </button>
               </div>
               <div class="pnl-pos-cart-line-controls">
@@ -73,18 +73,35 @@
                     <lucide-icon [img]="iconPlus" [size]="13"></lucide-icon>
                   </button>
                 </div>
-                <input type="text" inputmode="decimal" class="pnl-pos-unit-price-input"
-                  [class.pnl-pos-unit-price-input-error]="cartPriceError && (!line.unitPrice || line.unitPrice <= 0)"
-                  [class.pnl-pos-unit-price-input-warning]="isSalePriceBelowPurchaseCost(line.productId, line.unitPrice)"
-                  [value]="line.unitPriceDisplay" (input)="onLineUnitPriceInput(line, $event)" />
-                <span class="pnl-pos-line-subtotal"
-                  [innerHTML]="formatService.formatAmountShortHtml(line.quantity * line.unitPrice, userProfile?.currency || 'MMK')"></span>
+                <div class="pnl-pos-unit-price-stack">
+                  <input type="text" inputmode="decimal" class="pnl-pos-unit-price-input"
+                    [class.pnl-pos-unit-price-input-error]="cartPriceError && (!line.unitPrice || line.unitPrice <= 0)"
+                    [class.pnl-pos-unit-price-input-warning]="isSalePriceBelowPurchaseCost(line.productId, line.unitPrice)"
+                    [value]="line.unitPriceDisplay" (input)="onLineUnitPriceInput(line, $event)" />
+                  <div class="pnl-pos-cart-line-summary">
+                    <span class="pnl-pos-line-subtotal"
+                      [innerHTML]="formatService.formatAmountShortHtml(line.quantity * line.unitPrice, userProfile?.currency || 'MMK')"></span>
+                  </div>
+                </div>
               </div>
               <div class="pnl-pos-price-warning" *ngIf="isSalePriceBelowPurchaseCost(line.productId, line.unitPrice)">
                 {{ 'SALE_PRICE_BELOW_COST_WARNING' | translate: { cost: formatPurchaseCost(line.productId) } }}
               </div>
             </li>
           </ul>
+
+          <!-- Keep add/scan actions beside the latest cart work once the
+               list has lines, rather than leaving them above a long list. -->
+          <div class="pnl-pos-action-row pnl-pos-action-row-after-list" *ngIf="cart.length > 0">
+            <button type="button" class="pnl-pos-scan-btn" *ngIf="canScanBarcode" (click)="onScanBarcode()">
+              <lucide-icon [img]="iconScanLine" [size]="18"></lucide-icon>
+              {{ 'SCAN_BARCODE_BUTTON' | translate }}
+            </button>
+            <button type="button" class="pnl-pos-manual-add-btn" (click)="openProductPicker('cart', $event)">
+              <lucide-icon [img]="iconPlus" [size]="16"></lucide-icon>
+              {{ 'POS_ADD_ITEM_MANUAL' | translate }}
+            </button>
+          </div>
 
           <div class="pnl-field-error" *ngIf="cartPriceError">
             {{ 'PRICE_REQUIRED' | translate }}

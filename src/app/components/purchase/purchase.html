@@ -10,7 +10,7 @@
          top of the page on desktop; on mobile it's reached via the FAB
          below and opens as a full-screen overlay (no modal box). ── -->
     <div class="exp-cart-overlay-backdrop" [class.open]="showAddCartOverlay"></div>
-    <div class="exp-cart-overlay" [class.exp-cart-overlay-open]="showAddCartOverlay" [class.exp-cart-overlay-date-picker]="isMobileViewport && isDatePickerOpen && (datePickerTarget === 'cart' || datePickerTarget === 'voucher')" *ngIf="canCreateExpenseRecords">
+    <div class="exp-cart-overlay" [class.exp-cart-overlay-open]="showAddCartOverlay" [class.exp-cart-overlay-date-picker]="isMobileViewport && isDatePickerOpen && (datePickerTarget === 'cart' || datePickerTarget === 'voucher')" [class.exp-cart-overlay-picker-open]="isMobileViewport && isCartNonDatePickerOpen" *ngIf="canCreateExpenseRecords">
       <div class="exp-cart-overlay-topbar">
         <div class="exp-seg-ctrl exp-cart-overlay-tabs">
           <div class="exp-seg-track">
@@ -75,7 +75,7 @@
         {{ 'CATEGORY_REQUIRED' | translate }}
       </div>
 
-      <div class="exp-pos-action-row">
+      <div class="exp-pos-action-row" *ngIf="cart.length === 0">
         <button type="button" class="exp-pos-scan-btn" *ngIf="canScanBarcode" (click)="onScanBarcode()">
           <lucide-icon [img]="iconScanLine" [size]="18"></lucide-icon>
           {{ 'SCAN_BARCODE_BUTTON' | translate }}
@@ -98,8 +98,8 @@
               <span class="exp-pos-cart-line-name">{{ line.productName }}</span>
               <span class="exp-pos-cart-line-unit" *ngIf="line.unit">{{ line.unit }}</span>
             </div>
-            <button type="button" class="exp-pos-remove-btn" (click)="removeFromCart(line.productId)">
-              <lucide-icon [img]="iconTrash2" [size]="14"></lucide-icon>
+            <button type="button" class="exp-pos-remove-btn" (click)="removeFromCart(line.productId)" [title]="'DELETE_BUTTON_LABEL' | translate">
+              <lucide-icon [img]="iconTrash2" [size]="16"></lucide-icon>
             </button>
           </div>
           <div class="exp-pos-cart-line-controls">
@@ -116,17 +116,34 @@
                 <lucide-icon [img]="iconPlus" [size]="13"></lucide-icon>
               </button>
             </div>
-            <input
-              type="text"
-              inputmode="decimal"
-              class="exp-pos-unit-price-input"
-              [class.exp-pos-unit-price-input-error]="cartPriceError && (!line.price || line.price <= 0)"
-              [value]="line.priceDisplay"
-              (input)="onLineUnitPriceInput(line, $event)" />
-            <span class="exp-pos-line-subtotal" [innerHTML]="formatService.formatAmountShortHtml(line.quantity * line.price, userProfile?.currency || 'MMK')"></span>
+            <div class="exp-pos-unit-price-stack">
+              <input
+                type="text"
+                inputmode="decimal"
+                class="exp-pos-unit-price-input"
+                [class.exp-pos-unit-price-input-error]="cartPriceError && (!line.price || line.price <= 0)"
+                [value]="line.priceDisplay"
+                (input)="onLineUnitPriceInput(line, $event)" />
+              <div class="exp-pos-cart-line-summary">
+                <span class="exp-pos-line-subtotal" [innerHTML]="formatService.formatAmountShortHtml(line.quantity * line.price, userProfile?.currency || 'MMK')"></span>
+              </div>
+            </div>
           </div>
         </li>
       </ul>
+
+      <!-- Once there are lines, keep the next-item actions immediately after
+           them instead of making the user scroll back to the top. -->
+      <div class="exp-pos-action-row exp-pos-action-row-after-list" *ngIf="cart.length > 0">
+        <button type="button" class="exp-pos-scan-btn" *ngIf="canScanBarcode" (click)="onScanBarcode()">
+          <lucide-icon [img]="iconScanLine" [size]="18"></lucide-icon>
+          {{ 'SCAN_BARCODE_BUTTON' | translate }}
+        </button>
+        <button type="button" class="exp-pos-manual-add-btn" (click)="openProductPicker('cart', $event)">
+          <lucide-icon [img]="iconPlus" [size]="16"></lucide-icon>
+          {{ 'POS_ADD_ITEM_MANUAL' | translate }}
+        </button>
+      </div>
 
       <div class="exp-field-error" *ngIf="cartPriceError">
         {{ 'PRICE_REQUIRED' | translate }}

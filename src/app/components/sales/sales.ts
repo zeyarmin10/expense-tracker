@@ -852,6 +852,17 @@ export class Sales implements OnInit, OnDestroy {
     }
     this.closeProductPicker();
     this.cdr.markForCheck();
+    this.scrollCartToLatestItem();
+  }
+
+  private scrollCartToLatestItem(): void {
+    // The list and its below-list actions render asynchronously. Scroll only
+    // after that paint, so repeatedly selecting products stays at the latest
+    // line instead of sending the user back to the top of the cart.
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const scroller = document.querySelector<HTMLElement>('.pnl-cart-overlay-scroll');
+      scroller?.scrollTo({ top: scroller.scrollHeight, behavior: 'smooth' });
+    }));
   }
 
   get cartTotal(): number {
