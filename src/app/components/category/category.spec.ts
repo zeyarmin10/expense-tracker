@@ -23,4 +23,10 @@ describe('Category', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('opens the icon picker with the add-category modal', () => {
+    component.openAddModal();
+
+    expect(component.showAddIconPicker).toBeTrue();
+  });
 });
