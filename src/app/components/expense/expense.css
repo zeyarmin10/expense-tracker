@@ -887,6 +887,18 @@ body.exp-add-modal-open {
 
 }
 
+/* The Add Expense dialog stays intentionally compact on desktop too. Its
+   width is phone-like, so letting the desktop viewport switch these fields
+   back to the larger page-input sizing made the same form look different
+   from mobile. */
+@media (min-width: 577px) {
+  .exp-add-modal-sheet .full-form-item-name,
+  .exp-add-modal-sheet .full-form-quantity,
+  .exp-add-modal-sheet .full-form-unit {
+    height: 2.5rem !important;
+  }
+}
+
 .exp-field {
   display: flex;
   flex-direction: column;
