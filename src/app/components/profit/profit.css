@@ -1559,6 +1559,7 @@ app-date-input .di-trigger {
   font-weight: 800;
   padding: 0.5rem 0.9rem !important;
   height: 4rem !important;
+  text-align: right;
 }
 
 .pnl-amount-hero-input::placeholder {

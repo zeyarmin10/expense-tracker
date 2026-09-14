@@ -866,6 +866,8 @@
   "INVENTORY_TAB_STOCK_PROFIT": "Stock & Profit",
   "INVENTORY_EMPTY_PRODUCTS": "No products yet. Add one to get started.",
   "INVENTORY_TOTAL_PRODUCTS_LABEL": "Total Products",
+  "STOCK_SUMMARY_TOTAL_REMAINING_COST_LABEL": "Total Remaining Cost Value",
+  "STOCK_SUMMARY_TOTAL_RETAIL_VALUE_LABEL": "Total Remaining Sale Value",
   "INVENTORY_PRODUCT_KIND_SUFFIX": "types",
   "INVENTORY_EMPTY_STOCK_SUMMARY": "No stock activity yet.",
   "PRODUCT_NAME_LABEL": "Product Name",

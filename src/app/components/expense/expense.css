@@ -619,6 +619,7 @@ body.exp-add-modal-open {
   font-weight: 800;
   padding: 0.5rem 0.9rem !important;
   height: 4rem !important;
+  text-align: right;
 }
 
 /* At this size/weight, the placeholder reads almost like real content —

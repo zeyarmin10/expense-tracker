@@ -585,8 +585,8 @@ body.bgt-add-modal-open {
     align-items: center;
     gap: 0.4rem;
     border: none;
-    border-radius: 999px;
-    padding: 0.45rem 1rem;
+    border-radius: 10px;
+    padding: 0.65rem 1rem;
     background: var(--accent, #0b74ff);
     color: #fff;
     font-size: 0.8rem;
@@ -594,7 +594,6 @@ body.bgt-add-modal-open {
     cursor: pointer;
     box-shadow: 0 4px 14px rgba(11, 116, 255, 0.35);
     transition: transform 0.15s, box-shadow 0.15s;
-    margin-left: auto;
     white-space: nowrap;
   }
 
@@ -1110,6 +1109,7 @@ app-date-input .di-trigger {
   font-weight: 800;
   padding: 0.5rem 0.9rem !important;
   height: 4rem !important;
+  text-align: right;
 }
 
 .bgt-amount-hero-input::placeholder {

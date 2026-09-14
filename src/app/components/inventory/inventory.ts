@@ -474,6 +474,27 @@ export class Inventory implements OnInit, OnDestroy {
     return summary.reduce((sum, row) => sum + (row.estProfit || 0), 0);
   }
 
+  getTotalRemainingStockCost(summary: ProductStockSummary[]): number {
+    // A negative stock balance is a data-warning state, not stock the shop
+    // actually has on hand, so it must not reduce the value of real stock.
+    // Value the remaining stock at each product's latest recorded buy price.
+    return summary.reduce((sum, row) =>
+      sum + (row.currentStock > 0 ? row.currentStock * (row.lastPurchaseUnitCost ?? 0) : 0),
+    0);
+  }
+
+  getTotalRemainingStockRetailValue(summary: ProductStockSummary[]): number {
+    // A negative stock balance is a data-warning state, not stock the shop
+    // actually has on hand, so it must not reduce the value of real stock.
+    // Value the remaining stock at each product's current selling price.
+    const sellingPriceByProductId = new Map(
+      this._productsSubject.value.map((product) => [product.id, Number(product.sellingPrice) || 0]),
+    );
+    return summary.reduce((sum, row) =>
+      sum + (row.currentStock > 0 ? row.currentStock * (sellingPriceByProductId.get(row.productId) || 0) : 0),
+    0);
+  }
+
   get productCategoryOptions(): string[] {
     const names = new Set<string>();
     this.productCategoriesById.forEach((categories) => {

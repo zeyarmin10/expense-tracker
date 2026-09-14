@@ -2742,7 +2742,7 @@ body.light-mode .exp-seg-reset {
   display: grid;
   grid-template-columns: max-content minmax(0, 1fr);
   align-items: center;
-  gap: 0.35rem;
+  gap: 1rem;
 }
 
 .exp-pos-unit-price-stack {
@@ -2765,8 +2765,8 @@ body.light-mode .exp-seg-reset {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   border: none;
   background: var(--surface);
@@ -2777,7 +2777,7 @@ body.light-mode .exp-seg-reset {
 .exp-pos-qty-input {
   width: auto;
   min-width: 2rem;
-  max-width: 2.8rem;
+  max-width: 3rem;
   flex: 0 1 auto;
   padding: 0;
   border: 0;
@@ -2785,7 +2785,7 @@ body.light-mode .exp-seg-reset {
   background: transparent;
   color: var(--text);
   text-align: center;
-  font-size: 0.82rem;
+  font-size: 0.95rem;
   font-weight: 700;
 }
 

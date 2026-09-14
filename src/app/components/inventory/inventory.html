@@ -12,32 +12,30 @@
       </button>
     </div>
 
-    <div class="inv-seg-ctrl">
-      <div class="inv-seg-track">
-        <span class="inv-seg-indicator"
-          [style.transform]="'translateX(calc(' + (activeTab === 'products' ? 0 : 1) + ' * 100%))'"
-          aria-hidden="true"></span>
-        <button type="button" class="inv-seg-btn" [class.active]="activeTab === 'products'"
-          (click)="setActiveTab('products')">
-          {{ 'INVENTORY_TAB_PRODUCTS' | translate }}
-        </button>
-        <button type="button" class="inv-seg-btn" [class.active]="activeTab === 'stock'"
-          (click)="setActiveTab('stock')">
-          {{ 'INVENTORY_TAB_STOCK_PROFIT' | translate }}
-        </button>
+    <div class="inv-tab-toolbar">
+      <div class="inv-seg-ctrl">
+        <div class="inv-seg-track">
+          <span class="inv-seg-indicator"
+            [style.transform]="'translateX(calc(' + (activeTab === 'products' ? 0 : 1) + ' * 100%))'"
+            aria-hidden="true"></span>
+          <button type="button" class="inv-seg-btn" [class.active]="activeTab === 'products'"
+            (click)="setActiveTab('products')">
+            {{ 'INVENTORY_TAB_PRODUCTS' | translate }}
+          </button>
+          <button type="button" class="inv-seg-btn" [class.active]="activeTab === 'stock'"
+            (click)="setActiveTab('stock')">
+            {{ 'INVENTORY_TAB_STOCK_PROFIT' | translate }}
+          </button>
+        </div>
       </div>
+      <button type="button" class="inv-add-toolbar-btn" (click)="openAddOverlay()">
+        <lucide-icon [img]="iconPlus" [size]="15"></lucide-icon>
+        {{ 'ADD_PRODUCT' | translate }}
+      </button>
     </div>
 
     <!-- ── Products tab ── -->
     <div *ngIf="activeTab === 'products'">
-      <!-- Desktop-only toolbar button — opens the modal below. -->
-      <div class="inv-toolbar-row">
-        <button type="button" class="inv-add-toolbar-btn" (click)="openAddOverlay()">
-          <lucide-icon [img]="iconPlus" [size]="15"></lucide-icon>
-          {{ 'ADD_PRODUCT' | translate }}
-        </button>
-      </div>
-
       <!-- Add-Product form: a centered modal on desktop, full-screen
            overlay on mobile (reached via the FAB below) — same two-mode
            shell Expense/Budget/Income's own Add modal uses. -->
@@ -127,11 +125,26 @@
               {{ (products.length === 0 ? 'INVENTORY_EMPTY_PRODUCTS' : 'CUSTOM_SELECT_NO_RESULTS') | translate }}
             </div>
 
-            <div class="inv-list-summary" *ngIf="filteredProducts.length > 0">
-              {{ 'INVENTORY_TOTAL_PRODUCTS_LABEL' | translate }}:
-              <strong class="inv-product-count-badge">{{ formatService.formatCount(filteredProducts.length) }} {{
-                'INVENTORY_PRODUCT_KIND_SUFFIX' | translate }}</strong>
-            </div>
+            <ng-container *ngIf="filteredProducts.length > 0">
+              <div class="inv-remaining-value-card" *ngIf="stockSummary$ | async as stockSummary">
+                <div class="inv-remaining-value-row">
+                  <span>{{ 'STOCK_SUMMARY_TOTAL_REMAINING_COST_LABEL' | translate }}</span>
+                  <strong class="inv-remaining-cost-value"
+                    [innerHTML]="formatService.formatAmountWithSymbolHtml(getTotalRemainingStockCost(stockSummary), currency)"></strong>
+                </div>
+                <div class="inv-remaining-value-row">
+                  <span>{{ 'STOCK_SUMMARY_TOTAL_RETAIL_VALUE_LABEL' | translate }}</span>
+                  <strong class="inv-remaining-retail-value"
+                    [innerHTML]="formatService.formatAmountWithSymbolHtml(getTotalRemainingStockRetailValue(stockSummary), currency)"></strong>
+                </div>
+              </div>
+
+              <div class="inv-list-summary">
+                {{ 'INVENTORY_TOTAL_PRODUCTS_LABEL' | translate }}:
+                <strong class="inv-product-count-badge">{{ formatService.formatCount(filteredProducts.length) }} {{
+                  'INVENTORY_PRODUCT_KIND_SUFFIX' | translate }}</strong>
+              </div>
+            </ng-container>
 
             <ul class="inv-product-list" *ngIf="filteredProducts.length > 0">
               <li *ngFor="let product of filteredProducts; trackBy: trackByProductId" class="inv-product-item"

@@ -866,6 +866,8 @@
   "INVENTORY_TAB_STOCK_PROFIT": "สต็อกและกำไร",
   "INVENTORY_EMPTY_PRODUCTS": "ยังไม่มีสินค้า เพิ่มสินค้าเพื่อเริ่มต้น",
   "INVENTORY_TOTAL_PRODUCTS_LABEL": "จำนวนสินค้าทั้งหมด",
+  "STOCK_SUMMARY_TOTAL_REMAINING_COST_LABEL": "ต้นทุนสินค้าคงเหลือรวม",
+  "STOCK_SUMMARY_TOTAL_RETAIL_VALUE_LABEL": "มูลค่าขายสินค้าคงเหลือรวม",
   "INVENTORY_PRODUCT_KIND_SUFFIX": "รายการ",
   "INVENTORY_EMPTY_STOCK_SUMMARY": "ยังไม่มีความเคลื่อนไหวของสต็อก",
   "PRODUCT_NAME_LABEL": "ชื่อสินค้า",

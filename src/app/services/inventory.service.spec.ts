@@ -91,6 +91,19 @@ describe('InventoryService', () => {
     expect(summary.firstPurchaseDate).toBe('2026-01-10');
   });
 
+  it('should use the latest purchase date to retain the last unit cost', () => {
+    const products = [{ id: 'p6', name: 'Engine Oil' }];
+    const expenses = [
+      { productId: 'p6', date: '2026-08-12', quantity: 4, price: 1000, totalCost: 4000 },
+      { productId: 'p6', date: '2026-09-03', quantity: 2, price: 1400, totalCost: 2800 },
+      { productId: 'p6', date: '2026-08-26', quantity: 3, price: 1200, totalCost: 3600 },
+    ];
+
+    const [summary] = getSummary(products, expenses, []);
+
+    expect(summary.lastPurchaseUnitCost).toBe(1400);
+  });
+
   it('should report a null firstPurchaseDate for a product never purchased', () => {
     const products = [{ id: 'p5', name: 'Wiper Blade' }];
     const [summary] = getSummary(products, [], []);
