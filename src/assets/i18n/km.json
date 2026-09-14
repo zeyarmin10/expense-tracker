@@ -866,6 +866,8 @@
   "INVENTORY_TAB_STOCK_PROFIT": "ស្តុក និងប្រាក់ចំណេញ",
   "INVENTORY_EMPTY_PRODUCTS": "មិនទាន់មានផលិតផលទេ។ បន្ថែមមួយដើម្បីចាប់ផ្តើម។",
   "INVENTORY_TOTAL_PRODUCTS_LABEL": "ចំនួនផលិតផលសរុប",
+  "STOCK_SUMMARY_TOTAL_REMAINING_COST_LABEL": "តម្លៃដើមស្តុកសរុប",
+  "STOCK_SUMMARY_TOTAL_RETAIL_VALUE_LABEL": "តម្លៃលក់ស្តុកសរុប",
   "INVENTORY_PRODUCT_KIND_SUFFIX": "ប្រភេទ",
   "INVENTORY_EMPTY_STOCK_SUMMARY": "មិនទាន់មានចលនាស្តុកទេ។",
   "PRODUCT_NAME_LABEL": "ឈ្មោះផលិតផល",

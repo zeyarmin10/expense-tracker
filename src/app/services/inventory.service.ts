@@ -19,6 +19,8 @@ export interface ProductStockSummary {
   stockValue: number;
   /** Earliest expense.date this product was purchased on, or null if never purchased. */
   firstPurchaseDate: string | null;
+  /** Unit cost from the most recent recorded purchase, or null if never purchased. */
+  lastPurchaseUnitCost: number | null;
 }
 
 interface ProductTotals {
@@ -27,6 +29,8 @@ interface ProductTotals {
   totalSoldQty: number;
   totalRevenue: number;
   firstPurchaseDate: string | null;
+  lastPurchaseOrder: string | null;
+  lastPurchaseUnitCost: number | null;
 }
 
 @Injectable({
@@ -55,7 +59,15 @@ export class InventoryService {
         const getTotals = (productId: string): ProductTotals => {
           let totals = totalsByProductId.get(productId);
           if (!totals) {
-            totals = { totalPurchasedQty: 0, totalPurchaseCost: 0, totalSoldQty: 0, totalRevenue: 0, firstPurchaseDate: null };
+            totals = {
+              totalPurchasedQty: 0,
+              totalPurchaseCost: 0,
+              totalSoldQty: 0,
+              totalRevenue: 0,
+              firstPurchaseDate: null,
+              lastPurchaseOrder: null,
+              lastPurchaseUnitCost: null,
+            };
             totalsByProductId.set(productId, totals);
           }
           return totals;
@@ -73,6 +85,14 @@ export class InventoryService {
             totals.totalPurchaseCost += item.subtotal;
             if (expense.date && (!totals.firstPurchaseDate || expense.date < totals.firstPurchaseDate)) {
               totals.firstPurchaseDate = expense.date;
+            }
+            // The business date is the primary ordering. createdAt only
+            // breaks ties when two purchases use the same selected date.
+            const purchaseOrder = `${expense.date || ''}|${expense.createdAt || ''}`;
+            if (!totals.lastPurchaseOrder || purchaseOrder >= totals.lastPurchaseOrder) {
+              totals.lastPurchaseOrder = purchaseOrder;
+              totals.lastPurchaseUnitCost = Number(item.price)
+                || (item.quantity > 0 ? Number(item.subtotal) / item.quantity : 0);
             }
           });
         });
@@ -99,6 +119,8 @@ export class InventoryService {
             totalSoldQty: 0,
             totalRevenue: 0,
             firstPurchaseDate: null,
+            lastPurchaseOrder: null,
+            lastPurchaseUnitCost: null,
           };
 
           const avgCost = totals.totalPurchasedQty > 0
@@ -123,6 +145,7 @@ export class InventoryService {
             estProfit,
             stockValue,
             firstPurchaseDate: totals.firstPurchaseDate,
+            lastPurchaseUnitCost: totals.lastPurchaseUnitCost,
           };
         });
       }),

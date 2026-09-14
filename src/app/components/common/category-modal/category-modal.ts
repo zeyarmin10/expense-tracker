@@ -146,6 +146,7 @@ export class CategoryModalComponent implements OnInit, OnDestroy {
   async open(): Promise<void> {
     await this.loadCategories();
     this.resetForm();
+    this.showIconPicker = true;
     this.isModalOpen = true;
     document.body.classList.add('cat-modal-open');
     // loadCategories() resolves outside Angular's zone (see the AngularFire

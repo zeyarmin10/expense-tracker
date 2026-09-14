@@ -241,13 +241,16 @@ body:not(.light-mode) .app-date-adjustment-notice {
   }
 
   /* Expense and Budget have their category selector nested in a full-screen
-     form sheet, so the same inset is applied relative to that sheet. */
+     form sheet. Match the cart pickers: fill the available space between the
+     status bar and keyboard, leaving the category list as the sole scroller. */
   body.keyboard-visible .exp-category-bottom-sheet,
   body.keyboard-visible .bgt-selection-bottom-sheet {
+    top: calc(max(env(safe-area-inset-top, 0px), var(--native-status-bar-inset)) + 0.5rem);
     bottom: var(--keyboard-inset);
-    height: min(80%, calc(100% - var(--keyboard-inset) - env(safe-area-inset-top, 0px) - 0.75rem));
-    max-height: calc(100% - var(--keyboard-inset) - env(safe-area-inset-top, 0px) - 0.75rem);
+    height: auto;
+    max-height: none;
     overflow: hidden;
+    transition: translate 0.28s cubic-bezier(0.34, 1.2, 0.64, 1), top 0.18s ease, bottom 0.18s ease;
   }
 }
 

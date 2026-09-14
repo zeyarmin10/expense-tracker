@@ -866,6 +866,8 @@
   "INVENTORY_TAB_STOCK_PROFIT": "စတော့ နှင့် အမြတ်ငွေ",
   "INVENTORY_EMPTY_PRODUCTS": "ပစ္စည်းများ မရှိသေးပါ။ စတင်ရန် တစ်ခုထည့်ပါ။",
   "INVENTORY_TOTAL_PRODUCTS_LABEL": "ပစ္စည်းစုစုပေါင်း",
+  "STOCK_SUMMARY_TOTAL_REMAINING_COST_LABEL": "လက်ကျန် အဝယ်တန်ဖိုးစုစုပေါင်း",
+  "STOCK_SUMMARY_TOTAL_RETAIL_VALUE_LABEL": "လက်ကျန် အရောင်းတန်ဖိုးစုစုပေါင်း",
   "INVENTORY_PRODUCT_KIND_SUFFIX": "မျိုး",
   "INVENTORY_EMPTY_STOCK_SUMMARY": "စတော့ လှုပ်ရှားမှု မရှိသေးပါ။",
   "PRODUCT_NAME_LABEL": "ပစ္စည်းအမည်",

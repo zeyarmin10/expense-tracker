@@ -333,7 +333,7 @@ export class SalesReport implements OnInit, OnDestroy {
     this.updateCurrentPeriodLabel(filter);
 
     const presetFilters = [
-      'last30Days', 'currentMonth', 'lastMonth',
+      'today', 'last30Days', 'currentMonth', 'lastMonth',
       'lastSixMonths', 'currentYear', 'lastYear', 'currentWeek',
     ];
 

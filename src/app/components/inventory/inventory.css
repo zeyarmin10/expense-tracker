@@ -424,22 +424,9 @@ body.inv-settings-modal-open {
 }
 
 
-/* Desktop-only "Add Product" toolbar button — opens the modal above.
-   Mirrors Expense's .exp-add-toolbar-btn. */
-.inv-toolbar-row {
-  display: none;
-}
-
-@media (min-width: 992px) {
-  .inv-toolbar-row {
-    display: flex;
-    justify-content: flex-end;
-    margin-bottom: 1rem;
-  }
-}
-
+/* Desktop-only "Add Product" toolbar button — shares the tab row. */
 .inv-add-toolbar-btn {
-  display: inline-flex;
+  display: none;
   align-items: center;
   gap: 0.4rem;
   height: 40px;
@@ -451,6 +438,25 @@ body.inv-settings-modal-open {
   font-size: 0.82rem;
   font-weight: 700;
   cursor: pointer;
+}
+
+@media (min-width: 992px) {
+  .inv-tab-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.1rem;
+  }
+
+  .inv-tab-toolbar .inv-seg-ctrl {
+    margin-bottom: 0;
+  }
+
+  .inv-add-toolbar-btn {
+    display: inline-flex;
+    flex-shrink: 0;
+  }
 }
 
 /* Mobile-only FAB — opens the Add-Product overlay above. */
@@ -646,6 +652,38 @@ body.inv-settings-modal-open {
   background: var(--accent-dim);
   color: var(--accent, #0b74ff) !important;
   font-weight: 700;
+}
+
+.inv-remaining-value-card {
+  display: grid;
+  gap: 0.25rem;
+  margin-bottom: 0.65rem;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid color-mix(in srgb, var(--accent, #0b74ff) 24%, var(--border));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent-dim) 52%, var(--surface));
+}
+
+.inv-remaining-value-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  color: var(--text-muted);
+  font-size: 0.76rem;
+}
+
+.inv-remaining-value-row strong {
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.inv-remaining-cost-value {
+  color: var(--expense-color, #f4b11a);
+}
+
+.inv-remaining-retail-value {
+  color: var(--income-color);
 }
 
 /* Shared by the Products and Stock & Profit tabs: category selection beside

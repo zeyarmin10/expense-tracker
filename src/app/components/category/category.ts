@@ -279,6 +279,9 @@ export class Category implements OnInit, OnDestroy {
   }
 
   openAddModal(): void {
+    // An icon is part of every category's visual identity, so make the
+    // choices immediately available instead of requiring an extra tap.
+    this.showAddIconPicker = true;
     this.isAddModalOpen = true;
     document.body.classList.add('cat-add-modal-open');
   }

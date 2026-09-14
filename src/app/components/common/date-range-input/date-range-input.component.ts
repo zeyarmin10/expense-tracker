@@ -322,17 +322,27 @@ export class DateRangeInputComponent implements OnChanges, OnDestroy {
     const trigger = this.elRef.nativeElement.querySelector('.dri-trigger') as HTMLElement;
     if (!trigger) return;
     const rect = trigger.getBoundingClientRect();
+    // `.cbp-dialog` uses CSS translate/scale for its open animation. That
+    // makes it the containing block for this otherwise fixed panel, so page
+    // coordinates would be offset by the dialog a second time and send the
+    // calendar to the right of the modal. Use dialog-relative coordinates so
+    // the panel stays directly below the range field.
+    const customBudgetDialog = trigger.closest('.cbp-dialog') as HTMLElement | null;
+    const dialogRect = customBudgetDialog?.getBoundingClientRect();
+    const offsetLeft = dialogRect ? dialogRect.left : 0;
+    const offsetTop = dialogRect ? dialogRect.top : 0;
+    const offsetBottom = dialogRect ? dialogRect.bottom : window.innerHeight;
     const spaceBelow = window.innerHeight - rect.bottom;
     const estimatedH = 350;
-    this.panelLeft = rect.left;
+    this.panelLeft = rect.left - offsetLeft;
     this.panelWidth = Math.max(rect.width, 320);
     if (spaceBelow < estimatedH && rect.top > spaceBelow) {
       this.panelAbove = true;
-      this.panelBottom = window.innerHeight - rect.top + 4;
+      this.panelBottom = offsetBottom - rect.top + 4;
       this.panelTop = 0;
     } else {
       this.panelAbove = false;
-      this.panelTop = rect.bottom + 4;
+      this.panelTop = rect.bottom - offsetTop + 4;
       this.panelBottom = 0;
     }
   }

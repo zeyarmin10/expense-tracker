@@ -23,4 +23,20 @@ describe('SalesReport', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('updates the date range when Today is selected', () => {
+    component.setDateFilterMode('today');
+
+    const today = new Date();
+    const expectedDate = [
+      today.getFullYear(),
+      String(today.getMonth() + 1).padStart(2, '0'),
+      String(today.getDate()).padStart(2, '0'),
+    ].join('-');
+
+    expect(component.dateFilter$.value).toEqual({
+      start: expectedDate,
+      end: expectedDate,
+    });
+  });
 });

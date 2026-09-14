@@ -582,7 +582,7 @@
               <span class="pnl-currency-badge">{{ userProfile?.currency || 'MMK' }}</span>
               <div class="pnl-float-field" style="flex: 1; min-width: 0">
                 <input type="text" inputmode="decimal"
-                  class="pnl-input pnl-input-field pnl-input-joined pnl-input-plain" [value]="unitPriceDisplay"
+                  class="pnl-input pnl-input-field pnl-input-joined pnl-input-plain pnl-amount-input" [value]="unitPriceDisplay"
                   (input)="onUnitPriceInput($event)"
                   (focus)="unitPriceDisplay = (incomeForm.get('unitPrice')?.value > 0 ? formatWithCommas(incomeForm.get('unitPrice')?.value) : ''); incomeForm.get('unitPrice')?.markAsTouched()"
                   [placeholder]="'INCOME_UNIT_PRICE_LABEL' | translate" />
@@ -613,7 +613,7 @@
           <span class="pnl-currency-badge pnl-amount-hero-currency">{{ userProfile?.currency || 'MMK' }}</span>
           <div class="pnl-float-field" style="flex:1; min-width:0;">
             <input type="text" inputmode="decimal" id="incomeAmount"
-              class="pnl-input pnl-input-field pnl-input-joined pnl-amount-hero-input" [value]="incomeAmountDisplay"
+              class="pnl-input pnl-input-field pnl-input-joined pnl-amount-hero-input pnl-amount-input" [value]="incomeAmountDisplay"
               (input)="onIncomeAmountInput($event)"
               (focus)="incomeAmountDisplay = (incomeForm.get('amount')?.value > 0 ? formatWithCommas(incomeForm.get('amount')?.value) : ''); incomeForm.get('amount')?.markAsTouched()"
               placeholder="10,000"

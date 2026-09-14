@@ -1807,6 +1807,12 @@ app-date-input .di-trigger {
   font-weight: 800;
   padding: 0.5rem 0.9rem !important;
   height: 4rem !important;
+  text-align: right;
+}
+
+/* Monetary inputs stay aligned with the amounts in the income list. */
+.pnl-amount-input {
+  text-align: right;
 }
 
 .pnl-amount-hero-input::placeholder {
@@ -2731,7 +2737,7 @@ app-date-input .di-trigger {
   display: grid;
   grid-template-columns: max-content minmax(0, 1fr);
   align-items: center;
-  gap: 0.35rem;
+  gap: 1rem;
 }
 
 .pnl-pos-unit-price-stack {
@@ -2754,8 +2760,8 @@ app-date-input .di-trigger {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   border: none;
   background: var(--surface);
@@ -2766,7 +2772,7 @@ app-date-input .di-trigger {
 .pnl-pos-qty-input {
   width: auto;
   min-width: 2rem;
-  max-width: 2.8rem;
+  max-width: 3rem;
   flex: 0 1 auto;
   padding: 0;
   border: 0;
@@ -2774,7 +2780,7 @@ app-date-input .di-trigger {
   background: transparent;
   color: var(--text);
   text-align: center;
-  font-size: 0.82rem;
+  font-size: 0.95rem;
   font-weight: 700;
 }
 
