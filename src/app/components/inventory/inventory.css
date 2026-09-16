@@ -262,6 +262,13 @@ body.inv-settings-modal-open {
     -webkit-overflow-scrolling: touch;
     padding: 1rem 1rem calc(env(safe-area-inset-bottom, 0px) + 1rem);
   }
+
+  .inv-add-overlay .inv-add-btn {
+    min-height: 56px;
+    padding-inline: 1.25rem;
+    border-radius: 14px;
+    font-size: 0.9rem;
+  }
 }
 
 /* ── Inventory settings — desktop uses a focused dialog; phones retain a
@@ -420,6 +427,14 @@ body.inv-settings-modal-open {
 
   .inv-settings-modal-body {
     padding: 1rem 1rem calc(env(safe-area-inset-bottom, 0px) + 1rem);
+  }
+
+  .inv-settings-modal .inv-threshold-save-btn {
+    min-height: 50px;
+    min-width: 92px;
+    padding-inline: 1.1rem;
+    border-radius: 12px;
+    font-size: 0.88rem;
   }
 }
 

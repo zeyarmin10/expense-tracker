@@ -499,7 +499,8 @@
       </button>
     </div>
     <div class="pnl-cat-picker-list">
-      <button type="button" class="pnl-cat-picker-item" *ngIf="!productPickerSearch" (click)="selectProduct(null)">
+      <button type="button" class="pnl-cat-picker-item" *ngIf="!productPickerSearch"
+        [class.pnl-cat-picker-item-selected]="!incomeForm.get('productId')?.value" (click)="selectProduct(null)">
         <span class="pnl-cat-picker-item-label">{{ 'OPTIONAL' | translate }}</span>
         <lucide-icon *ngIf="!incomeForm.get('productId')?.value" [img]="iconCheck" [size]="16"
           class="pnl-cat-picker-item-check">
@@ -509,7 +510,8 @@
         {{ 'CUSTOM_SELECT_NO_RESULTS' | translate }}
       </p>
       <button type="button" class="pnl-cat-picker-item"
-        *ngFor="let prod of filteredPickerProducts; trackBy: trackByProductId" (click)="onPickProduct(prod)">
+        *ngFor="let prod of filteredPickerProducts; trackBy: trackByProductId"
+        [class.pnl-cat-picker-item-selected]="incomeForm.get('productId')?.value === prod.id" (click)="onPickProduct(prod)">
         <span class="pnl-cat-picker-item-icon">
           <lucide-icon [img]="iconPackage" [size]="15"></lucide-icon>
         </span>

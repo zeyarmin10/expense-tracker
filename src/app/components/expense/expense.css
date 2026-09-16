@@ -261,6 +261,15 @@ body.exp-add-modal-open {
     padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem);
   }
 
+  /* Give the full-width primary action enough vertical weight that it does
+     not read as a thin bar at the bottom of the phone form. */
+  .exp-add-modal-sheet .exp-form-footer .exp-btn-primary {
+    min-height: 56px;
+    padding-inline: 1.25rem;
+    border-radius: 14px;
+    font-size: 0.9rem;
+  }
+
 }
 
 .exp-category-bottom-sheet {
@@ -538,6 +547,11 @@ body.exp-add-modal-open {
   background: var(--surface-2);
 }
 
+.exp-cat-picker-item.exp-cat-picker-item-selected {
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+
 .exp-cat-picker-item-icon {
   display: inline-flex;
   align-items: center;
@@ -748,6 +762,10 @@ body.exp-add-modal-open {
     margin-top: 0.15rem;
     padding: 0.9rem 0 calc(env(safe-area-inset-bottom, 0px) + 0.9rem);
     background: linear-gradient(to bottom, transparent 0%, var(--surface) 22%);
+  }
+
+  .exp-add-modal-sheet .exp-personal-quick-form .exp-form-footer .exp-btn-primary {
+    min-height: 56px;
   }
 
   .exp-personal-mode-bar .exp-quick-toggle,
