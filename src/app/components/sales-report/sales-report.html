@@ -70,6 +70,13 @@
               {{ "DAILY_AVERAGE" | translate }}
               <span [innerHTML]="formatService.formatAmountShortHtml(summary.dailyAverage, summary.currency)"></span>
             </div>
+            <div class="srpt-period-change" *ngIf="getSalesChangePercent(summary) !== null">
+              <span [class.srpt-period-change-up]="getSalesChangePercent(summary)! >= 0"
+                [class.srpt-period-change-down]="getSalesChangePercent(summary)! < 0">
+                {{ getSalesChangePercent(summary)! >= 0 ? '+' : '' }}{{ getSalesChangePercent(summary)! | number:'1.0-0' }}%
+              </span>
+              <span>{{ 'SALES_COMPARED_TO_PREVIOUS' | translate }}</span>
+            </div>
           </div>
 
           <div class="summary-card product-highlight-card">
@@ -87,6 +94,40 @@
             </div>
           </div>
         </div>
+
+        <div class="srpt-kpi-grid">
+          <div class="srpt-kpi-card">
+            <span>{{ 'SALES_ORDERS_LABEL' | translate }}</span>
+            <strong>{{ formatService.formatCount(currencySummaries[0]?.orderCount || 0) }}</strong>
+          </div>
+          <div class="srpt-kpi-card">
+            <span>{{ 'SALES_ITEMS_SOLD_LABEL' | translate }}</span>
+            <strong>{{ formatService.formatCount(periodItemsSold) }}</strong>
+          </div>
+        </div>
+
+        <section class="srpt-trend-panel" *ngIf="salesTrend.length > 0">
+          <header class="srpt-trend-header">
+            <div>
+              <h3>
+                <lucide-icon [img]="iconChartColumn" [size]="17"></lucide-icon>
+                {{ 'SALES_TREND_LABEL' | translate }}
+              </h3>
+              <p>{{ getFilterLabel() }}</p>
+            </div>
+          </header>
+          <div class="srpt-trend-scroll">
+            <div class="srpt-trend-chart" [style.--trend-days]="visibleSalesTrend.length">
+              <div class="srpt-trend-day" *ngFor="let day of visibleSalesTrend; trackBy: trackByTrendDate"
+                [title]="getTrendDateLabel(day.date) + ': ' + formatService.formatAmountWithSymbol(day.totalSales, currencySummaries[0]?.currency || 'MMK')">
+                <div class="srpt-trend-bar-wrap">
+                  <span class="srpt-trend-bar" [style.height.%]="getTrendBarHeight(day)"></span>
+                </div>
+                <span class="srpt-trend-date">{{ getTrendDateLabel(day.date) }}</span>
+              </div>
+            </div>
+          </div>
+        </section>
 
         <!-- Product Breakdown Bars -->
         <div class="ov-breakdown-panel" *ngIf="productTotals.length > 0">

@@ -17,7 +17,7 @@ import {
 } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { FormatService } from '../../services/format.service';
-import { DateFilterService, DateRange } from '../../services/date-filter.service';
+import { DateRange, toLocalDateKey } from '../../services/date-filter.service';
 import { AuthService } from '../../services/auth';
 import { UserDataService, UserProfile } from '../../services/user-data';
 import { LucideAngularModule, Search, ChartColumn, List, Trophy, Package, CalendarDays } from 'lucide-angular';
@@ -29,6 +29,8 @@ interface CurrencySummary {
   currency: string;
   totalSales: number;
   dailyAverage: number;
+  orderCount: number;
+  previousTotalSales: number;
 }
 
 interface ProductTotal {
@@ -37,6 +39,12 @@ interface ProductTotal {
   total: number;
   qty: number;
   currency: string;
+}
+
+interface DailySales {
+  date: string;
+  totalSales: number;
+  orderCount: number;
 }
 
 @Component({
@@ -58,7 +66,6 @@ interface ProductTotal {
 export class SalesReport implements OnInit, OnDestroy {
   incomeService = inject(IncomeService);
   productService = inject(ProductService);
-  dateFilterService = inject(DateFilterService);
   datePipe = inject(DatePipe);
   translate = inject(TranslateService);
   authService = inject(AuthService);
@@ -201,6 +208,9 @@ export class SalesReport implements OnInit, OnDestroy {
   productTotalsSum = 0;
   allProductsTotal: { amount: number; currency: string }[] = [];
   topSellingSort: 'quantity' | 'revenue' = 'quantity';
+  periodItemsSold = 0;
+  salesTrend: DailySales[] = [];
+  maxDailySales = 0;
 
   get topSellingProductTotal(): ProductTotal | null {
     return this.productTotals[0] || null;
@@ -256,14 +266,10 @@ export class SalesReport implements OnInit, OnDestroy {
       this.userProfile$,
     ]).pipe(
       map(([incomes, { start, end }, searchTerm, selectedProduct, profile]) => {
+        const todayKey = toLocalDateKey(new Date());
+        const effectiveEnd = end > todayKey ? todayKey : end;
         const startDate = this.parseLocalDate(start);
-        const originalEndDate = this.parseLocalDate(end);
-        const today = new Date();
-
-        let effectiveEndDate = originalEndDate;
-        if (this.selectedDateFilter === 'custom' && originalEndDate > today) {
-          effectiveEndDate = today;
-        }
+        const effectiveEndDate = this.parseLocalDate(effectiveEnd);
 
         let totalDays: number;
         if (startDate > effectiveEndDate) {
@@ -273,9 +279,11 @@ export class SalesReport implements OnInit, OnDestroy {
           totalDays = Math.floor(ms / (1000 * 60 * 60 * 24)) + 1;
         }
 
-        let filtered = incomes
+        const reportIncomes = incomes
           .filter(i => i.currency === (profile?.currency || 'MMK'))
-          .filter(i => i.date >= start && i.date <= end);
+          .filter(i => i.date >= start && i.date <= effectiveEnd);
+
+        let filtered = reportIncomes;
 
         if (searchTerm) {
           const lower = searchTerm.toLowerCase();
@@ -294,12 +302,7 @@ export class SalesReport implements OnInit, OnDestroy {
           (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
         );
 
-        this.calculateSummary(
-          incomes
-            .filter(i => i.currency === (profile?.currency || 'MMK'))
-            .filter(i => i.date >= start && i.date <= end),
-          totalDays,
-        );
+        this.calculateSummary(reportIncomes, totalDays, incomes, start, effectiveEnd, profile?.currency || 'MMK');
         return filtered;
       }),
       shareReplay(1)
@@ -329,22 +332,34 @@ export class SalesReport implements OnInit, OnDestroy {
   setDateFilter(filter: string): void {
     this.selectedDateFilter = filter;
 
-    const presetFilters = [
-      'today', 'last30Days', 'currentMonth', 'lastMonth',
-      'lastSixMonths', 'currentYear', 'lastYear', 'currentWeek',
-    ];
-
-    if (presetFilters.includes(filter)) {
-      const dateRange = this.dateFilterService.getDateRange(
-        this.datePipe, filter, this.startDate, this.endDate
-      );
-      this.dateFilter$.next(dateRange);
+    if (filter !== 'custom') {
+      this.dateFilter$.next(this.getPresetDateRange(filter));
     } else if (filter === 'custom') {
       if (this.startDate && this.endDate) {
         this.dateFilter$.next({ start: this.startDate, end: this.endDate });
       } else {
         this.setDateFilter('currentMonth');
       }
+    }
+  }
+
+  private getPresetDateRange(filter: string): DateRange {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const end = toLocalDateKey(today);
+
+    switch (filter) {
+      case 'today':
+        return { start: end, end };
+      case 'currentWeek': {
+        // Match Sales exactly: weeks start on Sunday, not Monday.
+        const start = new Date(today);
+        start.setDate(today.getDate() - today.getDay());
+        return { start: toLocalDateKey(start), end };
+      }
+      case 'currentMonth':
+      default:
+        return { start: toLocalDateKey(new Date(today.getFullYear(), today.getMonth(), 1)), end };
     }
   }
 
@@ -411,15 +426,31 @@ export class SalesReport implements OnInit, OnDestroy {
     return this.formatService.formatQuantity(n, unit);
   }
 
-  calculateSummary(incomes: ServiceIIncome[], totalDays: number): void {
+  calculateSummary(
+    incomes: ServiceIIncome[],
+    totalDays: number,
+    allIncomes: ServiceIIncome[],
+    startDate: string,
+    endDate: string,
+    currency: string,
+  ): void {
     if (!incomes || incomes.length === 0) {
       this.currencySummaries  = [];
       this.productTotals      = [];
       this.productTotalsSum   = 0;
       this.allProductsTotal   = [];
       this.topSellingProduct  = 'N/A';
+      this.periodItemsSold = 0;
+      this.salesTrend = [];
+      this.maxDailySales = 0;
       return;
     }
+
+    const previousStart = this.shiftDateKey(startDate, -totalDays);
+    const previousEnd = this.shiftDateKey(startDate, -1);
+    const previousIncomes = allIncomes
+      .filter(income => income.currency === currency)
+      .filter(income => income.date >= previousStart && income.date <= previousEnd);
 
     const groupedByCurrency = incomes.reduce((acc, i) => {
       if (!i.currency) return acc;
@@ -431,8 +462,17 @@ export class SalesReport implements OnInit, OnDestroy {
       const list       = groupedByCurrency[currency];
       const totalSales = list.reduce((s, i) => s + i.amount, 0);
       const dailyAverage = totalDays > 0 ? totalSales / totalDays : 0;
-      return { currency, totalSales, dailyAverage };
+      const previousTotalSales = previousIncomes
+        .filter(income => income.currency === currency)
+        .reduce((sum, income) => sum + income.amount, 0);
+      return { currency, totalSales, dailyAverage, orderCount: list.length, previousTotalSales };
     });
+
+    this.periodItemsSold = incomes.reduce(
+      (sum, income) => sum + getIncomeLineItems(income).reduce((lineTotal, item) => lineTotal + item.quantity, 0),
+      0,
+    );
+    this.buildSalesTrend(incomes, startDate, endDate);
 
     const productTotalsMap: { [key: string]: ProductTotal } = {};
     for (const income of incomes) {
@@ -458,6 +498,50 @@ export class SalesReport implements OnInit, OnDestroy {
     this.allProductsTotal = Object.entries(currencyMap).map(([currency, amount]) => ({ amount, currency }));
 
     this.sortProductTotals();
+  }
+
+  private buildSalesTrend(incomes: ServiceIIncome[], startDate: string, endDate: string): void {
+    const totals = new Map<string, { totalSales: number; orderCount: number }>();
+    for (const income of incomes) {
+      const daily = totals.get(income.date) || { totalSales: 0, orderCount: 0 };
+      daily.totalSales += income.amount;
+      daily.orderCount += 1;
+      totals.set(income.date, daily);
+    }
+
+    const trend: DailySales[] = [];
+    for (let date = startDate; date <= endDate; date = this.shiftDateKey(date, 1)) {
+      const total = totals.get(date) || { totalSales: 0, orderCount: 0 };
+      trend.push({ date, ...total });
+    }
+    this.salesTrend = trend;
+    this.maxDailySales = Math.max(...trend.map(day => day.totalSales), 0);
+  }
+
+  private shiftDateKey(date: string, days: number): string {
+    const shifted = this.parseLocalDate(date);
+    shifted.setDate(shifted.getDate() + days);
+    return toLocalDateKey(shifted);
+  }
+
+  getTrendBarHeight(day: DailySales): number {
+    return this.maxDailySales > 0 ? Math.max((day.totalSales / this.maxDailySales) * 100, day.totalSales > 0 ? 5 : 0) : 0;
+  }
+
+  get visibleSalesTrend(): DailySales[] {
+    // A full month often has many zero-sale dates. Showing those as empty
+    // columns made the useful bars drift off-screen and left a large blank
+    // chart area on phones, so only plot days with actual sales.
+    return this.salesTrend.filter(day => day.totalSales > 0);
+  }
+
+  getTrendDateLabel(date: string): string {
+    return this.datePipe.transform(this.parseLocalDate(date), 'd') || date;
+  }
+
+  getSalesChangePercent(summary: CurrencySummary): number | null {
+    if (summary.previousTotalSales <= 0) return null;
+    return ((summary.totalSales - summary.previousTotalSales) / summary.previousTotalSales) * 100;
   }
 
   setTopSellingSort(sort: 'quantity' | 'revenue'): void {
@@ -486,6 +570,10 @@ export class SalesReport implements OnInit, OnDestroy {
 
   trackByProduct(index: number, p: ProductTotal): string {
     return `${p.productName}::${p.currency}`;
+  }
+
+  trackByTrendDate(index: number, day: DailySales): string {
+    return day.date;
   }
 
   trackByIncomeId(index: number, income: ServiceIIncome): string {

@@ -269,6 +269,145 @@
   font-size: 0.82rem;
 }
 
+.srpt-period-change {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.7rem;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+}
+
+.srpt-period-change-up,
+.srpt-period-change-down {
+  padding: 0.2rem 0.4rem;
+  border-radius: 999px;
+  font-weight: 750;
+}
+
+.srpt-period-change-up {
+  background: color-mix(in srgb, var(--success) 16%, transparent);
+  color: var(--success);
+}
+
+.srpt-period-change-down {
+  background: color-mix(in srgb, var(--danger) 16%, transparent);
+  color: var(--danger);
+}
+
+.srpt-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: -1.15rem 0 1rem;
+}
+
+.srpt-kpi-card {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.95rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.srpt-kpi-card span {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.srpt-kpi-card strong {
+  color: var(--text);
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+/* ── Daily sales trend ── */
+.srpt-trend-panel {
+  margin-bottom: 1rem;
+  padding: 1rem 1.1rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.srpt-trend-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.9rem;
+}
+
+.srpt-trend-header h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+  color: var(--income-color);
+  font-size: 0.82rem;
+  font-weight: 750;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.srpt-trend-header p {
+  margin: 0.25rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}
+
+.srpt-trend-scroll {
+  overflow-x: auto;
+  padding-bottom: 0.2rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+.srpt-trend-chart {
+  display: grid;
+  grid-template-columns: repeat(var(--trend-days), minmax(38px, 1fr));
+  align-items: end;
+  gap: 0.35rem;
+  min-width: max(100%, calc(var(--trend-days) * 42px));
+  height: 136px;
+}
+
+.srpt-trend-day {
+  display: grid;
+  grid-template-rows: 1fr 18px;
+  min-width: 0;
+  height: 100%;
+  text-align: center;
+}
+
+.srpt-trend-bar-wrap {
+  display: flex;
+  align-items: end;
+  min-height: 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.srpt-trend-bar {
+  width: 100%;
+  min-height: 0;
+  border-radius: 5px 5px 1px 1px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--income-color) 78%, #fff), var(--income-color));
+  transition: height 0.35s ease;
+}
+
+.srpt-trend-date {
+  padding-top: 0.35rem;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .product-highlight-card {
   grid-column: 1 / -1;
   background: linear-gradient(135deg, rgba(245, 179, 1, 0.08), rgba(245, 179, 1, 0.03));
