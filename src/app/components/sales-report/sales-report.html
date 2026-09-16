@@ -129,6 +129,42 @@
           </div>
         </section>
 
+        <section class="srpt-margin-panel" *ngIf="productMargins.length > 0">
+          <header class="srpt-margin-header">
+            <div>
+              <h3>{{ 'SALES_MARGIN_ANALYSIS' | translate }}</h3>
+              <p>{{ 'STOCK_SUMMARY_METHOD_NOTE' | translate }}</p>
+            </div>
+            <span>{{ marginSummary.grossMarginPercent | number:'1.0-0' }}%</span>
+          </header>
+
+          <div class="srpt-margin-metrics">
+            <div>
+              <span>{{ 'STOCK_SUMMARY_EST_COGS_COL' | translate }}</span>
+              <strong [innerHTML]="formatService.formatAmountShortWholeHighDenominationHtml(marginSummary.cogs, currencySummaries[0]?.currency || 'MMK')"></strong>
+            </div>
+            <div>
+              <span>{{ 'STOCK_SUMMARY_EST_PROFIT_COL' | translate }}</span>
+              <strong class="srpt-margin-profit" [innerHTML]="formatService.formatAmountShortWholeHighDenominationHtml(marginSummary.grossProfit, currencySummaries[0]?.currency || 'MMK')"></strong>
+            </div>
+          </div>
+
+          <p class="srpt-margin-missing" *ngIf="marginSummary.uncostedRevenue > 0">
+            {{ 'SALES_UNCOSTED_REVENUE' | translate }}:
+            <span [innerHTML]="formatService.formatAmountShortHtml(marginSummary.uncostedRevenue, currencySummaries[0]?.currency || 'MMK')"></span>
+          </p>
+
+          <div class="srpt-margin-products">
+            <div class="srpt-margin-product" *ngFor="let product of productMargins | slice:0:5; trackBy: trackByMarginProduct">
+              <div>
+                <strong>{{ product.productName }}</strong>
+                <span>{{ formatQuantity(product.quantity, product.unit) }} · {{ product.grossMarginPercent | number:'1.0-0' }}%</span>
+              </div>
+              <span class="srpt-margin-profit" [innerHTML]="formatService.formatAmountShortHtml(product.grossProfit, currencySummaries[0]?.currency || 'MMK')"></span>
+            </div>
+          </div>
+        </section>
+
         <!-- Product Breakdown Bars -->
         <div class="ov-breakdown-panel" *ngIf="productTotals.length > 0">
           <div class="ov-breakdown-header">

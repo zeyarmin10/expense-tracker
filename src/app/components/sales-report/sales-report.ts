@@ -3,6 +3,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IncomeService, ServiceIIncome, IncomeLineItem, getIncomeLineItems } from '../../services/income';
 import { ProductService, ServiceIProduct } from '../../services/product';
+import { ExpenseService, ServiceIExpense, getExpenseLineItems } from '../../services/expense';
 import {
   Observable,
   BehaviorSubject,
@@ -47,6 +48,24 @@ interface DailySales {
   orderCount: number;
 }
 
+interface ProductMargin {
+  productId: string;
+  productName: string;
+  unit?: string;
+  quantity: number;
+  revenue: number;
+  cogs: number;
+  grossProfit: number;
+  grossMarginPercent: number;
+}
+
+interface MarginSummary {
+  cogs: number;
+  grossProfit: number;
+  grossMarginPercent: number;
+  uncostedRevenue: number;
+}
+
 @Component({
   selector: 'app-sales-report',
   standalone: true,
@@ -65,6 +84,7 @@ interface DailySales {
 })
 export class SalesReport implements OnInit, OnDestroy {
   incomeService = inject(IncomeService);
+  expenseService = inject(ExpenseService);
   productService = inject(ProductService);
   datePipe = inject(DatePipe);
   translate = inject(TranslateService);
@@ -191,6 +211,12 @@ export class SalesReport implements OnInit, OnDestroy {
       return of([]);
     }),
   );
+  allExpenses$: Observable<ServiceIExpense[]> = this.expenseService.getExpenses().pipe(
+    catchError((err) => {
+      console.error('Error loading purchase costs:', err);
+      return of([]);
+    }),
+  );
   filteredIncomes$: Observable<ServiceIIncome[]> = of([]);
   selectedDateFilter: string = 'currentMonth';
   dateFilterMode: 'today' | 'week' | 'month' | 'custom' = 'month';
@@ -211,6 +237,8 @@ export class SalesReport implements OnInit, OnDestroy {
   periodItemsSold = 0;
   salesTrend: DailySales[] = [];
   maxDailySales = 0;
+  productMargins: ProductMargin[] = [];
+  marginSummary: MarginSummary = { cogs: 0, grossProfit: 0, grossMarginPercent: 0, uncostedRevenue: 0 };
 
   get topSellingProductTotal(): ProductTotal | null {
     return this.productTotals[0] || null;
@@ -260,12 +288,13 @@ export class SalesReport implements OnInit, OnDestroy {
 
     this.filteredIncomes$ = combineLatest([
       this.allIncomes$,
+      this.allExpenses$,
       this.dateFilter$,
       this.searchFilter$,
       this._selectedProduct$,
       this.userProfile$,
     ]).pipe(
-      map(([incomes, { start, end }, searchTerm, selectedProduct, profile]) => {
+      map(([incomes, expenses, { start, end }, searchTerm, selectedProduct, profile]) => {
         const todayKey = toLocalDateKey(new Date());
         const effectiveEnd = end > todayKey ? todayKey : end;
         const startDate = this.parseLocalDate(start);
@@ -303,6 +332,7 @@ export class SalesReport implements OnInit, OnDestroy {
         );
 
         this.calculateSummary(reportIncomes, totalDays, incomes, start, effectiveEnd, profile?.currency || 'MMK');
+        this.calculateMargins(reportIncomes, expenses, profile?.currency || 'MMK');
         return filtered;
       }),
       shareReplay(1)
@@ -443,6 +473,8 @@ export class SalesReport implements OnInit, OnDestroy {
       this.periodItemsSold = 0;
       this.salesTrend = [];
       this.maxDailySales = 0;
+      this.productMargins = [];
+      this.marginSummary = { cogs: 0, grossProfit: 0, grossMarginPercent: 0, uncostedRevenue: 0 };
       return;
     }
 
@@ -544,6 +576,68 @@ export class SalesReport implements OnInit, OnDestroy {
     return ((summary.totalSales - summary.previousTotalSales) / summary.previousTotalSales) * 100;
   }
 
+  private calculateMargins(
+    incomes: ServiceIIncome[],
+    expenses: ServiceIExpense[],
+    currency: string,
+  ): void {
+    const purchaseTotals = new Map<string, { quantity: number; cost: number }>();
+    for (const expense of expenses) {
+      if (expense.currency !== currency) continue;
+      for (const item of getExpenseLineItems(expense)) {
+        if (!item.productId || item.quantity <= 0) continue;
+        const purchase = purchaseTotals.get(item.productId) || { quantity: 0, cost: 0 };
+        purchase.quantity += item.quantity;
+        purchase.cost += item.subtotal;
+        purchaseTotals.set(item.productId, purchase);
+      }
+    }
+
+    const productMargins = new Map<string, Omit<ProductMargin, 'grossProfit' | 'grossMarginPercent'>>();
+    let uncostedRevenue = 0;
+    for (const income of incomes) {
+      for (const item of getIncomeLineItems(income)) {
+        if (!item.productId) continue;
+        const purchase = purchaseTotals.get(item.productId);
+        if (!purchase || purchase.quantity <= 0) {
+          uncostedRevenue += item.subtotal;
+          continue;
+        }
+        const product = this.productList.find(candidate => candidate.id === item.productId);
+        const margin = productMargins.get(item.productId) || {
+          productId: item.productId,
+          productName: product?.name || item.productName || this.translate.instant('DESCRIPTION'),
+          unit: product?.unit || item.unit,
+          quantity: 0,
+          revenue: 0,
+          cogs: 0,
+        };
+        margin.quantity += item.quantity;
+        margin.revenue += item.subtotal;
+        margin.cogs += item.quantity * (purchase.cost / purchase.quantity);
+        productMargins.set(item.productId, margin);
+      }
+    }
+
+    this.productMargins = Array.from(productMargins.values())
+      .map((margin) => ({
+        ...margin,
+        grossProfit: margin.revenue - margin.cogs,
+        grossMarginPercent: margin.revenue > 0 ? ((margin.revenue - margin.cogs) / margin.revenue) * 100 : 0,
+      }))
+      .sort((a, b) => b.grossProfit - a.grossProfit || b.revenue - a.revenue);
+
+    const cogs = this.productMargins.reduce((sum, margin) => sum + margin.cogs, 0);
+    const grossProfit = this.productMargins.reduce((sum, margin) => sum + margin.grossProfit, 0);
+    const coveredRevenue = this.productMargins.reduce((sum, margin) => sum + margin.revenue, 0);
+    this.marginSummary = {
+      cogs,
+      grossProfit,
+      grossMarginPercent: coveredRevenue > 0 ? (grossProfit / coveredRevenue) * 100 : 0,
+      uncostedRevenue,
+    };
+  }
+
   setTopSellingSort(sort: 'quantity' | 'revenue'): void {
     if (this.topSellingSort === sort) return;
     this.topSellingSort = sort;
@@ -570,6 +664,10 @@ export class SalesReport implements OnInit, OnDestroy {
 
   trackByProduct(index: number, p: ProductTotal): string {
     return `${p.productName}::${p.currency}`;
+  }
+
+  trackByMarginProduct(index: number, product: ProductMargin): string {
+    return product.productId;
   }
 
   trackByTrendDate(index: number, day: DailySales): string {

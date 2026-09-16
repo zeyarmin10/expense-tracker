@@ -989,6 +989,8 @@
   "SALES_ITEMS_SOLD_LABEL": "販売点数",
   "SALES_TREND_LABEL": "売上推移",
   "SALES_COMPARED_TO_PREVIOUS": "前期間比",
+  "SALES_MARGIN_ANALYSIS": "粗利益の分析",
+  "SALES_UNCOSTED_REVENUE": "仕入原価データのない売上",
   "TOTAL_PURCHASES_LABEL": "仕入れ合計",
   "RECORDED_SALES": "記録された販売",
   "NO_SALES_DATA": "販売データはありません。",

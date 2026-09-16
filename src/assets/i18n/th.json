@@ -987,6 +987,8 @@
   "SALES_ITEMS_SOLD_LABEL": "จำนวนสินค้าที่ขาย",
   "SALES_TREND_LABEL": "แนวโน้มยอดขาย",
   "SALES_COMPARED_TO_PREVIOUS": "เทียบกับช่วงก่อนหน้า",
+  "SALES_MARGIN_ANALYSIS": "การวิเคราะห์กำไรขั้นต้น",
+  "SALES_UNCOSTED_REVENUE": "ยอดขายที่ไม่มีข้อมูลต้นทุนซื้อ",
   "TOTAL_PURCHASES_LABEL": "ยอดซื้อรวม",
   "RECORDED_SALES": "การขายที่บันทึกไว้",
   "NO_SALES_DATA": "ไม่มีข้อมูลการขาย",

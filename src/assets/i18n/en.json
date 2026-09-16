@@ -989,6 +989,8 @@
   "SALES_ITEMS_SOLD_LABEL": "Items Sold",
   "SALES_TREND_LABEL": "Sales Trend",
   "SALES_COMPARED_TO_PREVIOUS": "vs. previous period",
+  "SALES_MARGIN_ANALYSIS": "Margin Analysis",
+  "SALES_UNCOSTED_REVENUE": "Sales without purchase-cost data",
   "TOTAL_PURCHASES_LABEL": "Total Purchases",
   "RECORDED_SALES": "Recorded Sales",
   "NO_SALES_DATA": "No sales data available.",

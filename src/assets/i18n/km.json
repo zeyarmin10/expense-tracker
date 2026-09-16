@@ -989,6 +989,8 @@
   "SALES_ITEMS_SOLD_LABEL": "ចំនួនទំនិញដែលបានលក់",
   "SALES_TREND_LABEL": "និន្នាការលក់",
   "SALES_COMPARED_TO_PREVIOUS": "ធៀបនឹងរយៈពេលមុន",
+  "SALES_MARGIN_ANALYSIS": "ការវិភាគប្រាក់ចំណេញ",
+  "SALES_UNCOSTED_REVENUE": "ការលក់គ្មានទិន្នន័យថ្លៃទិញ",
   "TOTAL_PURCHASES_LABEL": "ការទិញសរុប",
   "RECORDED_SALES": "ការលក់ដែលបានកត់ត្រា",
   "NO_SALES_DATA": "គ្មានទិន្នន័យការលក់ទេ។",

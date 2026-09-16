@@ -989,6 +989,8 @@
   "SALES_ITEMS_SOLD_LABEL": "ရောင်းပြီးပစ္စည်းအရေအတွက်",
   "SALES_TREND_LABEL": "နေ့စဉ်ရောင်းချမှုလမ်းကြောင်း",
   "SALES_COMPARED_TO_PREVIOUS": "ယခင်ကာလနှင့် နှိုင်းယှဉ်လျှင်",
+  "SALES_MARGIN_ANALYSIS": "ရောင်းချမှုအမြတ် ခွဲခြမ်းစိတ်ဖြာချက်",
+  "SALES_UNCOSTED_REVENUE": "ဝယ်ဈေးဒေတာမရှိသော ရောင်းချမှု",
   "TOTAL_PURCHASES_LABEL": "စုစုပေါင်းဝယ်ယူမှု",
   "RECORDED_SALES": "သင်၏ရောင်းချမှုများ",
   "NO_SALES_DATA": "ရောင်းချမှုဒေတာ မရှိသေးပါ။",
