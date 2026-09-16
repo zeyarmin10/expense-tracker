@@ -24,14 +24,14 @@
         <ng-container *ngIf="showCustomDatePicker; else salesReportFilterLabel">
           <app-date-range-input [(startDate)]="startDate" [(endDate)]="endDate"
             (rangeChange)="onCustomDateChange()" [showLabel]="false"
-            [startLabel]="'START_DATE' | translate" [endLabel]="'END_DATE' | translate">
+            [startLabel]="'DATE_FROM' | translate" [endLabel]="'DATE_TO' | translate">
           </app-date-range-input>
         </ng-container>
         <ng-template #salesReportFilterLabel>
           <div class="exp-filter-label">
             <span class="exp-filter-label-date">
               <lucide-icon [img]="iconCalendar" [size]="16" class="exp-filter-label-icon"></lucide-icon>
-              <span>{{ currentPeriodLabel }}</span>
+              <span>{{ getFilterLabel() }}</span>
             </span>
           </div>
         </ng-template>

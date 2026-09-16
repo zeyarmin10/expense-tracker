@@ -202,8 +202,6 @@ export class SalesReport implements OnInit, OnDestroy {
   allProductsTotal: { amount: number; currency: string }[] = [];
   topSellingSort: 'quantity' | 'revenue' = 'quantity';
 
-  currentPeriodLabel: string = '';
-
   get topSellingProductTotal(): ProductTotal | null {
     return this.productTotals[0] || null;
   }
@@ -330,7 +328,6 @@ export class SalesReport implements OnInit, OnDestroy {
 
   setDateFilter(filter: string): void {
     this.selectedDateFilter = filter;
-    this.updateCurrentPeriodLabel(filter);
 
     const presetFilters = [
       'today', 'last30Days', 'currentMonth', 'lastMonth',
@@ -373,35 +370,41 @@ export class SalesReport implements OnInit, OnDestroy {
     }
   }
 
-  updateCurrentPeriodLabel(filter: string): void {
-    if (filter === 'custom') {
-      if (this.startDate && this.endDate) {
-        const start = this.formatService.formatLocalizedDate(this.datePipe.transform(this.startDate));
-        const end   = this.formatService.formatLocalizedDate(this.datePipe.transform(this.endDate));
-        this.currentPeriodLabel = `${start} - ${end}`;
-      } else {
-        this.currentPeriodLabel = this.translate.instant('CUSTOM_DATE_RANGE');
+  getFilterLabel(): string {
+    const today = new Date();
+    const format = (date: Date, withYear = true): string => withYear
+      ? (this.datePipe.transform(date, 'MMM d, yyyy') || '')
+      : (this.datePipe.transform(date, 'MMM d') || '');
+    const parseLocalDate = (date: string) => new Date(`${date}T00:00:00`);
+
+    switch (this.dateFilterMode) {
+      case 'today':
+        return format(today);
+      case 'week': {
+        const start = new Date(today);
+        start.setDate(today.getDate() - today.getDay());
+        const end = new Date(start);
+        end.setDate(start.getDate() + 6);
+        return `${format(start, false)} – ${format(end)}`;
       }
-    } else {
-      const keyMap: { [key: string]: string } = {
-        'today':          'TODAY',
-        'currentWeek':    'THIS_WEEK',
-        'currentMonth':   'THIS_MONTH',
-        'currentYear':    'BUDGET_PERIOD.YEARLY',
-        'last30Days':     'LAST_30_DAYS',
-        'lastMonth':      'LAST_MONTH',
-        'lastSixMonths':  'LAST_SIX_MONTHS',
-        'lastYear':       'LAST_YEAR',
-      };
-      this.currentPeriodLabel = this.translate.instant(keyMap[filter] || filter);
+      case 'month':
+        return this.datePipe.transform(today, 'MMMM yyyy') || '';
+      case 'custom':
+        if (this.startDate && this.endDate) {
+          const start = parseLocalDate(this.startDate);
+          const end = parseLocalDate(this.endDate);
+          return this.startDate === this.endDate
+            ? format(end)
+            : `${format(start, false)} – ${format(end)}`;
+        }
+        return this.startDate ? format(parseLocalDate(this.startDate)) : '';
+      default:
+        return '';
     }
   }
 
   onSearch(): void {
     this.searchFilter$.next(this.searchTerm);
-    if (this.selectedDateFilter === 'custom') {
-      this.updateCurrentPeriodLabel('custom');
-    }
   }
 
   formatQuantity(n: number, unit?: string | null): string {
