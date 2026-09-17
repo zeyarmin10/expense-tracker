@@ -141,7 +141,7 @@
 .search-input {
   flex: 1;
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 1px solid var(--accent);
   border-right: none;
   color: var(--text);
   font-size: 0.88rem;
@@ -161,14 +161,14 @@
 }
 
 .search-btn {
-  background: var(--accent);
-  border: none;
-  color: #fff;
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+  border: 1px solid var(--accent);
+  color: var(--accent);
   font-size: 0.9rem;
   padding: 0 1.1rem;
   border-radius: 0 12px 12px 0;
   cursor: pointer;
-  transition: opacity 0.2s;
+  transition: background 0.2s, color 0.2s;
   display: flex;
   align-items: center;
   height: 54px;
@@ -176,7 +176,12 @@
 }
 
 .search-btn:hover {
-  opacity: 0.85;
+  background: color-mix(in srgb, var(--accent) 16%, var(--surface));
+}
+
+.search-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -3px;
 }
 
 /* Summary Cards */
@@ -339,7 +344,7 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 0.75rem;
-  margin-bottom: 0.9rem;
+  margin-bottom: 0rem;
 }
 
 .srpt-trend-header h3 {
@@ -372,7 +377,11 @@
   align-items: end;
   gap: 0.35rem;
   min-width: max(100%, calc(var(--trend-days) * 42px));
-  height: 136px;
+  /* Reserve enough headroom for the tallest bar's tooltip without shrinking bars. */
+  height: 180px;
+  /* Keep a safe inset so edge-day tooltips do not meet the card border. */
+  padding: 54px 0.65rem 0;
+  box-sizing: border-box;
 }
 
 .srpt-trend-day {
@@ -380,14 +389,80 @@
   grid-template-rows: 1fr 18px;
   min-width: 0;
   height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
   text-align: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.srpt-trend-day:focus-visible {
+  outline: 2px solid var(--income-color);
+  outline-offset: 3px;
+  border-radius: 7px;
 }
 
 .srpt-trend-bar-wrap {
   display: flex;
+  position: relative;
   align-items: end;
   min-height: 0;
   border-bottom: 1px solid var(--border);
+}
+
+.srpt-trend-tooltip {
+  position: absolute;
+  z-index: 1;
+  bottom: calc(var(--trend-bar-height) + 0.4rem);
+  left: 50%;
+  max-width: min(8rem, calc(100vw - 4rem));
+  padding: 0.38rem 0.58rem;
+  border-radius: 6px;
+  background: var(--text);
+  box-shadow: 0 3px 10px color-mix(in srgb, var(--text) 20%, transparent);
+  color: var(--surface);
+  font-size: clamp(0.72rem, 2.2vw, 0.84rem);
+  font-weight: 750;
+  line-height: 1.15;
+  pointer-events: none;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.srpt-trend-tooltip::after {
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  background: var(--text);
+  content: '';
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.srpt-trend-day.is-first .srpt-trend-tooltip {
+  left: 0;
+  transform: none;
+}
+
+.srpt-trend-day.is-first .srpt-trend-tooltip::after {
+  left: 0.6rem;
+  transform: rotate(45deg);
+}
+
+.srpt-trend-day.is-last .srpt-trend-tooltip {
+  right: 0;
+  left: auto;
+  transform: none;
+}
+
+.srpt-trend-day.is-last .srpt-trend-tooltip::after {
+  right: 0.6rem;
+  left: auto;
+  transform: rotate(45deg);
 }
 
 .srpt-trend-bar {
@@ -396,6 +471,16 @@
   border-radius: 5px 5px 1px 1px;
   background: linear-gradient(180deg, color-mix(in srgb, var(--income-color) 78%, #fff), var(--income-color));
   transition: height 0.35s ease;
+}
+
+.srpt-trend-day.is-selected .srpt-trend-bar {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--income-color) 26%, transparent);
+  filter: saturate(1.15);
+}
+
+.srpt-trend-day.is-selected {
+  position: relative;
+  z-index: 2;
 }
 
 .srpt-trend-date {
@@ -648,6 +733,7 @@
 .ov-bar-row {
   padding: 0.55rem 0.4rem;
   border-radius: 10px;
+  min-width: 0;
   cursor: pointer;
   transition: background 0.14s;
   -webkit-tap-highlight-color: transparent;
@@ -672,6 +758,7 @@ body.light-mode .ov-bar-active {
   display: flex;
   align-items: center;
   gap: 0.55rem;
+  min-width: 0;
 }
 
 .ov-bar-dot {
@@ -715,10 +802,12 @@ body.light-mode .ov-bar-active {
   display: flex;
   align-items: center;
   gap: 0.6rem;
+  min-width: 0;
 }
 
 .ov-bar-track {
   flex: 1;
+  min-width: 0;
   height: 5px;
   background: rgba(255,255,255,0.07);
   border-radius: 100px;
@@ -758,6 +847,84 @@ body.light-mode .ov-bar-active {
   height: 1px;
   background: var(--border);
   margin: 0.3rem 0.4rem 0.4rem;
+}
+
+/* Product breakdown stays compact by default. Each purchase category is an
+   accordion row; its products are only rendered after that category opens. */
+.srpt-category-group {
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+}
+
+.srpt-category-group:last-child {
+  border-bottom: 0;
+}
+
+.srpt-category-toggle {
+  width: 100%;
+  padding: 0.65rem 0.4rem;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.14s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.srpt-category-toggle:hover,
+.srpt-category-group.is-expanded .srpt-category-toggle {
+  background: color-mix(in srgb, var(--income-color) 7%, var(--surface));
+}
+
+.srpt-category-toggle:focus-visible,
+.srpt-category-more:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.srpt-category-chevron {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  transition: transform 0.2s ease;
+}
+
+.srpt-category-group.is-expanded .srpt-category-chevron {
+  transform: rotate(180deg);
+}
+
+.srpt-category-products {
+  display: grid;
+  gap: 0.15rem;
+  margin: 0 0.4rem 0.55rem 0.8rem;
+  padding: 0.25rem 0.15rem 0.15rem 0.55rem;
+  border-left: 2px solid color-mix(in srgb, var(--income-color) 35%, var(--border));
+  min-width: 0;
+}
+
+.srpt-category-product {
+  padding: 0.48rem 0.35rem;
+  min-width: 0;
+  width: 100%;
+}
+
+.srpt-category-product .ov-bar-name {
+  font-size: 0.84rem;
+}
+
+.srpt-category-more {
+  justify-self: start;
+  margin: 0.25rem 0.35rem 0.15rem;
+  padding: 0.35rem 0.55rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--border));
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--accent) 7%, var(--surface));
+  color: var(--accent);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 /* Table */

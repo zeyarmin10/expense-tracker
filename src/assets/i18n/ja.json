@@ -617,6 +617,7 @@
   "LOGIN_LIGHT": "ライト",
   "NAV_LIGHT_MODE": "ライト",
   "MORE": "その他",
+  "LESS": "閉じる",
   "EMPTY_STATE_TITLE": "記録を始めましょう",
   "EMPTY_STATE_SUB": "家計を上手に管理するために、最初の支出を追加してください。",
   "ADD_EXPENSE": "支出を追加",
