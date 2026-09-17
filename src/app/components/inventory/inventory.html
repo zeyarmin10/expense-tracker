@@ -28,7 +28,7 @@
           </button>
         </div>
       </div>
-      <button type="button" class="inv-add-toolbar-btn" (click)="openAddOverlay()">
+      <button type="button" class="inv-add-toolbar-btn" *ngIf="activeTab === 'products'" (click)="openAddOverlay()">
         <lucide-icon [img]="iconPlus" [size]="15"></lucide-icon>
         {{ 'ADD_PRODUCT' | translate }}
       </button>
@@ -126,19 +126,6 @@
             </div>
 
             <ng-container *ngIf="filteredProducts.length > 0">
-              <div class="inv-remaining-value-card" *ngIf="stockSummary$ | async as stockSummary">
-                <div class="inv-remaining-value-row">
-                  <span>{{ 'STOCK_SUMMARY_TOTAL_REMAINING_COST_LABEL' | translate }}</span>
-                  <strong class="inv-remaining-cost-value"
-                    [innerHTML]="formatService.formatAmountWithSymbolHtml(getTotalRemainingStockCost(stockSummary), currency)"></strong>
-                </div>
-                <div class="inv-remaining-value-row">
-                  <span>{{ 'STOCK_SUMMARY_TOTAL_RETAIL_VALUE_LABEL' | translate }}</span>
-                  <strong class="inv-remaining-retail-value"
-                    [innerHTML]="formatService.formatAmountWithSymbolHtml(getTotalRemainingStockRetailValue(stockSummary), currency)"></strong>
-                </div>
-              </div>
-
               <div class="inv-list-summary">
                 {{ 'INVENTORY_TOTAL_PRODUCTS_LABEL' | translate }}:
                 <strong class="inv-product-count-badge">{{ formatService.formatCount(filteredProducts.length) }} {{
@@ -280,6 +267,19 @@
             </div>
 
             <ng-container *ngIf="filteredSummary.length > 0">
+              <div class="inv-remaining-value-card">
+                <div class="inv-remaining-value-row">
+                  <span>{{ 'STOCK_SUMMARY_TOTAL_REMAINING_COST_LABEL' | translate }}</span>
+                  <strong class="inv-remaining-cost-value"
+                    [innerHTML]="formatService.formatAmountWithSymbolHtml(getTotalRemainingStockCost(summary), currency)"></strong>
+                </div>
+                <div class="inv-remaining-value-row">
+                  <span>{{ 'STOCK_SUMMARY_TOTAL_RETAIL_VALUE_LABEL' | translate }}</span>
+                  <strong class="inv-remaining-retail-value"
+                    [innerHTML]="formatService.formatAmountWithSymbolHtml(getTotalRemainingStockRetailValue(summary), currency)"></strong>
+                </div>
+              </div>
+
               <!-- Total estimated profit — shown above the table so it's the
                first thing seen, colored green/red by profit vs loss. -->
               <div class="inv-total-profit-banner"
