@@ -383,6 +383,7 @@
               type="button"
               class="exp-cat-picker-item"
               *ngIf="categoryPickerTarget === 'voucher' && !categoryPickerSearch"
+              [class.exp-cat-picker-item-selected]="!voucherForm.get('category')?.value"
               (click)="selectCategory('')"
             >
               <span class="exp-cat-picker-item-label">{{ 'VOUCHER_NO_CATEGORY' | translate }}</span>
@@ -398,6 +399,7 @@
               type="button"
               class="exp-cat-picker-item"
               *ngFor="let cat of filteredPickerCategories; trackBy: trackByCategoryId"
+              [class.exp-cat-picker-item-selected]="(categoryPickerTarget === 'voucher' ? voucherForm : cartForm).get('category')?.value === cat.name"
               [style.--cat-hue]="getIconHueForCategory(cat.name)"
               (click)="selectCategory(cat.name)"
             >
@@ -915,6 +917,7 @@
         type="button"
         class="exp-cat-picker-item"
         *ngFor="let cat of filteredPickerCategories; trackBy: trackByCategoryId"
+        [class.exp-cat-picker-item-selected]="newExpenseForm.get('category')?.value === cat.name"
         [style.--cat-hue]="getIconHueForCategory(cat.name)"
         (click)="selectCategory(cat.name)"
       >
@@ -968,6 +971,7 @@
         type="button"
         class="exp-cat-picker-item"
         *ngFor="let prod of filteredPickerProducts; trackBy: trackByProductId"
+        [class.exp-cat-picker-item-selected]="newExpenseForm.get('productId')?.value === prod.id"
         (click)="onPickProduct(prod)"
       >
         <span class="exp-cat-picker-item-icon">

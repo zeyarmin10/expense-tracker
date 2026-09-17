@@ -289,7 +289,7 @@
 .search-input {
   flex: 1;
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 1px solid var(--accent);
   border-right: none;
   color: var(--text);
   /* font-family: 'Syne', sans-serif; */
@@ -310,14 +310,14 @@
 }
 
 .search-btn {
-  background: var(--accent);
-  border: none;
-  color: #fff;
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+  border: 1px solid var(--accent);
+  color: var(--accent);
   font-size: 0.9rem;
   padding: 0 1.1rem;
   border-radius: 0 12px 12px 0;
   cursor: pointer;
-  transition: opacity 0.2s;
+  transition: background 0.2s, color 0.2s;
   display: flex;
   align-items: center;
   height: 54px;
@@ -325,7 +325,12 @@
 }
 
 .search-btn:hover {
-  opacity: 0.85;
+  background: color-mix(in srgb, var(--accent) 16%, var(--surface));
+}
+
+.search-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -3px;
 }
 
 /* Summary Cards */

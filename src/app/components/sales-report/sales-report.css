@@ -66,26 +66,16 @@
   width: 100%;
 }
 
-/* The report now uses the shared Expense-style date filter. Keep its search
-   box as a distinct block beneath it at every viewport size, matching
-   Expense Overview rather than letting the two controls touch/overlap. */
+/* The report uses the shared Expense/Budget/Purchase/Sales date filter.
+   Keep only the surrounding spacing here; its visual styling is inherited
+   unchanged from expense.css. */
 .srpt-container > .exp-filter-bar {
   margin-bottom: 0.85rem;
 }
 
-/*
- * On Android WebView a sticky element that contains a control which is added
- * and removed (the custom range input) can retain an old composited height.
- * The next sibling is then painted through the filter, which is why the
- * period label and search field overlap on a real device even though browser
- * device emulation looks correct.  The filter only needs to be sticky on the
- * wider report layout; keep the phone layout in normal document flow.
- *
- * `overflow: clip` avoids making the report container a scroll container
- * while still guarding against accidental horizontal overflow.  The global
- * page root remains the horizontal-overflow guard for older WebViews that do
- * not support `clip`.
- */
+/* Do not turn the shared filter into a report-specific layout on phones.
+   This preserves the same sticky header, height, and label spacing as the
+   other record screens. */
 @media (max-width: 991px) {
   .srpt-container {
     overflow-x: visible;
@@ -95,25 +85,6 @@
     .srpt-container {
       overflow-x: clip;
     }
-  }
-
-  .srpt-container > .exp-filter-bar {
-    position: relative;
-    top: auto;
-    /* Do not create a stacking context here. The date picker sheet is a
-       fixed child while its backdrop is attached to body; a local z-index
-       would trap the sheet underneath that backdrop on Android WebView. */
-    z-index: auto;
-    flex-shrink: 0;
-    margin-bottom: 1rem;
-  }
-
-  .srpt-container > .exp-filter-bar .exp-filter-bottom-row {
-    min-height: 1.35rem;
-  }
-
-  .srpt-container > .exp-filter-bar .exp-filter-label {
-    line-height: 1.35;
   }
 
   .srpt-container > .ov-search-row {
@@ -170,7 +141,7 @@
 .search-input {
   flex: 1;
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 1px solid var(--accent);
   border-right: none;
   color: var(--text);
   font-size: 0.88rem;
@@ -190,14 +161,14 @@
 }
 
 .search-btn {
-  background: var(--accent);
-  border: none;
-  color: #fff;
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+  border: 1px solid var(--accent);
+  color: var(--accent);
   font-size: 0.9rem;
   padding: 0 1.1rem;
   border-radius: 0 12px 12px 0;
   cursor: pointer;
-  transition: opacity 0.2s;
+  transition: background 0.2s, color 0.2s;
   display: flex;
   align-items: center;
   height: 54px;
@@ -205,7 +176,12 @@
 }
 
 .search-btn:hover {
-  opacity: 0.85;
+  background: color-mix(in srgb, var(--accent) 16%, var(--surface));
+}
+
+.search-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -3px;
 }
 
 /* Summary Cards */
@@ -296,6 +272,341 @@
 .summary-sub span {
   color: var(--info);
   font-size: 0.82rem;
+}
+
+.srpt-period-change {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.7rem;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+}
+
+.srpt-period-change-up,
+.srpt-period-change-down {
+  padding: 0.2rem 0.4rem;
+  border-radius: 999px;
+  font-weight: 750;
+}
+
+.srpt-period-change-up {
+  background: color-mix(in srgb, var(--success) 16%, transparent);
+  color: var(--success);
+}
+
+.srpt-period-change-down {
+  background: color-mix(in srgb, var(--danger) 16%, transparent);
+  color: var(--danger);
+}
+
+.srpt-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: -1.15rem 0 1rem;
+}
+
+.srpt-kpi-card {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.95rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.srpt-kpi-card span {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.srpt-kpi-card strong {
+  color: var(--text);
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+/* ── Daily sales trend ── */
+.srpt-trend-panel {
+  margin-bottom: 1rem;
+  padding: 1rem 1.1rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.srpt-trend-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0rem;
+}
+
+.srpt-trend-header h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+  color: var(--income-color);
+  font-size: 0.82rem;
+  font-weight: 750;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.srpt-trend-header p {
+  margin: 0.25rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}
+
+.srpt-trend-scroll {
+  overflow-x: auto;
+  padding-bottom: 0.2rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+.srpt-trend-chart {
+  display: grid;
+  grid-template-columns: repeat(var(--trend-days), minmax(38px, 1fr));
+  align-items: end;
+  gap: 0.35rem;
+  min-width: max(100%, calc(var(--trend-days) * 42px));
+  /* Reserve enough headroom for the tallest bar's tooltip without shrinking bars. */
+  height: 180px;
+  /* Keep a safe inset so edge-day tooltips do not meet the card border. */
+  padding: 54px 0.65rem 0;
+  box-sizing: border-box;
+}
+
+.srpt-trend-day {
+  display: grid;
+  grid-template-rows: 1fr 18px;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.srpt-trend-day:focus-visible {
+  outline: 2px solid var(--income-color);
+  outline-offset: 3px;
+  border-radius: 7px;
+}
+
+.srpt-trend-bar-wrap {
+  display: flex;
+  position: relative;
+  align-items: end;
+  min-height: 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.srpt-trend-tooltip {
+  position: absolute;
+  z-index: 1;
+  bottom: calc(var(--trend-bar-height) + 0.4rem);
+  left: 50%;
+  max-width: min(8rem, calc(100vw - 4rem));
+  padding: 0.38rem 0.58rem;
+  border-radius: 6px;
+  background: var(--text);
+  box-shadow: 0 3px 10px color-mix(in srgb, var(--text) 20%, transparent);
+  color: var(--surface);
+  font-size: clamp(0.72rem, 2.2vw, 0.84rem);
+  font-weight: 750;
+  line-height: 1.15;
+  pointer-events: none;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.srpt-trend-tooltip::after {
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  background: var(--text);
+  content: '';
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.srpt-trend-day.is-first .srpt-trend-tooltip {
+  left: 0;
+  transform: none;
+}
+
+.srpt-trend-day.is-first .srpt-trend-tooltip::after {
+  left: 0.6rem;
+  transform: rotate(45deg);
+}
+
+.srpt-trend-day.is-last .srpt-trend-tooltip {
+  right: 0;
+  left: auto;
+  transform: none;
+}
+
+.srpt-trend-day.is-last .srpt-trend-tooltip::after {
+  right: 0.6rem;
+  left: auto;
+  transform: rotate(45deg);
+}
+
+.srpt-trend-bar {
+  width: 100%;
+  min-height: 0;
+  border-radius: 5px 5px 1px 1px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--income-color) 78%, #fff), var(--income-color));
+  transition: height 0.35s ease;
+}
+
+.srpt-trend-day.is-selected .srpt-trend-bar {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--income-color) 26%, transparent);
+  filter: saturate(1.15);
+}
+
+.srpt-trend-day.is-selected {
+  position: relative;
+  z-index: 2;
+}
+
+.srpt-trend-date {
+  padding-top: 0.35rem;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Estimated gross margin ── */
+.srpt-margin-panel {
+  margin-bottom: 1rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid color-mix(in srgb, var(--success) 28%, var(--border));
+  border-radius: 14px;
+  background: linear-gradient(145deg, var(--surface), color-mix(in srgb, var(--success) 7%, var(--surface)));
+}
+
+.srpt-margin-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.9rem;
+}
+
+.srpt-margin-header h3 {
+  margin: 0;
+  color: var(--success);
+  font-size: 0.82rem;
+  font-weight: 750;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.srpt-margin-header p {
+  max-width: 38rem;
+  margin: 0.3rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  line-height: 1.4;
+}
+
+.srpt-margin-header > span {
+  flex: 0 0 auto;
+  padding: 0.35rem 0.55rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--success) 15%, transparent);
+  color: var(--success);
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.srpt-margin-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.srpt-margin-metrics > div {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--surface) 78%, transparent);
+}
+
+.srpt-margin-metrics span,
+.srpt-margin-product span {
+  color: var(--text-muted);
+  font-size: 0.68rem;
+}
+
+.srpt-margin-metrics strong {
+  color: var(--text);
+  font-size: 0.92rem;
+}
+
+.srpt-margin-profit {
+  color: var(--success) !important;
+  font-weight: 750;
+}
+
+.srpt-margin-missing {
+  margin: 0.75rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+}
+
+.srpt-margin-missing span {
+  color: var(--warning, #f59e0b);
+  font-weight: 700;
+}
+
+.srpt-margin-products {
+  display: grid;
+  gap: 0.1rem;
+  margin-top: 0.8rem;
+  border-top: 1px solid var(--border);
+  padding-top: 0.45rem;
+}
+
+.srpt-margin-product {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0.15rem;
+}
+
+.srpt-margin-product > div {
+  display: grid;
+  min-width: 0;
+  gap: 0.15rem;
+}
+
+.srpt-margin-product strong {
+  overflow: hidden;
+  color: var(--text);
+  font-size: 0.8rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .product-highlight-card {
@@ -422,6 +733,7 @@
 .ov-bar-row {
   padding: 0.55rem 0.4rem;
   border-radius: 10px;
+  min-width: 0;
   cursor: pointer;
   transition: background 0.14s;
   -webkit-tap-highlight-color: transparent;
@@ -446,6 +758,7 @@ body.light-mode .ov-bar-active {
   display: flex;
   align-items: center;
   gap: 0.55rem;
+  min-width: 0;
 }
 
 .ov-bar-dot {
@@ -489,10 +802,12 @@ body.light-mode .ov-bar-active {
   display: flex;
   align-items: center;
   gap: 0.6rem;
+  min-width: 0;
 }
 
 .ov-bar-track {
   flex: 1;
+  min-width: 0;
   height: 5px;
   background: rgba(255,255,255,0.07);
   border-radius: 100px;
@@ -532,6 +847,84 @@ body.light-mode .ov-bar-active {
   height: 1px;
   background: var(--border);
   margin: 0.3rem 0.4rem 0.4rem;
+}
+
+/* Product breakdown stays compact by default. Each purchase category is an
+   accordion row; its products are only rendered after that category opens. */
+.srpt-category-group {
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+}
+
+.srpt-category-group:last-child {
+  border-bottom: 0;
+}
+
+.srpt-category-toggle {
+  width: 100%;
+  padding: 0.65rem 0.4rem;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.14s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.srpt-category-toggle:hover,
+.srpt-category-group.is-expanded .srpt-category-toggle {
+  background: color-mix(in srgb, var(--income-color) 7%, var(--surface));
+}
+
+.srpt-category-toggle:focus-visible,
+.srpt-category-more:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.srpt-category-chevron {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  transition: transform 0.2s ease;
+}
+
+.srpt-category-group.is-expanded .srpt-category-chevron {
+  transform: rotate(180deg);
+}
+
+.srpt-category-products {
+  display: grid;
+  gap: 0.15rem;
+  margin: 0 0.4rem 0.55rem 0.8rem;
+  padding: 0.25rem 0.15rem 0.15rem 0.55rem;
+  border-left: 2px solid color-mix(in srgb, var(--income-color) 35%, var(--border));
+  min-width: 0;
+}
+
+.srpt-category-product {
+  padding: 0.48rem 0.35rem;
+  min-width: 0;
+  width: 100%;
+}
+
+.srpt-category-product .ov-bar-name {
+  font-size: 0.84rem;
+}
+
+.srpt-category-more {
+  justify-self: start;
+  margin: 0.25rem 0.35rem 0.15rem;
+  padding: 0.35rem 0.55rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--border));
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--accent) 7%, var(--surface));
+  color: var(--accent);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 /* Table */

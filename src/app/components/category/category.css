@@ -259,6 +259,15 @@ body.cat-add-modal-open {
     flex: 1;
     padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem);
   }
+
+  .cat-add-modal-sheet .cat-add-footer .cat-btn-primary {
+    width: 100%;
+    min-height: 56px;
+    justify-content: center;
+    padding-inline: 1.25rem;
+    border-radius: 14px;
+    font-size: 0.9rem;
+  }
 }
 
 /* Desktop-only "Add Category" toolbar button — the FAB (.cat-add-fab) is

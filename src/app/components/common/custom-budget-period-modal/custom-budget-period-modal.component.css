@@ -315,4 +315,13 @@ body.cbp-modal-open {
     margin-top: 0.5rem;
     padding: 0 1.4rem calc(env(safe-area-inset-bottom, 0px) + 1.25rem);
   }
+
+  .cbp-save-btn {
+    width: 100%;
+    min-height: 56px;
+    justify-content: center;
+    padding-inline: 1.25rem;
+    border-radius: 14px;
+    font-size: 0.9rem;
+  }
 }

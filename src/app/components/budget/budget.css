@@ -483,6 +483,11 @@ body.bgt-add-modal-open {
   background: var(--surface-2);
 }
 
+.bgt-cat-picker-item.bgt-cat-picker-item-selected {
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+
 .bgt-cat-picker-item-icon {
   display: inline-flex;
   align-items: center;
@@ -1049,6 +1054,15 @@ app-date-input .di-trigger {
 .bgt-form-footer .bgt-btn-primary {
   flex: 1;
   justify-content: center;
+}
+
+@media (max-width: 991.98px) {
+  .bgt-add-modal-sheet .bgt-form-footer .bgt-btn-primary {
+    min-height: 56px;
+    padding-inline: 1.25rem;
+    border-radius: 14px;
+    font-size: 0.9rem;
+  }
 }
 
 /* ── Date pill (pinned top-right, like Add Expense's mode-toggle row) ── */

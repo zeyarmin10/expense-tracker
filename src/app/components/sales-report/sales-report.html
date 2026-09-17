@@ -24,14 +24,14 @@
         <ng-container *ngIf="showCustomDatePicker; else salesReportFilterLabel">
           <app-date-range-input [(startDate)]="startDate" [(endDate)]="endDate"
             (rangeChange)="onCustomDateChange()" [showLabel]="false"
-            [startLabel]="'START_DATE' | translate" [endLabel]="'END_DATE' | translate">
+            [startLabel]="'DATE_FROM' | translate" [endLabel]="'DATE_TO' | translate">
           </app-date-range-input>
         </ng-container>
         <ng-template #salesReportFilterLabel>
           <div class="exp-filter-label">
             <span class="exp-filter-label-date">
               <lucide-icon [img]="iconCalendar" [size]="16" class="exp-filter-label-icon"></lucide-icon>
-              <span>{{ currentPeriodLabel }}</span>
+              <span>{{ getFilterLabel() }}</span>
             </span>
           </div>
         </ng-template>
@@ -43,7 +43,7 @@
         <input type="text" class="search-input" placeholder="{{ 'SEARCH_PLACEHOLDER' | translate }}"
           [(ngModel)]="searchTerm" (keyup.enter)="onSearch()" />
         <button class="search-btn" type="button" (click)="onSearch()" [title]="'SEARCH' | translate">
-          <lucide-icon [img]="iconSearch" [size]="15"></lucide-icon>
+          <lucide-icon [img]="iconSearch" [size]="25"></lucide-icon>
         </button>
       </div>
     </div>
@@ -70,6 +70,13 @@
               {{ "DAILY_AVERAGE" | translate }}
               <span [innerHTML]="formatService.formatAmountShortHtml(summary.dailyAverage, summary.currency)"></span>
             </div>
+            <div class="srpt-period-change" *ngIf="getSalesChangePercent(summary) !== null">
+              <span [class.srpt-period-change-up]="getSalesChangePercent(summary)! >= 0"
+                [class.srpt-period-change-down]="getSalesChangePercent(summary)! < 0">
+                {{ getSalesChangePercent(summary)! >= 0 ? '+' : '' }}{{ getSalesChangePercent(summary)! | number:'1.0-0' }}%
+              </span>
+              <span>{{ 'SALES_COMPARED_TO_PREVIOUS' | translate }}</span>
+            </div>
           </div>
 
           <div class="summary-card product-highlight-card">
@@ -87,6 +94,81 @@
             </div>
           </div>
         </div>
+
+        <div class="srpt-kpi-grid">
+          <div class="srpt-kpi-card">
+            <span>{{ 'SALES_ORDERS_LABEL' | translate }}</span>
+            <strong>{{ formatService.formatCount(currencySummaries[0]?.orderCount || 0) }}</strong>
+          </div>
+          <div class="srpt-kpi-card">
+            <span>{{ 'SALES_ITEMS_SOLD_LABEL' | translate }}</span>
+            <strong>{{ formatService.formatCount(periodItemsSold) }}</strong>
+          </div>
+        </div>
+
+        <section class="srpt-trend-panel" *ngIf="salesTrend.length > 0">
+          <header class="srpt-trend-header">
+            <div>
+              <h3>
+                <lucide-icon [img]="iconChartColumn" [size]="17"></lucide-icon>
+                {{ 'SALES_TREND_LABEL' | translate }}
+              </h3>
+              <p>{{ getFilterLabel() }}</p>
+            </div>
+          </header>
+          <div class="srpt-trend-scroll">
+            <div class="srpt-trend-chart" [style.--trend-days]="visibleSalesTrend.length">
+              <button type="button" class="srpt-trend-day" *ngFor="let day of visibleSalesTrend; first as isFirst; last as isLast; trackBy: trackByTrendDate"
+                [class.is-selected]="selectedTrendDate === day.date" [class.is-first]="isFirst" [class.is-last]="isLast"
+                [attr.aria-label]="getTrendDateLabel(day.date) + ': ' + formatService.formatAmountWithSymbol(day.totalSales, currencySummaries[0]?.currency || 'MMK')"
+                [attr.aria-pressed]="selectedTrendDate === day.date"
+                (click)="toggleTrendDay(day.date)">
+                <div class="srpt-trend-bar-wrap" [style.--trend-bar-height]="getTrendBarHeight(day) + '%'">
+                  <span class="srpt-trend-bar" [style.height.%]="getTrendBarHeight(day)"></span>
+                  <span class="srpt-trend-tooltip" *ngIf="selectedTrendDate === day.date"
+                    [innerHTML]="formatService.formatAmountShortHtml(day.totalSales, currencySummaries[0]?.currency || 'MMK')"></span>
+                </div>
+                <span class="srpt-trend-date">{{ getTrendDateLabel(day.date) }}</span>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section class="srpt-margin-panel" *ngIf="productMargins.length > 0">
+          <header class="srpt-margin-header">
+            <div>
+              <h3>{{ 'SALES_MARGIN_ANALYSIS' | translate }}</h3>
+              <p>{{ 'STOCK_SUMMARY_METHOD_NOTE' | translate }}</p>
+            </div>
+            <span>{{ marginSummary.grossMarginPercent | number:'1.0-0' }}%</span>
+          </header>
+
+          <div class="srpt-margin-metrics">
+            <div>
+              <span>{{ 'STOCK_SUMMARY_EST_COGS_COL' | translate }}</span>
+              <strong [innerHTML]="formatService.formatAmountShortWholeHighDenominationHtml(marginSummary.cogs, currencySummaries[0]?.currency || 'MMK')"></strong>
+            </div>
+            <div>
+              <span>{{ 'STOCK_SUMMARY_EST_PROFIT_COL' | translate }}</span>
+              <strong class="srpt-margin-profit" [innerHTML]="formatService.formatAmountShortWholeHighDenominationHtml(marginSummary.grossProfit, currencySummaries[0]?.currency || 'MMK')"></strong>
+            </div>
+          </div>
+
+          <p class="srpt-margin-missing" *ngIf="marginSummary.uncostedRevenue > 0">
+            {{ 'SALES_UNCOSTED_REVENUE' | translate }}:
+            <span [innerHTML]="formatService.formatAmountShortHtml(marginSummary.uncostedRevenue, currencySummaries[0]?.currency || 'MMK')"></span>
+          </p>
+
+          <div class="srpt-margin-products">
+            <div class="srpt-margin-product" *ngFor="let product of productMargins | slice:0:5; trackBy: trackByMarginProduct">
+              <div>
+                <strong>{{ product.productName }}</strong>
+                <span>{{ formatQuantity(product.quantity, product.unit) }} · {{ product.grossMarginPercent | number:'1.0-0' }}%</span>
+              </div>
+              <span class="srpt-margin-profit" [innerHTML]="formatService.formatAmountShortHtml(product.grossProfit, currencySummaries[0]?.currency || 'MMK')"></span>
+            </div>
+          </div>
+        </section>
 
         <!-- Product Breakdown Bars -->
         <div class="ov-breakdown-panel" *ngIf="productTotals.length > 0">
@@ -119,27 +201,54 @@
               </div>
             </div>
             <div class="ov-bar-divider"></div>
-            <div class="ov-bar-row"
-                 *ngFor="let p of productTotals; trackBy: trackByProduct"
-                 role="button"
-                 tabindex="0"
-                 (click)="filterByProduct(p.productName)"
-                 (keydown.enter)="filterByProduct(p.productName)"
-                 (keydown.space)="filterByProduct(p.productName); $event.preventDefault()"
-                 [class.ov-bar-active]="p.productName === (_selectedProduct$ | async)">
-              <div class="ov-bar-meta">
-                <lucide-icon [img]="iconPackage" [size]="16" class="ov-bar-cat-icon"></lucide-icon>
-                <span class="ov-bar-name">{{ p.productName }}</span>
-                <span class="ov-bar-qty">&#215; {{ formatQuantity(p.qty, p.unit) }}</span>
-                <span class="ov-bar-amount" [innerHTML]="formatService.formatAmountShortHtml(p.total, p.currency)"></span>
-              </div>
-              <div class="ov-bar-footer">
-                <div class="ov-bar-track">
-                  <div class="ov-bar-fill" [style.width.%]="getProductPercent(p)"></div>
+            <section class="srpt-category-group" *ngFor="let category of categoryTotals; trackBy: trackByCategory"
+              [class.is-expanded]="expandedProductCategory === category.key">
+              <button type="button" class="srpt-category-toggle" (click)="toggleProductCategory(category)"
+                [attr.aria-expanded]="expandedProductCategory === category.key">
+                <div class="ov-bar-meta">
+                  <lucide-icon [img]="iconPackage" [size]="17" class="ov-bar-cat-icon"></lucide-icon>
+                  <span class="ov-bar-name">{{ getCategoryLabel(category) }}</span>
+                  <span class="ov-bar-qty">&#215; {{ formatQuantity(category.qty) }}</span>
+                  <span class="ov-bar-amount" [innerHTML]="formatService.formatAmountShortHtml(category.total, category.currency)"></span>
+                  <lucide-icon [img]="iconChevronDown" [size]="17" class="srpt-category-chevron"></lucide-icon>
                 </div>
-                <span class="ov-bar-pct">{{ getProductPercent(p) | number:'1.0-0' }}%</span>
+                <div class="ov-bar-footer">
+                  <div class="ov-bar-track">
+                    <div class="ov-bar-fill" [style.width.%]="getCategoryPercent(category)"></div>
+                  </div>
+                  <span class="ov-bar-pct">{{ getCategoryPercent(category) | number:'1.0-0' }}%</span>
+                </div>
+              </button>
+
+              <div class="srpt-category-products" *ngIf="expandedProductCategory === category.key">
+                <div class="ov-bar-row srpt-category-product"
+                  *ngFor="let p of getVisibleCategoryProducts(category); trackBy: trackByProduct"
+                  role="button" tabindex="0"
+                  (click)="filterByProduct(p.productName)"
+                  (keydown.enter)="filterByProduct(p.productName)"
+                  (keydown.space)="filterByProduct(p.productName); $event.preventDefault()"
+                  [class.ov-bar-active]="p.productName === (_selectedProduct$ | async)">
+                  <div class="ov-bar-meta">
+                    <lucide-icon [img]="iconPackage" [size]="15" class="ov-bar-cat-icon"></lucide-icon>
+                    <span class="ov-bar-name">{{ p.productName }}</span>
+                    <span class="ov-bar-qty">&#215; {{ formatQuantity(p.qty, p.unit) }}</span>
+                    <span class="ov-bar-amount" [innerHTML]="formatService.formatAmountShortHtml(p.total, p.currency)"></span>
+                  </div>
+                  <div class="ov-bar-footer">
+                    <div class="ov-bar-track">
+                      <div class="ov-bar-fill" [style.width.%]="getCategoryProductPercent(p, category)"></div>
+                    </div>
+                    <span class="ov-bar-pct">{{ getCategoryProductPercent(p, category) | number:'1.0-0' }}%</span>
+                  </div>
+                </div>
+
+                <button type="button" class="srpt-category-more" *ngIf="category.products.length > 5"
+                  (click)="toggleCategoryProductList(category)">
+                  {{ (expandedCategoryProductLists[category.key] ? 'LESS' : 'MORE') | translate }}
+                  <ng-container *ngIf="!expandedCategoryProductLists[category.key]">(+{{ formatService.formatCount(category.products.length - 5) }})</ng-container>
+                </button>
               </div>
-            </div>
+            </section>
           </div>
         </div>
 

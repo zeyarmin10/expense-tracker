@@ -3,6 +3,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IncomeService, ServiceIIncome, IncomeLineItem, getIncomeLineItems } from '../../services/income';
 import { ProductService, ServiceIProduct } from '../../services/product';
+import { ExpenseService, ServiceIExpense, getExpenseLineItems } from '../../services/expense';
 import {
   Observable,
   BehaviorSubject,
@@ -17,10 +18,10 @@ import {
 } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { FormatService } from '../../services/format.service';
-import { DateFilterService, DateRange } from '../../services/date-filter.service';
+import { DateRange, toLocalDateKey } from '../../services/date-filter.service';
 import { AuthService } from '../../services/auth';
 import { UserDataService, UserProfile } from '../../services/user-data';
-import { LucideAngularModule, Search, ChartColumn, List, Trophy, Package, CalendarDays } from 'lucide-angular';
+import { LucideAngularModule, Search, ChartColumn, List, Trophy, Package, CalendarDays, ChevronDown } from 'lucide-angular';
 import { UserAvatarComponent } from '../common/user-avatar/user-avatar.component';
 import { DateRangeInputComponent } from '../common/date-range-input/date-range-input.component';
 import Swal from 'sweetalert2';
@@ -29,14 +30,50 @@ interface CurrencySummary {
   currency: string;
   totalSales: number;
   dailyAverage: number;
+  orderCount: number;
+  previousTotalSales: number;
 }
 
 interface ProductTotal {
+  productId?: string;
   productName: string;
   unit?: string;
   total: number;
   qty: number;
   currency: string;
+}
+
+interface CategoryTotal {
+  key: string;
+  name: string;
+  products: ProductTotal[];
+  total: number;
+  qty: number;
+  currency: string;
+}
+
+interface DailySales {
+  date: string;
+  totalSales: number;
+  orderCount: number;
+}
+
+interface ProductMargin {
+  productId: string;
+  productName: string;
+  unit?: string;
+  quantity: number;
+  revenue: number;
+  cogs: number;
+  grossProfit: number;
+  grossMarginPercent: number;
+}
+
+interface MarginSummary {
+  cogs: number;
+  grossProfit: number;
+  grossMarginPercent: number;
+  uncostedRevenue: number;
 }
 
 @Component({
@@ -57,8 +94,8 @@ interface ProductTotal {
 })
 export class SalesReport implements OnInit, OnDestroy {
   incomeService = inject(IncomeService);
+  expenseService = inject(ExpenseService);
   productService = inject(ProductService);
-  dateFilterService = inject(DateFilterService);
   datePipe = inject(DatePipe);
   translate = inject(TranslateService);
   authService = inject(AuthService);
@@ -74,6 +111,7 @@ export class SalesReport implements OnInit, OnDestroy {
   readonly iconTrophy = Trophy;
   readonly iconPackage = Package;
   readonly iconCalendar = CalendarDays;
+  readonly iconChevronDown = ChevronDown;
 
   productList: ServiceIProduct[] = [];
 
@@ -184,6 +222,12 @@ export class SalesReport implements OnInit, OnDestroy {
       return of([]);
     }),
   );
+  allExpenses$: Observable<ServiceIExpense[]> = this.expenseService.getExpenses().pipe(
+    catchError((err) => {
+      console.error('Error loading purchase costs:', err);
+      return of([]);
+    }),
+  );
   filteredIncomes$: Observable<ServiceIIncome[]> = of([]);
   selectedDateFilter: string = 'currentMonth';
   dateFilterMode: 'today' | 'week' | 'month' | 'custom' = 'month';
@@ -199,10 +243,17 @@ export class SalesReport implements OnInit, OnDestroy {
   topSellingProduct: string = 'N/A';
   productTotals: ProductTotal[] = [];
   productTotalsSum = 0;
+  categoryTotals: CategoryTotal[] = [];
+  expandedProductCategory: string | null = null;
+  expandedCategoryProductLists: Record<string, boolean> = {};
   allProductsTotal: { amount: number; currency: string }[] = [];
   topSellingSort: 'quantity' | 'revenue' = 'quantity';
-
-  currentPeriodLabel: string = '';
+  periodItemsSold = 0;
+  salesTrend: DailySales[] = [];
+  maxDailySales = 0;
+  selectedTrendDate: string | null = null;
+  productMargins: ProductMargin[] = [];
+  marginSummary: MarginSummary = { cogs: 0, grossProfit: 0, grossMarginPercent: 0, uncostedRevenue: 0 };
 
   get topSellingProductTotal(): ProductTotal | null {
     return this.productTotals[0] || null;
@@ -211,6 +262,39 @@ export class SalesReport implements OnInit, OnDestroy {
   getProductPercent(product: ProductTotal): number {
     const value = this.topSellingSort === 'quantity' ? product.qty : product.total;
     return this.productTotalsSum > 0 ? (value / this.productTotalsSum) * 100 : 0;
+  }
+
+  getCategoryPercent(category: CategoryTotal): number {
+    const value = this.topSellingSort === 'quantity' ? category.qty : category.total;
+    return this.productTotalsSum > 0 ? (value / this.productTotalsSum) * 100 : 0;
+  }
+
+  getCategoryProductPercent(product: ProductTotal, category: CategoryTotal): number {
+    const productValue = this.topSellingSort === 'quantity' ? product.qty : product.total;
+    const categoryValue = this.topSellingSort === 'quantity' ? category.qty : category.total;
+    return categoryValue > 0 ? (productValue / categoryValue) * 100 : 0;
+  }
+
+  getCategoryLabel(category: CategoryTotal): string {
+    return category.name || this.translate.instant('UNCATEGORIZED');
+  }
+
+  getVisibleCategoryProducts(category: CategoryTotal): ProductTotal[] {
+    return this.expandedCategoryProductLists[category.key] ? category.products : category.products.slice(0, 5);
+  }
+
+  toggleProductCategory(category: CategoryTotal): void {
+    this.expandedProductCategory = this.expandedProductCategory === category.key ? null : category.key;
+  }
+
+  toggleCategoryProductList(category: CategoryTotal): void {
+    if (this.expandedCategoryProductLists[category.key]) {
+      const next = { ...this.expandedCategoryProductLists };
+      delete next[category.key];
+      this.expandedCategoryProductLists = next;
+      return;
+    }
+    this.expandedCategoryProductLists = { ...this.expandedCategoryProductLists, [category.key]: true };
   }
 
   public _selectedProduct$ = new BehaviorSubject<string>('');
@@ -252,20 +336,17 @@ export class SalesReport implements OnInit, OnDestroy {
 
     this.filteredIncomes$ = combineLatest([
       this.allIncomes$,
+      this.allExpenses$,
       this.dateFilter$,
       this.searchFilter$,
       this._selectedProduct$,
       this.userProfile$,
     ]).pipe(
-      map(([incomes, { start, end }, searchTerm, selectedProduct, profile]) => {
+      map(([incomes, expenses, { start, end }, searchTerm, selectedProduct, profile]) => {
+        const todayKey = toLocalDateKey(new Date());
+        const effectiveEnd = end > todayKey ? todayKey : end;
         const startDate = this.parseLocalDate(start);
-        const originalEndDate = this.parseLocalDate(end);
-        const today = new Date();
-
-        let effectiveEndDate = originalEndDate;
-        if (this.selectedDateFilter === 'custom' && originalEndDate > today) {
-          effectiveEndDate = today;
-        }
+        const effectiveEndDate = this.parseLocalDate(effectiveEnd);
 
         let totalDays: number;
         if (startDate > effectiveEndDate) {
@@ -275,9 +356,11 @@ export class SalesReport implements OnInit, OnDestroy {
           totalDays = Math.floor(ms / (1000 * 60 * 60 * 24)) + 1;
         }
 
-        let filtered = incomes
+        const reportIncomes = incomes
           .filter(i => i.currency === (profile?.currency || 'MMK'))
-          .filter(i => i.date >= start && i.date <= end);
+          .filter(i => i.date >= start && i.date <= effectiveEnd);
+
+        let filtered = reportIncomes;
 
         if (searchTerm) {
           const lower = searchTerm.toLowerCase();
@@ -296,12 +379,8 @@ export class SalesReport implements OnInit, OnDestroy {
           (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
         );
 
-        this.calculateSummary(
-          incomes
-            .filter(i => i.currency === (profile?.currency || 'MMK'))
-            .filter(i => i.date >= start && i.date <= end),
-          totalDays,
-        );
+        this.calculateSummary(reportIncomes, totalDays, incomes, start, effectiveEnd, profile?.currency || 'MMK', expenses);
+        this.calculateMargins(reportIncomes, expenses, profile?.currency || 'MMK');
         return filtered;
       }),
       shareReplay(1)
@@ -330,24 +409,35 @@ export class SalesReport implements OnInit, OnDestroy {
 
   setDateFilter(filter: string): void {
     this.selectedDateFilter = filter;
-    this.updateCurrentPeriodLabel(filter);
 
-    const presetFilters = [
-      'today', 'last30Days', 'currentMonth', 'lastMonth',
-      'lastSixMonths', 'currentYear', 'lastYear', 'currentWeek',
-    ];
-
-    if (presetFilters.includes(filter)) {
-      const dateRange = this.dateFilterService.getDateRange(
-        this.datePipe, filter, this.startDate, this.endDate
-      );
-      this.dateFilter$.next(dateRange);
+    if (filter !== 'custom') {
+      this.dateFilter$.next(this.getPresetDateRange(filter));
     } else if (filter === 'custom') {
       if (this.startDate && this.endDate) {
         this.dateFilter$.next({ start: this.startDate, end: this.endDate });
       } else {
         this.setDateFilter('currentMonth');
       }
+    }
+  }
+
+  private getPresetDateRange(filter: string): DateRange {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const end = toLocalDateKey(today);
+
+    switch (filter) {
+      case 'today':
+        return { start: end, end };
+      case 'currentWeek': {
+        // Match Sales exactly: weeks start on Sunday, not Monday.
+        const start = new Date(today);
+        start.setDate(today.getDate() - today.getDay());
+        return { start: toLocalDateKey(start), end };
+      }
+      case 'currentMonth':
+      default:
+        return { start: toLocalDateKey(new Date(today.getFullYear(), today.getMonth(), 1)), end };
     }
   }
 
@@ -373,50 +463,78 @@ export class SalesReport implements OnInit, OnDestroy {
     }
   }
 
-  updateCurrentPeriodLabel(filter: string): void {
-    if (filter === 'custom') {
-      if (this.startDate && this.endDate) {
-        const start = this.formatService.formatLocalizedDate(this.datePipe.transform(this.startDate));
-        const end   = this.formatService.formatLocalizedDate(this.datePipe.transform(this.endDate));
-        this.currentPeriodLabel = `${start} - ${end}`;
-      } else {
-        this.currentPeriodLabel = this.translate.instant('CUSTOM_DATE_RANGE');
+  getFilterLabel(): string {
+    const today = new Date();
+    const format = (date: Date, withYear = true): string => withYear
+      ? (this.datePipe.transform(date, 'MMM d, yyyy') || '')
+      : (this.datePipe.transform(date, 'MMM d') || '');
+    const parseLocalDate = (date: string) => new Date(`${date}T00:00:00`);
+
+    switch (this.dateFilterMode) {
+      case 'today':
+        return format(today);
+      case 'week': {
+        const start = new Date(today);
+        start.setDate(today.getDate() - today.getDay());
+        const end = new Date(start);
+        end.setDate(start.getDate() + 6);
+        return `${format(start, false)} – ${format(end)}`;
       }
-    } else {
-      const keyMap: { [key: string]: string } = {
-        'today':          'TODAY',
-        'currentWeek':    'THIS_WEEK',
-        'currentMonth':   'THIS_MONTH',
-        'currentYear':    'BUDGET_PERIOD.YEARLY',
-        'last30Days':     'LAST_30_DAYS',
-        'lastMonth':      'LAST_MONTH',
-        'lastSixMonths':  'LAST_SIX_MONTHS',
-        'lastYear':       'LAST_YEAR',
-      };
-      this.currentPeriodLabel = this.translate.instant(keyMap[filter] || filter);
+      case 'month':
+        return this.datePipe.transform(today, 'MMMM yyyy') || '';
+      case 'custom':
+        if (this.startDate && this.endDate) {
+          const start = parseLocalDate(this.startDate);
+          const end = parseLocalDate(this.endDate);
+          return this.startDate === this.endDate
+            ? format(end)
+            : `${format(start, false)} – ${format(end)}`;
+        }
+        return this.startDate ? format(parseLocalDate(this.startDate)) : '';
+      default:
+        return '';
     }
   }
 
   onSearch(): void {
     this.searchFilter$.next(this.searchTerm);
-    if (this.selectedDateFilter === 'custom') {
-      this.updateCurrentPeriodLabel('custom');
-    }
   }
 
   formatQuantity(n: number, unit?: string | null): string {
     return this.formatService.formatQuantity(n, unit);
   }
 
-  calculateSummary(incomes: ServiceIIncome[], totalDays: number): void {
+  calculateSummary(
+    incomes: ServiceIIncome[],
+    totalDays: number,
+    allIncomes: ServiceIIncome[],
+    startDate: string,
+    endDate: string,
+    currency: string,
+    expenses: ServiceIExpense[],
+  ): void {
     if (!incomes || incomes.length === 0) {
       this.currencySummaries  = [];
       this.productTotals      = [];
       this.productTotalsSum   = 0;
+      this.categoryTotals     = [];
+      this.expandedProductCategory = null;
+      this.expandedCategoryProductLists = {};
       this.allProductsTotal   = [];
       this.topSellingProduct  = 'N/A';
+      this.periodItemsSold = 0;
+      this.salesTrend = [];
+      this.maxDailySales = 0;
+      this.productMargins = [];
+      this.marginSummary = { cogs: 0, grossProfit: 0, grossMarginPercent: 0, uncostedRevenue: 0 };
       return;
     }
+
+    const previousStart = this.shiftDateKey(startDate, -totalDays);
+    const previousEnd = this.shiftDateKey(startDate, -1);
+    const previousIncomes = allIncomes
+      .filter(income => income.currency === currency)
+      .filter(income => income.date >= previousStart && income.date <= previousEnd);
 
     const groupedByCurrency = incomes.reduce((acc, i) => {
       if (!i.currency) return acc;
@@ -428,8 +546,17 @@ export class SalesReport implements OnInit, OnDestroy {
       const list       = groupedByCurrency[currency];
       const totalSales = list.reduce((s, i) => s + i.amount, 0);
       const dailyAverage = totalDays > 0 ? totalSales / totalDays : 0;
-      return { currency, totalSales, dailyAverage };
+      const previousTotalSales = previousIncomes
+        .filter(income => income.currency === currency)
+        .reduce((sum, income) => sum + income.amount, 0);
+      return { currency, totalSales, dailyAverage, orderCount: list.length, previousTotalSales };
     });
+
+    this.periodItemsSold = incomes.reduce(
+      (sum, income) => sum + getIncomeLineItems(income).reduce((lineTotal, item) => lineTotal + item.quantity, 0),
+      0,
+    );
+    this.buildSalesTrend(incomes, startDate, endDate);
 
     const productTotalsMap: { [key: string]: ProductTotal } = {};
     for (const income of incomes) {
@@ -437,9 +564,10 @@ export class SalesReport implements OnInit, OnDestroy {
       for (const li of getIncomeLineItems(income)) {
         const product = this.productList.find(p => p.id === li.productId);
         const name = product?.name || li.productName || this.translate.instant('DESCRIPTION');
-        const key = `${name}::${income.currency}`;
+        const productId = li.productId || product?.id || '';
+        const key = `${productId || name}::${income.currency}`;
         if (!productTotalsMap[key]) {
-          productTotalsMap[key] = { productName: name, unit: product?.unit || li.unit, total: 0, qty: 0, currency: income.currency };
+          productTotalsMap[key] = { productId, productName: name, unit: product?.unit || li.unit, total: 0, qty: 0, currency: income.currency };
         }
         productTotalsMap[key].total += li.subtotal;
         productTotalsMap[key].qty += li.quantity;
@@ -455,12 +583,178 @@ export class SalesReport implements OnInit, OnDestroy {
     this.allProductsTotal = Object.entries(currencyMap).map(([currency, amount]) => ({ amount, currency }));
 
     this.sortProductTotals();
+    this.buildCategoryTotals(expenses, currency);
+  }
+
+  private buildCategoryTotals(expenses: ServiceIExpense[], currency: string): void {
+    const latestCategoryByProductId = new Map<string, { category: string; date: string }>();
+
+    for (const expense of expenses) {
+      if (expense.currency !== currency) continue;
+      const category = expense.category?.trim();
+      if (!category) continue;
+
+      for (const item of getExpenseLineItems(expense)) {
+        if (!item.productId) continue;
+        const previous = latestCategoryByProductId.get(item.productId);
+        if (!previous || expense.date >= previous.date) {
+          latestCategoryByProductId.set(item.productId, { category, date: expense.date });
+        }
+      }
+    }
+
+    const totalsByCategory = new Map<string, CategoryTotal>();
+    for (const product of this.productTotals) {
+      const category = product.productId ? latestCategoryByProductId.get(product.productId)?.category || '' : '';
+      const key = category || '__uncategorized__';
+      const group = totalsByCategory.get(key) || {
+        key,
+        name: category,
+        products: [],
+        total: 0,
+        qty: 0,
+        currency: product.currency,
+      };
+      group.products.push(product);
+      group.total += product.total;
+      group.qty += product.qty;
+      totalsByCategory.set(key, group);
+    }
+
+    this.categoryTotals = Array.from(totalsByCategory.values());
+    this.sortCategoryTotals();
+  }
+
+  private sortCategoryTotals(): void {
+    const metric = (product: Pick<ProductTotal, 'qty' | 'total'>) =>
+      this.topSellingSort === 'quantity' ? product.qty : product.total;
+    const sortProducts = (a: ProductTotal, b: ProductTotal) =>
+      metric(b) - metric(a) || b.total - a.total || a.productName.localeCompare(b.productName);
+
+    this.categoryTotals = this.categoryTotals
+      .map(category => ({ ...category, products: [...category.products].sort(sortProducts) }))
+      .sort((a, b) => metric(b) - metric(a) || b.total - a.total || this.getCategoryLabel(a).localeCompare(this.getCategoryLabel(b)));
+
+    if (!this.categoryTotals.some(category => category.key === this.expandedProductCategory)) {
+      this.expandedProductCategory = this.categoryTotals[0]?.key || null;
+    }
+  }
+
+  private buildSalesTrend(incomes: ServiceIIncome[], startDate: string, endDate: string): void {
+    const totals = new Map<string, { totalSales: number; orderCount: number }>();
+    for (const income of incomes) {
+      const daily = totals.get(income.date) || { totalSales: 0, orderCount: 0 };
+      daily.totalSales += income.amount;
+      daily.orderCount += 1;
+      totals.set(income.date, daily);
+    }
+
+    const trend: DailySales[] = [];
+    for (let date = startDate; date <= endDate; date = this.shiftDateKey(date, 1)) {
+      const total = totals.get(date) || { totalSales: 0, orderCount: 0 };
+      trend.push({ date, ...total });
+    }
+    this.salesTrend = trend;
+    this.maxDailySales = Math.max(...trend.map(day => day.totalSales), 0);
+  }
+
+  private shiftDateKey(date: string, days: number): string {
+    const shifted = this.parseLocalDate(date);
+    shifted.setDate(shifted.getDate() + days);
+    return toLocalDateKey(shifted);
+  }
+
+  getTrendBarHeight(day: DailySales): number {
+    return this.maxDailySales > 0 ? Math.max((day.totalSales / this.maxDailySales) * 100, day.totalSales > 0 ? 5 : 0) : 0;
+  }
+
+  toggleTrendDay(date: string): void {
+    this.selectedTrendDate = this.selectedTrendDate === date ? null : date;
+  }
+
+  get visibleSalesTrend(): DailySales[] {
+    // A full month often has many zero-sale dates. Showing those as empty
+    // columns made the useful bars drift off-screen and left a large blank
+    // chart area on phones, so only plot days with actual sales.
+    return this.salesTrend.filter(day => day.totalSales > 0);
+  }
+
+  getTrendDateLabel(date: string): string {
+    return this.datePipe.transform(this.parseLocalDate(date), 'd') || date;
+  }
+
+  getSalesChangePercent(summary: CurrencySummary): number | null {
+    if (summary.previousTotalSales <= 0) return null;
+    return ((summary.totalSales - summary.previousTotalSales) / summary.previousTotalSales) * 100;
+  }
+
+  private calculateMargins(
+    incomes: ServiceIIncome[],
+    expenses: ServiceIExpense[],
+    currency: string,
+  ): void {
+    const purchaseTotals = new Map<string, { quantity: number; cost: number }>();
+    for (const expense of expenses) {
+      if (expense.currency !== currency) continue;
+      for (const item of getExpenseLineItems(expense)) {
+        if (!item.productId || item.quantity <= 0) continue;
+        const purchase = purchaseTotals.get(item.productId) || { quantity: 0, cost: 0 };
+        purchase.quantity += item.quantity;
+        purchase.cost += item.subtotal;
+        purchaseTotals.set(item.productId, purchase);
+      }
+    }
+
+    const productMargins = new Map<string, Omit<ProductMargin, 'grossProfit' | 'grossMarginPercent'>>();
+    let uncostedRevenue = 0;
+    for (const income of incomes) {
+      for (const item of getIncomeLineItems(income)) {
+        if (!item.productId) continue;
+        const purchase = purchaseTotals.get(item.productId);
+        if (!purchase || purchase.quantity <= 0) {
+          uncostedRevenue += item.subtotal;
+          continue;
+        }
+        const product = this.productList.find(candidate => candidate.id === item.productId);
+        const margin = productMargins.get(item.productId) || {
+          productId: item.productId,
+          productName: product?.name || item.productName || this.translate.instant('DESCRIPTION'),
+          unit: product?.unit || item.unit,
+          quantity: 0,
+          revenue: 0,
+          cogs: 0,
+        };
+        margin.quantity += item.quantity;
+        margin.revenue += item.subtotal;
+        margin.cogs += item.quantity * (purchase.cost / purchase.quantity);
+        productMargins.set(item.productId, margin);
+      }
+    }
+
+    this.productMargins = Array.from(productMargins.values())
+      .map((margin) => ({
+        ...margin,
+        grossProfit: margin.revenue - margin.cogs,
+        grossMarginPercent: margin.revenue > 0 ? ((margin.revenue - margin.cogs) / margin.revenue) * 100 : 0,
+      }))
+      .sort((a, b) => b.grossProfit - a.grossProfit || b.revenue - a.revenue);
+
+    const cogs = this.productMargins.reduce((sum, margin) => sum + margin.cogs, 0);
+    const grossProfit = this.productMargins.reduce((sum, margin) => sum + margin.grossProfit, 0);
+    const coveredRevenue = this.productMargins.reduce((sum, margin) => sum + margin.revenue, 0);
+    this.marginSummary = {
+      cogs,
+      grossProfit,
+      grossMarginPercent: coveredRevenue > 0 ? (grossProfit / coveredRevenue) * 100 : 0,
+      uncostedRevenue,
+    };
   }
 
   setTopSellingSort(sort: 'quantity' | 'revenue'): void {
     if (this.topSellingSort === sort) return;
     this.topSellingSort = sort;
     this.sortProductTotals();
+    this.sortCategoryTotals();
     this.cdr.markForCheck();
   }
 
@@ -482,7 +776,19 @@ export class SalesReport implements OnInit, OnDestroy {
   }
 
   trackByProduct(index: number, p: ProductTotal): string {
-    return `${p.productName}::${p.currency}`;
+    return `${p.productId || p.productName}::${p.currency}`;
+  }
+
+  trackByCategory(index: number, category: CategoryTotal): string {
+    return category.key;
+  }
+
+  trackByMarginProduct(index: number, product: ProductMargin): string {
+    return product.productId;
+  }
+
+  trackByTrendDate(index: number, day: DailySales): string {
+    return day.date;
   }
 
   trackByIncomeId(index: number, income: ServiceIIncome): string {

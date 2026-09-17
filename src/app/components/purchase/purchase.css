@@ -554,7 +554,7 @@ body.exp-add-modal-open {
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  padding: 0.65rem 0rem;
+  padding: 0.65rem 0.7rem;
   border-radius: 10px;
   border: none;
   background: transparent;
@@ -567,6 +567,11 @@ body.exp-add-modal-open {
 
 .exp-cat-picker-item:hover {
   background: var(--surface-2);
+}
+
+.exp-cat-picker-item.exp-cat-picker-item-selected {
+  background: var(--accent-dim);
+  color: var(--accent);
 }
 
 .exp-cat-picker-item-icon {
@@ -2853,7 +2858,7 @@ body.light-mode .exp-seg-reset {
    cart instead of leaking onto the page below. */
 @media (max-width: 991.98px) {
   .exp-cart-overlay-scroll {
-    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 6rem);
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 7rem);
   }
 
   .exp-pos-footer-inline {
@@ -2872,7 +2877,7 @@ body.light-mode .exp-seg-reset {
     z-index: 10;
     background: var(--nav-bg, var(--surface));
     margin: 0;
-    padding: 0.7rem 1rem calc(env(safe-area-inset-bottom, 0px) + 1.5rem);
+    padding: 0.7rem 1rem calc(env(safe-area-inset-bottom, 0px) + 1.25rem);
     border-top: 1px solid var(--nav-border, var(--border));
     border-radius: 0;
     box-shadow: 0 -5px 16px rgba(0, 0, 0, 0.16);
@@ -2883,8 +2888,17 @@ body.light-mode .exp-seg-reset {
   }
 
   .exp-pos-footer .exp-btn-primary {
-    padding: 0.75rem 0.85rem;
-    font-size: 0.8rem;
+    min-height: 52px;
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    font-size: 0.88rem;
+  }
+
+  .exp-cart-overlay .exp-form-footer .exp-btn-primary {
+    min-height: 56px;
+    padding-inline: 1.25rem;
+    border-radius: 14px;
+    font-size: 0.9rem;
   }
 }
 

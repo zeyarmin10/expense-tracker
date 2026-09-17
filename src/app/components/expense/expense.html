@@ -93,6 +93,7 @@
             type="button"
             class="exp-cat-picker-item"
             *ngIf="categoryPickerTarget === 'voucher' && !categoryPickerSearch"
+            [class.exp-cat-picker-item-selected]="!voucherForm.get('category')?.value"
             (click)="selectCategory('')"
           >
             <span class="exp-cat-picker-item-label">{{ 'VOUCHER_NO_CATEGORY' | translate }}</span>
@@ -108,6 +109,7 @@
             type="button"
             class="exp-cat-picker-item"
             *ngFor="let cat of filteredPickerCategories; trackBy: trackByCategoryId"
+            [class.exp-cat-picker-item-selected]="(categoryPickerTarget === 'voucher' ? voucherForm : newExpenseForm).get('category')?.value === cat.name"
             [style.--cat-hue]="getIconHueForCategory(cat.name)"
             (click)="selectCategory(cat.name)"
           >
@@ -347,8 +349,8 @@
             </div>
 
             <!-- Price — same uncluttered, full-width amount input as Quick mode -->
-            <section class="exp-personal-full-amount" [class.exp-personal-amount-card]="isPersonalExpenseSpace">
-              <div class="exp-personal-field-heading" *ngIf="isPersonalExpenseSpace">
+            <section class="exp-personal-full-amount exp-personal-amount-card">
+              <div class="exp-personal-field-heading">
                 <span>{{ 'AMOUNT' | translate }}</span>
                 <span class="exp-personal-currency-code">{{ userProfile?.currency || 'MMK' }}</span>
               </div>

@@ -51,6 +51,7 @@ Thumbs.db
 
 # Firebase emulator persisted data (npm run emulators)
 emulator-data/
+firebase-export-*/
 firebase-debug.log
 database-debug.log
 firestore-debug.log

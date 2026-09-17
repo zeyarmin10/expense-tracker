@@ -70,6 +70,7 @@
             type="button"
             class="bgt-cat-picker-item"
             *ngFor="let cat of filteredPickerCategories; trackBy: trackByCategoryName"
+            [class.bgt-cat-picker-item-selected]="budgetForm.get('category')?.value === cat.id"
             [style.--cat-hue]="cat.id === 'all' ? null : getIconHueForCategoryId(cat.id)"
             (click)="selectBudgetCategory(cat.id || '')"
           >
@@ -105,6 +106,7 @@
             type="button"
             class="bgt-cat-picker-item"
             *ngFor="let option of budgetTypeOptions"
+            [class.bgt-cat-picker-item-selected]="budgetForm.get('type')?.value === option.value"
             (click)="selectBudgetType(option.value)"
           >
             <span class="bgt-cat-picker-item-icon">
