@@ -2807,6 +2807,14 @@ app-date-input .di-trigger {
   border-color: var(--warning);
 }
 
+/* Checkout validation takes priority over the below-cost advisory state so
+   the missing unit price is immediately visible on every affected line. */
+.pnl-pos-unit-price-input-error,
+.pnl-pos-unit-price-input-error:focus {
+  border: 2px solid var(--danger);
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.14);
+}
+
 .pnl-pos-price-warning {
   margin-top: 0.35rem;
   color: var(--warning);

@@ -1364,17 +1364,17 @@ body.light-mode .ov-bar-fill {
    filter picker. Let their inline calendar size itself from its container
    (rather than flatpickr's fixed 307px default) and keep it readable on both
    narrow phones and tablets. */
-:is(.exp-date-picker-body, .pnl-date-picker-body, .bgt-date-picker-body) > div {
+:is(.exp-date-picker-body, .pnl-date-picker-body, .bgt-date-picker-body, .inv-shop-expense-date-picker-body) > div {
   width: min(100%, 620px);
   margin-inline: auto;
 }
 
-:is(.exp-date-picker-body, .pnl-date-picker-body, .bgt-date-picker-body) .flatpickr-calendar.inline {
+:is(.exp-date-picker-body, .pnl-date-picker-body, .bgt-date-picker-body, .inv-shop-expense-date-picker-body) .flatpickr-calendar.inline {
   width: 100% !important;
   max-width: none !important;
 }
 
-:is(.exp-date-picker-body, .pnl-date-picker-body, .bgt-date-picker-body) .flatpickr-day {
+:is(.exp-date-picker-body, .pnl-date-picker-body, .bgt-date-picker-body, .inv-shop-expense-date-picker-body) .flatpickr-day {
   max-width: none !important;
   height: clamp(39px, 10vw, 52px) !important;
   line-height: clamp(39px, 10vw, 52px) !important;

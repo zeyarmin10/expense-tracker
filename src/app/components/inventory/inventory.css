@@ -72,7 +72,7 @@
 .inv-seg-indicator {
   position: absolute;
   inset: 0;
-  width: 50%;
+  width: calc(100% / 3);
   border-radius: 7px;
   background: var(--surface);
   box-shadow:
@@ -634,6 +634,337 @@ body.inv-settings-modal-open {
   font-size: 0.84rem;
 }
 
+/* A deliberate paint between tab selections prevents a large Stock & Profit
+   table from making an older phone look unresponsive after a tap. */
+.inv-tab-transition-loading {
+  min-height: 260px;
+}
+
+/* Shop Expenses are operational costs (rent, wages, transport, etc.), kept
+   separate from purchases so no record here can alter inventory stock. */
+.inv-shop-expenses {
+  display: grid;
+  gap: 1rem;
+}
+
+.inv-shop-profit-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.inv-shop-profit-grid > div,
+.inv-shop-expense-form,
+.inv-shop-expense-list {
+  padding: 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.inv-shop-profit-grid span,
+.inv-shop-expense-row span {
+  display: block;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}
+
+.inv-shop-profit-grid strong {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.98rem;
+}
+
+.inv-shop-expense-amount { color: var(--expense-color); }
+.inv-shop-net-profit { background: var(--profit-dim) !important; }
+
+.inv-shop-expense-form h3 {
+  margin: 0 0 0.8rem;
+  color: var(--text);
+  font-size: 0.92rem;
+}
+
+.inv-shop-expense-form {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.inv-shop-expense-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.inv-shop-expense-date-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.inv-shop-expense-amount-card {
+  padding: 0.85rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 38%, var(--border));
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 100% 0, color-mix(in srgb, var(--accent) 18%, transparent), transparent 48%),
+    var(--surface-2);
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.inv-shop-expense-amount-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 0.45rem 0.2rem;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.inv-shop-expense-amount-heading span:last-child {
+  color: var(--accent);
+}
+
+.inv-shop-amount-field {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  height: 74px;
+  border: 1px solid color-mix(in srgb, var(--accent) 42%, var(--border));
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.inv-shop-amount-field:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 13%, transparent); }
+
+.inv-shop-amount-field .inv-input {
+  width: 100%;
+  height: 72px !important;
+  padding: 0.5rem 0.9rem;
+  border: 0;
+  background: transparent;
+  border-radius: 12px;
+  color: var(--text);
+  font-size: clamp(1.8rem, 8vw, 2.45rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  text-align: right;
+}
+
+.inv-shop-amount-field .inv-input::placeholder { color: color-mix(in srgb, var(--text-muted) 42%, transparent); opacity: 1; }
+
+.inv-shop-expense-category-row { display: flex; align-items: stretch; gap: 0; min-width: 0; }
+.inv-shop-expense-category { min-width: 0; flex: 1; }
+.inv-shop-expense-category ::ng-deep .csl-trigger {
+  height: 56px;
+  border-color: color-mix(in srgb, var(--accent) 20%, var(--border));
+  border-right: 0;
+  border-radius: 10px 0 0 10px;
+  background: color-mix(in srgb, var(--surface) 58%, var(--surface-2));
+}
+.inv-shop-expense-category ::ng-deep .csl-trigger.csl-trigger-open { border-color: var(--accent); }
+.inv-shop-expense-category ::ng-deep .csl-value,
+.inv-shop-expense-category ::ng-deep .csl-label { font-size: 0.95rem; font-weight: 650; }
+.inv-shop-expense-category-add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 56px;
+  min-height: 56px;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--border));
+  border-radius: 0 10px 10px 0;
+  background: var(--info);
+  color: #fff;
+  cursor: pointer;
+}
+.inv-shop-expense-category-add:hover { filter: brightness(1.06); }
+.inv-shop-expense-field-error { margin-top: -0.35rem; color: var(--danger); font-size: 0.76rem; }
+
+.inv-shop-expense-description {
+  width: 100%;
+  height: auto !important;
+  min-height: 56px;
+  padding-block: 0.8rem;
+  border-color: color-mix(in srgb, var(--text-muted) 30%, var(--border));
+  background: color-mix(in srgb, var(--surface-2) 82%, transparent);
+  resize: vertical;
+}
+
+.inv-shop-expense-receipt-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.inv-shop-receipt-upload {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  flex: 1;
+  padding: 0.45rem 0.7rem;
+  border: 1px dashed var(--accent);
+  border-radius: 9px;
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.inv-shop-receipt-upload input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+
+.inv-shop-receipt-preview { position: relative; width: 48px; height: 48px; }
+.inv-shop-receipt-preview img { width: 100%; height: 100%; border-radius: 8px; object-fit: cover; }
+.inv-shop-receipt-preview button { position: absolute; top: -5px; right: -5px; display: grid; place-items: center; width: 20px; height: 20px; padding: 0; border: 0; border-radius: 50%; background: var(--danger); color: #fff; }
+
+.inv-shop-expense-save {
+  width: 100%;
+  min-height: 56px;
+  margin-top: 1rem;
+  padding: 0.7rem 1.2rem;
+  border: 1px solid var(--accent);
+  border-radius: 14px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  justify-content: center;
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--accent) 24%, transparent);
+}
+
+.inv-shop-expense-save:disabled {
+  border-color: var(--border);
+  background: var(--surface-2);
+  color: var(--text-muted);
+  opacity: 1;
+  cursor: not-allowed;
+}
+
+.inv-shop-expense-date-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  min-height: 38px;
+  padding: 0.4rem 0.72rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-2);
+  color: var(--text-sub);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+.inv-shop-expense-date-trigger lucide-icon { flex: 0 0 auto; color: currentColor; }
+.inv-shop-expense-date-trigger:hover { border-color: var(--accent); color: var(--text); }
+.inv-shop-expense-date-trigger:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.inv-shop-expense-date-picker-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 320px;
+}
+.inv-shop-expense-date-picker-body > div { width: min(100%, 620px); margin-inline: auto; }
+.inv-shop-expense-overlay .inv-add-overlay-title { flex: 1; min-width: 0; }
+.inv-shop-expense-date-back {
+  width: 32px;
+  height: 32px;
+  border: 0;
+}
+.inv-shop-expense-date-back lucide-icon { transform: rotate(90deg); }
+
+.inv-shop-expense-fab {
+  display: none;
+  background: linear-gradient(150deg, #ffcc4d, var(--expense-color, #f4b11a));
+  color: #0a1120;
+  box-shadow: 0 8px 22px rgba(244, 177, 26, 0.45);
+}
+.inv-shop-expense-fab::after { box-shadow: 0 0 0 3px rgba(244, 177, 26, 0.65); }
+
+.inv-shop-expense-list { padding: 0; border-radius: 16px; overflow: hidden; }
+.inv-shop-expense-date-group { border-bottom: 1px solid var(--border); }
+.inv-shop-expense-date-group:last-child { border-bottom: 0; }
+.inv-shop-expense-date-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  padding: 0.45rem 1rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+}
+.inv-shop-expense-date-label { flex-shrink: 0; color: var(--text-sub); font-size: 0.73rem; font-weight: 800; white-space: nowrap; }
+.inv-shop-expense-date-count { flex-shrink: 0; color: var(--text-muted); font-size: 0.67rem; white-space: nowrap; }
+.inv-shop-expense-date-totals { display: flex; align-items: center; justify-content: flex-end; gap: 0.3rem; margin-left: auto; min-width: 0; }
+.inv-shop-expense-date-total {
+  padding: 0.18rem 0.5rem;
+  border: 1px solid var(--expense-border);
+  border-radius: 999px;
+  background: var(--expense-dim);
+  color: var(--expense-color);
+  font-size: 0.7rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.inv-shop-expense-row {
+  padding: 0.85rem 1.1rem 0.85rem 1rem;
+  border-bottom: 1px solid var(--border);
+  border-left: 3px solid color-mix(in srgb, var(--expense-color) 55%, transparent);
+  transition: background 0.15s;
+}
+.inv-shop-expense-row:last-child { border-bottom: 0; }
+.inv-shop-expense-row:hover { background: var(--surface-2); }
+.inv-shop-expense-row-main { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.inv-shop-expense-row-main > div:first-child { min-width: 0; }
+.inv-shop-expense-row-main > div:first-child > strong { display: block; overflow: hidden; color: var(--text); font-size: 0.95rem; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.inv-shop-expense-row-right { text-align: right; }
+.inv-shop-expense-row-right strong { color: var(--expense-color); font-size: 0.95rem; font-weight: 500; white-space: nowrap; }
+.inv-shop-expense-row-right a { display: inline-block; margin-top: 0.2rem; color: var(--accent); font-size: 0.72rem; }
+.inv-shop-expense-row-actions { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.6rem; }
+.inv-shop-expense-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.4rem 0.85rem;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.inv-shop-expense-action-edit { border-color: rgba(96, 165, 250, 0.3); color: var(--info); }
+.inv-shop-expense-action-edit:hover { background: var(--info-dim); border-color: var(--info); }
+.inv-shop-expense-action-delete { border-color: rgba(248, 113, 113, 0.3); color: var(--danger); }
+.inv-shop-expense-action-delete:hover { background: var(--danger-dim); border-color: var(--danger); }
+
+@media (max-width: 599px) {
+  .inv-seg-btn { min-width: 0; padding-inline: 0.25rem; font-size: 0.7rem; }
+  .inv-shop-profit-grid { grid-template-columns: 1fr; }
+  .inv-shop-expense-date-trigger { min-height: 38px; padding: 0.4rem 0.72rem; font-size: 0.72rem; }
+  .inv-shop-expense-form .inv-input { background: var(--surface-2); }
+  .inv-shop-amount-field .inv-input { background: transparent; font-size: clamp(1.8rem, 8vw, 2.45rem); }
+  .inv-shop-expense-category-add { flex-basis: 56px; }
+  .inv-shop-receipt-upload { min-height: 54px; }
+  .inv-shop-expense-save { width: 100%; min-height: 56px; margin-top: 1rem; }
+}
+
+@media (max-width: 991.98px) {
+  .inv-shop-expense-fab { display: flex; }
+}
+
 .inv-loading-spinner {
   width: 30px;
   height: 30px;
@@ -673,7 +1004,7 @@ body.inv-settings-modal-open {
   display: grid;
   gap: 0.25rem;
   margin-bottom: 0.65rem;
-  padding: 0.65rem 0.8rem;
+  padding: 0.5rem 0.75rem;
   border: 1px solid color-mix(in srgb, var(--accent, #0b74ff) 24%, var(--border));
   border-radius: 10px;
   background: color-mix(in srgb, var(--accent-dim) 52%, var(--surface));
@@ -1234,7 +1565,7 @@ body:not(.light-mode) .inv-product-item-hidden .inv-product-hidden-badge {
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
-  padding: 0.6rem 0.5rem;
+  padding: 0.6rem 0.75rem;
   border-radius: 12px;
   margin-bottom: 0.9rem;
 }
@@ -1318,7 +1649,7 @@ body:not(.light-mode) .inv-product-item-hidden .inv-product-hidden-badge {
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  padding: 0.75rem 0.9rem;
+  padding: 0.75rem;
   background: none;
   border: none;
   text-align: left;

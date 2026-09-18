@@ -417,9 +417,25 @@ export class Purchase implements OnInit, OnDestroy {
     if (!this.canCreateExpenseRecords || this.isCheckingOut || this.cart.length === 0) {
       return;
     }
+    const categoryControl = this.cartForm.get('category');
+    if (!String(categoryControl?.value || '').trim()) {
+      categoryControl?.markAsTouched();
+      this.cdr.markForCheck();
+      await Swal.fire({
+        icon: 'warning',
+        title: this.translate.instant('CATEGORY_REQUIRED'),
+        confirmButtonText: this.translate.instant('CLOSE_BUTTON_LABEL'),
+      });
+      return;
+    }
     if (this.hasCartLineWithoutPrice()) {
       this.cartPriceError = true;
       this.cdr.markForCheck();
+      await Swal.fire({
+        icon: 'warning',
+        title: this.translate.instant('UNIT_PRICE_REQUIRED'),
+        confirmButtonText: this.translate.instant('CLOSE_BUTTON_LABEL'),
+      });
       return;
     }
     this.cartPriceError = false;

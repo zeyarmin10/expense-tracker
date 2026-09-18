@@ -75,6 +75,7 @@ export class CustomSelectComponent implements ControlValueAccessor {
   panelLeft = 0;
   panelWidth = 0;
   panelBottom = 0;
+  panelListMaxHeight = 240;
   panelAbove = false;
 
   readonly iconChevronDown = ChevronDown;
@@ -159,11 +160,36 @@ export class CustomSelectComponent implements ControlValueAccessor {
     const trigger = this.elRef.nativeElement.querySelector('.csl-trigger') as HTMLElement;
     if (!trigger) return;
     const rect = trigger.getBoundingClientRect();
+    // An Inventory add/edit overlay uses the individual `scale` property for
+    // its open animation. Like `transform`, that makes it the containing
+    // block for a nested fixed-position panel. Convert viewport coordinates
+    // to dialog-relative coordinates so a select inside that overlay opens
+    // directly below its trigger instead of offset to the right.
+    const inventoryOverlay = trigger.closest('.inv-add-overlay') as HTMLElement | null;
+    const overlayRect = inventoryOverlay?.getBoundingClientRect();
+
+    // In the Shop Expense desktop dialog, showing the picker below keeps the
+    // active category field visible and uses the form's note/receipt area.
+    // The generic height estimate can be overly conservative for Burmese
+    // option labels and was flipping this panel above despite visible room.
+    if (overlayRect) {
+      this.panelAbove = false;
+      this.panelLeft = rect.left - overlayRect.left;
+      this.panelWidth = rect.width;
+      this.panelTop = rect.bottom - overlayRect.top + 4;
+      this.panelBottom = 0;
+      // Reserve the search row and panel padding; the remaining space is a
+      // scrollable option list so long category sets stay inside the dialog.
+      this.panelListMaxHeight = Math.max(120, Math.floor(overlayRect.bottom - rect.bottom - 82));
+      return;
+    }
+
     const spaceBelow = window.innerHeight - rect.bottom;
     const estimatedHeight = this.showSearch ? 300 : 260;
 
     this.panelLeft = rect.left;
     this.panelWidth = rect.width;
+    this.panelListMaxHeight = 240;
 
     if (spaceBelow < estimatedHeight && rect.top > spaceBelow) {
       this.panelAbove = true;
