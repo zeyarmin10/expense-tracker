@@ -986,6 +986,11 @@ export class Sales implements OnInit, OnDestroy {
     if (this.hasCartLineWithoutPrice()) {
       this.cartPriceError = true;
       this.cdr.markForCheck();
+      await Swal.fire({
+        icon: 'warning',
+        title: this.translate.instant('UNIT_PRICE_REQUIRED'),
+        confirmButtonText: this.translate.instant('CLOSE_BUTTON_LABEL'),
+      });
       return;
     }
     this.cartPriceError = false;

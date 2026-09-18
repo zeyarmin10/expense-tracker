@@ -71,7 +71,9 @@
           <div class="pnl-float-field">
             <textarea id="incomeDesc" formControlName="description" class="pnl-input pnl-input-field pnl-textarea"
               placeholder=" " maxlength="250" [class.pnl-has-val]="incomeForm.get('description')?.value"></textarea>
-            <label class="pnl-float-label" for="incomeDesc">{{ 'DESCRIPTION' | translate }}</label>
+  <label class="pnl-float-label" for="incomeDesc">
+    {{ 'DESCRIPTION' | translate }} ({{ 'OPTIONAL' | translate }})
+  </label>
           </div>
           <div class="pnl-form-footer">
             <button type="submit" class="pnl-btn pnl-btn-primary" [disabled]="incomeForm.invalid || isSubmittingIncome">

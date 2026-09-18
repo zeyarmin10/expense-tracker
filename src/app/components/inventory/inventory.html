@@ -16,15 +16,19 @@
       <div class="inv-seg-ctrl">
         <div class="inv-seg-track">
           <span class="inv-seg-indicator"
-            [style.transform]="'translateX(calc(' + (activeTab === 'products' ? 0 : 1) + ' * 100%))'"
+            [style.transform]="'translateX(calc(' + inventoryTabIndex + ' * 100%))'"
             aria-hidden="true"></span>
-          <button type="button" class="inv-seg-btn" [class.active]="activeTab === 'products'"
+          <button type="button" class="inv-seg-btn" [class.active]="activeTab === 'products'" [disabled]="isTabTransitioning"
             (click)="setActiveTab('products')">
             {{ 'INVENTORY_TAB_PRODUCTS' | translate }}
           </button>
-          <button type="button" class="inv-seg-btn" [class.active]="activeTab === 'stock'"
+          <button type="button" class="inv-seg-btn" [class.active]="activeTab === 'stock'" [disabled]="isTabTransitioning"
             (click)="setActiveTab('stock')">
             {{ 'INVENTORY_TAB_STOCK_PROFIT' | translate }}
+          </button>
+          <button type="button" class="inv-seg-btn" [class.active]="activeTab === 'shopExpenses'" [disabled]="isTabTransitioning"
+            (click)="setActiveTab('shopExpenses')">
+            {{ 'INVENTORY_TAB_SHOP_EXPENSES' | translate }}
           </button>
         </div>
       </div>
@@ -32,10 +36,19 @@
         <lucide-icon [img]="iconPlus" [size]="15"></lucide-icon>
         {{ 'ADD_PRODUCT' | translate }}
       </button>
+      <button type="button" class="inv-add-toolbar-btn" *ngIf="activeTab === 'shopExpenses'" (click)="openShopExpenseOverlay()">
+        <lucide-icon [img]="iconPlus" [size]="15"></lucide-icon>
+        {{ 'SHOP_EXPENSE_ADD_TITLE' | translate }}
+      </button>
+    </div>
+
+    <div class="inv-loading-state inv-tab-transition-loading" *ngIf="isTabTransitioning" role="status">
+      <span class="inv-loading-spinner" aria-hidden="true"></span>
+      <span>{{ 'LOADING_DATA' | translate }}</span>
     </div>
 
     <!-- ── Products tab ── -->
-    <div *ngIf="activeTab === 'products'">
+    <div *ngIf="!isTabTransitioning && activeTab === 'products'">
       <!-- Add-Product form: a centered modal on desktop, full-screen
            overlay on mobile (reached via the FAB below) — same two-mode
            shell Expense/Budget/Income's own Add modal uses. -->
@@ -228,7 +241,7 @@
     </div>
 
     <!-- ── Stock & Profit tab ── -->
-    <div *ngIf="activeTab === 'stock'">
+    <div *ngIf="!isTabTransitioning && activeTab === 'stock'">
       <ng-container *ngIf="stockSummary$ | async as summary">
         <div class="inv-loading-state" *ngIf="isLoadingProducts || isLoadingStock" role="status">
           <span class="inv-loading-spinner" aria-hidden="true"></span>
@@ -411,6 +424,149 @@
       <p class="inv-method-note">{{ 'STOCK_SUMMARY_METHOD_NOTE' | translate }}</p>
     </div>
 
+    <!-- ── Shop expenses: operating costs that never affect stock ── -->
+    <div *ngIf="!isTabTransitioning && activeTab === 'shopExpenses'" class="inv-shop-expenses">
+      <ng-container *ngIf="shopExpenseSummary$ | async as summary">
+        <div class="inv-shop-profit-grid">
+          <div>
+            <span>{{ 'SHOP_EXPENSE_GROSS_PROFIT' | translate }}</span>
+            <strong [innerHTML]="formatService.formatAmountShortWholeHighDenominationHtml(summary.grossProfit, currency)"></strong>
+          </div>
+          <div>
+            <span>{{ 'SHOP_EXPENSE_OPERATING_TOTAL' | translate }}</span>
+            <strong class="inv-shop-expense-amount" [innerHTML]="formatService.formatAmountShortWholeHighDenominationHtml(summary.operatingExpenses, currency)"></strong>
+          </div>
+          <div class="inv-shop-net-profit" [class.inv-profit-positive]="summary.netProfit > 0" [class.inv-profit-negative]="summary.netProfit <= 0">
+            <span>{{ 'SHOP_EXPENSE_NET_PROFIT' | translate }}</span>
+            <strong [innerHTML]="formatService.formatAmountShortWholeHighDenominationHtml(summary.netProfit, currency)"></strong>
+          </div>
+        </div>
+      </ng-container>
+
+      <button type="button" class="inv-add-fab inv-shop-expense-fab" (click)="openShopExpenseOverlay()"
+        [title]="'SHOP_EXPENSE_ADD_TITLE' | translate">
+        <lucide-icon [img]="iconPlus" [size]="24"></lucide-icon>
+      </button>
+
+      <div class="inv-add-overlay-backdrop" [class.open]="showShopExpenseOverlay"></div>
+      <div class="inv-add-overlay inv-shop-expense-overlay" [class.inv-add-overlay-open]="showShopExpenseOverlay">
+        <div class="inv-add-overlay-topbar" *ngIf="!isShopExpenseDatePickerOpen">
+          <span class="inv-add-overlay-title">
+            <lucide-icon [img]="iconWallet" [size]="17" class="inv-icon-accent"></lucide-icon>
+            {{ (editingShopExpense ? 'EDIT_BUTTON_LABEL' : 'SHOP_EXPENSE_ADD_TITLE') | translate }}
+          </span>
+          <button type="button" class="inv-add-overlay-close" (click)="closeShopExpenseOverlay()"
+            [attr.aria-label]="'CANCEL_BUTTON_LABEL' | translate">
+            <lucide-icon [img]="iconTimes" [size]="20"></lucide-icon>
+          </button>
+        </div>
+        <div class="inv-add-overlay-topbar" *ngIf="isShopExpenseDatePickerOpen">
+          <button type="button" class="inv-add-overlay-close inv-shop-expense-date-back" (click)="closeShopExpenseDatePicker()"
+            [attr.aria-label]="'BACK_BUTTON' | translate">
+            <lucide-icon [img]="iconChevronDown" [size]="20"></lucide-icon>
+          </button>
+          <span class="inv-add-overlay-title">{{ 'EXPENSE_DATE_LABEL' | translate }}</span>
+          <button type="button" class="inv-add-overlay-close" (click)="closeShopExpenseDatePicker()"
+            [attr.aria-label]="'BACK_BUTTON' | translate">
+            <lucide-icon [img]="iconTimes" [size]="20"></lucide-icon>
+          </button>
+        </div>
+        <div class="inv-add-overlay-scroll inv-shop-expense-date-picker-body" *ngIf="isShopExpenseDatePickerOpen">
+          <div id="inv-shop-expense-date-picker-container"></div>
+        </div>
+        <div class="inv-add-overlay-scroll" *ngIf="!isShopExpenseDatePickerOpen">
+        <form class="inv-shop-expense-form" [formGroup]="shopExpenseForm" (ngSubmit)="saveShopExpense()">
+        <div class="inv-shop-expense-fields">
+          <div class="inv-shop-expense-date-toolbar">
+            <button type="button" class="inv-shop-expense-date-trigger" (click)="openShopExpenseDatePicker()">
+              <lucide-icon [img]="iconCalendar" [size]="13"></lucide-icon>
+              <span>{{ formatService.formatLocalizedDate(shopExpenseForm.get('date')?.value) }}</span>
+            </button>
+          </div>
+          <section class="inv-shop-expense-amount-card">
+            <div class="inv-shop-expense-amount-heading">
+              <span>{{ 'AMOUNT' | translate }}</span>
+              <span>{{ currency }}</span>
+            </div>
+            <div class="inv-shop-amount-field">
+              <input type="text" inputmode="decimal" class="inv-input" formControlName="amount"
+                (input)="onShopExpenseAmountInput($event)" placeholder="12,345" />
+            </div>
+          </section>
+          <div class="inv-shop-expense-category-row">
+            <app-custom-select class="inv-shop-expense-category" formControlName="category" [options]="shopExpenseCategoryOptions"
+              [label]="'CATEGORY_LABEL' | translate" [sheetTitle]="'CATEGORY_LABEL' | translate" [showIcons]="true"></app-custom-select>
+            <button type="button" class="inv-shop-expense-category-add" (click)="openShopExpenseCategoryModal()"
+              [title]="'EXPENSE_ADD_CATEGORY_BTN' | translate">
+              <lucide-icon [img]="iconPlus" [size]="18"></lucide-icon>
+            </button>
+          </div>
+          <div class="inv-shop-expense-field-error" *ngIf="shopExpenseForm.controls['category'].invalid && shopExpenseForm.controls['category'].touched">
+            {{ 'CATEGORY_REQUIRED' | translate }}
+          </div>
+          <textarea class="inv-input inv-shop-expense-description" formControlName="description" maxlength="250" rows="3"
+            [placeholder]="'SHOP_EXPENSE_NOTE_PLACEHOLDER' | translate"></textarea>
+          <div class="inv-shop-expense-receipt-row">
+            <label class="inv-shop-receipt-upload">
+              <input type="file" accept="image/*" (change)="onShopExpenseReceiptSelected($event)" />
+              <span>{{ 'SHOP_EXPENSE_RECEIPT' | translate }}</span>
+            </label>
+            <div class="inv-shop-receipt-preview" *ngIf="shopExpenseReceiptPreview">
+              <img [src]="shopExpenseReceiptPreview" alt="" />
+              <button type="button" (click)="clearShopExpenseReceipt()" [attr.aria-label]="'DELETE' | translate">
+                <lucide-icon [img]="iconTimes" [size]="15"></lucide-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+        <button type="submit" class="inv-add-btn inv-shop-expense-save" [disabled]="shopExpenseForm.invalid || isSavingShopExpense">
+          <lucide-icon *ngIf="!isSavingShopExpense" [img]="iconSave" [size]="17"></lucide-icon>
+          {{ isSavingShopExpense ? ('LOADING_DATA' | translate) : ((editingShopExpense ? 'SAVE_BUTTON_LABEL' : 'SHOP_EXPENSE_SAVE') | translate) }}
+        </button>
+        </form>
+        </div>
+      </div>
+
+      <ng-container *ngIf="shopExpenseDateGroups$ | async as groups">
+        <div class="inv-empty" *ngIf="groups.length === 0">{{ 'SHOP_EXPENSE_EMPTY' | translate }}</div>
+        <div class="inv-shop-expense-list" *ngIf="groups.length > 0">
+          <section class="inv-shop-expense-date-group" *ngFor="let group of groups">
+            <header class="inv-shop-expense-date-header">
+              <span class="inv-shop-expense-date-label">{{ formatService.formatLocalizedDate(group.date) }}</span>
+              <span class="inv-shop-expense-date-count">{{ 'EXPENSE_GROUP_COUNT' | translate: { count: formatService.formatCount(group.count) } }}</span>
+              <div class="inv-shop-expense-date-totals">
+                <span class="inv-shop-expense-date-total" *ngFor="let total of group.totalsByCurrency | keyvalue"
+                  [innerHTML]="formatService.formatAmountWithSymbolHtml(total.value, total.key)"></span>
+              </div>
+            </header>
+            <div class="inv-shop-expense-date-list">
+              <article class="inv-shop-expense-row" *ngFor="let expense of group.expenses">
+                <div class="inv-shop-expense-row-main">
+                  <div>
+                    <strong>{{ expense.category }}</strong>
+                    <span *ngIf="expense.description">{{ expense.description }}</span>
+                  </div>
+                  <div class="inv-shop-expense-row-right">
+                    <strong [innerHTML]="formatService.formatAmountWithSymbolHtml(expense.amount, expense.currency)"></strong>
+                    <a *ngIf="expense.receiptUrl" [href]="expense.receiptUrl" target="_blank" rel="noopener">{{ 'SHOP_EXPENSE_RECEIPT' | translate }}</a>
+                  </div>
+                </div>
+                <div class="inv-shop-expense-row-actions">
+                  <button type="button" class="inv-shop-expense-action inv-shop-expense-action-edit" (click)="startEditShopExpense(expense)">
+                    <lucide-icon [img]="iconPencil" [size]="16"></lucide-icon>
+                    {{ 'EDIT_BUTTON_LABEL' | translate }}
+                  </button>
+                  <button type="button" class="inv-shop-expense-action inv-shop-expense-action-delete" (click)="onDeleteShopExpense(expense)">
+                    <lucide-icon [img]="iconTrash2" [size]="16"></lucide-icon>
+                  </button>
+                </div>
+              </article>
+            </div>
+          </section>
+        </div>
+      </ng-container>
+    </div>
+
     <div class="inv-filter-sheet-backdrop" [class.open]="isInventoryFilterSheetOpen" (click)="closeInventoryFilterSheet()"></div>
     <section class="inv-filter-sheet" [class.open]="isInventoryFilterSheetOpen" role="dialog" [attr.aria-modal]="isInventoryFilterSheetOpen"
       [style.--inv-filter-top.px]="inventoryFilterMenuTop" [style.--inv-filter-left.px]="inventoryFilterMenuLeft"
@@ -475,3 +631,5 @@
 
   </div>
 </div>
+
+<app-category-modal></app-category-modal>

@@ -106,7 +106,7 @@
              [placeholder]="'CUSTOM_SELECT_SEARCH' | translate" autocomplete="off" />
     </div>
 
-    <div class="csl-panel-list">
+    <div class="csl-panel-list" [style.max-height.px]="panelListMaxHeight">
       <p class="csl-empty" *ngIf="filteredOptions.length === 0">
         {{ 'CUSTOM_SELECT_NO_RESULTS' | translate }}
       </p>

@@ -61,6 +61,10 @@
           }
         },
 
+        "shopExpenses": {
+          ".indexOn": ["date", "category"]
+        },
+
         "incomes": {
           ".indexOn": ["date", "productId"],
           ".write": "$uid === auth.uid",
@@ -178,6 +182,10 @@
           }
         },
 
+        "shopExpenses": {
+          ".indexOn": ["date", "category"]
+        },
+
         "incomes": {
           ".indexOn": ["date", "productId"],
           "$incomeId": {
@@ -253,6 +261,10 @@
               }
             }
           }
+        },
+
+        "shopExpenses": {
+          ".indexOn": ["date", "category"]
         },
 
         "incomes": {
