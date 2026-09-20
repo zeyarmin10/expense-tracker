@@ -73,9 +73,9 @@
   margin-bottom: 0.85rem;
 }
 
-/* Do not turn the shared filter into a report-specific layout on phones.
-   This preserves the same sticky header, height, and label spacing as the
-   other record screens. */
+/* Android WebView can retain a stale composited height for the sticky filter
+   after the date range changes. Keep the filter in normal flow on phones so
+   its period label cannot be painted underneath the following search field. */
 @media (max-width: 991px) {
   .srpt-container {
     overflow-x: visible;
@@ -85,6 +85,22 @@
     .srpt-container {
       overflow-x: clip;
     }
+  }
+
+  .srpt-container > .exp-filter-bar {
+    position: relative;
+    top: auto;
+    z-index: auto;
+    flex-shrink: 0;
+    margin-bottom: 1rem;
+  }
+
+  .srpt-container > .exp-filter-bar .exp-filter-bottom-row {
+    min-height: 1.35rem;
+  }
+
+  .srpt-container > .exp-filter-bar .exp-filter-label {
+    line-height: 1.35;
   }
 
   .srpt-container > .ov-search-row {

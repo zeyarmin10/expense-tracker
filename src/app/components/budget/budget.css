@@ -65,8 +65,10 @@
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.65);
-  animation: bgt-fab-pulse 2.6s ease-in-out infinite;
+  border: 2px solid rgba(96, 165, 250, 0.65);
+  animation: bgt-fab-pulse 4.4s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
   pointer-events: none;
 }
 
@@ -95,12 +97,13 @@
 }
 
 @keyframes bgt-fab-pulse {
-  0% {
-    transform: scale(1);
-    opacity: 0.85;
+  0%, 10% {
+    transform: translateZ(0) scale(0.92);
+    opacity: 0;
   }
-  75%, 100% {
-    transform: scale(1.55);
+  18% { opacity: 0.62; }
+  72%, 100% {
+    transform: translateZ(0) scale(1.45);
     opacity: 0;
   }
 }
@@ -526,6 +529,11 @@ body.bgt-add-modal-open {
   flex-direction: column;
   align-items: center;
   min-height: 320px;
+}
+
+.bgt-date-picker-body > div {
+  width: min(100%, 620px);
+  margin-inline: auto;
 }
 
 /* ── Page Header ── */
@@ -1084,14 +1092,17 @@ app-date-input .di-trigger {
 }
 
 .bgt-date-pill {
-  display: flex;
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.3rem;
-  padding: 0.25rem 0.6rem;
-  border-radius: 20px;
+  min-height: 38px;
+  padding: 0.4rem 0.72rem;
+  border-radius: 10px;
   border: 1px solid var(--border);
   background: var(--surface-2);
   color: var(--text-sub);
+  font: inherit;
   font-size: 0.72rem;
   font-weight: 700;
   cursor: pointer;
@@ -1104,6 +1115,9 @@ app-date-input .di-trigger {
   border-color: var(--accent);
   color: var(--text);
 }
+
+.bgt-date-pill lucide-icon { flex: 0 0 auto; color: currentColor; }
+.bgt-date-pill:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 /* ── Amount — prominent hero field, matching Add Expense's price field.
    Placeholder and typed value share the same large size (no floating label). */

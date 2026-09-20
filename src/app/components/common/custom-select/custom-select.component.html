@@ -22,6 +22,7 @@
         <lucide-icon *ngIf="!selectedOption!.iconUrl" [img]="getIconData(selectedOption!.icon)" [size]="15"></lucide-icon>
       </span>
       <span class="csl-value" *ngIf="selectedOption">{{ selectedOption.label }}</span>
+      <span class="csl-placeholder" *ngIf="!selectedOption && placeholder">{{ placeholder }}</span>
     </span>
 
     <lucide-icon [img]="iconChevronDown" [size]="15"
