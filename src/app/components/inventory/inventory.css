@@ -502,8 +502,10 @@ body.inv-settings-modal-open {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  box-shadow: 0 0 0 3px rgba(11, 116, 255, 0.65);
-  animation: inv-fab-pulse 2.6s ease-in-out infinite;
+  border: 2px solid rgba(11, 116, 255, 0.65);
+  animation: inv-fab-pulse 4.4s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
   pointer-events: none;
 }
 
@@ -516,12 +518,13 @@ body.inv-settings-modal-open {
 }
 
 @keyframes inv-fab-pulse {
-  0% {
-    transform: scale(1);
-    opacity: 0.85;
+  0%, 10% {
+    transform: translateZ(0) scale(0.92);
+    opacity: 0;
   }
-  75%, 100% {
-    transform: scale(1.55);
+  18% { opacity: 0.62; }
+  72%, 100% {
+    transform: translateZ(0) scale(1.45);
     opacity: 0;
   }
 }
@@ -761,7 +764,7 @@ body.inv-settings-modal-open {
 .inv-shop-expense-category-row { display: flex; align-items: stretch; gap: 0; min-width: 0; }
 .inv-shop-expense-category { min-width: 0; flex: 1; }
 .inv-shop-expense-category ::ng-deep .csl-trigger {
-  height: 56px;
+  height: 52px !important;
   border-color: color-mix(in srgb, var(--accent) 20%, var(--border));
   border-right: 0;
   border-radius: 10px 0 0 10px;
@@ -774,8 +777,9 @@ body.inv-settings-modal-open {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  flex: 0 0 56px;
-  min-height: 56px;
+  flex: 0 0 52px;
+  height: 52px;
+  min-height: 52px;
   border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--border));
   border-radius: 0 10px 10px 0;
   background: var(--info);
@@ -890,7 +894,7 @@ body.inv-settings-modal-open {
   color: #0a1120;
   box-shadow: 0 8px 22px rgba(244, 177, 26, 0.45);
 }
-.inv-shop-expense-fab::after { box-shadow: 0 0 0 3px rgba(244, 177, 26, 0.65); }
+.inv-shop-expense-fab::after { border-color: rgba(244, 177, 26, 0.65); }
 
 .inv-shop-expense-list { padding: 0; border-radius: 16px; overflow: hidden; }
 .inv-shop-expense-date-group { border-bottom: 1px solid var(--border); }
@@ -956,7 +960,7 @@ body.inv-settings-modal-open {
   .inv-shop-expense-date-trigger { min-height: 38px; padding: 0.4rem 0.72rem; font-size: 0.72rem; }
   .inv-shop-expense-form .inv-input { background: var(--surface-2); }
   .inv-shop-amount-field .inv-input { background: transparent; font-size: clamp(1.8rem, 8vw, 2.45rem); }
-  .inv-shop-expense-category-add { flex-basis: 56px; }
+  .inv-shop-expense-category-add { flex-basis: 52px; }
   .inv-shop-receipt-upload { min-height: 54px; }
   .inv-shop-expense-save { width: 100%; min-height: 56px; margin-top: 1rem; }
 }

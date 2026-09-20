@@ -495,7 +495,7 @@
           </section>
           <div class="inv-shop-expense-category-row">
             <app-custom-select class="inv-shop-expense-category" formControlName="category" [options]="shopExpenseCategoryOptions"
-              [label]="'CATEGORY_LABEL' | translate" [sheetTitle]="'CATEGORY_LABEL' | translate" [showIcons]="true"></app-custom-select>
+              label="" [placeholder]="'CATEGORY_LABEL' | translate" [sheetTitle]="'CATEGORY_LABEL' | translate" [showIcons]="true"></app-custom-select>
             <button type="button" class="inv-shop-expense-category-add" (click)="openShopExpenseCategoryModal()"
               [title]="'EXPENSE_ADD_CATEGORY_BTN' | translate">
               <lucide-icon [img]="iconPlus" [size]="18"></lucide-icon>

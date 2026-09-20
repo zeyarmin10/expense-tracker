@@ -82,8 +82,10 @@
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  box-shadow: 0 0 0 3px rgba(11, 116, 255, 0.65);
-  animation: cat-fab-pulse 2.6s ease-in-out infinite;
+  border: 2px solid rgba(11, 116, 255, 0.65);
+  animation: cat-fab-pulse 4.4s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
   pointer-events: none;
 }
 
@@ -112,12 +114,13 @@
 }
 
 @keyframes cat-fab-pulse {
-  0% {
-    transform: scale(1);
-    opacity: 0.85;
+  0%, 10% {
+    transform: translateZ(0) scale(0.92);
+    opacity: 0;
   }
-  75%, 100% {
-    transform: scale(1.55);
+  18% { opacity: 0.62; }
+  72%, 100% {
+    transform: translateZ(0) scale(1.45);
     opacity: 0;
   }
 }

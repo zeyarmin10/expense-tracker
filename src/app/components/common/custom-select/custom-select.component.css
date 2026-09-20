@@ -163,6 +163,14 @@
   text-overflow: ellipsis;
 }
 
+.csl-placeholder {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* Chevron — absolutely centered on the right */
 .csl-chevron {
   position: absolute;

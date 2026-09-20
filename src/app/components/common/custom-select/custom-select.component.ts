@@ -38,6 +38,8 @@ export class CustomSelectComponent implements ControlValueAccessor {
   get options(): SelectOption[] { return this._options; }
 
   @Input() label = '';
+  /** Inline prompt for compact, no-floating-label selects. */
+  @Input() placeholder = '';
   // Title shown in the mobile bottom sheet's header. Falls back to `label`
   // when not set — kept separate so callers using [fitContent] to hide the
   // floating label above the closed trigger (e.g. compact date filters)
