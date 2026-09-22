@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 
 /** Collections that Phase 1 can safely edit without a connection. */
-export type OfflineCollection = 'expenses' | 'incomes' | 'categories' | 'budgets';
-export type OfflineOperationKind = 'set' | 'update' | 'remove';
+export type OfflineCollection = 'expenses' | 'incomes' | 'categories' | 'budgets' | 'vouchers';
+export type OfflineOperationKind = 'set' | 'update' | 'remove' | 'uploadVoucher';
 
 export interface OfflineOperation {
   id: string;
@@ -13,11 +13,20 @@ export interface OfflineOperation {
   createdAt: number;
   attempts: number;
   lastError?: string;
+  /** Present for shared-space edits, which must never silently overwrite a collaborator. */
+  sharedSpaceId?: string;
+  /** Server revision observed before the local edit; used for conflict detection. */
+  baseUpdatedAt?: string | null;
 }
 
 interface StoredCollection {
   key: string;
   records: Record<string, Record<string, unknown>>;
+}
+
+interface StoredBlob {
+  key: string;
+  blob: Blob;
 }
 
 /**
@@ -31,12 +40,14 @@ interface StoredCollection {
 @Injectable({ providedIn: 'root' })
 export class OfflineStoreService {
   private readonly databaseName = 'kyat-wise-offline';
-  private readonly databaseVersion = 1;
+  private readonly databaseVersion = 2;
   private readonly collectionStore = 'collections';
   private readonly queueStore = 'queue';
+  private readonly blobStore = 'blobs';
   private dbPromise?: Promise<IDBDatabase | null>;
   private readonly memoryCollections = new Map<string, StoredCollection>();
   private readonly memoryQueue = new Map<string, OfflineOperation>();
+  private readonly memoryBlobs = new Map<string, Blob>();
   private lastOperationTimestamp = 0;
 
   private get database(): Promise<IDBDatabase | null> {
@@ -58,6 +69,9 @@ export class OfflineStoreService {
         }
         if (!db.objectStoreNames.contains(this.queueStore)) {
           db.createObjectStore(this.queueStore, { keyPath: 'id' });
+        }
+        if (!db.objectStoreNames.contains(this.blobStore)) {
+          db.createObjectStore(this.blobStore, { keyPath: 'key' });
         }
       };
       request.onsuccess = () => resolve(request.result);
@@ -182,6 +196,36 @@ export class OfflineStoreService {
       attempts: operation.attempts + 1,
       lastError: error instanceof Error ? error.message : String(error),
     });
+  }
+
+  async saveBlob(key: string, blob: Blob): Promise<void> {
+    const db = await this.database;
+    if (!db) {
+      this.memoryBlobs.set(key, blob);
+      return;
+    }
+    const transaction = db.transaction(this.blobStore, 'readwrite');
+    transaction.objectStore(this.blobStore).put({ key, blob } as StoredBlob);
+    await this.transactionDone(transaction);
+  }
+
+  async getBlob(key: string): Promise<Blob | null> {
+    const db = await this.database;
+    if (!db) return this.memoryBlobs.get(key) || null;
+    const transaction = db.transaction(this.blobStore, 'readonly');
+    const value = await this.request(transaction.objectStore(this.blobStore).get(key));
+    return (value as StoredBlob | undefined)?.blob || null;
+  }
+
+  async removeBlob(key: string): Promise<void> {
+    const db = await this.database;
+    if (!db) {
+      this.memoryBlobs.delete(key);
+      return;
+    }
+    const transaction = db.transaction(this.blobStore, 'readwrite');
+    transaction.objectStore(this.blobStore).delete(key);
+    await this.transactionDone(transaction);
   }
 
   createId(prefix = 'offline'): string {

@@ -94,6 +94,23 @@ export class PersonalOfflineDataService {
     });
   }
 
+  async queueVoucherUpload(
+    profile: UserProfile,
+    voucherId: string,
+    localVoucher: Record<string, unknown>,
+    uploadPayload: Record<string, unknown>,
+  ): Promise<void> {
+    await this.store.patchRecord(profile.uid, 'vouchers', voucherId, localVoucher);
+    await this.store.enqueue({
+      id: this.store.createId('op'),
+      kind: 'uploadVoucher',
+      path: this.path(profile, 'vouchers', voucherId),
+      payload: uploadPayload,
+      createdAt: this.store.nextOperationTimestamp(),
+      attempts: 0,
+    });
+  }
+
   createRecordId(collection: OfflineCollection): string {
     return this.store.createId(collection.slice(0, 3));
   }
