@@ -22,6 +22,7 @@ import { SpaceDataService } from './space-data.service';
 import { SpaceSwitchLoadingService } from './space-switch-loading.service';
 import { toLocalDateKey } from './date-filter.service';
 import { PersonalOfflineDataService } from './personal-offline-data.service';
+import { SharedOfflineDataService } from './shared-offline-data.service';
 
 export interface IncomeLineItem {
   productId: string;
@@ -51,6 +52,7 @@ export interface ServiceIIncome {
   userId?: string;
   groupId?: string;
   createdAt?: string;
+  updatedAt?: string;
   createdByName?: string;
   createdByPhotoURL?: string | null;
   device: string;
@@ -102,6 +104,7 @@ export class IncomeService {
   private spaceDataService = inject(SpaceDataService);
   private spaceSwitchLoadingService = inject(SpaceSwitchLoadingService);
   private personalOfflineData = inject(PersonalOfflineDataService);
+  private sharedOfflineData = inject(SharedOfflineDataService);
 
   constructor() {
   }
@@ -130,6 +133,14 @@ export class IncomeService {
       createdAt: new Date().toISOString(),
       device: navigator.userAgent,
     };
+
+    if (this.sharedOfflineData.isOfflineShared(profile)) {
+      await this.sharedOfflineData.write(
+        profile, 'incomes', 'set', this.sharedOfflineData.createRecordId('incomes'),
+        { ...newIncomeToSave, groupId: getActiveGroupId(profile) },
+      );
+      return;
+    }
 
     if (this.personalOfflineData.isOfflinePersonal(profile)) {
       await this.personalOfflineData.write(
@@ -164,6 +175,13 @@ export class IncomeService {
 
     return profile$.pipe(
       switchMap((profile) => {
+        if (this.sharedOfflineData.isOfflineShared(profile)) {
+          return from(this.sharedOfflineData.read<ServiceIIncome>(profile, 'incomes')).pipe(
+            map(incomes => Object.entries(incomes)
+              .map(([id, income]) => ({ id, ...income }))
+              .filter(income => income.status !== 'void')),
+          );
+        }
         if (this.personalOfflineData.isOfflinePersonal(profile)) {
           return from(this.personalOfflineData.read<ServiceIIncome>(profile, 'incomes')).pipe(
             map(incomesData => {
@@ -196,7 +214,9 @@ export class IncomeService {
           switchMap(async snapshot => {
             const incomesData = snapshot.val();
             if (!incomesData) {
-              if (!getActiveGroupId(profile)) {
+              if (getActiveGroupId(profile)) {
+                await this.sharedOfflineData.cacheRemote(profile, 'incomes', {});
+              } else {
                 await this.personalOfflineData.cacheRemote(profile, 'incomes', {});
               }
               return [];
@@ -228,7 +248,9 @@ export class IncomeService {
               });
             }
 
-            if (!getActiveGroupId(profile)) {
+            if (getActiveGroupId(profile)) {
+              await this.sharedOfflineData.cacheRemote(profile, 'incomes', incomesData);
+            } else {
               await this.personalOfflineData.cacheRemote(profile, 'incomes', incomesData);
             }
             return Object.keys(incomesData).map(key => {
@@ -281,6 +303,16 @@ export class IncomeService {
       throw new Error('Income ID is required for update.');
     }
 
+    if (this.sharedOfflineData.isOfflineShared(profile)) {
+      const records = await this.sharedOfflineData.read<ServiceIIncome>(profile, 'incomes');
+      const current = records[incomeId];
+      if (!current) throw new Error('Income not found on this device.');
+      await this.sharedOfflineData.write(profile, 'incomes', 'update', incomeId, {
+        ...updatedData, editedDevice: navigator.userAgent, updatedAt: new Date().toISOString(),
+      }, current.updatedAt || current.createdAt || null);
+      return;
+    }
+
     if (this.personalOfflineData.isOfflinePersonal(profile)) {
       await this.personalOfflineData.write(profile, 'incomes', 'update', incomeId, {
         ...updatedData,
@@ -314,6 +346,13 @@ export class IncomeService {
       throw new Error('Income ID is required for deletion.');
     }
 
+    if (this.sharedOfflineData.isOfflineShared(profile)) {
+      const records = await this.sharedOfflineData.read<ServiceIIncome>(profile, 'incomes');
+      await this.sharedOfflineData.write(profile, 'incomes', 'remove', id, undefined,
+        records[id]?.updatedAt || records[id]?.createdAt || null);
+      return;
+    }
+
     if (this.personalOfflineData.isOfflinePersonal(profile)) {
       await this.personalOfflineData.write(profile, 'incomes', 'remove', id);
       return;
@@ -345,6 +384,14 @@ export class IncomeService {
     }
     if (!id) {
       throw new Error('Income ID is required for voiding.');
+    }
+    if (this.sharedOfflineData.isOfflineShared(profile)) {
+      const records = await this.sharedOfflineData.read<ServiceIIncome>(profile, 'incomes');
+      await this.sharedOfflineData.write(profile, 'incomes', 'update', id, {
+        status: 'void', voidedAt: new Date().toISOString(), voidedBy: profile.uid,
+        voidedByName: profile.displayName || 'Unknown', voidReason: reason || null,
+      }, records[id]?.updatedAt || records[id]?.createdAt || null);
+      return;
     }
     if (this.personalOfflineData.isOfflinePersonal(profile)) {
       await this.personalOfflineData.write(profile, 'incomes', 'update', id, {
