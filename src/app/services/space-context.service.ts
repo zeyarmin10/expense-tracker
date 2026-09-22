@@ -8,10 +8,12 @@ import {
   set,
   update,
 } from '@angular/fire/database';
-import { Observable, combineLatest, map, of, switchMap, catchError } from 'rxjs';
+import { Observable, combineLatest, map, of, switchMap, catchError, from, tap } from 'rxjs';
 import { CategoryService } from './category';
 import { Space, SpaceRole, UserSpaceSummary } from './space.model';
 import { UserDataService, UserProfile, getActiveGroupId } from './user-data';
+import { OfflineStoreService } from './offline-store.service';
+import { NetworkService } from './network.service';
 
 @Injectable({
   providedIn: 'root',
@@ -20,6 +22,8 @@ export class SpaceContextService {
   private db = inject(Database);
   private userDataService = inject(UserDataService);
   private categoryService = inject(CategoryService);
+  private offlineStore = inject(OfflineStoreService);
+  private network = inject(NetworkService);
   private readonly virtualPersonalPrefix = 'personal:';
 
   private isVirtualPersonalSpaceId(spaceId: string | null | undefined): boolean {
@@ -177,6 +181,11 @@ export class SpaceContextService {
   getUserSpaces(userId: string): Observable<UserSpaceSummary[]> {
     return this.userDataService.getUserProfile(userId).pipe(
       switchMap((profile) => {
+        if (!this.network.isOnline$.value) {
+          return from(this.offlineStore.getCollection<UserSpaceSummary>(userId, 'spaces')).pipe(
+            map(spaces => Object.values(spaces)),
+          );
+        }
         const memberships = profile?.spaceMemberships || {};
         const personalSpaceId =
           profile?.personalSpaceId || (profile?.uid ? this.buildVirtualPersonalSpaceId(profile.uid) : null);
@@ -203,6 +212,7 @@ export class SpaceContextService {
         if (entries.length === 0) {
           return personalSpace$.pipe(
             map((space) => (space ? [space] : [])),
+            tap(spaces => void this.cacheUserSpaces(userId, spaces)),
           );
         }
 
@@ -238,8 +248,20 @@ export class SpaceContextService {
 
             return [...deduped.values()];
           }),
+          tap(spaces => void this.cacheUserSpaces(userId, spaces)),
         );
       }),
+    );
+  }
+
+  private async cacheUserSpaces(userId: string, spaces: UserSpaceSummary[]): Promise<void> {
+    const records = Object.fromEntries(
+      spaces.filter(space => !!space.id).map(space => [space.id!, space]),
+    ) as unknown as Record<string, Record<string, unknown>>;
+    await this.offlineStore.replaceCollection(
+      userId,
+      'spaces',
+      records,
     );
   }
 
