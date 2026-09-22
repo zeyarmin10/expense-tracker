@@ -598,6 +598,7 @@
   "ONBOARDING_PERSONAL_ACCOUNT_SETUP_ERROR": "មានបញ្ហាក្នុងការរៀបចំគណនីផ្ទាល់ខ្លួន។ សូមព្យាយាមម្តងទៀត។",
   "ONBOARDING_GROUP_CREATION_FAILED": "ការបង្កើតក្រុមបរាជ័យ។ សូមពិនិត្យព័ត៌មាន ហើយព្យាយាមម្តងទៀត។",
   "SPACE_CREATION_REQUIRES_INTERNET": "ត្រូវការភ្ជាប់អ៊ីនធឺណិត ដើម្បីបង្កើត Space ថ្មី។",
+  "SPACE_CREATE_OR_JOIN_REQUIRES_INTERNET": "ត្រូវការភ្ជាប់អ៊ីនធឺណិត ដើម្បីបង្កើត ឬចូលរួម Space។",
   "ONBOARDING_MUST_BE_LOGGED_IN": "អ្នកត្រូវចូលគណនីជាមុនសិន ដើម្បីចូលរួមក្រុម។",
   "ONBOARDING_JOIN_GROUP_SUCCESS": "បានចូលរួមក្រុមដោយជោគជ័យ!",
   "ONBOARDING_INVITATION_PROCESS_FAILED": "ការដំណើរការការអញ្ជើញបរាជ័យ។ ការអញ្ជើញអាចមិនត្រឹមត្រូវ ឬផុតកំណត់ហើយ។",

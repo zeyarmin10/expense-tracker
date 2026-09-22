@@ -15,6 +15,7 @@ import { Space, SpaceRole, UserSpaceSummary } from './space.model';
 import { UserDataService, UserProfile, getActiveGroupId } from './user-data';
 import { OfflineStoreService } from './offline-store.service';
 import { NetworkService } from './network.service';
+import { GroupOfflineAccessService } from './group-offline-access.service';
 
 @Injectable({
   providedIn: 'root',
@@ -26,6 +27,7 @@ export class SpaceContextService {
   private categoryService = inject(CategoryService);
   private offlineStore = inject(OfflineStoreService);
   private network = inject(NetworkService);
+  private groupOfflineAccess = inject(GroupOfflineAccessService);
   private readonly virtualPersonalPrefix = 'personal:';
 
   private isVirtualPersonalSpaceId(spaceId: string | null | undefined): boolean {
@@ -509,7 +511,12 @@ export class SpaceContextService {
       throw new Error('Space access denied. Connect to the internet once to refresh your spaces.');
     }
 
-    const isGroup = space?.type === 'group';
+    const isGroup = space?.type === 'group' || (!!membershipRole && !isOwnPersonalSpace);
+    if (isGroup) {
+      // Do this before changing the cached profile, so an expired group can
+      // never be entered briefly and then locked by the app-shell overlay.
+      await this.groupOfflineAccess.assertCanOpenOfflineGroup(spaceId);
+    }
     const role = isGroup ? (membershipRole || space?.role || 'member') : 'owner';
     const contextUpdate: Partial<UserProfile> = {
       currentSpaceId: spaceId,

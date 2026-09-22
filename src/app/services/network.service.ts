@@ -4,6 +4,9 @@ import { BehaviorSubject } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class NetworkService {
+  /** Physical Wi-Fi/mobile connectivity only; it intentionally ignores RTDB availability. */
+  isPhysicalConnection$ = new BehaviorSubject<boolean>(true);
+  /** Usable Firebase connection. A blocked RTDB route is local/offline mode. */
   isOnline$ = new BehaviorSubject<boolean>(true);
   private physicalConnection = true;
   private serverUnavailable = false;
@@ -65,6 +68,7 @@ export class NetworkService {
   }
 
   private publishConnectionState(): void {
+    this.isPhysicalConnection$.next(this.physicalConnection);
     this.isOnline$.next(this.physicalConnection && !this.serverUnavailable);
   }
 }

@@ -425,6 +425,10 @@ export class OnboardingComponent implements OnInit, OnDestroy {
   }
 
   async openJoinSpaceModal(): Promise<void> {
+    if (!this.network.isOnline$.value) {
+      await this.showSpaceCreateOrJoinRequiresInternetAlert();
+      return;
+    }
     const user = await firstValueFrom(this.authService.currentUser$);
     if (!user) {
       Swal.fire({
@@ -559,6 +563,10 @@ export class OnboardingComponent implements OnInit, OnDestroy {
   async joinGroup(): Promise<void> {
     const code = this.inviteCode.trim();
     if (this.isJoiningSpace || code.length !== this.inviteCodeLength) return;
+    if (!this.network.isOnline$.value) {
+      await this.showSpaceCreateOrJoinRequiresInternetAlert();
+      return;
+    }
 
     const user = await firstValueFrom(this.authService.currentUser$);
     if (!user) {
@@ -649,10 +657,14 @@ export class OnboardingComponent implements OnInit, OnDestroy {
   }
 
   private showSpaceCreationRequiresInternetAlert(): Promise<any> {
+    return this.showSpaceCreateOrJoinRequiresInternetAlert();
+  }
+
+  private showSpaceCreateOrJoinRequiresInternetAlert(): Promise<any> {
     return Swal.fire({
       icon: 'info',
       title: this.translate.instant('ERROR_TITLE'),
-      text: this.translate.instant('SPACE_CREATION_REQUIRES_INTERNET'),
+      text: this.translate.instant('SPACE_CREATE_OR_JOIN_REQUIRES_INTERNET'),
     });
   }
 

@@ -9,6 +9,7 @@ import { SpaceCollection, SpaceDataService } from './space-data.service';
 import { getActiveGroupId, UserProfile } from './user-data';
 import { OfflineStoreService } from './offline-store.service';
 import { UserSpaceSummary } from './space.model';
+import { GroupOfflineAccessService } from './group-offline-access.service';
 
 /**
  * Hydrates only spaces listed in the signed-in user's own profile. It never
@@ -24,6 +25,7 @@ export class OfflineHydrationService {
   private personal = inject(PersonalOfflineDataService);
   private shared = inject(SharedOfflineDataService);
   private store = inject(OfflineStoreService);
+  private groupOfflineAccess = inject(GroupOfflineAccessService);
   private started = false;
   private syncing = false;
   readonly lastSyncedAt$ = new BehaviorSubject<Date | null>(null);
@@ -81,6 +83,9 @@ export class OfflineHydrationService {
         ...(['categories', 'budgets', 'products', 'expenses', 'incomes', 'vouchers', 'shopExpenses'] as SpaceCollection[])
           .map(collection => this.hydrateCollection(profile, collection)),
       ]);
+    if (getActiveGroupId(profile)) {
+      await this.groupOfflineAccess.markSuccessfulSync(profile);
+    }
   }
 
   private async cacheSpaceSummaries(profile: UserProfile): Promise<void> {

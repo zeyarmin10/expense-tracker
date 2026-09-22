@@ -15,6 +15,20 @@
   </div>
 </div>
 
+<div class="group-offline-lock-overlay" *ngIf="groupOfflineAccessState$ | async as groupOfflineState">
+  <section class="group-offline-lock-card" *ngIf="groupOfflineState.isLocked" role="alertdialog" aria-modal="true">
+    <div class="group-offline-lock-icon">☁</div>
+    <h2>{{ getGroupOfflineLockTitle() }}</h2>
+    <p>{{ getGroupOfflineLockMessage() }}</p>
+    <button type="button" class="group-offline-lock-primary" (click)="retryGroupOfflineAccess()">
+      {{ getActiveLang() === 'my' ? 'အင်တာနက်ချိတ်ပြီး Sync လုပ်မည်' : 'Connect and sync' }}
+    </button>
+    <button type="button" class="group-offline-lock-secondary" (click)="switchToPersonalSpace()">
+      {{ getActiveLang() === 'my' ? 'Personal space ကို သွားမည်' : 'Use personal space' }}
+    </button>
+  </section>
+</div>
+
 <nav class="app-navbar" *ngIf="showNavbar$ | async">
   <div class="nav-inner">
     <!-- Logo -->

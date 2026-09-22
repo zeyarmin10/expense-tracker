@@ -598,6 +598,7 @@
   "ONBOARDING_PERSONAL_ACCOUNT_SETUP_ERROR": "เกิดข้อผิดพลาดในการตั้งค่าบัญชีส่วนตัว กรุณาลองอีกครั้ง",
   "ONBOARDING_GROUP_CREATION_FAILED": "สร้างกลุ่มไม่สำเร็จ กรุณาตรวจสอบข้อมูลและลองอีกครั้ง",
   "SPACE_CREATION_REQUIRES_INTERNET": "ต้องเชื่อมต่ออินเทอร์เน็ตเพื่อสร้างพื้นที่ใหม่",
+  "SPACE_CREATE_OR_JOIN_REQUIRES_INTERNET": "ต้องเชื่อมต่ออินเทอร์เน็ตเพื่อสร้างหรือเข้าร่วมพื้นที่",
   "ONBOARDING_MUST_BE_LOGGED_IN": "กรุณาเข้าสู่ระบบก่อนเข้าร่วมกลุ่ม",
   "ONBOARDING_JOIN_GROUP_SUCCESS": "เข้าร่วมกลุ่มเรียบร้อยแล้ว!",
   "ONBOARDING_INVITATION_PROCESS_FAILED": "ดำเนินการคำเชิญไม่สำเร็จ คำเชิญอาจไม่ถูกต้องหรือหมดอายุแล้ว",

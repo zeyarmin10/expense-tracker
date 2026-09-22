@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { AuthGuard } from './guards/auth-guard';
+import { GroupOfflineAccessGuard } from './guards/group-offline-access.guard';
 
 export const routes: Routes = [
   {
@@ -89,6 +90,7 @@ export const routes: Routes = [
       },
       {
         path: 'onboarding',
+        canActivate: [GroupOfflineAccessGuard],
         loadComponent: () => import('./components/onboarding/onboarding').then((m) => m.OnboardingComponent),
         data: { titleKey: 'SPACE_SECTION_TITLE' },
       },
