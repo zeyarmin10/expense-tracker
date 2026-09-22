@@ -14,6 +14,8 @@ import { AuthService } from './auth';
 import { getActiveGroupId, UserProfile } from './user-data';
 import { SpaceDataService } from './space-data.service';
 import { SpaceSwitchLoadingService } from './space-switch-loading.service';
+import { PersonalOfflineDataService } from './personal-offline-data.service';
+import { SharedOfflineDataService } from './shared-offline-data.service';
 
 export interface ServiceIBudget {
   id?: string;
@@ -29,6 +31,7 @@ export interface ServiceIBudget {
   createdAt?: string;
   device: string;
   editedDevice?: string;
+  updatedAt?: string;
 }
 
 @Injectable({
@@ -39,6 +42,8 @@ export class BudgetService {
   private authService = inject(AuthService);
   private spaceDataService = inject(SpaceDataService);
   private spaceSwitchLoadingService = inject(SpaceSwitchLoadingService);
+  private personalOfflineData = inject(PersonalOfflineDataService);
+  private sharedOfflineData = inject(SharedOfflineDataService);
 
   constructor() {}
 
@@ -65,6 +70,21 @@ export class BudgetService {
       device: navigator.userAgent,
     };
 
+    if (this.sharedOfflineData.isOfflineShared(profile)) {
+      await this.sharedOfflineData.write(
+        profile, 'budgets', 'set', this.sharedOfflineData.createRecordId('budgets'),
+        { ...newBudget, groupId: getActiveGroupId(profile) },
+      );
+      return;
+    }
+
+    if (this.personalOfflineData.isOfflinePersonal(profile)) {
+      await this.personalOfflineData.write(
+        profile, 'budgets', 'set', this.personalOfflineData.createRecordId('budgets'), newBudget,
+      );
+      return;
+    }
+
     let budgetsRef: DatabaseReference;
     const activeGroupId = getActiveGroupId(profile);
     const { canonicalRef, legacyRef } = await this.spaceDataService.getActiveCollectionContext(profile, 'budgets');
@@ -90,8 +110,22 @@ export class BudgetService {
         );
 
     return profile$.pipe(
-      switchMap(profile =>
-        this.spaceSwitchLoadingService.track(
+      switchMap(profile => {
+        if (this.sharedOfflineData.isOfflineShared(profile)) {
+          return from(this.sharedOfflineData.read<ServiceIBudget>(profile, 'budgets')).pipe(
+            map(budgets => this.filterBudgets(
+              Object.entries(budgets).map(([id, budget]) => ({ id, ...budget })), startDate, endDate,
+            )),
+          );
+        }
+        if (this.personalOfflineData.isOfflinePersonal(profile)) {
+          return from(this.personalOfflineData.read<ServiceIBudget>(profile, 'budgets')).pipe(
+            map(budgetsData => this.filterBudgets(
+              Object.entries(budgetsData).map(([id, budget]) => ({ id, ...budget })), startDate, endDate,
+            )),
+          );
+        }
+        return this.spaceSwitchLoadingService.track(
           from(this.spaceDataService.getActiveCollectionContext(profile, 'budgets')),
         ).pipe(
           switchMap(({ canonicalRef, legacyRef }) =>
@@ -99,44 +133,25 @@ export class BudgetService {
           map(snapshot => {
             const budgetsData = snapshot.val();
             if (!budgetsData) {
+              if (getActiveGroupId(profile)) {
+                void this.sharedOfflineData.cacheRemote(profile, 'budgets', {});
+              } else {
+                void this.personalOfflineData.cacheRemote(profile, 'budgets', {});
+              }
               return [];
             }
 
+            if (getActiveGroupId(profile)) {
+              void this.sharedOfflineData.cacheRemote(profile, 'budgets', budgetsData);
+            } else {
+              void this.personalOfflineData.cacheRemote(profile, 'budgets', budgetsData);
+            }
             let allBudgets: ServiceIBudget[] = Object.keys(budgetsData).map(key => ({
               id: key,
               ...budgetsData[key]
             }));
 
-            if (startDate && endDate) {
-              const start = new Date(startDate);
-              start.setHours(0, 0, 0, 0);
-              const end = new Date(endDate);
-              end.setHours(23, 59, 59, 999);
-
-              allBudgets = allBudgets.filter(budget => {
-                if (!budget.period) return false;
-
-                const periodParts = budget.period.split('-').map(Number);
-                const year = periodParts[0];
-                const month = periodParts.length > 1 ? periodParts[1] - 1 : 0; // JS month is 0-indexed
-
-                if (budget.type === 'yearly') {
-                   const budgetStart = new Date(year, 0, 1);
-                   const budgetEnd = new Date(year, 11, 31, 23, 59, 59, 999);
-                   return budgetStart <= end && budgetEnd >= start;
-                }
-                
-                if (budget.type === 'monthly' || budget.type === 'weekly') {
-                  const budgetStart = new Date(year, month, 1);
-                  const budgetEnd = new Date(year, month + 1, 0, 23, 59, 59, 999);
-                  return budgetStart <= end && budgetEnd >= start;
-                }
-
-                return false;
-              });
-            }
-
-            return allBudgets;
+            return this.filterBudgets(allBudgets, startDate, endDate);
           }),
           catchError(error => {
             console.error('Error fetching budgets:', error);
@@ -145,7 +160,7 @@ export class BudgetService {
             )
           )
         )
-      )
+      })
     );
   }
 
@@ -159,6 +174,23 @@ export class BudgetService {
     }
     if (!budgetId) {
       throw new Error('Budget ID is required for update.');
+    }
+
+    if (this.sharedOfflineData.isOfflineShared(profile)) {
+      const records = await this.sharedOfflineData.read<ServiceIBudget>(profile, 'budgets');
+      const current = records[budgetId];
+      if (!current) throw new Error('Budget not found on this device.');
+      await this.sharedOfflineData.write(profile, 'budgets', 'update', budgetId, {
+        ...updatedData, editedDevice: navigator.userAgent, updatedAt: new Date().toISOString(),
+      }, current.updatedAt || current.createdAt || null);
+      return;
+    }
+
+    if (this.personalOfflineData.isOfflinePersonal(profile)) {
+      await this.personalOfflineData.write(profile, 'budgets', 'update', budgetId, {
+        ...updatedData, editedDevice: navigator.userAgent,
+      });
+      return;
     }
 
     let budgetRef: DatabaseReference;
@@ -185,6 +217,18 @@ export class BudgetService {
       throw new Error('Budget ID is required for deletion.');
     }
 
+    if (this.sharedOfflineData.isOfflineShared(profile)) {
+      const records = await this.sharedOfflineData.read<ServiceIBudget>(profile, 'budgets');
+      await this.sharedOfflineData.write(profile, 'budgets', 'remove', id, undefined,
+        records[id]?.updatedAt || records[id]?.createdAt || null);
+      return;
+    }
+
+    if (this.personalOfflineData.isOfflinePersonal(profile)) {
+      await this.personalOfflineData.write(profile, 'budgets', 'remove', id);
+      return;
+    }
+
     let budgetRef: DatabaseReference;
     const activeGroupId = getActiveGroupId(profile);
     const currentSpaceId = this.spaceDataService.getCurrentSpaceId(profile);
@@ -197,5 +241,26 @@ export class BudgetService {
         budgetRef = ref(this.db, `users/${profile.uid}/budgets/${id}`);
     }
     await remove(budgetRef);
+  }
+
+  private filterBudgets(
+    allBudgets: ServiceIBudget[], startDate?: Date, endDate?: Date,
+  ): ServiceIBudget[] {
+    if (!startDate || !endDate) return allBudgets;
+    const start = new Date(startDate);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
+    return allBudgets.filter(budget => {
+      if (!budget.period) return false;
+      const periodParts = budget.period.split('-').map(Number);
+      const year = periodParts[0];
+      const month = periodParts.length > 1 ? periodParts[1] - 1 : 0;
+      const budgetStart = budget.type === 'yearly' ? new Date(year, 0, 1) : new Date(year, month, 1);
+      const budgetEnd = budget.type === 'yearly'
+        ? new Date(year, 11, 31, 23, 59, 59, 999)
+        : new Date(year, month + 1, 0, 23, 59, 59, 999);
+      return budgetStart <= end && budgetEnd >= start;
+    });
   }
 }

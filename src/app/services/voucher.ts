@@ -18,6 +18,9 @@ import { SpaceSwitchLoadingService } from './space-switch-loading.service';
 import { UserDataService, UserProfile, PublicUserProfile, getActiveGroupId } from './user-data';
 import { ImageUploadService } from './image-upload.service';
 import { environment } from '../../environments/environment';
+import { PersonalOfflineDataService } from './personal-offline-data.service';
+import { SharedOfflineDataService } from './shared-offline-data.service';
+import { OfflineStoreService } from './offline-store.service';
 
 export type ServiceIVoucher = IVoucher & {
   id: string;
@@ -25,6 +28,9 @@ export type ServiceIVoucher = IVoucher & {
   createdByPhotoURL?: string | null;
   userDisplayName?: string;
   userPhotoURL?: string | null;
+  /** Present only while a locally captured receipt is waiting for upload. */
+  syncStatus?: 'pending' | 'synced';
+  offlineFileKeys?: string[];
 };
 
 export interface AddVoucherInput {
@@ -50,6 +56,9 @@ export class VoucherService {
   private spaceDataService = inject(SpaceDataService);
   private spaceSwitchLoadingService = inject(SpaceSwitchLoadingService);
   private imageUploadService = inject(ImageUploadService);
+  private personalOfflineData = inject(PersonalOfflineDataService);
+  private sharedOfflineData = inject(SharedOfflineDataService);
+  private offlineStore = inject(OfflineStoreService);
 
   private getProfilePhotoURL(profile: { photoURL?: string | null } | null | undefined): string | null {
     if (!profile) return null;
@@ -157,8 +166,18 @@ export class VoucherService {
         );
 
     return profile$.pipe(
-      switchMap(profile =>
-        this.spaceSwitchLoadingService.track(
+      switchMap(profile => {
+        if (this.sharedOfflineData.isOfflineShared(profile)) {
+          return from(this.sharedOfflineData.read<ServiceIVoucher>(profile, 'vouchers')).pipe(
+            switchMap(vouchers => from(this.withOfflineImageUrls(vouchers))),
+          );
+        }
+        if (this.personalOfflineData.isOfflinePersonal(profile)) {
+          return from(this.personalOfflineData.read<ServiceIVoucher>(profile, 'vouchers')).pipe(
+            switchMap(vouchers => from(this.withOfflineImageUrls(vouchers))),
+          );
+        }
+        return this.spaceSwitchLoadingService.track(
           from(this.spaceDataService.getActiveCollectionContext(profile, 'vouchers')),
         ).pipe(
           switchMap(({ canonicalRef, legacyRef }) => {
@@ -166,7 +185,14 @@ export class VoucherService {
             const vouchers$ = from(get(baseRef)).pipe(
               switchMap(async snapshot => {
                 const vouchersData = snapshot.val();
-                if (!vouchersData) return [];
+                if (!vouchersData) {
+                  if (getActiveGroupId(profile)) await this.sharedOfflineData.cacheRemote(profile, 'vouchers', {});
+                  else await this.personalOfflineData.cacheRemote(profile, 'vouchers', {});
+                  return [];
+                }
+
+                if (getActiveGroupId(profile)) await this.sharedOfflineData.cacheRemote(profile, 'vouchers', vouchersData);
+                else await this.personalOfflineData.cacheRemote(profile, 'vouchers', vouchersData);
 
                 const userIds = new Set<string>();
                 Object.values(vouchersData).forEach((v: any) => {
@@ -229,8 +255,8 @@ export class VoucherService {
 
             return this.spaceSwitchLoadingService.track(vouchers$);
           }),
-        ),
-      ),
+        );
+      }),
     );
   }
 
@@ -247,6 +273,65 @@ export class VoucherService {
     }
 
     const currentUser = await firstValueFrom(this.authService.currentUser$);
+
+    const offlineShared = this.sharedOfflineData.isOfflineShared(profile);
+    const offlinePersonal = this.personalOfflineData.isOfflinePersonal(profile);
+    if (offlineShared || offlinePersonal) {
+      const compressed = await Promise.all(files.map(f => this.compressImage(f)));
+      const voucherId = offlineShared
+        ? this.sharedOfflineData.createRecordId('vouchers')
+        : this.personalOfflineData.createRecordId('vouchers');
+      const fileKeys = compressed.map((_, index) => `voucher:${profile.uid}:${voucherId}:${index}`);
+      await Promise.all(compressed.map((file, index) => this.offlineStore.saveBlob(fileKeys[index], file)));
+      const imageUrls = compressed.map(file => URL.createObjectURL(file));
+      const safeFileName = this.sanitizeFileName(files[0].name);
+      const parser = new UAParser();
+      const result = parser.getResult();
+      const device = `${result.browser.name} on ${result.os.name}, Model: ${result.device.model || 'Unknown'} (${result.device.vendor || 'Unknown'})`;
+      const localVoucher: Record<string, unknown> = {
+        date: voucherData.date,
+        title: voucherData.title?.trim() || safeFileName,
+        category: voucherData.category || '',
+        note: voucherData.note?.trim() || '',
+        imageUrl: imageUrls[0],
+        imageUrls,
+        imageCount: imageUrls.length,
+        storagePath: '',
+        storagePaths: [],
+        fileName: files[0].name,
+        contentType: files[0].type,
+        size: files.reduce((sum, file) => sum + file.size, 0),
+        userId: profile.uid,
+        ...(offlineShared ? { groupId: getActiveGroupId(profile) } : {}),
+        createdByName: profile.displayName || 'Anonymous',
+        createdByPhotoURL: this.getProfilePhotoURL(profile) || currentUser?.photoURL || null,
+        createdAt: new Date().toISOString(),
+        device,
+        syncStatus: 'pending',
+        offlineFileKeys: fileKeys,
+      };
+      const serverVoucher = { ...localVoucher };
+      delete serverVoucher['imageUrl'];
+      delete serverVoucher['imageUrls'];
+      delete serverVoucher['storagePath'];
+      delete serverVoucher['storagePaths'];
+      delete serverVoucher['syncStatus'];
+      delete serverVoucher['offlineFileKeys'];
+      const uploadPayload = {
+        voucherId,
+        userId: profile.uid,
+        cacheScope: offlineShared ? this.sharedOfflineData.cacheScope(profile) : profile.uid,
+        fileKeys,
+        cloudinaryFolder: offlineShared
+          ? `vouchers/spaces/${getActiveGroupId(profile)}`
+          : `vouchers/${profile.personalSpaceId ? `spaces/${profile.personalSpaceId}` : `users/${profile.uid}`}`,
+        // Local-only display fields must never reach Firebase.
+        voucher: serverVoucher,
+      };
+      if (offlineShared) await this.sharedOfflineData.queueVoucherUpload(profile, voucherId, localVoucher, uploadPayload);
+      else await this.personalOfflineData.queueVoucherUpload(profile, voucherId, localVoucher, uploadPayload);
+      return;
+    }
     const { canonicalRef, legacyRef, spaceId } =
       await this.spaceDataService.getActiveCollectionContext(profile, 'vouchers');
     const vouchersRef = canonicalRef || legacyRef;
@@ -313,9 +398,45 @@ export class VoucherService {
     await set(newVoucherRef, newVoucher);
   }
 
+  private async withOfflineImageUrls(
+    records: Record<string, ServiceIVoucher>,
+  ): Promise<ServiceIVoucher[]> {
+    const vouchers = await Promise.all(Object.entries(records).map(async ([id, voucher]) => {
+      if (!voucher.offlineFileKeys?.length) return { ...voucher, id } as ServiceIVoucher;
+      const blobs = await Promise.all(voucher.offlineFileKeys.map(key => this.offlineStore.getBlob(key)));
+      const imageUrls = blobs.filter((blob): blob is Blob => !!blob).map(blob => URL.createObjectURL(blob));
+      return {
+        ...voucher,
+        id,
+        imageUrl: imageUrls[0] || voucher.imageUrl,
+        imageUrls: imageUrls.length ? imageUrls : voucher.imageUrls,
+        imageCount: imageUrls.length || voucher.imageCount,
+      } as ServiceIVoucher;
+    }));
+    return vouchers.sort((a, b) => this.getTimestamp(b.date) - this.getTimestamp(a.date));
+  }
+
   async deleteVoucher(voucher: ServiceIVoucher): Promise<void> {
     const profile = await firstValueFrom(this.authService.userProfile$);
     if (!profile?.uid) throw new Error('User not authenticated.');
+
+    if (this.personalOfflineData.isOfflinePersonal(profile)) {
+      await this.personalOfflineData.write(profile, 'vouchers', 'remove', voucher.id!);
+      return;
+    }
+    if (this.sharedOfflineData.isOfflineShared(profile)) {
+      const records = await this.sharedOfflineData.read<ServiceIVoucher>(profile, 'vouchers');
+      const current = records[voucher.id!];
+      await this.sharedOfflineData.write(
+        profile,
+        'vouchers',
+        'remove',
+        voucher.id!,
+        undefined,
+        (current as any)?.updatedAt || current?.createdAt || null,
+      );
+      return;
+    }
 
     const activeGroupId = getActiveGroupId(profile);
     const currentSpaceId = this.spaceDataService.getCurrentSpaceId(profile);

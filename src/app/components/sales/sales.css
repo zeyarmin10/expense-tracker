@@ -396,8 +396,95 @@ body.pnl-add-modal-open {
   padding: 0;
 }
 
-/* ── Printable receipt (see .pnl-receipt-sheet reuse of the add-modal's
-   own backdrop/sheet/header CSS above — only the paper content is new). ── */
+/* ── Printable receipt — a true app-screen overlay, not a modal card. ── */
+.pnl-receipt-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1050;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--text);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(12px);
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+}
+
+.pnl-receipt-overlay.open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.pnl-receipt-overlay-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-shrink: 0;
+  padding: calc(max(env(safe-area-inset-top, 0px), var(--native-status-bar-inset)) + 0.75rem) 1rem 0.75rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.pnl-receipt-overlay-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.pnl-receipt-overlay-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.pnl-receipt-overlay-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 1rem;
+}
+
+.pnl-receipt-content {
+  width: min(100%, 620px);
+  margin: 0 auto;
+}
+
+.pnl-receipt-overlay-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  flex-shrink: 0;
+  padding: 0.75rem 1rem calc(env(safe-area-inset-bottom, 0px) + 0.85rem);
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+}
+
+@media (max-width: 460px) {
+  .pnl-receipt-overlay-actions .pnl-btn {
+    flex: 1;
+    justify-content: center;
+    padding-inline: 0.65rem;
+  }
+}
+
 .pnl-receipt-paper {
   font-family: 'DM Mono', 'Courier New', monospace;
   background: var(--surface-2);
@@ -405,7 +492,7 @@ body.pnl-add-modal-open {
   border: 1px dashed var(--border);
   border-radius: 10px;
   padding: 1rem;
-  margin-bottom: 1rem;
+  margin: 0;
 }
 
 .pnl-receipt-shop {

@@ -12,6 +12,8 @@ import { InvitationService } from './services/invitation.service';
 import { DataManagerService } from './services/data-manager';
 import { ToastService } from './services/toast';
 import { NetworkService } from './services/network.service';
+import { OfflineSyncService } from './services/offline-sync.service';
+import { OfflineHydrationService } from './services/offline-hydration.service';
 import { ThemeService } from './services/theme.service';
 import { NotificationService } from './services/notification.service';
 import { AppUpdateService, AppUpdateStatus } from './services/app-update.service';
@@ -19,7 +21,7 @@ import { FlexibleUpdateInstallStatus } from '@capawesome/capacitor-app-update';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { APP_LANGUAGES } from './core/constants/app.constants';
 import { SplashScreen } from '@capacitor/splash-screen';
-import { Capacitor } from '@capacitor/core';
+import { Capacitor, SystemBars, SystemBarType, SystemBarsStyle } from '@capacitor/core';
 import { Camera } from '@capacitor/camera';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Keyboard } from '@capacitor/keyboard';
@@ -69,6 +71,8 @@ export class App implements OnInit, AfterViewInit {
   showFab$: Observable<boolean>;
   isDrawerRouteActive$!: Observable<boolean>;
   spaceSwitchLoading$: Observable<boolean>;
+  pendingSyncCount$: Observable<number>;
+  syncConflictCount$: Observable<number>;
   currentGroupImageUrl$: Observable<string | null>;
   // Shown once for brand-new accounts (see UserProfile.hasSeenWelcomeTour).
   showWelcomeTour = false;
@@ -113,6 +117,8 @@ export class App implements OnInit, AfterViewInit {
   private dataManager = inject(DataManagerService);
   private toastService = inject(ToastService);
   private networkService = inject(NetworkService);
+  private offlineSyncService = inject(OfflineSyncService);
+  private offlineHydrationService = inject(OfflineHydrationService);
   private spaceContextService = inject(SpaceContextService);
   private spaceSwitchLoadingService = inject(SpaceSwitchLoadingService);
   private modalStateService = inject(ModalStateService);
@@ -128,6 +134,8 @@ export class App implements OnInit, AfterViewInit {
     this.translate.use(savedLang);
     this.currentLang = savedLang;
     this.spaceSwitchLoading$ = this.spaceSwitchLoadingService.loading$;
+    this.pendingSyncCount$ = this.offlineSyncService.pendingCount$;
+    this.syncConflictCount$ = this.offlineSyncService.conflictCount$;
 
     this.currentUser$ = this.authService.currentUser$;
     this.userDisplayName$ = this.authService.userProfile$.pipe(
@@ -326,9 +334,7 @@ export class App implements OnInit, AfterViewInit {
 
     this.themeService.isDarkMode$.subscribe((isDarkMode) => {
       this.isDarkMode = isDarkMode;
-      if (Capacitor.isNativePlatform()) {
-        StatusBar.setStyle({ style: isDarkMode ? Style.Dark : Style.Light }).catch(() => {});
-      }
+      this.applySystemBarStyles(isDarkMode);
     });
 
     // Android can reset the StatusBar icon style after in-app navigations (e.g. login → dashboard).
@@ -337,7 +343,7 @@ export class App implements OnInit, AfterViewInit {
       this.router.events.pipe(
         filter((e): e is NavigationEnd => e instanceof NavigationEnd)
       ).subscribe(() => {
-        StatusBar.setStyle({ style: this.themeService.isDarkMode ? Style.Dark : Style.Light }).catch(() => {});
+        this.applySystemBarStyles(this.themeService.isDarkMode);
       });
     }
 
@@ -430,7 +436,19 @@ export class App implements OnInit, AfterViewInit {
     this.isPullRefreshing = true;
     this.pullDistance = this.pullRefreshThreshold;
 
-    setTimeout(() => {
+    setTimeout(async () => {
+      // A failed Firebase route (e.g. a VPN-only ISP path) intentionally
+      // puts the app in local mode. Pull-to-refresh is the user's explicit
+      // request to try that route again after enabling a VPN.
+      await this.networkService.retryServerConnection();
+      const profile = await firstValueFrom(
+        this.authService.userProfile$.pipe(filter((value): value is UserProfile => !!value), take(1)),
+      ).catch(() => null);
+      if (profile) {
+        await this.offlineHydrationService.syncActiveSpace(profile).catch((error) => {
+          console.warn('Offline data refresh failed:', error);
+        });
+      }
       const currentUrl = this.router.url;
       this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
         this.router.navigateByUrl(currentUrl).then(() => {
@@ -563,9 +581,8 @@ export class App implements OnInit, AfterViewInit {
       // Configure status bar early — splash hide is deferred to ngAfterViewInit
       StatusBar.setOverlaysWebView({ overlay: true }).catch(() => {});
       StatusBar.show().catch(() => {});
-      // Apply correct icon style immediately after setOverlaysWebView
-      const earlyStyle = this.themeService.isDarkMode ? Style.Dark : Style.Light;
-      StatusBar.setStyle({ style: earlyStyle }).catch(() => {});
+      // Apply correct status/navigation icon styles immediately after overlay setup.
+      this.applySystemBarStyles(this.themeService.isDarkMode);
       Camera.requestPermissions({ permissions: ['camera'] }).catch(() => {});
       // Warm up the native Google Sign-In plugin now so the login screen's
       // first tap doesn't pay for the bridge/Play-Services init cost.
@@ -617,6 +634,8 @@ export class App implements OnInit, AfterViewInit {
 
     // ── Network monitoring ──────────────────────
     await this.networkService.init();
+    await this.offlineSyncService.init();
+    await this.offlineHydrationService.init();
     this.listenNetworkChanges();
     // ────────────────────────────────────────────
 
@@ -655,14 +674,27 @@ export class App implements OnInit, AfterViewInit {
           await SplashScreen.hide().catch(() => {});
           // Re-apply overlay + style — Android may reset both during splash dismiss
           StatusBar.setOverlaysWebView({ overlay: true }).catch(() => {});
-          const style = this.themeService.isDarkMode ? Style.Dark : Style.Light;
-          StatusBar.setStyle({ style }).catch(() => {});
+          this.applySystemBarStyles(this.themeService.isDarkMode);
           setTimeout(() => {
-            StatusBar.setStyle({ style: this.themeService.isDarkMode ? Style.Dark : Style.Light }).catch(() => {});
+            this.applySystemBarStyles(this.themeService.isDarkMode);
           }, 200);
         });
       });
     });
+  }
+
+  /** Keep Android's native system buttons legible as the app theme or route changes. */
+  private applySystemBarStyles(isDarkMode: boolean): void {
+    if (!Capacitor.isNativePlatform()) return;
+
+    StatusBar.setStyle({ style: isDarkMode ? Style.Dark : Style.Light }).catch(() => {});
+
+    if (Capacitor.getPlatform() === 'android') {
+      SystemBars.setStyle({
+        bar: SystemBarType.NavigationBar,
+        style: isDarkMode ? SystemBarsStyle.Dark : SystemBarsStyle.Light,
+      }).catch(() => {});
+    }
   }
 
   // ── Network monitoring: Native + Web ───────────
@@ -685,7 +717,6 @@ export class App implements OnInit, AfterViewInit {
       window.addEventListener('online', () => {
         if (this.wasOffline) {
           this.wasOffline = false;
-          Swal.close();
           this.showNetworkRestoredToast();
         }
         void this.notificationService.refreshCurrentRegistration();
@@ -716,7 +747,6 @@ export class App implements OnInit, AfterViewInit {
       } else {
         if (this.wasOffline) {
           this.wasOffline = false;
-          Swal.close();
           this.showNetworkRestoredToast();
         }
         void this.notificationService.refreshCurrentRegistration();
@@ -893,53 +923,15 @@ export class App implements OnInit, AfterViewInit {
   }
 
   private showNoNetworkAlert(): void {
-    if (Swal.isVisible()) return;
-
     const lang = this.getActiveLang();
     const isMy = lang === 'my';
-
-    // ✅ Theme detect — isDarkMode property သို့မဟုတ် body class စစ်တယ်
-    const isDark = document.body.classList.contains('light-mode') === false;
-
-    // Theme colors
-    const bgColor = isDark ? '#07162f' : '#ffffff';
-    const titleColor = isDark ? '#ffffff' : '#111827';
-    const textColor = isDark ? '#9ca3af' : '#4b5563';
-
-    const wifiIcon = `
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64"
-          fill="none" stroke="#f59e0b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M8 26 C16 18 26 14 32 14 C38 14 48 18 56 26" stroke-width="4.5"/>
-        <path d="M14 33 C19 27 25 24 32 24 C39 24 45 27 50 33" stroke-width="4.5"/>
-        <path d="M22 40 C25 37 28 35.5 32 35.5 C36 35.5 39 37 42 40" stroke-width="4.5"/>
-        <circle cx="32" cy="50" r="3.5" fill="#f59e0b" stroke="none"/>
-        <line x1="43" y1="10" x2="57" y2="24" stroke="#ef4444" stroke-width="5"/>
-        <line x1="57" y1="10" x2="43" y2="24" stroke="#ef4444" stroke-width="5"/>
-      </svg>`;
-
-    const title = isMy ? 'အင်တာနက် ချိတ်ဆက်မှု မရှိပါ' : 'No Internet Connection';
-    const text = isMy
-      ? 'ကွန်ရက်ချိတ်ဆက်မှု စစ်ဆေးပြီး နောက်မှ ထပ်ကြိုးစားပါ\nPlease check your network and try again.'
-      : 'Please check your network and try again.\nကွန်ရက်ချိတ်ဆက်မှု စစ်ဆေးပြီး ထပ်ကြိုးစားပါ';
-    const btnText = isMy ? 'သိပြီ' : 'OK';
-
-    Swal.fire({
-      html: `
-        <div style="display:flex;flex-direction:column;align-items:center;gap:12px;">
-          ${wifiIcon}
-          <div style="font-size:1rem;font-weight:700;color:${titleColor};">${title}</div>
-          <div style="font-size:0.82rem;color:${textColor};white-space:pre-line;text-align:center;">${text}</div>
-        </div>`,
-      confirmButtonText: btnText,
-      confirmButtonColor: '#0b74ff',
-      background: bgColor,
-      color: titleColor,
-      allowOutsideClick: false,
-      showClass: { popup: 'swal2-show' },
-      customClass: {
-        popup: isDark ? 'swal-dark' : 'swal-light',
-      }
-    });
+    // Offline is now a usable state for the Phase-1 personal data flows.
+    // A blocking modal would prevent the very entries that users need to add.
+    this.toastService.showError(
+      isMy
+        ? 'အင်တာနက်မရှိပါ — ပြောင်းလဲမှုများကို ဒီစက်တွင် သိမ်းထားပါမည်'
+        : 'Offline — changes will be saved on this device.',
+    );
   }
 
   private showNetworkRestoredToast(): void {
@@ -950,6 +942,44 @@ export class App implements OnInit, AfterViewInit {
       : 'Internet connection restored 🌐';
 
     this.toastService.showSuccess(msg);
+  }
+
+  async resolveSyncConflicts(): Promise<void> {
+    const conflicts = await this.offlineSyncService.getConflicts();
+    if (conflicts.length === 0) return;
+    let needsServerRefresh = false;
+
+    for (const operation of conflicts) {
+      const recordName = operation.path.split('/').slice(-2).join(' / ');
+      const result = await Swal.fire({
+        icon: 'warning',
+        title: this.getActiveLang() === 'my' ? 'Sync conflict တွေ့ရှိသည်' : 'Sync conflict found',
+        text: this.getActiveLang() === 'my'
+          ? `${recordName} ကို အခြား device မှ ပြင်ထားပါသည်။`
+          : `${recordName} was changed on another device.`,
+        showCancelButton: true,
+        confirmButtonText: this.getActiveLang() === 'my' ? 'ကျွန်ုပ်ပြင်ထားတာကို သုံးမယ်' : 'Keep my version',
+        cancelButtonText: this.getActiveLang() === 'my' ? 'Server version ကို သုံးမယ်' : 'Use server version',
+        confirmButtonColor: '#dc2626',
+        reverseButtons: true,
+      });
+      if (result.isConfirmed) {
+        await this.offlineSyncService.keepLocalVersion(operation);
+      } else if (result.dismiss === Swal.DismissReason.cancel) {
+        await this.offlineSyncService.useServerVersion(operation);
+        needsServerRefresh = true;
+      } else {
+        break;
+      }
+    }
+    this.toastService.showSuccess(
+      this.getActiveLang() === 'my' ? 'Conflict ဖြေရှင်းမှုကို သိမ်းပြီးပါပြီ' : 'Conflict resolution saved.',
+    );
+    // Reload only when the server version was chosen, so every cached
+    // collection and derived report is rebuilt from the authoritative data.
+    if (needsServerRefresh && this.networkService.isOnline$.value) {
+      setTimeout(() => window.location.reload(), 700);
+    }
   }
   // ────────────────────────────────────────────────────────────────
 

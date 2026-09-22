@@ -35,6 +35,7 @@ import Swal from 'sweetalert2';
 import { getRedirectResult } from '@angular/fire/auth';
 import { Auth } from '@angular/fire/auth';
 import { Capacitor } from '@capacitor/core';
+import { NetworkService } from '../../services/network.service';
 
 @Component({
   selector: 'app-login',
@@ -84,6 +85,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   invitationService = inject(InvitationService);
   spaceContextService = inject(SpaceContextService);
   themeService = inject(ThemeService);
+  private networkService = inject(NetworkService);
   router = inject(Router);
   route = inject(ActivatedRoute); // Inject ActivatedRoute
   sessionService = inject(SessionManagementService);
@@ -156,6 +158,9 @@ export class LoginComponent implements OnInit, OnDestroy {
   readonly appLanguages = APP_LANGUAGES;
   currencySelectOptions: SelectOption[] = [];
   private pendingPreferencesUser: User | null = null;
+  /** Set only when Firebase Auth succeeded but the RTDB profile had to be
+   * provisioned on this device for later synchronization. */
+  private provisionalProfileUserId: string | null = null;
 
   constructor(private fb: FormBuilder) {
     this.loginForm = this.fb.group({
@@ -271,8 +276,12 @@ export class LoginComponent implements OnInit, OnDestroy {
     // and navigate away before the user finishes picking language/currency.
     if (this.showPreferencesStep) return;
 
-    let profile = await this.userDataService.fetchUserProfile(user.uid);
+    const profileResult = await this.readProfileAfterAuth(user.uid);
+    let profile = profileResult.profile;
     let isNewUser = false;
+    if (profileResult.serverUnavailable) {
+      this.networkService.markServerUnavailable();
+    }
 
     // Always create a profile if one doesn't exist
     if (!profile) {
@@ -291,23 +300,41 @@ export class LoginComponent implements OnInit, OnDestroy {
         createdAt: Date.now(),
         hasSeenWelcomeTour: false,
       };
-      await this.userDataService.createUserProfile(newUserProfile);
+      let provisionedLocally = profileResult.serverUnavailable;
+      if (!provisionedLocally) {
+        try {
+          await this.userDataService.createUserProfile(newUserProfile);
+        } catch (error) {
+          // Auth can be available from a different Google/Firebase route
+          // while RTDB itself is blocked. Do not strand the authenticated
+          // user on this page; continue in local-first mode instead.
+          console.warn('RTDB profile creation deferred:', error);
+          provisionedLocally = true;
+        }
+      }
+      if (provisionedLocally) {
+        await this.userDataService.provisionOfflineProfile(newUserProfile);
+        await this.categoryService.addOfflineDefaultCategories(newUserProfile, this.currentLang);
+        this.provisionalProfileUserId = user.uid;
+      }
       profile = newUserProfile; // use the new profile
       // Don't block navigation on these — the dashboard reads categories via a
       // live RTDB listener, so they can arrive a moment after the user lands
       // there. Sequenced (not parallel) because ensurePersonalSpace also
       // seeds default categories when none exist yet — racing the two would
       // write the defaults twice.
-      this.categoryService.addDefaultCategories(user.uid, this.currentLang)
-        .catch((error) => {
-          console.error('Failed to create default categories:', error);
-        })
-        .then(() => this.spaceContextService.ensurePersonalSpace(user.uid))
-        .catch((error) => {
-          // Non-fatal: every consumer falls back to the virtual personal
-          // space (personal:{uid}) until a real one exists.
-          console.error('Failed to create personal space at signup:', error);
-        });
+      if (!provisionedLocally) {
+        this.categoryService.addDefaultCategories(user.uid, this.currentLang)
+          .catch((error) => {
+            console.error('Failed to create default categories:', error);
+          })
+          .then(() => this.spaceContextService.ensurePersonalSpace(user.uid))
+          .catch((error) => {
+            // Non-fatal: every consumer falls back to the virtual personal
+            // space (personal:{uid}) until a real one exists.
+            console.error('Failed to create personal space at signup:', error);
+          });
+      }
     } else {
       // Self-heal: bring the RTDB profile back in sync with Firebase Auth if
       // they've drifted apart (e.g. an older account hit the race above and
@@ -320,7 +347,11 @@ export class LoginComponent implements OnInit, OnDestroy {
         updates.displayName = user.displayName;
       }
       if (Object.keys(updates).length > 0) {
-        await this.userDataService.updateUserProfile(user.uid, updates);
+        if (profileResult.serverUnavailable) {
+          await this.userDataService.updateOfflineProfile(user.uid, updates);
+        } else {
+          await this.userDataService.updateUserProfile(user.uid, updates);
+        }
         profile = { ...profile, ...updates };
       }
       // Self-heal: accounts that predate signup-time personal-space creation
@@ -328,7 +359,7 @@ export class LoginComponent implements OnInit, OnDestroy {
       // real personal space materialized in the background. Their legacy
       // users/{uid} data then migrates lazily via SpaceDataService's
       // backfill the next time the personal space is used.
-      if (!profile.personalSpaceId) {
+      if (!profile.personalSpaceId && !profileResult.serverUnavailable) {
         this.spaceContextService.ensurePersonalSpace(user.uid).catch((error) => {
           console.error('Failed to backfill personal space at login:', error);
         });
@@ -384,10 +415,15 @@ export class LoginComponent implements OnInit, OnDestroy {
 
     this.isSavingPreferences = true;
     try {
-      await this.userDataService.updateUserProfile(user.uid, {
+      const preferences = {
         language: this.preferencesLang,
         currency: this.preferencesCurrency,
-      });
+      };
+      if (this.provisionalProfileUserId === user.uid) {
+        await this.userDataService.updateOfflineProfile(user.uid, preferences);
+      } else {
+        await this.userDataService.updateUserProfile(user.uid, preferences);
+      }
     } catch (error) {
       console.error('Failed to save initial language/currency preferences:', error);
     }
@@ -396,6 +432,34 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.pendingPreferencesUser = null;
 
     await this.continueAfterProfileReady(user);
+  }
+
+  private async readProfileAfterAuth(
+    userId: string,
+  ): Promise<{ profile: UserProfile | null; serverUnavailable: boolean }> {
+    try {
+      const profile = await this.withTimeout(
+        this.userDataService.fetchUserProfile(userId),
+        4500,
+      );
+      return { profile, serverUnavailable: false };
+    } catch (error) {
+      console.warn('RTDB profile lookup unavailable; using local access mode.', error);
+      return {
+        profile: await this.userDataService.getCachedProfile(userId),
+        serverUnavailable: true,
+      };
+    }
+  }
+
+  private withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+    return new Promise<T>((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error('RTDB profile lookup timed out.')), ms);
+      promise.then(
+        value => { clearTimeout(timer); resolve(value); },
+        error => { clearTimeout(timer); reject(error); },
+      );
+    });
   }
 
   private async continueAfterProfileReady(user: User): Promise<void> {

@@ -13,13 +13,15 @@ import {
   get,
   child,
 } from '@angular/fire/database';
-import { Observable, switchMap, firstValueFrom, map, of, Subject, take } from 'rxjs';
+import { Observable, switchMap, firstValueFrom, map, of, Subject, take, tap, from } from 'rxjs';
 import { AuthService } from './auth';
 import { TranslateService } from '@ngx-translate/core';
 import { getActiveGroupId, UserProfile } from './user-data'; // Import UserProfile
 import { SpaceDataService } from './space-data.service';
 import { SpaceSwitchLoadingService } from './space-switch-loading.service';
 import { ImageUploadService } from './image-upload.service';
+import { PersonalOfflineDataService } from './personal-offline-data.service';
+import { SharedOfflineDataService } from './shared-offline-data.service';
 
 export interface ServiceICategory {
   id?: string;
@@ -61,6 +63,8 @@ export class CategoryService {
   private spaceDataService = inject(SpaceDataService);
   private spaceSwitchLoadingService = inject(SpaceSwitchLoadingService);
   private imageUploadService = inject(ImageUploadService);
+  private personalOfflineData = inject(PersonalOfflineDataService);
+  private sharedOfflineData = inject(SharedOfflineDataService);
 
   private categoryUpdatedSource = new Subject<{
     oldName: string;
@@ -86,6 +90,16 @@ export class CategoryService {
   getCategories(): Observable<ServiceICategory[]> {
     return this.authService.userProfile$.pipe(
       switchMap((profile: UserProfile | null) => { // Explicitly type the profile
+        if (profile && this.sharedOfflineData.isOfflineShared(profile)) {
+          return from(this.sharedOfflineData.read<ServiceICategory>(profile, 'categories')).pipe(
+            map(categories => Object.entries(categories).map(([id, category]) => ({ id, ...category }))),
+          );
+        }
+        if (profile && this.personalOfflineData.isOfflinePersonal(profile)) {
+          return from(this.personalOfflineData.read<ServiceICategory>(profile, 'categories')).pipe(
+            map(categories => Object.entries(categories).map(([id, category]) => ({ id, ...category }))),
+          );
+        }
         const activeGroupId = getActiveGroupId(profile);
         if (activeGroupId) {
           return of(profile).pipe(
@@ -101,7 +115,17 @@ export class CategoryService {
                 ),
               );
               return this.spaceSwitchLoadingService.track(
-                listVal<ServiceICategory>(canonicalRef || legacyRef, { keyField: 'id' }),
+                listVal<ServiceICategory>(canonicalRef || legacyRef, { keyField: 'id' }).pipe(
+                  tap(categories => {
+                    if (activeGroupId) {
+                      const records = Object.fromEntries(categories.map(({ id, ...category }) => [id!, category]));
+                      void this.sharedOfflineData.cacheRemote(currentProfile, 'categories', records);
+                    } else {
+                      const records = Object.fromEntries(categories.map(({ id, ...category }) => [id!, category]));
+                      void this.personalOfflineData.cacheRemote(currentProfile, 'categories', records);
+                    }
+                  }),
+                ),
               );
             }),
             switchMap(stream => stream),
@@ -120,7 +144,12 @@ export class CategoryService {
                 ),
               );
               return this.spaceSwitchLoadingService.track(
-                listVal<ServiceICategory>(canonicalRef || legacyRef, { keyField: 'id' }),
+                listVal<ServiceICategory>(canonicalRef || legacyRef, { keyField: 'id' }).pipe(
+                  tap(categories => {
+                    const records = Object.fromEntries(categories.map(({ id, ...category }) => [id!, category]));
+                    void this.personalOfflineData.cacheRemote(currentProfile, 'categories', records);
+                  }),
+                ),
               );
             }),
             switchMap(stream => stream),
@@ -186,6 +215,22 @@ export class CategoryService {
       createdAt: new Date().toISOString(),
     };
 
+    if (this.sharedOfflineData.isOfflineShared(profile)) {
+      await this.sharedOfflineData.write(
+        profile, 'categories', 'set', this.sharedOfflineData.createRecordId('categories'),
+        { ...newCategory, groupId: getActiveGroupId(profile), userId: profile.uid },
+      );
+      return;
+    }
+
+    if (this.personalOfflineData.isOfflinePersonal(profile)) {
+      await this.personalOfflineData.write(
+        profile, 'categories', 'set', this.personalOfflineData.createRecordId('categories'),
+        { ...newCategory, userId: profile.uid },
+      );
+      return;
+    }
+
     let categoriesRef: DatabaseReference;
     const activeGroupId = getActiveGroupId(profile);
     const { canonicalRef, legacyRef } = await this.spaceDataService.getActiveCollectionContext(profile, 'categories');
@@ -214,6 +259,55 @@ export class CategoryService {
     }
     if (!categoryId) {
       throw new Error('Category ID is required for update.');
+    }
+
+    if (this.sharedOfflineData.isOfflineShared(profile)) {
+      const categories = await this.sharedOfflineData.read<ServiceICategory>(profile, 'categories');
+      const current = categories[categoryId];
+      if (!current) throw new Error('Category not found on this device.');
+      const nextName = newCategoryName.trim();
+      if (current.name !== nextName) await this.assertCategoryNameAvailable(nextName, categoryId);
+      const updateData: { name: string; icon?: string; iconUrl?: string | null; updatedAt?: string } = {
+        name: nextName,
+        updatedAt: new Date().toISOString(),
+      };
+      if (icon !== undefined) updateData.icon = icon;
+      if (iconUrl !== undefined) updateData.iconUrl = iconUrl;
+      await this.sharedOfflineData.write(profile, 'categories', 'update', categoryId, updateData,
+        (current as any).updatedAt || current.createdAt || null);
+      if (current.name !== nextName) {
+        const expenses = await this.sharedOfflineData.read<{ category?: string; updatedAt?: string; createdAt?: string }>(profile, 'expenses');
+        await Promise.all(Object.entries(expenses)
+          .filter(([, expense]) => expense.category === current.name)
+          .map(([id, expense]) => this.sharedOfflineData.write(profile, 'expenses', 'update', id,
+            { category: nextName, updatedAt: new Date().toISOString() }, expense.updatedAt || expense.createdAt || null)));
+        this.categoryUpdatedSource.next({ oldName: current.name, newName: nextName, userId: profile.uid });
+      }
+      return;
+    }
+
+    if (this.personalOfflineData.isOfflinePersonal(profile)) {
+      const categories = await this.personalOfflineData.read<ServiceICategory>(profile, 'categories');
+      const oldCategory = categories[categoryId];
+      if (!oldCategory) throw new Error('Category not found on this device.');
+      const trimmedNewName = newCategoryName.trim();
+      const updateData: { name: string; icon?: string; iconUrl?: string | null } = { name: trimmedNewName };
+      if (icon !== undefined) updateData.icon = icon;
+      if (iconUrl !== undefined) updateData.iconUrl = iconUrl;
+      if (oldCategory.name !== trimmedNewName) {
+        await this.assertCategoryNameAvailable(trimmedNewName, categoryId);
+      }
+      await this.personalOfflineData.write(profile, 'categories', 'update', categoryId, updateData);
+      // Category names are denormalized into expenses. Keep cached records
+      // and their queued Firebase updates consistent while offline.
+      if (oldCategory.name !== trimmedNewName) {
+        const expenses = await this.personalOfflineData.read<{ category?: string }>(profile, 'expenses');
+        await Promise.all(Object.entries(expenses)
+          .filter(([, expense]) => expense.category === oldCategory.name)
+          .map(([id]) => this.personalOfflineData.write(profile, 'expenses', 'update', id, { category: trimmedNewName })));
+        this.categoryUpdatedSource.next({ oldName: oldCategory.name, newName: trimmedNewName, userId: profile.uid });
+      }
+      return;
     }
 
     let categoryRef: DatabaseReference;
@@ -246,7 +340,10 @@ export class CategoryService {
       await this.assertCategoryNameAvailable(trimmedNewName, categoryId);
     }
 
-    const updateData: { name: string; icon?: string; iconUrl?: string | null } = { name: trimmedNewName };
+    const updateData: { name: string; icon?: string; iconUrl?: string | null; updatedAt?: string } = {
+      name: trimmedNewName,
+      updatedAt: new Date().toISOString(),
+    };
     if (icon !== undefined) updateData.icon = icon;
     if (iconUrl !== undefined) updateData.iconUrl = iconUrl;
     await update(categoryRef, updateData);
@@ -318,6 +415,19 @@ export class CategoryService {
     }
     if (!categoryId) {
       throw new Error('Category ID is required for deletion.');
+    }
+
+    if (this.sharedOfflineData.isOfflineShared(profile)) {
+      const categories = await this.sharedOfflineData.read<ServiceICategory>(profile, 'categories');
+      const current = categories[categoryId];
+      await this.sharedOfflineData.write(profile, 'categories', 'remove', categoryId, undefined,
+        (current as any)?.updatedAt || current?.createdAt || null);
+      return;
+    }
+
+    if (this.personalOfflineData.isOfflinePersonal(profile)) {
+      await this.personalOfflineData.write(profile, 'categories', 'remove', categoryId);
+      return;
     }
 
     const activeGroupId = getActiveGroupId(profile);
@@ -411,6 +521,25 @@ export class CategoryService {
       };
       return push(targetRef, newCategory);
     }));
+  }
+
+  /** Seeds a new provisional personal profile without reaching RTDB. */
+  async addOfflineDefaultCategories(profile: UserProfile, language: string): Promise<void> {
+    if (!this.personalOfflineData.isOfflinePersonal(profile)) return;
+    const existing = await this.personalOfflineData.read<ServiceICategory>(profile, 'categories');
+    if (Object.keys(existing).length > 0) return;
+    await Promise.all(DEFAULT_CATEGORY_SEEDS.map(seed => this.personalOfflineData.write(
+      profile,
+      'categories',
+      'set',
+      this.personalOfflineData.createRecordId('categories'),
+      {
+        name: (seed.names[language] || seed.names['en']).trim(),
+        icon: seed.icon,
+        userId: profile.uid,
+        createdAt: new Date().toISOString(),
+      },
+    )));
   }
 
   async addDefaultGroupCategories(groupId: string, language: string): Promise<void> {

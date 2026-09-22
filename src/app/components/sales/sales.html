@@ -644,20 +644,21 @@
 </div>
 
 <!-- ── Printable receipt — shown right after a successful checkout ── -->
-<div class="pnl-add-modal-backdrop" [class.open]="showReceipt"></div>
-<div class="pnl-add-modal-sheet pnl-receipt-sheet" [class.open]="showReceipt">
-  <div class="pnl-add-modal-header">
-    <span class="pnl-add-modal-header-title">
+<section class="pnl-receipt-overlay" [class.open]="showReceipt"
+  role="dialog" aria-modal="true" [attr.aria-label]="'SALE_RECEIPT_TITLE' | translate">
+  <header class="pnl-receipt-overlay-header">
+    <span class="pnl-receipt-overlay-title">
       <lucide-icon [img]="iconReceipt" [size]="16"></lucide-icon>
       {{ 'SALE_RECEIPT_TITLE' | translate }}
     </span>
-    <button type="button" class="pnl-add-modal-close" (click)="closeReceipt()"
+    <button type="button" class="pnl-receipt-overlay-close" (click)="closeReceipt()"
       [title]="'CLOSE_BUTTON_LABEL' | translate">
       <lucide-icon [img]="iconX" [size]="18"></lucide-icon>
     </button>
-  </div>
-  <div class="pnl-add-modal-body">
-    <div class="pnl-receipt-paper">
+  </header>
+  <div class="pnl-receipt-overlay-scroll">
+    <div class="pnl-receipt-content">
+      <div class="pnl-receipt-paper">
       <div class="pnl-receipt-shop">{{ receiptShopName }}</div>
       <div class="pnl-receipt-shop-info" *ngIf="receiptShopAddress">{{ receiptShopAddress }}</div>
       <div class="pnl-receipt-shop-info pnl-receipt-shop-phone" *ngIf="receiptShopPhone">{{ 'SHOP_PHONE_LABEL' | translate }}: {{ receiptShopPhone }}</div>
@@ -677,8 +678,10 @@
         <span>{{ receiptTotal }}</span>
       </div>
       <div class="pnl-receipt-thanks">{{ 'SALE_RECEIPT_THANK_YOU' | translate }}</div>
+      </div>
     </div>
-    <div class="pnl-form-footer pnl-receipt-actions">
+  </div>
+  <footer class="pnl-receipt-overlay-actions">
       <button type="button" class="pnl-btn pnl-btn-ghost" [disabled]="isSavingReceiptImage"
         (click)="saveReceiptAsImage()">
         <span *ngIf="isSavingReceiptImage" class="pnl-btn-spinner"></span>
@@ -689,8 +692,7 @@
         <lucide-icon [img]="iconShare2" [size]="15"></lucide-icon>
         {{ 'SALE_RECEIPT_SHARE_BUTTON' | translate }}
       </button>
-    </div>
-  </div>
-</div>
+  </footer>
+</section>
 
 <app-product-modal (productAdded)="onProductModalAdded($event)"></app-product-modal>

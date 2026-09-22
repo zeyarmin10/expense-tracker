@@ -1,6 +1,8 @@
 import { bootstrapApplication } from '@angular/platform-browser';
 import { appConfig } from './app/app.config';
 import { App } from './app/app';
+import { Capacitor } from '@capacitor/core';
+import { environment } from './environments/environment';
 
 // IMPORTANT: Ensure these imports are present
 // Every language in APP_LANGUAGES needs its Angular locale registered here —
@@ -21,4 +23,24 @@ registerLocaleData(localeKm, 'km', localeKmExtra);
 registerLocaleData(localeJa, 'ja', localeJaExtra);
 
 bootstrapApplication(App, appConfig)
+  .then(() => {
+    // Native Capacitor builds already bundle the application shell. The web
+    // build needs a service worker so it can start without a connection too.
+    // Angular's development server serves index.html virtually, which is not
+    // a cacheable public asset. Keep the worker production-only so `ng serve`
+    // stays free of its misleading "no asset found" request warning.
+    if (!Capacitor.isNativePlatform() && 'serviceWorker' in navigator) {
+      if (environment.production) {
+        navigator.serviceWorker.register('/service-worker.js').catch((error) => {
+          console.warn('Unable to register offline service worker:', error);
+        });
+      } else {
+        // Clean up a worker installed before the production-only guard was
+        // added. This is confined to localhost/dev builds.
+        navigator.serviceWorker.getRegistrations().then((registrations) => {
+          registrations.forEach((registration) => void registration.unregister());
+        });
+      }
+    }
+  })
   .catch((err: unknown) => console.error(err));

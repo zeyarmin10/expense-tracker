@@ -12,13 +12,15 @@ import {
   DatabaseReference,
   get,
 } from '@angular/fire/database';
-import { Observable, switchMap, firstValueFrom, of, take, map } from 'rxjs';
+import { Observable, switchMap, firstValueFrom, of, take, map, from, tap } from 'rxjs';
 import { AuthService } from './auth';
 import { getActiveGroupId, UserProfile } from './user-data';
 import { SpaceDataService } from './space-data.service';
 import { SpaceSwitchLoadingService } from './space-switch-loading.service';
 import { getExpenseLineItems, ServiceIExpense } from './expense';
 import { getIncomeLineItems, ServiceIIncome } from './income';
+import { PersonalOfflineDataService } from './personal-offline-data.service';
+import { SharedOfflineDataService } from './shared-offline-data.service';
 
 export interface ServiceIProduct {
   id?: string;
@@ -37,6 +39,7 @@ export interface ServiceIProduct {
   userId?: string;
   groupId?: string;
   createdAt?: string;
+  updatedAt?: string;
   // Absent/true = shown in "Add Item" pickers; false = hidden from new
   // selections but kept intact for historical purchase/sale records — see
   // deactivateProduct()/activateProduct().
@@ -67,6 +70,8 @@ export class ProductService {
   private authService = inject(forwardRef(() => AuthService));
   private spaceDataService = inject(SpaceDataService);
   private spaceSwitchLoadingService = inject(SpaceSwitchLoadingService);
+  private personalOfflineData = inject(PersonalOfflineDataService);
+  private sharedOfflineData = inject(SharedOfflineDataService);
 
   constructor() {}
 
@@ -83,6 +88,18 @@ export class ProductService {
         if (!profile?.uid) {
           return of([] as ServiceIProduct[]);
         }
+        if (this.sharedOfflineData.isOfflineShared(profile)) {
+          return from(this.sharedOfflineData.read<ServiceIProduct>(profile, 'products')).pipe(
+            map(records => Object.entries(records).map(([id, product]) => ({ id, ...product }))
+              .filter(product => this.getProductCurrency(product) === (profile.currency || 'MMK'))),
+          );
+        }
+        if (this.personalOfflineData.isOfflinePersonal(profile)) {
+          return from(this.personalOfflineData.read<ServiceIProduct>(profile, 'products')).pipe(
+            map(records => Object.entries(records).map(([id, product]) => ({ id, ...product }))
+              .filter(product => this.getProductCurrency(product) === (profile.currency || 'MMK'))),
+          );
+        }
         return of(profile).pipe(
           switchMap(async (currentProfile) => {
             if (!currentProfile) {
@@ -98,6 +115,11 @@ export class ProductService {
             return this.spaceSwitchLoadingService.track(
               listVal<ServiceIProduct>(canonicalRef || legacyRef, { keyField: 'id' }),
             ).pipe(
+              tap(products => {
+                const records = Object.fromEntries(products.map(({ id, ...product }) => [id!, product]));
+                if (getActiveGroupId(currentProfile)) void this.sharedOfflineData.cacheRemote(currentProfile, 'products', records);
+                else void this.personalOfflineData.cacheRemote(currentProfile, 'products', records);
+              }),
               map((products) => products.filter(
                 (product) => this.getProductCurrency(product) === (currentProfile.currency || 'MMK'),
               )),
@@ -151,6 +173,15 @@ export class ProductService {
     if (!profile?.uid) {
       throw new Error('User not authenticated.');
     }
+    if (this.sharedOfflineData.isOfflineShared(profile) || this.personalOfflineData.isOfflinePersonal(profile)) {
+      const products = this.sharedOfflineData.isOfflineShared(profile)
+        ? await this.sharedOfflineData.read<ServiceIProduct>(profile, 'products')
+        : await this.personalOfflineData.read<ServiceIProduct>(profile, 'products');
+      return Object.entries(products)
+        .map(([id, product]) => ({ id, ...product }))
+        .find(product => product.barcode === trimmedBarcode &&
+          this.getProductCurrency(product) === (profile.currency || 'MMK')) || null;
+    }
     const { canonicalRef, legacyRef } = await this.spaceDataService.getActiveCollectionContext(profile, 'products');
     const productsRef = canonicalRef || legacyRef;
     const snapshot = await get(query(productsRef, orderByChild('barcode'), equalTo(trimmedBarcode)));
@@ -186,6 +217,17 @@ export class ProductService {
       createdAt: new Date().toISOString(),
     };
 
+    if (this.sharedOfflineData.isOfflineShared(profile)) {
+      await this.sharedOfflineData.write(profile, 'products', 'set', this.sharedOfflineData.createRecordId('products'),
+        { ...newProduct, userId: profile.uid, groupId: getActiveGroupId(profile) });
+      return;
+    }
+    if (this.personalOfflineData.isOfflinePersonal(profile)) {
+      await this.personalOfflineData.write(profile, 'products', 'set', this.personalOfflineData.createRecordId('products'),
+        { ...newProduct, userId: profile.uid });
+      return;
+    }
+
     const activeGroupId = getActiveGroupId(profile);
     const { canonicalRef, legacyRef } = await this.spaceDataService.getActiveCollectionContext(profile, 'products');
     const productsRef = canonicalRef || legacyRef;
@@ -211,6 +253,32 @@ export class ProductService {
     }
     if (!productId) {
       throw new Error('Product ID is required for update.');
+    }
+
+    const offlineTrimmedName = newName.trim();
+    await this.assertProductNameAvailable(offlineTrimmedName, productId);
+    const offlineTrimmedBarcode = barcode?.trim();
+    if (offlineTrimmedBarcode) await this.assertBarcodeAvailable(offlineTrimmedBarcode, productId);
+
+    const buildUpdate = () => {
+      const updateData: { name: string; unit?: string; sellingPrice?: number | null; barcode?: string | null; updatedAt?: string } = {
+        name: newName.trim(), updatedAt: new Date().toISOString(),
+      };
+      if (unit !== undefined) updateData.unit = unit.trim();
+      if (sellingPrice !== undefined) updateData.sellingPrice = sellingPrice && sellingPrice > 0 ? sellingPrice : null;
+      if (barcode !== undefined) updateData.barcode = barcode?.trim() || null;
+      return updateData;
+    };
+    if (this.sharedOfflineData.isOfflineShared(profile)) {
+      const products = await this.sharedOfflineData.read<ServiceIProduct>(profile, 'products');
+      const current = products[productId];
+      if (!current) throw new Error('Product not found on this device.');
+      await this.sharedOfflineData.write(profile, 'products', 'update', productId, buildUpdate(), current.updatedAt || current.createdAt || null);
+      return;
+    }
+    if (this.personalOfflineData.isOfflinePersonal(profile)) {
+      await this.personalOfflineData.write(profile, 'products', 'update', productId, buildUpdate());
+      return;
     }
 
     const activeGroupId = getActiveGroupId(profile);
@@ -251,6 +319,16 @@ export class ProductService {
     }
     if (!productId) {
       throw new Error('Product ID is required for deletion.');
+    }
+    if (this.sharedOfflineData.isOfflineShared(profile)) {
+      const products = await this.sharedOfflineData.read<ServiceIProduct>(profile, 'products');
+      await this.sharedOfflineData.write(profile, 'products', 'remove', productId, undefined,
+        products[productId]?.updatedAt || products[productId]?.createdAt || null);
+      return;
+    }
+    if (this.personalOfflineData.isOfflinePersonal(profile)) {
+      await this.personalOfflineData.write(profile, 'products', 'remove', productId);
+      return;
     }
 
     const activeGroupId = getActiveGroupId(profile);
@@ -330,6 +408,17 @@ export class ProductService {
     const profile = await firstValueFrom(this.authService.userProfile$) as UserProfile | null;
     if (!profile?.uid) {
       throw new Error('User not authenticated.');
+    }
+    if (this.sharedOfflineData.isOfflineShared(profile)) {
+      const products = await this.sharedOfflineData.read<ServiceIProduct>(profile, 'products');
+      await this.sharedOfflineData.write(profile, 'products', 'update', productId,
+        { isActive, updatedAt: new Date().toISOString() },
+        products[productId]?.updatedAt || products[productId]?.createdAt || null);
+      return;
+    }
+    if (this.personalOfflineData.isOfflinePersonal(profile)) {
+      await this.personalOfflineData.write(profile, 'products', 'update', productId, { isActive });
+      return;
     }
     const activeGroupId = getActiveGroupId(profile);
     const currentSpaceId = this.spaceDataService.getCurrentSpaceId(profile);
