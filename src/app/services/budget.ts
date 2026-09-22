@@ -15,6 +15,7 @@ import { getActiveGroupId, UserProfile } from './user-data';
 import { SpaceDataService } from './space-data.service';
 import { SpaceSwitchLoadingService } from './space-switch-loading.service';
 import { PersonalOfflineDataService } from './personal-offline-data.service';
+import { SharedOfflineDataService } from './shared-offline-data.service';
 
 export interface ServiceIBudget {
   id?: string;
@@ -30,6 +31,7 @@ export interface ServiceIBudget {
   createdAt?: string;
   device: string;
   editedDevice?: string;
+  updatedAt?: string;
 }
 
 @Injectable({
@@ -41,6 +43,7 @@ export class BudgetService {
   private spaceDataService = inject(SpaceDataService);
   private spaceSwitchLoadingService = inject(SpaceSwitchLoadingService);
   private personalOfflineData = inject(PersonalOfflineDataService);
+  private sharedOfflineData = inject(SharedOfflineDataService);
 
   constructor() {}
 
@@ -66,6 +69,14 @@ export class BudgetService {
       createdAt: new Date().toISOString(),
       device: navigator.userAgent,
     };
+
+    if (this.sharedOfflineData.isOfflineShared(profile)) {
+      await this.sharedOfflineData.write(
+        profile, 'budgets', 'set', this.sharedOfflineData.createRecordId('budgets'),
+        { ...newBudget, groupId: getActiveGroupId(profile) },
+      );
+      return;
+    }
 
     if (this.personalOfflineData.isOfflinePersonal(profile)) {
       await this.personalOfflineData.write(
@@ -100,6 +111,13 @@ export class BudgetService {
 
     return profile$.pipe(
       switchMap(profile => {
+        if (this.sharedOfflineData.isOfflineShared(profile)) {
+          return from(this.sharedOfflineData.read<ServiceIBudget>(profile, 'budgets')).pipe(
+            map(budgets => this.filterBudgets(
+              Object.entries(budgets).map(([id, budget]) => ({ id, ...budget })), startDate, endDate,
+            )),
+          );
+        }
         if (this.personalOfflineData.isOfflinePersonal(profile)) {
           return from(this.personalOfflineData.read<ServiceIBudget>(profile, 'budgets')).pipe(
             map(budgetsData => this.filterBudgets(
@@ -115,13 +133,17 @@ export class BudgetService {
           map(snapshot => {
             const budgetsData = snapshot.val();
             if (!budgetsData) {
-              if (!getActiveGroupId(profile)) {
+              if (getActiveGroupId(profile)) {
+                void this.sharedOfflineData.cacheRemote(profile, 'budgets', {});
+              } else {
                 void this.personalOfflineData.cacheRemote(profile, 'budgets', {});
               }
               return [];
             }
 
-            if (!getActiveGroupId(profile)) {
+            if (getActiveGroupId(profile)) {
+              void this.sharedOfflineData.cacheRemote(profile, 'budgets', budgetsData);
+            } else {
               void this.personalOfflineData.cacheRemote(profile, 'budgets', budgetsData);
             }
             let allBudgets: ServiceIBudget[] = Object.keys(budgetsData).map(key => ({
@@ -154,6 +176,16 @@ export class BudgetService {
       throw new Error('Budget ID is required for update.');
     }
 
+    if (this.sharedOfflineData.isOfflineShared(profile)) {
+      const records = await this.sharedOfflineData.read<ServiceIBudget>(profile, 'budgets');
+      const current = records[budgetId];
+      if (!current) throw new Error('Budget not found on this device.');
+      await this.sharedOfflineData.write(profile, 'budgets', 'update', budgetId, {
+        ...updatedData, editedDevice: navigator.userAgent, updatedAt: new Date().toISOString(),
+      }, current.updatedAt || current.createdAt || null);
+      return;
+    }
+
     if (this.personalOfflineData.isOfflinePersonal(profile)) {
       await this.personalOfflineData.write(profile, 'budgets', 'update', budgetId, {
         ...updatedData, editedDevice: navigator.userAgent,
@@ -183,6 +215,13 @@ export class BudgetService {
     }
     if (!id) {
       throw new Error('Budget ID is required for deletion.');
+    }
+
+    if (this.sharedOfflineData.isOfflineShared(profile)) {
+      const records = await this.sharedOfflineData.read<ServiceIBudget>(profile, 'budgets');
+      await this.sharedOfflineData.write(profile, 'budgets', 'remove', id, undefined,
+        records[id]?.updatedAt || records[id]?.createdAt || null);
+      return;
     }
 
     if (this.personalOfflineData.isOfflinePersonal(profile)) {
