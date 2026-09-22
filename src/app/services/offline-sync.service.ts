@@ -66,8 +66,8 @@ export class OfflineSyncService {
   private async assertNoSharedConflict(operation: OfflineOperation, target: ReturnType<typeof ref>): Promise<void> {
     if (!operation.sharedSpaceId || !operation.baseUpdatedAt) return;
     const current = await get(target);
-    const serverUpdatedAt = current.val()?.updatedAt as string | undefined;
-    if (serverUpdatedAt && serverUpdatedAt !== operation.baseUpdatedAt) {
+    const serverRevision = (current.val()?.updatedAt || current.val()?.createdAt) as string | undefined;
+    if (serverRevision && serverRevision !== operation.baseUpdatedAt) {
       throw new Error('SYNC_CONFLICT: This shared record changed on another device.');
     }
   }

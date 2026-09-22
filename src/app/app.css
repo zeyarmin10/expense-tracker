@@ -1371,3 +1371,9 @@ body.light-mode .mob-drawer-group-avatar {
   min-width: 22px;
   justify-content: center;
 }
+
+.offline-sync-badge.conflict {
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.5);
+  background: rgba(239, 68, 68, 0.15);
+}

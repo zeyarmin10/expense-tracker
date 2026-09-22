@@ -71,6 +71,7 @@ export class App implements OnInit, AfterViewInit {
   isDrawerRouteActive$!: Observable<boolean>;
   spaceSwitchLoading$: Observable<boolean>;
   pendingSyncCount$: Observable<number>;
+  syncConflictCount$: Observable<number>;
   currentGroupImageUrl$: Observable<string | null>;
   // Shown once for brand-new accounts (see UserProfile.hasSeenWelcomeTour).
   showWelcomeTour = false;
@@ -132,6 +133,7 @@ export class App implements OnInit, AfterViewInit {
     this.currentLang = savedLang;
     this.spaceSwitchLoading$ = this.spaceSwitchLoadingService.loading$;
     this.pendingSyncCount$ = this.offlineSyncService.pendingCount$;
+    this.syncConflictCount$ = this.offlineSyncService.conflictCount$;
 
     this.currentUser$ = this.authService.currentUser$;
     this.userDisplayName$ = this.authService.userProfile$.pipe(
