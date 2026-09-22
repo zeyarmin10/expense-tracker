@@ -13,6 +13,7 @@ import { DataManagerService } from './services/data-manager';
 import { ToastService } from './services/toast';
 import { NetworkService } from './services/network.service';
 import { OfflineSyncService } from './services/offline-sync.service';
+import { OfflineHydrationService } from './services/offline-hydration.service';
 import { ThemeService } from './services/theme.service';
 import { NotificationService } from './services/notification.service';
 import { AppUpdateService, AppUpdateStatus } from './services/app-update.service';
@@ -117,6 +118,7 @@ export class App implements OnInit, AfterViewInit {
   private toastService = inject(ToastService);
   private networkService = inject(NetworkService);
   private offlineSyncService = inject(OfflineSyncService);
+  private offlineHydrationService = inject(OfflineHydrationService);
   private spaceContextService = inject(SpaceContextService);
   private spaceSwitchLoadingService = inject(SpaceSwitchLoadingService);
   private modalStateService = inject(ModalStateService);
@@ -436,7 +438,15 @@ export class App implements OnInit, AfterViewInit {
     this.isPullRefreshing = true;
     this.pullDistance = this.pullRefreshThreshold;
 
-    setTimeout(() => {
+    setTimeout(async () => {
+      const profile = await firstValueFrom(
+        this.authService.userProfile$.pipe(filter((value): value is UserProfile => !!value), take(1)),
+      ).catch(() => null);
+      if (profile) {
+        await this.offlineHydrationService.syncActiveSpace(profile).catch((error) => {
+          console.warn('Offline data refresh failed:', error);
+        });
+      }
       const currentUrl = this.router.url;
       this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
         this.router.navigateByUrl(currentUrl).then(() => {
@@ -624,6 +634,7 @@ export class App implements OnInit, AfterViewInit {
     // ── Network monitoring ──────────────────────
     await this.networkService.init();
     await this.offlineSyncService.init();
+    await this.offlineHydrationService.init();
     this.listenNetworkChanges();
     // ────────────────────────────────────────────
 
