@@ -19,6 +19,7 @@ import { UserDataService, UserProfile, PublicUserProfile, getActiveGroupId } fro
 import { ImageUploadService } from './image-upload.service';
 import { environment } from '../../environments/environment';
 import { PersonalOfflineDataService } from './personal-offline-data.service';
+import { SharedOfflineDataService } from './shared-offline-data.service';
 import { OfflineStoreService } from './offline-store.service';
 
 export type ServiceIVoucher = IVoucher & {
@@ -56,6 +57,7 @@ export class VoucherService {
   private spaceSwitchLoadingService = inject(SpaceSwitchLoadingService);
   private imageUploadService = inject(ImageUploadService);
   private personalOfflineData = inject(PersonalOfflineDataService);
+  private sharedOfflineData = inject(SharedOfflineDataService);
   private offlineStore = inject(OfflineStoreService);
 
   private getProfilePhotoURL(profile: { photoURL?: string | null } | null | undefined): string | null {
@@ -165,6 +167,11 @@ export class VoucherService {
 
     return profile$.pipe(
       switchMap(profile => {
+        if (this.sharedOfflineData.isOfflineShared(profile)) {
+          return from(this.sharedOfflineData.read<ServiceIVoucher>(profile, 'vouchers')).pipe(
+            switchMap(vouchers => from(this.withOfflineImageUrls(vouchers))),
+          );
+        }
         if (this.personalOfflineData.isOfflinePersonal(profile)) {
           return from(this.personalOfflineData.read<ServiceIVoucher>(profile, 'vouchers')).pipe(
             switchMap(vouchers => from(this.withOfflineImageUrls(vouchers))),
@@ -179,15 +186,13 @@ export class VoucherService {
               switchMap(async snapshot => {
                 const vouchersData = snapshot.val();
                 if (!vouchersData) {
-                  if (!getActiveGroupId(profile)) {
-                    await this.personalOfflineData.cacheRemote(profile, 'vouchers', {});
-                  }
+                  if (getActiveGroupId(profile)) await this.sharedOfflineData.cacheRemote(profile, 'vouchers', {});
+                  else await this.personalOfflineData.cacheRemote(profile, 'vouchers', {});
                   return [];
                 }
 
-                if (!getActiveGroupId(profile)) {
-                  await this.personalOfflineData.cacheRemote(profile, 'vouchers', vouchersData);
-                }
+                if (getActiveGroupId(profile)) await this.sharedOfflineData.cacheRemote(profile, 'vouchers', vouchersData);
+                else await this.personalOfflineData.cacheRemote(profile, 'vouchers', vouchersData);
 
                 const userIds = new Set<string>();
                 Object.values(vouchersData).forEach((v: any) => {
@@ -269,9 +274,13 @@ export class VoucherService {
 
     const currentUser = await firstValueFrom(this.authService.currentUser$);
 
-    if (this.personalOfflineData.isOfflinePersonal(profile)) {
+    const offlineShared = this.sharedOfflineData.isOfflineShared(profile);
+    const offlinePersonal = this.personalOfflineData.isOfflinePersonal(profile);
+    if (offlineShared || offlinePersonal) {
       const compressed = await Promise.all(files.map(f => this.compressImage(f)));
-      const voucherId = this.personalOfflineData.createRecordId('vouchers');
+      const voucherId = offlineShared
+        ? this.sharedOfflineData.createRecordId('vouchers')
+        : this.personalOfflineData.createRecordId('vouchers');
       const fileKeys = compressed.map((_, index) => `voucher:${profile.uid}:${voucherId}:${index}`);
       await Promise.all(compressed.map((file, index) => this.offlineStore.saveBlob(fileKeys[index], file)));
       const imageUrls = compressed.map(file => URL.createObjectURL(file));
@@ -293,6 +302,7 @@ export class VoucherService {
         contentType: files[0].type,
         size: files.reduce((sum, file) => sum + file.size, 0),
         userId: profile.uid,
+        ...(offlineShared ? { groupId: getActiveGroupId(profile) } : {}),
         createdByName: profile.displayName || 'Anonymous',
         createdByPhotoURL: this.getProfilePhotoURL(profile) || currentUser?.photoURL || null,
         createdAt: new Date().toISOString(),
@@ -307,14 +317,19 @@ export class VoucherService {
       delete serverVoucher['storagePaths'];
       delete serverVoucher['syncStatus'];
       delete serverVoucher['offlineFileKeys'];
-      await this.personalOfflineData.queueVoucherUpload(profile, voucherId, localVoucher, {
+      const uploadPayload = {
         voucherId,
         userId: profile.uid,
+        cacheScope: offlineShared ? this.sharedOfflineData.cacheScope(profile) : profile.uid,
         fileKeys,
-        cloudinaryFolder: `vouchers/${profile.personalSpaceId ? `spaces/${profile.personalSpaceId}` : `users/${profile.uid}`}`,
+        cloudinaryFolder: offlineShared
+          ? `vouchers/spaces/${getActiveGroupId(profile)}`
+          : `vouchers/${profile.personalSpaceId ? `spaces/${profile.personalSpaceId}` : `users/${profile.uid}`}`,
         // Local-only display fields must never reach Firebase.
         voucher: serverVoucher,
-      });
+      };
+      if (offlineShared) await this.sharedOfflineData.queueVoucherUpload(profile, voucherId, localVoucher, uploadPayload);
+      else await this.personalOfflineData.queueVoucherUpload(profile, voucherId, localVoucher, uploadPayload);
       return;
     }
     const { canonicalRef, legacyRef, spaceId } =
@@ -407,6 +422,19 @@ export class VoucherService {
 
     if (this.personalOfflineData.isOfflinePersonal(profile)) {
       await this.personalOfflineData.write(profile, 'vouchers', 'remove', voucher.id!);
+      return;
+    }
+    if (this.sharedOfflineData.isOfflineShared(profile)) {
+      const records = await this.sharedOfflineData.read<ServiceIVoucher>(profile, 'vouchers');
+      const current = records[voucher.id!];
+      await this.sharedOfflineData.write(
+        profile,
+        'vouchers',
+        'remove',
+        voucher.id!,
+        undefined,
+        (current as any)?.updatedAt || current?.createdAt || null,
+      );
       return;
     }
 

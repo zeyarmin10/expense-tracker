@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { get } from '@angular/fire/database';
+import { Database, get, ref } from '@angular/fire/database';
 import { BehaviorSubject, combineLatest, filter } from 'rxjs';
 import { AuthService } from './auth';
 import { NetworkService } from './network.service';
@@ -7,6 +7,8 @@ import { PersonalOfflineDataService } from './personal-offline-data.service';
 import { SharedOfflineDataService } from './shared-offline-data.service';
 import { SpaceCollection, SpaceDataService } from './space-data.service';
 import { getActiveGroupId, UserProfile } from './user-data';
+import { OfflineStoreService } from './offline-store.service';
+import { UserSpaceSummary } from './space.model';
 
 /**
  * Hydrates only spaces listed in the signed-in user's own profile. It never
@@ -16,10 +18,12 @@ import { getActiveGroupId, UserProfile } from './user-data';
 @Injectable({ providedIn: 'root' })
 export class OfflineHydrationService {
   private auth = inject(AuthService);
+  private db = inject(Database);
   private network = inject(NetworkService);
   private spaceData = inject(SpaceDataService);
   private personal = inject(PersonalOfflineDataService);
   private shared = inject(SharedOfflineDataService);
+  private store = inject(OfflineStoreService);
   private started = false;
   private syncing = false;
   readonly lastSyncedAt$ = new BehaviorSubject<Date | null>(null);
@@ -40,6 +44,7 @@ export class OfflineHydrationService {
     const activeProfile = profile;
     this.syncing = true;
     try {
+      await this.cacheSpaceSummaries(activeProfile);
       const personalProfile: UserProfile = {
         ...activeProfile,
         currentSpaceId: activeProfile.personalSpaceId || `personal:${activeProfile.uid}`,
@@ -72,6 +77,53 @@ export class OfflineHydrationService {
         ...(['categories', 'budgets', 'products', 'expenses', 'incomes', 'vouchers', 'shopExpenses'] as SpaceCollection[])
           .map(collection => this.hydrateCollection(profile, collection)),
       ]);
+  }
+
+  private async cacheSpaceSummaries(profile: UserProfile): Promise<void> {
+    const personalId = profile.personalSpaceId || `personal:${profile.uid}`;
+    const personal: UserSpaceSummary = {
+      id: personalId,
+      type: 'personal',
+      name: 'My Personal',
+      ownerId: profile.uid,
+      currency: profile.currency || 'MMK',
+      budgetPeriod: profile.budgetPeriod || null,
+      budgetStartDate: profile.budgetStartDate || null,
+      budgetEndDate: profile.budgetEndDate || null,
+      selectedBudgetPeriodId: profile.selectedBudgetPeriodId || null,
+      imageUrl: (profile as any).spaceImageUrl || profile.photoURL || null,
+      createdAt: profile.createdAt || Date.now(),
+      role: 'owner',
+    };
+    const groupSpaces = await Promise.all(
+      Object.entries(profile.spaceMemberships || {})
+        .filter(([spaceId]) => spaceId !== personalId && !spaceId.startsWith('personal:'))
+        .map(async ([spaceId, role]) => {
+          let raw: any = null;
+          try {
+            const canonical = await get(ref(this.db, `spaces/${spaceId}`));
+            if (canonical.exists()) raw = canonical.val();
+            else raw = (await get(ref(this.db, `groups/${spaceId}`))).val();
+          } catch {
+            // A stale membership must not stop all of this account's other
+            // spaces from being prepared for offline use.
+            return null;
+          }
+          if (!raw) return null;
+          return {
+            ...raw,
+            id: spaceId,
+            type: 'group',
+            name: raw.name || raw.groupName || 'Group',
+            role,
+          } as UserSpaceSummary;
+        }),
+    );
+    const records = Object.fromEntries(
+      [personal, ...groupSpaces.filter((space): space is UserSpaceSummary => !!space)]
+        .map(space => [space.id!, space]),
+    ) as unknown as Record<string, Record<string, unknown>>;
+    await this.store.replaceCollection(profile.uid, 'spaces', records);
   }
 
   private async hydrateCollection(

@@ -177,9 +177,14 @@ export class IncomeService {
       switchMap((profile) => {
         if (this.sharedOfflineData.isOfflineShared(profile)) {
           return from(this.sharedOfflineData.read<ServiceIIncome>(profile, 'incomes')).pipe(
-            map(incomes => Object.entries(incomes)
-              .map(([id, income]) => ({ id, ...income }))
-              .filter(income => income.status !== 'void')),
+            map(incomes => {
+              const start = startDate ? toLocalDateKey(startDate) : null;
+              const end = endDate ? toLocalDateKey(endDate) : null;
+              return Object.entries(incomes)
+                .map(([id, income]) => ({ id, ...income }))
+                .filter(income => income.status !== 'void' &&
+                  (!start || !end || (income.date >= start && income.date <= end)));
+            }),
           );
         }
         if (this.personalOfflineData.isOfflinePersonal(profile)) {

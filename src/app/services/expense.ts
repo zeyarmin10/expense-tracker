@@ -155,14 +155,19 @@ export class ExpenseService {
       switchMap(profile => {
         if (this.sharedOfflineData.isOfflineShared(profile)) {
           return from(this.sharedOfflineData.read<IExpense>(profile, 'expenses')).pipe(
-            map(records => Object.entries(records).map(([id, expense]) => ({
-              id, ...expense,
-              totalCost: expense.lineItems?.length
-                ? (expense.totalCost ?? expense.lineItems.reduce((sum, item) => sum + item.subtotal, 0))
-                : (expense.quantity ?? 0) * (expense.price ?? 0),
-              createdByName: expense.createdByName || 'Former Member',
-              createdByPhotoURL: expense.createdByPhotoURL || null,
-            } as ServiceIExpense)).filter(expense => expense.status !== 'void')),
+            map(records => {
+              const start = startDate ? toLocalDateKey(startDate) : null;
+              const end = endDate ? toLocalDateKey(endDate) : null;
+              return Object.entries(records).map(([id, expense]) => ({
+                id, ...expense,
+                totalCost: expense.lineItems?.length
+                  ? (expense.totalCost ?? expense.lineItems.reduce((sum, item) => sum + item.subtotal, 0))
+                  : (expense.quantity ?? 0) * (expense.price ?? 0),
+                createdByName: expense.createdByName || 'Former Member',
+                createdByPhotoURL: expense.createdByPhotoURL || null,
+              } as ServiceIExpense)).filter(expense => expense.status !== 'void' &&
+                (!start || !end || (expense.date >= start && expense.date <= end)));
+            }),
           );
         }
         if (this.personalOfflineData.isOfflinePersonal(profile)) {

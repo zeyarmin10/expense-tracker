@@ -8,6 +8,7 @@ import {
   set,
   update,
 } from '@angular/fire/database';
+import { Auth } from '@angular/fire/auth';
 import { Observable, combineLatest, map, of, switchMap, catchError, from, tap } from 'rxjs';
 import { CategoryService } from './category';
 import { Space, SpaceRole, UserSpaceSummary } from './space.model';
@@ -20,6 +21,7 @@ import { NetworkService } from './network.service';
 })
 export class SpaceContextService {
   private db = inject(Database);
+  private firebaseAuth = inject(Auth);
   private userDataService = inject(UserDataService);
   private categoryService = inject(CategoryService);
   private offlineStore = inject(OfflineStoreService);
@@ -93,6 +95,17 @@ export class SpaceContextService {
   getSpace(spaceId: string | null | undefined): Observable<Space | null> {
     if (!spaceId) {
       return of(null);
+    }
+
+    // Space names/settings are cached with the account's space list. This is
+    // what lets the shop/dashboard resolve the selected space after an
+    // offline switch without opening a Firebase listener.
+    if (!this.network.isOnline$.value) {
+      const userId = this.firebaseAuth.currentUser?.uid;
+      if (!userId) return of(null);
+      return from(this.offlineStore.getCollection<UserSpaceSummary>(userId, 'spaces')).pipe(
+        map(spaces => (spaces[spaceId] || null) as Space | null),
+      );
     }
 
     if (this.isVirtualPersonalSpaceId(spaceId)) {
@@ -393,6 +406,10 @@ export class SpaceContextService {
   }
 
   async switchSpace(userId: string, spaceId: string): Promise<void> {
+    if (!this.network.isOnline$.value) {
+      await this.switchSpaceOffline(userId, spaceId);
+      return;
+    }
     if (this.isVirtualPersonalSpaceId(spaceId)) {
       const ownVirtualId = this.buildVirtualPersonalSpaceId(userId);
       if (spaceId !== ownVirtualId) {
@@ -475,6 +492,58 @@ export class SpaceContextService {
       currentSpaceRole: role,
       accountType: isGroup ? 'group' : 'personal',
       groupId: isGroup ? spaceId : null,
+    });
+  }
+
+  private async switchSpaceOffline(userId: string, spaceId: string): Promise<void> {
+    const profile = await this.offlineStore.getProfile<UserProfile>(userId);
+    if (!profile) throw new Error('Offline profile is not available on this device.');
+
+    const cachedSpaces = await this.offlineStore.getCollection<UserSpaceSummary>(userId, 'spaces');
+    const space = cachedSpaces[spaceId];
+    const isOwnPersonalSpace =
+      profile.personalSpaceId === spaceId ||
+      spaceId === this.buildVirtualPersonalSpaceId(userId);
+    const membershipRole = profile.spaceMemberships?.[spaceId];
+    if ((!space && !isOwnPersonalSpace) || (!membershipRole && !isOwnPersonalSpace)) {
+      throw new Error('Space access denied. Connect to the internet once to refresh your spaces.');
+    }
+
+    const isGroup = space?.type === 'group';
+    const role = isGroup ? (membershipRole || space?.role || 'member') : 'owner';
+    const contextUpdate: Partial<UserProfile> = {
+      currentSpaceId: spaceId,
+      currentSpaceType: isGroup ? 'group' : 'personal',
+      currentSpaceName: space?.name || 'My Personal',
+      currentSpaceRole: role,
+      accountType: isGroup ? 'group' : 'personal',
+      groupId: isGroup ? spaceId : null,
+      // These fields are only a local runtime context. The queued server
+      // patch below intentionally does not write group settings into the
+      // user's personal profile.
+      ...(space?.currency ? { currency: space.currency } : {}),
+      ...(space ? {
+        budgetPeriod: space.budgetPeriod || null,
+        budgetStartDate: space.budgetStartDate || null,
+        budgetEndDate: space.budgetEndDate || null,
+        selectedBudgetPeriodId: space.selectedBudgetPeriodId || null,
+      } : {}),
+    };
+    await this.userDataService.updateCachedProfile(userId, contextUpdate);
+    await this.offlineStore.enqueue({
+      id: this.offlineStore.createId('op'),
+      kind: 'update',
+      path: `users/${userId}`,
+      payload: {
+        currentSpaceId: contextUpdate.currentSpaceId,
+        currentSpaceType: contextUpdate.currentSpaceType,
+        currentSpaceName: contextUpdate.currentSpaceName,
+        currentSpaceRole: contextUpdate.currentSpaceRole,
+        accountType: contextUpdate.accountType,
+        groupId: contextUpdate.groupId,
+      },
+      createdAt: this.offlineStore.nextOperationTimestamp(),
+      attempts: 0,
     });
   }
 }

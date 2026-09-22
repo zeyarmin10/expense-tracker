@@ -68,6 +68,30 @@ export class SharedOfflineDataService {
     });
   }
 
+  /** Stores an image-backed shared voucher locally until Cloudinary is reachable. */
+  async queueVoucherUpload(
+    profile: UserProfile,
+    voucherId: string,
+    localVoucher: Record<string, unknown>,
+    uploadPayload: Record<string, unknown>,
+  ): Promise<void> {
+    const groupId = this.groupId(profile);
+    await this.store.patchRecord(this.scope(profile), 'vouchers', voucherId, localVoucher);
+    await this.store.enqueue({
+      id: this.store.createId('op'),
+      kind: 'uploadVoucher',
+      path: this.path(profile, 'vouchers', voucherId),
+      payload: uploadPayload,
+      createdAt: this.store.nextOperationTimestamp(),
+      sharedSpaceId: groupId,
+      attempts: 0,
+    });
+  }
+
+  cacheScope(profile: UserProfile): string {
+    return this.scope(profile);
+  }
+
   createRecordId(collection: OfflineCollection): string {
     return this.store.createId(`shared-${collection.slice(0, 3)}`);
   }

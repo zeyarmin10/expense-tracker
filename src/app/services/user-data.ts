@@ -8,7 +8,7 @@ import {
   get,
   remove
 } from '@angular/fire/database';
-import { Observable, concat, EMPTY, from, of } from 'rxjs';
+import { BehaviorSubject, Observable, concat, EMPTY, from, merge, of } from 'rxjs';
 import { filter, switchMap, tap } from 'rxjs/operators';
 import { DataManagerService } from './data-manager';
 import { Space, SpaceRole, SpaceType } from './space.model';
@@ -116,6 +116,7 @@ export class UserDataService {
   private db: Database = inject(Database);
   private offlineStore = inject(OfflineStoreService);
   private dataManagerService!: DataManagerService;
+  private readonly offlineProfileChanges = new Map<string, BehaviorSubject<UserProfile | null>>();
 
   constructor(private injector: Injector) {}
 
@@ -128,6 +129,9 @@ export class UserDataService {
 
   getUserProfile(userId: string): Observable<UserProfile | null> {
     const userRef = ref(this.db, `users/${userId}`);
+    const localChanges$ = this.getOfflineProfileChanges(userId).pipe(
+      filter((profile): profile is UserProfile => profile !== null),
+    );
     const cached$ = from(this.offlineStore.getProfile<UserProfile>(userId)).pipe(
       switchMap(profile => profile ? of(profile) : EMPTY),
     );
@@ -138,7 +142,29 @@ export class UserDataService {
       // Do not replace a usable cached profile with a transient offline null.
       filter((profile): profile is UserProfile => profile !== null),
     );
-    return concat(cached$, remote$);
+    // A space switch made offline cannot update Firebase immediately. Keep a
+    // small local stream alongside the remote listener so the active-space
+    // context changes instantly, then let Firebase become authoritative again
+    // once the queued update is replayed.
+    return concat(cached$, merge(localChanges$, remote$));
+  }
+
+  async updateCachedProfile(userId: string, changes: Partial<UserProfile>): Promise<UserProfile> {
+    const current = await this.offlineStore.getProfile<UserProfile>(userId);
+    if (!current) throw new Error('Offline profile is not available on this device.');
+    const updated = { ...current, ...changes, uid: current.uid || userId } as UserProfile;
+    await this.offlineStore.cacheProfile(userId, updated);
+    this.getOfflineProfileChanges(userId).next(updated);
+    return updated;
+  }
+
+  private getOfflineProfileChanges(userId: string): BehaviorSubject<UserProfile | null> {
+    let changes = this.offlineProfileChanges.get(userId);
+    if (!changes) {
+      changes = new BehaviorSubject<UserProfile | null>(null);
+      this.offlineProfileChanges.set(userId, changes);
+    }
+    return changes;
   }
 
   async fetchUserProfile(userId: string): Promise<UserProfile | null> {

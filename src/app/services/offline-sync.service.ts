@@ -111,6 +111,7 @@ export class OfflineSyncService {
     const payload = operation.payload as {
       voucherId?: string;
       userId?: string;
+      cacheScope?: string;
       fileKeys?: string[];
       cloudinaryFolder?: string;
       voucher?: Record<string, unknown>;
@@ -145,7 +146,7 @@ export class OfflineSyncService {
       storagePaths,
     };
     await set(target, voucher);
-    await this.store.patchRecord(payload.userId, 'vouchers', payload.voucherId, {
+    await this.store.patchRecord(payload.cacheScope || payload.userId, 'vouchers', payload.voucherId, {
       ...voucher,
       offlineFileKeys: undefined,
       syncStatus: 'synced',
