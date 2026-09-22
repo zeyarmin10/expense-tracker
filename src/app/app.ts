@@ -21,7 +21,7 @@ import { FlexibleUpdateInstallStatus } from '@capawesome/capacitor-app-update';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { APP_LANGUAGES } from './core/constants/app.constants';
 import { SplashScreen } from '@capacitor/splash-screen';
-import { Capacitor } from '@capacitor/core';
+import { Capacitor, SystemBars, SystemBarType, SystemBarsStyle } from '@capacitor/core';
 import { Camera } from '@capacitor/camera';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Keyboard } from '@capacitor/keyboard';
@@ -334,9 +334,7 @@ export class App implements OnInit, AfterViewInit {
 
     this.themeService.isDarkMode$.subscribe((isDarkMode) => {
       this.isDarkMode = isDarkMode;
-      if (Capacitor.isNativePlatform()) {
-        StatusBar.setStyle({ style: isDarkMode ? Style.Dark : Style.Light }).catch(() => {});
-      }
+      this.applySystemBarStyles(isDarkMode);
     });
 
     // Android can reset the StatusBar icon style after in-app navigations (e.g. login → dashboard).
@@ -345,7 +343,7 @@ export class App implements OnInit, AfterViewInit {
       this.router.events.pipe(
         filter((e): e is NavigationEnd => e instanceof NavigationEnd)
       ).subscribe(() => {
-        StatusBar.setStyle({ style: this.themeService.isDarkMode ? Style.Dark : Style.Light }).catch(() => {});
+        this.applySystemBarStyles(this.themeService.isDarkMode);
       });
     }
 
@@ -583,9 +581,8 @@ export class App implements OnInit, AfterViewInit {
       // Configure status bar early — splash hide is deferred to ngAfterViewInit
       StatusBar.setOverlaysWebView({ overlay: true }).catch(() => {});
       StatusBar.show().catch(() => {});
-      // Apply correct icon style immediately after setOverlaysWebView
-      const earlyStyle = this.themeService.isDarkMode ? Style.Dark : Style.Light;
-      StatusBar.setStyle({ style: earlyStyle }).catch(() => {});
+      // Apply correct status/navigation icon styles immediately after overlay setup.
+      this.applySystemBarStyles(this.themeService.isDarkMode);
       Camera.requestPermissions({ permissions: ['camera'] }).catch(() => {});
       // Warm up the native Google Sign-In plugin now so the login screen's
       // first tap doesn't pay for the bridge/Play-Services init cost.
@@ -677,14 +674,27 @@ export class App implements OnInit, AfterViewInit {
           await SplashScreen.hide().catch(() => {});
           // Re-apply overlay + style — Android may reset both during splash dismiss
           StatusBar.setOverlaysWebView({ overlay: true }).catch(() => {});
-          const style = this.themeService.isDarkMode ? Style.Dark : Style.Light;
-          StatusBar.setStyle({ style }).catch(() => {});
+          this.applySystemBarStyles(this.themeService.isDarkMode);
           setTimeout(() => {
-            StatusBar.setStyle({ style: this.themeService.isDarkMode ? Style.Dark : Style.Light }).catch(() => {});
+            this.applySystemBarStyles(this.themeService.isDarkMode);
           }, 200);
         });
       });
     });
+  }
+
+  /** Keep Android's native system buttons legible as the app theme or route changes. */
+  private applySystemBarStyles(isDarkMode: boolean): void {
+    if (!Capacitor.isNativePlatform()) return;
+
+    StatusBar.setStyle({ style: isDarkMode ? Style.Dark : Style.Light }).catch(() => {});
+
+    if (Capacitor.getPlatform() === 'android') {
+      SystemBars.setStyle({
+        bar: SystemBarType.NavigationBar,
+        style: isDarkMode ? SystemBarsStyle.Dark : SystemBarsStyle.Light,
+      }).catch(() => {});
+    }
   }
 
   // ── Network monitoring: Native + Web ───────────

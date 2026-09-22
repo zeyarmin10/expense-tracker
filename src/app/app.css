@@ -1185,9 +1185,22 @@ body.light-mode .mob-drawer-avatar-more {
   color: #f87171 !important;
 }
 
-/* Light mode overrides */
+/* Light mode: keep a consistent visual boundary above Android's system bar.
+   This applies to the shared mobile nav, so every menu gets the same contrast
+   that was previously only noticeable on the inventory screen. */
 body.light-mode .mob-bottom-nav {
-  /* box-shadow: 0 -3px 6px rgba(0, 0, 0, 0.35) !important; */
+  border-top-color: rgba(71, 85, 105, 0.18);
+  box-shadow: 0 -8px 24px rgba(71, 85, 105, 0.18), 0 -1px 3px rgba(0, 94, 234, 0.28);
+}
+
+body.light-mode .mob-bottom-nav::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: -20px 0 auto;
+  height: 20px;
+  pointer-events: none;
+  background: linear-gradient(to top, rgba(148, 163, 184, 0.20), transparent);
 }
 
 body.light-mode .mob-drawer {
