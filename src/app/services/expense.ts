@@ -25,6 +25,7 @@ import { SpaceContextService } from './space-context.service';
 import { SpaceDataService } from './space-data.service';
 import { SpaceSwitchLoadingService } from './space-switch-loading.service';
 import { toLocalDateKey } from './date-filter.service';
+import { PersonalOfflineDataService } from './personal-offline-data.service';
 
 export type ServiceIExpense = IExpense & {
   id: string;
@@ -75,6 +76,7 @@ export class ExpenseService {
   private spaceContextService: SpaceContextService = inject(SpaceContextService);
   private spaceDataService: SpaceDataService = inject(SpaceDataService);
   private spaceSwitchLoadingService = inject(SpaceSwitchLoadingService);
+  private personalOfflineData = inject(PersonalOfflineDataService);
 
   constructor() {}
 
@@ -148,8 +150,32 @@ export class ExpenseService {
         );
 
     return profile$.pipe(
-      switchMap(profile =>
-        this.spaceSwitchLoadingService.track(
+      switchMap(profile => {
+        if (this.personalOfflineData.isOfflinePersonal(profile)) {
+          return from(this.personalOfflineData.read<IExpense>(profile, 'expenses')).pipe(
+            map(expensesData => {
+              const start = startDate ? toLocalDateKey(startDate) : null;
+              const end = endDate ? toLocalDateKey(endDate) : null;
+              const expenses = Object.entries(expensesData).map(([id, expense]) => ({
+                id,
+                ...expense,
+                totalCost: expense.lineItems?.length
+                  ? (expense.totalCost ?? expense.lineItems.reduce((sum, item) => sum + item.subtotal, 0))
+                  : (expense.quantity ?? 0) * (expense.price ?? 0),
+                createdByName: expense.createdByName || profile.displayName || 'Former Member',
+                createdByPhotoURL: expense.createdByPhotoURL || profile.photoURL || null,
+                userDisplayName: expense.createdByName || profile.displayName || 'Former Member',
+                userPhotoURL: expense.createdByPhotoURL || profile.photoURL || null,
+              } as ServiceIExpense));
+              loadErrorSignal?.next(false);
+              return expenses.filter(expense =>
+                expense.status !== 'void' &&
+                (!start || !end || (expense.date >= start && expense.date <= end)),
+              );
+            }),
+          );
+        }
+        return this.spaceSwitchLoadingService.track(
           from(this.spaceDataService.getActiveCollectionContext(profile, 'expenses')),
         ).pipe(
           switchMap(({ canonicalRef, legacyRef }) => {
@@ -169,6 +195,9 @@ export class ExpenseService {
           switchMap(async (snapshot) => {
             const expensesData = snapshot.val();
             if (!expensesData) {
+              if (!getActiveGroupId(profile)) {
+                await this.personalOfflineData.cacheRemote(profile, 'expenses', {});
+              }
               return [];
             }
 
@@ -225,6 +254,12 @@ export class ExpenseService {
               } as ServiceIExpense;
             });
 
+            // Retain the server shape, not the display-enriched one, so a
+            // later offline read uses exactly the same financial values.
+            if (!getActiveGroupId(profile)) {
+              await this.personalOfflineData.cacheRemote(profile, 'expenses', expensesData);
+            }
+
             loadErrorSignal?.next(false);
             // Voided (soft-deleted) records stay in Firebase forever for
             // audit purposes but never surface here — every caller (lists,
@@ -241,8 +276,8 @@ export class ExpenseService {
             );
             return this.spaceSwitchLoadingService.track(expenses$);
           }),
-        ),
-      ),
+        );
+      }),
     );
   }
 
@@ -261,6 +296,24 @@ export class ExpenseService {
     const parser = new UAParser();
     const result = parser.getResult();
     const device = `${result.browser.name} on ${result.os.name}, Model: ${result.device.model || 'Unknown'} (${result.device.vendor || 'Unknown'})`;
+
+    if (this.personalOfflineData.isOfflinePersonal(profile)) {
+      const id = this.personalOfflineData.createRecordId('expenses');
+      const totalCost = expenseData.lineItems?.length
+        ? expenseData.lineItems.reduce((sum, item) => sum + item.subtotal, 0)
+        : (expenseData.quantity ?? 0) * (expenseData.price ?? 0);
+      await this.personalOfflineData.write(profile, 'expenses', 'set', id, {
+        ...expenseData,
+        userId: profile.uid,
+        createdByName: profile.displayName || 'Anonymous',
+        createdByPhotoURL: this.getProfilePhotoURL(profile) || currentUser?.photoURL || null,
+        currency: profile.currency,
+        totalCost,
+        createdAt: new Date().toISOString(),
+        device,
+      });
+      return;
+    }
 
     const totalCost = expenseData.lineItems?.length
       ? expenseData.lineItems.reduce((sum, item) => sum + item.subtotal, 0)
@@ -312,6 +365,24 @@ export class ExpenseService {
     const parser = new UAParser();
     const result = parser.getResult();
     const editedDevice = `${result.browser.name} on ${result.os.name}, Model: ${result.device.model || 'Unknown'} (${result.device.vendor || 'Unknown'})`;
+
+    if (this.personalOfflineData.isOfflinePersonal(profile)) {
+      const cached = await this.personalOfflineData.read<IExpense>(profile, 'expenses');
+      const currentExpense = cached[expenseId];
+      if (!currentExpense) throw new Error('Expense not found on this device.');
+      const quantity = updates.quantity ?? currentExpense.quantity;
+      const price = updates.price ?? currentExpense.price;
+      const now = new Date().toISOString();
+      await this.personalOfflineData.write(profile, 'expenses', 'update', expenseId, {
+        ...updates,
+        updatedAt: now,
+        editedDevice,
+        updatedBy: profile.uid,
+        updatedByPhotoURL: this.getProfilePhotoURL(profile) || currentUser?.photoURL || null,
+        totalCost: (quantity ?? 0) * (price ?? 0),
+      });
+      return;
+    }
 
     const activeGroupId = getActiveGroupId(profile);
     const currentSpaceId = this.spaceDataService.getCurrentSpaceId(profile);
@@ -386,6 +457,10 @@ export class ExpenseService {
     if (!profile?.uid) {
       throw new Error('User not authenticated.');
     }
+    if (this.personalOfflineData.isOfflinePersonal(profile)) {
+      await this.personalOfflineData.write(profile, 'expenses', 'remove', expenseId);
+      return;
+    }
     const activeGroupId = getActiveGroupId(profile);
     const currentSpaceId = this.spaceDataService.getCurrentSpaceId(profile);
     const { canonicalRef } = await this.spaceDataService.getActiveCollectionContext(profile, 'expenses');
@@ -408,6 +483,15 @@ export class ExpenseService {
       throw new Error('User not authenticated.');
     }
     const currentUser = await firstValueFrom(this.authService.currentUser$);
+
+    if (this.personalOfflineData.isOfflinePersonal(profile)) {
+      const now = new Date().toISOString();
+      await this.personalOfflineData.write(profile, 'expenses', 'update', expenseId, {
+        status: 'void', voidedAt: now, voidedBy: profile.uid,
+        voidedByName: profile.displayName || 'Unknown', voidReason: reason || null,
+      });
+      return;
+    }
 
     const activeGroupId = getActiveGroupId(profile);
     const currentSpaceId = this.spaceDataService.getCurrentSpaceId(profile);
@@ -450,6 +534,21 @@ export class ExpenseService {
         switchMap((profile) => {
           if (!profile) {
             throw new Error('User not authenticated.');
+          }
+          if (this.personalOfflineData.isOfflinePersonal(profile)) {
+            return from(this.personalOfflineData.read<IExpense>(profile, 'expenses')).pipe(
+              map(expenses => {
+                const expense = expenses[expenseId];
+                if (!expense) throw new Error('Expense not found.');
+                return {
+                  id: expenseId,
+                  ...expense,
+                  totalCost: expense.lineItems?.length
+                    ? (expense.totalCost ?? expense.lineItems.reduce((sum, item) => sum + item.subtotal, 0))
+                    : (expense.quantity ?? 0) * (expense.price ?? 0),
+                } as ServiceIExpense;
+              }),
+            );
           }
           return from(this.spaceDataService.getActiveCollectionContext(profile, 'expenses')).pipe(
             switchMap(({ canonicalRef }) => {

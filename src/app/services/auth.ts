@@ -29,6 +29,7 @@ import { UserDataService, UserProfile } from './user-data';
 import { DataManagerService } from './data-manager';
 import { SessionManagementService } from './session-management';
 import { SpaceContextService } from './space-context.service';
+import { NetworkService } from './network.service';
 import Swal from 'sweetalert2';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 
@@ -54,6 +55,7 @@ export class AuthService {
   newUserRegistered$ = this.newUserRegisteredSource.asObservable();
 
   translateService = inject(TranslateService);
+  private networkService = inject(NetworkService);
 
   constructor(private injector: Injector) {
     this.currentUser$ = new Observable<User | null>((observer) => {
@@ -87,6 +89,13 @@ export class AuthService {
                 accountType: profile.accountType || 'personal',
                 groupId: profile.groupId || null,
               } as UserProfile);
+            }
+
+            // The profile is persisted locally for Phase 1. Avoid waiting on
+            // the space listener when the device is offline; otherwise a
+            // valid cached personal profile never reaches the app shell.
+            if (!this.networkService.isOnline$.value) {
+              return of(profile);
             }
 
             return spaceContextService.getSpace(activeSpaceId).pipe(

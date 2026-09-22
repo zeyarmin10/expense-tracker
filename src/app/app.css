@@ -1352,3 +1352,22 @@ body.light-mode .dropdown-space-avatar {
 body.light-mode .mob-drawer-group-avatar {
   border-color: rgba(0, 79, 199, 0.35);
 }
+.offline-sync-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(245, 158, 11, 0.16);
+  border: 1px solid rgba(245, 158, 11, 0.42);
+  color: #fbbf24;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.offline-sync-badge.mobile {
+  margin-left: auto;
+  margin-right: 12px;
+  min-width: 22px;
+  justify-content: center;
+}

@@ -8,9 +8,11 @@ import {
   get,
   remove
 } from '@angular/fire/database';
-import { Observable } from 'rxjs';
+import { Observable, concat, EMPTY, from, of } from 'rxjs';
+import { filter, switchMap, tap } from 'rxjs/operators';
 import { DataManagerService } from './data-manager';
 import { Space, SpaceRole, SpaceType } from './space.model';
+import { OfflineStoreService } from './offline-store.service';
 
 // Publicly-readable subset of a profile (see `user_public/{uid}` in the DB
 // rules) — anyone signed in may read this, so it must never carry anything
@@ -112,6 +114,7 @@ export function canManageSharedSpace(profile: UserProfile | null | undefined): b
 })
 export class UserDataService {
   private db: Database = inject(Database);
+  private offlineStore = inject(OfflineStoreService);
   private dataManagerService!: DataManagerService;
 
   constructor(private injector: Injector) {}
@@ -125,7 +128,17 @@ export class UserDataService {
 
   getUserProfile(userId: string): Observable<UserProfile | null> {
     const userRef = ref(this.db, `users/${userId}`);
-    return objectVal<UserProfile>(userRef);
+    const cached$ = from(this.offlineStore.getProfile<UserProfile>(userId)).pipe(
+      switchMap(profile => profile ? of(profile) : EMPTY),
+    );
+    const remote$ = objectVal<UserProfile>(userRef).pipe(
+      tap(profile => {
+        if (profile) void this.offlineStore.cacheProfile(userId, profile);
+      }),
+      // Do not replace a usable cached profile with a transient offline null.
+      filter((profile): profile is UserProfile => profile !== null),
+    );
+    return concat(cached$, remote$);
   }
 
   async fetchUserProfile(userId: string): Promise<UserProfile | null> {

@@ -21,6 +21,7 @@ import { getActiveGroupId, UserDataService, UserProfile, PublicUserProfile } fro
 import { SpaceDataService } from './space-data.service';
 import { SpaceSwitchLoadingService } from './space-switch-loading.service';
 import { toLocalDateKey } from './date-filter.service';
+import { PersonalOfflineDataService } from './personal-offline-data.service';
 
 export interface IncomeLineItem {
   productId: string;
@@ -100,6 +101,7 @@ export class IncomeService {
   private userDataService = inject(UserDataService);
   private spaceDataService = inject(SpaceDataService);
   private spaceSwitchLoadingService = inject(SpaceSwitchLoadingService);
+  private personalOfflineData = inject(PersonalOfflineDataService);
 
   constructor() {
   }
@@ -129,6 +131,13 @@ export class IncomeService {
       device: navigator.userAgent,
     };
 
+    if (this.personalOfflineData.isOfflinePersonal(profile)) {
+      await this.personalOfflineData.write(
+        profile, 'incomes', 'set', this.personalOfflineData.createRecordId('incomes'), newIncomeToSave,
+      );
+      return;
+    }
+
     let incomesRef: DatabaseReference;
     const activeGroupId = getActiveGroupId(profile);
     const { canonicalRef, legacyRef } = await this.spaceDataService.getActiveCollectionContext(profile, 'incomes');
@@ -154,8 +163,20 @@ export class IncomeService {
         );
 
     return profile$.pipe(
-      switchMap((profile) =>
-        this.spaceSwitchLoadingService.track(
+      switchMap((profile) => {
+        if (this.personalOfflineData.isOfflinePersonal(profile)) {
+          return from(this.personalOfflineData.read<ServiceIIncome>(profile, 'incomes')).pipe(
+            map(incomesData => {
+              const start = startDate ? toLocalDateKey(startDate) : null;
+              const end = endDate ? toLocalDateKey(endDate) : null;
+              return Object.entries(incomesData)
+                .map(([id, income]) => ({ id, ...income }))
+                .filter(income => income.status !== 'void' &&
+                  (!start || !end || (income.date >= start && income.date <= end)));
+            }),
+          );
+        }
+        return this.spaceSwitchLoadingService.track(
           from(this.spaceDataService.getActiveCollectionContext(profile, 'incomes')),
         ).pipe(
           switchMap(({ canonicalRef, legacyRef }) => {
@@ -175,6 +196,9 @@ export class IncomeService {
           switchMap(async snapshot => {
             const incomesData = snapshot.val();
             if (!incomesData) {
+              if (!getActiveGroupId(profile)) {
+                await this.personalOfflineData.cacheRemote(profile, 'incomes', {});
+              }
               return [];
             }
 
@@ -204,6 +228,9 @@ export class IncomeService {
               });
             }
 
+            if (!getActiveGroupId(profile)) {
+              await this.personalOfflineData.cacheRemote(profile, 'incomes', incomesData);
+            }
             return Object.keys(incomesData).map(key => {
               const income = incomesData[key] as ServiceIIncome;
               // Prefer the live profile over the snapshot stored at creation
@@ -235,9 +262,9 @@ export class IncomeService {
             return of([]);
           })
             );
-          })
-        )
-      )
+          }),
+        );
+      })
     );
   }
 
@@ -252,6 +279,14 @@ export class IncomeService {
 
     if (!incomeId) {
       throw new Error('Income ID is required for update.');
+    }
+
+    if (this.personalOfflineData.isOfflinePersonal(profile)) {
+      await this.personalOfflineData.write(profile, 'incomes', 'update', incomeId, {
+        ...updatedData,
+        editedDevice: navigator.userAgent,
+      });
+      return;
     }
 
     let incomeRef: DatabaseReference;
@@ -277,6 +312,11 @@ export class IncomeService {
     
     if (!id) {
       throw new Error('Income ID is required for deletion.');
+    }
+
+    if (this.personalOfflineData.isOfflinePersonal(profile)) {
+      await this.personalOfflineData.write(profile, 'incomes', 'remove', id);
+      return;
     }
 
     let incomeRef: DatabaseReference;
@@ -305,6 +345,16 @@ export class IncomeService {
     }
     if (!id) {
       throw new Error('Income ID is required for voiding.');
+    }
+    if (this.personalOfflineData.isOfflinePersonal(profile)) {
+      await this.personalOfflineData.write(profile, 'incomes', 'update', id, {
+        status: 'void',
+        voidedAt: new Date().toISOString(),
+        voidedBy: profile.uid,
+        voidedByName: profile.displayName || 'Unknown',
+        voidReason: reason || null,
+      });
+      return;
     }
 
     let incomeRef: DatabaseReference;

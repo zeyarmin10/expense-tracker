@@ -83,6 +83,9 @@
 
     <!-- Right: Desktop only -->
     <ul class="nav-right" *ngIf="currentUser$ | async as user">
+      <li *ngIf="pendingSyncCount$ | async as pending" class="offline-sync-badge" [attr.aria-label]="pending + ' changes waiting to sync'">
+        {{ pending }} pending
+      </li>
       <li class="dropdown" *ngIf="userSpaces$ | async as spaces">
         <a class="space-switcher-btn" href="#" id="spaceDropdown" role="button" data-bs-toggle="dropdown"
           aria-expanded="false">
@@ -192,6 +195,7 @@
 <div class="mob-topbar" *ngIf="showNavbar$ | async">
   <img src="/images/Kyat-Wise-Logo.png" class="mob-topbar-logo" alt="" aria-hidden="true" />
   <span class="mob-topbar-title">{{ pageTitle$ | async }}</span>
+  <span *ngIf="pendingSyncCount$ | async as pending" class="offline-sync-badge mobile" aria-live="polite">{{ pending }}</span>
   <app-current-space-title [inline]="true"></app-current-space-title>
 </div>
 
