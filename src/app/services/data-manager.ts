@@ -21,6 +21,7 @@ import { Invitation } from './invitation.service';
 import { SpaceContextService } from './space-context.service';
 import { ImageUploadService } from './image-upload.service';
 import { Space } from './space.model';
+import { NetworkService } from './network.service';
 
 export const MAX_SPACE_NAME_LENGTH = 50;
 
@@ -39,6 +40,7 @@ export class DataManagerService {
   private spaceContextService: SpaceContextService = inject(SpaceContextService);
   private categoryService: CategoryService = inject(CategoryService);
   private imageUploadService: ImageUploadService = inject(ImageUploadService);
+  private network = inject(NetworkService);
 
   /**
    * Validates a candidate group name (required, max length, per-account
@@ -100,6 +102,12 @@ export class DataManagerService {
     imageUrl?: string | null,
     enableInventory = false,
   ): Promise<string> {
+    // A space is a server-owned container (membership, default categories,
+    // and access rules are created together), so it must never be created as
+    // an offline draft that could later collide with another device.
+    if (!this.network.isOnline$.value) {
+      throw new Error('OFFLINE_SPACE_CREATION');
+    }
     const userId = (await firstValueFrom(
       this.authService.currentUser$.pipe(rxMap((user) => user?.uid))
     ))!;

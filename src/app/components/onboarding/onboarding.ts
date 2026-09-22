@@ -17,6 +17,7 @@ import Swal from 'sweetalert2';
 import { LucideAngularModule, CircleCheck, Link, EllipsisVertical, Pencil, Trash2, User, Users, X } from 'lucide-angular';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
 import { FormatService } from '../../services/format.service';
+import { NetworkService } from '../../services/network.service';
 
 @Component({
   selector: 'app-onboarding',
@@ -35,6 +36,7 @@ export class OnboardingComponent implements OnInit, OnDestroy {
   private spaceContextService = inject(SpaceContextService);
   private imageUploadService = inject(ImageUploadService);
   private modalStateService = inject(ModalStateService);
+  private network = inject(NetworkService);
   public formatService = inject(FormatService);
 
   readonly iconUser = User;
@@ -385,6 +387,10 @@ export class OnboardingComponent implements OnInit, OnDestroy {
   createSpaceEnableInventory = false;
 
   async openCreateSpaceModal(): Promise<void> {
+    if (!this.network.isOnline$.value) {
+      await this.showSpaceCreationRequiresInternetAlert();
+      return;
+    }
     const user = await firstValueFrom(this.authService.currentUser$);
     if (!user) {
       Swal.fire({
@@ -508,6 +514,10 @@ export class OnboardingComponent implements OnInit, OnDestroy {
 
   async submitCreateSpace(): Promise<void> {
     if (!this.canSubmitCreateSpace) return;
+    if (!this.network.isOnline$.value) {
+      await this.showSpaceCreationRequiresInternetAlert();
+      return;
+    }
     const user = await firstValueFrom(this.authService.currentUser$);
     if (!user) return;
 
@@ -621,6 +631,8 @@ export class OnboardingComponent implements OnInit, OnDestroy {
 
   private getCreateGroupErrorMessage(error: any): string {
     switch (error?.message) {
+      case 'OFFLINE_SPACE_CREATION':
+        return this.translate.instant('SPACE_CREATION_REQUIRES_INTERNET');
       case 'Group name is too long.':
         return this.translate.instant('SPACE_NAME_MAX_LENGTH_ERROR', {
           max: this.maxSpaceNameLength,
@@ -634,6 +646,14 @@ export class OnboardingComponent implements OnInit, OnDestroy {
       default:
         return this.translate.instant('ONBOARDING_GROUP_CREATION_FAILED');
     }
+  }
+
+  private showSpaceCreationRequiresInternetAlert(): Promise<any> {
+    return Swal.fire({
+      icon: 'info',
+      title: this.translate.instant('ERROR_TITLE'),
+      text: this.translate.instant('SPACE_CREATION_REQUIRES_INTERNET'),
+    });
   }
 
   private compressSpaceImage(file: File): Promise<File> {
