@@ -439,6 +439,10 @@ export class App implements OnInit, AfterViewInit {
     this.pullDistance = this.pullRefreshThreshold;
 
     setTimeout(async () => {
+      // A failed Firebase route (e.g. a VPN-only ISP path) intentionally
+      // puts the app in local mode. Pull-to-refresh is the user's explicit
+      // request to try that route again after enabling a VPN.
+      await this.networkService.retryServerConnection();
       const profile = await firstValueFrom(
         this.authService.userProfile$.pipe(filter((value): value is UserProfile => !!value), take(1)),
       ).catch(() => null);

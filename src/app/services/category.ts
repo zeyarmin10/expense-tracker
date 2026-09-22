@@ -523,6 +523,25 @@ export class CategoryService {
     }));
   }
 
+  /** Seeds a new provisional personal profile without reaching RTDB. */
+  async addOfflineDefaultCategories(profile: UserProfile, language: string): Promise<void> {
+    if (!this.personalOfflineData.isOfflinePersonal(profile)) return;
+    const existing = await this.personalOfflineData.read<ServiceICategory>(profile, 'categories');
+    if (Object.keys(existing).length > 0) return;
+    await Promise.all(DEFAULT_CATEGORY_SEEDS.map(seed => this.personalOfflineData.write(
+      profile,
+      'categories',
+      'set',
+      this.personalOfflineData.createRecordId('categories'),
+      {
+        name: (seed.names[language] || seed.names['en']).trim(),
+        icon: seed.icon,
+        userId: profile.uid,
+        createdAt: new Date().toISOString(),
+      },
+    )));
+  }
+
   async addDefaultGroupCategories(groupId: string, language: string): Promise<void> {
     // Write straight to the canonical space_data path — group_data is legacy
     // (read-only-for-backfill at this point per SpaceDataService), and a

@@ -61,6 +61,10 @@ export class OfflineHydrationService {
         }));
       await Promise.all([personalProfile, ...groupProfiles].map(spaceProfile => this.syncSpace(spaceProfile)));
       this.lastSyncedAt$.next(new Date());
+      this.network.markServerAvailable();
+    } catch (error) {
+      this.network.markServerUnavailable();
+      throw error;
     } finally {
       this.syncing = false;
     }

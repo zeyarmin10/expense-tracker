@@ -158,6 +158,75 @@ export class UserDataService {
     return updated;
   }
 
+  async getCachedProfile(userId: string): Promise<UserProfile | null> {
+    return this.offlineStore.getProfile<UserProfile>(userId);
+  }
+
+  /** Creates a device-local profile after Firebase Auth succeeds but the
+   * RTDB route is unavailable. The server write is conditional, so a later
+   * reconnect cannot overwrite an already-existing account profile. */
+  async provisionOfflineProfile(profile: UserProfile): Promise<void> {
+    const virtualPersonalSpaceId = `personal:${profile.uid}`;
+    const localProfile: UserProfile = {
+      ...profile,
+      accountType: 'personal',
+      groupId: null,
+      currentSpaceId: profile.currentSpaceId || virtualPersonalSpaceId,
+      currentSpaceType: 'personal',
+      currentSpaceName: profile.currentSpaceName || 'My Personal',
+      currentSpaceRole: 'owner',
+      spaceMemberships: {
+        [virtualPersonalSpaceId]: 'owner',
+        ...(profile.spaceMemberships || {}),
+      },
+    };
+    await this.offlineStore.cacheProfile(profile.uid, localProfile);
+    await this.offlineStore.replaceCollection(profile.uid, 'spaces', {
+      [virtualPersonalSpaceId]: {
+        id: virtualPersonalSpaceId,
+        type: 'personal',
+        name: 'My Personal',
+        ownerId: profile.uid,
+        currency: localProfile.currency || 'MMK',
+        budgetPeriod: localProfile.budgetPeriod || null,
+        budgetStartDate: localProfile.budgetStartDate || null,
+        budgetEndDate: localProfile.budgetEndDate || null,
+        selectedBudgetPeriodId: localProfile.selectedBudgetPeriodId || null,
+        imageUrl: localProfile.photoURL || null,
+        createdAt: localProfile.createdAt || Date.now(),
+        role: 'owner',
+      },
+    });
+    this.getOfflineProfileChanges(profile.uid).next(localProfile);
+    const path = `users/${profile.uid}`;
+    const alreadyQueued = (await this.offlineStore.pendingOperations()).some(operation =>
+      operation.kind === 'setIfMissing' && operation.path === path,
+    );
+    if (!alreadyQueued) {
+      await this.offlineStore.enqueue({
+        id: this.offlineStore.createId('op'),
+        kind: 'setIfMissing',
+        path,
+        payload: localProfile as unknown as Record<string, unknown>,
+        createdAt: this.offlineStore.nextOperationTimestamp(),
+        attempts: 0,
+      });
+    }
+  }
+
+  async updateOfflineProfile(userId: string, changes: Partial<UserProfile>): Promise<UserProfile> {
+    const updated = await this.updateCachedProfile(userId, changes);
+    await this.offlineStore.enqueue({
+      id: this.offlineStore.createId('op'),
+      kind: 'update',
+      path: `users/${userId}`,
+      payload: changes as Record<string, unknown>,
+      createdAt: this.offlineStore.nextOperationTimestamp(),
+      attempts: 0,
+    });
+    return updated;
+  }
+
   private getOfflineProfileChanges(userId: string): BehaviorSubject<UserProfile | null> {
     let changes = this.offlineProfileChanges.get(userId);
     if (!changes) {
@@ -200,10 +269,12 @@ export class UserDataService {
     });
   }
 
-  createUserProfile(profile: UserProfile): Promise<void> {
+  async createUserProfile(profile: UserProfile): Promise<void> {
       const userRef = ref(this.db, `users/${profile.uid}`);
       this.mirrorPublicProfile(profile.uid, profile.displayName, profile.photoURL);
-      return set(userRef, profile);
+      await set(userRef, profile);
+      await this.offlineStore.cacheProfile(profile.uid, profile);
+      this.getOfflineProfileChanges(profile.uid).next(profile);
   }
 
   async updateUserProfile(userId: string, data: Partial<UserProfile>): Promise<void> {

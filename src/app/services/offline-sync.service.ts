@@ -82,10 +82,18 @@ export class OfflineSyncService {
     const target = ref(this.db, operation.path);
     switch (operation.kind) {
       case 'set': return set(target, operation.payload || {});
+      case 'setIfMissing': return this.setIfMissing(target, operation.payload || {});
       case 'update': return this.applySharedUpdate(operation, target);
       case 'remove': return this.applySharedRemove(operation, target);
       case 'uploadVoucher': return this.uploadVoucher(operation, target);
     }
+  }
+
+  /** A locally provisioned account must never overwrite an RTDB profile
+   * which happened to exist on the server but was unreachable at login. */
+  private async setIfMissing(target: ReturnType<typeof ref>, payload: Record<string, unknown>): Promise<void> {
+    const current = await get(target);
+    if (!current.exists()) await set(target, payload);
   }
 
   private async assertNoSharedConflict(operation: OfflineOperation, target: ReturnType<typeof ref>): Promise<void> {

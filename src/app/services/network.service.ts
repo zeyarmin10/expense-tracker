@@ -5,18 +5,22 @@ import { BehaviorSubject } from 'rxjs';
 @Injectable({ providedIn: 'root' })
 export class NetworkService {
   isOnline$ = new BehaviorSubject<boolean>(true);
+  private physicalConnection = true;
+  private serverUnavailable = false;
   private initialized = false;
   private listenerAdded = false; // listener တစ်ကြိမ်တည်းသာ add ဖို့
 
   async init() {
     const status = await Network.getStatus();
-    this.isOnline$.next(status.connected);
+    this.physicalConnection = status.connected;
+    this.publishConnectionState();
 
     // listener ကို တစ်ကြိမ်တည်းသာ register လုပ်
     if (!this.listenerAdded) {
       this.listenerAdded = true;
       Network.addListener('networkStatusChange', (status) => {
-        this.isOnline$.next(status.connected);
+        this.physicalConnection = status.connected;
+        this.publishConnectionState();
       });
     }
 
@@ -35,6 +39,32 @@ export class NetworkService {
   async checkOnResume() {
     await new Promise(resolve => setTimeout(resolve, 800));
     const status = await Network.getStatus();
-    this.isOnline$.next(status.connected);
+    this.physicalConnection = status.connected;
+    this.publishConnectionState();
+  }
+
+  /** The device has a network, but Firebase's backend cannot be reached
+   * (for example an ISP route that requires a VPN). Treat it as offline so
+   * normal writes use the durable local queue instead of hanging on RTDB. */
+  markServerUnavailable(): void {
+    this.serverUnavailable = true;
+    this.publishConnectionState();
+  }
+
+  markServerAvailable(): void {
+    this.serverUnavailable = false;
+    this.publishConnectionState();
+  }
+
+  /** Lets pull-to-refresh retry Firebase after the user enables a VPN. */
+  async retryServerConnection(): Promise<void> {
+    this.serverUnavailable = false;
+    const status = await Network.getStatus();
+    this.physicalConnection = status.connected;
+    this.publishConnectionState();
+  }
+
+  private publishConnectionState(): void {
+    this.isOnline$.next(this.physicalConnection && !this.serverUnavailable);
   }
 }
