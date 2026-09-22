@@ -86,8 +86,10 @@
       <li *ngIf="pendingSyncCount$ | async as pending" class="offline-sync-badge" [attr.aria-label]="pending + ' changes waiting to sync'">
         {{ pending }} pending
       </li>
-      <li *ngIf="syncConflictCount$ | async as conflicts" class="offline-sync-badge conflict" aria-live="polite">
-        {{ conflicts }} conflict
+      <li *ngIf="syncConflictCount$ | async as conflicts">
+        <button type="button" class="offline-sync-badge conflict" (click)="resolveSyncConflicts()" aria-live="polite">
+          {{ conflicts }} conflict
+        </button>
       </li>
       <li class="dropdown" *ngIf="userSpaces$ | async as spaces">
         <a class="space-switcher-btn" href="#" id="spaceDropdown" role="button" data-bs-toggle="dropdown"
@@ -199,7 +201,7 @@
   <img src="/images/Kyat-Wise-Logo.png" class="mob-topbar-logo" alt="" aria-hidden="true" />
   <span class="mob-topbar-title">{{ pageTitle$ | async }}</span>
   <span *ngIf="pendingSyncCount$ | async as pending" class="offline-sync-badge mobile" aria-live="polite">{{ pending }}</span>
-  <span *ngIf="syncConflictCount$ | async as conflicts" class="offline-sync-badge mobile conflict" aria-live="polite">!</span>
+  <button *ngIf="syncConflictCount$ | async as conflicts" type="button" class="offline-sync-badge mobile conflict" (click)="resolveSyncConflicts()" aria-live="polite">!</button>
   <app-current-space-title [inline]="true"></app-current-space-title>
 </div>
 

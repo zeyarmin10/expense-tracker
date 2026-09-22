@@ -918,6 +918,44 @@ export class App implements OnInit, AfterViewInit {
 
     this.toastService.showSuccess(msg);
   }
+
+  async resolveSyncConflicts(): Promise<void> {
+    const conflicts = await this.offlineSyncService.getConflicts();
+    if (conflicts.length === 0) return;
+    let needsServerRefresh = false;
+
+    for (const operation of conflicts) {
+      const recordName = operation.path.split('/').slice(-2).join(' / ');
+      const result = await Swal.fire({
+        icon: 'warning',
+        title: this.getActiveLang() === 'my' ? 'Sync conflict တွေ့ရှိသည်' : 'Sync conflict found',
+        text: this.getActiveLang() === 'my'
+          ? `${recordName} ကို အခြား device မှ ပြင်ထားပါသည်။`
+          : `${recordName} was changed on another device.`,
+        showCancelButton: true,
+        confirmButtonText: this.getActiveLang() === 'my' ? 'ကျွန်ုပ်ပြင်ထားတာကို သုံးမယ်' : 'Keep my version',
+        cancelButtonText: this.getActiveLang() === 'my' ? 'Server version ကို သုံးမယ်' : 'Use server version',
+        confirmButtonColor: '#dc2626',
+        reverseButtons: true,
+      });
+      if (result.isConfirmed) {
+        await this.offlineSyncService.keepLocalVersion(operation);
+      } else if (result.dismiss === Swal.DismissReason.cancel) {
+        await this.offlineSyncService.useServerVersion(operation);
+        needsServerRefresh = true;
+      } else {
+        break;
+      }
+    }
+    this.toastService.showSuccess(
+      this.getActiveLang() === 'my' ? 'Conflict ဖြေရှင်းမှုကို သိမ်းပြီးပါပြီ' : 'Conflict resolution saved.',
+    );
+    // Reload only when the server version was chosen, so every cached
+    // collection and derived report is rebuilt from the authoritative data.
+    if (needsServerRefresh && this.networkService.isOnline$.value) {
+      setTimeout(() => window.location.reload(), 700);
+    }
+  }
   // ────────────────────────────────────────────────────────────────
 
   private async handleInvitation(inviteCode: string): Promise<void> {

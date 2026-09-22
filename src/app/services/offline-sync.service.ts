@@ -32,6 +32,31 @@ export class OfflineSyncService {
     ).length);
   }
 
+  async getConflicts(): Promise<OfflineOperation[]> {
+    return (await this.store.pendingOperations()).filter(operation =>
+      operation.lastError?.startsWith('SYNC_CONFLICT:'),
+    );
+  }
+
+  /** Replays the local edit deliberately, without the stale revision check. */
+  async keepLocalVersion(operation: OfflineOperation): Promise<void> {
+    await this.store.enqueue({
+      ...operation,
+      baseUpdatedAt: null,
+      lastError: undefined,
+      attempts: 0,
+      createdAt: this.store.nextOperationTimestamp(),
+    });
+    await this.refreshPendingCount();
+    await this.sync();
+  }
+
+  /** Drops only the unsynced operation; the next online refresh supplies server data. */
+  async useServerVersion(operation: OfflineOperation): Promise<void> {
+    await this.store.removeOperation(operation.id);
+    await this.refreshPendingCount();
+  }
+
   async sync(): Promise<void> {
     if (this.syncing || !this.network.isOnline$.value) return;
     this.syncing = true;
