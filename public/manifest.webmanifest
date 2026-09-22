@@ -1,0 +1,15 @@
+{
+  "name": "Kyat Wise",
+  "short_name": "Kyat Wise",
+  "description": "Personal expense tracking that works offline.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#020817",
+  "theme_color": "#0F2340",
+  "icons": [
+    {
+      "src": "/images/Kyat-Wise-Logo.png",
+      "type": "image/png"
+    }
+  ]
+}

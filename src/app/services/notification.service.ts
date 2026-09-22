@@ -548,7 +548,10 @@ export class NotificationService {
   }
 
   private async registerMessagingServiceWorker(): Promise<ServiceWorkerRegistration> {
-    const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
+    // The app-shell cache and Firebase background messages share one root
+    // worker. Registering two scripts at scope '/' causes each to replace the
+    // other, which would make either offline loading or web push unreliable.
+    const registration = await navigator.serviceWorker.register('/service-worker.js', {
       updateViaCache: 'none',
     });
 
