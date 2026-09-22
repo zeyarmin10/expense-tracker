@@ -21,6 +21,7 @@ import { SpaceDataService } from './space-data.service';
 import { SpaceSwitchLoadingService } from './space-switch-loading.service';
 import { ImageUploadService } from './image-upload.service';
 import { PersonalOfflineDataService } from './personal-offline-data.service';
+import { SharedOfflineDataService } from './shared-offline-data.service';
 
 export interface ServiceICategory {
   id?: string;
@@ -63,6 +64,7 @@ export class CategoryService {
   private spaceSwitchLoadingService = inject(SpaceSwitchLoadingService);
   private imageUploadService = inject(ImageUploadService);
   private personalOfflineData = inject(PersonalOfflineDataService);
+  private sharedOfflineData = inject(SharedOfflineDataService);
 
   private categoryUpdatedSource = new Subject<{
     oldName: string;
@@ -88,6 +90,11 @@ export class CategoryService {
   getCategories(): Observable<ServiceICategory[]> {
     return this.authService.userProfile$.pipe(
       switchMap((profile: UserProfile | null) => { // Explicitly type the profile
+        if (profile && this.sharedOfflineData.isOfflineShared(profile)) {
+          return from(this.sharedOfflineData.read<ServiceICategory>(profile, 'categories')).pipe(
+            map(categories => Object.entries(categories).map(([id, category]) => ({ id, ...category }))),
+          );
+        }
         if (profile && this.personalOfflineData.isOfflinePersonal(profile)) {
           return from(this.personalOfflineData.read<ServiceICategory>(profile, 'categories')).pipe(
             map(categories => Object.entries(categories).map(([id, category]) => ({ id, ...category }))),
@@ -110,7 +117,10 @@ export class CategoryService {
               return this.spaceSwitchLoadingService.track(
                 listVal<ServiceICategory>(canonicalRef || legacyRef, { keyField: 'id' }).pipe(
                   tap(categories => {
-                    if (!activeGroupId) {
+                    if (activeGroupId) {
+                      const records = Object.fromEntries(categories.map(({ id, ...category }) => [id!, category]));
+                      void this.sharedOfflineData.cacheRemote(currentProfile, 'categories', records);
+                    } else {
                       const records = Object.fromEntries(categories.map(({ id, ...category }) => [id!, category]));
                       void this.personalOfflineData.cacheRemote(currentProfile, 'categories', records);
                     }
@@ -205,6 +215,14 @@ export class CategoryService {
       createdAt: new Date().toISOString(),
     };
 
+    if (this.sharedOfflineData.isOfflineShared(profile)) {
+      await this.sharedOfflineData.write(
+        profile, 'categories', 'set', this.sharedOfflineData.createRecordId('categories'),
+        { ...newCategory, groupId: getActiveGroupId(profile), userId: profile.uid },
+      );
+      return;
+    }
+
     if (this.personalOfflineData.isOfflinePersonal(profile)) {
       await this.personalOfflineData.write(
         profile, 'categories', 'set', this.personalOfflineData.createRecordId('categories'),
@@ -241,6 +259,31 @@ export class CategoryService {
     }
     if (!categoryId) {
       throw new Error('Category ID is required for update.');
+    }
+
+    if (this.sharedOfflineData.isOfflineShared(profile)) {
+      const categories = await this.sharedOfflineData.read<ServiceICategory>(profile, 'categories');
+      const current = categories[categoryId];
+      if (!current) throw new Error('Category not found on this device.');
+      const nextName = newCategoryName.trim();
+      if (current.name !== nextName) await this.assertCategoryNameAvailable(nextName, categoryId);
+      const updateData: { name: string; icon?: string; iconUrl?: string | null; updatedAt?: string } = {
+        name: nextName,
+        updatedAt: new Date().toISOString(),
+      };
+      if (icon !== undefined) updateData.icon = icon;
+      if (iconUrl !== undefined) updateData.iconUrl = iconUrl;
+      await this.sharedOfflineData.write(profile, 'categories', 'update', categoryId, updateData,
+        (current as any).updatedAt || current.createdAt || null);
+      if (current.name !== nextName) {
+        const expenses = await this.sharedOfflineData.read<{ category?: string; updatedAt?: string; createdAt?: string }>(profile, 'expenses');
+        await Promise.all(Object.entries(expenses)
+          .filter(([, expense]) => expense.category === current.name)
+          .map(([id, expense]) => this.sharedOfflineData.write(profile, 'expenses', 'update', id,
+            { category: nextName, updatedAt: new Date().toISOString() }, expense.updatedAt || expense.createdAt || null)));
+        this.categoryUpdatedSource.next({ oldName: current.name, newName: nextName, userId: profile.uid });
+      }
+      return;
     }
 
     if (this.personalOfflineData.isOfflinePersonal(profile)) {
@@ -297,7 +340,10 @@ export class CategoryService {
       await this.assertCategoryNameAvailable(trimmedNewName, categoryId);
     }
 
-    const updateData: { name: string; icon?: string; iconUrl?: string | null } = { name: trimmedNewName };
+    const updateData: { name: string; icon?: string; iconUrl?: string | null; updatedAt?: string } = {
+      name: trimmedNewName,
+      updatedAt: new Date().toISOString(),
+    };
     if (icon !== undefined) updateData.icon = icon;
     if (iconUrl !== undefined) updateData.iconUrl = iconUrl;
     await update(categoryRef, updateData);
@@ -369,6 +415,14 @@ export class CategoryService {
     }
     if (!categoryId) {
       throw new Error('Category ID is required for deletion.');
+    }
+
+    if (this.sharedOfflineData.isOfflineShared(profile)) {
+      const categories = await this.sharedOfflineData.read<ServiceICategory>(profile, 'categories');
+      const current = categories[categoryId];
+      await this.sharedOfflineData.write(profile, 'categories', 'remove', categoryId, undefined,
+        (current as any)?.updatedAt || current?.createdAt || null);
+      return;
     }
 
     if (this.personalOfflineData.isOfflinePersonal(profile)) {
