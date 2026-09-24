@@ -88,7 +88,7 @@
           translate
           }}</a>
       </li>
-      <li *ngIf="isGroupAdmin$ | async">
+      <li *ngIf="isGroupAccount$ | async">
         <a routerLink="/member-management" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{
           'NAV_MEMBER_MANAGEMENT'
           | translate }}</a>
@@ -459,7 +459,7 @@
       <span>{{ 'NAV_CATEGORY' | translate }}</span>
     </a>
 
-    <a class="mob-drawer-link" *ngIf="isGroupAdmin$ | async" routerLink="/member-management"
+    <a class="mob-drawer-link" *ngIf="isGroupAccount$ | async" routerLink="/member-management"
       routerLinkActive="mob-drawer-active" (click)="closeNavbarMenu()">
       <span class="mob-drawer-link-icon">
         <lucide-icon [img]="iconUsers" [size]="16"></lucide-icon>
