@@ -93,8 +93,12 @@ export class MemberManagementComponent implements OnInit {
       })
     );
 
-    this.pendingInvites$ = this.userProfile$.pipe(
-      switchMap(profile => {
+    this.pendingInvites$ = combineLatest([this.userProfile$, this.isAdmin$]).pipe(
+      switchMap(([profile, isAdmin]) => {
+        if (!isAdmin) {
+          return of([]);
+        }
+
         const activeGroupId = getActiveGroupId(profile);
         return profile && activeGroupId
           ? this.dataManager.getPendingInvitations(activeGroupId)
@@ -143,6 +147,10 @@ export class MemberManagementComponent implements OnInit {
     return re.test(email?.trim() || '');
   }
 
+  private async canManageMembers(): Promise<boolean> {
+    return await firstValueFrom(this.isAdmin$);
+  }
+
   getAvatarColor(name: string): string {
     if (!name) return '#ccc';
     let hash = 0;
@@ -159,6 +167,7 @@ export class MemberManagementComponent implements OnInit {
 
   async sendInvite(): Promise<void> {
     if (this.isSending || !this.newMemberEmail || !this.isValidEmail(this.newMemberEmail)) return;
+    if (!(await this.canManageMembers())) return;
 
     this.isSending = true;
     this.invitationSent = false;
@@ -234,6 +243,8 @@ export class MemberManagementComponent implements OnInit {
   // fallback: copy it and share it directly.
   async copyInviteCode(code: string | undefined): Promise<void> {
     if (!code) return;
+    if (!(await this.canManageMembers())) return;
+
     try {
       await navigator.clipboard.writeText(code);
       Toast.fire({ icon: 'success', title: this.translate.instant('INVITE_CODE_COPIED') });
@@ -243,7 +254,9 @@ export class MemberManagementComponent implements OnInit {
     }
   }
 
-  confirmDeleteMember(memberId: string): void {
+  async confirmDeleteMember(memberId: string): Promise<void> {
+    if (!(await this.canManageMembers())) return;
+
     Swal.fire({
       title: this.translate.instant('CONFIRM_DELETE_TITLE'),
       text: this.translate.instant('CONFIRM_DELETE_MEMBER'),
@@ -269,12 +282,14 @@ export class MemberManagementComponent implements OnInit {
     });
   }
 
-  confirmRevokeInvite(inviteKey: string | undefined): void {
+  async confirmRevokeInvite(inviteKey: string | undefined): Promise<void> {
     if (!inviteKey) {
       console.error("Cannot revoke invite, key is missing.");
       Toast.fire({ icon: 'error', title: this.translate.instant('TOAST_ERROR_REVOKING_INVITE') });
       return;
     }
+    if (!(await this.canManageMembers())) return;
+
     Swal.fire({
       title: this.translate.instant('CONFIRM_REVOKE_TITLE'),
       text: this.translate.instant('CONFIRM_REVOKE_INVITE'),
