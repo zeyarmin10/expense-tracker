@@ -98,7 +98,7 @@
         <div class="srpt-kpi-grid">
           <div class="srpt-kpi-card">
             <span>{{ 'SALES_ORDERS_LABEL' | translate }}</span>
-            <strong>{{ formatService.formatCount(currencySummaries[0]?.orderCount || 0) }}</strong>
+            <strong>{{ formatService.formatCount(primaryOrderCount) }}</strong>
           </div>
           <div class="srpt-kpi-card">
             <span>{{ 'SALES_ITEMS_SOLD_LABEL' | translate }}</span>
@@ -120,13 +120,13 @@
             <div class="srpt-trend-chart" [style.--trend-days]="visibleSalesTrend.length">
               <button type="button" class="srpt-trend-day" *ngFor="let day of visibleSalesTrend; first as isFirst; last as isLast; trackBy: trackByTrendDate"
                 [class.is-selected]="selectedTrendDate === day.date" [class.is-first]="isFirst" [class.is-last]="isLast"
-                [attr.aria-label]="getTrendDateLabel(day.date) + ': ' + formatService.formatAmountWithSymbol(day.totalSales, currencySummaries[0]?.currency || 'MMK')"
+                [attr.aria-label]="getTrendDateLabel(day.date) + ': ' + formatService.formatAmountWithSymbol(day.totalSales, primaryCurrency)"
                 [attr.aria-pressed]="selectedTrendDate === day.date"
                 (click)="toggleTrendDay(day.date)">
                 <div class="srpt-trend-bar-wrap" [style.--trend-bar-height]="getTrendBarHeight(day) + '%'">
                   <span class="srpt-trend-bar" [style.height.%]="getTrendBarHeight(day)"></span>
                   <span class="srpt-trend-tooltip" *ngIf="selectedTrendDate === day.date"
-                    [innerHTML]="formatService.formatAmountShortHtml(day.totalSales, currencySummaries[0]?.currency || 'MMK')"></span>
+                    [innerHTML]="formatService.formatAmountShortHtml(day.totalSales, primaryCurrency)"></span>
                 </div>
                 <span class="srpt-trend-date">{{ getTrendDateLabel(day.date) }}</span>
               </button>
@@ -146,17 +146,17 @@
           <div class="srpt-margin-metrics">
             <div>
               <span>{{ 'STOCK_SUMMARY_EST_COGS_COL' | translate }}</span>
-              <strong [innerHTML]="formatService.formatAmountShortWholeHighDenominationHtml(marginSummary.cogs, currencySummaries[0]?.currency || 'MMK')"></strong>
+              <strong [innerHTML]="formatService.formatAmountShortWholeHighDenominationHtml(marginSummary.cogs, primaryCurrency)"></strong>
             </div>
             <div>
               <span>{{ 'STOCK_SUMMARY_EST_PROFIT_COL' | translate }}</span>
-              <strong class="srpt-margin-profit" [innerHTML]="formatService.formatAmountShortWholeHighDenominationHtml(marginSummary.grossProfit, currencySummaries[0]?.currency || 'MMK')"></strong>
+              <strong class="srpt-margin-profit" [innerHTML]="formatService.formatAmountShortWholeHighDenominationHtml(marginSummary.grossProfit, primaryCurrency)"></strong>
             </div>
           </div>
 
           <p class="srpt-margin-missing" *ngIf="marginSummary.uncostedRevenue > 0">
             {{ 'SALES_UNCOSTED_REVENUE' | translate }}:
-            <span [innerHTML]="formatService.formatAmountShortHtml(marginSummary.uncostedRevenue, currencySummaries[0]?.currency || 'MMK')"></span>
+            <span [innerHTML]="formatService.formatAmountShortHtml(marginSummary.uncostedRevenue, primaryCurrency)"></span>
           </p>
 
           <div class="srpt-margin-products">
@@ -165,7 +165,7 @@
                 <strong>{{ product.productName }}</strong>
                 <span>{{ formatQuantity(product.quantity, product.unit) }} · {{ product.grossMarginPercent | number:'1.0-0' }}%</span>
               </div>
-              <span class="srpt-margin-profit" [innerHTML]="formatService.formatAmountShortHtml(product.grossProfit, currencySummaries[0]?.currency || 'MMK')"></span>
+              <span class="srpt-margin-profit" [innerHTML]="formatService.formatAmountShortHtml(product.grossProfit, primaryCurrency)"></span>
             </div>
           </div>
         </section>
