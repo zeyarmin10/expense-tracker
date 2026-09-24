@@ -75,6 +75,7 @@ export class App implements OnInit, AfterViewInit {
   pendingSyncCount$: Observable<number>;
   syncConflictCount$: Observable<number>;
   groupOfflineAccessState$: Observable<GroupOfflineAccessState | null>;
+  lockedGroupOfflineAccessState$: Observable<GroupOfflineAccessState | null>;
   currentGroupImageUrl$: Observable<string | null>;
   // Shown once for brand-new accounts (see UserProfile.hasSeenWelcomeTour).
   showWelcomeTour = false;
@@ -140,6 +141,14 @@ export class App implements OnInit, AfterViewInit {
     this.pendingSyncCount$ = this.offlineSyncService.pendingCount$;
     this.syncConflictCount$ = this.offlineSyncService.conflictCount$;
     this.groupOfflineAccessState$ = this.groupOfflineAccess.state$;
+    this.lockedGroupOfflineAccessState$ = this.groupOfflineAccessState$.pipe(
+      map(state => state?.isLocked ? state : null),
+      distinctUntilChanged((previous, current) =>
+        previous?.groupId === current?.groupId &&
+        previous?.isLocked === current?.isLocked &&
+        Math.floor(previous?.offlineDays ?? -1) === Math.floor(current?.offlineDays ?? -1)
+      )
+    );
 
     this.currentUser$ = this.authService.currentUser$;
     this.userDisplayName$ = this.authService.userProfile$.pipe(

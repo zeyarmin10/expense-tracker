@@ -15,8 +15,8 @@
   </div>
 </div>
 
-<div class="group-offline-lock-overlay" *ngIf="groupOfflineAccessState$ | async as groupOfflineState">
-  <section class="group-offline-lock-card" *ngIf="groupOfflineState.isLocked" role="alertdialog" aria-modal="true">
+<div class="group-offline-lock-overlay" *ngIf="lockedGroupOfflineAccessState$ | async as groupOfflineState">
+  <section class="group-offline-lock-card" role="alertdialog" aria-modal="true">
     <div class="group-offline-lock-icon">☁</div>
     <h2>{{ getGroupOfflineLockTitle() }}</h2>
     <p>{{ getGroupOfflineLockMessage() }}</p>
