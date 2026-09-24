@@ -13,6 +13,9 @@ const config: CapacitorConfig = {
       style: 'DARK',
       overlaysWebView: true
     },
+    CapacitorHttp: {
+      enabled: true
+    },
     SplashScreen: {
       launchShowDuration: 2000,
       backgroundColor: '#0F2340',

@@ -650,7 +650,9 @@ export class App implements OnInit, AfterViewInit {
         if (isActive) {
           // foreground ပြန်ရောက်မှ current status စစ်
           await this.networkService.checkOnResume();
-          await this.notificationService.refreshCurrentRegistration();
+          if (this.networkService.hasInternetAccess$.value) {
+            await this.notificationService.refreshCurrentRegistration();
+          }
         }
       });
     }
@@ -782,46 +784,33 @@ export class App implements OnInit, AfterViewInit {
   }
 
   private listenNetworkChanges(): void {
-    // Web browser
     if (!Capacitor.isNativePlatform()) {
-      if (!navigator.onLine) {
-        this.wasOffline = true;
-        this.showNoNetworkAlert();
-      }
-
       window.addEventListener('offline', () => {
-        this.wasOffline = true;
-        this.showNoNetworkAlert();
+        void this.networkService.refreshInternetAccess();
       });
 
       window.addEventListener('online', () => {
-        if (this.wasOffline) {
-          this.wasOffline = false;
-          this.showNetworkRestoredToast();
-        }
-        void this.notificationService.refreshCurrentRegistration();
+        void this.networkService.refreshInternetAccess();
       });
-      return;
     }
 
-    // Android/iOS native
-    // app စဖွင့်ချိန်း offline ဆိုရင်သာ alert ပြ
-    if (!this.networkService.isPhysicalConnection$.getValue()) {
-      this.wasOffline = true;
-      this.showNoNetworkAlert();
-    }
-
-    // status ပြောင်းမှသာ react လုပ်မယ်
+    // status ပြောင်းမှသာ react လုပ်မယ်။ Wi-Fi/mobile data ချိတ်ထားရုံနဲ့
+    // online မယူဘဲ native reachability probe အောင်မှသာ restored ပြမယ်။
     // debounceTime is intentionally generous — absorbs a brief
     // disconnected→connected flicker (e.g. right after returning from the
     // camera app on some devices, on top of checkOnResume()'s own settle
     // delay) so it never surfaces as a spurious alert+toast pair; a real
     // outage still lasts well past this window.
-    this.networkService.isPhysicalConnection$.pipe(
-      distinctUntilChanged(),  // တူတဲ့ value ထပ်မ emit မဖြစ်အောင်
+    combineLatest([
+      this.networkService.hasInternetAccess$,
+      this.networkService.hasCheckedInternetAccess$,
+    ]).pipe(
+      filter(([, checked]) => checked),
+      map(([hasInternetAccess]) => hasInternetAccess),
+      distinctUntilChanged(),
       debounceTime(1500)
-    ).subscribe(hasPhysicalConnection => {
-      if (!hasPhysicalConnection) {
+    ).subscribe(hasInternetAccess => {
+      if (!hasInternetAccess) {
         this.wasOffline = true;
         this.showNoNetworkAlert();
       } else {
