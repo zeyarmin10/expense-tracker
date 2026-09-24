@@ -65,6 +65,16 @@
                   "maximumError": "65kB"
                 }
               ],
+              "allowedCommonJsDependencies": [
+                "flatpickr/dist/l10n/my",
+                "sweetalert2",
+                "html2canvas"
+              ],
+              "optimization": {
+                "styles": {
+                  "inlineCritical": false
+                }
+              },
               "outputHashing": "all"
             },
             "development": {

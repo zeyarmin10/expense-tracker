@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { Capacitor } from '@capacitor/core';
 import { Network } from '@capacitor/network';
 import { BehaviorSubject } from 'rxjs';
 import { environment } from '../../environments/environment';
@@ -19,29 +20,31 @@ export class NetworkService {
   private initialized = false;
   private listenerAdded = false; // listener တစ်ကြိမ်တည်းသာ add ဖို့
   private reachabilityCheckId = 0;
-  private readonly reachabilityTimeoutMs = 2500;
+  private physicalStatusCheckId = 0;
+  private readonly reachabilityTimeoutMs = Capacitor.isNativePlatform() ? 3500 : 6000;
+  private readonly reachabilityRetryDelayMs = 650;
+  private readonly disconnectConfirmDelayMs = Capacitor.isNativePlatform() ? 2200 : 0;
 
   async init() {
-    const status = await Network.getStatus().catch(() => ({ connected: false }));
-    this.physicalConnection = status.connected;
+    this.physicalConnection = await this.getConfirmedPhysicalConnectionStatus();
     this.publishConnectionState();
 
     // listener ကို တစ်ကြိမ်တည်းသာ register လုပ်
     if (!this.listenerAdded) {
       this.listenerAdded = true;
       Network.addListener('networkStatusChange', (status) => {
-        this.physicalConnection = status.connected;
         if (!status.connected) {
-          this.internetReachable = false;
-          this.hasCheckedInternetAccess$.next(true);
-          this.publishConnectionState();
+          const checkId = ++this.physicalStatusCheckId;
+          void this.confirmPhysicalDisconnect(checkId);
           return;
         }
 
+        ++this.physicalStatusCheckId;
+        this.physicalConnection = true;
         // A connected Wi-Fi/mobile bearer can still be captive or internet-less.
-        // Stay offline until the native probe proves backend reachability.
-        this.internetReachable = false;
-        this.publishConnectionState();
+        // Keep the previous usable state while the reachability probe runs so
+        // a slow mobile reload/viewport change does not flash a false offline
+        // toast before Firebase has a chance to answer.
         void this.refreshInternetAccess();
       });
     }
@@ -61,9 +64,9 @@ export class NetworkService {
   // by "Internet restored". Give the radio a moment to settle first.
   async checkOnResume() {
     await new Promise(resolve => setTimeout(resolve, 800));
-    const status = await Network.getStatus().catch(() => ({ connected: false }));
-    this.physicalConnection = status.connected;
-    if (!status.connected) {
+    ++this.physicalStatusCheckId;
+    this.physicalConnection = await this.getConfirmedPhysicalConnectionStatus();
+    if (!this.physicalConnection) {
       this.internetReachable = false;
       this.hasCheckedInternetAccess$.next(true);
       this.publishConnectionState();
@@ -90,8 +93,7 @@ export class NetworkService {
   /** Lets pull-to-refresh retry Firebase after the user enables a VPN. */
   async retryServerConnection(): Promise<void> {
     this.serverUnavailable = false;
-    const status = await Network.getStatus().catch(() => ({ connected: false }));
-    this.physicalConnection = status.connected;
+    this.physicalConnection = await this.getConfirmedPhysicalConnectionStatus();
     this.publishConnectionState();
     await this.refreshInternetAccess();
   }
@@ -120,7 +122,58 @@ export class NetworkService {
     return reachable;
   }
 
+  private async getPhysicalConnectionStatus(): Promise<boolean> {
+    if (!Capacitor.isNativePlatform()) {
+      return typeof navigator === 'undefined' ? true : navigator.onLine;
+    }
+
+    const status = await Network.getStatus().catch(() => ({ connected: false }));
+    return status.connected;
+  }
+
+  private async getConfirmedPhysicalConnectionStatus(): Promise<boolean> {
+    const connected = await this.getPhysicalConnectionStatus();
+    if (connected || !Capacitor.isNativePlatform()) {
+      return connected;
+    }
+
+    await this.delay(this.disconnectConfirmDelayMs);
+    return this.getPhysicalConnectionStatus();
+  }
+
+  private async confirmPhysicalDisconnect(checkId: number): Promise<void> {
+    await this.delay(this.disconnectConfirmDelayMs);
+    if (checkId !== this.physicalStatusCheckId) {
+      return;
+    }
+
+    const stillDisconnected = !(await this.getPhysicalConnectionStatus());
+    if (checkId !== this.physicalStatusCheckId) {
+      return;
+    }
+
+    if (!stillDisconnected) {
+      this.physicalConnection = true;
+      await this.refreshInternetAccess();
+      return;
+    }
+
+    this.physicalConnection = false;
+    this.internetReachable = false;
+    this.hasCheckedInternetAccess$.next(true);
+    this.publishConnectionState();
+  }
+
   private async probeBackendReachability(): Promise<boolean> {
+    if (await this.probeBackendOnce()) {
+      return true;
+    }
+
+    await new Promise(resolve => setTimeout(resolve, this.reachabilityRetryDelayMs));
+    return this.probeBackendOnce();
+  }
+
+  private async probeBackendOnce(): Promise<boolean> {
     const databaseUrl = environment.firebaseConfig.databaseURL.replace(/\/$/, '');
     const url = `${databaseUrl}/.json?shallow=true&kw_probe=${Date.now()}`;
     const controller = new AbortController();
@@ -142,6 +195,10 @@ export class NetworkService {
     } finally {
       clearTimeout(timeoutId);
     }
+  }
+
+  private delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   private publishConnectionState(): void {

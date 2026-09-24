@@ -112,6 +112,8 @@ export class App implements OnInit, AfterViewInit {
   private pullStartY = 0;
   private pullStartX = 0;
   private pullTracking = false;
+  private nativeSplashHidden = false;
+  private nativeSplashFallbackTimer: ReturnType<typeof setTimeout> | null = null;
 
   private authService = inject(AuthService);
   private router = inject(Router);
@@ -679,24 +681,45 @@ export class App implements OnInit, AfterViewInit {
 
   ngAfterViewInit(): void {
     if (!Capacitor.isNativePlatform()) return;
-    // Wait until the first route navigation finishes (content is rendered) before hiding splash.
-    // This prevents the white flash caused by the splash exiting onto a blank/loading screen.
+    // Prefer the first completed route render, but keep a timeout fallback for
+    // native resumes/launches where Angular's initial NavigationEnd already
+    // happened before this hook subscribes. Without it, Android can be left
+    // behind an undismissed launch overlay.
     this.router.events.pipe(
       filter(e => e instanceof NavigationEnd),
       take(1)
     ).subscribe(() => {
+      this.hideNativeSplashAfterPaint();
+    });
+
+    this.nativeSplashFallbackTimer = setTimeout(() => {
+      this.hideNativeSplashAfterPaint();
+    }, 1400);
+  }
+
+  private hideNativeSplashAfterPaint(): void {
+    requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        requestAnimationFrame(async () => {
-          await SplashScreen.hide().catch(() => {});
-          // Re-apply overlay + style — Android may reset both during splash dismiss
-          StatusBar.setOverlaysWebView({ overlay: true }).catch(() => {});
-          this.applySystemBarStyles(this.themeService.isDarkMode);
-          setTimeout(() => {
-            this.applySystemBarStyles(this.themeService.isDarkMode);
-          }, 200);
-        });
+        void this.hideNativeSplash();
       });
     });
+  }
+
+  private async hideNativeSplash(): Promise<void> {
+    if (this.nativeSplashHidden) return;
+    this.nativeSplashHidden = true;
+    if (this.nativeSplashFallbackTimer !== null) {
+      clearTimeout(this.nativeSplashFallbackTimer);
+      this.nativeSplashFallbackTimer = null;
+    }
+
+    await SplashScreen.hide().catch(() => {});
+    // Re-apply overlay + style — Android may reset both during splash dismiss
+    StatusBar.setOverlaysWebView({ overlay: true }).catch(() => {});
+    this.applySystemBarStyles(this.themeService.isDarkMode);
+    setTimeout(() => {
+      this.applySystemBarStyles(this.themeService.isDarkMode);
+    }, 200);
   }
 
   /** Keep Android's native system buttons legible as the app theme or route changes. */
