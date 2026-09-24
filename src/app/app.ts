@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, NavigationEnd, RouterOutlet, RouterModule, ActivatedRoute } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
-import { Observable, combineLatest, of, firstValueFrom } from 'rxjs';
+import { Observable, combineLatest, of, firstValueFrom, timer } from 'rxjs';
 import { map, filter, startWith, switchMap, distinctUntilChanged, debounceTime, take, shareReplay } from 'rxjs/operators';
 import { AuthService } from './services/auth';
 import { User } from '@angular/fire/auth';
@@ -14,6 +14,7 @@ import { ToastService } from './services/toast';
 import { NetworkService } from './services/network.service';
 import { OfflineSyncService } from './services/offline-sync.service';
 import { OfflineHydrationService } from './services/offline-hydration.service';
+import { GroupOfflineAccessService, GroupOfflineAccessState } from './services/group-offline-access.service';
 import { ThemeService } from './services/theme.service';
 import { NotificationService } from './services/notification.service';
 import { AppUpdateService, AppUpdateStatus } from './services/app-update.service';
@@ -73,6 +74,8 @@ export class App implements OnInit, AfterViewInit {
   spaceSwitchLoading$: Observable<boolean>;
   pendingSyncCount$: Observable<number>;
   syncConflictCount$: Observable<number>;
+  groupOfflineAccessState$: Observable<GroupOfflineAccessState | null>;
+  lockedGroupOfflineAccessState$: Observable<GroupOfflineAccessState | null>;
   currentGroupImageUrl$: Observable<string | null>;
   // Shown once for brand-new accounts (see UserProfile.hasSeenWelcomeTour).
   showWelcomeTour = false;
@@ -109,6 +112,8 @@ export class App implements OnInit, AfterViewInit {
   private pullStartY = 0;
   private pullStartX = 0;
   private pullTracking = false;
+  private nativeSplashHidden = false;
+  private nativeSplashFallbackTimer: ReturnType<typeof setTimeout> | null = null;
 
   private authService = inject(AuthService);
   private router = inject(Router);
@@ -119,6 +124,7 @@ export class App implements OnInit, AfterViewInit {
   private networkService = inject(NetworkService);
   private offlineSyncService = inject(OfflineSyncService);
   private offlineHydrationService = inject(OfflineHydrationService);
+  private groupOfflineAccess = inject(GroupOfflineAccessService);
   private spaceContextService = inject(SpaceContextService);
   private spaceSwitchLoadingService = inject(SpaceSwitchLoadingService);
   private modalStateService = inject(ModalStateService);
@@ -136,6 +142,15 @@ export class App implements OnInit, AfterViewInit {
     this.spaceSwitchLoading$ = this.spaceSwitchLoadingService.loading$;
     this.pendingSyncCount$ = this.offlineSyncService.pendingCount$;
     this.syncConflictCount$ = this.offlineSyncService.conflictCount$;
+    this.groupOfflineAccessState$ = this.groupOfflineAccess.state$;
+    this.lockedGroupOfflineAccessState$ = this.groupOfflineAccessState$.pipe(
+      map(state => state?.isLocked ? state : null),
+      distinctUntilChanged((previous, current) =>
+        previous?.groupId === current?.groupId &&
+        previous?.isLocked === current?.isLocked &&
+        Math.floor(previous?.offlineDays ?? -1) === Math.floor(current?.offlineDays ?? -1)
+      )
+    );
 
     this.currentUser$ = this.authService.currentUser$;
     this.userDisplayName$ = this.authService.userProfile$.pipe(
@@ -637,6 +652,7 @@ export class App implements OnInit, AfterViewInit {
     await this.offlineSyncService.init();
     await this.offlineHydrationService.init();
     this.listenNetworkChanges();
+    this.listenGroupOfflineAccess();
     // ────────────────────────────────────────────
 
     // Foreground ပြန်လာတိုင်း network စစ်မယ်
@@ -645,7 +661,9 @@ export class App implements OnInit, AfterViewInit {
         if (isActive) {
           // foreground ပြန်ရောက်မှ current status စစ်
           await this.networkService.checkOnResume();
-          await this.notificationService.refreshCurrentRegistration();
+          if (this.networkService.hasInternetAccess$.value) {
+            await this.notificationService.refreshCurrentRegistration();
+          }
         }
       });
     }
@@ -663,24 +681,45 @@ export class App implements OnInit, AfterViewInit {
 
   ngAfterViewInit(): void {
     if (!Capacitor.isNativePlatform()) return;
-    // Wait until the first route navigation finishes (content is rendered) before hiding splash.
-    // This prevents the white flash caused by the splash exiting onto a blank/loading screen.
+    // Prefer the first completed route render, but keep a timeout fallback for
+    // native resumes/launches where Angular's initial NavigationEnd already
+    // happened before this hook subscribes. Without it, Android can be left
+    // behind an undismissed launch overlay.
     this.router.events.pipe(
       filter(e => e instanceof NavigationEnd),
       take(1)
     ).subscribe(() => {
+      this.hideNativeSplashAfterPaint();
+    });
+
+    this.nativeSplashFallbackTimer = setTimeout(() => {
+      this.hideNativeSplashAfterPaint();
+    }, 1400);
+  }
+
+  private hideNativeSplashAfterPaint(): void {
+    requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        requestAnimationFrame(async () => {
-          await SplashScreen.hide().catch(() => {});
-          // Re-apply overlay + style — Android may reset both during splash dismiss
-          StatusBar.setOverlaysWebView({ overlay: true }).catch(() => {});
-          this.applySystemBarStyles(this.themeService.isDarkMode);
-          setTimeout(() => {
-            this.applySystemBarStyles(this.themeService.isDarkMode);
-          }, 200);
-        });
+        void this.hideNativeSplash();
       });
     });
+  }
+
+  private async hideNativeSplash(): Promise<void> {
+    if (this.nativeSplashHidden) return;
+    this.nativeSplashHidden = true;
+    if (this.nativeSplashFallbackTimer !== null) {
+      clearTimeout(this.nativeSplashFallbackTimer);
+      this.nativeSplashFallbackTimer = null;
+    }
+
+    await SplashScreen.hide().catch(() => {});
+    // Re-apply overlay + style — Android may reset both during splash dismiss
+    StatusBar.setOverlaysWebView({ overlay: true }).catch(() => {});
+    this.applySystemBarStyles(this.themeService.isDarkMode);
+    setTimeout(() => {
+      this.applySystemBarStyles(this.themeService.isDarkMode);
+    }, 200);
   }
 
   /** Keep Android's native system buttons legible as the app theme or route changes. */
@@ -700,48 +739,110 @@ export class App implements OnInit, AfterViewInit {
   // ── Network monitoring: Native + Web ───────────
   // ── wasOffline: offline ဖြစ်ဖူးမှသာ "restored" toast ပြမယ် ──
   private wasOffline = false;
+  private groupOfflineWarningOpen = false;
+
+  /** Checks the seven-day lease at startup, network changes, and while the app stays open. */
+  private listenGroupOfflineAccess(): void {
+    combineLatest([
+      this.authService.userProfile$,
+      this.networkService.isOnline$,
+      timer(0, 60 * 60 * 1000),
+    ]).pipe(
+      debounceTime(100),
+    ).subscribe(([profile]) => {
+      void this.refreshGroupOfflineAccess(profile);
+    });
+  }
+
+  private async refreshGroupOfflineAccess(profile: UserProfile | null): Promise<void> {
+    const state = await this.groupOfflineAccess.evaluate(profile);
+    if (!state?.shouldWarn || this.groupOfflineWarningOpen) return;
+
+    this.groupOfflineWarningOpen = true;
+    await this.groupOfflineAccess.markWarningShown(state);
+    const isMy = this.getActiveLang() === 'my';
+    await Swal.fire({
+      icon: 'warning',
+      title: isMy ? 'Group space ကို offline သုံးနေပါသည်' : 'Group space is being used offline',
+      text: isMy
+        ? `${Math.floor(state.offlineDays)} ရက်ကြာ offline ဖြစ်နေပါသည်။ ၇ ရက်မပြည့်မီ အင်တာနက်ချိတ်ပြီး sync လုပ်ပေးပါ။`
+        : `This shared space has been offline for ${Math.floor(state.offlineDays)} days. Connect and sync before day 7.`,
+      confirmButtonText: isMy ? 'နားလည်ပါပြီ' : 'Got it',
+      confirmButtonColor: '#0b74ff',
+    });
+    this.groupOfflineWarningOpen = false;
+  }
+
+  async retryGroupOfflineAccess(): Promise<void> {
+    await this.networkService.retryServerConnection();
+    const profile = await firstValueFrom(
+      this.authService.userProfile$.pipe(filter((value): value is UserProfile => !!value), take(1)),
+    ).catch(() => null);
+    if (!profile) return;
+
+    try {
+      await this.offlineHydrationService.syncAllUserSpaces(profile);
+      await this.refreshGroupOfflineAccess(profile);
+      this.toastService.showSuccess(
+        this.getActiveLang() === 'my' ? 'Group space ကို sync လုပ်ပြီးပါပြီ' : 'Group space synced successfully.',
+      );
+    } catch {
+      await this.refreshGroupOfflineAccess(profile);
+      this.toastService.showError(
+        this.getActiveLang() === 'my'
+          ? 'အင်တာနက်ချိတ်ဆက်ပြီး ထပ်ကြိုးစားပေးပါ'
+          : 'Connect to the internet and try again.',
+      );
+    }
+  }
+
+  async switchToPersonalSpace(): Promise<void> {
+    const profile = await firstValueFrom(
+      this.authService.userProfile$.pipe(filter((value): value is UserProfile => !!value), take(1)),
+    ).catch(() => null);
+    if (profile) await this.switchSpace(profile.personalSpaceId || `personal:${profile.uid}`);
+  }
+
+  getGroupOfflineLockTitle(): string {
+    return this.getActiveLang() === 'my'
+      ? 'Group space ကို အင်တာနက်ချိတ်ရန် လိုအပ်ပါသည်'
+      : 'Connect to use this group space';
+  }
+
+  getGroupOfflineLockMessage(): string {
+    return this.getActiveLang() === 'my'
+      ? 'ဤ group space ကို ၇ ရက်ကျော် offline သုံးထားပါသည်။ Data မကွဲလွဲစေရန် အင်တာနက်ချိတ်ပြီး sync လုပ်ပါ။ Personal space ကိုတော့ offline ဆက်သုံးနိုင်ပါသည်။'
+      : 'This group space has been offline for over 7 days. Connect and sync to prevent data conflicts. Your personal space remains available offline.';
+  }
 
   private listenNetworkChanges(): void {
-    // Web browser
     if (!Capacitor.isNativePlatform()) {
-      if (!navigator.onLine) {
-        this.wasOffline = true;
-        this.showNoNetworkAlert();
-      }
-
       window.addEventListener('offline', () => {
-        this.wasOffline = true;
-        this.showNoNetworkAlert();
+        void this.networkService.refreshInternetAccess();
       });
 
       window.addEventListener('online', () => {
-        if (this.wasOffline) {
-          this.wasOffline = false;
-          this.showNetworkRestoredToast();
-        }
-        void this.notificationService.refreshCurrentRegistration();
+        void this.networkService.refreshInternetAccess();
       });
-      return;
     }
 
-    // Android/iOS native
-    // app စဖွင့်ချိန်း offline ဆိုရင်သာ alert ပြ
-    if (!this.networkService.isOnline$.getValue()) {
-      this.wasOffline = true;
-      this.showNoNetworkAlert();
-    }
-
-    // status ပြောင်းမှသာ react လုပ်မယ်
+    // status ပြောင်းမှသာ react လုပ်မယ်။ Wi-Fi/mobile data ချိတ်ထားရုံနဲ့
+    // online မယူဘဲ native reachability probe အောင်မှသာ restored ပြမယ်။
     // debounceTime is intentionally generous — absorbs a brief
     // disconnected→connected flicker (e.g. right after returning from the
     // camera app on some devices, on top of checkOnResume()'s own settle
     // delay) so it never surfaces as a spurious alert+toast pair; a real
     // outage still lasts well past this window.
-    this.networkService.isOnline$.pipe(
-      distinctUntilChanged(),  // တူတဲ့ value ထပ်မ emit မဖြစ်အောင်
+    combineLatest([
+      this.networkService.hasInternetAccess$,
+      this.networkService.hasCheckedInternetAccess$,
+    ]).pipe(
+      filter(([, checked]) => checked),
+      map(([hasInternetAccess]) => hasInternetAccess),
+      distinctUntilChanged(),
       debounceTime(1500)
-    ).subscribe(isOnline => {
-      if (!isOnline) {
+    ).subscribe(hasInternetAccess => {
+      if (!hasInternetAccess) {
         this.wasOffline = true;
         this.showNoNetworkAlert();
       } else {
@@ -774,7 +875,7 @@ export class App implements OnInit, AfterViewInit {
   // networks right after startup), when translate.currentLang is still
   // unset and would fall back to the English default — so read the
   // persisted language choice directly.
-  private getActiveLang(): string {
+  getActiveLang(): string {
     return (
       localStorage.getItem('selectedLanguage') ||
       this.translate.currentLang ||
@@ -984,6 +1085,15 @@ export class App implements OnInit, AfterViewInit {
   // ────────────────────────────────────────────────────────────────
 
   private async handleInvitation(inviteCode: string): Promise<void> {
+    if (!this.networkService.isOnline$.value) {
+      this.toastService.showError(
+        this.getActiveLang() === 'my'
+          ? 'Space အသစ်ဖန်တီးရန် နှင့် Space အသစ်ကို join ရန် အင်တာနက်ချိတ်ဆက်မှု လိုအပ်ပါသည်'
+          : 'An internet connection is required to create or join a space.',
+      );
+      this.router.navigate([], { queryParams: { invite_code: null }, queryParamsHandling: 'merge' });
+      return;
+    }
     const user = await firstValueFrom(this.authService.currentUser$);
     if (!user) return;
 

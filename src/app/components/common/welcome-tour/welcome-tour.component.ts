@@ -137,7 +137,7 @@ export class WelcomeTourComponent implements OnInit, OnDestroy {
     const step = this.steps[this.currentStep];
     const el = document.getElementById(step.targetId);
 
-    if (!el) {
+    if (!el || !this.isUsableTarget(el)) {
       if (attempt < this.MAX_LOCATE_ATTEMPTS) {
         this.locateTimeout = setTimeout(() => this.locate(attempt + 1), 120);
       } else {
@@ -173,6 +173,22 @@ export class WelcomeTourComponent implements OnInit, OnDestroy {
     }
 
     this.computeTooltipPosition(rect);
+  }
+
+  private isUsableTarget(el: HTMLElement): boolean {
+    const rect = el.getBoundingClientRect();
+    const style = window.getComputedStyle(el);
+    return (
+      rect.width >= 8 &&
+      rect.height >= 8 &&
+      style.display !== 'none' &&
+      style.visibility !== 'hidden' &&
+      Number(style.opacity || '1') > 0 &&
+      rect.bottom > 0 &&
+      rect.right > 0 &&
+      rect.top < window.innerHeight &&
+      rect.left < window.innerWidth
+    );
   }
 
   private computeTooltipPosition(rect: DOMRect): void {

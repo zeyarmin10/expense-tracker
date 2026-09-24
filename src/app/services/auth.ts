@@ -319,7 +319,7 @@ export class AuthService {
     const urlParams = new URLSearchParams(window.location.search);
     const inviteCode = urlParams.get('invite_code');
 
-    if (inviteCode) {
+    if (inviteCode && this.networkService.isOnline$.value) {
       const inviteRef = this.db.object(`invitations/${inviteCode}`);
       const inviteSnap = await inviteRef.query.get();
 

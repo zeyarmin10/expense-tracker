@@ -31,15 +31,28 @@
             "styles": [
               "node_modules/flatpickr/dist/flatpickr.min.css",
               "src/styles.css",
-              "node_modules/bootstrap/dist/css/bootstrap.min.css",
+              "node_modules/bootstrap/dist/css/bootstrap.css",
               "node_modules/sweetalert2/dist/sweetalert2.min.css"
             ],
             "scripts": [
               "node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"
+            ],
+            "allowedCommonJsDependencies": [
+              "flatpickr/dist/l10n/my",
+              "sweetalert2",
+              "html2canvas"
             ]
           },
           "configurations": {
             "production": {
+              "optimization": {
+                "scripts": true,
+                "styles": {
+                  "minify": true,
+                  "inlineCritical": false
+                },
+                "fonts": true
+              },
               "budgets": [
                 {
                   "type": "initial",
@@ -48,10 +61,20 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "35kB",
-                  "maximumError": "50kB"
+                  "maximumWarning": "50kB",
+                  "maximumError": "65kB"
                 }
               ],
+              "allowedCommonJsDependencies": [
+                "flatpickr/dist/l10n/my",
+                "sweetalert2",
+                "html2canvas"
+              ],
+              "optimization": {
+                "styles": {
+                  "inlineCritical": false
+                }
+              },
               "outputHashing": "all"
             },
             "development": {

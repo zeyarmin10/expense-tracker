@@ -304,6 +304,11 @@ export class DataManagerService {
   }
 
   async acceptGroupInvitation(inviteCode: string, userId: string): Promise<void> {
+    // Joining changes server-owned membership and invitation state; never
+    // queue it locally, otherwise two devices could consume the same invite.
+    if (!this.network.isOnline$.value) {
+      throw new Error('OFFLINE_SPACE_JOIN');
+    }
     const inviteRef = ref(this.db, `invitations/${inviteCode}`);
     const inviteSnapshot = await get(inviteRef);
 

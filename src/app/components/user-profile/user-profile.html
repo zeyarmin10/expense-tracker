@@ -151,10 +151,11 @@
           </div>
           <div class="prof-list-item">
             <span class="prof-list-title">{{ 'CURRENCY' | translate }}</span>
-            <app-custom-select
+            <app-custom-select class="csl-tall-sheet"
               formControlName="currency"
               [options]="currencySelectOptions"
-              [fitContent]="true">
+              [fitContent]="true"
+              [sheetTitle]="'CURRENCY' | translate">
             </app-custom-select>
           </div>
 

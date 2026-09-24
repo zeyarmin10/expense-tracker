@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { getActiveGroupId, UserProfile } from './user-data';
 import { NetworkService } from './network.service';
 import { OfflineCollection, OfflineOperationKind, OfflineStoreService } from './offline-store.service';
+import { GroupOfflineAccessService } from './group-offline-access.service';
 
 /** Offline cache/queue for a group space. Unlike personal data, edits retain
  * the revision that was seen locally so OfflineSyncService can stop conflicts. */
@@ -9,6 +10,7 @@ import { OfflineCollection, OfflineOperationKind, OfflineStoreService } from './
 export class SharedOfflineDataService {
   private network = inject(NetworkService);
   private store = inject(OfflineStoreService);
+  private groupOfflineAccess = inject(GroupOfflineAccessService);
 
   isOfflineShared(profile: UserProfile | null | undefined): boolean {
     return !!getActiveGroupId(profile) && !this.network.isOnline$.value;
@@ -58,6 +60,7 @@ export class SharedOfflineDataService {
     payload?: Record<string, unknown>,
     baseUpdatedAt?: string | null,
   ): Promise<void> {
+    await this.groupOfflineAccess.assertCanWriteOffline(profile);
     const scope = this.scope(profile);
     if (kind === 'remove') await this.store.removeRecord(scope, collection, recordId);
     else await this.store.patchRecord(scope, collection, recordId, payload || {});
@@ -75,6 +78,7 @@ export class SharedOfflineDataService {
     localVoucher: Record<string, unknown>,
     uploadPayload: Record<string, unknown>,
   ): Promise<void> {
+    await this.groupOfflineAccess.assertCanWriteOffline(profile);
     const groupId = this.groupId(profile);
     await this.store.patchRecord(this.scope(profile), 'vouchers', voucherId, localVoucher);
     await this.store.enqueue({

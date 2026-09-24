@@ -598,6 +598,7 @@
   "ONBOARDING_PERSONAL_ACCOUNT_SETUP_ERROR": "個人アカウントの設定中にエラーが発生しました。もう一度お試しください。",
   "ONBOARDING_GROUP_CREATION_FAILED": "グループの作成に失敗しました。内容を確認してもう一度お試しください。",
   "SPACE_CREATION_REQUIRES_INTERNET": "新しいスペースを作成するにはインターネット接続が必要です。",
+  "SPACE_CREATE_OR_JOIN_REQUIRES_INTERNET": "スペースの作成または参加にはインターネット接続が必要です。",
   "ONBOARDING_MUST_BE_LOGGED_IN": "グループに参加するにはログインが必要です。",
   "ONBOARDING_JOIN_GROUP_SUCCESS": "グループに参加しました！",
   "ONBOARDING_INVITATION_PROCESS_FAILED": "招待の処理に失敗しました。招待が無効か、有効期限が切れている可能性があります。",

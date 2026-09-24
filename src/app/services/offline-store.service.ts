@@ -41,14 +41,16 @@ interface StoredBlob {
 @Injectable({ providedIn: 'root' })
 export class OfflineStoreService {
   private readonly databaseName = 'kyat-wise-offline';
-  private readonly databaseVersion = 2;
+  private readonly databaseVersion = 3;
   private readonly collectionStore = 'collections';
   private readonly queueStore = 'queue';
   private readonly blobStore = 'blobs';
+  private readonly metadataStore = 'metadata';
   private dbPromise?: Promise<IDBDatabase | null>;
   private readonly memoryCollections = new Map<string, StoredCollection>();
   private readonly memoryQueue = new Map<string, OfflineOperation>();
   private readonly memoryBlobs = new Map<string, Blob>();
+  private readonly memoryMetadata = new Map<string, unknown>();
   private lastOperationTimestamp = 0;
 
   private get database(): Promise<IDBDatabase | null> {
@@ -73,6 +75,9 @@ export class OfflineStoreService {
         }
         if (!db.objectStoreNames.contains(this.blobStore)) {
           db.createObjectStore(this.blobStore, { keyPath: 'key' });
+        }
+        if (!db.objectStoreNames.contains(this.metadataStore)) {
+          db.createObjectStore(this.metadataStore, { keyPath: 'key' });
         }
       };
       request.onsuccess = () => resolve(request.result);
@@ -226,6 +231,27 @@ export class OfflineStoreService {
     }
     const transaction = db.transaction(this.blobStore, 'readwrite');
     transaction.objectStore(this.blobStore).delete(key);
+    await this.transactionDone(transaction);
+  }
+
+  /** Durable device-local state that does not belong to a data collection. */
+  async getMetadata<T>(key: string): Promise<T | null> {
+    const db = await this.database;
+    if (!db) return (this.memoryMetadata.get(key) as T | undefined) ?? null;
+    const transaction = db.transaction(this.metadataStore, 'readonly');
+    const value = await this.request(transaction.objectStore(this.metadataStore).get(key)) as
+      { key: string; value: T } | undefined;
+    return value?.value ?? null;
+  }
+
+  async setMetadata<T>(key: string, value: T): Promise<void> {
+    const db = await this.database;
+    if (!db) {
+      this.memoryMetadata.set(key, value);
+      return;
+    }
+    const transaction = db.transaction(this.metadataStore, 'readwrite');
+    transaction.objectStore(this.metadataStore).put({ key, value });
     await this.transactionDone(transaction);
   }
 

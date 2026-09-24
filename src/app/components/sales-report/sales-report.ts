@@ -259,6 +259,14 @@ export class SalesReport implements OnInit, OnDestroy {
     return this.productTotals[0] || null;
   }
 
+  get primaryCurrency(): string {
+    return this.currencySummaries[0]?.currency || 'MMK';
+  }
+
+  get primaryOrderCount(): number {
+    return this.currencySummaries[0]?.orderCount || 0;
+  }
+
   getProductPercent(product: ProductTotal): number {
     const value = this.topSellingSort === 'quantity' ? product.qty : product.total;
     return this.productTotalsSum > 0 ? (value / this.productTotalsSum) * 100 : 0;
