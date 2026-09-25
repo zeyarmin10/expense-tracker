@@ -13,6 +13,7 @@ import { DataManagerService } from './services/data-manager';
 import { ToastService } from './services/toast';
 import { NetworkService } from './services/network.service';
 import { OfflineSyncService } from './services/offline-sync.service';
+import { OfflineOperation } from './services/offline-store.service';
 import { OfflineHydrationService } from './services/offline-hydration.service';
 import { GroupOfflineAccessService, GroupOfflineAccessState } from './services/group-offline-access.service';
 import { ThemeService } from './services/theme.service';
@@ -35,6 +36,7 @@ import { getActiveGroupId, UserProfile } from './services/user-data';
 import { CurrentSpaceTitleComponent } from './components/common/current-space-title/current-space-title.component';
 import { UserAvatarComponent } from './components/common/user-avatar/user-avatar.component';
 import { WelcomeTourComponent } from './components/common/welcome-tour/welcome-tour.component';
+import { FormatService } from './services/format.service';
 
 @Component({
   selector: 'app-root',
@@ -131,6 +133,7 @@ export class App implements OnInit, AfterViewInit {
   private themeService = inject(ThemeService);
   private notificationService = inject(NotificationService);
   private appUpdateService = inject(AppUpdateService);
+  private formatService = inject(FormatService);
   private documentTitle = inject(Title);
   private ngZone = inject(NgZone);
 
@@ -1081,6 +1084,145 @@ export class App implements OnInit, AfterViewInit {
     if (needsServerRefresh && this.networkService.isOnline$.value) {
       setTimeout(() => window.location.reload(), 700);
     }
+  }
+
+  formatSyncCount(count: number, compact = false): string {
+    const formatted = this.formatService.formatCount(count);
+    return this.translate.instant(compact ? 'SYNC_PENDING_SHORT' : 'SYNC_PENDING_COUNT', { count: formatted });
+  }
+
+  async showSyncDetails(): Promise<void> {
+    const operations = await this.offlineSyncService.getPendingOperations();
+    if (operations.length === 0) {
+      await Swal.fire({
+        icon: 'success',
+        title: this.translate.instant('SYNC_DETAILS_TITLE'),
+        text: this.translate.instant('SYNC_NO_PENDING_CHANGES'),
+        confirmButtonText: this.translate.instant('OK_BUTTON'),
+      });
+      return;
+    }
+
+    const html = `
+      <div class="sync-detail-modal">
+        <p class="sync-detail-summary">${this.escapeHtml(this.translate.instant('SYNC_PENDING_SUMMARY', {
+          count: this.formatService.formatCount(operations.length),
+        }))}</p>
+        <div class="sync-detail-list">
+          ${operations.map(operation => this.buildSyncOperationHtml(operation)).join('')}
+        </div>
+      </div>
+    `;
+
+    const result = await Swal.fire({
+      icon: 'info',
+      title: this.translate.instant('SYNC_DETAILS_TITLE'),
+      html,
+      showCancelButton: true,
+      confirmButtonText: this.translate.instant('SYNC_NOW_BUTTON'),
+      cancelButtonText: this.translate.instant('CLOSE_BUTTON_LABEL'),
+      reverseButtons: true,
+      customClass: { popup: 'sync-detail-swal' },
+    });
+
+    if (result.isConfirmed) {
+      await this.manualSyncChanges();
+    }
+  }
+
+  async manualSyncChanges(): Promise<void> {
+    await this.networkService.retryServerConnection();
+    if (!this.networkService.isOnline$.value) {
+      this.toastService.showError(this.translate.instant('SYNC_OFFLINE_MESSAGE'));
+      return;
+    }
+
+    await this.offlineSyncService.sync();
+    const profile = await firstValueFrom(this.authService.userProfile$.pipe(take(1)));
+    if (profile) {
+      await this.offlineHydrationService.syncActiveSpace(profile).catch((error) => {
+        console.warn('[sync] Server refresh after manual sync failed:', error);
+      });
+    }
+
+    const pending = await this.offlineSyncService.getPendingOperations();
+    if (pending.length > 0) {
+      this.toastService.showError(this.translate.instant('SYNC_PENDING_REMAINING', {
+        count: this.formatService.formatCount(pending.length),
+      }));
+      return;
+    }
+
+    this.toastService.showSuccess(this.translate.instant('SYNC_COMPLETE_MESSAGE'));
+  }
+
+  private buildSyncOperationHtml(operation: OfflineOperation): string {
+    const collection = operation.path.split('/').slice(-2, -1)[0] || operation.path;
+    const recordId = operation.path.split('/').slice(-1)[0] || '';
+    const title = `${this.translate.instant(this.getSyncActionKey(operation.kind))} · ${this.translate.instant(this.getSyncCollectionKey(collection))}`;
+    const payload = this.summarizeSyncPayload(operation.payload);
+    const error = operation.lastError ? `<div class="sync-detail-error">${this.escapeHtml(operation.lastError)}</div>` : '';
+    return `
+      <article class="sync-detail-item">
+        <div class="sync-detail-item-main">
+          <strong>${this.escapeHtml(title)}</strong>
+          <span>${this.escapeHtml(recordId)}</span>
+          ${payload ? `<small>${this.escapeHtml(payload)}</small>` : ''}
+          ${error}
+        </div>
+      </article>
+    `;
+  }
+
+  private summarizeSyncPayload(payload?: Record<string, unknown>): string {
+    if (!payload) return '';
+    const preferredKeys = ['name', 'category', 'description', 'itemName', 'amount', 'date', 'currency', 'status'];
+    const picked = preferredKeys
+      .filter(key => payload[key] !== undefined && payload[key] !== null && payload[key] !== '')
+      .slice(0, 3)
+      .map(key => `${key}: ${String(payload[key])}`);
+
+    if (picked.length > 0) {
+      return picked.join(' · ');
+    }
+
+    const keys = Object.keys(payload).slice(0, 3);
+    return keys.join(' · ');
+  }
+
+  private getSyncActionKey(kind: OfflineOperation['kind']): string {
+    const map: Record<OfflineOperation['kind'], string> = {
+      set: 'SYNC_ACTION_CREATE',
+      setIfMissing: 'SYNC_ACTION_CREATE',
+      update: 'SYNC_ACTION_UPDATE',
+      remove: 'SYNC_ACTION_DELETE',
+      uploadVoucher: 'SYNC_ACTION_UPLOAD',
+    };
+    return map[kind] || 'SYNC_ACTION_UPDATE';
+  }
+
+  private getSyncCollectionKey(collection: string): string {
+    const map: Record<string, string> = {
+      expenses: 'SYNC_COLLECTION_EXPENSES',
+      incomes: 'SYNC_COLLECTION_INCOMES',
+      budgets: 'SYNC_COLLECTION_BUDGETS',
+      categories: 'SYNC_COLLECTION_CATEGORIES',
+      vouchers: 'SYNC_COLLECTION_VOUCHERS',
+      products: 'SYNC_COLLECTION_PRODUCTS',
+      shopExpenses: 'SYNC_COLLECTION_SHOP_EXPENSES',
+      spaces: 'SYNC_COLLECTION_SPACES',
+      users: 'SYNC_COLLECTION_PROFILE',
+    };
+    return map[collection] || 'SYNC_COLLECTION_OTHER';
+  }
+
+  private escapeHtml(value: unknown): string {
+    return String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
   }
   // ────────────────────────────────────────────────────────────────
 

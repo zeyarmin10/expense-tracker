@@ -26,6 +26,21 @@
         <p class="ob-hero-hint">{{ 'ONBOARDING.SPACE_HUB_HINT' | translate }}</p>
       </div>
 
+      <div class="ob-quick-actions">
+        <button class="ob-action-button ob-action-button-primary" type="button" (click)="openCreateSpaceModal()">
+          <span class="ob-action-icon">
+            <lucide-icon [img]="iconUsers" [size]="20"></lucide-icon>
+          </span>
+          <span class="ob-action-label">{{ 'ONBOARDING.CREATE_GROUP_BUTTON' | translate }}</span>
+        </button>
+        <button class="ob-action-button ob-action-button-secondary" type="button" (click)="openJoinSpaceModal()">
+          <span class="ob-action-icon">
+            <lucide-icon [img]="iconLink" [size]="20"></lucide-icon>
+          </span>
+          <span class="ob-action-label">{{ 'ONBOARDING.JOIN_GROUP_BUTTON' | translate }}</span>
+        </button>
+      </div>
+
       <div class="ob-cards">
         <div class="ob-card ob-card-spaces" *ngIf="userProfile$ | async as profile">
           <div class="ob-card-inner">
@@ -97,62 +112,6 @@
                   </button>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- <div class="ob-card ob-card-personal">
-          <div class="ob-card-inner">
-            <div class="ob-card-head">
-              <div class="ob-card-icon ob-icon-personal">
-                <fa-icon [icon]="faUser"></fa-icon>
-              </div>
-              <div>
-                <h3 class="ob-card-title">{{ 'ONBOARDING.GO_TO_PERSONAL_SPACE' | translate }}</h3>
-                <p class="ob-card-desc">{{ 'ONBOARDING.PERSONAL_SPACE_DESC' | translate }}</p>
-              </div>
-            </div>
-            <button class="ob-btn ob-btn-primary" (click)="switchToPersonalSpace()">
-              {{ 'ONBOARDING.SWITCH_TO_PERSONAL_SPACE' | translate }}
-              <span class="ob-btn-arrow">-></span>
-            </button>
-          </div>
-        </div> -->
-
-        <div class="ob-card ob-card-group">
-          <div class="ob-card-inner">
-            <div class="ob-card-head">
-              <div class="ob-card-icon ob-icon-group">
-                <lucide-icon [img]="iconUsers" [size]="18"></lucide-icon>
-              </div>
-              <div>
-                <h3 class="ob-card-title">{{ 'ONBOARDING.CREATE_NEW_GROUP' | translate }}</h3>
-                <p class="ob-card-desc">{{ 'ONBOARDING.CREATE_SHARED_SPACE' | translate }}</p>
-              </div>
-            </div>
-            <div class="ob-input-row">
-              <button class="ob-btn ob-btn-accent" (click)="openCreateSpaceModal()">
-                {{ 'ONBOARDING.CREATE_GROUP_BUTTON' | translate }}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div class="ob-card ob-card-join">
-          <div class="ob-card-inner">
-            <div class="ob-card-head">
-              <div class="ob-card-icon ob-icon-join">
-                <lucide-icon [img]="iconLink" [size]="18"></lucide-icon>
-              </div>
-              <div>
-                <h3 class="ob-card-title">{{ 'ONBOARDING.JOIN_EXISTING_GROUP' | translate }}</h3>
-                <p class="ob-card-desc">{{ 'ONBOARDING.USE_INVITE_CODE' | translate }}</p>
-              </div>
-            </div>
-            <div class="ob-input-row">
-              <button class="ob-btn ob-btn-outline" (click)="openJoinSpaceModal()">
-                {{ 'ONBOARDING.JOIN_GROUP_BUTTON' | translate }}
-              </button>
             </div>
           </div>
         </div>

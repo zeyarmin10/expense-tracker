@@ -397,7 +397,8 @@ type SpaceImageSource = {
       right: auto;
       z-index: auto;
       width: auto;
-      max-width: none;
+      max-width: 100%;
+      min-width: 0;
       pointer-events: auto;
       display: block;
     }
@@ -406,6 +407,12 @@ type SpaceImageSource = {
       position: relative;
       top: auto;
       right: auto;
+      max-width: 100%;
+      min-width: 0;
+    }
+
+    :host.cst-inline .space-title-label-visible {
+      max-width: calc(100% - 50px);
     }
 
     :host.cst-inline .space-title-menu {
