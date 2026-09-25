@@ -105,7 +105,7 @@ export class DataManagerService {
     // A space is a server-owned container (membership, default categories,
     // and access rules are created together), so it must never be created as
     // an offline draft that could later collide with another device.
-    if (!this.network.isOnline$.value) {
+    if (!(await this.hasUsableServerConnection())) {
       throw new Error('OFFLINE_SPACE_CREATION');
     }
     const userId = (await firstValueFrom(
@@ -306,7 +306,7 @@ export class DataManagerService {
   async acceptGroupInvitation(inviteCode: string, userId: string): Promise<void> {
     // Joining changes server-owned membership and invitation state; never
     // queue it locally, otherwise two devices could consume the same invite.
-    if (!this.network.isOnline$.value) {
+    if (!(await this.hasUsableServerConnection())) {
       throw new Error('OFFLINE_SPACE_JOIN');
     }
     const inviteRef = ref(this.db, `invitations/${inviteCode}`);
@@ -348,6 +348,15 @@ export class DataManagerService {
     updates[`/invitations/${inviteCode}/acceptedAt`] = new Date().toISOString();
 
     await update(ref(this.db), updates);
+  }
+
+  private async hasUsableServerConnection(): Promise<boolean> {
+    if (this.network.isOnline$.value) {
+      return true;
+    }
+
+    await this.network.retryServerConnection();
+    return this.network.isOnline$.value;
   }
 
   getSpaceMembersWithProfile(spaceId: string): Observable<IGroupMemberDetails[]> {

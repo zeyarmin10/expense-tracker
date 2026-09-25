@@ -235,15 +235,9 @@ export class ProductModalComponent implements OnInit, OnDestroy {
     const trimmedBarcode = barcode || undefined;
 
     try {
-      await this.productService.addProduct(name, unit || undefined, Number(sellingPrice) || undefined, trimmedBarcode);
+      const created = await this.productService.addProduct(name, unit || undefined, Number(sellingPrice) || undefined, trimmedBarcode);
       Toast.fire({ icon: 'success', title: this.translateService.instant('PRODUCT_ADDED_SUCCESS') });
-      await this.loadProducts();
-      // addProduct() only returns void — read the just-created record back
-      // by barcode (or by name, when it wasn't scanned) so it can be handed
-      // to a caller's open cart.
-      const created = trimmedBarcode
-        ? this.products.find((p) => p.barcode === trimmedBarcode)
-        : this.products.find((p) => p.name === name.trim());
+      this.products$.next([created, ...this.products.filter((product) => product.id !== created.id)]);
       if (created) {
         this.productAdded.emit(created);
       }

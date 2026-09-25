@@ -53,6 +53,9 @@ type SpaceContextLike = {
   currentSpaceId?: string | null;
   currentSpaceType?: SpaceType | null;
   groupId?: string | null;
+  accountType?: 'personal' | 'group' | null;
+  personalSpaceId?: string | null;
+  spaceMemberships?: { [key: string]: SpaceRole } | null;
 };
 
 export function getActiveGroupId(profile: SpaceContextLike | null | undefined): string | null {
@@ -61,6 +64,19 @@ export function getActiveGroupId(profile: SpaceContextLike | null | undefined): 
   }
 
   if (profile.currentSpaceType === 'group' && profile.currentSpaceId) {
+    return profile.currentSpaceId;
+  }
+
+  if (profile.currentSpaceType === 'personal') {
+    return null;
+  }
+
+  if (
+    profile.accountType === 'group' &&
+    profile.currentSpaceId &&
+    profile.currentSpaceId !== profile.personalSpaceId &&
+    (!profile.spaceMemberships || !!profile.spaceMemberships[profile.currentSpaceId])
+  ) {
     return profile.currentSpaceId;
   }
 

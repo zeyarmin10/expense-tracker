@@ -23,6 +23,7 @@ import { SpaceSwitchLoadingService } from './space-switch-loading.service';
 import { toLocalDateKey } from './date-filter.service';
 import { PersonalOfflineDataService } from './personal-offline-data.service';
 import { SharedOfflineDataService } from './shared-offline-data.service';
+import { NetworkService } from './network.service';
 
 export interface IncomeLineItem {
   productId: string;
@@ -105,6 +106,7 @@ export class IncomeService {
   private spaceSwitchLoadingService = inject(SpaceSwitchLoadingService);
   private personalOfflineData = inject(PersonalOfflineDataService);
   private sharedOfflineData = inject(SharedOfflineDataService);
+  private network = inject(NetworkService);
 
   constructor() {
   }
@@ -117,6 +119,12 @@ export class IncomeService {
     return ref(this.db, `group_data/${groupId}/incomes`);
   }
 
+  private async refreshConnectionStateForWrite(): Promise<void> {
+    if (this.network.isOnline$.value) {
+      await this.network.refreshInternetAccess();
+    }
+  }
+
   async addIncome(
     incomeData: Omit<ServiceIIncome, 'id' | 'userId' | 'groupId' | 'createdAt' | 'device' | 'editedDevice'>
   ): Promise<void> {
@@ -124,6 +132,7 @@ export class IncomeService {
     if (!profile?.uid) {
         throw new Error('User not authenticated.');
     }
+    await this.refreshConnectionStateForWrite();
 
     const newIncomeToSave: Omit<ServiceIIncome, 'id'> = {
       ...incomeData,
@@ -307,6 +316,7 @@ export class IncomeService {
     if (!incomeId) {
       throw new Error('Income ID is required for update.');
     }
+    await this.refreshConnectionStateForWrite();
 
     if (this.sharedOfflineData.isOfflineShared(profile)) {
       const records = await this.sharedOfflineData.read<ServiceIIncome>(profile, 'incomes');
@@ -350,6 +360,7 @@ export class IncomeService {
     if (!id) {
       throw new Error('Income ID is required for deletion.');
     }
+    await this.refreshConnectionStateForWrite();
 
     if (this.sharedOfflineData.isOfflineShared(profile)) {
       const records = await this.sharedOfflineData.read<ServiceIIncome>(profile, 'incomes');
@@ -390,6 +401,7 @@ export class IncomeService {
     if (!id) {
       throw new Error('Income ID is required for voiding.');
     }
+    await this.refreshConnectionStateForWrite();
     if (this.sharedOfflineData.isOfflineShared(profile)) {
       const records = await this.sharedOfflineData.read<ServiceIIncome>(profile, 'incomes');
       await this.sharedOfflineData.write(profile, 'incomes', 'update', id, {

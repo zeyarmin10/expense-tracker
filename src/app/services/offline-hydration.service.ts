@@ -139,15 +139,11 @@ export class OfflineHydrationService {
     profile: UserProfile,
     collection: SpaceCollection,
   ): Promise<void> {
-    // Do not call the migration helper here: it deliberately reads an entire
-    // legacy collection to backfill it, which defeats this targeted sync.
-    // Normal app flows can still migrate legacy data; hydration only reads
-    // the selected, user-owned/shared space.
-    const spaceId = this.spaceData.getCurrentSpaceId(profile);
-    const source = spaceId && !spaceId.startsWith('personal:')
-      ? this.spaceData.getCanonicalCollectionRef(spaceId, collection)
-      : this.spaceData.getLegacyCollectionRef(profile, collection);
-    const snapshot = await get(source);
+    // Prefer the canonical /space_data path, but let SpaceDataService backfill
+    // from legacy /group_data or /users data first. Otherwise a synced group
+    // whose real data still lives in the legacy path is cached as an empty
+    // space and then appears blank when the app starts offline.
+    const { snapshot } = await this.spaceData.preferCanonicalSnapshot(profile, collection);
     const records = (snapshot.val() || {}) as Record<string, Record<string, unknown>>;
     if (getActiveGroupId(profile)) {
       await this.shared.cacheRemote(profile, collection, records);

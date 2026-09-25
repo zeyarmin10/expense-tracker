@@ -387,7 +387,7 @@ export class OnboardingComponent implements OnInit, OnDestroy {
   createSpaceEnableInventory = false;
 
   async openCreateSpaceModal(): Promise<void> {
-    if (!this.network.isOnline$.value) {
+    if (!(await this.hasUsableServerConnection())) {
       await this.showSpaceCreationRequiresInternetAlert();
       return;
     }
@@ -425,7 +425,7 @@ export class OnboardingComponent implements OnInit, OnDestroy {
   }
 
   async openJoinSpaceModal(): Promise<void> {
-    if (!this.network.isOnline$.value) {
+    if (!(await this.hasUsableServerConnection())) {
       await this.showSpaceCreateOrJoinRequiresInternetAlert();
       return;
     }
@@ -518,7 +518,7 @@ export class OnboardingComponent implements OnInit, OnDestroy {
 
   async submitCreateSpace(): Promise<void> {
     if (!this.canSubmitCreateSpace) return;
-    if (!this.network.isOnline$.value) {
+    if (!(await this.hasUsableServerConnection())) {
       await this.showSpaceCreationRequiresInternetAlert();
       return;
     }
@@ -563,7 +563,7 @@ export class OnboardingComponent implements OnInit, OnDestroy {
   async joinGroup(): Promise<void> {
     const code = this.inviteCode.trim();
     if (this.isJoiningSpace || code.length !== this.inviteCodeLength) return;
-    if (!this.network.isOnline$.value) {
+    if (!(await this.hasUsableServerConnection())) {
       await this.showSpaceCreateOrJoinRequiresInternetAlert();
       return;
     }
@@ -658,6 +658,15 @@ export class OnboardingComponent implements OnInit, OnDestroy {
 
   private showSpaceCreationRequiresInternetAlert(): Promise<any> {
     return this.showSpaceCreateOrJoinRequiresInternetAlert();
+  }
+
+  private async hasUsableServerConnection(): Promise<boolean> {
+    if (this.network.isOnline$.value) {
+      return true;
+    }
+
+    await this.network.retryServerConnection();
+    return this.network.isOnline$.value;
   }
 
   private showSpaceCreateOrJoinRequiresInternetAlert(): Promise<any> {

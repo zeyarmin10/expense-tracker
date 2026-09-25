@@ -27,6 +27,7 @@ import { SpaceSwitchLoadingService } from './space-switch-loading.service';
 import { toLocalDateKey } from './date-filter.service';
 import { PersonalOfflineDataService } from './personal-offline-data.service';
 import { SharedOfflineDataService } from './shared-offline-data.service';
+import { NetworkService } from './network.service';
 
 export type ServiceIExpense = IExpense & {
   id: string;
@@ -79,6 +80,7 @@ export class ExpenseService {
   private spaceSwitchLoadingService = inject(SpaceSwitchLoadingService);
   private personalOfflineData = inject(PersonalOfflineDataService);
   private sharedOfflineData = inject(SharedOfflineDataService);
+  private network = inject(NetworkService);
 
   constructor() {}
 
@@ -96,6 +98,12 @@ export class ExpenseService {
 
   private getGroupExpenseRef(groupId: string, expenseId: string): DatabaseReference {
     return ref(this.db, `group_data/${groupId}/expenses/${expenseId}`);
+  }
+
+  private async refreshConnectionStateForWrite(): Promise<void> {
+    if (this.network.isOnline$.value) {
+      await this.network.refreshInternetAccess();
+    }
   }
 
   // Reads the public display-identity mirror (name + photo only) rather
@@ -314,6 +322,7 @@ export class ExpenseService {
     if (!profile?.uid) {
       throw new Error('User not authenticated.');
     }
+    await this.refreshConnectionStateForWrite();
     const currentUser = await firstValueFrom(this.authService.currentUser$);
 
     const parser = new UAParser();
@@ -396,6 +405,7 @@ export class ExpenseService {
     if (!profile?.uid) {
       throw new Error('User not authenticated.');
     }
+    await this.refreshConnectionStateForWrite();
 
     const currentUser = await firstValueFrom(this.authService.currentUser$);
 
@@ -511,6 +521,7 @@ export class ExpenseService {
     if (!profile?.uid) {
       throw new Error('User not authenticated.');
     }
+    await this.refreshConnectionStateForWrite();
     if (this.personalOfflineData.isOfflinePersonal(profile)) {
       await this.personalOfflineData.write(profile, 'expenses', 'remove', expenseId);
       return;
@@ -542,6 +553,7 @@ export class ExpenseService {
     if (!profile?.uid) {
       throw new Error('User not authenticated.');
     }
+    await this.refreshConnectionStateForWrite();
     const currentUser = await firstValueFrom(this.authService.currentUser$);
 
     if (this.personalOfflineData.isOfflinePersonal(profile)) {

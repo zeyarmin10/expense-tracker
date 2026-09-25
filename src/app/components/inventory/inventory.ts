@@ -153,6 +153,8 @@ export class Inventory implements OnInit, OnDestroy {
   shopExpenseCategoryOptions: SelectOption[] = [];
   editingShopExpense: ShopExpense | null = null;
   editingProductId: string | null = null;
+  isSavingProduct = false;
+  updatingProductId: string | null = null;
   // Three-dot row actions menu — same open/close-on-outside-click pattern
   // as onboarding.ts's space-list kebab menu.
   openActionMenuProductId: string | null = null;
@@ -882,16 +884,15 @@ export class Inventory implements OnInit, OnDestroy {
     this.selectedStockProductId = productId;
   }
 
-  async loadProducts(): Promise<void> {
-    this.isLoadingProducts = true;
-    this.isLoadingStock = true;
-    this.cdr.markForCheck();
+  async loadProducts(showLoading = true): Promise<void> {
+    if (showLoading) {
+      this.isLoadingProducts = true;
+      this.isLoadingStock = true;
+      this.cdr.markForCheck();
+    }
     try {
       const products = await firstValueFrom(this.productService.getProducts());
-      // Most recently added first — older products (from before createdAt
-      // was tracked) fall back to '' and sink to the bottom.
-      const sorted = [...products].sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
-      this._productsSubject.next(sorted);
+      this._productsSubject.next(this.sortProducts(products));
       this.loadedCurrency = this.currency;
     } catch (error) {
       this.showErrorModal(
@@ -900,27 +901,61 @@ export class Inventory implements OnInit, OnDestroy {
       );
       console.error('Error loading products:', error);
     } finally {
-      this.isLoadingProducts = false;
+      if (showLoading) {
+        this.isLoadingProducts = false;
+      }
       this.cdr.detectChanges();
     }
   }
 
+  private sortProducts(products: ServiceIProduct[]): ServiceIProduct[] {
+    // Most recently added first — older products (from before createdAt
+    // was tracked) fall back to '' and sink to the bottom.
+    return [...products].sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+  }
+
+  private upsertProductInList(product: ServiceIProduct): void {
+    if (!product.id) return;
+    const next = [
+      product,
+      ...this._productsSubject.value.filter(existing => existing.id !== product.id),
+    ];
+    this._productsSubject.next(this.sortProducts(next));
+    this.selectedProductId = product.id;
+    this.cdr.markForCheck();
+  }
+
+  private patchProductInList(productId: string, patch: Partial<ServiceIProduct>): void {
+    const next = this._productsSubject.value.map(product =>
+      product.id === productId ? { ...product, ...patch } : product,
+    );
+    this._productsSubject.next(this.sortProducts(next));
+    this.selectedProductId = productId;
+    this.cdr.markForCheck();
+  }
+
   async onAddSubmit(): Promise<void> {
+    if (this.isSavingProduct) return;
     if (this.addProductForm.invalid) {
       return;
     }
 
     const { name, unit, sellingPrice, barcode } = this.addProductForm.value;
+    this.isSavingProduct = true;
+    this.cdr.markForCheck();
     try {
-      await this.productService.addProduct(name, unit || undefined, Number(sellingPrice) || undefined, barcode || undefined);
+      const product = await this.productService.addProduct(name, unit || undefined, Number(sellingPrice) || undefined, barcode || undefined);
+      this.upsertProductInList(product);
       Toast.fire({ icon: 'success', title: this.translateService.instant('PRODUCT_ADDED_SUCCESS') });
       this.addProductForm.reset();
       this.sellingPriceDisplay = '';
-      await this.loadProducts();
     } catch (error: any) {
       const key = getProductErrorMessage(error) || 'DATA_SAVE_ERROR';
       this.showErrorModal(this.translateService.instant('ERROR_TITLE'), this.translateService.instant(key));
       console.error('Product add error:', error);
+    } finally {
+      this.isSavingProduct = false;
+      this.cdr.markForCheck();
     }
   }
 
@@ -972,6 +1007,7 @@ export class Inventory implements OnInit, OnDestroy {
   }
 
   async onUpdateInline(productId: string): Promise<void> {
+    if (this.updatingProductId) return;
     if (!this.editingNameControl || this.editingNameControl.invalid || !productId) {
       this.showErrorModal(
         this.translateService.instant('ERROR_TITLE'),
@@ -984,15 +1020,26 @@ export class Inventory implements OnInit, OnDestroy {
     const newUnit = (this.editingUnitControl?.value || '').trim();
     const newSellingPrice = Number(this.editingSellingPriceControl?.value) || null;
     const newBarcode = (this.editingBarcodeControl?.value || '').trim() || null;
+    this.updatingProductId = productId;
+    this.cdr.markForCheck();
     try {
       await this.productService.updateProduct(productId, newName, newUnit, newSellingPrice, newBarcode);
+      this.patchProductInList(productId, {
+        name: newName,
+        unit: newUnit || undefined,
+        sellingPrice: newSellingPrice && newSellingPrice > 0 ? newSellingPrice : undefined,
+        barcode: newBarcode || undefined,
+        updatedAt: new Date().toISOString(),
+      });
       Toast.fire({ icon: 'success', title: this.translateService.instant('PRODUCT_UPDATED_SUCCESS') });
       this.cancelEdit();
-      await this.loadProducts();
     } catch (error: any) {
       const key = getProductErrorMessage(error) || 'DATA_SAVE_ERROR';
       this.showErrorModal(this.translateService.instant('ERROR_TITLE'), this.translateService.instant(key));
       console.error('Error updating product:', error);
+    } finally {
+      this.updatingProductId = null;
+      this.cdr.markForCheck();
     }
   }
 

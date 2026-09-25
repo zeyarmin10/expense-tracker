@@ -1085,7 +1085,7 @@ export class App implements OnInit, AfterViewInit {
   // ────────────────────────────────────────────────────────────────
 
   private async handleInvitation(inviteCode: string): Promise<void> {
-    if (!this.networkService.isOnline$.value) {
+    if (!(await this.hasUsableServerConnection())) {
       this.toastService.showError(
         this.getActiveLang() === 'my'
           ? 'Space အသစ်ဖန်တီးရန် နှင့် Space အသစ်ကို join ရန် အင်တာနက်ချိတ်ဆက်မှု လိုအပ်ပါသည်'
@@ -1112,6 +1112,15 @@ export class App implements OnInit, AfterViewInit {
       this.toastService.showError('Failed to process invitation.');
       this.router.navigate([], { queryParams: { invite_code: null }, queryParamsHandling: 'merge' });
     }
+  }
+
+  private async hasUsableServerConnection(): Promise<boolean> {
+    if (this.networkService.isOnline$.value) {
+      return true;
+    }
+
+    await this.networkService.retryServerConnection();
+    return this.networkService.isOnline$.value;
   }
 
   onDrawerTouchStart(event: TouchEvent): void {

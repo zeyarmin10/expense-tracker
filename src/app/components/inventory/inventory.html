@@ -85,9 +85,9 @@
                 </button>
               </div>
             </div>
-            <button type="submit" class="inv-add-btn" [disabled]="addProductForm.invalid">
-              <lucide-icon [img]="iconPlus" [size]="18"></lucide-icon>
-              {{ 'ADD_PRODUCT' | translate }}
+            <button type="submit" class="inv-add-btn" [disabled]="addProductForm.invalid || isSavingProduct">
+              <lucide-icon *ngIf="!isSavingProduct" [img]="iconPlus" [size]="18"></lucide-icon>
+              {{ isSavingProduct ? ('LOADING_DATA' | translate) : ('ADD_PRODUCT' | translate) }}
             </button>
           </form>
         </div>
@@ -226,9 +226,9 @@
                         {{ "CANCEL_BUTTON_LABEL" | translate }}
                       </button>
                       <button type="button" class="inv-action-btn inv-action-save" (click)="onUpdateInline(product.id!)"
-                        [disabled]="editingNameControl?.invalid">
-                        <lucide-icon [img]="iconSave" [size]="16"></lucide-icon>
-                        {{ "SAVE_BUTTON_LABEL" | translate }}
+                        [disabled]="editingNameControl?.invalid || updatingProductId === product.id">
+                        <lucide-icon *ngIf="updatingProductId !== product.id" [img]="iconSave" [size]="16"></lucide-icon>
+                        {{ (updatingProductId === product.id ? 'LOADING_DATA' : 'SAVE_BUTTON_LABEL') | translate }}
                       </button>
                     </div>
                   </div>
