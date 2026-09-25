@@ -9,7 +9,7 @@ import {
   remove
 } from '@angular/fire/database';
 import { BehaviorSubject, Observable, concat, EMPTY, from, merge, of } from 'rxjs';
-import { filter, switchMap, tap } from 'rxjs/operators';
+import { filter, map, switchMap, tap } from 'rxjs/operators';
 import { DataManagerService } from './data-manager';
 import { Space, SpaceRole, SpaceType } from './space.model';
 import { OfflineStoreService } from './offline-store.service';
@@ -147,22 +147,31 @@ export class UserDataService {
     const userRef = ref(this.db, `users/${userId}`);
     const localChanges$ = this.getOfflineProfileChanges(userId).pipe(
       filter((profile): profile is UserProfile => profile !== null),
+      map(profile => this.withUserId(userId, profile)),
     );
     const cached$ = from(this.offlineStore.getProfile<UserProfile>(userId)).pipe(
-      switchMap(profile => profile ? of(profile) : EMPTY),
+      switchMap(profile => profile ? of(this.withUserId(userId, profile)) : EMPTY),
     );
     const remote$ = objectVal<UserProfile>(userRef).pipe(
       tap(profile => {
-        if (profile) void this.offlineStore.cacheProfile(userId, profile);
+        if (profile) void this.offlineStore.cacheProfile(userId, this.withUserId(userId, profile));
       }),
       // Do not replace a usable cached profile with a transient offline null.
       filter((profile): profile is UserProfile => profile !== null),
+      map(profile => this.withUserId(userId, profile)),
     );
     // A space switch made offline cannot update Firebase immediately. Keep a
     // small local stream alongside the remote listener so the active-space
     // context changes instantly, then let Firebase become authoritative again
     // once the queued update is replayed.
     return concat(cached$, merge(localChanges$, remote$));
+  }
+
+  private withUserId(userId: string, profile: UserProfile): UserProfile {
+    return {
+      ...profile,
+      uid: profile.uid || userId,
+    };
   }
 
   async updateCachedProfile(userId: string, changes: Partial<UserProfile>): Promise<UserProfile> {

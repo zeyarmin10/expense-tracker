@@ -1122,7 +1122,11 @@ export class App implements OnInit, AfterViewInit {
       confirmButtonText: this.translate.instant('SYNC_NOW_BUTTON'),
       cancelButtonText: this.translate.instant('CLOSE_BUTTON_LABEL'),
       reverseButtons: true,
-      customClass: { popup: 'sync-detail-swal' },
+      customClass: {
+        container: 'sync-detail-container',
+        popup: 'sync-detail-swal',
+        htmlContainer: 'sync-detail-html',
+      },
     });
 
     if (result.isConfirmed) {
@@ -1158,15 +1162,13 @@ export class App implements OnInit, AfterViewInit {
 
   private buildSyncOperationHtml(operation: OfflineOperation): string {
     const collection = operation.path.split('/').slice(-2, -1)[0] || operation.path;
-    const recordId = operation.path.split('/').slice(-1)[0] || '';
     const title = `${this.translate.instant(this.getSyncActionKey(operation.kind))} · ${this.translate.instant(this.getSyncCollectionKey(collection))}`;
-    const payload = this.summarizeSyncPayload(operation.payload);
+    const payload = this.summarizeSyncPayload(collection, operation.payload);
     const error = operation.lastError ? `<div class="sync-detail-error">${this.escapeHtml(operation.lastError)}</div>` : '';
     return `
       <article class="sync-detail-item">
         <div class="sync-detail-item-main">
           <strong>${this.escapeHtml(title)}</strong>
-          <span>${this.escapeHtml(recordId)}</span>
           ${payload ? `<small>${this.escapeHtml(payload)}</small>` : ''}
           ${error}
         </div>
@@ -1174,19 +1176,47 @@ export class App implements OnInit, AfterViewInit {
     `;
   }
 
-  private summarizeSyncPayload(payload?: Record<string, unknown>): string {
+  private summarizeSyncPayload(collection: string, payload?: Record<string, unknown>): string {
     if (!payload) return '';
+    const hiddenKeys = new Set([
+      'uid',
+      'userId',
+      'createdBy',
+      'createdByName',
+      'createdByPhotoURL',
+      'updatedBy',
+      'spaceId',
+      'currentSpaceId',
+      'personalSpaceId',
+      'groupId',
+      'currentSpaceName',
+      'currentSpaceType',
+      'currentSpaceRole',
+      'spaceName',
+      'spaceType',
+      'accountType',
+      'spaceMemberships',
+    ]);
+    const collectionHiddenKeys = new Set(collection === 'spaces' ? ['name', 'type', 'imageUrl'] : []);
+    const visibleEntries = Object.entries(payload).filter(([key, value]) =>
+      !hiddenKeys.has(key) &&
+      !collectionHiddenKeys.has(key) &&
+      value !== undefined &&
+      value !== null &&
+      value !== ''
+    );
+    const visiblePayload = Object.fromEntries(visibleEntries);
     const preferredKeys = ['name', 'category', 'description', 'itemName', 'amount', 'date', 'currency', 'status'];
     const picked = preferredKeys
-      .filter(key => payload[key] !== undefined && payload[key] !== null && payload[key] !== '')
+      .filter(key => visiblePayload[key] !== undefined)
       .slice(0, 3)
-      .map(key => `${key}: ${String(payload[key])}`);
+      .map(key => `${key}: ${String(visiblePayload[key])}`);
 
     if (picked.length > 0) {
       return picked.join(' · ');
     }
 
-    const keys = Object.keys(payload).slice(0, 3);
+    const keys = Object.keys(visiblePayload).slice(0, 3);
     return keys.join(' · ');
   }
 

@@ -1236,6 +1236,7 @@ body.inv-settings-modal-open {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  min-width: 0;
   padding: 0.7rem 0.9rem;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -1801,6 +1802,20 @@ body:not(.light-mode) .inv-product-item-hidden .inv-product-hidden-badge {
 
 .inv-table-product-cell {
   font-weight: 600;
+  max-width: 13rem;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inv-table-product-name {
+  display: inline-block;
+  max-width: calc(100% - 2.5rem);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
 }
 
 .inv-table-unit {

@@ -86,7 +86,15 @@
                 {{ "TOP_SELLING_PRODUCT" | translate }} ·
                 {{ topSellingSort === 'quantity' ? ('QUANTITY_SHORT_LABEL' | translate) : ('SALES_REVENUE' | translate) }}
               </div>
-              <span class="summary-amount">{{ topSellingProduct }}</span>
+              <span class="summary-amount top-product-name"
+                [class.top-product-name-scroll]="isLongName(topSellingProduct)"
+                [attr.title]="topSellingProduct">
+                <span class="top-product-name-track">
+                  <span class="top-product-name-text">{{ topSellingProduct }}</span>
+                  <span class="top-product-name-text" aria-hidden="true"
+                    *ngIf="isLongName(topSellingProduct)">{{ topSellingProduct }}</span>
+                </span>
+              </span>
               <div class="top-product-stats" *ngIf="topSellingProductTotal as topProduct">
                 <span>{{ 'QUANTITY_SHORT_LABEL' | translate }}: {{ formatQuantity(topProduct.qty, topProduct.unit) }}</span>
                 <span [innerHTML]="formatService.formatAmountShortHtml(topProduct.total, topProduct.currency)"></span>
@@ -162,7 +170,7 @@
           <div class="srpt-margin-products">
             <div class="srpt-margin-product" *ngFor="let product of productMargins | slice:0:5; trackBy: trackByMarginProduct">
               <div>
-                <strong>{{ product.productName }}</strong>
+                <strong [attr.title]="product.productName">{{ product.productName }}</strong>
                 <span>{{ formatQuantity(product.quantity, product.unit) }} · {{ product.grossMarginPercent | number:'1.0-0' }}%</span>
               </div>
               <span class="srpt-margin-profit" [innerHTML]="formatService.formatAmountShortHtml(product.grossProfit, primaryCurrency)"></span>
@@ -207,7 +215,7 @@
                 [attr.aria-expanded]="expandedProductCategory === category.key">
                 <div class="ov-bar-meta">
                   <lucide-icon [img]="iconPackage" [size]="17" class="ov-bar-cat-icon"></lucide-icon>
-                  <span class="ov-bar-name">{{ getCategoryLabel(category) }}</span>
+                  <span class="ov-bar-name" [attr.title]="getCategoryLabel(category)">{{ getCategoryLabel(category) }}</span>
                   <span class="ov-bar-qty">&#215; {{ formatQuantity(category.qty) }}</span>
                   <span class="ov-bar-amount" [innerHTML]="formatService.formatAmountShortHtml(category.total, category.currency)"></span>
                   <lucide-icon [img]="iconChevronDown" [size]="17" class="srpt-category-chevron"></lucide-icon>
@@ -230,7 +238,7 @@
                   [class.ov-bar-active]="p.productName === (_selectedProduct$ | async)">
                   <div class="ov-bar-meta">
                     <lucide-icon [img]="iconPackage" [size]="15" class="ov-bar-cat-icon"></lucide-icon>
-                    <span class="ov-bar-name">{{ p.productName }}</span>
+                    <span class="ov-bar-name" [attr.title]="p.productName">{{ p.productName }}</span>
                     <span class="ov-bar-qty">&#215; {{ formatQuantity(p.qty, p.unit) }}</span>
                     <span class="ov-bar-amount" [innerHTML]="formatService.formatAmountShortHtml(p.total, p.currency)"></span>
                   </div>
@@ -288,7 +296,7 @@
                     </span>
                   </td>
                   <td class="td-name">
-                    <span class="td-item-name">{{ getSaleDisplayName(income) }}</span>
+                    <span class="td-item-name" [attr.title]="getSaleDisplayName(income)">{{ getSaleDisplayName(income) }}</span>
                     <span class="td-name-creator" *ngIf="isGroupUser">
                       <app-user-avatar [name]="income.createdByName || 'Former Member'"
                         [photoUrl]="income.createdByPhotoURL" [size]="20"></app-user-avatar>

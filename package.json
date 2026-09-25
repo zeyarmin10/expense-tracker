@@ -43,6 +43,7 @@
     "@capacitor/share": "^8.0.1",
     "@capacitor/splash-screen": "^8.0.1",
     "@capacitor/status-bar": "^8.0.1",
+    "@capacitor/toast": "^8.0.1",
     "@capawesome/capacitor-app-update": "^8.0.4",
     "@codetrix-studio/capacitor-google-auth": "^3.4.0-rc.4",
     "@fortawesome/angular-fontawesome": "^0.15.0",

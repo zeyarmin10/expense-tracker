@@ -97,28 +97,25 @@
 
     <!-- Right: Desktop only -->
     <ul class="nav-right" *ngIf="currentUser$ | async as user">
-      <li class="dropdown nav-space-item" *ngIf="userSpaces$ | async as spaces">
-        <div class="space-switcher-stack">
-          <a class="space-switcher-btn" href="#" id="spaceDropdown" role="button" data-bs-toggle="dropdown"
-            aria-expanded="false">
-            <span class="space-switcher-label">{{ (currentSpaceLabel$ | async) || ('SPACE_MY_PERSONAL' | translate)
-              }}</span>
-            <lucide-icon [img]="iconChevronDown" [size]="11" style="opacity: 0.6"></lucide-icon>
-          </a>
-          <div class="sync-status-row">
-            <button *ngIf="pendingSyncCount$ | async as pending" type="button" class="offline-sync-badge"
-              [class.offline-sync-badge-hidden]="pending <= 0"
-              (click)="pending > 0 && showSyncDetails()"
-              [attr.aria-label]="formatSyncCount(pending)">
-              {{ formatSyncCount(pending) }}
-            </button>
-            <button *ngIf="syncConflictCount$ | async as conflicts" type="button" class="offline-sync-badge conflict"
-              [class.offline-sync-badge-hidden]="conflicts <= 0"
-              (click)="conflicts > 0 && resolveSyncConflicts()" aria-live="polite">
-              {{ formatSyncCount(conflicts, true) }} {{ 'SYNC_CONFLICT_LABEL' | translate }}
-            </button>
-          </div>
-        </div>
+      <li *ngIf="pendingSyncCount$ | async as pending">
+        <button type="button" class="offline-sync-badge"
+          (click)="showSyncDetails()"
+          [attr.aria-label]="formatSyncCount(pending)">
+          {{ formatSyncCount(pending) }}
+        </button>
+      </li>
+      <li *ngIf="syncConflictCount$ | async as conflicts">
+        <button type="button" class="offline-sync-badge conflict" (click)="resolveSyncConflicts()" aria-live="polite">
+          {{ formatSyncCount(conflicts, true) }} {{ 'SYNC_CONFLICT_LABEL' | translate }}
+        </button>
+      </li>
+      <li class="dropdown" *ngIf="userSpaces$ | async as spaces">
+        <a class="space-switcher-btn" href="#" id="spaceDropdown" role="button" data-bs-toggle="dropdown"
+          aria-expanded="false">
+          <span class="space-switcher-label">{{ (currentSpaceLabel$ | async) || ('SPACE_MY_PERSONAL' | translate)
+            }}</span>
+          <lucide-icon [img]="iconChevronDown" [size]="11" style="opacity: 0.6"></lucide-icon>
+        </a>
         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="spaceDropdown">
           <li class="dropdown-space-title">{{ 'SPACE_SECTION_TITLE' | translate }}</li>
           <li class="dropdown-space-scroll">
@@ -221,22 +218,16 @@
 <div class="mob-topbar" *ngIf="showNavbar$ | async">
   <img src="/images/Kyat-Wise-Logo.png" class="mob-topbar-logo" alt="" aria-hidden="true" />
   <span class="mob-topbar-title">{{ pageTitle$ | async }}</span>
-  <div class="mob-topbar-space-wrap">
-    <app-current-space-title [inline]="true"></app-current-space-title>
-    <div class="sync-status-row mobile">
-      <button *ngIf="pendingSyncCount$ | async as pending" type="button" class="offline-sync-badge mobile"
-        [class.offline-sync-badge-hidden]="pending <= 0"
-        (click)="pending > 0 && showSyncDetails()"
-        [attr.aria-label]="formatSyncCount(pending)">
-        {{ formatSyncCount(pending, true) }}
-      </button>
-      <button *ngIf="syncConflictCount$ | async as conflicts" type="button" class="offline-sync-badge mobile conflict"
-        [class.offline-sync-badge-hidden]="conflicts <= 0"
-        (click)="conflicts > 0 && resolveSyncConflicts()" aria-live="polite">
-        {{ formatSyncCount(conflicts, true) }}
-      </button>
-    </div>
-  </div>
+  <button *ngIf="pendingSyncCount$ | async as pending" type="button" class="offline-sync-badge mobile"
+    (click)="showSyncDetails()"
+    [attr.aria-label]="formatSyncCount(pending)">
+    {{ formatSyncCount(pending, true) }}
+  </button>
+  <button *ngIf="syncConflictCount$ | async as conflicts" type="button" class="offline-sync-badge mobile conflict"
+    (click)="resolveSyncConflicts()" aria-live="polite">
+    {{ formatSyncCount(conflicts, true) }}
+  </button>
+  <app-current-space-title [inline]="true"></app-current-space-title>
 </div>
 
 <!-- ═══════════════════════════════════════════

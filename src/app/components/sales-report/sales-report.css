@@ -632,6 +632,7 @@
   display: flex;
   align-items: center;
   gap: 1rem;
+  min-width: 0;
 }
 
 @media (min-width: 576px) {
@@ -661,6 +662,62 @@
   font-size: 1.1rem;
   font-weight: 700;
   color: var(--text);
+}
+
+.product-highlight-card > div:last-child {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.top-product-name {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.top-product-name-track {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.top-product-name-scroll .top-product-name-track {
+  display: inline-flex;
+  align-items: center;
+  gap: 2.4rem;
+  max-width: none;
+  min-width: max-content;
+  overflow: visible;
+  text-overflow: clip;
+  animation: srpt-name-marquee 9s linear infinite;
+  will-change: transform;
+}
+
+.top-product-name-text {
+  white-space: nowrap;
+}
+
+@keyframes srpt-name-marquee {
+  0%,
+  14% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(calc(-50% - 1.2rem));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .top-product-name-scroll .top-product-name-track {
+    animation: none;
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }
 
 .top-product-stats {
@@ -792,6 +849,8 @@ body.light-mode .ov-bar-active {
 
 .ov-bar-name {
   flex: 1;
+  min-width: 0;
+  max-width: 100%;
   font-size: 0.88rem;
   font-weight: 500;
   overflow: hidden;
@@ -1062,6 +1121,7 @@ body.light-mode .ov-bar-active {
 .td-name {
   font-weight: 500;
   min-width: 0;
+  max-width: 42vw;
 }
 
 .td-item-name {
@@ -1122,6 +1182,7 @@ body.light-mode .ov-bar-active {
 
 .created-by-name {
   min-width: 0;
+  max-width: 9rem;
   overflow: hidden;
   text-overflow: ellipsis;
 }
