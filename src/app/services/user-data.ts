@@ -147,10 +147,10 @@ export class UserDataService {
     const userRef = ref(this.db, `users/${userId}`);
     const localChanges$ = this.getOfflineProfileChanges(userId).pipe(
       filter((profile): profile is UserProfile => profile !== null),
-      map(profile => this.withUserId(userId, profile)),
+      switchMap(profile => from(this.withCachedSpaceContext(userId, profile))),
     );
     const cached$ = from(this.offlineStore.getProfile<UserProfile>(userId)).pipe(
-      switchMap(profile => profile ? of(this.withUserId(userId, profile)) : EMPTY),
+      switchMap(profile => profile ? from(this.withCachedSpaceContext(userId, profile)) : EMPTY),
     );
     const remote$ = objectVal<UserProfile>(userRef).pipe(
       tap(profile => {
@@ -171,6 +171,50 @@ export class UserDataService {
     return {
       ...profile,
       uid: profile.uid || userId,
+    };
+  }
+
+  private async withCachedSpaceContext(userId: string, profile: UserProfile): Promise<UserProfile> {
+    const normalized = this.withUserId(userId, profile);
+    const activeSpaceId =
+      normalized.currentSpaceId ||
+      normalized.groupId ||
+      normalized.personalSpaceId ||
+      null;
+
+    if (!activeSpaceId) {
+      return normalized;
+    }
+
+    const spaces = await this.offlineStore.getCollection<Space>(userId, 'spaces');
+    const cachedSpace = spaces[activeSpaceId] as (Space & { role?: SpaceRole }) | undefined;
+    if (!cachedSpace) {
+      return normalized;
+    }
+
+    const isGroup =
+      cachedSpace.type === 'group' ||
+      (
+        activeSpaceId !== normalized.personalSpaceId &&
+        !!normalized.spaceMemberships?.[activeSpaceId]
+      );
+    const role = isGroup
+      ? normalized.currentSpaceRole || normalized.spaceMemberships?.[activeSpaceId] || cachedSpace.role || 'member'
+      : 'owner';
+
+    return {
+      ...normalized,
+      currentSpaceId: activeSpaceId,
+      currentSpaceType: isGroup ? 'group' : 'personal',
+      currentSpaceName: cachedSpace.name || normalized.currentSpaceName || (isGroup ? 'Group' : 'My Personal'),
+      currentSpaceRole: role,
+      accountType: isGroup ? 'group' : 'personal',
+      groupId: isGroup ? activeSpaceId : null,
+      currency: cachedSpace.currency || normalized.currency,
+      budgetPeriod: cachedSpace.budgetPeriod ?? normalized.budgetPeriod ?? null,
+      budgetStartDate: cachedSpace.budgetStartDate ?? normalized.budgetStartDate ?? null,
+      budgetEndDate: cachedSpace.budgetEndDate ?? normalized.budgetEndDate ?? null,
+      selectedBudgetPeriodId: cachedSpace.selectedBudgetPeriodId ?? normalized.selectedBudgetPeriodId ?? null,
     };
   }
 

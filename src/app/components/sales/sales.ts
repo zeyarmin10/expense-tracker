@@ -60,6 +60,7 @@ import { ExpenseService } from '../../services/expense'; // Added missing import
 import { InventoryService, ProductStockSummary } from '../../services/inventory.service';
 import { ProfitLossService } from '../../services/profit-loss.service';
 import Swal from 'sweetalert2';
+import { createAppToast } from '../../services/toast';
 import { UserAvatarComponent } from '../common/user-avatar/user-avatar.component';
 import { ProductModalComponent } from '../common/product-modal/product-modal';
 import { SelectOption } from '../common/custom-select/custom-select.component';
@@ -71,19 +72,7 @@ import type { Instance as FlatpickrInstance } from 'flatpickr/dist/types/instanc
 import { Burmese } from 'flatpickr/dist/l10n/my';
 import { FlatpickrMonthMenu, installFlatpickrMonthMenu } from '../../utils/flatpickr-month-menu';
 
-const Toast = Swal.mixin({
-  toast: true,
-  position: 'top-end',
-  showConfirmButton: false,
-  showCloseButton: true,
-  timer: 3000,
-  timerProgressBar: true,
-  customClass: { popup: 'colored-toast' },
-  didOpen: (toast) => {
-    toast.addEventListener('mouseenter', Swal.stopTimer)
-    toast.addEventListener('mouseleave', Swal.resumeTimer)
-  }
-});
+const Toast = createAppToast();
 
 // Type alias for clarity
 type CurrencyMap = { [currency: string]: number };

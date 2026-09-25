@@ -12,7 +12,7 @@ import {
   DatabaseReference,
   get,
 } from '@angular/fire/database';
-import { Observable, switchMap, firstValueFrom, of, take, map, from, tap, timeout } from 'rxjs';
+import { Observable, switchMap, firstValueFrom, of, take, map, from, tap, timeout, filter } from 'rxjs';
 import { AuthService } from './auth';
 import { getActiveGroupId, UserProfile } from './user-data';
 import { SpaceDataService } from './space-data.service';
@@ -68,7 +68,7 @@ export function getProductErrorMessage(error: any): string | null {
 })
 export class ProductService {
   private db: Database = inject(Database);
-  private authService = inject(forwardRef(() => AuthService));
+  private authService: AuthService = inject(forwardRef(() => AuthService));
   private spaceDataService = inject(SpaceDataService);
   private spaceSwitchLoadingService = inject(SpaceSwitchLoadingService);
   private personalOfflineData = inject(PersonalOfflineDataService);
@@ -86,10 +86,8 @@ export class ProductService {
 
   getProducts(): Observable<ServiceIProduct[]> {
     return this.authService.userProfile$.pipe(
-      switchMap((profile: UserProfile | null) => {
-        if (!profile?.uid) {
-          return of([] as ServiceIProduct[]);
-        }
+      filter((profile): profile is UserProfile => profile !== null),
+      switchMap((profile) => {
         if (this.sharedOfflineData.isOfflineShared(profile)) {
           return from(this.sharedOfflineData.read<ServiceIProduct>(profile, 'products')).pipe(
             map(records => Object.entries(records).map(([id, product]) => ({ id, ...product }))

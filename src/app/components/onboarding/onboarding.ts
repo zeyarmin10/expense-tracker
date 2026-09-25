@@ -18,6 +18,7 @@ import { LucideAngularModule, CircleCheck, Link, EllipsisVertical, Pencil, Trash
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
 import { FormatService } from '../../services/format.service';
 import { NetworkService } from '../../services/network.service';
+import { showAppToast } from '../../services/toast';
 
 @Component({
   selector: 'app-onboarding',
@@ -302,11 +303,7 @@ export class OnboardingComponent implements OnInit, OnDestroy {
           void this.imageUploadService.deleteImages([oldPublicId]);
         }
       }
-      const SavedToast = Swal.mixin({
-        toast: true, position: 'top-end',
-        showConfirmButton: false, showCloseButton: true, timer: 2500, timerProgressBar: true,
-      });
-      SavedToast.fire({ icon: 'success', title: this.translate.instant('SPACE_RENAME_SUCCESS') });
+      void showAppToast(this.translate.instant('SPACE_RENAME_SUCCESS'), 'success');
     } catch (error) {
       console.error('Error editing group:', error);
       Swal.fire({

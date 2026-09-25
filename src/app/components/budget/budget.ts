@@ -50,6 +50,7 @@ import { getIconData, getIconHue, getCategoryHue } from '../../utils/category-ic
 import { CustomSelectComponent, SelectOption } from '../common/custom-select/custom-select.component';
 import { DateRangeInputComponent } from '../common/date-range-input/date-range-input.component';
 import Swal from 'sweetalert2';
+import { createAppToast } from '../../services/toast';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
 import { ShowFullTextDirective } from '../../directives/show-full-text.directive';
 import flatpickr from 'flatpickr';
@@ -59,19 +60,7 @@ import { FlatpickrMonthMenu, installFlatpickrMonthMenu } from '../../utils/flatp
 
 Chart.register(...registerables);
 
-const Toast = Swal.mixin({
-  toast: true,
-  position: 'top-end',
-  showConfirmButton: false,
-  showCloseButton: true,
-  timer: 3000,
-  timerProgressBar: true,
-  customClass: { popup: 'colored-toast' },
-  didOpen: (toast) => {
-    toast.addEventListener('mouseenter', Swal.stopTimer)
-    toast.addEventListener('mouseleave', Swal.resumeTimer)
-  }
-});
+const Toast = createAppToast();
 
 // Define interfaces for better type checking and clarity
 interface BudgetSummary {

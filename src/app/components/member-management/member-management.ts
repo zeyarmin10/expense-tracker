@@ -11,6 +11,7 @@ import { DataManagerService, IGroupMemberDetails } from '../../services/data-man
 import { SpaceContextService } from '../../services/space-context.service';
 import { InvitationService } from '../../services/invitation.service';
 import Swal from 'sweetalert2';
+import { createAppToast } from '../../services/toast';
 import { getActiveGroupId } from '../../services/user-data';
 import { Router } from '@angular/router';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
@@ -18,19 +19,7 @@ import { UserAvatarComponent } from '../common/user-avatar/user-avatar.component
 import { LightboxComponent } from '../common/lightbox/lightbox.component';
 import { FormatService } from '../../services/format.service';
 
-const Toast = Swal.mixin({
-  toast: true,
-  position: 'top-end',
-  showConfirmButton: false,
-  showCloseButton: true,
-  timer: 3000,
-  timerProgressBar: true,
-  customClass: { popup: 'colored-toast' },
-  didOpen: (toast) => {
-    toast.addEventListener('mouseenter', Swal.stopTimer);
-    toast.addEventListener('mouseleave', Swal.resumeTimer);
-  }
-});
+const Toast = createAppToast();
 
 @Component({
   selector: 'app-member-management',
@@ -180,7 +169,7 @@ export class MemberManagementComponent implements OnInit {
         const isAlreadyMember = members.some(member => member.email === this.newMemberEmail);
 
         if (isAlreadyMember) {
-          Swal.fire({ icon: 'error', title: this.translate.instant('MEMBER_ALREADY_EXISTS'), toast: true, position: 'top-end', showConfirmButton: false, showCloseButton: true, timer: 3000, timerProgressBar: true });
+          Toast.fire({ icon: 'error', title: this.translate.instant('MEMBER_ALREADY_EXISTS') });
           this.isSending = false;
           return;
         }
@@ -189,7 +178,7 @@ export class MemberManagementComponent implements OnInit {
         const hasPendingInvite = pendingInvites.some(invite => invite.email === this.newMemberEmail);
 
         if (hasPendingInvite) {
-          Swal.fire({ icon: 'error', title: this.translate.instant('MEMBER_ALREADY_EXISTS'), toast: true, position: 'top-end', showConfirmButton: false, showCloseButton: true, timer: 3000, timerProgressBar: true });
+          Toast.fire({ icon: 'error', title: this.translate.instant('MEMBER_ALREADY_EXISTS') });
           this.isSending = false;
           return;
         }

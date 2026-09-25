@@ -35,6 +35,7 @@ import {
 } from 'lucide-angular';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import Swal from 'sweetalert2';
+import { createAppToast } from '../../services/toast';
 import { MobileFullscreenOverlayComponent } from '../common/mobile-fullscreen-overlay/mobile-fullscreen-overlay.component';
 import { CustomSelectComponent, SelectOption } from '../common/custom-select/custom-select.component';
 import { CategoryModalComponent } from '../common/category-modal/category-modal';
@@ -46,19 +47,7 @@ interface ShopExpenseDateGroup {
   count: number;
 }
 
-const Toast = Swal.mixin({
-  toast: true,
-  position: 'top-end',
-  showConfirmButton: false,
-  showCloseButton: true,
-  timer: 3000,
-  timerProgressBar: true,
-  customClass: { popup: 'colored-toast' },
-  didOpen: (toast) => {
-    toast.addEventListener('mouseenter', Swal.stopTimer);
-    toast.addEventListener('mouseleave', Swal.resumeTimer);
-  }
-});
+const Toast = createAppToast();
 
 @Component({
   selector: 'app-inventory',

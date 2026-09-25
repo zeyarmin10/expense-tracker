@@ -8,21 +8,10 @@ import { LucideAngularModule, X, Plus, Package, Trash2, ScanLine, Eye } from 'lu
 import { meaningfulTextValidator } from '../../../utils/form-validators';
 import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import Swal from 'sweetalert2';
+import { createAppToast } from '../../../services/toast';
 import { FormatService } from '../../../services/format.service';
 
-const Toast = Swal.mixin({
-  toast: true,
-  position: 'top-end',
-  showConfirmButton: false,
-  showCloseButton: true,
-  timer: 3000,
-  timerProgressBar: true,
-  customClass: { popup: 'colored-toast' },
-  didOpen: (toast) => {
-    toast.addEventListener('mouseenter', Swal.stopTimer);
-    toast.addEventListener('mouseleave', Swal.resumeTimer);
-  }
-});
+const Toast = createAppToast();
 
 @Component({
   selector: 'app-product-modal',
