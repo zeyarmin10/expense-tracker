@@ -33,6 +33,7 @@ import { ServiceIIncome, IncomeService, IncomeLineItem, getIncomeLineItems } fro
 import { CategoryService, ServiceICategory } from '../../services/category';
 import { ServiceIProduct, ProductService } from '../../services/product';
 import { SpaceContextService } from '../../services/space-context.service';
+import { formatDateFilterLabel } from '../../services/date-filter.service';
 import { BarcodeScannerService } from '../../services/barcode-scanner.service';
 import { LucideAngularModule } from 'lucide-angular';
 import { getIconData } from '../../utils/category-icons';
@@ -1345,44 +1346,12 @@ export class Sales implements OnInit, OnDestroy {
   }
 
   getFilterLabel(): string {
-    const today = new Date();
-
-    const fmt = (d: Date, withYear = true): string => {
-      return withYear
-        ? (this.datePipe.transform(d, 'MMM d, yyyy') || '')
-        : (this.datePipe.transform(d, 'MMM d') || '');
-    };
-
-    const parseLocal = (s: string) => new Date(s + 'T00:00:00');
-
-    switch (this.dateFilterMode) {
-      case 'today':
-        return fmt(today);
-
-      case 'week': {
-        const start = new Date(today);
-        start.setDate(today.getDate() - today.getDay());
-        const end = new Date(start);
-        end.setDate(start.getDate() + 6);
-        return `${fmt(start, false)} – ${fmt(end)}`;
-      }
-
-      case 'month':
-        return this.datePipe.transform(today, 'MMMM yyyy') || '';
-
-      case 'custom': {
-        if (this.startDate && this.endDate) {
-          const s = parseLocal(this.startDate);
-          const e = parseLocal(this.endDate);
-          if (this.startDate === this.endDate) return fmt(e);
-          return `${fmt(s, false)} – ${fmt(e)}`;
-        }
-        return this.startDate ? fmt(parseLocal(this.startDate)) : '';
-      }
-
-      default:
-        return '';
-    }
+    return formatDateFilterLabel(
+      this.dateFilterMode,
+      this.translate.currentLang || this.translate.getDefaultLang(),
+      this.startDate,
+      this.endDate,
+    );
   }
 
   // --- Income Management ---

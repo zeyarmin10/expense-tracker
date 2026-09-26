@@ -18,7 +18,7 @@ import {
 } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { FormatService } from '../../services/format.service';
-import { DateRange, toLocalDateKey } from '../../services/date-filter.service';
+import { DateRange, formatDateFilterLabel, toLocalDateKey } from '../../services/date-filter.service';
 import { AuthService } from '../../services/auth';
 import { UserDataService, UserProfile } from '../../services/user-data';
 import { LucideAngularModule, Search, ChartColumn, List, Trophy, Package, CalendarDays, ChevronDown } from 'lucide-angular';
@@ -472,36 +472,12 @@ export class SalesReport implements OnInit, OnDestroy {
   }
 
   getFilterLabel(): string {
-    const today = new Date();
-    const format = (date: Date, withYear = true): string => withYear
-      ? (this.datePipe.transform(date, 'MMM d, yyyy') || '')
-      : (this.datePipe.transform(date, 'MMM d') || '');
-    const parseLocalDate = (date: string) => new Date(`${date}T00:00:00`);
-
-    switch (this.dateFilterMode) {
-      case 'today':
-        return format(today);
-      case 'week': {
-        const start = new Date(today);
-        start.setDate(today.getDate() - today.getDay());
-        const end = new Date(start);
-        end.setDate(start.getDate() + 6);
-        return `${format(start, false)} – ${format(end)}`;
-      }
-      case 'month':
-        return this.datePipe.transform(today, 'MMMM yyyy') || '';
-      case 'custom':
-        if (this.startDate && this.endDate) {
-          const start = parseLocalDate(this.startDate);
-          const end = parseLocalDate(this.endDate);
-          return this.startDate === this.endDate
-            ? format(end)
-            : `${format(start, false)} – ${format(end)}`;
-        }
-        return this.startDate ? format(parseLocalDate(this.startDate)) : '';
-      default:
-        return '';
-    }
+    return formatDateFilterLabel(
+      this.dateFilterMode,
+      this.translate.currentLang || this.translate.getDefaultLang(),
+      this.startDate,
+      this.endDate,
+    );
   }
 
   onSearch(): void {

@@ -23,6 +23,7 @@ import { ServiceICategory, CategoryService } from '../../services/category';
 import { ServiceIProduct, ProductService } from '../../services/product';
 import { BarcodeScannerService } from '../../services/barcode-scanner.service';
 import { SpaceContextService } from '../../services/space-context.service';
+import { formatDateFilterLabel } from '../../services/date-filter.service';
 import flatpickr from 'flatpickr';
 import type { Instance as FlatpickrInstance } from 'flatpickr/dist/types/instance';
 import { Burmese } from 'flatpickr/dist/l10n/my';
@@ -1390,49 +1391,12 @@ export class Purchase implements OnInit, OnDestroy {
   }
 
   getFilterLabel(): string {
-    const lang = this.translate.currentLang || this.translate.getDefaultLang();
-    const isMy = lang === 'my';
-    const today = new Date();
-
-    const toMy = (n: number) =>
-      new Intl.NumberFormat('my-MM', { numberingSystem: 'mymr', useGrouping: false }).format(n);
-
-    const fmt = (d: Date, withYear = true): string => {
-      return withYear
-        ? (this.datePipe.transform(d, 'MMM d, yyyy') || '')
-        : (this.datePipe.transform(d, 'MMM d') || '');
-    };
-
-    const parseLocal = (s: string) => new Date(s + 'T00:00:00');
-
-    switch (this.dateFilterMode) {
-      case 'today':
-        return fmt(today);
-
-      case 'week': {
-        const start = new Date(today);
-        start.setDate(today.getDate() - today.getDay());
-        const end = new Date(start);
-        end.setDate(start.getDate() + 6);
-        return `${fmt(start, false)} – ${fmt(end)}`;
-      }
-
-      case 'month':
-        return this.datePipe.transform(today, 'MMMM yyyy') || '';
-
-      case 'custom': {
-        if (this.customStartDate && this.customEndDate) {
-          const s = parseLocal(this.customStartDate);
-          const e = parseLocal(this.customEndDate);
-          if (this.customStartDate === this.customEndDate) return fmt(e);
-          return `${fmt(s, false)} – ${fmt(e)}`;
-        }
-        return this.customStartDate ? fmt(parseLocal(this.customStartDate)) : '';
-      }
-
-      default:
-        return '';
-    }
+    return formatDateFilterLabel(
+      this.dateFilterMode,
+      this.translate.currentLang || this.translate.getDefaultLang(),
+      this.customStartDate,
+      this.customEndDate,
+    );
   }
 
   resetFilter(): void {
