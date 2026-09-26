@@ -31,22 +31,11 @@ import { MobileFullscreenOverlayComponent } from '../common/mobile-fullscreen-ov
 
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import Swal from 'sweetalert2';
+import { createAppToast } from '../../services/toast';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
 import { FormatService } from '../../services/format.service';
 
-const Toast = Swal.mixin({
-  toast: true,
-  position: 'top-end',
-  showConfirmButton: false,
-  showCloseButton: true,
-  timer: 3000,
-  timerProgressBar: true,
-  customClass: { popup: 'colored-toast' },
-  didOpen: (toast) => {
-    toast.addEventListener('mouseenter', Swal.stopTimer);
-    toast.addEventListener('mouseleave', Swal.resumeTimer);
-  }
-});
+const Toast = createAppToast();
 
 @Component({
   selector: 'app-category',

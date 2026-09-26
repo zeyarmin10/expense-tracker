@@ -1,19 +1,18 @@
 import { Injectable, inject } from '@angular/core';
+import { Capacitor } from '@capacitor/core';
 import { getActiveGroupId, UserProfile } from './user-data';
 import { NetworkService } from './network.service';
 import { OfflineCollection, OfflineOperationKind, OfflineStoreService } from './offline-store.service';
 
-/**
- * Phase-1 adapter for personal-space records. Shared spaces deliberately stay
- * online-only until their conflict rules are implemented in Phase 3.
- */
+/** Native offline cache and write queue for personal-space records. */
 @Injectable({ providedIn: 'root' })
 export class PersonalOfflineDataService {
   private network = inject(NetworkService);
   private store = inject(OfflineStoreService);
 
   isOfflinePersonal(profile: UserProfile | null | undefined): boolean {
-    return !!profile?.uid && !getActiveGroupId(profile) && !this.network.isOnline$.value;
+    return Capacitor.isNativePlatform() &&
+      !!profile?.uid && !getActiveGroupId(profile) && !this.network.isOnline$.value;
   }
 
   path(profile: UserProfile, collection: OfflineCollection, recordId?: string): string {
@@ -35,6 +34,7 @@ export class PersonalOfflineDataService {
     collection: OfflineCollection,
     remoteRecords: Record<string, Record<string, unknown>>,
   ): Promise<void> {
+    if (!Capacitor.isNativePlatform()) return;
     // Never let a just-fetched server snapshot visually undo a local write
     // that is still in the queue.
     const records = { ...remoteRecords };
@@ -61,6 +61,7 @@ export class PersonalOfflineDataService {
     recordId: string,
     payload?: Record<string, unknown>,
   ): Promise<void> {
+    if (!Capacitor.isNativePlatform()) throw new Error('WEB_REQUIRES_INTERNET');
     if (kind === 'remove') {
       await this.store.removeRecord(profile.uid, collection, recordId);
     } else if (kind === 'set') {
@@ -84,6 +85,7 @@ export class PersonalOfflineDataService {
     path: string,
     payload?: Record<string, unknown>,
   ): Promise<void> {
+    if (!Capacitor.isNativePlatform()) throw new Error('WEB_REQUIRES_INTERNET');
     await this.store.enqueue({
       id: this.store.createId('op'),
       kind,
@@ -100,6 +102,7 @@ export class PersonalOfflineDataService {
     localVoucher: Record<string, unknown>,
     uploadPayload: Record<string, unknown>,
   ): Promise<void> {
+    if (!Capacitor.isNativePlatform()) throw new Error('WEB_REQUIRES_INTERNET');
     await this.store.patchRecord(profile.uid, 'vouchers', voucherId, localVoucher);
     await this.store.enqueue({
       id: this.store.createId('op'),

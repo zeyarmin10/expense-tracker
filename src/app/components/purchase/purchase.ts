@@ -41,6 +41,7 @@ import { Camera } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import Swal from 'sweetalert2';
+import { createAppToast } from '../../services/toast';
 
 import {
   LucideAngularModule,
@@ -67,19 +68,7 @@ import { UserAvatarComponent } from '../common/user-avatar/user-avatar.component
 import { ShowFullTextDirective } from '../../directives/show-full-text.directive';
 import { MobileFullscreenOverlayComponent } from '../common/mobile-fullscreen-overlay/mobile-fullscreen-overlay.component';
 
-const Toast = Swal.mixin({
-  toast: true,
-  position: 'top-end',
-  showConfirmButton: false,
-  showCloseButton: true,
-  timer: 3000,
-  timerProgressBar: true,
-  customClass: { popup: 'colored-toast' },
-  didOpen: (toast) => {
-    toast.addEventListener('mouseenter', Swal.stopTimer);
-    toast.addEventListener('mouseleave', Swal.resumeTimer);
-  }
-});
+const Toast = createAppToast();
 
 interface ExpenseDateGroup {
   date: string;
@@ -424,7 +413,7 @@ export class Purchase implements OnInit, OnDestroy {
       await Swal.fire({
         icon: 'warning',
         title: this.translate.instant('CATEGORY_REQUIRED'),
-        confirmButtonText: this.translate.instant('CLOSE_BUTTON_LABEL'),
+        confirmButtonText: this.translate.instant('OK_BUTTON'),
       });
       return;
     }
@@ -434,7 +423,7 @@ export class Purchase implements OnInit, OnDestroy {
       await Swal.fire({
         icon: 'warning',
         title: this.translate.instant('UNIT_PRICE_REQUIRED'),
-        confirmButtonText: this.translate.instant('CLOSE_BUTTON_LABEL'),
+        confirmButtonText: this.translate.instant('OK_BUTTON'),
       });
       return;
     }

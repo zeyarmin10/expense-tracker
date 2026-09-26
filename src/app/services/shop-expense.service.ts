@@ -1,12 +1,13 @@
 import { Injectable, inject } from '@angular/core';
 import { child, listVal, push, remove, update } from '@angular/fire/database';
-import { Observable, firstValueFrom, from, of } from 'rxjs';
+import { Observable, firstValueFrom, from, of, combineLatest } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { AuthService } from './auth';
 import { SpaceDataService } from './space-data.service';
 import { getActiveGroupId, UserProfile } from './user-data';
 import { PersonalOfflineDataService } from './personal-offline-data.service';
 import { SharedOfflineDataService } from './shared-offline-data.service';
+import { NetworkService } from './network.service';
 
 export interface ShopExpense {
   id: string;
@@ -29,10 +30,11 @@ export class ShopExpenseService {
   private spaceDataService = inject(SpaceDataService);
   private personalOfflineData = inject(PersonalOfflineDataService);
   private sharedOfflineData = inject(SharedOfflineDataService);
+  private network = inject(NetworkService);
 
   getShopExpenses(): Observable<ShopExpense[]> {
-    return this.authService.userProfile$.pipe(
-      switchMap(profile => {
+    return combineLatest([this.authService.userProfile$, this.network.isOnline$]).pipe(
+      switchMap(([profile]) => {
         if (!profile?.uid) return of([] as ShopExpense[]);
         if (this.sharedOfflineData.isOfflineShared(profile)) {
           return from(this.sharedOfflineData.read<ShopExpense>(profile, 'shopExpenses')).pipe(

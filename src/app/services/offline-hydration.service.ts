@@ -1,4 +1,5 @@
 import { Injectable, inject } from '@angular/core';
+import { Capacitor } from '@capacitor/core';
 import { Database, get, ref } from '@angular/fire/database';
 import { BehaviorSubject, combineLatest, filter } from 'rxjs';
 import { AuthService } from './auth';
@@ -31,16 +32,22 @@ export class OfflineHydrationService {
   readonly lastSyncedAt$ = new BehaviorSubject<Date | null>(null);
 
   async init(): Promise<void> {
+    if (!Capacitor.isNativePlatform()) return;
     if (this.started) return;
     this.started = true;
     combineLatest([this.auth.userProfile$, this.network.isOnline$]).pipe(
       filter(([profile, online]) => !!profile && online),
     ).subscribe(([profile]) => {
-      if (profile) void this.syncAllUserSpaces(profile);
+      if (profile) {
+        void this.syncAllUserSpaces(profile).catch(error =>
+          console.warn('[offline] Could not refresh every space cache.', error),
+        );
+      }
     });
   }
 
   async syncAllUserSpaces(profile?: UserProfile): Promise<void> {
+    if (!Capacitor.isNativePlatform()) return;
     if (this.syncing || !this.network.isOnline$.value) return;
     if (!profile) return;
     const activeProfile = profile;
@@ -65,7 +72,11 @@ export class OfflineHydrationService {
       this.lastSyncedAt$.next(new Date());
       this.network.markServerAvailable();
     } catch (error) {
-      this.network.markServerUnavailable();
+      // A stale membership or permission error in one space does not mean
+      // the backend is unreachable for all of the user's other spaces.
+      if (!(await this.network.refreshInternetAccess())) {
+        this.network.markServerUnavailable();
+      }
       throw error;
     } finally {
       this.syncing = false;
@@ -139,15 +150,11 @@ export class OfflineHydrationService {
     profile: UserProfile,
     collection: SpaceCollection,
   ): Promise<void> {
-    // Do not call the migration helper here: it deliberately reads an entire
-    // legacy collection to backfill it, which defeats this targeted sync.
-    // Normal app flows can still migrate legacy data; hydration only reads
-    // the selected, user-owned/shared space.
-    const spaceId = this.spaceData.getCurrentSpaceId(profile);
-    const source = spaceId && !spaceId.startsWith('personal:')
-      ? this.spaceData.getCanonicalCollectionRef(spaceId, collection)
-      : this.spaceData.getLegacyCollectionRef(profile, collection);
-    const snapshot = await get(source);
+    // Prefer the canonical /space_data path, but let SpaceDataService backfill
+    // from legacy /group_data or /users data first. Otherwise a synced group
+    // whose real data still lives in the legacy path is cached as an empty
+    // space and then appears blank when the app starts offline.
+    const { snapshot } = await this.spaceData.preferCanonicalSnapshot(profile, collection);
     const records = (snapshot.val() || {}) as Record<string, Record<string, unknown>>;
     if (getActiveGroupId(profile)) {
       await this.shared.cacheRemote(profile, collection, records);

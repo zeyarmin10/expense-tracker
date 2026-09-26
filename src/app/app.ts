@@ -13,6 +13,7 @@ import { DataManagerService } from './services/data-manager';
 import { ToastService } from './services/toast';
 import { NetworkService } from './services/network.service';
 import { OfflineSyncService } from './services/offline-sync.service';
+import { OfflineOperation } from './services/offline-store.service';
 import { OfflineHydrationService } from './services/offline-hydration.service';
 import { GroupOfflineAccessService, GroupOfflineAccessState } from './services/group-offline-access.service';
 import { ThemeService } from './services/theme.service';
@@ -35,6 +36,7 @@ import { getActiveGroupId, UserProfile } from './services/user-data';
 import { CurrentSpaceTitleComponent } from './components/common/current-space-title/current-space-title.component';
 import { UserAvatarComponent } from './components/common/user-avatar/user-avatar.component';
 import { WelcomeTourComponent } from './components/common/welcome-tour/welcome-tour.component';
+import { FormatService } from './services/format.service';
 
 @Component({
   selector: 'app-root',
@@ -76,6 +78,9 @@ export class App implements OnInit, AfterViewInit {
   syncConflictCount$: Observable<number>;
   groupOfflineAccessState$: Observable<GroupOfflineAccessState | null>;
   lockedGroupOfflineAccessState$: Observable<GroupOfflineAccessState | null>;
+  webUnavailable$: Observable<boolean>;
+  webConnectionChecked$: Observable<boolean>;
+  isRetryingWebConnection = false;
   currentGroupImageUrl$: Observable<string | null>;
   // Shown once for brand-new accounts (see UserProfile.hasSeenWelcomeTour).
   showWelcomeTour = false;
@@ -131,6 +136,7 @@ export class App implements OnInit, AfterViewInit {
   private themeService = inject(ThemeService);
   private notificationService = inject(NotificationService);
   private appUpdateService = inject(AppUpdateService);
+  private formatService = inject(FormatService);
   private documentTitle = inject(Title);
   private ngZone = inject(NgZone);
 
@@ -150,6 +156,11 @@ export class App implements OnInit, AfterViewInit {
         previous?.isLocked === current?.isLocked &&
         Math.floor(previous?.offlineDays ?? -1) === Math.floor(current?.offlineDays ?? -1)
       )
+    );
+    this.webConnectionChecked$ = this.networkService.hasCheckedInternetAccess$;
+    this.webUnavailable$ = this.networkService.isOnline$.pipe(
+      map(online => !Capacitor.isNativePlatform() && !online),
+      distinctUntilChanged(),
     );
 
     this.currentUser$ = this.authService.currentUser$;
@@ -452,10 +463,13 @@ export class App implements OnInit, AfterViewInit {
     this.pullDistance = this.pullRefreshThreshold;
 
     setTimeout(async () => {
-      // A failed Firebase route (e.g. a VPN-only ISP path) intentionally
-      // puts the app in local mode. Pull-to-refresh is the user's explicit
-      // request to try that route again after enabling a VPN.
+      // Retry the backend route before refreshing the current page.
       await this.networkService.retryServerConnection();
+      if (!Capacitor.isNativePlatform() && !this.networkService.isOnline$.value) {
+        this.isPullRefreshing = false;
+        this.pullDistance = 0;
+        return;
+      }
       const profile = await firstValueFrom(
         this.authService.userProfile$.pipe(filter((value): value is UserProfile => !!value), take(1)),
       ).catch(() => null);
@@ -556,6 +570,7 @@ export class App implements OnInit, AfterViewInit {
     const isMobileViewport = window.matchMedia('(max-width: 991px)').matches;
     if (
       (!isMobileViewport && !Capacitor.isNativePlatform()) ||
+      (!Capacitor.isNativePlatform() && !this.networkService.isOnline$.value) ||
       this.mobileMenuOpen ||
       this.drawerSwiping ||
       this.isPullRefreshing ||
@@ -755,6 +770,7 @@ export class App implements OnInit, AfterViewInit {
   }
 
   private async refreshGroupOfflineAccess(profile: UserProfile | null): Promise<void> {
+    if (!Capacitor.isNativePlatform()) return;
     const state = await this.groupOfflineAccess.evaluate(profile);
     if (!state?.shouldWarn || this.groupOfflineWarningOpen) return;
 
@@ -816,16 +832,6 @@ export class App implements OnInit, AfterViewInit {
   }
 
   private listenNetworkChanges(): void {
-    if (!Capacitor.isNativePlatform()) {
-      window.addEventListener('offline', () => {
-        void this.networkService.refreshInternetAccess();
-      });
-
-      window.addEventListener('online', () => {
-        void this.networkService.refreshInternetAccess();
-      });
-    }
-
     // status ပြောင်းမှသာ react လုပ်မယ်။ Wi-Fi/mobile data ချိတ်ထားရုံနဲ့
     // online မယူဘဲ native reachability probe အောင်မှသာ restored ပြမယ်။
     // debounceTime is intentionally generous — absorbs a brief
@@ -833,8 +839,11 @@ export class App implements OnInit, AfterViewInit {
     // camera app on some devices, on top of checkOnResume()'s own settle
     // delay) so it never surfaces as a spurious alert+toast pair; a real
     // outage still lasts well past this window.
+    const usableConnection$ = Capacitor.isNativePlatform()
+      ? this.networkService.hasInternetAccess$
+      : this.networkService.isOnline$;
     combineLatest([
-      this.networkService.hasInternetAccess$,
+      usableConnection$,
       this.networkService.hasCheckedInternetAccess$,
     ]).pipe(
       filter(([, checked]) => checked),
@@ -844,7 +853,7 @@ export class App implements OnInit, AfterViewInit {
     ).subscribe(hasInternetAccess => {
       if (!hasInternetAccess) {
         this.wasOffline = true;
-        this.showNoNetworkAlert();
+        if (Capacitor.isNativePlatform()) this.showNoNetworkAlert();
       } else {
         if (this.wasOffline) {
           this.wasOffline = false;
@@ -855,6 +864,16 @@ export class App implements OnInit, AfterViewInit {
         // → ဘာမှမပြဘူး ✓
       }
     });
+  }
+
+  async retryWebConnection(): Promise<void> {
+    if (this.isRetryingWebConnection) return;
+    this.isRetryingWebConnection = true;
+    try {
+      await this.networkService.retryServerConnection();
+    } finally {
+      this.isRetryingWebConnection = false;
+    }
   }
 
   private async checkForAppUpdate(): Promise<void> {
@@ -1026,8 +1045,7 @@ export class App implements OnInit, AfterViewInit {
   private showNoNetworkAlert(): void {
     const lang = this.getActiveLang();
     const isMy = lang === 'my';
-    // Offline is now a usable state for the Phase-1 personal data flows.
-    // A blocking modal would prevent the very entries that users need to add.
+    // Native apps can still save changes locally while disconnected.
     this.toastService.showError(
       isMy
         ? 'အင်တာနက်မရှိပါ — ပြောင်းလဲမှုများကို ဒီစက်တွင် သိမ်းထားပါမည်'
@@ -1082,10 +1100,179 @@ export class App implements OnInit, AfterViewInit {
       setTimeout(() => window.location.reload(), 700);
     }
   }
+
+  formatSyncCount(count: number, compact = false): string {
+    const formatted = this.formatService.formatCount(count);
+    return this.translate.instant(compact ? 'SYNC_PENDING_SHORT' : 'SYNC_PENDING_COUNT', { count: formatted });
+  }
+
+  async showSyncDetails(): Promise<void> {
+    const operations = await this.offlineSyncService.getPendingOperations();
+    if (operations.length === 0) {
+      await Swal.fire({
+        icon: 'success',
+        title: this.translate.instant('SYNC_DETAILS_TITLE'),
+        text: this.translate.instant('SYNC_NO_PENDING_CHANGES'),
+        confirmButtonText: this.translate.instant('OK_BUTTON'),
+      });
+      return;
+    }
+
+    const html = `
+      <div class="sync-detail-modal">
+        <p class="sync-detail-summary">${this.escapeHtml(this.translate.instant('SYNC_PENDING_SUMMARY', {
+          count: this.formatService.formatCount(operations.length),
+        }))}</p>
+        <div class="sync-detail-list">
+          ${operations.map(operation => this.buildSyncOperationHtml(operation)).join('')}
+        </div>
+      </div>
+    `;
+
+    const result = await Swal.fire({
+      icon: 'info',
+      title: this.translate.instant('SYNC_DETAILS_TITLE'),
+      html,
+      showCancelButton: true,
+      confirmButtonText: this.translate.instant('SYNC_NOW_BUTTON'),
+      cancelButtonText: this.translate.instant('CLOSE_BUTTON_LABEL'),
+      reverseButtons: true,
+      customClass: {
+        container: 'sync-detail-container',
+        popup: 'sync-detail-swal',
+        htmlContainer: 'sync-detail-html',
+      },
+    });
+
+    if (result.isConfirmed) {
+      await this.manualSyncChanges();
+    }
+  }
+
+  async manualSyncChanges(): Promise<void> {
+    await this.networkService.retryServerConnection();
+    if (!this.networkService.isOnline$.value) {
+      this.toastService.showError(this.translate.instant('SYNC_OFFLINE_MESSAGE'));
+      return;
+    }
+
+    await this.offlineSyncService.sync();
+    const profile = await firstValueFrom(this.authService.userProfile$.pipe(take(1)));
+    if (profile) {
+      await this.offlineHydrationService.syncActiveSpace(profile).catch((error) => {
+        console.warn('[sync] Server refresh after manual sync failed:', error);
+      });
+    }
+
+    const pending = await this.offlineSyncService.getPendingOperations();
+    if (pending.length > 0) {
+      this.toastService.showError(this.translate.instant('SYNC_PENDING_REMAINING', {
+        count: this.formatService.formatCount(pending.length),
+      }));
+      return;
+    }
+
+    this.toastService.showSuccess(this.translate.instant('SYNC_COMPLETE_MESSAGE'));
+  }
+
+  private buildSyncOperationHtml(operation: OfflineOperation): string {
+    const collection = operation.path.split('/').slice(-2, -1)[0] || operation.path;
+    const title = `${this.translate.instant(this.getSyncActionKey(operation.kind))} · ${this.translate.instant(this.getSyncCollectionKey(collection))}`;
+    const payload = this.summarizeSyncPayload(collection, operation.payload);
+    const error = operation.lastError ? `<div class="sync-detail-error">${this.escapeHtml(operation.lastError)}</div>` : '';
+    return `
+      <article class="sync-detail-item">
+        <div class="sync-detail-item-main">
+          <strong>${this.escapeHtml(title)}</strong>
+          ${payload ? `<small>${this.escapeHtml(payload)}</small>` : ''}
+          ${error}
+        </div>
+      </article>
+    `;
+  }
+
+  private summarizeSyncPayload(collection: string, payload?: Record<string, unknown>): string {
+    if (!payload) return '';
+    const hiddenKeys = new Set([
+      'uid',
+      'userId',
+      'createdBy',
+      'createdByName',
+      'createdByPhotoURL',
+      'updatedBy',
+      'spaceId',
+      'currentSpaceId',
+      'personalSpaceId',
+      'groupId',
+      'currentSpaceName',
+      'currentSpaceType',
+      'currentSpaceRole',
+      'spaceName',
+      'spaceType',
+      'accountType',
+      'spaceMemberships',
+    ]);
+    const collectionHiddenKeys = new Set(collection === 'spaces' ? ['name', 'type', 'imageUrl'] : []);
+    const visibleEntries = Object.entries(payload).filter(([key, value]) =>
+      !hiddenKeys.has(key) &&
+      !collectionHiddenKeys.has(key) &&
+      value !== undefined &&
+      value !== null &&
+      value !== ''
+    );
+    const visiblePayload = Object.fromEntries(visibleEntries);
+    const preferredKeys = ['name', 'category', 'description', 'itemName', 'amount', 'date', 'currency', 'status'];
+    const picked = preferredKeys
+      .filter(key => visiblePayload[key] !== undefined)
+      .slice(0, 3)
+      .map(key => `${key}: ${String(visiblePayload[key])}`);
+
+    if (picked.length > 0) {
+      return picked.join(' · ');
+    }
+
+    const keys = Object.keys(visiblePayload).slice(0, 3);
+    return keys.join(' · ');
+  }
+
+  private getSyncActionKey(kind: OfflineOperation['kind']): string {
+    const map: Record<OfflineOperation['kind'], string> = {
+      set: 'SYNC_ACTION_CREATE',
+      setIfMissing: 'SYNC_ACTION_CREATE',
+      update: 'SYNC_ACTION_UPDATE',
+      remove: 'SYNC_ACTION_DELETE',
+      uploadVoucher: 'SYNC_ACTION_UPLOAD',
+    };
+    return map[kind] || 'SYNC_ACTION_UPDATE';
+  }
+
+  private getSyncCollectionKey(collection: string): string {
+    const map: Record<string, string> = {
+      expenses: 'SYNC_COLLECTION_EXPENSES',
+      incomes: 'SYNC_COLLECTION_INCOMES',
+      budgets: 'SYNC_COLLECTION_BUDGETS',
+      categories: 'SYNC_COLLECTION_CATEGORIES',
+      vouchers: 'SYNC_COLLECTION_VOUCHERS',
+      products: 'SYNC_COLLECTION_PRODUCTS',
+      shopExpenses: 'SYNC_COLLECTION_SHOP_EXPENSES',
+      spaces: 'SYNC_COLLECTION_SPACES',
+      users: 'SYNC_COLLECTION_PROFILE',
+    };
+    return map[collection] || 'SYNC_COLLECTION_OTHER';
+  }
+
+  private escapeHtml(value: unknown): string {
+    return String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
   // ────────────────────────────────────────────────────────────────
 
   private async handleInvitation(inviteCode: string): Promise<void> {
-    if (!this.networkService.isOnline$.value) {
+    if (!(await this.hasUsableServerConnection())) {
       this.toastService.showError(
         this.getActiveLang() === 'my'
           ? 'Space အသစ်ဖန်တီးရန် နှင့် Space အသစ်ကို join ရန် အင်တာနက်ချိတ်ဆက်မှု လိုအပ်ပါသည်'
@@ -1112,6 +1299,15 @@ export class App implements OnInit, AfterViewInit {
       this.toastService.showError('Failed to process invitation.');
       this.router.navigate([], { queryParams: { invite_code: null }, queryParamsHandling: 'merge' });
     }
+  }
+
+  private async hasUsableServerConnection(): Promise<boolean> {
+    if (this.networkService.isOnline$.value) {
+      return true;
+    }
+
+    await this.networkService.retryServerConnection();
+    return this.networkService.isOnline$.value;
   }
 
   onDrawerTouchStart(event: TouchEvent): void {

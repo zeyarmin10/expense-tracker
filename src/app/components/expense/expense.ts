@@ -38,6 +38,7 @@ import { Camera } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import Swal from 'sweetalert2';
+import { createAppToast } from '../../services/toast';
 
 import {
   LucideAngularModule,
@@ -70,19 +71,7 @@ import { MobileFullscreenOverlayComponent } from '../common/mobile-fullscreen-ov
 // switches from the mobile FAB to the desktop toolbar "Add Expense" button.
 const DESKTOP_BREAKPOINT = 992;
 
-const Toast = Swal.mixin({
-  toast: true,
-  position: 'top-end',
-  showConfirmButton: false,
-  showCloseButton: true,
-  timer: 3000,
-  timerProgressBar: true,
-  customClass: { popup: 'colored-toast' },
-  didOpen: (toast) => {
-    toast.addEventListener('mouseenter', Swal.stopTimer);
-    toast.addEventListener('mouseleave', Swal.resumeTimer);
-  }
-});
+const Toast = createAppToast();
 
 interface ExpenseDateGroup {
   date: string;

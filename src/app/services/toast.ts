@@ -1,10 +1,19 @@
 import { Injectable } from '@angular/core';
-import Swal from 'sweetalert2';
+import { Capacitor, registerPlugin } from '@capacitor/core';
+import { Toast as NativeToast } from '@capacitor/toast';
+import Swal, { SweetAlertIcon, SweetAlertOptions } from 'sweetalert2';
 
-// Canonical toast styling — matches the pattern already used across the app
-// (category, expense, budget, profit, member-management, user-profile,
-// category-modal). Centralized here so app.ts/login.ts/current-space-title
-// don't need their own copy, and any future theming change is one place.
+interface AppToastPlugin {
+  show(options: {
+    text: string;
+    duration?: 'short' | 'long';
+    kind?: string;
+    bottomOffsetDp?: number;
+  }): Promise<void>;
+}
+
+const AppToast = registerPlugin<AppToastPlugin>('AppToast');
+
 const SwalToast = Swal.mixin({
   toast: true,
   position: 'top-end',
@@ -19,15 +28,72 @@ const SwalToast = Swal.mixin({
   },
 });
 
+type AppToastOptions = Pick<SweetAlertOptions, 'icon' | 'title' | 'text'>;
+
+export async function showAppToast(
+  message: string,
+  icon: SweetAlertIcon = 'info',
+): Promise<void> {
+  const normalizedMessage = String(message || '').trim();
+  if (!normalizedMessage) {
+    return;
+  }
+
+  if (Capacitor.isNativePlatform()) {
+    const duration = icon === 'error' || icon === 'warning' ? 'long' : 'short';
+
+    try {
+      if (Capacitor.getPlatform() === 'android') {
+        await AppToast.show({
+          text: normalizedMessage,
+          duration,
+          kind: icon,
+          bottomOffsetDp: 150,
+        });
+        return;
+      }
+
+      await NativeToast.show({
+        text: normalizedMessage,
+        duration,
+        position: 'bottom',
+      });
+      return;
+    } catch (error) {
+      console.warn('[toast] Native toast failed; falling back to web toast.', error);
+    }
+  }
+
+  await SwalToast.fire({ icon, title: normalizedMessage });
+}
+
+export function createAppToast() {
+  return {
+    fire(options: AppToastOptions): Promise<void> {
+      const title = typeof options.title === 'string' ? options.title : '';
+      const text = typeof options.text === 'string' ? options.text : '';
+      return showAppToast(title || text, options.icon as SweetAlertIcon || 'info');
+    },
+  };
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class ToastService {
   showSuccess(message: string): void {
-    SwalToast.fire({ icon: 'success', title: message });
+    void showAppToast(message, 'success');
   }
 
   showError(message: string): void {
-    SwalToast.fire({ icon: 'error', title: message });
+    void showAppToast(message, 'error');
+  }
+
+  showWarning(message: string): void {
+    void showAppToast(message, 'warning');
+  }
+
+  showInfo(message: string): void {
+    void showAppToast(message, 'info');
   }
 }

@@ -806,4 +806,8 @@ export class SalesReport implements OnInit, OnDestroy {
   filterByProduct(productName: string): void {
     this._selectedProduct$.next(productName);
   }
+
+  isLongName(name: string | null | undefined): boolean {
+    return String(name || '').trim().length > 20;
+  }
 }

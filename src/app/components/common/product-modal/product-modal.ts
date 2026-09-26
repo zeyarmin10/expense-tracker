@@ -8,21 +8,10 @@ import { LucideAngularModule, X, Plus, Package, Trash2, ScanLine, Eye } from 'lu
 import { meaningfulTextValidator } from '../../../utils/form-validators';
 import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import Swal from 'sweetalert2';
+import { createAppToast } from '../../../services/toast';
 import { FormatService } from '../../../services/format.service';
 
-const Toast = Swal.mixin({
-  toast: true,
-  position: 'top-end',
-  showConfirmButton: false,
-  showCloseButton: true,
-  timer: 3000,
-  timerProgressBar: true,
-  customClass: { popup: 'colored-toast' },
-  didOpen: (toast) => {
-    toast.addEventListener('mouseenter', Swal.stopTimer);
-    toast.addEventListener('mouseleave', Swal.resumeTimer);
-  }
-});
+const Toast = createAppToast();
 
 @Component({
   selector: 'app-product-modal',
@@ -235,15 +224,9 @@ export class ProductModalComponent implements OnInit, OnDestroy {
     const trimmedBarcode = barcode || undefined;
 
     try {
-      await this.productService.addProduct(name, unit || undefined, Number(sellingPrice) || undefined, trimmedBarcode);
+      const created = await this.productService.addProduct(name, unit || undefined, Number(sellingPrice) || undefined, trimmedBarcode);
       Toast.fire({ icon: 'success', title: this.translateService.instant('PRODUCT_ADDED_SUCCESS') });
-      await this.loadProducts();
-      // addProduct() only returns void — read the just-created record back
-      // by barcode (or by name, when it wasn't scanned) so it can be handed
-      // to a caller's open cart.
-      const created = trimmedBarcode
-        ? this.products.find((p) => p.barcode === trimmedBarcode)
-        : this.products.find((p) => p.name === name.trim());
+      this.products$.next([created, ...this.products.filter((product) => product.id !== created.id)]);
       if (created) {
         this.productAdded.emit(created);
       }

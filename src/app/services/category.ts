@@ -13,7 +13,7 @@ import {
   get,
   child,
 } from '@angular/fire/database';
-import { Observable, switchMap, firstValueFrom, map, of, Subject, take, tap, from } from 'rxjs';
+import { Observable, switchMap, firstValueFrom, map, of, Subject, take, tap, from, combineLatest } from 'rxjs';
 import { AuthService } from './auth';
 import { TranslateService } from '@ngx-translate/core';
 import { getActiveGroupId, UserProfile } from './user-data'; // Import UserProfile
@@ -22,6 +22,7 @@ import { SpaceSwitchLoadingService } from './space-switch-loading.service';
 import { ImageUploadService } from './image-upload.service';
 import { PersonalOfflineDataService } from './personal-offline-data.service';
 import { SharedOfflineDataService } from './shared-offline-data.service';
+import { NetworkService } from './network.service';
 
 export interface ServiceICategory {
   id?: string;
@@ -65,6 +66,7 @@ export class CategoryService {
   private imageUploadService = inject(ImageUploadService);
   private personalOfflineData = inject(PersonalOfflineDataService);
   private sharedOfflineData = inject(SharedOfflineDataService);
+  private network = inject(NetworkService);
 
   private categoryUpdatedSource = new Subject<{
     oldName: string;
@@ -88,8 +90,8 @@ export class CategoryService {
   }
 
   getCategories(): Observable<ServiceICategory[]> {
-    return this.authService.userProfile$.pipe(
-      switchMap((profile: UserProfile | null) => { // Explicitly type the profile
+    return combineLatest([this.authService.userProfile$, this.network.isOnline$]).pipe(
+      switchMap(([profile]) => {
         if (profile && this.sharedOfflineData.isOfflineShared(profile)) {
           return from(this.sharedOfflineData.read<ServiceICategory>(profile, 'categories')).pipe(
             map(categories => Object.entries(categories).map(([id, category]) => ({ id, ...category }))),

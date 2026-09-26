@@ -28,6 +28,7 @@ import { FormatService } from '../../services/format.service';
 import { AppTheme, ThemeService } from '../../services/theme.service';
 import { NotificationService, NotificationSettingsState } from '../../services/notification.service';
 import Swal from 'sweetalert2';
+import { createAppToast } from '../../services/toast';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
 import { UserAvatarComponent } from '../common/user-avatar/user-avatar.component';
 import { ImageCropperComponent } from '../common/image-cropper/image-cropper.component';
@@ -42,19 +43,7 @@ export const AVAILABLE_BUDGET_PERIODS = [
   { code: 'yearly', nameKey: 'BUDGET_PERIOD.YEARLY' },
 ];
 
-const Toast = Swal.mixin({
-  toast: true,
-  position: 'top-end',
-  showConfirmButton: false,
-  showCloseButton: true,
-  timer: 3000,
-  timerProgressBar: true,
-  customClass: { popup: 'colored-toast' },
-  didOpen: (toast) => {
-    toast.addEventListener('mouseenter', Swal.stopTimer);
-    toast.addEventListener('mouseleave', Swal.resumeTimer);
-  }
-});
+const Toast = createAppToast();
 
 @Component({
   selector: 'app-user-profile',

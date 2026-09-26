@@ -1,4 +1,5 @@
 import { Injectable, inject } from '@angular/core';
+import { Capacitor } from '@capacitor/core';
 import {
   Database,
   get,
@@ -102,7 +103,7 @@ export class SpaceContextService {
     // Space names/settings are cached with the account's space list. This is
     // what lets the shop/dashboard resolve the selected space after an
     // offline switch without opening a Firebase listener.
-    if (!this.network.isOnline$.value) {
+    if (Capacitor.isNativePlatform() && !this.network.isOnline$.value) {
       const userId = this.firebaseAuth.currentUser?.uid;
       if (!userId) return of(null);
       return from(this.offlineStore.getCollection<UserSpaceSummary>(userId, 'spaces')).pipe(
@@ -196,7 +197,7 @@ export class SpaceContextService {
   getUserSpaces(userId: string): Observable<UserSpaceSummary[]> {
     return this.userDataService.getUserProfile(userId).pipe(
       switchMap((profile) => {
-        if (!this.network.isOnline$.value) {
+        if (Capacitor.isNativePlatform() && !this.network.isOnline$.value) {
           return from(this.offlineStore.getCollection<UserSpaceSummary>(userId, 'spaces')).pipe(
             map(spaces => Object.values(spaces)),
           );
@@ -270,6 +271,7 @@ export class SpaceContextService {
   }
 
   private async cacheUserSpaces(userId: string, spaces: UserSpaceSummary[]): Promise<void> {
+    if (!Capacitor.isNativePlatform()) return;
     const records = Object.fromEntries(
       spaces.filter(space => !!space.id).map(space => [space.id!, space]),
     ) as unknown as Record<string, Record<string, unknown>>;
@@ -408,6 +410,9 @@ export class SpaceContextService {
   }
 
   async switchSpace(userId: string, spaceId: string): Promise<void> {
+    if (!Capacitor.isNativePlatform() && !this.network.isOnline$.value) {
+      throw new Error('WEB_REQUIRES_INTERNET');
+    }
     if (!this.network.isOnline$.value) {
       await this.switchSpaceOffline(userId, spaceId);
       return;

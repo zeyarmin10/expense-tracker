@@ -24,7 +24,7 @@
           <div class="pnl-pos-section-header">
             <h2 class="pnl-pos-section-title">
               <lucide-icon [img]="iconHandCoins" [size]="18" class="pnl-icon-accent"></lucide-icon>
-              {{ 'ADD_SALE' | translate }}
+              <span class="pnl-pos-section-body-title">{{ 'ADD_SALE' | translate }}</span>
             </h2>
             <button type="button" class="pnl-date-pill" (click)="openDatePicker()">
               <lucide-icon [img]="iconCalendarDays" [size]="13"></lucide-icon>
@@ -431,7 +431,12 @@
           <span class="pnl-cat-picker-item-icon">
             <lucide-icon [img]="iconPackage" [size]="15"></lucide-icon>
           </span>
-          <span class="pnl-cat-picker-item-label">{{ prod.name }}</span>
+          <span class="pnl-cat-picker-item-info">
+            <span class="pnl-cat-picker-item-label">{{ prod.name }}</span>
+            <span class="pnl-cat-picker-item-price" *ngIf="prod.sellingPrice && prod.sellingPrice > 0">
+              {{ 'PRODUCT_SELLING_PRICE_SHORT_LABEL' | translate }}: {{ formatService.formatAmountWithSymbol(prod.sellingPrice, userProfile?.currency || 'MMK') }}
+            </span>
+          </span>
           <span class="pnl-cat-picker-item-stock">{{ 'STOCK_REMAINING_LABEL' | translate }}: {{
             formatQuantity(getProductStock(prod.id!) ?? 0, prod.unit) }}</span>
         </button>
@@ -515,7 +520,12 @@
         <span class="pnl-cat-picker-item-icon">
           <lucide-icon [img]="iconPackage" [size]="15"></lucide-icon>
         </span>
-        <span class="pnl-cat-picker-item-label">{{ prod.name }}</span>
+        <span class="pnl-cat-picker-item-info">
+          <span class="pnl-cat-picker-item-label">{{ prod.name }}</span>
+          <span class="pnl-cat-picker-item-price" *ngIf="prod.sellingPrice && prod.sellingPrice > 0">
+            {{ 'PRODUCT_SELLING_PRICE_SHORT_LABEL' | translate }}: {{ formatService.formatAmountWithSymbol(prod.sellingPrice, userProfile?.currency || 'MMK') }}
+          </span>
+        </span>
         <lucide-icon *ngIf="incomeForm.get('productId')?.value === prod.id" [img]="iconCheck" [size]="16"
           class="pnl-cat-picker-item-check">
         </lucide-icon>

@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, of, firstValueFrom, from } from 'rxjs';
+import { Observable, of, firstValueFrom, from, combineLatest } from 'rxjs';
 import { switchMap, map, catchError, filter } from 'rxjs/operators';
 import {
   Database,
@@ -9,6 +9,7 @@ import {
   update,
   DatabaseReference,
   get,
+  objectVal,
 } from '@angular/fire/database';
 import { AuthService } from './auth';
 import { getActiveGroupId, UserProfile } from './user-data';
@@ -16,6 +17,7 @@ import { SpaceDataService } from './space-data.service';
 import { SpaceSwitchLoadingService } from './space-switch-loading.service';
 import { PersonalOfflineDataService } from './personal-offline-data.service';
 import { SharedOfflineDataService } from './shared-offline-data.service';
+import { NetworkService } from './network.service';
 
 export interface ServiceIBudget {
   id?: string;
@@ -44,6 +46,7 @@ export class BudgetService {
   private spaceSwitchLoadingService = inject(SpaceSwitchLoadingService);
   private personalOfflineData = inject(PersonalOfflineDataService);
   private sharedOfflineData = inject(SharedOfflineDataService);
+  private network = inject(NetworkService);
 
   constructor() {}
 
@@ -109,8 +112,8 @@ export class BudgetService {
           filter((profile): profile is UserProfile => profile !== null),
         );
 
-    return profile$.pipe(
-      switchMap(profile => {
+    return combineLatest([profile$, this.network.isOnline$]).pipe(
+      switchMap(([profile]) => {
         if (this.sharedOfflineData.isOfflineShared(profile)) {
           return from(this.sharedOfflineData.read<ServiceIBudget>(profile, 'budgets')).pipe(
             map(budgets => this.filterBudgets(
@@ -129,9 +132,8 @@ export class BudgetService {
           from(this.spaceDataService.getActiveCollectionContext(profile, 'budgets')),
         ).pipe(
           switchMap(({ canonicalRef, legacyRef }) =>
-            this.spaceSwitchLoadingService.track(from(get(canonicalRef || legacyRef))).pipe(
-          map(snapshot => {
-            const budgetsData = snapshot.val();
+            this.spaceSwitchLoadingService.track(objectVal<Record<string, Record<string, unknown>> | null>(canonicalRef || legacyRef)).pipe(
+          map(budgetsData => {
             if (!budgetsData) {
               if (getActiveGroupId(profile)) {
                 void this.sharedOfflineData.cacheRemote(profile, 'budgets', {});
@@ -148,7 +150,7 @@ export class BudgetService {
             }
             let allBudgets: ServiceIBudget[] = Object.keys(budgetsData).map(key => ({
               id: key,
-              ...budgetsData[key]
+              ...budgetsData[key] as unknown as ServiceIBudget
             }));
 
             return this.filterBudgets(allBudgets, startDate, endDate);

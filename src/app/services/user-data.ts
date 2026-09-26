@@ -1,4 +1,5 @@
 import { Injectable, inject, Injector } from '@angular/core';
+import { Capacitor } from '@capacitor/core';
 import {
   Database,
   ref,
@@ -8,11 +9,12 @@ import {
   get,
   remove
 } from '@angular/fire/database';
-import { BehaviorSubject, Observable, concat, EMPTY, from, merge, of } from 'rxjs';
-import { filter, switchMap, tap } from 'rxjs/operators';
+import { BehaviorSubject, Observable, concat, EMPTY, from, of } from 'rxjs';
+import { filter, map, switchMap, tap } from 'rxjs/operators';
 import { DataManagerService } from './data-manager';
 import { Space, SpaceRole, SpaceType } from './space.model';
 import { OfflineStoreService } from './offline-store.service';
+import { NetworkService } from './network.service';
 
 // Publicly-readable subset of a profile (see `user_public/{uid}` in the DB
 // rules) — anyone signed in may read this, so it must never carry anything
@@ -53,6 +55,9 @@ type SpaceContextLike = {
   currentSpaceId?: string | null;
   currentSpaceType?: SpaceType | null;
   groupId?: string | null;
+  accountType?: 'personal' | 'group' | null;
+  personalSpaceId?: string | null;
+  spaceMemberships?: { [key: string]: SpaceRole } | null;
 };
 
 export function getActiveGroupId(profile: SpaceContextLike | null | undefined): string | null {
@@ -61,6 +66,19 @@ export function getActiveGroupId(profile: SpaceContextLike | null | undefined): 
   }
 
   if (profile.currentSpaceType === 'group' && profile.currentSpaceId) {
+    return profile.currentSpaceId;
+  }
+
+  if (profile.currentSpaceType === 'personal') {
+    return null;
+  }
+
+  if (
+    profile.accountType === 'group' &&
+    profile.currentSpaceId &&
+    profile.currentSpaceId !== profile.personalSpaceId &&
+    (!profile.spaceMemberships || !!profile.spaceMemberships[profile.currentSpaceId])
+  ) {
     return profile.currentSpaceId;
   }
 
@@ -115,6 +133,7 @@ export function canManageSharedSpace(profile: UserProfile | null | undefined): b
 export class UserDataService {
   private db: Database = inject(Database);
   private offlineStore = inject(OfflineStoreService);
+  private network = inject(NetworkService);
   private dataManagerService!: DataManagerService;
   private readonly offlineProfileChanges = new Map<string, BehaviorSubject<UserProfile | null>>();
 
@@ -129,24 +148,81 @@ export class UserDataService {
 
   getUserProfile(userId: string): Observable<UserProfile | null> {
     const userRef = ref(this.db, `users/${userId}`);
-    const localChanges$ = this.getOfflineProfileChanges(userId).pipe(
-      filter((profile): profile is UserProfile => profile !== null),
-    );
-    const cached$ = from(this.offlineStore.getProfile<UserProfile>(userId)).pipe(
-      switchMap(profile => profile ? of(profile) : EMPTY),
-    );
     const remote$ = objectVal<UserProfile>(userRef).pipe(
       tap(profile => {
-        if (profile) void this.offlineStore.cacheProfile(userId, profile);
+        if (profile && Capacitor.isNativePlatform()) {
+          void this.offlineStore.cacheProfile(userId, this.withUserId(userId, profile));
+        }
       }),
       // Do not replace a usable cached profile with a transient offline null.
       filter((profile): profile is UserProfile => profile !== null),
+      map(profile => this.withUserId(userId, profile)),
     );
-    // A space switch made offline cannot update Firebase immediately. Keep a
-    // small local stream alongside the remote listener so the active-space
-    // context changes instantly, then let Firebase become authoritative again
-    // once the queued update is replayed.
-    return concat(cached$, merge(localChanges$, remote$));
+    if (!Capacitor.isNativePlatform()) return remote$;
+
+    const localChanges$ = this.getOfflineProfileChanges(userId).pipe(
+      filter((profile): profile is UserProfile => profile !== null),
+      switchMap(profile => from(this.withCachedSpaceContext(userId, profile))),
+    );
+    const cached$ = from(this.offlineStore.getProfile<UserProfile>(userId)).pipe(
+      switchMap(profile => profile ? from(this.withCachedSpaceContext(userId, profile)) : EMPTY),
+    );
+    // Keep local profile edits visible offline, then switch back to the live
+    // server profile as soon as the backend is reachable.
+    return this.network.isOnline$.pipe(
+      switchMap(online => online ? remote$ : concat(cached$, localChanges$)),
+    );
+  }
+
+  private withUserId(userId: string, profile: UserProfile): UserProfile {
+    return {
+      ...profile,
+      uid: profile.uid || userId,
+    };
+  }
+
+  private async withCachedSpaceContext(userId: string, profile: UserProfile): Promise<UserProfile> {
+    const normalized = this.withUserId(userId, profile);
+    const activeSpaceId =
+      normalized.currentSpaceId ||
+      normalized.groupId ||
+      normalized.personalSpaceId ||
+      null;
+
+    if (!activeSpaceId) {
+      return normalized;
+    }
+
+    const spaces = await this.offlineStore.getCollection<Space>(userId, 'spaces');
+    const cachedSpace = spaces[activeSpaceId] as (Space & { role?: SpaceRole }) | undefined;
+    if (!cachedSpace) {
+      return normalized;
+    }
+
+    const isGroup =
+      cachedSpace.type === 'group' ||
+      (
+        activeSpaceId !== normalized.personalSpaceId &&
+        !!normalized.spaceMemberships?.[activeSpaceId]
+      );
+    const role = isGroup
+      ? normalized.currentSpaceRole || normalized.spaceMemberships?.[activeSpaceId] || cachedSpace.role || 'member'
+      : 'owner';
+
+    return {
+      ...normalized,
+      currentSpaceId: activeSpaceId,
+      currentSpaceType: isGroup ? 'group' : 'personal',
+      currentSpaceName: cachedSpace.name || normalized.currentSpaceName || (isGroup ? 'Group' : 'My Personal'),
+      currentSpaceRole: role,
+      accountType: isGroup ? 'group' : 'personal',
+      groupId: isGroup ? activeSpaceId : null,
+      currency: cachedSpace.currency || normalized.currency,
+      budgetPeriod: cachedSpace.budgetPeriod ?? normalized.budgetPeriod ?? null,
+      budgetStartDate: cachedSpace.budgetStartDate ?? normalized.budgetStartDate ?? null,
+      budgetEndDate: cachedSpace.budgetEndDate ?? normalized.budgetEndDate ?? null,
+      selectedBudgetPeriodId: cachedSpace.selectedBudgetPeriodId ?? normalized.selectedBudgetPeriodId ?? null,
+    };
   }
 
   async updateCachedProfile(userId: string, changes: Partial<UserProfile>): Promise<UserProfile> {
@@ -273,8 +349,10 @@ export class UserDataService {
       const userRef = ref(this.db, `users/${profile.uid}`);
       this.mirrorPublicProfile(profile.uid, profile.displayName, profile.photoURL);
       await set(userRef, profile);
-      await this.offlineStore.cacheProfile(profile.uid, profile);
-      this.getOfflineProfileChanges(profile.uid).next(profile);
+      if (Capacitor.isNativePlatform()) {
+        await this.offlineStore.cacheProfile(profile.uid, profile);
+        this.getOfflineProfileChanges(profile.uid).next(profile);
+      }
   }
 
   async updateUserProfile(userId: string, data: Partial<UserProfile>): Promise<void> {

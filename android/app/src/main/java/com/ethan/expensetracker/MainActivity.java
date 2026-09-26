@@ -17,6 +17,7 @@ public class MainActivity extends BridgeActivity {
         // prevents white frame showing through transparent status bar during splash exit
         getWindow().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#020817")));
         EdgeToEdge.enable(this);
+        registerPlugin(AppToastPlugin.class);
         super.onCreate(savedInstanceState);
 
         getBridge().getWebView().setBackgroundColor(Color.parseColor("#020817"));

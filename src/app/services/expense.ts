@@ -11,11 +11,9 @@ import {
   orderByChild,
   equalTo,
   get,
-  startAt,
-  endAt,
-  Query,
+  objectVal,
 } from '@angular/fire/database';
-import { Observable, Subject, from, of, firstValueFrom } from 'rxjs';
+import { Observable, Subject, from, of, firstValueFrom, combineLatest } from 'rxjs';
 import { map, switchMap, catchError, filter } from 'rxjs/operators';
 import { DataIExpense as IExpense, ExpenseLineItem } from '../core/models/data';
 import { AuthService } from './auth';
@@ -27,6 +25,7 @@ import { SpaceSwitchLoadingService } from './space-switch-loading.service';
 import { toLocalDateKey } from './date-filter.service';
 import { PersonalOfflineDataService } from './personal-offline-data.service';
 import { SharedOfflineDataService } from './shared-offline-data.service';
+import { NetworkService } from './network.service';
 
 export type ServiceIExpense = IExpense & {
   id: string;
@@ -79,6 +78,7 @@ export class ExpenseService {
   private spaceSwitchLoadingService = inject(SpaceSwitchLoadingService);
   private personalOfflineData = inject(PersonalOfflineDataService);
   private sharedOfflineData = inject(SharedOfflineDataService);
+  private network = inject(NetworkService);
 
   constructor() {}
 
@@ -96,6 +96,12 @@ export class ExpenseService {
 
   private getGroupExpenseRef(groupId: string, expenseId: string): DatabaseReference {
     return ref(this.db, `group_data/${groupId}/expenses/${expenseId}`);
+  }
+
+  private async refreshConnectionStateForWrite(): Promise<void> {
+    if (this.network.isOnline$.value) {
+      await this.network.refreshInternetAccess();
+    }
   }
 
   // Reads the public display-identity mirror (name + photo only) rather
@@ -151,8 +157,8 @@ export class ExpenseService {
           filter((profile): profile is UserProfile => profile !== null),
         );
 
-    return profile$.pipe(
-      switchMap(profile => {
+    return combineLatest([profile$, this.network.isOnline$]).pipe(
+      switchMap(([profile]) => {
         if (this.sharedOfflineData.isOfflineShared(profile)) {
           return from(this.sharedOfflineData.read<IExpense>(profile, 'expenses')).pipe(
             map(records => {
@@ -199,20 +205,9 @@ export class ExpenseService {
         ).pipe(
           switchMap(({ canonicalRef, legacyRef }) => {
             const baseRef = canonicalRef || legacyRef;
-            let expensesQuery: Query = baseRef;
-
-            if (startDate && endDate) {
-              // Keep the query on the selected local calendar days. The
-              // database's `date` field is a business-date key, while audit
-              // timestamps such as createdAt are stored separately in UTC.
-              const start = toLocalDateKey(startDate);
-              const end = toLocalDateKey(endDate);
-              expensesQuery = query(baseRef, orderByChild('date'), startAt(start), endAt(end));
-            }
-
-            const expenses$ = from(get(expensesQuery)).pipe(
-          switchMap(async (snapshot) => {
-            const expensesData = snapshot.val();
+            // Keep the complete collection in the offline cache.
+            const expenses$ = objectVal<Record<string, Record<string, unknown>> | null>(baseRef).pipe(
+          switchMap(async (expensesData) => {
             if (!expensesData) {
               if (getActiveGroupId(profile)) {
                 await this.sharedOfflineData.cacheRemote(profile, 'expenses', {});
@@ -241,7 +236,7 @@ export class ExpenseService {
             }, {} as { [userId: string]: PublicUserProfile });
 
             const expenses = Object.keys(expensesData).map((key) => {
-              const expense = expensesData[key] as IExpense;
+              const expense = expensesData[key] as unknown as IExpense;
               // Prefer the live profile (kept current by the member) over the
               // snapshot stored on the record at creation time — the snapshot
               // is only a fallback for members whose profile can no longer be
@@ -289,7 +284,10 @@ export class ExpenseService {
             // InventoryService's stock derivation, ProfitLossService's
             // totals, SalesReport) reads through this one method, so
             // filtering once here is enough to fix all of them at once.
-            return expenses.filter((e) => e.status !== 'void');
+            const start = startDate ? toLocalDateKey(startDate) : null;
+            const end = endDate ? toLocalDateKey(endDate) : null;
+            return expenses.filter((e) => e.status !== 'void' &&
+              (!start || !end || (e.date >= start && e.date <= end)));
           }),
           catchError((error) => {
             console.error('Error fetching expenses:', error);
@@ -314,6 +312,7 @@ export class ExpenseService {
     if (!profile?.uid) {
       throw new Error('User not authenticated.');
     }
+    await this.refreshConnectionStateForWrite();
     const currentUser = await firstValueFrom(this.authService.currentUser$);
 
     const parser = new UAParser();
@@ -396,6 +395,7 @@ export class ExpenseService {
     if (!profile?.uid) {
       throw new Error('User not authenticated.');
     }
+    await this.refreshConnectionStateForWrite();
 
     const currentUser = await firstValueFrom(this.authService.currentUser$);
 
@@ -511,6 +511,7 @@ export class ExpenseService {
     if (!profile?.uid) {
       throw new Error('User not authenticated.');
     }
+    await this.refreshConnectionStateForWrite();
     if (this.personalOfflineData.isOfflinePersonal(profile)) {
       await this.personalOfflineData.write(profile, 'expenses', 'remove', expenseId);
       return;
@@ -542,6 +543,7 @@ export class ExpenseService {
     if (!profile?.uid) {
       throw new Error('User not authenticated.');
     }
+    await this.refreshConnectionStateForWrite();
     const currentUser = await firstValueFrom(this.authService.currentUser$);
 
     if (this.personalOfflineData.isOfflinePersonal(profile)) {

@@ -281,6 +281,10 @@ export class LoginComponent implements OnInit, OnDestroy {
     let isNewUser = false;
     if (profileResult.serverUnavailable) {
       this.networkService.markServerUnavailable();
+      if (!Capacitor.isNativePlatform()) {
+        this.showErrorModal(this.translate.instant('PROFILE_FETCH_ERROR'));
+        return;
+      }
     }
 
     // Always create a profile if one doesn't exist
@@ -305,9 +309,11 @@ export class LoginComponent implements OnInit, OnDestroy {
         try {
           await this.userDataService.createUserProfile(newUserProfile);
         } catch (error) {
-          // Auth can be available from a different Google/Firebase route
-          // while RTDB itself is blocked. Do not strand the authenticated
-          // user on this page; continue in local-first mode instead.
+          if (!Capacitor.isNativePlatform()) {
+            console.error('RTDB profile creation failed:', error);
+            this.showErrorModal(this.translate.instant('DATA_SAVE_ERROR'));
+            return;
+          }
           console.warn('RTDB profile creation deferred:', error);
           provisionedLocally = true;
         }
@@ -444,9 +450,11 @@ export class LoginComponent implements OnInit, OnDestroy {
       );
       return { profile, serverUnavailable: false };
     } catch (error) {
-      console.warn('RTDB profile lookup unavailable; using local access mode.', error);
+      console.warn('RTDB profile lookup unavailable.', error);
       return {
-        profile: await this.userDataService.getCachedProfile(userId),
+        profile: Capacitor.isNativePlatform()
+          ? await this.userDataService.getCachedProfile(userId)
+          : null,
         serverUnavailable: true,
       };
     }

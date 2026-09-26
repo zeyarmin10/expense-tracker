@@ -1,4 +1,5 @@
 import { Injectable, inject, forwardRef } from '@angular/core';
+import { Capacitor } from '@capacitor/core';
 import {
   Database,
   ref,
@@ -12,7 +13,7 @@ import {
   DatabaseReference,
   get,
 } from '@angular/fire/database';
-import { Observable, switchMap, firstValueFrom, of, take, map, from, tap } from 'rxjs';
+import { Observable, switchMap, firstValueFrom, of, take, map, from, tap, timeout, filter, combineLatest } from 'rxjs';
 import { AuthService } from './auth';
 import { getActiveGroupId, UserProfile } from './user-data';
 import { SpaceDataService } from './space-data.service';
@@ -21,6 +22,7 @@ import { getExpenseLineItems, ServiceIExpense } from './expense';
 import { getIncomeLineItems, ServiceIIncome } from './income';
 import { PersonalOfflineDataService } from './personal-offline-data.service';
 import { SharedOfflineDataService } from './shared-offline-data.service';
+import { NetworkService } from './network.service';
 
 export interface ServiceIProduct {
   id?: string;
@@ -67,11 +69,12 @@ export function getProductErrorMessage(error: any): string | null {
 })
 export class ProductService {
   private db: Database = inject(Database);
-  private authService = inject(forwardRef(() => AuthService));
+  private authService: AuthService = inject(forwardRef(() => AuthService));
   private spaceDataService = inject(SpaceDataService);
   private spaceSwitchLoadingService = inject(SpaceSwitchLoadingService);
   private personalOfflineData = inject(PersonalOfflineDataService);
   private sharedOfflineData = inject(SharedOfflineDataService);
+  private network = inject(NetworkService);
 
   constructor() {}
 
@@ -83,11 +86,11 @@ export class ProductService {
   }
 
   getProducts(): Observable<ServiceIProduct[]> {
-    return this.authService.userProfile$.pipe(
-      switchMap((profile: UserProfile | null) => {
-        if (!profile?.uid) {
-          return of([] as ServiceIProduct[]);
-        }
+    return combineLatest([
+      this.authService.userProfile$.pipe(filter((profile): profile is UserProfile => profile !== null)),
+      this.network.isOnline$,
+    ]).pipe(
+      switchMap(([profile]) => {
         if (this.sharedOfflineData.isOfflineShared(profile)) {
           return from(this.sharedOfflineData.read<ServiceIProduct>(profile, 'products')).pipe(
             map(records => Object.entries(records).map(([id, product]) => ({ id, ...product }))
@@ -134,8 +137,11 @@ export class ProductService {
   private async assertProductNameAvailable(
     trimmedName: string,
     excludeProductId?: string,
+    profile?: UserProfile,
   ): Promise<void> {
-    const existingProducts = await firstValueFrom(this.getProducts().pipe(take(1)));
+    const existingProducts = profile
+      ? await this.getProductsSnapshot(profile)
+      : await firstValueFrom(this.getProducts().pipe(take(1)));
     const isDuplicate = existingProducts.some(
       (product) =>
         product.id !== excludeProductId &&
@@ -151,8 +157,11 @@ export class ProductService {
   private async assertBarcodeAvailable(
     trimmedBarcode: string,
     excludeProductId?: string,
+    profile?: UserProfile,
   ): Promise<void> {
-    const existingProducts = await firstValueFrom(this.getProducts().pipe(take(1)));
+    const existingProducts = profile
+      ? await this.getProductsSnapshot(profile)
+      : await firstValueFrom(this.getProducts().pipe(take(1)));
     const isDuplicate = existingProducts.some(
       (product) =>
         product.id !== excludeProductId &&
@@ -195,17 +204,47 @@ export class ProductService {
     return matchingProduct || null;
   }
 
-  async addProduct(name: string, unit?: string, sellingPrice?: number, barcode?: string): Promise<void> {
+  private async refreshConnectionStateForWrite(): Promise<void> {
+    if (this.network.isOnline$.value) {
+      await this.network.refreshInternetAccess();
+    }
+  }
+
+  private async getProductsSnapshot(profile: UserProfile): Promise<ServiceIProduct[]> {
+    if (this.sharedOfflineData.isOfflineShared(profile) || this.personalOfflineData.isOfflinePersonal(profile)) {
+      return this.readCachedProducts(profile);
+    }
+
+    try {
+      return await firstValueFrom(this.getProducts().pipe(take(1), timeout({ first: 2500 })));
+    } catch (error) {
+      if (!Capacitor.isNativePlatform()) throw error;
+      return this.readCachedProducts(profile);
+    }
+  }
+
+  private async readCachedProducts(profile: UserProfile): Promise<ServiceIProduct[]> {
+    const records = getActiveGroupId(profile)
+      ? await this.sharedOfflineData.read<ServiceIProduct>(profile, 'products')
+      : await this.personalOfflineData.read<ServiceIProduct>(profile, 'products');
+
+    return Object.entries(records)
+      .map(([id, product]) => ({ id, ...product }))
+      .filter(product => this.getProductCurrency(product) === (profile.currency || 'MMK'));
+  }
+
+  async addProduct(name: string, unit?: string, sellingPrice?: number, barcode?: string): Promise<ServiceIProduct> {
     const profile = await firstValueFrom(this.authService.userProfile$) as UserProfile | null;
     if (!profile?.uid) {
       throw new Error('User not authenticated.');
     }
+    await this.refreshConnectionStateForWrite();
 
     const trimmedName = name.trim();
-    await this.assertProductNameAvailable(trimmedName);
+    await this.assertProductNameAvailable(trimmedName, undefined, profile);
     const trimmedBarcode = barcode?.trim();
     if (trimmedBarcode) {
-      await this.assertBarcodeAvailable(trimmedBarcode);
+      await this.assertBarcodeAvailable(trimmedBarcode, undefined, profile);
     }
 
     const newProduct: Omit<ServiceIProduct, 'id'> = {
@@ -218,14 +257,17 @@ export class ProductService {
     };
 
     if (this.sharedOfflineData.isOfflineShared(profile)) {
-      await this.sharedOfflineData.write(profile, 'products', 'set', this.sharedOfflineData.createRecordId('products'),
-        { ...newProduct, userId: profile.uid, groupId: getActiveGroupId(profile) });
-      return;
+      const id = this.sharedOfflineData.createRecordId('products');
+      const groupId = getActiveGroupId(profile)!;
+      await this.sharedOfflineData.write(profile, 'products', 'set', id,
+        { ...newProduct, userId: profile.uid, groupId });
+      return { id, ...newProduct, userId: profile.uid, groupId };
     }
     if (this.personalOfflineData.isOfflinePersonal(profile)) {
-      await this.personalOfflineData.write(profile, 'products', 'set', this.personalOfflineData.createRecordId('products'),
+      const id = this.personalOfflineData.createRecordId('products');
+      await this.personalOfflineData.write(profile, 'products', 'set', id,
         { ...newProduct, userId: profile.uid });
-      return;
+      return { id, ...newProduct, userId: profile.uid };
     }
 
     const activeGroupId = getActiveGroupId(profile);
@@ -237,7 +279,8 @@ export class ProductService {
       newProduct.groupId = activeGroupId;
     }
 
-    await push(productsRef, newProduct);
+    const productRef = await push(productsRef, newProduct);
+    return { id: productRef.key || undefined, ...newProduct };
   }
 
   async updateProduct(
@@ -254,11 +297,12 @@ export class ProductService {
     if (!productId) {
       throw new Error('Product ID is required for update.');
     }
+    await this.refreshConnectionStateForWrite();
 
     const offlineTrimmedName = newName.trim();
-    await this.assertProductNameAvailable(offlineTrimmedName, productId);
+    await this.assertProductNameAvailable(offlineTrimmedName, productId, profile);
     const offlineTrimmedBarcode = barcode?.trim();
-    if (offlineTrimmedBarcode) await this.assertBarcodeAvailable(offlineTrimmedBarcode, productId);
+    if (offlineTrimmedBarcode) await this.assertBarcodeAvailable(offlineTrimmedBarcode, productId, profile);
 
     const buildUpdate = () => {
       const updateData: { name: string; unit?: string; sellingPrice?: number | null; barcode?: string | null; updatedAt?: string } = {
@@ -291,13 +335,12 @@ export class ProductService {
         : ref(this.db, `users/${profile.uid}/products/${productId}`);
 
     const trimmedNewName = newName.trim();
-    await this.assertProductNameAvailable(trimmedNewName, productId);
     const trimmedBarcode = barcode?.trim();
-    if (trimmedBarcode) {
-      await this.assertBarcodeAvailable(trimmedBarcode, productId);
-    }
 
-    const updateData: { name: string; unit?: string; sellingPrice?: number | null; barcode?: string | null } = { name: trimmedNewName };
+    const updateData: { name: string; unit?: string; sellingPrice?: number | null; barcode?: string | null; updatedAt?: string } = {
+      name: trimmedNewName,
+      updatedAt: new Date().toISOString(),
+    };
     if (unit !== undefined) {
       updateData.unit = unit.trim();
     }

@@ -598,6 +598,23 @@ body.exp-add-modal-open {
   white-space: nowrap;
 }
 
+.exp-cat-picker-item-info {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  gap: 0.1rem;
+}
+
+.exp-cat-picker-item-price {
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .exp-cat-picker-item-check {
   color: var(--accent);
   flex-shrink: 0;

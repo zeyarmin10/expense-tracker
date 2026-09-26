@@ -38,6 +38,10 @@ export class OfflineSyncService {
     );
   }
 
+  async getPendingOperations(): Promise<OfflineOperation[]> {
+    return this.store.pendingOperations();
+  }
+
   /** Replays the local edit deliberately, without the stale revision check. */
   async keepLocalVersion(operation: OfflineOperation): Promise<void> {
     await this.store.enqueue({

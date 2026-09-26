@@ -14,10 +14,11 @@ import { APP_LANGUAGE_CODES } from '../../core/constants/app.constants';
 import { UserSpaceSummary } from '../../services/space.model';
 import { ModalStateService } from '../../services/modal-state.service';
 import Swal from 'sweetalert2';
-import { LucideAngularModule, CircleCheck, Link, EllipsisVertical, Pencil, Trash2, User, Users, X } from 'lucide-angular';
+import { LucideAngularModule, ArrowLeft, CircleCheck, Link, EllipsisVertical, Pencil, Trash2, User, Users, X } from 'lucide-angular';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
 import { FormatService } from '../../services/format.service';
 import { NetworkService } from '../../services/network.service';
+import { showAppToast } from '../../services/toast';
 
 @Component({
   selector: 'app-onboarding',
@@ -40,6 +41,7 @@ export class OnboardingComponent implements OnInit, OnDestroy {
   public formatService = inject(FormatService);
 
   readonly iconUser = User;
+  readonly iconArrowLeft = ArrowLeft;
   readonly iconUsers = Users;
   readonly iconLink = Link;
   readonly iconCircleCheck = CircleCheck;
@@ -79,6 +81,10 @@ export class OnboardingComponent implements OnInit, OnDestroy {
 
   trackBySpaceId(index: number, space: UserSpaceSummary): string {
     return space.id ?? String(index);
+  }
+
+  goBack(): void {
+    void this.router.navigate(['/dashboard']);
   }
 
   getDisplaySpaceName(space: Pick<UserSpaceSummary, 'type' | 'name'>): string {
@@ -302,11 +308,7 @@ export class OnboardingComponent implements OnInit, OnDestroy {
           void this.imageUploadService.deleteImages([oldPublicId]);
         }
       }
-      const SavedToast = Swal.mixin({
-        toast: true, position: 'top-end',
-        showConfirmButton: false, showCloseButton: true, timer: 2500, timerProgressBar: true,
-      });
-      SavedToast.fire({ icon: 'success', title: this.translate.instant('SPACE_RENAME_SUCCESS') });
+      void showAppToast(this.translate.instant('SPACE_RENAME_SUCCESS'), 'success');
     } catch (error) {
       console.error('Error editing group:', error);
       Swal.fire({
@@ -387,7 +389,7 @@ export class OnboardingComponent implements OnInit, OnDestroy {
   createSpaceEnableInventory = false;
 
   async openCreateSpaceModal(): Promise<void> {
-    if (!this.network.isOnline$.value) {
+    if (!(await this.hasUsableServerConnection())) {
       await this.showSpaceCreationRequiresInternetAlert();
       return;
     }
@@ -425,7 +427,7 @@ export class OnboardingComponent implements OnInit, OnDestroy {
   }
 
   async openJoinSpaceModal(): Promise<void> {
-    if (!this.network.isOnline$.value) {
+    if (!(await this.hasUsableServerConnection())) {
       await this.showSpaceCreateOrJoinRequiresInternetAlert();
       return;
     }
@@ -518,7 +520,7 @@ export class OnboardingComponent implements OnInit, OnDestroy {
 
   async submitCreateSpace(): Promise<void> {
     if (!this.canSubmitCreateSpace) return;
-    if (!this.network.isOnline$.value) {
+    if (!(await this.hasUsableServerConnection())) {
       await this.showSpaceCreationRequiresInternetAlert();
       return;
     }
@@ -563,7 +565,7 @@ export class OnboardingComponent implements OnInit, OnDestroy {
   async joinGroup(): Promise<void> {
     const code = this.inviteCode.trim();
     if (this.isJoiningSpace || code.length !== this.inviteCodeLength) return;
-    if (!this.network.isOnline$.value) {
+    if (!(await this.hasUsableServerConnection())) {
       await this.showSpaceCreateOrJoinRequiresInternetAlert();
       return;
     }
@@ -658,6 +660,15 @@ export class OnboardingComponent implements OnInit, OnDestroy {
 
   private showSpaceCreationRequiresInternetAlert(): Promise<any> {
     return this.showSpaceCreateOrJoinRequiresInternetAlert();
+  }
+
+  private async hasUsableServerConnection(): Promise<boolean> {
+    if (this.network.isOnline$.value) {
+      return true;
+    }
+
+    await this.network.retryServerConnection();
+    return this.network.isOnline$.value;
   }
 
   private showSpaceCreateOrJoinRequiresInternetAlert(): Promise<any> {

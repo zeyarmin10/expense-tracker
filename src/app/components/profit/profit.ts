@@ -53,6 +53,7 @@ import { DateFilterService } from '../../services/date-filter.service';
 import { ExpenseService } from '../../services/expense'; // Added missing import
 import { ProfitLossService } from '../../services/profit-loss.service';
 import Swal from 'sweetalert2';
+import { createAppToast } from '../../services/toast';
 import { UserAvatarComponent } from '../common/user-avatar/user-avatar.component';
 import { CustomSelectComponent, SelectOption } from '../common/custom-select/custom-select.component';
 import { DateRangeInputComponent } from '../common/date-range-input/date-range-input.component';
@@ -65,19 +66,7 @@ import { FlatpickrMonthMenu, installFlatpickrMonthMenu } from '../../utils/flatp
 
 Chart.register(...registerables);
 
-const Toast = Swal.mixin({
-  toast: true,
-  position: 'top-end',
-  showConfirmButton: false,
-  showCloseButton: true,
-  timer: 3000,
-  timerProgressBar: true,
-  customClass: { popup: 'colored-toast' },
-  didOpen: (toast) => {
-    toast.addEventListener('mouseenter', Swal.stopTimer)
-    toast.addEventListener('mouseleave', Swal.resumeTimer)
-  }
-});
+const Toast = createAppToast();
 
 // Type alias for clarity
 type CurrencyMap = { [currency: string]: number };
