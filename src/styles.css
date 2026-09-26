@@ -755,6 +755,32 @@ body:not(.light-mode) .prof-segment-btn:not(.active) .theme-icon-img {
   filter: brightness(0) invert(0.7);
 }
 
+/* Date filter tabs follow their translated labels, like the App Theme control. */
+.exp-filter-bar .exp-seg-track {
+  min-width: 0;
+  gap: 2px;
+}
+
+.exp-filter-bar .exp-seg-indicator {
+  display: none;
+}
+
+.exp-filter-bar .exp-seg-track .exp-seg-btn {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding-inline: 0.35rem;
+  line-height: 1.3;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  transition: color 0.15s, background 0.15s, box-shadow 0.15s, transform 0.12s;
+}
+
+.exp-filter-bar .exp-seg-track .exp-seg-btn.active {
+  background: var(--surface);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.3), 0 0 0 0.5px rgba(11, 116, 255, 0.15);
+}
+
 /* ── Light mode: date filter segment control ── */
 body.light-mode .exp-filter-bar {
   background: #f0f5ff;
