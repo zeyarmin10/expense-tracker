@@ -15,9 +15,6 @@
     <div class="inv-tab-toolbar">
       <div class="inv-seg-ctrl">
         <div class="inv-seg-track">
-          <span class="inv-seg-indicator"
-            [style.transform]="'translateX(calc(' + inventoryTabIndex + ' * 100%))'"
-            aria-hidden="true"></span>
           <button type="button" class="inv-seg-btn" [class.active]="activeTab === 'products'" [disabled]="isTabTransitioning"
             (click)="setActiveTab('products')">
             {{ 'INVENTORY_TAB_PRODUCTS' | translate }}
@@ -322,6 +319,7 @@
                     <tr *ngFor="let row of filteredSummary; trackBy: trackByStockRow"
                       [class.inv-row-negative]="row.currentStock < 0" [class.inv-row-out-of-stock]="isOutOfStock(row)"
                       [class.inv-row-low-stock]="isLowStock(row)"
+                      [class.inv-row-never-purchased]="isNeverPurchased(row) && row.currentStock >= 0"
                       [class.inv-stock-row-selected]="selectedStockProductId === row.productId"
                       (click)="selectStockRow(row.productId)">
                       <td class="inv-table-product-cell">
@@ -336,7 +334,7 @@
                         <lucide-icon *ngIf="isOutOfStock(row) || isLowStock(row)" [img]="iconWarning" [size]="13"
                           [title]="'STOCK_SUMMARY_LOW_STOCK_WARNING' | translate"></lucide-icon>
                       </td>
-                      <ng-container *ngIf="row.avgCost === null; else purchasedCols">
+                      <ng-container *ngIf="isNeverPurchased(row); else purchasedCols">
                         <td colspan="6" class="inv-muted inv-never-purchased-cell">
                           {{ 'STOCK_SUMMARY_NEVER_PURCHASED' | translate }}
                         </td>
@@ -362,6 +360,7 @@
                 <div class="inv-stock-card" *ngFor="let row of filteredSummary; trackBy: trackByStockRow"
                   [class.inv-row-negative]="row.currentStock < 0" [class.inv-row-low-stock]="isLowStock(row)"
                   [class.inv-row-out-of-stock]="isOutOfStock(row)"
+                  [class.inv-row-never-purchased]="isNeverPurchased(row) && row.currentStock >= 0"
                   [class.inv-stock-card-selected]="selectedStockProductId === row.productId">
                   <button type="button" class="inv-stock-card-summary" (click)="toggleRowExpand(row.productId)"
                     [attr.aria-expanded]="expandedProductId === row.productId">
@@ -381,7 +380,7 @@
                   </button>
 
                   <div class="inv-stock-card-detail" *ngIf="expandedProductId === row.productId">
-                    <div class="inv-stock-card-detail-row" *ngIf="row.avgCost === null">
+                    <div class="inv-stock-card-detail-row" *ngIf="isNeverPurchased(row)">
                       <span class="inv-muted inv-never-purchased">{{ 'STOCK_SUMMARY_NEVER_PURCHASED' | translate }}</span>
                     </div>
                     <ng-container *ngIf="row.avgCost !== null">
@@ -580,8 +579,9 @@
         <button type="button" [class.active]="!selectedProductCategory" (click)="selectInventoryFilter('')">{{ 'ALL_CATEGORIES' | translate }}</button>
         <button type="button" [class.active]="selectedProductCategory === outOfStockFilterValue" (click)="selectInventoryFilter(outOfStockFilterValue)">{{ 'INVENTORY_FILTER_OUT_OF_STOCK' | translate }}</button>
         <button type="button" [class.active]="selectedProductCategory === lowStockFilterValue" (click)="selectInventoryFilter(lowStockFilterValue)">{{ 'INVENTORY_FILTER_LOW_STOCK' | translate }}</button>
-        <button type="button" *ngFor="let category of productCategoryOptions" [class.active]="selectedProductCategory === category" (click)="selectInventoryFilter(category)">{{ category }}</button>
+        <button type="button" [class.active]="selectedProductCategory === neverPurchasedFilterValue" (click)="selectInventoryFilter(neverPurchasedFilterValue)">{{ 'INVENTORY_FILTER_NEVER_PURCHASED' | translate }}</button>
         <button type="button" *ngIf="hasUncategorizedProducts" [class.active]="selectedProductCategory === uncategorizedFilterValue" (click)="selectInventoryFilter(uncategorizedFilterValue)">{{ 'UNCATEGORIZED' | translate }}</button>
+        <button type="button" *ngFor="let category of productCategoryOptions" [class.active]="selectedProductCategory === category" (click)="selectInventoryFilter(category)">{{ category }}</button>
       </div>
     </section>
 

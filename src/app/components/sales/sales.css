@@ -3064,6 +3064,12 @@ app-date-input .di-trigger {
   margin: 0;
 }
 
+.pnl-pos-section-body-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
 /* ── Cart's own date/product picker sheet (independent of the edit modal —
    a fresh bottom-sheet overlay, not swapped in place like the modal's
    internal pickers, since the cart section isn't a transformed container). ── */

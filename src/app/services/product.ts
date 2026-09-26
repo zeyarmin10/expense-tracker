@@ -1,4 +1,5 @@
 import { Injectable, inject, forwardRef } from '@angular/core';
+import { Capacitor } from '@capacitor/core';
 import {
   Database,
   ref,
@@ -216,7 +217,8 @@ export class ProductService {
 
     try {
       return await firstValueFrom(this.getProducts().pipe(take(1), timeout({ first: 2500 })));
-    } catch {
+    } catch (error) {
+      if (!Capacitor.isNativePlatform()) throw error;
       return this.readCachedProducts(profile);
     }
   }

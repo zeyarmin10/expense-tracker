@@ -1,4 +1,5 @@
 import { Injectable, inject, Injector } from '@angular/core';
+import { Capacitor } from '@capacitor/core';
 import {
   Database,
   ref,
@@ -147,20 +148,24 @@ export class UserDataService {
 
   getUserProfile(userId: string): Observable<UserProfile | null> {
     const userRef = ref(this.db, `users/${userId}`);
+    const remote$ = objectVal<UserProfile>(userRef).pipe(
+      tap(profile => {
+        if (profile && Capacitor.isNativePlatform()) {
+          void this.offlineStore.cacheProfile(userId, this.withUserId(userId, profile));
+        }
+      }),
+      // Do not replace a usable cached profile with a transient offline null.
+      filter((profile): profile is UserProfile => profile !== null),
+      map(profile => this.withUserId(userId, profile)),
+    );
+    if (!Capacitor.isNativePlatform()) return remote$;
+
     const localChanges$ = this.getOfflineProfileChanges(userId).pipe(
       filter((profile): profile is UserProfile => profile !== null),
       switchMap(profile => from(this.withCachedSpaceContext(userId, profile))),
     );
     const cached$ = from(this.offlineStore.getProfile<UserProfile>(userId)).pipe(
       switchMap(profile => profile ? from(this.withCachedSpaceContext(userId, profile)) : EMPTY),
-    );
-    const remote$ = objectVal<UserProfile>(userRef).pipe(
-      tap(profile => {
-        if (profile) void this.offlineStore.cacheProfile(userId, this.withUserId(userId, profile));
-      }),
-      // Do not replace a usable cached profile with a transient offline null.
-      filter((profile): profile is UserProfile => profile !== null),
-      map(profile => this.withUserId(userId, profile)),
     );
     // Keep local profile edits visible offline, then switch back to the live
     // server profile as soon as the backend is reachable.
@@ -344,8 +349,10 @@ export class UserDataService {
       const userRef = ref(this.db, `users/${profile.uid}`);
       this.mirrorPublicProfile(profile.uid, profile.displayName, profile.photoURL);
       await set(userRef, profile);
-      await this.offlineStore.cacheProfile(profile.uid, profile);
-      this.getOfflineProfileChanges(profile.uid).next(profile);
+      if (Capacitor.isNativePlatform()) {
+        await this.offlineStore.cacheProfile(profile.uid, profile);
+        this.getOfflineProfileChanges(profile.uid).next(profile);
+      }
   }
 
   async updateUserProfile(userId: string, data: Partial<UserProfile>): Promise<void> {

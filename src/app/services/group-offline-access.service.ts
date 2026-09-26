@@ -1,4 +1,5 @@
 import { Injectable, inject } from '@angular/core';
+import { Capacitor } from '@capacitor/core';
 import { BehaviorSubject } from 'rxjs';
 import { NetworkService } from './network.service';
 import { OfflineStoreService } from './offline-store.service';
@@ -36,6 +37,10 @@ export class GroupOfflineAccessService {
   }
 
   async evaluate(profile: UserProfile | null | undefined): Promise<GroupOfflineAccessState | null> {
+    if (!Capacitor.isNativePlatform()) {
+      this.state$.next(null);
+      return null;
+    }
     const groupId = getActiveGroupId(profile);
     if (!groupId) {
       this.state$.next(null);

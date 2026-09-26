@@ -1,4 +1,5 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import { Database, goOnline, onValue, ref } from '@angular/fire/database';
 import { Capacitor } from '@capacitor/core';
 import { Network } from '@capacitor/network';
 import { BehaviorSubject } from 'rxjs';
@@ -6,17 +7,19 @@ import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class NetworkService {
-  /** Physical Wi-Fi/mobile connectivity only. */
+  private db = inject(Database);
+  /** Native physical status; web follows the Firebase connection. */
   isPhysicalConnection$ = new BehaviorSubject<boolean>(false);
-  /** True only after a native reachability probe proves the app can reach its backend. */
+  /** Native reachability result; on web this follows Firebase's live connection. */
   hasInternetAccess$ = new BehaviorSubject<boolean>(false);
-  /** The first probe has completed, so UI may safely show an offline/online notice. */
+  /** The first connection check has completed. */
   hasCheckedInternetAccess$ = new BehaviorSubject<boolean>(false);
-  /** Usable Firebase connection. Unknown, blocked, or unreachable means local/offline mode. */
+  /** Web follows Firebase's live connection; native also checks reachability. */
   isOnline$ = new BehaviorSubject<boolean>(false);
   private physicalConnection = false;
   private internetReachable = false;
   private serverUnavailable = false;
+  private firebaseListenerAdded = false;
   private initialized = false;
   private listenerAdded = false; // listener တစ်ကြိမ်တည်းသာ add ဖို့
   private probeTimer?: ReturnType<typeof setInterval>;
@@ -27,6 +30,17 @@ export class NetworkService {
   private readonly disconnectConfirmDelayMs = Capacitor.isNativePlatform() ? 2200 : 0;
 
   async init() {
+    if (!Capacitor.isNativePlatform()) {
+      if (!this.firebaseListenerAdded) {
+        this.firebaseListenerAdded = true;
+        onValue(ref(this.db, '.info/connected'), snapshot => {
+          this.updateWebConnection(snapshot.val() === true);
+        }, () => {
+          this.updateWebConnection(false);
+        });
+      }
+      return;
+    }
     this.physicalConnection = await this.getConfirmedPhysicalConnectionStatus();
     this.publishConnectionState();
 
@@ -80,9 +94,7 @@ export class NetworkService {
     await this.refreshInternetAccess();
   }
 
-  /** The device has a network, but Firebase's backend cannot be reached
-   * (for example an ISP route that requires a VPN). Treat it as offline so
-   * normal writes use the durable local queue instead of hanging on RTDB. */
+  /** Native uses the durable local queue if Firebase cannot be reached. */
   markServerUnavailable(): void {
     this.serverUnavailable = true;
     this.publishConnectionState();
@@ -98,12 +110,20 @@ export class NetworkService {
   /** Lets pull-to-refresh retry Firebase after the user enables a VPN. */
   async retryServerConnection(): Promise<void> {
     this.serverUnavailable = false;
+    if (!Capacitor.isNativePlatform()) {
+      goOnline(this.db);
+      this.publishConnectionState();
+      return;
+    }
     this.physicalConnection = await this.getConfirmedPhysicalConnectionStatus();
     this.publishConnectionState();
     await this.refreshInternetAccess();
   }
 
   async refreshInternetAccess(): Promise<boolean> {
+    if (!Capacitor.isNativePlatform()) {
+      return this.isOnline$.value;
+    }
     const checkId = ++this.reachabilityCheckId;
 
     if (!this.physicalConnection) {
@@ -179,13 +199,15 @@ export class NetworkService {
   }
 
   private async probeBackendOnce(): Promise<boolean> {
-    const databaseUrl = environment.firebaseConfig.databaseURL.replace(/\/$/, '');
-    const url = `${databaseUrl}/.json?shallow=true&kw_probe=${Date.now()}`;
+    const url = new URL(environment.firebaseConfig.databaseURL);
+    url.pathname = `${url.pathname.replace(/\/$/, '')}/.json`;
+    url.searchParams.set('shallow', 'true');
+    url.searchParams.set('kw_probe', String(Date.now()));
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.reachabilityTimeoutMs);
 
     try {
-      const response = await fetch(url, {
+      const response = await fetch(url.toString(), {
         method: 'GET',
         cache: 'no-store',
         signal: controller.signal,
@@ -213,7 +235,16 @@ export class NetworkService {
     if (this.hasInternetAccess$.value !== this.internetReachable) {
       this.hasInternetAccess$.next(this.internetReachable);
     }
-    const online = this.internetReachable && !this.serverUnavailable;
+    const online = this.internetReachable &&
+      (!Capacitor.isNativePlatform() || !this.serverUnavailable);
     if (this.isOnline$.value !== online) this.isOnline$.next(online);
+  }
+
+  private updateWebConnection(connected: boolean): void {
+    this.physicalConnection = connected;
+    this.internetReachable = connected;
+    this.hasCheckedInternetAccess$.next(true);
+    if (connected) this.serverUnavailable = false;
+    this.publishConnectionState();
   }
 }

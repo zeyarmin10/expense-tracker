@@ -1,9 +1,6 @@
-<!-- Floating back button -->
-<button class="pp-float-back" (click)="goBack()" [attr.aria-label]="'BACK_BUTTON' | translate">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
-    stroke-linejoin="round">
-    <polyline points="15 18 9 12 15 6" />
-  </svg>
+<button class="pp-float-back" type="button" (click)="goBack()">
+  <lucide-icon [img]="iconArrowLeft" [size]="18"></lucide-icon>
+  <span>{{ 'BACK_BUTTON' | translate }}</span>
 </button>
 
 <div class="pp-wrapper">

@@ -413,7 +413,7 @@ export class Purchase implements OnInit, OnDestroy {
       await Swal.fire({
         icon: 'warning',
         title: this.translate.instant('CATEGORY_REQUIRED'),
-        confirmButtonText: this.translate.instant('CLOSE_BUTTON_LABEL'),
+        confirmButtonText: this.translate.instant('OK_BUTTON'),
       });
       return;
     }
@@ -423,7 +423,7 @@ export class Purchase implements OnInit, OnDestroy {
       await Swal.fire({
         icon: 'warning',
         title: this.translate.instant('UNIT_PRICE_REQUIRED'),
-        confirmButtonText: this.translate.instant('CLOSE_BUTTON_LABEL'),
+        confirmButtonText: this.translate.instant('OK_BUTTON'),
       });
       return;
     }

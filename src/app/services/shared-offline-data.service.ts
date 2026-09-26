@@ -1,4 +1,5 @@
 import { Injectable, inject } from '@angular/core';
+import { Capacitor } from '@capacitor/core';
 import { getActiveGroupId, UserProfile } from './user-data';
 import { NetworkService } from './network.service';
 import { OfflineCollection, OfflineOperationKind, OfflineStoreService } from './offline-store.service';
@@ -13,7 +14,8 @@ export class SharedOfflineDataService {
   private groupOfflineAccess = inject(GroupOfflineAccessService);
 
   isOfflineShared(profile: UserProfile | null | undefined): boolean {
-    return !!getActiveGroupId(profile) && !this.network.isOnline$.value;
+    return Capacitor.isNativePlatform() &&
+      !!getActiveGroupId(profile) && !this.network.isOnline$.value;
   }
 
   private groupId(profile: UserProfile): string {
@@ -40,6 +42,7 @@ export class SharedOfflineDataService {
     collection: OfflineCollection,
     remoteRecords: Record<string, Record<string, unknown>>,
   ): Promise<void> {
+    if (!Capacitor.isNativePlatform()) return;
     const records = { ...remoteRecords };
     const prefix = `${this.path(profile, collection)}/`;
     for (const operation of await this.store.pendingOperations()) {
@@ -60,6 +63,7 @@ export class SharedOfflineDataService {
     payload?: Record<string, unknown>,
     baseUpdatedAt?: string | null,
   ): Promise<void> {
+    if (!Capacitor.isNativePlatform()) throw new Error('WEB_REQUIRES_INTERNET');
     await this.groupOfflineAccess.assertCanWriteOffline(profile);
     const scope = this.scope(profile);
     if (kind === 'remove') await this.store.removeRecord(scope, collection, recordId);
@@ -78,6 +82,7 @@ export class SharedOfflineDataService {
     localVoucher: Record<string, unknown>,
     uploadPayload: Record<string, unknown>,
   ): Promise<void> {
+    if (!Capacitor.isNativePlatform()) throw new Error('WEB_REQUIRES_INTERNET');
     await this.groupOfflineAccess.assertCanWriteOffline(profile);
     const groupId = this.groupId(profile);
     await this.store.patchRecord(this.scope(profile), 'vouchers', voucherId, localVoucher);

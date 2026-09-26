@@ -24,15 +24,13 @@ registerLocaleData(localeJa, 'ja', localeJaExtra);
 
 bootstrapApplication(App, appConfig)
   .then(() => {
-    // Native Capacitor builds already bundle the application shell. The web
-    // build needs a service worker so it can start without a connection too.
-    // Angular's development server serves index.html virtually, which is not
-    // a cacheable public asset. Keep the worker production-only so `ng serve`
-    // stays free of its misleading "no asset found" request warning.
+    // Web push notifications share this worker. It no longer caches the app
+    // shell, but production must register the updated worker to retire old
+    // offline shell caches even before notifications are enabled.
     if (!Capacitor.isNativePlatform() && 'serviceWorker' in navigator) {
       if (environment.production) {
         navigator.serviceWorker.register('/service-worker.js').catch((error) => {
-          console.warn('Unable to register offline service worker:', error);
+          console.warn('Unable to register notification service worker:', error);
         });
       } else {
         // Clean up a worker installed before the production-only guard was

@@ -124,6 +124,7 @@ export class Inventory implements OnInit, OnDestroy {
   selectedProductCategory = '';
   readonly outOfStockFilterValue = '__out_of_stock__';
   readonly lowStockFilterValue = '__low_stock__';
+  readonly neverPurchasedFilterValue = '__never_purchased__';
   isInventoryFilterSheetOpen = false;
   inventoryFilterMenuTop = 0;
   inventoryFilterMenuLeft = 0;
@@ -567,10 +568,6 @@ export class Inventory implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  get inventoryTabIndex(): number {
-    return this.activeTab === 'products' ? 0 : this.activeTab === 'stock' ? 1 : 2;
-  }
-
   setActiveTab(tab: 'products' | 'stock' | 'shopExpenses'): void {
     if (this.activeTab === tab || this.isTabTransitioning) return;
     // Large stock tables can take a visible moment to construct on older
@@ -820,6 +817,7 @@ export class Inventory implements OnInit, OnDestroy {
     if (!this.selectedProductCategory) return this.translateService.instant('ALL_CATEGORIES');
     if (this.selectedProductCategory === this.outOfStockFilterValue) return this.translateService.instant('INVENTORY_FILTER_OUT_OF_STOCK');
     if (this.selectedProductCategory === this.lowStockFilterValue) return this.translateService.instant('INVENTORY_FILTER_LOW_STOCK');
+    if (this.selectedProductCategory === this.neverPurchasedFilterValue) return this.translateService.instant('INVENTORY_FILTER_NEVER_PURCHASED');
     if (this.selectedProductCategory === this.uncategorizedFilterValue) return this.translateService.instant('UNCATEGORIZED');
     return this.selectedProductCategory;
   }
@@ -840,6 +838,7 @@ export class Inventory implements OnInit, OnDestroy {
     const stock = productId ? this.stockByProductId.get(productId) : undefined;
     if (this.selectedProductCategory === this.outOfStockFilterValue) return !!stock && this.isOutOfStock(stock);
     if (this.selectedProductCategory === this.lowStockFilterValue) return !!stock && this.isLowStock(stock);
+    if (this.selectedProductCategory === this.neverPurchasedFilterValue) return !!stock && this.isNeverPurchased(stock);
 
     const categories = productId ? this.productCategoriesById.get(productId) : undefined;
     if (this.selectedProductCategory === this.uncategorizedFilterValue) {
@@ -858,6 +857,10 @@ export class Inventory implements OnInit, OnDestroy {
 
   isLowStock(row: ProductStockSummary): boolean {
     return row.totalPurchasedQty > 0 && row.currentStock > 0 && row.currentStock <= this.lowStockThreshold;
+  }
+
+  isNeverPurchased(row: ProductStockSummary): boolean {
+    return row.avgCost === null;
   }
 
   toggleRowExpand(productId: string): void {

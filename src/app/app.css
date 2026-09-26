@@ -2,6 +2,60 @@
    Global App Styles
    ===================== */
 
+.web-connection-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 5000;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  background: var(--bg, #020817);
+  color: var(--text, #f0f2f7);
+}
+
+.web-connection-card {
+  width: min(100%, 420px);
+  padding: 2rem;
+  border: 1px solid var(--border, rgba(148, 163, 184, 0.25));
+  border-radius: 1.25rem;
+  background: var(--surface, #12151c);
+  text-align: center;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.2);
+}
+
+.web-connection-icon {
+  font-size: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+.web-connection-card h1 {
+  margin: 0 0 0.75rem;
+  font-size: 1.3rem;
+}
+
+.web-connection-card p {
+  margin: 0 0 1.5rem;
+  line-height: 1.5;
+  color: var(--text-muted, #94a3b8);
+}
+
+.web-connection-card button {
+  min-height: 44px;
+  padding: 0 1.5rem;
+  border: 0;
+  border-radius: 0.7rem;
+  background: var(--accent, #0b74ff);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.web-connection-card button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
 /* Remove default body margin/padding and set dark base */
 body {
   margin: 0;

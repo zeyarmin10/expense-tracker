@@ -8,7 +8,7 @@ import { APP_VERSION } from '../../core/constants/app.constants';
 import {
   LucideAngularModule,
   Wallet, PiggyBank, TrendingUp, Users, Globe, Tags, Package,
-  Heart, Star, Mail, Sparkles,
+  Heart, Star, Mail, Sparkles, ArrowLeft,
 } from 'lucide-angular';
 
 interface AboutFeature {
@@ -28,6 +28,7 @@ export class AboutComponent implements OnInit {
   private location = inject(Location);
 
   readonly iconSparkles = Sparkles;
+  readonly iconArrowLeft = ArrowLeft;
   readonly iconHeart = Heart;
   readonly iconStar = Star;
   readonly iconMail = Mail;

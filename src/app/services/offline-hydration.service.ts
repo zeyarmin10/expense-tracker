@@ -1,4 +1,5 @@
 import { Injectable, inject } from '@angular/core';
+import { Capacitor } from '@capacitor/core';
 import { Database, get, ref } from '@angular/fire/database';
 import { BehaviorSubject, combineLatest, filter } from 'rxjs';
 import { AuthService } from './auth';
@@ -31,6 +32,7 @@ export class OfflineHydrationService {
   readonly lastSyncedAt$ = new BehaviorSubject<Date | null>(null);
 
   async init(): Promise<void> {
+    if (!Capacitor.isNativePlatform()) return;
     if (this.started) return;
     this.started = true;
     combineLatest([this.auth.userProfile$, this.network.isOnline$]).pipe(
@@ -45,6 +47,7 @@ export class OfflineHydrationService {
   }
 
   async syncAllUserSpaces(profile?: UserProfile): Promise<void> {
+    if (!Capacitor.isNativePlatform()) return;
     if (this.syncing || !this.network.isOnline$.value) return;
     if (!profile) return;
     const activeProfile = profile;

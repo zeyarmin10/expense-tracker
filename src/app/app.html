@@ -1,3 +1,16 @@
+<div class="web-connection-screen" *ngIf="webUnavailable$ | async" role="status" aria-live="polite">
+  <section class="web-connection-card">
+    <div class="web-connection-icon" aria-hidden="true">☁</div>
+    <h1>{{ ((webConnectionChecked$ | async) ? 'WEB_INTERNET_REQUIRED_TITLE' : 'WEB_CHECKING_CONNECTION') | translate }}</h1>
+    <p *ngIf="webConnectionChecked$ | async">{{ 'WEB_INTERNET_REQUIRED_MESSAGE' | translate }}</p>
+    <button type="button" *ngIf="webConnectionChecked$ | async"
+      (click)="retryWebConnection()" [disabled]="isRetryingWebConnection">
+      {{ 'WEB_RETRY_CONNECTION' | translate }}
+    </button>
+  </section>
+</div>
+
+<ng-container *ngIf="!(webUnavailable$ | async)">
 <div class="status-bar-bg" [class.standalone-page]="isStandalonePage$ | async" aria-hidden="true"></div>
 
 <div class="pull-refresh-indicator" [class.visible]="pullDistance > 0 || isPullRefreshing"
@@ -532,3 +545,4 @@
 <router-outlet />
 
 <app-welcome-tour *ngIf="showWelcomeTour" (closed)="showWelcomeTour = false"></app-welcome-tour>
+</ng-container>

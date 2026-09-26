@@ -2,33 +2,34 @@
   display: block;
 }
 
-/* Floating back button */
 .pp-float-back {
   position: fixed;
   top: calc(env(safe-area-inset-top, 0px) + 14px);
   left: 16px;
   z-index: 200;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 50%;
-  color: var(--text);
+  gap: 0.4rem;
+  flex: 0 0 auto;
+  min-height: 40px;
+  padding: 0 0.7rem;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+  border-radius: 10px;
+  background: var(--surface, #141920);
+  color: var(--text, #fff);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
-  transition: background 0.15s;
 }
 
 .pp-float-back:hover {
-  background: var(--surface-2);
+  background: var(--surface-2, #1c2230);
 }
 
-.pp-float-back svg {
-  width: 18px;
-  height: 18px;
+.pp-float-back:focus-visible {
+  outline: 2px solid var(--accent, #0b74ff);
+  outline-offset: 2px;
 }
 
 .pp-wrapper {
@@ -39,9 +40,13 @@
 }
 
 @media (max-width: 991px) {
+  .pp-float-back {
+    min-height: 44px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+  }
+
   .pp-wrapper {
-    /* safe area + floating button (40px) + gap (16px) */
-    padding-top: calc(env(safe-area-inset-top, 0px) + 4.25rem);
+    padding-top: calc(env(safe-area-inset-top, 0px) + 4.5rem);
   }
 }
 
