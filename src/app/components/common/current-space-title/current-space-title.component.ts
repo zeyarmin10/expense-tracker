@@ -5,12 +5,16 @@ import { LucideAngularModule, Check, User, Plus } from 'lucide-angular';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import {
   combineLatest,
+  filter,
   firstValueFrom,
   map,
   of,
   shareReplay,
   startWith,
+  Subject,
   switchMap,
+  take,
+  takeUntil,
 } from 'rxjs';
 import { AuthService } from '../../../services/auth';
 import { UserSpaceSummary } from '../../../services/space.model';
@@ -40,7 +44,7 @@ type SpaceImageSource = {
   imports: [CommonModule, LucideAngularModule, TranslateModule, RouterModule],
   template: `
     <div class="space-title-switcher" *ngIf="viewModel$ | async as vm">
-      <span class="space-title-label" [class.space-title-label-visible]="showLabel">{{ vm.currentName }}</span>
+      <span class="space-title-label" [class.space-title-label-visible]="showLabel && !menuOpen" *ngIf="vm.currentName">{{ vm.currentName }}</span>
       <button
         id="tour-space-switcher"
         class="space-title-trigger"
@@ -165,33 +169,49 @@ type SpaceImageSource = {
     }
 
     .space-title-label {
-      flex: 0 1 auto;
-      min-width: 0;
-      max-width: 0;
-      overflow: hidden;
-      white-space: nowrap;
-      text-align: right;
+      position: absolute;
+      z-index: 1;
+      top: calc(100% + 0.5rem);
+      right: 0;
+      width: max-content;
+      max-width: min(280px, calc(100vw - 1.5rem));
+      padding: 0.5rem 0.7rem;
+      border: 1px solid var(--border, rgba(255, 255, 255, 0.14));
+      border-radius: 10px;
+      background: var(--surface, #12151c);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+      line-height: 1.45;
+      overflow-wrap: anywhere;
+      text-align: left;
       font-size: 0.8rem;
       font-weight: 700;
-      color: var(--accent, #0b74ff);
-      letter-spacing: 0.01em;
-      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.55);
+      color: var(--text, #ffffff);
       opacity: 0;
-      margin-right: 0;
+      visibility: hidden;
+      transform: translateY(-4px);
       pointer-events: none;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 4px;
-      backdrop-filter: blur(3px);
       transition:
-        max-width 3.5s cubic-bezier(0.25, 0.1, 0.25, 1),
-        opacity 3.2s cubic-bezier(0.25, 0.1, 0.25, 1),
-        margin-right 3.5s cubic-bezier(0.25, 0.1, 0.25, 1);
+        opacity 0.2s ease,
+        transform 0.2s ease,
+        visibility 0s linear 0.2s;
     }
 
     .space-title-label-visible {
-      max-width: 180px;
       opacity: 1;
-      margin-right: 0.5rem;
+      visibility: visible;
+      transform: translateY(0);
+      transition:
+        opacity 0.2s ease,
+        transform 0.2s ease,
+        visibility 0s;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .space-title-label,
+      .space-title-label-visible {
+        transform: none;
+        transition: none;
+      }
     }
 
     .space-title-trigger {
@@ -385,11 +405,6 @@ type SpaceImageSource = {
       box-shadow: 0 12px 30px rgba(15, 23, 42, 0.15);
     }
 
-    :host-context(body.light-mode) .space-title-label {
-      color: var(--accent, #0b74ff);
-      text-shadow: 0 1px 3px rgba(255, 255, 255, 0.6);
-    }
-
     /* ── Inline mode: embedded inside topbar ── */
     :host.cst-inline {
       position: relative;
@@ -450,9 +465,9 @@ export class CurrentSpaceTitleComponent implements OnInit, OnDestroy {
   isSwitching = false;
   showLabel = false;
 
-  private labelCycleTimeout: ReturnType<typeof setTimeout> | null = null;
+  private readonly destroy$ = new Subject<void>();
+  private labelShowTimeout: ReturnType<typeof setTimeout> | null = null;
   private labelHideTimeout: ReturnType<typeof setTimeout> | null = null;
-  private labelIntervalId: ReturnType<typeof setInterval> | null = null;
   private readonly imageLoadFailures = new Set<string>();
 
   private readonly userSpaces$ = this.authService.currentUser$.pipe(
@@ -526,31 +541,42 @@ export class CurrentSpaceTitleComponent implements OnInit, OnDestroy {
         spaces: spaceOptions,
       };
     }),
+    shareReplay({ bufferSize: 1, refCount: true }),
   );
 
   ngOnInit(): void {
-    const SLIDE_DURATION = 3500;  // matches CSS transition
-    const HOLD_DURATION = 3000;   // 3s pause after fully visible
-    const SHOW_DURATION = SLIDE_DURATION + HOLD_DURATION;
-    const CYCLE_INTERVAL = SHOW_DURATION + SLIDE_DURATION + 5000;
-
-    const show = () => {
-      this.showLabel = true;
-      this.labelHideTimeout = setTimeout(() => {
-        this.showLabel = false;
-      }, SHOW_DURATION);
-    };
-
-    this.labelCycleTimeout = setTimeout(() => {
-      show();
-      this.labelIntervalId = setInterval(show, CYCLE_INTERVAL);
-    }, 1500);
+    this.viewModel$.pipe(
+      filter(vm => !!vm.currentName),
+      take(1),
+      takeUntil(this.destroy$),
+    ).subscribe(() => this.showSpaceNameChip());
   }
 
   ngOnDestroy(): void {
-    if (this.labelCycleTimeout !== null) clearTimeout(this.labelCycleTimeout);
+    this.destroy$.next();
+    this.destroy$.complete();
+    this.clearSpaceNameChipTimers();
+  }
+
+  private showSpaceNameChip(): void {
+    this.clearSpaceNameChipTimers();
+    this.showLabel = false;
+    // Let the chip render in its hidden state before fading it in.
+    this.labelShowTimeout = setTimeout(() => {
+      this.showLabel = true;
+      this.labelShowTimeout = null;
+      this.labelHideTimeout = setTimeout(() => {
+        this.showLabel = false;
+        this.labelHideTimeout = null;
+      }, 2200);
+    }, 150);
+  }
+
+  private clearSpaceNameChipTimers(): void {
+    if (this.labelShowTimeout !== null) clearTimeout(this.labelShowTimeout);
     if (this.labelHideTimeout !== null) clearTimeout(this.labelHideTimeout);
-    if (this.labelIntervalId !== null) clearInterval(this.labelIntervalId);
+    this.labelShowTimeout = null;
+    this.labelHideTimeout = null;
   }
 
   @HostListener('document:pointerdown', ['$event'])
@@ -567,6 +593,10 @@ export class CurrentSpaceTitleComponent implements OnInit, OnDestroy {
   toggleMenu(event: MouseEvent): void {
     event.stopPropagation();
     this.menuOpen = !this.menuOpen;
+    if (this.menuOpen) {
+      this.clearSpaceNameChipTimers();
+      this.showLabel = false;
+    }
   }
 
   shouldShowImage(
@@ -632,6 +662,11 @@ export class CurrentSpaceTitleComponent implements OnInit, OnDestroy {
           this.router.navigate(['/dashboard']),
         );
       }
+      this.spaceSwitchLoadingService.loading$.pipe(
+        filter(loading => !loading),
+        take(1),
+        takeUntil(this.destroy$),
+      ).subscribe(() => this.showSpaceNameChip());
     } catch (error) {
       console.error('Space switch failed', error);
       this.spaceSwitchLoadingService.cancelSwitch(loadingToken);
