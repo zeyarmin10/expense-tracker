@@ -919,6 +919,7 @@
   "PRODUCT_NAME_LABEL": "ပစ္စည်းအမည်",
   "PRODUCT_UNIT_LABEL": "ယူနစ်",
   "PRODUCT_SELLING_PRICE_LABEL": "ရောင်းဈေး (မဖြည့်လည်းရ)",
+  "PRODUCT_SELLING_PRICE_SHORT_LABEL": "ရောင်းဈေး",
   "PRODUCT_BARCODE_LABEL": "ဘားကုဒ် (မဖြည့်လည်းရ)",
   "SCAN_BARCODE_BUTTON": "ဘားကုဒ် စကင်",
   "BARCODE_NO_MATCH": "ဒီဘားကုဒ်နှင့် ကိုက်ညီတဲ့ ပစ္စည်း မတွေ့ပါ။",

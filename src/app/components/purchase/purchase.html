@@ -455,7 +455,12 @@
               <span class="exp-cat-picker-item-icon">
                 <lucide-icon [img]="iconPackage" [size]="15"></lucide-icon>
               </span>
-              <span class="exp-cat-picker-item-label">{{ prod.name }}</span>
+              <span class="exp-cat-picker-item-info">
+                <span class="exp-cat-picker-item-label">{{ prod.name }}</span>
+                <span class="exp-cat-picker-item-price" *ngIf="prod.sellingPrice && prod.sellingPrice > 0">
+                  {{ 'PRODUCT_SELLING_PRICE_SHORT_LABEL' | translate }}: {{ formatService.formatAmountWithSymbol(prod.sellingPrice, userProfile?.currency || 'MMK') }}
+                </span>
+              </span>
             </button>
           </div>
         </div>
@@ -977,7 +982,12 @@
         <span class="exp-cat-picker-item-icon">
           <lucide-icon [img]="iconArchive" [size]="15"></lucide-icon>
         </span>
-        <span class="exp-cat-picker-item-label">{{ prod.name }}</span>
+        <span class="exp-cat-picker-item-info">
+          <span class="exp-cat-picker-item-label">{{ prod.name }}</span>
+          <span class="exp-cat-picker-item-price" *ngIf="prod.sellingPrice && prod.sellingPrice > 0">
+            {{ 'PRODUCT_SELLING_PRICE_SHORT_LABEL' | translate }}: {{ formatService.formatAmountWithSymbol(prod.sellingPrice, userProfile?.currency || 'MMK') }}
+          </span>
+        </span>
         <lucide-icon
           *ngIf="newExpenseForm.get('productId')?.value === prod.id"
           [img]="iconCheck" [size]="16" class="exp-cat-picker-item-check">

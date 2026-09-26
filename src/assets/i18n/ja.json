@@ -919,6 +919,7 @@
   "PRODUCT_NAME_LABEL": "商品名",
   "PRODUCT_UNIT_LABEL": "単位",
   "PRODUCT_SELLING_PRICE_LABEL": "販売価格（任意）",
+  "PRODUCT_SELLING_PRICE_SHORT_LABEL": "販売価格",
   "PRODUCT_BARCODE_LABEL": "バーコード（任意）",
   "SCAN_BARCODE_BUTTON": "バーコードをスキャン",
   "BARCODE_NO_MATCH": "このバーコードに一致する商品が見つかりません。",

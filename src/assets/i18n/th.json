@@ -919,6 +919,7 @@
   "PRODUCT_NAME_LABEL": "ชื่อสินค้า",
   "PRODUCT_UNIT_LABEL": "หน่วย",
   "PRODUCT_SELLING_PRICE_LABEL": "ราคาขาย (ไม่บังคับ)",
+  "PRODUCT_SELLING_PRICE_SHORT_LABEL": "ราคาขาย",
   "PRODUCT_BARCODE_LABEL": "บาร์โค้ด (ไม่บังคับ)",
   "SCAN_BARCODE_BUTTON": "สแกนบาร์โค้ด",
   "BARCODE_NO_MATCH": "ไม่พบสินค้าที่ตรงกับบาร์โค้ดนี้",

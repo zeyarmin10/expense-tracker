@@ -919,6 +919,7 @@
   "PRODUCT_NAME_LABEL": "ឈ្មោះផលិតផល",
   "PRODUCT_UNIT_LABEL": "ឯកតា",
   "PRODUCT_SELLING_PRICE_LABEL": "តម្លៃលក់ (ស្រេចចិត្ត)",
+  "PRODUCT_SELLING_PRICE_SHORT_LABEL": "តម្លៃលក់",
   "PRODUCT_BARCODE_LABEL": "បាកូដ (ស្រេចចិត្ត)",
   "SCAN_BARCODE_BUTTON": "ស្កេនបាកូដ",
   "BARCODE_NO_MATCH": "រកមិនឃើញផលិតផលដែលត្រូវគ្នានឹងបាកូដនេះទេ។",

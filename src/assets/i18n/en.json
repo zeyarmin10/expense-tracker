@@ -919,6 +919,7 @@
   "PRODUCT_NAME_LABEL": "Product Name",
   "PRODUCT_UNIT_LABEL": "Unit",
   "PRODUCT_SELLING_PRICE_LABEL": "Selling Price (optional)",
+  "PRODUCT_SELLING_PRICE_SHORT_LABEL": "Selling price",
   "PRODUCT_BARCODE_LABEL": "Barcode (optional)",
   "SCAN_BARCODE_BUTTON": "Scan barcode",
   "BARCODE_NO_MATCH": "No product matches this barcode.",
