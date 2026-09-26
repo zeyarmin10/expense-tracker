@@ -19,6 +19,7 @@ export class NetworkService {
   private serverUnavailable = false;
   private initialized = false;
   private listenerAdded = false; // listener တစ်ကြိမ်တည်းသာ add ဖို့
+  private probeTimer?: ReturnType<typeof setInterval>;
   private reachabilityCheckId = 0;
   private physicalStatusCheckId = 0;
   private readonly reachabilityTimeoutMs = Capacitor.isNativePlatform() ? 3500 : 6000;
@@ -51,6 +52,10 @@ export class NetworkService {
 
     this.initialized = true;
     void this.refreshInternetAccess();
+    // A VPN/backend route can recover without a Wi-Fi status change.
+    this.probeTimer ??= setInterval(() => {
+      if (this.physicalConnection) void this.refreshInternetAccess();
+    }, 15000);
   }
 
   // foreground ပြန်လာတိုင်း current status စစ်ပြီး emit လုပ်တယ်
@@ -202,8 +207,13 @@ export class NetworkService {
   }
 
   private publishConnectionState(): void {
-    this.isPhysicalConnection$.next(this.physicalConnection);
-    this.hasInternetAccess$.next(this.internetReachable);
-    this.isOnline$.next(this.internetReachable && !this.serverUnavailable);
+    if (this.isPhysicalConnection$.value !== this.physicalConnection) {
+      this.isPhysicalConnection$.next(this.physicalConnection);
+    }
+    if (this.hasInternetAccess$.value !== this.internetReachable) {
+      this.hasInternetAccess$.next(this.internetReachable);
+    }
+    const online = this.internetReachable && !this.serverUnavailable;
+    if (this.isOnline$.value !== online) this.isOnline$.next(online);
   }
 }

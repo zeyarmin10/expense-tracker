@@ -23,7 +23,7 @@ import {
 } from '@angular/fire/auth';
 import { AngularFireDatabase } from '@angular/fire/compat/database';
 import { TranslateService } from '@ngx-translate/core';
-import { Observable, Subject, of, from, firstValueFrom, shareReplay } from 'rxjs';
+import { Observable, Subject, of, from, firstValueFrom, shareReplay, combineLatest } from 'rxjs';
 import { switchMap, map } from 'rxjs/operators';
 import { UserDataService, UserProfile } from './user-data';
 import { DataManagerService } from './data-manager';
@@ -73,7 +73,8 @@ export class AuthService {
         const spaceContextService = this.injector.get(SpaceContextService);
 
         return userDataService.getUserProfile(user.uid).pipe(
-          switchMap((profile) => {
+          switchMap((profile) => combineLatest([of(profile), this.networkService.isOnline$])),
+          switchMap(([profile, online]) => {
             if (!profile) {
               return of(null);
             }
@@ -94,7 +95,7 @@ export class AuthService {
             // The profile is persisted locally for Phase 1. Avoid waiting on
             // the space listener when the device is offline; otherwise a
             // valid cached personal profile never reaches the app shell.
-            if (!this.networkService.isOnline$.value) {
+            if (!online) {
               return of(profile);
             }
 

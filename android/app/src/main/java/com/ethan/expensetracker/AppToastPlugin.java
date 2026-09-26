@@ -58,10 +58,10 @@ public class AppToastPlugin extends Plugin {
         toast.setGravity(Gravity.CENTER);
         toast.setMaxLines(3);
         toast.setPadding(
-            Math.round(17 * density),
-            Math.round(11 * density),
-            Math.round(17 * density),
-            Math.round(11 * density)
+            Math.round(16 * density),
+            Math.round(10 * density),
+            Math.round(16 * density),
+            Math.round(10 * density)
         );
 
         GradientDrawable background = new GradientDrawable();

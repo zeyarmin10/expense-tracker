@@ -7,8 +7,9 @@ import {
   ref as dbRef,
   remove,
   set,
+  objectVal,
 } from '@angular/fire/database';
-import { Observable, firstValueFrom, from, of } from 'rxjs';
+import { Observable, firstValueFrom, from, of, combineLatest } from 'rxjs';
 import { catchError, filter, switchMap } from 'rxjs/operators';
 import { UAParser } from 'ua-parser-js';
 import { DataIVoucher as IVoucher } from '../core/models/data';
@@ -21,6 +22,7 @@ import { environment } from '../../environments/environment';
 import { PersonalOfflineDataService } from './personal-offline-data.service';
 import { SharedOfflineDataService } from './shared-offline-data.service';
 import { OfflineStoreService } from './offline-store.service';
+import { NetworkService } from './network.service';
 
 export type ServiceIVoucher = IVoucher & {
   id: string;
@@ -59,6 +61,7 @@ export class VoucherService {
   private personalOfflineData = inject(PersonalOfflineDataService);
   private sharedOfflineData = inject(SharedOfflineDataService);
   private offlineStore = inject(OfflineStoreService);
+  private network = inject(NetworkService);
 
   private getProfilePhotoURL(profile: { photoURL?: string | null } | null | undefined): string | null {
     if (!profile) return null;
@@ -165,8 +168,8 @@ export class VoucherService {
           filter((profile): profile is UserProfile => profile !== null),
         );
 
-    return profile$.pipe(
-      switchMap(profile => {
+    return combineLatest([profile$, this.network.isOnline$]).pipe(
+      switchMap(([profile]) => {
         if (this.sharedOfflineData.isOfflineShared(profile)) {
           return from(this.sharedOfflineData.read<ServiceIVoucher>(profile, 'vouchers')).pipe(
             switchMap(vouchers => from(this.withOfflineImageUrls(vouchers))),
@@ -182,9 +185,8 @@ export class VoucherService {
         ).pipe(
           switchMap(({ canonicalRef, legacyRef }) => {
             const baseRef = canonicalRef || legacyRef;
-            const vouchers$ = from(get(baseRef)).pipe(
-              switchMap(async snapshot => {
-                const vouchersData = snapshot.val();
+            const vouchers$ = objectVal<Record<string, Record<string, unknown>> | null>(baseRef).pipe(
+              switchMap(async vouchersData => {
                 if (!vouchersData) {
                   if (getActiveGroupId(profile)) await this.sharedOfflineData.cacheRemote(profile, 'vouchers', {});
                   else await this.personalOfflineData.cacheRemote(profile, 'vouchers', {});
@@ -219,7 +221,7 @@ export class VoucherService {
 
                 return Object.keys(vouchersData)
                   .map(key => {
-                    const voucher = vouchersData[key] as IVoucher;
+                    const voucher = vouchersData[key] as unknown as IVoucher;
                     // Prefer the live profile over the snapshot stored at
                     // creation time, so a member's name/photo update reaches
                     // past records — fall back to the snapshot only if the

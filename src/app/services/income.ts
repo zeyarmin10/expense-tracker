@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { BehaviorSubject, Observable, of, firstValueFrom, from } from 'rxjs';
+import { Observable, of, firstValueFrom, from, combineLatest } from 'rxjs';
 import { map, switchMap, catchError, filter } from 'rxjs/operators';
 import {
   Database,
@@ -7,14 +7,11 @@ import {
   push,
   remove,
   update,
-  listVal,
   DatabaseReference,
   query,
   orderByChild,
-  startAt,
-  endAt,
-  Query,
   get,
+  objectVal,
 } from '@angular/fire/database';
 import { AuthService } from './auth';
 import { getActiveGroupId, UserDataService, UserProfile, PublicUserProfile } from './user-data';
@@ -182,8 +179,8 @@ export class IncomeService {
           filter((profile): profile is UserProfile => profile !== null),
         );
 
-    return profile$.pipe(
-      switchMap((profile) => {
+    return combineLatest([profile$, this.network.isOnline$]).pipe(
+      switchMap(([profile]) => {
         if (this.sharedOfflineData.isOfflineShared(profile)) {
           return from(this.sharedOfflineData.read<ServiceIIncome>(profile, 'incomes')).pipe(
             map(incomes => {
@@ -213,20 +210,9 @@ export class IncomeService {
         ).pipe(
           switchMap(({ canonicalRef, legacyRef }) => {
             const baseRef = canonicalRef || legacyRef;
-            let incomesQuery: Query = baseRef;
-
-            if (startDate && endDate) {
-              // `date` is a local business-date key, not a UTC timestamp.
-              // toISOString() would move an Asia timezone midnight into the
-              // prior UTC day and include yesterday's sales in today's query.
-              const start = toLocalDateKey(startDate);
-              const end = toLocalDateKey(endDate);
-              incomesQuery = query(baseRef, orderByChild('date'), startAt(start), endAt(end));
-            }
-
-            return this.spaceSwitchLoadingService.track(from(get(incomesQuery))).pipe(
-          switchMap(async snapshot => {
-            const incomesData = snapshot.val();
+            // Read every change from the server and cache the full collection.
+            return this.spaceSwitchLoadingService.track(objectVal<Record<string, Record<string, unknown>> | null>(baseRef)).pipe(
+          switchMap(async incomesData => {
             if (!incomesData) {
               if (getActiveGroupId(profile)) {
                 await this.sharedOfflineData.cacheRemote(profile, 'incomes', {});
@@ -268,7 +254,7 @@ export class IncomeService {
               await this.personalOfflineData.cacheRemote(profile, 'incomes', incomesData);
             }
             return Object.keys(incomesData).map(key => {
-              const income = incomesData[key] as ServiceIIncome;
+              const income = incomesData[key] as unknown as ServiceIIncome;
               // Prefer the live profile over the snapshot stored at creation
               // time, so a member's name/photo update reaches past records —
               // fall back to the snapshot only if the live lookup found nothing.
@@ -291,7 +277,12 @@ export class IncomeService {
               // InventoryService's stock derivation, ProfitLossService's
               // totals, SalesReport) reads through this one method, so
               // filtering once here is enough to fix all of them at once.
-              .filter((i: ServiceIIncome) => i.status !== 'void');
+              .filter((i: ServiceIIncome) => {
+                const start = startDate ? toLocalDateKey(startDate) : null;
+                const end = endDate ? toLocalDateKey(endDate) : null;
+                return i.status !== 'void' &&
+                  (!start || !end || (i.date >= start && i.date <= end));
+              });
           }),
           catchError(error => {
             console.error('Error fetching incomes:', error);

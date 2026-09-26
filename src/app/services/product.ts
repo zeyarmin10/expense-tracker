@@ -12,7 +12,7 @@ import {
   DatabaseReference,
   get,
 } from '@angular/fire/database';
-import { Observable, switchMap, firstValueFrom, of, take, map, from, tap, timeout, filter } from 'rxjs';
+import { Observable, switchMap, firstValueFrom, of, take, map, from, tap, timeout, filter, combineLatest } from 'rxjs';
 import { AuthService } from './auth';
 import { getActiveGroupId, UserProfile } from './user-data';
 import { SpaceDataService } from './space-data.service';
@@ -85,9 +85,11 @@ export class ProductService {
   }
 
   getProducts(): Observable<ServiceIProduct[]> {
-    return this.authService.userProfile$.pipe(
-      filter((profile): profile is UserProfile => profile !== null),
-      switchMap((profile) => {
+    return combineLatest([
+      this.authService.userProfile$.pipe(filter((profile): profile is UserProfile => profile !== null)),
+      this.network.isOnline$,
+    ]).pipe(
+      switchMap(([profile]) => {
         if (this.sharedOfflineData.isOfflineShared(profile)) {
           return from(this.sharedOfflineData.read<ServiceIProduct>(profile, 'products')).pipe(
             map(records => Object.entries(records).map(([id, product]) => ({ id, ...product }))

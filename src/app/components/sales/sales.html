@@ -22,10 +22,10 @@
       <div class="pnl-cart-overlay-scroll">
         <div class="pnl-pos-section">
           <div class="pnl-pos-section-header">
-            <h2 class="pnl-pos-section-title">
+            <h4 class="pnl-pos-section-title">
               <lucide-icon [img]="iconHandCoins" [size]="18" class="pnl-icon-accent"></lucide-icon>
               {{ 'ADD_SALE' | translate }}
-            </h2>
+            </h4>
             <button type="button" class="pnl-date-pill" (click)="openDatePicker()">
               <lucide-icon [img]="iconCalendarDays" [size]="13"></lucide-icon>
               <span>{{ formatService.formatLocalizedDate(incomeForm.get('date')?.value) }}</span>

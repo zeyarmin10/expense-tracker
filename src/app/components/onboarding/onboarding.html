@@ -4,17 +4,23 @@
 
   <div class="ob-scroll">
     <div class="ob-wrap">
-      <div class="ob-brand">
-        <div class="ob-brand-logo">
-          <!-- <fa-icon [icon]="faCreditCard"></fa-icon> -->
-          <img src="/images/Kyat-Wise-Logo.png" alt="Kyat Wise" class="lgn-logo-img" onerror="
+      <div class="ob-header">
+        <button class="ob-back-button" type="button" (click)="goBack()">
+          <lucide-icon [img]="iconArrowLeft" [size]="18"></lucide-icon>
+          <span>{{ 'BACK_BUTTON' | translate }}</span>
+        </button>
+        <div class="ob-brand">
+          <div class="ob-brand-logo">
+            <!-- <fa-icon [icon]="faCreditCard"></fa-icon> -->
+            <img src="/images/Kyat-Wise-Logo.png" alt="Kyat Wise" class="lgn-logo-img" onerror="
                                                                                                     this.style.display = 'none';
                                                                                                     this.nextElementSibling.style.display = 'flex';
                                                                                                   " />
-        </div>
-        <div class="ob-brand-text">
-          <span class="ob-brand-name">Kyat</span>
-          <span class="ob-brand-tag">WISE</span>
+          </div>
+          <div class="ob-brand-text">
+            <span class="ob-brand-name">Kyat</span>
+            <span class="ob-brand-tag">WISE</span>
+          </div>
         </div>
       </div>
 

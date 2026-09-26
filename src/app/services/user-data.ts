@@ -8,11 +8,12 @@ import {
   get,
   remove
 } from '@angular/fire/database';
-import { BehaviorSubject, Observable, concat, EMPTY, from, merge, of } from 'rxjs';
+import { BehaviorSubject, Observable, concat, EMPTY, from, of } from 'rxjs';
 import { filter, map, switchMap, tap } from 'rxjs/operators';
 import { DataManagerService } from './data-manager';
 import { Space, SpaceRole, SpaceType } from './space.model';
 import { OfflineStoreService } from './offline-store.service';
+import { NetworkService } from './network.service';
 
 // Publicly-readable subset of a profile (see `user_public/{uid}` in the DB
 // rules) — anyone signed in may read this, so it must never carry anything
@@ -131,6 +132,7 @@ export function canManageSharedSpace(profile: UserProfile | null | undefined): b
 export class UserDataService {
   private db: Database = inject(Database);
   private offlineStore = inject(OfflineStoreService);
+  private network = inject(NetworkService);
   private dataManagerService!: DataManagerService;
   private readonly offlineProfileChanges = new Map<string, BehaviorSubject<UserProfile | null>>();
 
@@ -160,11 +162,11 @@ export class UserDataService {
       filter((profile): profile is UserProfile => profile !== null),
       map(profile => this.withUserId(userId, profile)),
     );
-    // A space switch made offline cannot update Firebase immediately. Keep a
-    // small local stream alongside the remote listener so the active-space
-    // context changes instantly, then let Firebase become authoritative again
-    // once the queued update is replayed.
-    return concat(cached$, merge(localChanges$, remote$));
+    // Keep local profile edits visible offline, then switch back to the live
+    // server profile as soon as the backend is reachable.
+    return this.network.isOnline$.pipe(
+      switchMap(online => online ? remote$ : concat(cached$, localChanges$)),
+    );
   }
 
   private withUserId(userId: string, profile: UserProfile): UserProfile {

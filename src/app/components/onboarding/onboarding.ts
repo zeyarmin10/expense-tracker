@@ -14,7 +14,7 @@ import { APP_LANGUAGE_CODES } from '../../core/constants/app.constants';
 import { UserSpaceSummary } from '../../services/space.model';
 import { ModalStateService } from '../../services/modal-state.service';
 import Swal from 'sweetalert2';
-import { LucideAngularModule, CircleCheck, Link, EllipsisVertical, Pencil, Trash2, User, Users, X } from 'lucide-angular';
+import { LucideAngularModule, ArrowLeft, CircleCheck, Link, EllipsisVertical, Pencil, Trash2, User, Users, X } from 'lucide-angular';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
 import { FormatService } from '../../services/format.service';
 import { NetworkService } from '../../services/network.service';
@@ -41,6 +41,7 @@ export class OnboardingComponent implements OnInit, OnDestroy {
   public formatService = inject(FormatService);
 
   readonly iconUser = User;
+  readonly iconArrowLeft = ArrowLeft;
   readonly iconUsers = Users;
   readonly iconLink = Link;
   readonly iconCircleCheck = CircleCheck;
@@ -80,6 +81,10 @@ export class OnboardingComponent implements OnInit, OnDestroy {
 
   trackBySpaceId(index: number, space: UserSpaceSummary): string {
     return space.id ?? String(index);
+  }
+
+  goBack(): void {
+    void this.router.navigate(['/dashboard']);
   }
 
   getDisplaySpaceName(space: Pick<UserSpaceSummary, 'type' | 'name'>): string {

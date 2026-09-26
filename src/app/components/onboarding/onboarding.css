@@ -65,6 +65,55 @@
 }
 
 /* ── Brand ── */
+.ob-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.ob-back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex: 0 0 auto;
+  min-height: 40px;
+  padding: 0 0.7rem;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+  border-radius: 10px;
+  background: var(--surface, #141920);
+  color: var(--text, #fff);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ob-back-button:hover {
+  background: var(--surface-2, #1c2230);
+}
+
+.ob-back-button:focus-visible {
+  outline: 2px solid var(--accent, #0b74ff);
+  outline-offset: 2px;
+}
+
+@media (max-width: 991.98px) {
+  .ob-header {
+    justify-content: flex-end;
+    min-height: 44px;
+  }
+
+  .ob-back-button {
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 14px);
+    left: 16px;
+    z-index: 200;
+    min-height: 44px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+  }
+}
+
 .ob-brand {
   display: flex;
   align-items: center;

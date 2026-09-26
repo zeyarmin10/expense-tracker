@@ -36,7 +36,11 @@ export class OfflineHydrationService {
     combineLatest([this.auth.userProfile$, this.network.isOnline$]).pipe(
       filter(([profile, online]) => !!profile && online),
     ).subscribe(([profile]) => {
-      if (profile) void this.syncAllUserSpaces(profile);
+      if (profile) {
+        void this.syncAllUserSpaces(profile).catch(error =>
+          console.warn('[offline] Could not refresh every space cache.', error),
+        );
+      }
     });
   }
 
@@ -65,7 +69,11 @@ export class OfflineHydrationService {
       this.lastSyncedAt$.next(new Date());
       this.network.markServerAvailable();
     } catch (error) {
-      this.network.markServerUnavailable();
+      // A stale membership or permission error in one space does not mean
+      // the backend is unreachable for all of the user's other spaces.
+      if (!(await this.network.refreshInternetAccess())) {
+        this.network.markServerUnavailable();
+      }
       throw error;
     } finally {
       this.syncing = false;
