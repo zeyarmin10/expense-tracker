@@ -1,4 +1,4 @@
-import { TestBed } from '@angular/core/testing';
+import { fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { Database } from '@angular/fire/database';
 import { BehaviorSubject } from 'rxjs';
 import { GroupOfflineAccessService } from './group-offline-access.service';
@@ -55,7 +55,7 @@ describe('Web online-only data access', () => {
     expect(store.enqueue).not.toHaveBeenCalled();
   });
 
-  it('uses the live Firebase connection to unlock web without a separate probe', () => {
+  it('uses the live Firebase connection to unlock web without a separate probe', fakeAsync(() => {
     TestBed.overrideProvider(NetworkService, {
       useFactory: () => new NetworkService(),
       deps: [],
@@ -74,5 +74,43 @@ describe('Web online-only data access', () => {
 
     updateWebConnection(false);
     expect(network.isOnline$.value).toBeFalse();
-  });
+    expect(network.isConfirmedWebUnavailable$.value).toBeFalse();
+    tick(2000);
+    expect(network.isConfirmedWebUnavailable$.value).toBeTrue();
+  }));
+
+  it('does not show the web connection screen for a startup connection blip', fakeAsync(() => {
+    TestBed.overrideProvider(NetworkService, {
+      useFactory: () => new NetworkService(),
+      deps: [],
+    });
+    const network = TestBed.inject(NetworkService);
+    const updateWebConnection = (connected: boolean) =>
+      (network as unknown as { updateWebConnection(connected: boolean): void })
+        .updateWebConnection(connected);
+
+    updateWebConnection(false);
+    tick(3000);
+    expect(network.isConfirmedWebUnavailable$.value).toBeFalse();
+
+    updateWebConnection(true);
+    tick(5000);
+    expect(network.isOnline$.value).toBeTrue();
+    expect(network.isConfirmedWebUnavailable$.value).toBeFalse();
+  }));
+
+  it('shows the web connection screen when startup stays disconnected', fakeAsync(() => {
+    TestBed.overrideProvider(NetworkService, {
+      useFactory: () => new NetworkService(),
+      deps: [],
+    });
+    const network = TestBed.inject(NetworkService);
+    (network as unknown as { updateWebConnection(connected: boolean): void })
+      .updateWebConnection(false);
+
+    tick(4999);
+    expect(network.isConfirmedWebUnavailable$.value).toBeFalse();
+    tick(1);
+    expect(network.isConfirmedWebUnavailable$.value).toBeTrue();
+  }));
 });

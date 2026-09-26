@@ -14,6 +14,8 @@ export class NetworkService {
   hasInternetAccess$ = new BehaviorSubject<boolean>(false);
   /** The first connection check has completed. */
   hasCheckedInternetAccess$ = new BehaviorSubject<boolean>(false);
+  /** Show the web connection screen only after a sustained Firebase disconnect. */
+  isConfirmedWebUnavailable$ = new BehaviorSubject<boolean>(false);
   /** Web follows Firebase's live connection; native also checks reachability. */
   isOnline$ = new BehaviorSubject<boolean>(false);
   private physicalConnection = false;
@@ -25,6 +27,10 @@ export class NetworkService {
   private probeTimer?: ReturnType<typeof setInterval>;
   private reachabilityCheckId = 0;
   private physicalStatusCheckId = 0;
+  private webDisconnectTimer?: ReturnType<typeof setTimeout>;
+  private hasConnectedOnWeb = false;
+  private readonly initialWebDisconnectConfirmDelayMs = 5000;
+  private readonly webDisconnectConfirmDelayMs = 2000;
   private readonly reachabilityTimeoutMs = Capacitor.isNativePlatform() ? 3500 : 6000;
   private readonly reachabilityRetryDelayMs = 650;
   private readonly disconnectConfirmDelayMs = Capacitor.isNativePlatform() ? 2200 : 0;
@@ -241,6 +247,22 @@ export class NetworkService {
   }
 
   private updateWebConnection(connected: boolean): void {
+    if (connected) {
+      if (this.webDisconnectTimer) {
+        clearTimeout(this.webDisconnectTimer);
+        this.webDisconnectTimer = undefined;
+      }
+      this.hasConnectedOnWeb = true;
+      this.isConfirmedWebUnavailable$.next(false);
+    } else if (!this.webDisconnectTimer && !this.isConfirmedWebUnavailable$.value) {
+      const delay = this.hasConnectedOnWeb
+        ? this.webDisconnectConfirmDelayMs
+        : this.initialWebDisconnectConfirmDelayMs;
+      this.webDisconnectTimer = setTimeout(() => {
+        this.webDisconnectTimer = undefined;
+        if (!this.isOnline$.value) this.isConfirmedWebUnavailable$.next(true);
+      }, delay);
+    }
     this.physicalConnection = connected;
     this.internetReachable = connected;
     this.hasCheckedInternetAccess$.next(true);

@@ -158,8 +158,8 @@ export class App implements OnInit, AfterViewInit {
       )
     );
     this.webConnectionChecked$ = this.networkService.hasCheckedInternetAccess$;
-    this.webUnavailable$ = this.networkService.isOnline$.pipe(
-      map(online => !Capacitor.isNativePlatform() && !online),
+    this.webUnavailable$ = this.networkService.isConfirmedWebUnavailable$.pipe(
+      map(unavailable => !Capacitor.isNativePlatform() && unavailable),
       distinctUntilChanged(),
     );
 
@@ -841,7 +841,7 @@ export class App implements OnInit, AfterViewInit {
     // outage still lasts well past this window.
     const usableConnection$ = Capacitor.isNativePlatform()
       ? this.networkService.hasInternetAccess$
-      : this.networkService.isOnline$;
+      : this.networkService.isConfirmedWebUnavailable$.pipe(map(unavailable => !unavailable));
     combineLatest([
       usableConnection$,
       this.networkService.hasCheckedInternetAccess$,
