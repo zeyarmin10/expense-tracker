@@ -77,7 +77,7 @@ export class MemberManagementComponent implements OnInit {
       switchMap(profile => {
         const activeGroupId = getActiveGroupId(profile);
         return profile && activeGroupId
-          ? this.dataManager.getSpaceMembersWithProfile(activeGroupId)
+          ? this.dataManager.getSpaceMembersWithProfile(activeGroupId, profile.uid)
           : of([])
       })
     );

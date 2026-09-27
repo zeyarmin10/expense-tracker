@@ -204,7 +204,7 @@ export class App implements OnInit, AfterViewInit {
       switchMap(profile => {
         const activeGroupId = getActiveGroupId(profile);
         if (profile && activeGroupId) {
-          return this.dataManager.getSpaceMembersWithProfile(activeGroupId);
+          return this.dataManager.getSpaceMembersWithProfile(activeGroupId, profile.uid);
         }
         return of([]);
       })

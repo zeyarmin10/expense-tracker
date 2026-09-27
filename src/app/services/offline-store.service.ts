@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 
 /** Collections that Phase 1 can safely edit without a connection. */
 export type OfflineCollection =
-  | 'expenses' | 'incomes' | 'categories' | 'budgets' | 'vouchers' | 'products' | 'shopExpenses' | 'spaces';
+  | 'expenses' | 'incomes' | 'categories' | 'budgets' | 'vouchers' | 'products' | 'shopExpenses' | 'spaces' | 'spaceMembers';
 export type OfflineOperationKind = 'set' | 'setIfMissing' | 'update' | 'remove' | 'uploadVoucher';
 
 export interface OfflineOperation {

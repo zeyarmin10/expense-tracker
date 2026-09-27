@@ -12,7 +12,8 @@ import {
   set,
   update,
 } from '@angular/fire/database';
-import { Observable, switchMap, firstValueFrom, of, combineLatest, map as rxMap, catchError } from 'rxjs';
+import { Observable, switchMap, firstValueFrom, of, combineLatest, map as rxMap, catchError, from, tap } from 'rxjs';
+import { Capacitor } from '@capacitor/core';
 import { AuthService } from './auth';
 import { CategoryService } from './category';
 import { IUserProfile, IInvitation } from '../core/models/data';
@@ -22,6 +23,7 @@ import { SpaceContextService } from './space-context.service';
 import { ImageUploadService } from './image-upload.service';
 import { Space } from './space.model';
 import { NetworkService } from './network.service';
+import { OfflineStoreService } from './offline-store.service';
 
 export const MAX_SPACE_NAME_LENGTH = 50;
 
@@ -41,6 +43,7 @@ export class DataManagerService {
   private categoryService: CategoryService = inject(CategoryService);
   private imageUploadService: ImageUploadService = inject(ImageUploadService);
   private network = inject(NetworkService);
+  private offlineStore = inject(OfflineStoreService);
 
   /**
    * Validates a candidate group name (required, max length, per-account
@@ -359,9 +362,9 @@ export class DataManagerService {
     return this.network.isOnline$.value;
   }
 
-  getSpaceMembersWithProfile(spaceId: string): Observable<IGroupMemberDetails[]> {
+  getSpaceMembersWithProfile(spaceId: string, viewerId: string): Observable<IGroupMemberDetails[]> {
     const membersRef = ref(this.db, `space_members/${spaceId}`);
-    return listVal<any>(membersRef, { keyField: 'uid' }).pipe(
+    const liveMembers$ = listVal<any>(membersRef, { keyField: 'uid' }).pipe(
       switchMap(members => {
         if (!members || members.length === 0) {
           return of([]);
@@ -386,7 +389,30 @@ export class DataManagerService {
           )
         );
         return combineLatest(memberProfiles$);
-      })
+      }),
+      tap(members => {
+        if (!Capacitor.isNativePlatform() || members.length === 0) return;
+
+        // Keep one display-only snapshot per account and space. A group has
+        // at least its owner, so an empty transient server emission must not
+        // erase the last usable offline list.
+        const cachedMembers = members.map(({ uid, role, displayName, photoURL, email }) => ({
+          uid, role, displayName, photoURL: photoURL ?? null, email: email ?? null, currency: '',
+        }));
+        void this.offlineStore.patchRecord(viewerId, 'spaceMembers', spaceId, {
+          members: cachedMembers,
+        }).catch(error => console.warn('[offline] Could not cache space members.', error));
+      }),
+    );
+
+    if (!Capacitor.isNativePlatform()) return liveMembers$;
+
+    return this.network.isOnline$.pipe(
+      switchMap(online => online
+        ? liveMembers$
+        : from(this.offlineStore.getCollection<{ members: IGroupMemberDetails[] }>(viewerId, 'spaceMembers')).pipe(
+            rxMap(cached => cached[spaceId]?.members ?? []),
+          )),
     );
   }
 
