@@ -204,3 +204,31 @@ describe('offline sale sync', () => {
     expect(store.replayingOperationId).toBeNull();
   });
 });
+
+describe('pending sync badge', () => {
+  it('updates as soon as an offline operation is queued', async () => {
+    const queue: OfflineOperation[] = [];
+    const queueChanged$ = new Subject<void>();
+    const store = jasmine.createSpyObj<OfflineStoreService>('OfflineStoreService', ['pendingOperations']);
+    store.pendingOperations.and.callFake(async () => [...queue]);
+    (store as any).queueChanged$ = queueChanged$;
+    TestBed.configureTestingModule({
+      providers: [
+        OfflineSyncService,
+        { provide: Database, useValue: {} },
+        { provide: NetworkService, useValue: { isOnline$: new BehaviorSubject(false) } },
+        { provide: OfflineStoreService, useValue: store },
+        { provide: IncomeService, useValue: {} },
+      ],
+    });
+    const sync = TestBed.inject(OfflineSyncService);
+    await sync.init();
+    expect(sync.pendingCount$.value).toBe(0);
+
+    queue.push({ id: 'op1', kind: 'set', path: 'space_data/shop/incomes/sale1', createdAt: 1, attempts: 0 });
+    queueChanged$.next();
+    await Promise.resolve();
+
+    expect(sync.pendingCount$.value).toBe(1);
+  });
+});

@@ -382,6 +382,7 @@ export class OnboardingComponent implements OnInit, OnDestroy {
   isCreatingSpace = false;
   isJoinSpaceModalOpen = false;
   isJoiningSpace = false;
+  isOpeningSpaceAction: 'create' | 'join' | null = null;
   createSpaceName = '';
   createSpaceError: string | null = null;
   createSpaceImageFile: File | null = null;
@@ -389,31 +390,37 @@ export class OnboardingComponent implements OnInit, OnDestroy {
   createSpaceEnableInventory = false;
 
   async openCreateSpaceModal(): Promise<void> {
-    if (!(await this.hasUsableServerConnection())) {
-      await this.showSpaceCreationRequiresInternetAlert();
-      return;
-    }
-    const user = await firstValueFrom(this.authService.currentUser$);
-    if (!user) {
-      Swal.fire({
-        icon: 'error',
-        title: this.translate.instant('ERROR_TITLE'),
-        text: this.translate.instant('ONBOARDING_MUST_BE_LOGGED_IN'),
-      });
-      return;
-    }
+    if (this.isOpeningSpaceAction || this.isCreateSpaceModalOpen || this.isJoinSpaceModalOpen) return;
+    this.isOpeningSpaceAction = 'create';
+    try {
+      if (!(await this.hasUsableServerConnection())) {
+        await this.showSpaceCreationRequiresInternetAlert();
+        return;
+      }
+      const user = await firstValueFrom(this.authService.currentUser$);
+      if (!user) {
+        Swal.fire({
+          icon: 'error',
+          title: this.translate.instant('ERROR_TITLE'),
+          text: this.translate.instant('ONBOARDING_MUST_BE_LOGGED_IN'),
+        });
+        return;
+      }
 
-    this.createSpaceName = '';
-    this.createSpaceError = null;
-    this.createSpaceEnableInventory = false;
-    this.clearCreateSpaceImage();
-    // Push a history entry so the Android hardware back button — which
-    // otherwise exits the app entirely while on /onboarding, see app.ts's
-    // initBackButton — closes this modal instead, via onPopState() below.
-    // Mirrors the pattern already used by category-modal.ts.
-    history.pushState(null, '');
-    this.modalStateService.modalOpened();
-    this.isCreateSpaceModalOpen = true;
+      this.createSpaceName = '';
+      this.createSpaceError = null;
+      this.createSpaceEnableInventory = false;
+      this.clearCreateSpaceImage();
+      // Push a history entry so the Android hardware back button — which
+      // otherwise exits the app entirely while on /onboarding, see app.ts's
+      // initBackButton — closes this modal instead, via onPopState() below.
+      // Mirrors the pattern already used by category-modal.ts.
+      history.pushState(null, '');
+      this.modalStateService.modalOpened();
+      this.isCreateSpaceModalOpen = true;
+    } finally {
+      this.isOpeningSpaceAction = null;
+    }
   }
 
   closeCreateSpaceModal(): void {
@@ -424,27 +431,33 @@ export class OnboardingComponent implements OnInit, OnDestroy {
   }
 
   async openJoinSpaceModal(): Promise<void> {
-    if (!(await this.hasUsableServerConnection())) {
-      await this.showSpaceCreateOrJoinRequiresInternetAlert();
-      return;
-    }
-    const user = await firstValueFrom(this.authService.currentUser$);
-    if (!user) {
-      Swal.fire({
-        icon: 'error',
-        title: this.translate.instant('ERROR_TITLE'),
-        text: this.translate.instant('ONBOARDING_MUST_BE_LOGGED_IN'),
-      });
-      return;
-    }
+    if (this.isOpeningSpaceAction || this.isCreateSpaceModalOpen || this.isJoinSpaceModalOpen) return;
+    this.isOpeningSpaceAction = 'join';
+    try {
+      if (!(await this.hasUsableServerConnection())) {
+        await this.showSpaceCreateOrJoinRequiresInternetAlert();
+        return;
+      }
+      const user = await firstValueFrom(this.authService.currentUser$);
+      if (!user) {
+        Swal.fire({
+          icon: 'error',
+          title: this.translate.instant('ERROR_TITLE'),
+          text: this.translate.instant('ONBOARDING_MUST_BE_LOGGED_IN'),
+        });
+        return;
+      }
 
-    this.inviteCode = '';
-    history.pushState(null, '');
-    this.modalStateService.modalOpened();
-    this.isJoinSpaceModalOpen = true;
-    setTimeout(() => {
-      (document.getElementById('ob-join-invite-code') as HTMLInputElement | null)?.focus();
-    }, 80);
+      this.inviteCode = '';
+      history.pushState(null, '');
+      this.modalStateService.modalOpened();
+      this.isJoinSpaceModalOpen = true;
+      setTimeout(() => {
+        (document.getElementById('ob-join-invite-code') as HTMLInputElement | null)?.focus();
+      }, 80);
+    } finally {
+      this.isOpeningSpaceAction = null;
+    }
   }
 
   closeJoinSpaceModal(): void {
@@ -517,17 +530,16 @@ export class OnboardingComponent implements OnInit, OnDestroy {
 
   async submitCreateSpace(): Promise<void> {
     if (!this.canSubmitCreateSpace) return;
-    if (!(await this.hasUsableServerConnection())) {
-      await this.showSpaceCreationRequiresInternetAlert();
-      return;
-    }
-    const user = await firstValueFrom(this.authService.currentUser$);
-    if (!user) return;
-
     const name = this.createSpaceName.trim();
     this.isCreatingSpace = true;
     this.createSpaceError = null;
     try {
+      if (!(await this.hasUsableServerConnection())) {
+        await this.showSpaceCreationRequiresInternetAlert();
+        return;
+      }
+      const user = await firstValueFrom(this.authService.currentUser$);
+      if (!user) return;
       // Validate up front so rejected names can be corrected in the open sheet.
       await this.dataManager.validateNewGroupName(name, user.uid);
 
@@ -570,23 +582,21 @@ export class OnboardingComponent implements OnInit, OnDestroy {
   async joinGroup(): Promise<void> {
     const code = this.inviteCode.trim();
     if (this.isJoiningSpace || code.length !== this.inviteCodeLength) return;
-    if (!(await this.hasUsableServerConnection())) {
-      await this.showSpaceCreateOrJoinRequiresInternetAlert();
-      return;
-    }
-
-    const user = await firstValueFrom(this.authService.currentUser$);
-    if (!user) {
-      Swal.fire({
-        icon: 'error',
-        title: this.translate.instant('ERROR_TITLE'),
-        text: this.translate.instant('ONBOARDING_MUST_BE_LOGGED_IN')
-      });
-      return;
-    }
-
     this.isJoiningSpace = true;
     try {
+      if (!(await this.hasUsableServerConnection())) {
+        await this.showSpaceCreateOrJoinRequiresInternetAlert();
+        return;
+      }
+      const user = await firstValueFrom(this.authService.currentUser$);
+      if (!user) {
+        Swal.fire({
+          icon: 'error',
+          title: this.translate.instant('ERROR_TITLE'),
+          text: this.translate.instant('ONBOARDING_MUST_BE_LOGGED_IN')
+        });
+        return;
+      }
       const invitation = await firstValueFrom(this.invitationService.getInvitation(code));
       if (invitation && invitation.status === 'pending') {
         await this.dataManager.acceptGroupInvitation(code, user.uid);
@@ -670,7 +680,11 @@ export class OnboardingComponent implements OnInit, OnDestroy {
       return true;
     }
 
-    await this.network.retryServerConnection();
+    try {
+      await this.network.retryServerConnection();
+    } catch {
+      return false;
+    }
     return this.network.isOnline$.value;
   }
 

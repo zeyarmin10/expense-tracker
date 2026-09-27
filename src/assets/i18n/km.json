@@ -162,6 +162,7 @@
   "SYNC_CONFLICT_LABEL": "ជម្លោះ",
   "SYNC_DETAILS_TITLE": "ការផ្លាស់ប្តូរដែលរង់ចាំ sync",
   "SYNC_PENDING_SUMMARY": "មាន {{count}} ការផ្លាស់ប្តូរកំពុងរង់ចាំ sync។",
+  "SYNC_SPACE_LABEL": "ទីតាំង",
   "SYNC_NO_PENDING_CHANGES": "មិនមានការផ្លាស់ប្តូររង់ចាំ sync ទេ។",
   "SYNC_NOW_BUTTON": "Sync ឥឡូវនេះ",
   "SYNC_COMPLETE_MESSAGE": "Sync បានបញ្ចប់។",

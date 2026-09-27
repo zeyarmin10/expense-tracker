@@ -33,15 +33,19 @@
       </div>
 
       <div class="ob-quick-actions">
-        <button class="ob-action-button ob-action-button-primary" type="button" (click)="openCreateSpaceModal()">
+        <button class="ob-action-button ob-action-button-primary" type="button" (click)="openCreateSpaceModal()"
+          [disabled]="!!isOpeningSpaceAction" [attr.aria-busy]="isOpeningSpaceAction === 'create'">
           <span class="ob-action-icon">
-            <lucide-icon [img]="iconUsers" [size]="20"></lucide-icon>
+            <span *ngIf="isOpeningSpaceAction === 'create'" class="ob-modal-spinner" aria-hidden="true"></span>
+            <lucide-icon *ngIf="isOpeningSpaceAction !== 'create'" [img]="iconUsers" [size]="20"></lucide-icon>
           </span>
           <span class="ob-action-label">{{ 'ONBOARDING.CREATE_GROUP_BUTTON' | translate }}</span>
         </button>
-        <button class="ob-action-button ob-action-button-secondary" type="button" (click)="openJoinSpaceModal()">
+        <button class="ob-action-button ob-action-button-secondary" type="button" (click)="openJoinSpaceModal()"
+          [disabled]="!!isOpeningSpaceAction" [attr.aria-busy]="isOpeningSpaceAction === 'join'">
           <span class="ob-action-icon">
-            <lucide-icon [img]="iconLink" [size]="20"></lucide-icon>
+            <span *ngIf="isOpeningSpaceAction === 'join'" class="ob-modal-spinner" aria-hidden="true"></span>
+            <lucide-icon *ngIf="isOpeningSpaceAction !== 'join'" [img]="iconLink" [size]="20"></lucide-icon>
           </span>
           <span class="ob-action-label">{{ 'ONBOARDING.JOIN_GROUP_BUTTON' | translate }}</span>
         </button>

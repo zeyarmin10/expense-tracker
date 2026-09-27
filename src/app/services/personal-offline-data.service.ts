@@ -91,6 +91,7 @@ export class PersonalOfflineDataService {
       kind,
       path: this.path(profile, collection, recordId),
       payload,
+      spaceName: profile.currentSpaceName,
       createdAt: this.store.nextOperationTimestamp(),
       attempts: 0,
     });
@@ -126,6 +127,7 @@ export class PersonalOfflineDataService {
       kind: 'uploadVoucher',
       path: this.path(profile, 'vouchers', voucherId),
       payload: uploadPayload,
+      spaceName: profile.currentSpaceName,
       createdAt: this.store.nextOperationTimestamp(),
       attempts: 0,
     });

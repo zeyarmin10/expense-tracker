@@ -19,6 +19,8 @@ export interface OfflineOperation {
   sharedSpaceId?: string;
   /** Server revision observed before the local edit; used for conflict detection. */
   baseUpdatedAt?: string | null;
+  /** Name of the space where the change was made, retained across switches. */
+  spaceName?: string;
 }
 
 interface StoredCollection {

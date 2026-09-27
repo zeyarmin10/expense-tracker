@@ -13,7 +13,7 @@ import { DataManagerService } from './services/data-manager';
 import { ToastService } from './services/toast';
 import { NetworkService } from './services/network.service';
 import { OfflineSyncService } from './services/offline-sync.service';
-import { OfflineOperation } from './services/offline-store.service';
+import { OfflineOperation, OfflineStoreService } from './services/offline-store.service';
 import { OfflineHydrationService } from './services/offline-hydration.service';
 import { GroupOfflineAccessService, GroupOfflineAccessState } from './services/group-offline-access.service';
 import { ThemeService } from './services/theme.service';
@@ -128,6 +128,7 @@ export class App implements OnInit, AfterViewInit {
   private toastService = inject(ToastService);
   private networkService = inject(NetworkService);
   private offlineSyncService = inject(OfflineSyncService);
+  private offlineStore = inject(OfflineStoreService);
   private offlineHydrationService = inject(OfflineHydrationService);
   private groupOfflineAccess = inject(GroupOfflineAccessService);
   private spaceContextService = inject(SpaceContextService);
@@ -663,8 +664,10 @@ export class App implements OnInit, AfterViewInit {
     this.notificationService.initAutoRegistration();
 
     // ── Network monitoring ──────────────────────
-    await this.networkService.init();
+    // Show durable queued changes immediately, even while the first native
+    // network check is still in progress.
     await this.offlineSyncService.init();
+    await this.networkService.init();
     await this.offlineHydrationService.init();
     this.listenNetworkChanges();
     this.listenGroupOfflineAccess();
@@ -1143,13 +1146,18 @@ export class App implements OnInit, AfterViewInit {
       return;
     }
 
+    const profile = await firstValueFrom(this.authService.userProfile$.pipe(take(1)));
+    const cachedSpaces = profile
+      ? await this.offlineStore.getCollection<UserSpaceSummary>(profile.uid, 'spaces')
+      : {};
+
     const html = `
       <div class="sync-detail-modal">
         <p class="sync-detail-summary">${this.escapeHtml(this.translate.instant('SYNC_PENDING_SUMMARY', {
           count: this.formatService.formatCount(operations.length),
         }))}</p>
         <div class="sync-detail-list">
-          ${operations.map(operation => this.buildSyncOperationHtml(operation)).join('')}
+          ${operations.map(operation => this.buildSyncOperationHtml(operation, cachedSpaces, profile)).join('')}
         </div>
       </div>
     `;
@@ -1200,9 +1208,14 @@ export class App implements OnInit, AfterViewInit {
     this.toastService.showSuccess(this.translate.instant('SYNC_COMPLETE_MESSAGE'));
   }
 
-  private buildSyncOperationHtml(operation: OfflineOperation): string {
+  private buildSyncOperationHtml(
+    operation: OfflineOperation,
+    spaces: Record<string, UserSpaceSummary>,
+    profile: UserProfile | null,
+  ): string {
     const collection = operation.path.split('/').slice(-2, -1)[0] || operation.path;
     const title = `${this.translate.instant(this.getSyncActionKey(operation.kind))} · ${this.translate.instant(this.getSyncCollectionKey(collection))}`;
+    const spaceName = this.getSyncOperationSpaceName(operation, spaces, profile);
     const payload = this.summarizeSyncPayload(collection, operation.payload);
     const errorText = operation.lastError === 'SYNC_CONFLICT:STOCK_INSUFFICIENT'
       ? this.translate.instant('STOCK_SYNC_CONFLICT_TITLE')
@@ -1212,11 +1225,49 @@ export class App implements OnInit, AfterViewInit {
       <article class="sync-detail-item">
         <div class="sync-detail-item-main">
           <strong>${this.escapeHtml(title)}</strong>
+          <span class="sync-detail-space">${this.escapeHtml(this.translate.instant('SYNC_SPACE_LABEL'))}: ${this.escapeHtml(spaceName)}</span>
           ${payload ? `<small>${this.escapeHtml(payload)}</small>` : ''}
           ${error}
         </div>
       </article>
     `;
+  }
+
+  private getSyncOperationSpaceName(
+    operation: OfflineOperation,
+    spaces: Record<string, UserSpaceSummary>,
+    profile: UserProfile | null,
+  ): string {
+    const parts = operation.path.split('/');
+    let spaceId: string | null = null;
+    if (['space_data', 'group_data', 'spaces', 'spaceMembers', 'group_members', 'groups'].includes(parts[0])) {
+      spaceId = parts[1] || null;
+    } else if (parts[0] === 'users' && typeof operation.payload?.['currentSpaceId'] === 'string') {
+      spaceId = operation.payload['currentSpaceId'] as string;
+    }
+    const cachedSpace = spaceId ? spaces[spaceId] : undefined;
+    if (cachedSpace?.name) {
+      return cachedSpace.type === 'personal' || cachedSpace.name === 'My Personal'
+        ? this.translate.instant('SPACE_MY_PERSONAL')
+        : cachedSpace.name;
+    }
+    const recordedName = operation.spaceName ||
+      (typeof operation.payload?.['currentSpaceName'] === 'string' ? operation.payload['currentSpaceName'] : null) ||
+      (parts[0] === 'spaces' && typeof operation.payload?.['name'] === 'string' ? operation.payload['name'] : null);
+    if (recordedName) {
+      return recordedName === 'My Personal'
+        ? this.translate.instant('SPACE_MY_PERSONAL')
+        : recordedName;
+    }
+    if (spaceId && spaceId === profile?.currentSpaceId && profile.currentSpaceName) {
+      return profile.currentSpaceName === 'My Personal'
+        ? this.translate.instant('SPACE_MY_PERSONAL')
+        : profile.currentSpaceName;
+    }
+    if (parts[0] === 'users' || (profile?.personalSpaceId && spaceId === profile.personalSpaceId)) {
+      return this.translate.instant('SPACE_MY_PERSONAL');
+    }
+    return spaceId || this.translate.instant('SPACE_MY_PERSONAL');
   }
 
   private summarizeSyncPayload(collection: string, payload?: Record<string, unknown>): string {

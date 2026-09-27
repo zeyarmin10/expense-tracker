@@ -162,6 +162,7 @@
   "SYNC_CONFLICT_LABEL": "ขัดแย้ง",
   "SYNC_DETAILS_TITLE": "การเปลี่ยนแปลงที่รอซิงค์",
   "SYNC_PENDING_SUMMARY": "มี {{count}} รายการรอซิงค์",
+  "SYNC_SPACE_LABEL": "พื้นที่",
   "SYNC_NO_PENDING_CHANGES": "ไม่มีการเปลี่ยนแปลงที่รอซิงค์",
   "SYNC_NOW_BUTTON": "ซิงค์ตอนนี้",
   "SYNC_COMPLETE_MESSAGE": "ซิงค์เสร็จแล้ว",

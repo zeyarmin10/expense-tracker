@@ -85,6 +85,7 @@ export class SharedOfflineDataService {
     }
     await this.store.enqueue({
       id: this.store.createId('op'), kind, path: this.path(profile, collection, recordId), payload,
+      spaceName: profile.currentSpaceName,
       createdAt: this.store.nextOperationTimestamp(), sharedSpaceId: this.groupId(profile), baseUpdatedAt,
       attempts: 0,
     });
@@ -106,6 +107,7 @@ export class SharedOfflineDataService {
       kind: 'uploadVoucher',
       path: this.path(profile, 'vouchers', voucherId),
       payload: uploadPayload,
+      spaceName: profile.currentSpaceName,
       createdAt: this.store.nextOperationTimestamp(),
       sharedSpaceId: groupId,
       attempts: 0,

@@ -24,4 +24,14 @@ describe('App', () => {
     const app = fixture.componentInstance;
     expect(app.title).toBe('Kyat Wise');
   });
+
+  it('shows the cached space name for a pending change from another space', () => {
+    const app = TestBed.createComponent(App).componentInstance;
+    const name = (app as any).getSyncOperationSpaceName(
+      { path: 'space_data/shop-1/incomes/sale-1' },
+      { 'shop-1': { id: 'shop-1', type: 'group', name: 'North Shop' } },
+      { uid: 'seller', currentSpaceName: 'South Shop' },
+    );
+    expect(name).toBe('North Shop');
+  });
 });

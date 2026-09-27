@@ -162,6 +162,7 @@
   "SYNC_CONFLICT_LABEL": "conflict",
   "SYNC_DETAILS_TITLE": "Pending sync changes",
   "SYNC_PENDING_SUMMARY": "{{count}} changes are waiting to sync.",
+  "SYNC_SPACE_LABEL": "Space",
   "SYNC_NO_PENDING_CHANGES": "There are no pending changes.",
   "SYNC_NOW_BUTTON": "Sync now",
   "SYNC_COMPLETE_MESSAGE": "Sync completed.",

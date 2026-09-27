@@ -221,6 +221,14 @@
   transform: scale(0.98);
 }
 
+.ob-action-button:disabled {
+  cursor: wait;
+}
+
+.ob-action-button:disabled:active {
+  transform: none;
+}
+
 .ob-action-button-primary {
   border-color: rgba(11, 116, 255, 0.36);
   background: linear-gradient(135deg, var(--accent, #0b74ff), #135fd7);

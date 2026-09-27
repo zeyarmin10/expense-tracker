@@ -162,6 +162,7 @@
   "SYNC_CONFLICT_LABEL": "conflict",
   "SYNC_DETAILS_TITLE": "Sync မလုပ်ရသေးသော ပြောင်းလဲမှုများ",
   "SYNC_PENDING_SUMMARY": "{{count}} ခု sync လုပ်ရန် စောင့်နေသည်။",
+  "SYNC_SPACE_LABEL": "နေရာ",
   "SYNC_NO_PENDING_CHANGES": "Sync မလုပ်ရသေးသော ပြောင်းလဲမှု မရှိပါ။",
   "SYNC_NOW_BUTTON": "ယခု Sync လုပ်မည်",
   "SYNC_COMPLETE_MESSAGE": "Sync လုပ်ပြီးပါပြီ။",

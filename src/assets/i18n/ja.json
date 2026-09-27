@@ -162,6 +162,7 @@
   "SYNC_CONFLICT_LABEL": "競合",
   "SYNC_DETAILS_TITLE": "同期待ちの変更",
   "SYNC_PENDING_SUMMARY": "{{count}} 件の変更が同期を待っています。",
+  "SYNC_SPACE_LABEL": "スペース",
   "SYNC_NO_PENDING_CHANGES": "同期待ちの変更はありません。",
   "SYNC_NOW_BUTTON": "今すぐ同期",
   "SYNC_COMPLETE_MESSAGE": "同期が完了しました。",

@@ -1554,6 +1554,11 @@ button.offline-sync-badge {
   overflow-wrap: anywhere;
 }
 
+.sync-detail-item .sync-detail-space {
+  color: var(--text, #f8fafc);
+  font-size: 0.82rem;
+}
+
 .sync-detail-error {
   margin-top: 0.25rem;
   color: #fca5a5;

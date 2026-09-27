@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, NgZone, inject } from '@angular/core';
 import { Database, get, ref, remove, set, update } from '@angular/fire/database';
 import { BehaviorSubject, filter } from 'rxjs';
 import { NetworkService } from './network.service';
@@ -13,29 +13,39 @@ export class OfflineSyncService {
   private network = inject(NetworkService);
   private store = inject(OfflineStoreService);
   private incomeService = inject(IncomeService);
+  private zone = inject(NgZone);
   private started = false;
   private syncing = false;
+  private countRefreshVersion = 0;
   readonly pendingCount$ = new BehaviorSubject<number>(0);
   readonly conflictCount$ = new BehaviorSubject<number>(0);
 
   async init(): Promise<void> {
     if (this.started) return;
     this.started = true;
-    await this.refreshPendingCount();
+    // Listen before the first IndexedDB read so a write during startup is
+    // never missed until the next app launch.
     this.store.queueChanged$.subscribe(() => {
       void this.refreshPendingCount();
       if (this.network.isOnline$.value) void this.sync();
     });
     this.network.isOnline$.pipe(filter(Boolean)).subscribe(() => void this.sync());
+    await this.refreshPendingCount();
     if (this.network.isOnline$.value) void this.sync();
   }
 
   async refreshPendingCount(): Promise<void> {
+    const version = ++this.countRefreshVersion;
     const operations = await this.store.pendingOperations();
-    this.pendingCount$.next(operations.length);
-    this.conflictCount$.next(operations.filter(operation =>
-      operation.lastError?.startsWith('SYNC_CONFLICT:'),
-    ).length);
+    if (version !== this.countRefreshVersion) return;
+    // IndexedDB and Capacitor callbacks may complete outside Angular's zone.
+    // Emit inside it so the navbar badge updates without reopening the app.
+    this.zone.run(() => {
+      this.pendingCount$.next(operations.length);
+      this.conflictCount$.next(operations.filter(operation =>
+        operation.lastError?.startsWith('SYNC_CONFLICT:'),
+      ).length);
+    });
   }
 
   async getConflicts(): Promise<OfflineOperation[]> {
