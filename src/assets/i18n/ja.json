@@ -595,6 +595,7 @@
     "CREATE_NEW_GROUP": "新しいスペースを作成",
     "CREATE_SHARED_SPACE": "共有スペースを作成して他のメンバーを招待します。",
     "ENTER_GROUP_NAME": "スペース名を入力",
+    "SPACE_PHOTO_OPTIONAL": "写真は任意です",
     "CREATE_GROUP_BUTTON": "スペースを作成",
     "JOIN_EXISTING_GROUP": "既存のグループに参加",
     "USE_INVITE_CODE": "招待コードを使ってグループに参加します。",

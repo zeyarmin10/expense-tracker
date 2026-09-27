@@ -595,6 +595,7 @@
     "CREATE_NEW_GROUP": "បង្កើតកន្លែងថ្មី",
     "CREATE_SHARED_SPACE": "បង្កើតកន្លែងរួម ហើយអញ្ជើញអ្នកដទៃ។",
     "ENTER_GROUP_NAME": "បញ្ចូលឈ្មោះកន្លែង",
+    "SPACE_PHOTO_OPTIONAL": "មិនចាំបាច់ដាក់រូបភាព",
     "CREATE_GROUP_BUTTON": "បង្កើតកន្លែង",
     "JOIN_EXISTING_GROUP": "ចូលរួមក្រុមដែលមានស្រាប់",
     "USE_INVITE_CODE": "ប្រើកូដអញ្ជើញដើម្បីចូលរួមក្រុម។",

@@ -1074,6 +1074,11 @@
   font-size: 0.72rem;
 }
 
+.ob-join-modal-warning {
+  color: var(--warning, #f4b11a);
+  font-weight: 600;
+}
+
 .ob-modal-meta-row {
   width: 100%;
   display: flex;

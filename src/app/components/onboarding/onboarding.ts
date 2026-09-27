@@ -414,9 +414,6 @@ export class OnboardingComponent implements OnInit, OnDestroy {
     history.pushState(null, '');
     this.modalStateService.modalOpened();
     this.isCreateSpaceModalOpen = true;
-    setTimeout(() => {
-      (document.getElementById('ob-create-space-name') as HTMLInputElement | null)?.focus();
-    }, 80);
   }
 
   closeCreateSpaceModal(): void {
@@ -531,8 +528,7 @@ export class OnboardingComponent implements OnInit, OnDestroy {
     this.isCreatingSpace = true;
     this.createSpaceError = null;
     try {
-      // Validate up front (duplicate name / space limit) so the rejection
-      // surfaces inline while the typed name & photo are still in place.
+      // Validate up front so rejected names can be corrected in the open sheet.
       await this.dataManager.validateNewGroupName(name, user.uid);
 
       let imageUrl: string | null = null;
@@ -556,7 +552,16 @@ export class OnboardingComponent implements OnInit, OnDestroy {
       this.router.navigate(['/dashboard']);
     } catch (error) {
       console.error('Error creating group:', error);
-      this.createSpaceError = this.getCreateGroupErrorMessage(error);
+      if ((error as Error)?.message === 'Space limit reached.') {
+        await Swal.fire({
+          icon: 'warning',
+          title: this.translate.instant('ALERT_TITLE'),
+          text: this.translate.instant('SPACE_LIMIT_REACHED'),
+          confirmButtonText: this.translate.instant('OK_BUTTON'),
+        });
+      } else {
+        this.createSpaceError = this.getCreateGroupErrorMessage(error);
+      }
     } finally {
       this.isCreatingSpace = false;
     }
@@ -649,8 +654,6 @@ export class OnboardingComponent implements OnInit, OnDestroy {
         });
       case 'Group name is required.':
         return this.translate.instant('SPACE_RENAME_EMPTY_ERROR');
-      case 'Space limit reached.':
-        return this.translate.instant('SPACE_LIMIT_REACHED');
       case 'Duplicate group name.':
         return this.translate.instant('SPACE_DUPLICATE_NAME');
       default:

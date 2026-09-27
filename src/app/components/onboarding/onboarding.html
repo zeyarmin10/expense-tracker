@@ -147,7 +147,7 @@
           [disabled]="isCreatingSpace"
           (change)="onCreateSpacePhotoSelected($event)" />
       </label>
-      <div class="ob-modal-photo-hint">{{ 'OPTIONAL' | translate }}</div>
+      <div class="ob-modal-photo-hint">{{ 'ONBOARDING.SPACE_PHOTO_OPTIONAL' | translate }}</div>
 
       <input
         id="ob-create-space-name"
@@ -214,7 +214,7 @@
         autocomplete="one-time-code" autocapitalize="characters" spellcheck="false"
         (keyup.enter)="joinGroup()" />
       <div class="ob-modal-meta-row ob-join-modal-meta">
-        <span>{{ 'INVITE_CODE_LENGTH_HINT' | translate:{ length: formatService.formatCount(inviteCodeLength) } }}</span>
+        <span class="ob-join-modal-warning">{{ 'INVITE_CODE_LENGTH_HINT' | translate:{ length: formatService.formatCount(inviteCodeLength) } }}</span>
         <span>{{ formatService.formatCount(inviteCode.trim().length) }} / {{ formatService.formatCount(inviteCodeLength) }}</span>
       </div>
       <div class="ob-modal-actions">
