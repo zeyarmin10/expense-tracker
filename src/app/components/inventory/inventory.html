@@ -324,6 +324,7 @@
                       (click)="selectStockRow(row.productId)">
                       <td class="inv-table-product-cell">
                         <span class="inv-table-product-name" [attr.title]="row.productName">{{ row.productName }}</span>
+                        <span class="inv-product-hidden-badge" *ngIf="row.isActive === false">{{ 'PRODUCT_HIDDEN_BADGE' | translate }}</span>
                         <span class="inv-table-unit" *ngIf="row.unit">({{ row.unit }})</span>
                       </td>
                       <td [class.inv-negative]="row.currentStock < 0" [class.inv-out-of-stock]="isOutOfStock(row)"
@@ -366,6 +367,7 @@
                     [attr.aria-expanded]="expandedProductId === row.productId">
                     <span class="inv-stock-card-name" [attr.title]="row.productName">
                       {{ row.productName }}
+                      <span class="inv-product-hidden-badge" *ngIf="row.isActive === false">{{ 'PRODUCT_HIDDEN_BADGE' | translate }}</span>
                       <span class="inv-table-unit" *ngIf="row.unit">({{ row.unit }})</span>
                     </span>
                     <span class="inv-stock-card-stock" [class.inv-negative]="row.currentStock < 0"

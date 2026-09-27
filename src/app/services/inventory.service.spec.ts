@@ -75,6 +75,19 @@ describe('InventoryService', () => {
     expect(summary.currentStock).toBe(-2);
     expect(summary.avgCost).toBe(500);
     expect(summary.estCOGS).toBe(2500); // 5 * 500
+    expect(summary.stockValue).toBe(0);
+  });
+
+  it('keeps hidden products in historical stock and profit totals', () => {
+    const [summary] = getSummary(
+      [{ id: 'hidden', name: 'Old item', isActive: false }],
+      [{ productId: 'hidden', quantity: 2, totalCost: 200 }],
+      [{ productId: 'hidden', isProductSale: true, quantity: 1, amount: 150 }],
+    );
+
+    expect(summary.isActive).toBeFalse();
+    expect(summary.stockValue).toBe(100);
+    expect(summary.estProfit).toBe(50);
   });
 
   it('should track the earliest purchase date across multiple batches', () => {

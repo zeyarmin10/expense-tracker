@@ -7,6 +7,7 @@ import { ServiceIIncome, getIncomeLineItems } from './income';
 export interface ProductStockSummary {
   productId: string;
   productName: string;
+  isActive?: boolean;
   unit?: string;
   totalPurchasedQty: number;
   totalPurchaseCost: number;
@@ -129,11 +130,14 @@ export class InventoryService {
           const currentStock = totals.totalPurchasedQty - totals.totalSoldQty;
           const estCOGS = totals.totalSoldQty * (avgCost ?? 0);
           const estProfit = totals.totalRevenue - estCOGS;
-          const stockValue = currentStock * (avgCost ?? 0);
+          // A negative balance is an error state, not inventory with a
+          // negative asset value. This also makes the table sum match its total.
+          const stockValue = Math.max(0, currentStock) * (avgCost ?? 0);
 
           return {
             productId: product.id!,
             productName: product.name,
+            isActive: product.isActive !== false,
             unit: product.unit,
             totalPurchasedQty: totals.totalPurchasedQty,
             totalPurchaseCost: totals.totalPurchaseCost,

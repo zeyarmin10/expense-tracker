@@ -198,10 +198,10 @@ export class Inventory implements OnInit, OnDestroy {
   private _productsSubject = new BehaviorSubject<ServiceIProduct[]>([]);
   products$: Observable<ServiceIProduct[]> = this._productsSubject.asObservable();
 
-  // Hidden products remain in the Products tab so they can be restored, but
-  // must not affect the customer-facing Stock & Profit overview or its totals.
+  // Hidden products remain in financial totals and stock history. Hiding a
+  // product only prevents it from being selected for new transactions.
   stockSummary$: Observable<ProductStockSummary[]> = this.inventoryService.getStockSummary(
-    this.products$.pipe(map((products) => products.filter((product) => product.isActive !== false))),
+    this.products$,
     combineLatest([this.expenseService.getExpenses(), this.authService.userProfile$]).pipe(
       map(([expenses, profile]) => expenses.filter((expense) => expense.currency === (profile?.currency || 'MMK'))),
     ),
@@ -217,7 +217,11 @@ export class Inventory implements OnInit, OnDestroy {
     shareReplay({ bufferSize: 1, refCount: true }),
   );
 
-  shopExpenses$: Observable<ShopExpense[]> = this.shopExpenseService.getShopExpenses().pipe(
+  shopExpenses$: Observable<ShopExpense[]> = combineLatest([
+    this.shopExpenseService.getShopExpenses(),
+    this.authService.userProfile$,
+  ]).pipe(
+    map(([expenses, profile]) => expenses.filter((expense) => expense.currency === (profile?.currency || 'MMK'))),
     shareReplay({ bufferSize: 1, refCount: true }),
   );
 
@@ -748,12 +752,7 @@ export class Inventory implements OnInit, OnDestroy {
   }
 
   getTotalRemainingStockCost(summary: ProductStockSummary[]): number {
-    // A negative stock balance is a data-warning state, not stock the shop
-    // actually has on hand, so it must not reduce the value of real stock.
-    // Value the remaining stock at each product's latest recorded buy price.
-    return summary.reduce((sum, row) =>
-      sum + (row.currentStock > 0 ? row.currentStock * (row.lastPurchaseUnitCost ?? 0) : 0),
-    0);
+    return summary.reduce((sum, row) => sum + row.stockValue, 0);
   }
 
   getTotalRemainingStockRetailValue(summary: ProductStockSummary[]): number {

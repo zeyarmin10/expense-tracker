@@ -683,7 +683,9 @@ export class Profit implements OnInit, OnDestroy {
         console.error('Error saving income:', error);
         Toast.fire({
           icon: 'error',
-          title: error.message || this.translate.instant('INCOME_SAVE_ERROR')
+          title: typeof error?.message === 'string' && error.message.startsWith('STOCK_')
+            ? this.translate.instant(error.message)
+            : error.message || this.translate.instant('INCOME_SAVE_ERROR')
         });
       })
       .finally(() => {

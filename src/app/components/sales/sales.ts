@@ -1042,7 +1042,7 @@ export class Sales implements OnInit, OnDestroy {
       console.error('Error checking out sale:', error);
       Toast.fire({
         icon: 'error',
-        title: error.message || this.translate.instant('SALE_SAVE_ERROR'),
+        title: this.getSaleSaveError(error),
       });
     } finally {
       this.isCheckingOut = false;
@@ -1396,12 +1396,19 @@ export class Sales implements OnInit, OnDestroy {
         console.error('Error saving income:', error);
         Toast.fire({
           icon: 'error',
-          title: error.message || this.translate.instant('SALE_SAVE_ERROR')
+          title: this.getSaleSaveError(error)
         });
       })
       .finally(() => {
         this.isSubmittingIncome = false;
       });
+  }
+
+  private getSaleSaveError(error: any): string {
+    const key = error?.message;
+    return typeof key === 'string' && key.startsWith('STOCK_')
+      ? this.translate.instant(key)
+      : key || this.translate.instant('SALE_SAVE_ERROR');
   }
 
   // ── Edit — reuses the Add-Sale modal (same pattern as expense.ts's

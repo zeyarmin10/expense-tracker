@@ -12,6 +12,8 @@ import {
   orderByChild,
   get,
   objectVal,
+  runTransaction,
+  onValue,
 } from '@angular/fire/database';
 import { AuthService } from './auth';
 import { getActiveGroupId, UserDataService, UserProfile, PublicUserProfile } from './user-data';
@@ -21,6 +23,7 @@ import { toLocalDateKey } from './date-filter.service';
 import { PersonalOfflineDataService } from './personal-offline-data.service';
 import { SharedOfflineDataService } from './shared-offline-data.service';
 import { NetworkService } from './network.service';
+import { getExpenseLineItems, ServiceIExpense } from './expense';
 
 export interface IncomeLineItem {
   productId: string;
@@ -92,6 +95,33 @@ export function getIncomeLineItems(income: ServiceIIncome): IncomeLineItem[] {
   return [];
 }
 
+/** Uses the same legacy/cart line-item rules as the inventory summary. */
+export function hasStockForProductSale(
+  expenses: Record<string, ServiceIExpense>,
+  incomes: Record<string, ServiceIIncome>,
+  candidate: ServiceIIncome,
+  excludedIncomeId?: string,
+): boolean {
+  const balance = new Map<string, number>();
+  for (const expense of Object.values(expenses)) {
+    if (expense.status === 'void' || expense.currency !== candidate.currency) continue;
+    for (const item of getExpenseLineItems(expense)) {
+      if (item.productId) balance.set(item.productId, (balance.get(item.productId) || 0) + Number(item.quantity || 0));
+    }
+  }
+  for (const [id, income] of Object.entries(incomes)) {
+    if (id === excludedIncomeId || income.status === 'void' || !income.isProductSale || income.currency !== candidate.currency) continue;
+    for (const item of getIncomeLineItems(income)) {
+      if (item.productId) balance.set(item.productId, (balance.get(item.productId) || 0) - Number(item.quantity || 0));
+    }
+  }
+  const requestedByProduct = new Map<string, number>();
+  for (const item of getIncomeLineItems(candidate)) {
+    requestedByProduct.set(item.productId, (requestedByProduct.get(item.productId) || 0) + Number(item.quantity));
+  }
+  return [...requestedByProduct].every(([productId, quantity]) => quantity <= (balance.get(productId) || 0));
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -122,6 +152,92 @@ export class IncomeService {
     }
   }
 
+  /**
+   * Product sales use one transaction at the common parent of purchases and
+   * sales. Stock is derived from those two collections, so checking a client
+   * observable and then pushing an income cannot protect two simultaneous
+   * checkouts. This is intentionally restricted to online product sales:
+   * separate offline queues cannot reserve the same stock safely.
+   */
+  private async getStockTransactionRoot(profile: UserProfile): Promise<DatabaseReference> {
+    const [expenses, incomes] = await Promise.all([
+      this.spaceDataService.getActiveCollectionContext(profile, 'expenses'),
+      this.spaceDataService.getActiveCollectionContext(profile, 'incomes'),
+    ]);
+    if (expenses.source !== incomes.source) {
+      throw new Error('STOCK_CHECK_RETRY');
+    }
+    if (incomes.source === 'canonical' && incomes.spaceId) {
+      return ref(this.db, `space_data/${incomes.spaceId}`);
+    }
+    const groupId = getActiveGroupId(profile);
+    return ref(this.db, groupId ? `group_data/${groupId}` : `users/${profile.uid}`);
+  }
+
+  private async saveProductSaleTransaction(
+    profile: UserProfile,
+    incomeId: string,
+    incoming: Partial<ServiceIIncome>,
+    mode: 'add' | 'update',
+  ): Promise<void> {
+    if (!this.network.isOnline$.value) {
+      throw new Error('STOCK_CHECK_ONLINE_REQUIRED');
+    }
+    const rootRef = await this.getStockTransactionRoot(profile);
+    // get() alone does not keep the RTDB sync tree populated for the first
+    // transaction callback. Keep a value listener active until commit so that
+    // the callback starts with the current purchases instead of null.
+    let resolveReady!: () => void;
+    let rejectReady!: (reason: unknown) => void;
+    const ready = new Promise<void>((resolve, reject) => {
+      resolveReady = resolve;
+      rejectReady = reject;
+    });
+    const stopListening = onValue(rootRef, (snapshot) => {
+      if (snapshot.exists()) resolveReady();
+      else rejectReady(new Error('STOCK_CHECK_RETRY'));
+    }, rejectReady);
+    let abortReason = 'STOCK_CHECK_RETRY';
+    try {
+      await ready;
+      const result = await runTransaction(rootRef, (currentData: any) => {
+        abortReason = 'STOCK_CHECK_RETRY';
+        if (!currentData) return;
+
+        const incomes = (currentData.incomes || {}) as Record<string, ServiceIIncome>;
+        const expenses = (currentData.expenses || {}) as Record<string, ServiceIExpense>;
+        const oldIncome = mode === 'update' ? incomes[incomeId] : undefined;
+        if (mode === 'update' && (!oldIncome || oldIncome.status === 'void')) return;
+        if (mode === 'add' && incomes[incomeId]) return;
+
+        const nextIncome = mode === 'update'
+          ? { ...oldIncome, ...incoming } as ServiceIIncome
+          : incoming as ServiceIIncome;
+        const requested = nextIncome.isProductSale ? getIncomeLineItems(nextIncome) : [];
+        if (nextIncome.isProductSale && (
+          requested.length === 0 ||
+          requested.some((item) => !item.productId || !Number.isFinite(Number(item.quantity)) || Number(item.quantity) <= 0)
+        )) {
+          abortReason = 'STOCK_INVALID_SALE';
+          return;
+        }
+
+        if (nextIncome.isProductSale && !hasStockForProductSale(expenses, incomes, nextIncome, incomeId)) {
+          abortReason = 'STOCK_CHECK_RETRY';
+          return;
+        }
+
+        return {
+          ...currentData,
+          incomes: { ...incomes, [incomeId]: nextIncome },
+        };
+      }, { applyLocally: false });
+      if (!result.committed) throw new Error(abortReason);
+    } finally {
+      stopListening();
+    }
+  }
+
   async addIncome(
     incomeData: Omit<ServiceIIncome, 'id' | 'userId' | 'groupId' | 'createdAt' | 'device' | 'editedDevice'>
   ): Promise<void> {
@@ -131,14 +247,27 @@ export class IncomeService {
     }
     await this.refreshConnectionStateForWrite();
 
+    if (incomeData.isProductSale && !this.network.isOnline$.value) {
+      throw new Error('STOCK_CHECK_ONLINE_REQUIRED');
+    }
+
     const newIncomeToSave: Omit<ServiceIIncome, 'id'> = {
       ...incomeData,
       userId: profile.uid,
+      ...(getActiveGroupId(profile) ? { groupId: getActiveGroupId(profile)! } : {}),
       createdByName: profile.displayName || 'Anonymous',
       createdByPhotoURL: profile.photoURL || null,
       createdAt: new Date().toISOString(),
       device: navigator.userAgent,
     };
+
+    if (incomeData.isProductSale) {
+      const { canonicalRef, legacyRef } = await this.spaceDataService.getActiveCollectionContext(profile, 'incomes');
+      const incomeId = push(canonicalRef || legacyRef).key;
+      if (!incomeId) throw new Error('STOCK_CHECK_RETRY');
+      await this.saveProductSaleTransaction(profile, incomeId, newIncomeToSave, 'add');
+      return;
+    }
 
     if (this.sharedOfflineData.isOfflineShared(profile)) {
       await this.sharedOfflineData.write(
@@ -313,6 +442,7 @@ export class IncomeService {
       const records = await this.sharedOfflineData.read<ServiceIIncome>(profile, 'incomes');
       const current = records[incomeId];
       if (!current) throw new Error('Income not found on this device.');
+      if (current.isProductSale || updatedData.isProductSale) throw new Error('STOCK_CHECK_ONLINE_REQUIRED');
       await this.sharedOfflineData.write(profile, 'incomes', 'update', incomeId, {
         ...updatedData, editedDevice: navigator.userAgent, updatedAt: new Date().toISOString(),
       }, current.updatedAt || current.createdAt || null);
@@ -320,6 +450,8 @@ export class IncomeService {
     }
 
     if (this.personalOfflineData.isOfflinePersonal(profile)) {
+      const records = await this.personalOfflineData.read<ServiceIIncome>(profile, 'incomes');
+      if (records[incomeId]?.isProductSale || updatedData.isProductSale) throw new Error('STOCK_CHECK_ONLINE_REQUIRED');
       await this.personalOfflineData.write(profile, 'incomes', 'update', incomeId, {
         ...updatedData,
         editedDevice: navigator.userAgent,
@@ -339,7 +471,14 @@ export class IncomeService {
         incomeRef = ref(this.db, `users/${profile.uid}/incomes/${incomeId}`);
     }
 
-    await update(incomeRef, { ...updatedData, editedDevice: navigator.userAgent });
+    const currentSnapshot = await get(incomeRef);
+    const current = currentSnapshot.val() as ServiceIIncome | null;
+    const patch = { ...updatedData, editedDevice: navigator.userAgent };
+    if (current?.isProductSale || updatedData.isProductSale) {
+      await this.saveProductSaleTransaction(profile, incomeId, patch, 'update');
+      return;
+    }
+    await update(incomeRef, patch);
   }
 
   async deleteIncome(id: string): Promise<void> {
