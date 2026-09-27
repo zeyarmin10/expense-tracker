@@ -669,6 +669,7 @@
   <div class="pnl-receipt-overlay-scroll">
     <div class="pnl-receipt-content">
       <div class="pnl-receipt-paper">
+      <div class="pnl-receipt-pending" *ngIf="receiptPendingSync">{{ 'SALE_PENDING_SYNC_BADGE' | translate }}</div>
       <div class="pnl-receipt-shop">{{ receiptShopName }}</div>
       <div class="pnl-receipt-shop-info" *ngIf="receiptShopAddress">{{ receiptShopAddress }}</div>
       <div class="pnl-receipt-shop-info pnl-receipt-shop-phone" *ngIf="receiptShopPhone">{{ 'SHOP_PHONE_LABEL' | translate }}: {{ receiptShopPhone }}</div>

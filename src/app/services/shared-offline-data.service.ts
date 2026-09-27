@@ -49,7 +49,7 @@ export class SharedOfflineDataService {
       if (!operation.path.startsWith(prefix)) continue;
       const id = operation.path.slice(prefix.length).split('/')[0];
       if (operation.kind === 'remove') delete records[id];
-      else if (operation.kind === 'set') records[id] = { ...(operation.payload || {}) };
+      else if (operation.kind === 'set' || operation.kind === 'stockSaleSet') records[id] = { ...(operation.payload || {}) };
       else records[id] = { ...(records[id] || {}), ...(operation.payload || {}) };
     }
     await this.store.replaceCollection(this.scope(profile), collection, records);
@@ -68,6 +68,21 @@ export class SharedOfflineDataService {
     const scope = this.scope(profile);
     if (kind === 'remove') await this.store.removeRecord(scope, collection, recordId);
     else await this.store.patchRecord(scope, collection, recordId, payload || {});
+    if (collection === 'incomes' && (kind === 'update' || kind === 'stockSaleUpdate')) {
+      const pending = (await this.store.pendingOperations()).find(operation =>
+        operation.path === this.path(profile, collection, recordId) &&
+        (operation.kind === 'stockSaleSet' || operation.kind === 'stockSaleUpdate') &&
+        operation.id !== this.store.replayingOperationId,
+      );
+      if (pending) {
+        await this.store.enqueue({
+          ...pending,
+          payload: { ...pending.payload, ...payload },
+          lastError: undefined,
+        });
+        return;
+      }
+    }
     await this.store.enqueue({
       id: this.store.createId('op'), kind, path: this.path(profile, collection, recordId), payload,
       createdAt: this.store.nextOperationTimestamp(), sharedSpaceId: this.groupId(profile), baseUpdatedAt,

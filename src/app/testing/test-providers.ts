@@ -4,17 +4,10 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { AngularFireModule } from '@angular/fire/compat';
-import {
-  AngularFireDatabaseModule,
-  USE_EMULATOR as USE_DATABASE_EMULATOR,
-} from '@angular/fire/compat/database';
+import { AngularFireDatabaseModule } from '@angular/fire/compat/database';
 import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
 import { connectAuthEmulator, getAuth, provideAuth } from '@angular/fire/auth';
-import {
-  connectDatabaseEmulator,
-  getDatabase,
-  provideDatabase,
-} from '@angular/fire/database';
+import { getDatabase, provideDatabase } from '@angular/fire/database';
 import { TranslateModule } from '@ngx-translate/core';
 
 // Tests never talk to production Firebase: a fake "demo-" project config is
@@ -57,22 +50,12 @@ export const TEST_PROVIDERS = [
     }
     return auth;
   }),
-  provideDatabase(() => {
-    const db = getDatabase();
-    try {
-      connectDatabaseEmulator(db, EMULATOR_HOST, DATABASE_EMULATOR_PORT);
-    } catch {
-      // Same as above — instance already targets the emulator.
-    }
-    return db;
-  }),
+  // databaseURL already points at the local emulator. Reconnecting the cached
+  // SDK instance across TestBeds throws before service tests can run.
+  provideDatabase(() => getDatabase()),
   importProvidersFrom(
     AngularFireModule.initializeApp(TEST_FIREBASE_CONFIG),
     AngularFireDatabaseModule,
     TranslateModule.forRoot(),
   ),
-  {
-    provide: USE_DATABASE_EMULATOR,
-    useValue: [EMULATOR_HOST, DATABASE_EMULATOR_PORT],
-  },
 ];

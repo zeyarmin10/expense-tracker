@@ -1,4 +1,5 @@
 import { Injectable, inject } from '@angular/core';
+import { Capacitor } from '@capacitor/core';
 import {
   Database,
   ref,
@@ -208,17 +209,15 @@ export class ExpenseService {
             // Keep the complete collection in the offline cache.
             const expenses$ = objectVal<Record<string, Record<string, unknown>> | null>(baseRef).pipe(
           switchMap(async (expensesData) => {
-            if (!expensesData) {
-              if (getActiveGroupId(profile)) {
-                await this.sharedOfflineData.cacheRemote(profile, 'expenses', {});
-              } else {
-                await this.personalOfflineData.cacheRemote(profile, 'expenses', {});
-              }
-              return [];
-            }
+            const offlineData = getActiveGroupId(profile) ? this.sharedOfflineData : this.personalOfflineData;
+            const serverRecords = expensesData || {};
+            await offlineData.cacheRemote(profile, 'expenses', serverRecords);
+            const records = Capacitor.isNativePlatform()
+              ? await offlineData.read<IExpense>(profile, 'expenses')
+              : serverRecords;
 
             const userIds = new Set<string>();
-            Object.values(expensesData).forEach((expense: any) => {
+            Object.values(records).forEach((expense: any) => {
               if (expense.userId) userIds.add(expense.userId);
               if (expense.updatedBy) userIds.add(expense.updatedBy);
             });
@@ -235,8 +234,8 @@ export class ExpenseService {
               return acc;
             }, {} as { [userId: string]: PublicUserProfile });
 
-            const expenses = Object.keys(expensesData).map((key) => {
-              const expense = expensesData[key] as unknown as IExpense;
+            const expenses = Object.keys(records).map((key) => {
+              const expense = records[key] as unknown as IExpense;
               // Prefer the live profile (kept current by the member) over the
               // snapshot stored on the record at creation time — the snapshot
               // is only a fallback for members whose profile can no longer be
@@ -269,14 +268,6 @@ export class ExpenseService {
                 userPhotoURL: createdByPhotoURL,
               } as ServiceIExpense;
             });
-
-            // Retain the server shape, not the display-enriched one, so a
-            // later offline read uses exactly the same financial values.
-            if (getActiveGroupId(profile)) {
-              await this.sharedOfflineData.cacheRemote(profile, 'expenses', expensesData);
-            } else {
-              await this.personalOfflineData.cacheRemote(profile, 'expenses', expensesData);
-            }
 
             loadErrorSignal?.next(false);
             // Voided (soft-deleted) records stay in Firebase forever for

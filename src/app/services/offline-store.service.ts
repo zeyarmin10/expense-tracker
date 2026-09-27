@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
+import { Subject } from 'rxjs';
 
 /** Collections that Phase 1 can safely edit without a connection. */
 export type OfflineCollection =
   | 'expenses' | 'incomes' | 'categories' | 'budgets' | 'vouchers' | 'products' | 'shopExpenses' | 'spaces' | 'spaceMembers';
-export type OfflineOperationKind = 'set' | 'setIfMissing' | 'update' | 'remove' | 'uploadVoucher';
+export type OfflineOperationKind = 'set' | 'setIfMissing' | 'update' | 'remove' | 'uploadVoucher' | 'stockSaleSet' | 'stockSaleUpdate';
 
 export interface OfflineOperation {
   id: string;
@@ -40,6 +41,9 @@ interface StoredBlob {
  */
 @Injectable({ providedIn: 'root' })
 export class OfflineStoreService {
+  readonly queueChanged$ = new Subject<void>();
+  /** The operation currently being sent, so local edits can queue behind it. */
+  replayingOperationId: string | null = null;
   private readonly databaseName = 'kyat-wise-offline';
   private readonly databaseVersion = 3;
   private readonly collectionStore = 'collections';
@@ -170,11 +174,13 @@ export class OfflineStoreService {
     const db = await this.database;
     if (!db) {
       this.memoryQueue.set(operation.id, operation);
+      this.queueChanged$.next();
       return;
     }
     const transaction = db.transaction(this.queueStore, 'readwrite');
     transaction.objectStore(this.queueStore).put(operation);
     await this.transactionDone(transaction);
+    this.queueChanged$.next();
   }
 
   async pendingOperations(): Promise<OfflineOperation[]> {
@@ -189,11 +195,13 @@ export class OfflineStoreService {
     const db = await this.database;
     if (!db) {
       this.memoryQueue.delete(id);
+      this.queueChanged$.next();
       return;
     }
     const transaction = db.transaction(this.queueStore, 'readwrite');
     transaction.objectStore(this.queueStore).delete(id);
     await this.transactionDone(transaction);
+    this.queueChanged$.next();
   }
 
   async markFailed(operation: OfflineOperation, error: unknown): Promise<void> {

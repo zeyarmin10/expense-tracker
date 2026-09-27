@@ -1067,8 +1067,29 @@ export class App implements OnInit, AfterViewInit {
     const conflicts = await this.offlineSyncService.getConflicts();
     if (conflicts.length === 0) return;
     let needsServerRefresh = false;
+    let resolvedAny = false;
 
     for (const operation of conflicts) {
+      if (operation.lastError === 'SYNC_CONFLICT:STOCK_INSUFFICIENT') {
+        const result = await Swal.fire({
+          icon: 'warning',
+          title: this.translate.instant('STOCK_SYNC_CONFLICT_TITLE'),
+          text: this.translate.instant('STOCK_SYNC_CONFLICT_TEXT'),
+          showCancelButton: true,
+          confirmButtonText: this.translate.instant('STOCK_SYNC_KEEP_PENDING'),
+          cancelButtonText: this.translate.instant('STOCK_SYNC_DISCARD'),
+          reverseButtons: true,
+        });
+        if (result.dismiss === Swal.DismissReason.cancel) {
+          await this.offlineSyncService.useServerVersion(operation);
+          needsServerRefresh = true;
+          resolvedAny = true;
+          continue;
+        }
+        // Keeping it pending preserves the local receipt until the shop
+        // restocks on another device and tries syncing again.
+        break;
+      }
       const recordName = operation.path.split('/').slice(-2).join(' / ');
       const result = await Swal.fire({
         icon: 'warning',
@@ -1084,16 +1105,20 @@ export class App implements OnInit, AfterViewInit {
       });
       if (result.isConfirmed) {
         await this.offlineSyncService.keepLocalVersion(operation);
+        resolvedAny = true;
       } else if (result.dismiss === Swal.DismissReason.cancel) {
         await this.offlineSyncService.useServerVersion(operation);
         needsServerRefresh = true;
+        resolvedAny = true;
       } else {
         break;
       }
     }
-    this.toastService.showSuccess(
-      this.getActiveLang() === 'my' ? 'Conflict ဖြေရှင်းမှုကို သိမ်းပြီးပါပြီ' : 'Conflict resolution saved.',
-    );
+    if (resolvedAny) {
+      this.toastService.showSuccess(
+        this.getActiveLang() === 'my' ? 'Conflict ဖြေရှင်းမှုကို သိမ်းပြီးပါပြီ' : 'Conflict resolution saved.',
+      );
+    }
     // Reload only when the server version was chosen, so every cached
     // collection and derived report is rebuilt from the authoritative data.
     if (needsServerRefresh && this.networkService.isOnline$.value) {
@@ -1179,7 +1204,10 @@ export class App implements OnInit, AfterViewInit {
     const collection = operation.path.split('/').slice(-2, -1)[0] || operation.path;
     const title = `${this.translate.instant(this.getSyncActionKey(operation.kind))} · ${this.translate.instant(this.getSyncCollectionKey(collection))}`;
     const payload = this.summarizeSyncPayload(collection, operation.payload);
-    const error = operation.lastError ? `<div class="sync-detail-error">${this.escapeHtml(operation.lastError)}</div>` : '';
+    const errorText = operation.lastError === 'SYNC_CONFLICT:STOCK_INSUFFICIENT'
+      ? this.translate.instant('STOCK_SYNC_CONFLICT_TITLE')
+      : operation.lastError;
+    const error = errorText ? `<div class="sync-detail-error">${this.escapeHtml(errorText)}</div>` : '';
     return `
       <article class="sync-detail-item">
         <div class="sync-detail-item-main">
@@ -1238,8 +1266,10 @@ export class App implements OnInit, AfterViewInit {
   private getSyncActionKey(kind: OfflineOperation['kind']): string {
     const map: Record<OfflineOperation['kind'], string> = {
       set: 'SYNC_ACTION_CREATE',
+      stockSaleSet: 'SYNC_ACTION_CREATE',
       setIfMissing: 'SYNC_ACTION_CREATE',
       update: 'SYNC_ACTION_UPDATE',
+      stockSaleUpdate: 'SYNC_ACTION_UPDATE',
       remove: 'SYNC_ACTION_DELETE',
       uploadVoucher: 'SYNC_ACTION_UPLOAD',
     };

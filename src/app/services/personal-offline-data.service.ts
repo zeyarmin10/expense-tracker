@@ -45,7 +45,7 @@ export class PersonalOfflineDataService {
       if (!recordId) continue;
       if (operation.kind === 'remove') {
         delete records[recordId];
-      } else if (operation.kind === 'set') {
+      } else if (operation.kind === 'set' || operation.kind === 'stockSaleSet') {
         records[recordId] = { ...(operation.payload || {}) };
       } else {
         records[recordId] = { ...(records[recordId] || {}), ...(operation.payload || {}) };
@@ -68,6 +68,23 @@ export class PersonalOfflineDataService {
       await this.store.patchRecord(profile.uid, collection, recordId, payload || {});
     } else {
       await this.store.patchRecord(profile.uid, collection, recordId, payload || {});
+    }
+    // Keep an unsynced sale and any later edit/void as one operation. Replaying
+    // an obsolete larger quantity first could otherwise conflict needlessly.
+    if (collection === 'incomes' && (kind === 'update' || kind === 'stockSaleUpdate')) {
+      const pending = (await this.store.pendingOperations()).find(operation =>
+        operation.path === this.path(profile, collection, recordId) &&
+        (operation.kind === 'stockSaleSet' || operation.kind === 'stockSaleUpdate') &&
+        operation.id !== this.store.replayingOperationId,
+      );
+      if (pending) {
+        await this.store.enqueue({
+          ...pending,
+          payload: { ...pending.payload, ...payload },
+          lastError: undefined,
+        });
+        return;
+      }
     }
     await this.store.enqueue({
       id: this.store.createId('op'),

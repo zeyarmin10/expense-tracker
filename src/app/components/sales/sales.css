@@ -3278,3 +3278,13 @@ app-date-input .di-trigger {
     overscroll-behavior: contain;
   }
 }
+.pnl-receipt-pending {
+  color: #9a3412;
+  border: 1px solid #fdba74;
+  background: #fff7ed;
+  padding: 6px 8px;
+  margin-bottom: 10px;
+  text-align: center;
+  font-size: .78rem;
+  font-weight: 700;
+}

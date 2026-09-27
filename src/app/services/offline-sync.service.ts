@@ -4,6 +4,7 @@ import { BehaviorSubject, filter } from 'rxjs';
 import { NetworkService } from './network.service';
 import { OfflineOperation, OfflineStoreService } from './offline-store.service';
 import { environment } from '../../environments/environment';
+import { IncomeService } from './income';
 
 /** Replays durable local writes as soon as a connection returns. */
 @Injectable({ providedIn: 'root' })
@@ -11,6 +12,7 @@ export class OfflineSyncService {
   private db = inject(Database);
   private network = inject(NetworkService);
   private store = inject(OfflineStoreService);
+  private incomeService = inject(IncomeService);
   private started = false;
   private syncing = false;
   readonly pendingCount$ = new BehaviorSubject<number>(0);
@@ -20,6 +22,10 @@ export class OfflineSyncService {
     if (this.started) return;
     this.started = true;
     await this.refreshPendingCount();
+    this.store.queueChanged$.subscribe(() => {
+      void this.refreshPendingCount();
+      if (this.network.isOnline$.value) void this.sync();
+    });
     this.network.isOnline$.pipe(filter(Boolean)).subscribe(() => void this.sync());
     if (this.network.isOnline$.value) void this.sync();
   }
@@ -65,8 +71,13 @@ export class OfflineSyncService {
     if (this.syncing || !this.network.isOnline$.value) return;
     this.syncing = true;
     try {
-      for (const operation of await this.store.pendingOperations()) {
+      // Reload after each commit so an edit queued while a sale was being
+      // uploaded is processed immediately after that sale.
+      while (this.network.isOnline$.value) {
+        const operation = (await this.store.pendingOperations())[0];
+        if (!operation) break;
         if (!this.network.isOnline$.value) break;
+        this.store.replayingOperationId = operation.id;
         try {
           await this.apply(operation);
           await this.store.removeOperation(operation.id);
@@ -74,6 +85,8 @@ export class OfflineSyncService {
           await this.store.markFailed(operation, error);
           // Preserve write order: an update after a failed create cannot run yet.
           break;
+        } finally {
+          this.store.replayingOperationId = null;
         }
       }
     } finally {
@@ -86,6 +99,8 @@ export class OfflineSyncService {
     const target = ref(this.db, operation.path);
     switch (operation.kind) {
       case 'set': return set(target, operation.payload || {});
+      case 'stockSaleSet':
+      case 'stockSaleUpdate': return this.incomeService.applyQueuedProductSale(operation);
       case 'setIfMissing': return this.setIfMissing(target, operation.payload || {});
       case 'update': return this.applySharedUpdate(operation, target);
       case 'remove': return this.applySharedRemove(operation, target);
