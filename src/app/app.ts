@@ -1156,9 +1156,9 @@ export class App implements OnInit, AfterViewInit {
         <p class="sync-detail-summary">${this.escapeHtml(this.translate.instant('SYNC_PENDING_SUMMARY', {
           count: this.formatService.formatCount(operations.length),
         }))}</p>
-        <div class="sync-detail-list">
-          ${operations.map(operation => this.buildSyncOperationHtml(operation, cachedSpaces, profile)).join('')}
-        </div>
+        <ol class="sync-detail-list">
+          ${operations.map((operation, index) => this.buildSyncOperationHtml(operation, cachedSpaces, profile, index + 1)).join('')}
+        </ol>
       </div>
     `;
 
@@ -1166,6 +1166,7 @@ export class App implements OnInit, AfterViewInit {
       icon: 'info',
       title: this.translate.instant('SYNC_DETAILS_TITLE'),
       html,
+      allowOutsideClick: false,
       showCancelButton: true,
       confirmButtonText: this.translate.instant('SYNC_NOW_BUTTON'),
       cancelButtonText: this.translate.instant('CLOSE_BUTTON_LABEL'),
@@ -1212,6 +1213,7 @@ export class App implements OnInit, AfterViewInit {
     operation: OfflineOperation,
     spaces: Record<string, UserSpaceSummary>,
     profile: UserProfile | null,
+    position: number,
   ): string {
     const collection = operation.path.split('/').slice(-2, -1)[0] || operation.path;
     const title = `${this.translate.instant(this.getSyncActionKey(operation.kind))} · ${this.translate.instant(this.getSyncCollectionKey(collection))}`;
@@ -1222,14 +1224,15 @@ export class App implements OnInit, AfterViewInit {
       : operation.lastError;
     const error = errorText ? `<div class="sync-detail-error">${this.escapeHtml(errorText)}</div>` : '';
     return `
-      <article class="sync-detail-item">
+      <li class="sync-detail-item">
+        <span class="sync-detail-index" aria-hidden="true">${this.escapeHtml(this.formatService.formatCount(position))}</span>
         <div class="sync-detail-item-main">
           <strong>${this.escapeHtml(title)}</strong>
           <span class="sync-detail-space">${this.escapeHtml(this.translate.instant('SYNC_SPACE_LABEL'))}: ${this.escapeHtml(spaceName)}</span>
           ${payload ? `<small>${this.escapeHtml(payload)}</small>` : ''}
           ${error}
         </div>
-      </article>
+      </li>
     `;
   }
 

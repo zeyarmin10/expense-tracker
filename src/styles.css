@@ -665,6 +665,158 @@ body.light-mode .swal2-content {
   color: #4a5568 !important;
 }
 
+/* Sync details are rendered by SweetAlert under <body>, outside App's scoped styles. */
+.swal2-popup.sync-detail-swal {
+  width: min(92vw, 520px) !important;
+}
+
+.swal2-html-container.sync-detail-html,
+.sync-detail-modal {
+  text-align: left !important;
+}
+
+.sync-detail-summary {
+  margin: 0 0 0.85rem;
+  color: #aeb8c7;
+  font-size: 0.88rem;
+}
+
+.sync-detail-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  max-height: min(52vh, 380px);
+  margin: 0;
+  padding: 0 0.2rem 0.1rem 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.sync-detail-item {
+  display: grid;
+  grid-template-columns: 1.7rem minmax(0, 1fr);
+  gap: 0.7rem;
+  padding: 0.8rem;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  border-radius: 12px;
+  background: rgba(148, 163, 184, 0.1);
+}
+
+.sync-detail-index {
+  display: grid;
+  place-items: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 50%;
+  background: rgba(96, 165, 250, 0.2);
+  color: #93c5fd;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.sync-detail-item-main {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.sync-detail-item-main strong {
+  color: #f0f2f7;
+  font-size: 0.9rem;
+}
+
+.sync-detail-item-main .sync-detail-space,
+.sync-detail-item-main small {
+  color: #aeb8c7;
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
+
+.sync-detail-error {
+  color: #fca5a5;
+  font-size: 0.78rem;
+  overflow-wrap: anywhere;
+}
+
+body.light-mode .sync-detail-summary,
+body.light-mode .sync-detail-item-main .sync-detail-space,
+body.light-mode .sync-detail-item-main small {
+  color: #526071;
+}
+
+body.light-mode .sync-detail-item {
+  border-color: #dbe3ed;
+  background: #f8fafc;
+}
+
+body.light-mode .sync-detail-item-main strong {
+  color: #1a202c;
+}
+
+body.light-mode .sync-detail-index {
+  background: #e5f0ff;
+  color: #005eea;
+}
+
+body.light-mode .sync-detail-error {
+  color: #b91c1c;
+}
+
+@media (max-width: 639.98px) {
+  .swal2-container.sync-detail-container {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+
+  .swal2-popup.sync-detail-swal {
+    width: 100% !important;
+    height: 80dvh !important;
+    max-height: 80dvh !important;
+    margin: 0 !important;
+    border-radius: 24px 24px 0 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+  }
+
+  .sync-detail-swal .swal2-title {
+    flex: 0 0 auto;
+    padding-inline: 1rem;
+  }
+
+  .swal2-html-container.sync-detail-html {
+    flex: 1 1 auto;
+    min-height: 0;
+    margin: 0 1rem !important;
+    overflow: hidden !important;
+  }
+
+  .sync-detail-modal {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .sync-detail-summary {
+    flex: 0 0 auto;
+  }
+
+  .sync-detail-list {
+    flex: 1 1 auto;
+    max-height: none;
+    min-height: 0;
+    padding-bottom: 0.25rem;
+  }
+
+  .sync-detail-swal .swal2-actions {
+    flex: 0 0 auto;
+    width: calc(100% - 2rem);
+    margin: 1rem 1rem calc(env(safe-area-inset-bottom, 0px) + 1rem) !important;
+  }
+}
+
 body.light-mode .swal2-confirm {
   background: #005eea !important;
   color: #ffffff !important;

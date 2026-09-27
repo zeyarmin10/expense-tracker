@@ -59,7 +59,6 @@ import { AVAILABLE_CURRENCIES } from '../../core/constants/app.constants';
 import { FormatService } from '../../services/format.service';
 import { ExpenseService } from '../../services/expense'; // Added missing import
 import { InventoryService, ProductStockSummary } from '../../services/inventory.service';
-import { OfflineSyncService } from '../../services/offline-sync.service';
 import { ProfitLossService } from '../../services/profit-loss.service';
 import Swal from 'sweetalert2';
 import { createAppToast } from '../../services/toast';
@@ -134,7 +133,6 @@ export class Sales implements OnInit, OnDestroy {
   private spaceContextService = inject(SpaceContextService);
   private barcodeScanner = inject(BarcodeScannerService);
   private inventoryService = inject(InventoryService);
-  private offlineSyncService = inject(OfflineSyncService);
   private router = inject(Router);
 
   categoryList: ServiceICategory[] = [];
@@ -308,7 +306,6 @@ export class Sales implements OnInit, OnDestroy {
   // re-viewable later from any Recorded Sales row's receipt icon, see
   // viewReceiptForIncome()), shareable as plain text or a PNG image. ──
   showReceipt = false;
-  receiptPendingSync = false;
   receiptShopName = '';
   receiptShopAddress = '';
   receiptShopPhone = '';
@@ -322,7 +319,7 @@ export class Sales implements OnInit, OnDestroy {
   // Reopens the same receipt modal for an already-recorded sale — a plain
   // (non-product) sale has no lineItems, so it's shown as a single
   // synthetic line using its description and full amount.
-  async viewReceiptForIncome(income: ServiceIIncome): Promise<void> {
+  viewReceiptForIncome(income: ServiceIIncome): void {
     const lineItems = getIncomeLineItems(income);
     const effectiveLineItems: IncomeLineItem[] = lineItems.length > 0
       ? lineItems
@@ -337,11 +334,7 @@ export class Sales implements OnInit, OnDestroy {
     // authoritative for the Date line; createdAt only supplies the time of
     // day the sale was actually recorded (older records may lack it, in
     // which case the time is simply left blank rather than guessed).
-    const pendingSync = (await this.offlineSyncService.getPendingOperations()).some(operation =>
-      (operation.kind === 'stockSaleSet' || operation.kind === 'stockSaleUpdate') &&
-      operation.path.endsWith(`/incomes/${income.id}`),
-    );
-    this.buildAndShowReceipt(effectiveLineItems, income.amount, income.currency, income.date, income.createdAt, this.getReceiptCode(income), pendingSync);
+    this.buildAndShowReceipt(effectiveLineItems, income.amount, income.currency, income.date, income.createdAt, this.getReceiptCode(income));
   }
 
   private buildAndShowReceipt(
@@ -351,9 +344,7 @@ export class Sales implements OnInit, OnDestroy {
     date: string,
     createdAt?: string,
     receiptCode?: string,
-    pendingSync = false,
   ): void {
-    this.receiptPendingSync = pendingSync;
     this.receiptCode = receiptCode || '';
     this.receiptShopName = this.userProfile?.currentSpaceName || 'Kyat Wise';
     this.receiptDate = this.formatService.formatLocalizedDate(date);
@@ -389,7 +380,6 @@ export class Sales implements OnInit, OnDestroy {
     this.receiptText =
       `${this.receiptShopName}\n${shopInfoLines ? shopInfoLines + '\n' : ''}${sep}\n` +
       `${this.translate.instant('DATE_LABEL')}: ${this.receiptDate}  ${this.receiptTime}\n${receiptCodeLine}` +
-      `${pendingSync ? this.translate.instant('SALE_PENDING_SYNC_BADGE') + '\n' : ''}` +
       `${sep}\n${rows}\n${sep}\n` +
       `${this.translate.instant('POS_TOTAL_LABEL')}: ${this.receiptTotal}\n${sep}\n` +
       `${this.translate.instant('SALE_RECEIPT_THANK_YOU')}`;
@@ -1049,7 +1039,7 @@ export class Sales implements OnInit, OnDestroy {
       // same URL, no visible effect; same trade-off onboarding.ts documents
       // for its own history.back()-vs-navigate() race).
       this.reallyCloseAddCartOverlay();
-      this.buildAndShowReceipt(lineItems, amount, currency, date, undefined, receiptCode, saveStatus === 'queued');
+      this.buildAndShowReceipt(lineItems, amount, currency, date, undefined, receiptCode);
     } catch (error: any) {
       console.error('Error checking out sale:', error);
       Toast.fire({

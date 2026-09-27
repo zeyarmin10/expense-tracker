@@ -1031,7 +1031,6 @@
   "STOCK_INVALID_SALE": "販売を保存する前に、商品と正しい数量を選択してください。",
   "STOCK_INSUFFICIENT": "この販売に必要な在庫がありません。更新して数量を確認してください。",
   "SALE_PENDING_SYNC": "この端末に保存しました。再接続後に販売と在庫を確認して同期します。",
-  "SALE_PENDING_SYNC_BADGE": "同期と在庫確認を待機中",
   "STOCK_SYNC_CONFLICT_TITLE": "オフライン販売を同期できません：在庫不足",
   "STOCK_SYNC_CONFLICT_TEXT": "オフライン中に別の販売で在庫が使われました。別の端末で補充して再同期するか、未同期の販売を破棄してください。",
   "STOCK_SYNC_KEEP_PENDING": "保留する",
