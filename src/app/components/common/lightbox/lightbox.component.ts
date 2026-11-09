@@ -98,6 +98,11 @@ export class LightboxComponent implements AfterViewInit, OnDestroy {
   // applied to the inner <img>) so the two gestures never fight.
   private dragX = 0;
 
+  // Desktop: mouse drag pans a zoomed image. A drag that ends over the
+  // stage must not count as the stage's click-to-close.
+  private suppressNextClick = false;
+  private stopMouseDrag?: () => void;
+
   ngAfterViewInit(): void {
     const el = this.vp?.nativeElement;
     if (!el) return;
@@ -116,6 +121,7 @@ export class LightboxComponent implements AfterViewInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.unlisten?.();
+    this.stopMouseDrag?.();
     this.restoreScroll();
   }
 
@@ -136,6 +142,7 @@ export class LightboxComponent implements AfterViewInit, OnDestroy {
 
   hide(): void {
     if (!this.visible) return;
+    this.stopMouseDrag?.();
     this.visible = false;
     this.restoreScroll();
     this.closed.emit();
@@ -221,6 +228,15 @@ export class LightboxComponent implements AfterViewInit, OnDestroy {
     if (this.n >= 2) {
       this.snapZoomToLevel(true);
       this.n = e.touches.length;
+      // One finger is still down: re-anchor the pan to it, otherwise the next
+      // move is measured from where the first finger started the pinch and
+      // the image jumps.
+      if (e.touches.length === 1) {
+        this.sx0 = this.px0 = e.touches[0].clientX;
+        this.sy0 = this.py0 = e.touches[0].clientY;
+        this.tx0 = this.tx;
+        this.ty0 = this.ty;
+      }
       return;
     }
 
@@ -255,6 +271,56 @@ export class LightboxComponent implements AfterViewInit, OnDestroy {
 
     if (this.scale < 1) this.resetZoom();
     this.n = e.touches.length;
+  }
+
+  onStageClick(): void {
+    if (this.suppressNextClick) {
+      this.suppressNextClick = false;
+      return;
+    }
+    this.hide();
+  }
+
+  /** Desktop pan: drag a zoomed image with the mouse (touch has its own path). */
+  onMouseDown(e: MouseEvent): void {
+    if (e.button !== 0 || this.scale <= 1.05) return;
+    e.preventDefault(); // no native image/text drag
+    this.stopMouseDrag?.();
+    this.suppressNextClick = false;
+    const startX = e.clientX;
+    const startY = e.clientY;
+    this.tx0 = this.tx;
+    this.ty0 = this.ty;
+    const stage = this.vp?.nativeElement;
+    stage?.classList.add('lb-mouse-dragging');
+
+    // Outside Angular for the same reason as touchmove: per-frame updates
+    // go straight to the DOM without app-wide change detection.
+    this.ngZone.runOutsideAngular(() => {
+      const move = (ev: MouseEvent) => {
+        const dx = ev.clientX - startX;
+        const dy = ev.clientY - startY;
+        if (Math.hypot(dx, dy) > 3) this.suppressNextClick = true;
+        this.tx = this.tx0 + dx;
+        this.ty = this.ty0 + dy;
+        this.clamp();
+        this.applyImgTransform();
+      };
+      const up = () => {
+        this.stopMouseDrag?.();
+        // The click (if any) fires right after mouseup; clear afterwards so
+        // a later plain click on the backdrop still closes.
+        setTimeout(() => (this.suppressNextClick = false), 0);
+      };
+      window.addEventListener('mousemove', move);
+      window.addEventListener('mouseup', up);
+      this.stopMouseDrag = () => {
+        window.removeEventListener('mousemove', move);
+        window.removeEventListener('mouseup', up);
+        stage?.classList.remove('lb-mouse-dragging');
+        this.stopMouseDrag = undefined;
+      };
+    });
   }
 
   /** Slides the current image out and the next/prev one in, then hands off to next()/prev(). */
@@ -412,6 +478,7 @@ export class LightboxComponent implements AfterViewInit, OnDestroy {
   /** Writes the zoom/pan transform directly to the <img>, bypassing template
    *  binding so high-frequency pinch/pan updates don't trigger change detection. */
   private applyImgTransform(animate = false): void {
+    this.vp?.nativeElement.classList.toggle('lb-zoomed', this.scale > 1.05);
     const el = this.imgEl?.nativeElement;
     if (!el) return;
     el.style.transition = animate ? 'transform 0.25s cubic-bezier(0.22,0.61,0.36,1)' : 'none';

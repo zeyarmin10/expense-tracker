@@ -101,10 +101,6 @@
   position: relative;
 }
 
-.lb-stage:active {
-  cursor: grabbing;
-}
-
 .lb-img-wrap {
   display: flex;
   align-items: center;
@@ -338,4 +334,17 @@
 
 @keyframes lb-spin {
   to { transform: rotate(360deg); }
+}
+
+/* Grab cursor only while there is something to pan. */
+.lb-stage {
+  cursor: default;
+}
+
+.lb-stage.lb-zoomed {
+  cursor: grab;
+}
+
+.lb-stage.lb-mouse-dragging {
+  cursor: grabbing;
 }

@@ -38,7 +38,8 @@
     class="lb-stage"
     (touchstart)="onStart($event)"
     (touchend)="onEnd($event)"
-    (click)="hide()"
+    (mousedown)="onMouseDown($event)"
+    (click)="onStageClick()"
   >
     <div #imgWrap class="lb-img-wrap" [class.lb-img-fade]="fading" [class.lb-img-wrap-shaped]="!!shapeBorderRadius"
       (click)="$event.stopPropagation()" (dblclick)="onDoubleClick($event)">
