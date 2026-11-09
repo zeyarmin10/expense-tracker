@@ -15,10 +15,10 @@
       <div class="exp-add-modal-handle"></div>
       <div class="exp-add-modal-header" *ngIf="!isDatePickerOpen">
         <!-- Edit mode: plain title instead of the add/voucher tabs -->
-        <span class="exp-add-modal-header-title" *ngIf="editingExpense">
-          {{ 'EDIT_BUTTON_LABEL' | translate }}
+        <span class="exp-add-modal-header-title" *ngIf="editingExpense || editingVoucher">
+          {{ (editingVoucher ? 'VOUCHER_EDIT_TITLE' : 'EDIT_BUTTON_LABEL') | translate }}
         </span>
-        <div class="exp-seg-ctrl exp-add-modal-tabs" *ngIf="!editingExpense">
+        <div class="exp-seg-ctrl exp-add-modal-tabs" *ngIf="!editingExpense && !editingVoucher">
           <div class="exp-seg-track">
             <span
               class="exp-seg-indicator"
@@ -455,7 +455,7 @@
           />
 
           <!-- Empty state — two action buttons -->
-          <div *ngIf="selectedVoucherFiles.length === 0" class="exp-upload-actions">
+          <div *ngIf="voucherImageCount === 0" class="exp-upload-actions">
             <button type="button" class="exp-upload-btn exp-upload-btn-camera"
               (click)="openCamera()">
               <span class="exp-upload-btn-icon"><lucide-icon [img]="iconCamera" [size]="28"></lucide-icon></span>
@@ -469,12 +469,28 @@
           </div>
 
           <!-- Image grid -->
-          <div class="exp-image-grid" *ngIf="selectedVoucherFiles.length > 0">
+          <div class="exp-image-grid" *ngIf="voucherImageCount > 0">
+            <!-- Already-uploaded images of the voucher being edited -->
+            <div class="exp-image-thumb" *ngFor="let img of editVoucherExistingImages; let i = index; trackBy: trackByIndex">
+              <img
+                [src]="img.url"
+                [alt]="'VOUCHER_IMAGE_ALT' | translate"
+                (click)="openLightbox(voucherFormImageUrls, i)"
+              />
+              <button
+                type="button"
+                class="exp-thumb-remove"
+                (click)="removeExistingVoucherImage(i)"
+                [title]="'CANCEL_BUTTON_LABEL' | translate"
+              >
+                <lucide-icon [img]="iconX" [size]="16"></lucide-icon>
+              </button>
+            </div>
             <div class="exp-image-thumb" *ngFor="let url of voucherPreviewUrls; let i = index; trackBy: trackByIndex">
               <img
                 [src]="url"
                 [alt]="'VOUCHER_IMAGE_ALT' | translate"
-                (click)="openLightbox(voucherPreviewUrls, i)"
+                (click)="openLightbox(voucherFormImageUrls, editVoucherExistingImages.length + i)"
               />
               <button
                 type="button"
@@ -485,7 +501,7 @@
                 <lucide-icon [img]="iconX" [size]="16"></lucide-icon>
               </button>
             </div>
-            <div *ngIf="selectedVoucherFiles.length < MAX_VOUCHER_IMAGES"
+            <div *ngIf="voucherImageCount < MAX_VOUCHER_IMAGES"
               class="exp-image-add-more-wrap">
               <button type="button" class="exp-image-add-more exp-image-add-camera"
                 (click)="openCamera()"
@@ -501,8 +517,8 @@
           </div>
 
           <!-- Counter + clear -->
-          <div class="exp-image-info-row" *ngIf="selectedVoucherFiles.length > 0">
-            <span class="exp-image-counter">{{ formatCount(selectedVoucherFiles.length) }} / {{ formatCount(MAX_VOUCHER_IMAGES) }}</span>
+          <div class="exp-image-info-row" *ngIf="voucherImageCount > 0">
+            <span class="exp-image-counter">{{ formatCount(voucherImageCount) }} / {{ formatCount(MAX_VOUCHER_IMAGES) }}</span>
             <button
               type="button"
               class="exp-btn exp-btn-sm exp-btn-ghost"
@@ -517,10 +533,10 @@
             <button
               type="submit"
               class="exp-btn exp-btn-primary"
-              [disabled]="voucherForm.invalid || selectedVoucherFiles.length === 0 || isVoucherSaving"
+              [disabled]="voucherForm.invalid || voucherImageCount === 0 || isVoucherSaving"
             >
               <lucide-icon [img]="iconSave" [size]="16"></lucide-icon>
-              {{ "VOUCHER_SAVE_BUTTON" | translate }}
+              {{ (editingVoucher ? "VOUCHER_UPDATE_BUTTON" : "VOUCHER_SAVE_BUTTON") | translate }}
             </button>
           </div>
         </form>
@@ -679,6 +695,15 @@
                 [title]="'VOUCHER_VIEW' | translate"
               >
                 <lucide-icon [img]="iconEye" [size]="16"></lucide-icon>
+              </button>
+              <button
+                *ngIf="canEditVoucher(voucher)"
+                type="button"
+                class="exp-icon-btn"
+                (click)="startEditVoucher(voucher)"
+                [title]="'EDIT_BUTTON_LABEL' | translate"
+              >
+                <lucide-icon [img]="iconPen" [size]="16"></lucide-icon>
               </button>
               <button
                 *ngIf="canDeleteVoucher(voucher)"

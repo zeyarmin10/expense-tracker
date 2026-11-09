@@ -7,6 +7,7 @@ import {
   ref as dbRef,
   remove,
   set,
+  update,
   objectVal,
 } from '@angular/fire/database';
 import { Observable, firstValueFrom, from, of, combineLatest } from 'rxjs';
@@ -41,6 +42,23 @@ export interface AddVoucherInput {
   category?: string;
   note?: string;
   files: File[];
+}
+
+export interface VoucherImageRef {
+  url: string;
+  /** Cloudinary public id — empty for a not-yet-uploaded offline image. */
+  publicId: string;
+}
+
+export interface UpdateVoucherInput {
+  date: string;
+  title?: string;
+  category?: string;
+  note?: string;
+  /** Existing images to keep, in display order. */
+  keptImages: VoucherImageRef[];
+  /** Newly picked images appended after the kept ones. */
+  newFiles: File[];
 }
 
 const MAX_IMAGES = 10;
@@ -398,6 +416,119 @@ export class VoucherService {
     if (activeGroupId) newVoucher.groupId = activeGroupId;
 
     await set(newVoucherRef, newVoucher);
+  }
+
+  /** The voucher's current images paired with their Cloudinary ids. */
+  getVoucherImageRefs(voucher: ServiceIVoucher): VoucherImageRef[] {
+    const urls = voucher.imageUrls?.length ? voucher.imageUrls : voucher.imageUrl ? [voucher.imageUrl] : [];
+    const ids = voucher.storagePaths?.length ? voucher.storagePaths : voucher.storagePath ? [voucher.storagePath] : [];
+    return urls.map((url, index) => ({ url, publicId: ids[index] || '' }));
+  }
+
+  async updateVoucher(voucher: ServiceIVoucher, input: UpdateVoucherInput): Promise<void> {
+    const profile = await firstValueFrom(this.authService.userProfile$);
+    if (!profile?.uid) throw new Error('User not authenticated.');
+    if (!voucher.id) throw new Error('Voucher ID is required.');
+
+    const original = this.getVoucherImageRefs(voucher);
+    const newFiles = input.newFiles.slice(0, Math.max(0, MAX_IMAGES - input.keptImages.length));
+    if (input.keptImages.length + newFiles.length === 0) throw new Error('VOUCHER_ERROR_SELECT_IMAGE');
+    for (const file of newFiles) {
+      if (!file.type.startsWith('image/')) throw new Error('VOUCHER_ERROR_FILE_TYPE');
+      if (file.size > 8 * 1024 * 1024) throw new Error('VOUCHER_ERROR_FILE_SIZE');
+    }
+
+    const keptUrls = new Set(input.keptImages.map(img => img.url));
+    const removed = original.filter(img => !keptUrls.has(img.url));
+    const imagesChanged = newFiles.length > 0 || removed.length > 0;
+
+    const parser = new UAParser();
+    const result = parser.getResult();
+    const editedDevice = `${result.browser.name} on ${result.os.name}, Model: ${result.device.model || 'Unknown'} (${result.device.vendor || 'Unknown'})`;
+    const metadata: Record<string, unknown> = {
+      date: input.date,
+      title: input.title?.trim() || voucher.title || voucher.fileName,
+      category: input.category || '',
+      note: input.note?.trim() || '',
+      updatedAt: new Date().toISOString(),
+      updatedBy: profile.uid,
+      editedDevice,
+    };
+
+    const offlineShared = this.sharedOfflineData.isOfflineShared(profile);
+    const offlinePersonal = this.personalOfflineData.isOfflinePersonal(profile);
+    // Image changes need Cloudinary; offline (or still-queued) vouchers only
+    // get text edits so a queued upload's file keys never go out of step.
+    if (imagesChanged && (offlineShared || offlinePersonal || voucher.syncStatus === 'pending')) {
+      throw new Error('VOUCHER_ERROR_EDIT_IMAGES_OFFLINE');
+    }
+    if (offlineShared || offlinePersonal) {
+      if (offlinePersonal) {
+        await this.personalOfflineData.write(profile, 'vouchers', 'update', voucher.id, metadata);
+        return;
+      }
+      if (offlineShared) {
+        const records = await this.sharedOfflineData.read<ServiceIVoucher>(profile, 'vouchers');
+        const current = records[voucher.id];
+        await this.sharedOfflineData.write(
+          profile, 'vouchers', 'update', voucher.id, metadata,
+          (current as any)?.updatedAt || current?.createdAt || null,
+        );
+        return;
+      }
+    }
+
+    const activeGroupId = getActiveGroupId(profile);
+    const currentSpaceId = this.spaceDataService.getCurrentSpaceId(profile);
+    const { canonicalRef, spaceId } = await this.spaceDataService.getActiveCollectionContext(profile, 'vouchers');
+    const voucherRef = canonicalRef && currentSpaceId
+      ? dbRef(this.db, `space_data/${currentSpaceId}/vouchers/${voucher.id}`)
+      : activeGroupId
+        ? dbRef(this.db, `group_data/${activeGroupId}/vouchers/${voucher.id}`)
+        : dbRef(this.db, `users/${profile.uid}/vouchers/${voucher.id}`);
+
+    if (!imagesChanged) {
+      await update(voucherRef, metadata);
+      return;
+    }
+
+    const ownerSegment = spaceId
+      ? `spaces/${spaceId}`
+      : activeGroupId
+        ? `groups/${activeGroupId}`
+        : `users/${profile.uid}`;
+    const compressed = await Promise.all(newFiles.map(f => this.compressImage(f)));
+    let uploaded: { url: string; publicId: string }[];
+    try {
+      uploaded = await Promise.all(compressed.map(f => this.uploadToCloudinary(f, `vouchers/${ownerSegment}`)));
+    } catch (error) {
+      console.error('Voucher image upload to Cloudinary failed:', error);
+      throw new Error('VOUCHER_UPLOAD_ERROR');
+    }
+
+    const images = [...input.keptImages, ...uploaded];
+    // Per-image sizes aren't stored, so estimate the kept share of the old total.
+    const keptSize = original.length
+      ? Math.round((voucher.size || 0) * (input.keptImages.length / original.length))
+      : 0;
+    const imagePayload: Record<string, unknown> = {
+      imageUrl: images[0].url,
+      imageUrls: images.map(img => img.url),
+      imageCount: images.length,
+      storagePath: images[0].publicId,
+      storagePaths: images.map(img => img.publicId),
+      size: keptSize + compressed.reduce((sum, f) => sum + f.size, 0),
+    };
+
+    try {
+      await update(voucherRef, { ...metadata, ...imagePayload });
+    } catch (error) {
+      void this.imageUploadService.deleteImages(uploaded.map(img => img.publicId));
+      throw error;
+    }
+
+    // Free removed images only after the record no longer points at them.
+    if (removed.length) void this.imageUploadService.deleteImages(removed.map(img => img.publicId));
   }
 
   private async withOfflineImageUrls(

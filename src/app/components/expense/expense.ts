@@ -18,7 +18,7 @@ import {
   FormsModule,
 } from '@angular/forms';
 import { ServiceIExpense as IExpense, ExpenseService } from '../../services/expense';
-import { ServiceIVoucher, VoucherService } from '../../services/voucher';
+import { ServiceIVoucher, VoucherImageRef, VoucherService } from '../../services/voucher';
 import { ServiceICategory, CategoryService } from '../../services/category';
 import flatpickr from 'flatpickr';
 import type { Instance as FlatpickrInstance } from 'flatpickr/dist/types/instance';
@@ -156,6 +156,10 @@ export class Expense implements OnInit, OnDestroy {
   addModalTab: 'expense' | 'voucher' = 'expense';
   // Non-null while the add modal is editing an existing record instead.
   editingExpense: IExpense | null = null;
+  /** Saved voucher being edited in the voucher tab of the add modal. */
+  editingVoucher: ServiceIVoucher | null = null;
+  /** Already-uploaded images of `editingVoucher` that are still kept. */
+  editVoucherExistingImages: VoucherImageRef[] = [];
   isVoucherSaving = false;
   isSavedVoucherListOpen = false;
   isQuickMode = true;
@@ -384,6 +388,7 @@ export class Expense implements OnInit, OnDestroy {
     // state never carry over into the next time the modal opens.
     this.editingExpense = null;
     this.resetNewExpenseForm();
+    if (this.editingVoucher) this.resetVoucherEditState();
     if (shouldPopHistory) history.back();
   }
 
@@ -787,7 +792,7 @@ export class Expense implements OnInit, OnDestroy {
 
     if (newFiles.length === 0) return;
 
-    const remaining = this.MAX_VOUCHER_IMAGES - this.selectedVoucherFiles.length;
+    const remaining = this.MAX_VOUCHER_IMAGES - this.voucherImageCount;
     if (remaining <= 0) {
       Toast.fire({ icon: 'warning', title: this.translate.instant('VOUCHER_ERROR_MAX_IMAGES', { max: this.MAX_VOUCHER_IMAGES }) });
       return;
@@ -824,11 +829,57 @@ export class Expense implements OnInit, OnDestroy {
     URL.revokeObjectURL(this.voucherPreviewUrls[index]);
     this.selectedVoucherFiles.splice(index, 1);
     this.voucherPreviewUrls.splice(index, 1);
-    this.voucherForm.patchValue({ imageFile: this.selectedVoucherFiles.length > 0 ? 'set' : '' });
+    this.voucherForm.patchValue({ imageFile: this.voucherImageCount > 0 ? 'set' : '' });
     this.voucherForm.get('imageFile')?.markAsTouched();
   }
 
+  get voucherImageCount(): number {
+    return this.editVoucherExistingImages.length + this.selectedVoucherFiles.length;
+  }
+
+  removeExistingVoucherImage(index: number): void {
+    this.editVoucherExistingImages.splice(index, 1);
+    this.voucherForm.patchValue({ imageFile: this.voucherImageCount > 0 ? 'set' : '' });
+    this.voucherForm.get('imageFile')?.markAsTouched();
+  }
+
+  /** All images shown in the voucher form — kept uploads first, then new picks. */
+  get voucherFormImageUrls(): string[] {
+    return [...this.editVoucherExistingImages.map(img => img.url), ...this.voucherPreviewUrls];
+  }
+
+  startEditVoucher(voucher: ServiceIVoucher): void {
+    if (!this.canEditVoucher(voucher)) return;
+    this.clearAllVoucherFiles();
+    this.editingVoucher = voucher;
+    this.editVoucherExistingImages = this.voucherService.getVoucherImageRefs(voucher);
+    this.voucherForm.reset({
+      date: voucher.date,
+      title: voucher.title || '',
+      category: voucher.category || '',
+      note: voucher.note || '',
+      imageFile: this.editVoucherExistingImages.length > 0 ? 'set' : '',
+    });
+    this.openAddModal('voucher');
+  }
+
+  private resetVoucherEditState(): void {
+    this.editingVoucher = null;
+    this.editVoucherExistingImages = [];
+    this.voucherPreviewUrls.forEach(url => URL.revokeObjectURL(url));
+    this.selectedVoucherFiles = [];
+    this.voucherPreviewUrls = [];
+    this.voucherForm.reset({
+      date: this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '',
+      title: '',
+      category: '',
+      note: '',
+      imageFile: '',
+    });
+  }
+
   clearAllVoucherFiles(): void {
+    this.editVoucherExistingImages = [];
     this.voucherPreviewUrls.forEach(url => URL.revokeObjectURL(url));
     this.selectedVoucherFiles = [];
     this.voucherPreviewUrls = [];
@@ -838,7 +889,7 @@ export class Expense implements OnInit, OnDestroy {
 
   async onSubmitVoucher(): Promise<void> {
     this.voucherForm.markAllAsTouched();
-    if (this.voucherForm.invalid || this.selectedVoucherFiles.length === 0) {
+    if (this.voucherForm.invalid || this.voucherImageCount === 0) {
       Toast.fire({ icon: 'error', title: this.translate.instant('VOUCHER_ERROR_SELECT_IMAGE') });
       return;
     }
@@ -847,6 +898,29 @@ export class Expense implements OnInit, OnDestroy {
     this.cdr.markForCheck();
     this.isVoucherSaving = true;
     const fv = this.voucherForm.value;
+
+    if (this.editingVoucher) {
+      try {
+        await this.voucherService.updateVoucher(this.editingVoucher, {
+          date: fv.date,
+          title: fv.title,
+          category: fv.category,
+          note: fv.note,
+          keptImages: [...this.editVoucherExistingImages],
+          newFiles: [...this.selectedVoucherFiles],
+        });
+        Toast.fire({ icon: 'success', title: this.translate.instant('VOUCHER_SUCCESS_UPDATED') });
+        this.closeAddModal(); // also resets the voucher edit state
+        this.refreshVouchers$.next();
+      } catch (error: any) {
+        Toast.fire({ icon: 'error', title: this.getVoucherErrorTitle(error, 'VOUCHER_ERROR_UPDATE') });
+      } finally {
+        this.isVoucherSaving = false;
+        this.isSaving = false;
+        this.cdr.markForCheck();
+      }
+      return;
+    }
 
     try {
       await this.voucherService.addVoucher({
@@ -876,6 +950,10 @@ export class Expense implements OnInit, OnDestroy {
   }
 
   canDeleteVoucher(_voucher: ServiceIVoucher): boolean {
+    return this.canManageExpenseRecords;
+  }
+
+  canEditVoucher(_voucher: ServiceIVoucher): boolean {
     return this.canManageExpenseRecords;
   }
 
@@ -1115,7 +1193,7 @@ export class Expense implements OnInit, OnDestroy {
   }
 
   private async appendFromWebPath(webPath: string, filename: string): Promise<void> {
-    if (this.selectedVoucherFiles.length >= this.MAX_VOUCHER_IMAGES) {
+    if (this.voucherImageCount >= this.MAX_VOUCHER_IMAGES) {
       Toast.fire({ icon: 'warning', title: this.translate.instant('VOUCHER_ERROR_MAX_IMAGES', { max: this.MAX_VOUCHER_IMAGES }) });
       return;
     }

@@ -895,20 +895,14 @@ body.exp-add-modal-open {
     height: 2.5rem !important;
   }
 
-  .exp-upload-card,
-  .exp-voucher-item {
+  .exp-upload-card {
     grid-template-columns: 1fr;
   }
 
-  .exp-upload-box,
-  .exp-voucher-thumb {
+  .exp-upload-box {
     width: 100%;
     height: auto;
     aspect-ratio: 16 / 9;
-  }
-
-  .exp-voucher-actions {
-    justify-content: flex-end;
   }
 
 }
@@ -2132,6 +2126,49 @@ body.light-mode .exp-item {
   display: flex;
   align-items: center;
   gap: 0.45rem;
+}
+
+/* Phones: three 44px buttons beside the title squeezed it to a few
+   characters. Move the actions to a compact row under the text so the
+   title/meta get the full width. Placed after the base voucher rules so
+   it wins on source order. */
+@media (max-width: 576px) {
+  .exp-voucher-item {
+    grid-template-columns: 64px minmax(0, 1fr);
+    grid-template-areas:
+      "thumb content"
+      "thumb actions";
+    column-gap: 0.75rem;
+    row-gap: 0.5rem;
+    padding: 0.6rem;
+  }
+
+  .exp-voucher-thumb {
+    grid-area: thumb;
+    width: 64px;
+    height: 64px;
+    align-self: center;
+  }
+
+  .exp-voucher-content {
+    grid-area: content;
+    gap: 0.2rem;
+  }
+
+  .exp-voucher-actions {
+    grid-area: actions;
+    gap: 0.4rem;
+  }
+
+  .exp-voucher-actions .exp-icon-btn {
+    width: 34px;
+    height: 34px;
+  }
+
+  /* Creator avatar sits at the far end of the action row. */
+  .exp-voucher-actions .exp-avatar-btn {
+    margin-left: auto;
+  }
 }
 
 /* ── Edit Form ── */
