@@ -1,0 +1,165 @@
+<div class="vg-wrapper">
+  <div class="vg-container">
+    <header class="vg-header">
+      <span class="vg-header-icon">
+        <lucide-icon [img]="iconImages" [size]="18"></lucide-icon>
+      </span>
+      <div class="vg-header-text">
+        <h1 class="vg-title">{{ 'VOUCHER_GALLERY_TITLE' | translate }}</h1>
+        <p class="vg-subtitle">
+          <span *ngIf="spaceName$ | async as spaceName" class="vg-space-name">{{ spaceName }}</span>
+          <ng-container *ngIf="vouchers$ | async as vouchers">
+            <span class="vg-dot" *ngIf="spaceName$ | async">·</span>
+            <ng-container *ngIf="hasActiveFilter && (filtered$ | async) as shown; else totalCount">
+              {{ 'VOUCHER_GALLERY_FILTERED_COUNT' | translate: { shown: formatService.formatCount(shown.length), total: formatService.formatCount(vouchers.length) } }}
+            </ng-container>
+            <ng-template #totalCount>
+              {{ 'VOUCHER_GALLERY_COUNT' | translate: { count: formatService.formatCount(vouchers.length) } }}
+            </ng-template>
+          </ng-container>
+        </p>
+      </div>
+      <!-- Desktop: inline add button (the FAB is phone-only, like the expense page). -->
+      <button type="button" class="vg-add-btn" (click)="addVoucher()">
+        <lucide-icon [img]="iconPlus" [size]="16"></lucide-icon>
+        {{ 'VOUCHER_GALLERY_ADD_LINK' | translate }}
+      </button>
+    </header>
+
+    <!-- Search + category chips (only once there is something to filter) -->
+    <div class="vg-filters" *ngIf="(vouchers$ | async)?.length">
+      <label class="vg-search">
+        <lucide-icon [img]="iconSearch" [size]="16" class="vg-search-icon"></lucide-icon>
+        <input
+          type="search"
+          class="vg-search-input"
+          [value]="searchTerm"
+          (input)="onSearchInput($any($event.target).value)"
+          [placeholder]="'VOUCHER_GALLERY_SEARCH_PLACEHOLDER' | translate"
+          [attr.aria-label]="'SEARCH' | translate"
+          enterkeyhint="search"
+        />
+        <button *ngIf="searchTerm" type="button" class="vg-search-clear" (click)="clearSearch()" [attr.aria-label]="'CANCEL_BUTTON' | translate">
+          <lucide-icon [img]="iconX" [size]="14"></lucide-icon>
+        </button>
+      </label>
+
+      <div class="vg-chips" *ngIf="categoryChips$ | async as chips">
+        <ng-container *ngIf="chips.length > 0 || selectedCategory">
+          <button type="button" class="vg-chip" [class.vg-chip-active]="!selectedCategory" (click)="selectCategory('')">
+            {{ 'ALL' | translate }}
+          </button>
+          <button
+            type="button"
+            class="vg-chip"
+            *ngFor="let chip of chips; trackBy: trackByChip"
+            [class.vg-chip-active]="selectedCategory === chip.value"
+            [style.--cat-hue]="categoryHue(chip.value)"
+            (click)="selectCategory(chip.value)"
+          >
+            <img *ngIf="categoryIconUrl(chip.value) as iconUrl" [src]="iconUrl" alt="" class="vg-chip-img" />
+            <lucide-icon *ngIf="!categoryIconUrl(chip.value)" [img]="categoryIcon(chip.value)" [size]="12"></lucide-icon>
+            <span>{{ chip.value }}</span>
+            <span class="vg-chip-count">{{ formatService.formatCount(chip.count) }}</span>
+          </button>
+        </ng-container>
+      </div>
+    </div>
+
+    <ng-container *ngIf="groups$ | async as groups; else loading">
+      <ng-container *ngIf="groups.length === 0">
+        <!-- Filtered down to nothing -->
+        <div *ngIf="hasActiveFilter; else noVouchers" class="vg-empty">
+          <lucide-icon [img]="iconSearchX" [size]="40"></lucide-icon>
+          <p>{{ 'VOUCHER_GALLERY_NO_MATCH' | translate }}</p>
+          <button type="button" class="vg-empty-link" (click)="clearFilters()">{{ 'VOUCHER_GALLERY_CLEAR_FILTERS' | translate }}</button>
+        </div>
+        <!-- No vouchers in this space at all -->
+        <ng-template #noVouchers>
+          <div class="vg-empty">
+            <lucide-icon [img]="iconReceipt" [size]="40"></lucide-icon>
+            <p>{{ 'VOUCHER_GALLERY_EMPTY' | translate }}</p>
+            <button type="button" class="vg-empty-link" (click)="addVoucher()">{{ 'VOUCHER_GALLERY_ADD_LINK' | translate }}</button>
+          </div>
+        </ng-template>
+      </ng-container>
+
+      <section class="vg-month" *ngFor="let group of groups; trackBy: trackByGroup">
+        <h2 class="vg-month-header">
+          <span>{{ group.label }}</span>
+          <span class="vg-month-count">{{ formatService.formatCount(group.vouchers.length) }}</span>
+        </h2>
+        <div class="vg-grid">
+          <button
+            type="button"
+            class="vg-tile"
+            *ngFor="let voucher of group.vouchers; trackBy: trackByVoucher"
+            (click)="openVoucher(voucher)"
+            [attr.aria-label]="voucher.title || voucher.fileName"
+            [title]="voucher.title || voucher.fileName"
+          >
+            <img [src]="thumbUrl(voucher)" [alt]="voucher.title || ('VOUCHER_IMAGE_ALT' | translate)" loading="lazy" decoding="async" />
+            <span *ngIf="(voucher.imageCount || 1) > 1" class="vg-tile-badge">
+              <lucide-icon [img]="iconImages" [size]="11"></lucide-icon>
+              {{ formatService.formatCount(voucher.imageCount || 1) }}
+            </span>
+          </button>
+        </div>
+      </section>
+    </ng-container>
+
+    <ng-template #loading>
+      <div class="vg-grid vg-grid-loading" aria-hidden="true">
+        <div class="vg-tile vg-tile-skeleton" *ngFor="let i of [1, 2, 3, 4, 5, 6, 7, 8, 9]"></div>
+      </div>
+    </ng-template>
+  </div>
+</div>
+
+<button type="button" class="vg-add-fab" (click)="addVoucher()" [title]="'VOUCHER_GALLERY_ADD_LINK' | translate" [attr.aria-label]="'VOUCHER_GALLERY_ADD_LINK' | translate">
+  <lucide-icon [img]="iconPlus" [size]="26"></lucide-icon>
+</button>
+
+<!-- Subscribed only for its side effect of filling categoryList. -->
+<ng-container *ngIf="categories$ | async"></ng-container>
+
+<app-lightbox [hasFooter]="true" (indexChange)="onViewerIndexChange($event)" (closed)="onViewerClosed()">
+  <div lbFooter class="vg-viewer-footer" *ngIf="current as entry" (click)="$event.stopPropagation()">
+    <div class="vg-viewer-title-row">
+      <h3 class="vg-viewer-title">{{ entry.voucher.title || entry.voucher.fileName }}</h3>
+      <span *ngIf="entry.imageCount > 1" class="vg-viewer-image-pos">
+        <lucide-icon [img]="iconImages" [size]="12"></lucide-icon>
+        {{ formatService.formatCount(entry.imageIndex + 1) }}/{{ formatService.formatCount(entry.imageCount) }}
+      </span>
+    </div>
+
+    <div class="vg-viewer-meta">
+      <span>{{ formatDateWithTime(entry.voucher) }}</span>
+      <span *ngIf="entry.voucher.category" class="vg-viewer-cat" [style.--cat-hue]="categoryHue(entry.voucher.category)">
+        <img *ngIf="categoryIconUrl(entry.voucher.category) as iconUrl" [src]="iconUrl" alt="" class="vg-viewer-cat-img" />
+        <lucide-icon *ngIf="!categoryIconUrl(entry.voucher.category)" [img]="categoryIcon(entry.voucher.category)" [size]="11"></lucide-icon>
+        <span class="vg-viewer-cat-text">{{ entry.voucher.category }}</span>
+      </span>
+      <span *ngIf="isGroupSpace && (entry.voucher.userDisplayName || entry.voucher.createdByName) as creator" class="vg-viewer-creator">
+        · {{ creator }}
+      </span>
+    </div>
+
+    <p *ngIf="entry.voucher.note" class="vg-viewer-note">{{ entry.voucher.note }}</p>
+
+    <div class="vg-viewer-actions">
+      <button type="button" class="vg-viewer-btn" (click)="shareCurrent()">
+        <lucide-icon [img]="iconShare" [size]="18"></lucide-icon>
+        <span>{{ 'VOUCHER_SHARE' | translate }}</span>
+      </button>
+      <button *ngIf="canManage" type="button" class="vg-viewer-btn" (click)="editCurrent()">
+        <lucide-icon [img]="iconPencil" [size]="18"></lucide-icon>
+        <span>{{ 'EDIT_BUTTON_LABEL' | translate }}</span>
+      </button>
+      <button *ngIf="canManage" type="button" class="vg-viewer-btn vg-viewer-btn-danger" [disabled]="isDeleting" (click)="deleteCurrent()">
+        <lucide-icon [img]="iconTrash" [size]="18"></lucide-icon>
+        <span>{{ 'DELETE_BUTTON_LABEL' | translate }}</span>
+      </button>
+    </div>
+  </div>
+</app-lightbox>

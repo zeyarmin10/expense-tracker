@@ -93,6 +93,8 @@
           }}</a>
       </li>
 
+      <li><a routerLink="/vouchers" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_VOUCHERS' |
+          translate }}</a></li>
       <li><a routerLink="/category" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_CATEGORY' |
           translate
           }}</a></li>
@@ -471,6 +473,13 @@
         <lucide-icon [img]="iconChartColumn" [size]="16"></lucide-icon>
       </span>
       <span>{{ 'NAV_SALES_REPORT' | translate }}</span>
+    </a>
+
+    <a class="mob-drawer-link" routerLink="/vouchers" routerLinkActive="mob-drawer-active" (click)="closeNavbarMenu()">
+      <span class="mob-drawer-link-icon">
+        <lucide-icon [img]="iconImages" [size]="16"></lucide-icon>
+      </span>
+      <span>{{ 'NAV_VOUCHERS' | translate }}</span>
     </a>
 
     <a class="mob-drawer-link" routerLink="/category" routerLinkActive="mob-drawer-active" (click)="closeNavbarMenu()">

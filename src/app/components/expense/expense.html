@@ -15,10 +15,10 @@
       <div class="exp-add-modal-handle"></div>
       <div class="exp-add-modal-header" *ngIf="!isDatePickerOpen">
         <!-- Edit mode: plain title instead of the add/voucher tabs -->
-        <span class="exp-add-modal-header-title" *ngIf="editingExpense || editingVoucher">
-          {{ (editingVoucher ? 'VOUCHER_EDIT_TITLE' : 'EDIT_BUTTON_LABEL') | translate }}
+        <span class="exp-add-modal-header-title" *ngIf="editingExpense || editingVoucher || voucherOnlyMode">
+          {{ (editingVoucher ? 'VOUCHER_EDIT_TITLE' : voucherOnlyMode ? 'VOUCHER_ADD_TITLE' : 'EDIT_BUTTON_LABEL') | translate }}
         </span>
-        <div class="exp-seg-ctrl exp-add-modal-tabs" *ngIf="!editingExpense && !editingVoucher">
+        <div class="exp-seg-ctrl exp-add-modal-tabs" *ngIf="!editingExpense && !editingVoucher && !voucherOnlyMode">
           <div class="exp-seg-track">
             <span
               class="exp-seg-indicator"
@@ -744,6 +744,10 @@
           </div>
         </div>
       </ng-container>
+      <a routerLink="/vouchers" class="exp-voucher-view-all">
+        {{ 'VOUCHER_GALLERY_VIEW_ALL' | translate }}
+        <lucide-icon [img]="iconChevronRight" [size]="14"></lucide-icon>
+      </a>
       </div>
       </div>
     </div>

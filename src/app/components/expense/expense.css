@@ -2128,6 +2128,23 @@ body.light-mode .exp-item {
   gap: 0.45rem;
 }
 
+/* "View all" → /vouchers gallery, at the end of the saved-voucher list. */
+.exp-voucher-view-all {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.7rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #0b74ff;
+  text-decoration: none;
+}
+
+.exp-voucher-view-all:hover {
+  text-decoration: underline;
+}
+
 /* Phones: three 44px buttons beside the title squeezed it to a few
    characters. Move the actions to a compact row under the text so the
    title/meta get the full width. Placed after the base voucher rules so

@@ -5,6 +5,9 @@ import {
   AfterViewInit,
   OnDestroy,
   HostListener,
+  Input,
+  Output,
+  EventEmitter,
   inject,
   ChangeDetectorRef,
 } from '@angular/core';
@@ -38,6 +41,35 @@ export class LightboxComponent implements AfterViewInit, OnDestroy {
   // of the default free-aspect rectangle — so a profile picture opens
   // looking like the avatar it was clicked from, not a generic photo.
   shapeBorderRadius: string | null = null;
+
+  /**
+   * Footer mode: the host projects `[lbFooter]` content (e.g. a caption and
+   * actions) below the image; the image shrinks to fit above it, and the
+   * filmstrip/hint are hidden. Off by default so existing usages are unchanged.
+   */
+  @Input() hasFooter = false;
+  /** Fires with the new index whenever the visible image changes (incl. on show). */
+  @Output() indexChange = new EventEmitter<number>();
+  @Output() closed = new EventEmitter<void>();
+
+  /**
+   * `src` of the last image that finished loading (or failed). While the
+   * <img> is given a new src, browsers keep painting the previous image until
+   * the new one arrives, which flashed the last-viewed photo on open / swipe.
+   * The image stays hidden until its current src has settled.
+   */
+  private settledSrc: string | null = null;
+
+  get isPending(): boolean {
+    const src = this.images[this.idx];
+    return !!src && src !== this.settledSrc;
+  }
+
+  onImgSettled(event: Event): void {
+    // getAttribute, not .src: .src is resolved to an absolute URL and would
+    // never equal a relative entry in `images`.
+    this.settledSrc = (event.target as HTMLImageElement).getAttribute('src');
+  }
 
   @ViewChild('vp') vp!: ElementRef<HTMLElement>;
   @ViewChild('imgWrap') imgWrapEl!: ElementRef<HTMLElement>;
@@ -95,6 +127,7 @@ export class LightboxComponent implements AfterViewInit, OnDestroy {
     this.clearDragInlineStyles();
     this.fading = false;
     this.visible = true;
+    this.indexChange.emit(this.idx);
     document.body.style.overflow = 'hidden';
     // Deferred a tick so the filmstrip's *ngIf/[class.lb-thumb-active] has
     // actually rendered before we try to query and scroll to it.
@@ -105,6 +138,7 @@ export class LightboxComponent implements AfterViewInit, OnDestroy {
     if (!this.visible) return;
     this.visible = false;
     this.restoreScroll();
+    this.closed.emit();
   }
 
   trackByIndex(index: number): number {
@@ -238,6 +272,7 @@ export class LightboxComponent implements AfterViewInit, OnDestroy {
     setTimeout(() => {
       this.resetZoom();
       this.idx = direction === 'next' ? this.idx + 1 : this.idx - 1;
+      this.indexChange.emit(this.idx);
       this.dragX = 0;
       // Force the [src]="images[idx]" binding to update synchronously right
       // now, in this task — waiting on zone's own async tick scheduling
@@ -338,6 +373,7 @@ export class LightboxComponent implements AfterViewInit, OnDestroy {
     setTimeout(() => {
       this.resetZoom();
       this.idx = newIdx;
+      this.indexChange.emit(this.idx);
       this.fading = false;
       // See the identical call in commitSwipe() — forces the view to
       // reflect the new idx/fading state in this task instead of waiting

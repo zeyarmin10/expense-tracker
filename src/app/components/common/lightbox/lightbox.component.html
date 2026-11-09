@@ -1,6 +1,7 @@
 <div
   class="lb-overlay"
   [class.lb-open]="visible"
+  [class.lb-has-footer]="hasFooter"
   role="dialog"
   aria-modal="true"
   (click)="onOverlayClick($event)"
@@ -45,12 +46,18 @@
         #img
         class="lb-img"
         [class.lb-img-shaped]="!!shapeBorderRadius"
+        [class.lb-img-pending]="isPending"
         [style.border-radius]="shapeBorderRadius"
         [src]="images[idx]"
         alt=""
         draggable="false"
+        (load)="onImgSettled($event)"
+        (error)="onImgSettled($event)"
       />
     </div>
+
+    <!-- Shown while the current image is still loading -->
+    <div class="lb-spinner" *ngIf="visible && isPending" aria-hidden="true"></div>
 
     <!-- Zoom badge (shown/updated imperatively from TS — see applyZoomBadge) -->
     <div #zoomBadge class="lb-zoom-badge"></div>
@@ -64,8 +71,11 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
   </button>
 
+  <!-- Host-provided caption/actions (footer mode only) -->
+  <ng-content select="[lbFooter]"></ng-content>
+
   <!-- Thumbnail filmstrip -->
-  <div class="lb-filmstrip" *ngIf="images.length > 1">
+  <div class="lb-filmstrip" *ngIf="images.length > 1 && !hasFooter">
     <div #filmstrip class="lb-filmstrip-inner">
       <button
         class="lb-thumb"
@@ -79,7 +89,9 @@
   </div>
 
   <!-- Hint -->
-  <div class="lb-hint" *ngIf="images.length > 1">swipe · double-tap to zoom</div>
-  <div class="lb-hint" *ngIf="images.length <= 1">double-tap to zoom</div>
+  <ng-container *ngIf="!hasFooter">
+    <div class="lb-hint" *ngIf="images.length > 1">swipe · double-tap to zoom</div>
+    <div class="lb-hint" *ngIf="images.length <= 1">double-tap to zoom</div>
+  </ng-container>
 
 </div>

@@ -7,7 +7,7 @@ import { Observable, combineLatest, of, firstValueFrom, timer } from 'rxjs';
 import { map, filter, startWith, switchMap, distinctUntilChanged, debounceTime, take, shareReplay } from 'rxjs/operators';
 import { AuthService } from './services/auth';
 import { User } from '@angular/fire/auth';
-import { LucideAngularModule, LogOut, Users as LucideUsers, User as LucideUserIcon, ChevronDown, Sun, Moon, PiggyBank, ShoppingCart, Tags, ArrowDown, RotateCw, TrendingUp, Banknote, Package, HandCoins, ChartColumn } from 'lucide-angular';
+import { LucideAngularModule, LogOut, Users as LucideUsers, User as LucideUserIcon, ChevronDown, Sun, Moon, PiggyBank, ShoppingCart, Tags, ArrowDown, RotateCw, TrendingUp, Banknote, Package, HandCoins, ChartColumn, Images } from 'lucide-angular';
 import { InvitationService } from './services/invitation.service';
 import { DataManagerService } from './services/data-manager';
 import { ToastService } from './services/toast';
@@ -95,6 +95,7 @@ export class App implements OnInit, AfterViewInit {
   readonly iconPiggyBank = PiggyBank;
   readonly iconShoppingCart = ShoppingCart;
   readonly iconTags = Tags;
+  readonly iconImages = Images;
   readonly iconArrowDown = ArrowDown;
   readonly iconRotateCw = RotateCw;
   readonly iconTrendingUp = TrendingUp;
@@ -272,6 +273,7 @@ export class App implements OnInit, AfterViewInit {
       '/profit':             'NAV_PROFIT',
       '/cash-flow':          'NAV_CASH_FLOW',
       '/category':           'NAV_CATEGORY',
+      '/vouchers':           'NAV_VOUCHERS',
       '/member-management':  'NAV_MEMBER_MANAGEMENT',
       '/profile':            'NAV_PROFILE_AND_SETTING',
       '/onboarding':         'SPACE_CREATE_OR_JOIN',
@@ -343,7 +345,7 @@ export class App implements OnInit, AfterViewInit {
       )
     );
 
-    const drawerRoutes = ['/expense-overview', '/cash-flow', '/sales-report', '/category', '/member-management', '/profile', '/privacy-policy', '/about'];
+    const drawerRoutes = ['/expense-overview', '/cash-flow', '/sales-report', '/vouchers', '/category', '/member-management', '/profile', '/privacy-policy', '/about'];
     this.isDrawerRouteActive$ = this.router.events.pipe(
       filter((event): event is NavigationEnd => event instanceof NavigationEnd),
       map((e: NavigationEnd) => e.urlAfterRedirects.split('?')[0]),

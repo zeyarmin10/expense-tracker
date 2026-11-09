@@ -33,6 +33,8 @@ import {
   firstValueFrom,
   Subject,
   takeUntil,
+  filter,
+  take,
 } from 'rxjs';
 import { Camera } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
@@ -42,7 +44,7 @@ import { createAppToast } from '../../services/toast';
 
 import {
   LucideAngularModule,
-  Plus, Pencil, Trash2, Save, X, RotateCcw, Info, Wallet, ListChecks,
+  Plus, ChevronRight, Pencil, Trash2, Save, X, RotateCcw, Info, Wallet, ListChecks,
   Coins, ChevronDown, ChevronUp, Calendar, CalendarDays, RotateCw, Receipt,
   Image, Images, Eye, Camera as LucideCamera, Zap, List, Archive,
   Search, Check,
@@ -51,7 +53,7 @@ import {
 import { CategoryModalComponent } from '../common/category-modal/category-modal';
 import { LightboxComponent } from '../common/lightbox/lightbox.component';
 import { getIconData, getIconHue } from '../../utils/category-icons';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth';
 import {
   UserProfile,
@@ -96,6 +98,7 @@ interface ExpenseDateGroup {
     ShowFullTextDirective,
     DateRangeInputComponent,
     MobileFullscreenOverlayComponent,
+    RouterLink,
   ],
   providers: [DatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -160,6 +163,12 @@ export class Expense implements OnInit, OnDestroy {
   editingVoucher: ServiceIVoucher | null = null;
   /** Already-uploaded images of `editingVoucher` that are still kept. */
   editVoucherExistingImages: VoucherImageRef[] = [];
+  /** Opened from the voucher gallery (`?editVoucher=…` / `?addVoucher=1` with `from=vouchers`): go back there once the modal closes. */
+  private returnToVouchersOnClose = false;
+  /** Set while the modal's own history entry is being popped, so the next popstate continues back to the gallery. */
+  private pendingReturnBack = false;
+  /** Gallery's "add voucher": the modal shows only the voucher form, without the expense tab. */
+  voucherOnlyMode = false;
   isVoucherSaving = false;
   isSavedVoucherListOpen = false;
   isQuickMode = true;
@@ -242,6 +251,7 @@ export class Expense implements OnInit, OnDestroy {
   // Icons
   readonly iconPlus = Plus;
   readonly iconPencil = Pencil;
+  readonly iconChevronRight = ChevronRight;
   readonly iconTrash2 = Trash2;
   readonly iconSave = Save;
   readonly iconX = X;
@@ -355,6 +365,10 @@ export class Expense implements OnInit, OnDestroy {
       this.cdr.markForCheck();
     });
     this.loadCategories();
+    // After the profile subscription above: its first emission resets the
+    // page (closeAddModal) for the initial space, which must not close a
+    // modal opened from a gallery deep link.
+    this.openVoucherEditorFromQuery();
   }
 
   ngOnDestroy(): void {
@@ -389,11 +403,56 @@ export class Expense implements OnInit, OnDestroy {
     this.editingExpense = null;
     this.resetNewExpenseForm();
     if (this.editingVoucher) this.resetVoucherEditState();
+    this.voucherOnlyMode = false;
+    if (this.returnToVouchersOnClose) {
+      this.returnToVouchersOnClose = false;
+      // Two history steps: the modal's own entry, then this page itself.
+      // When the modal entry still has to be popped, wait for that popstate
+      // before stepping back again (see onPopState).
+      if (shouldPopHistory) this.pendingReturnBack = true;
+      else history.back();
+    }
     if (shouldPopHistory) history.back();
+  }
+
+  /** Deep links from the voucher gallery: add a voucher, or edit one from the viewer. */
+  private openVoucherEditorFromQuery(): void {
+    const params = this.route.snapshot.queryParamMap;
+    const fromGallery = params.get('from') === 'vouchers';
+    if (params.get('addVoucher')) {
+      this.authService.userProfile$.pipe(
+        filter(profile => !!profile),
+        take(1),
+        takeUntil(this.destroy$),
+      ).subscribe(() => {
+        this.voucherOnlyMode = true;
+        this.openAddModal('voucher');
+        this.returnToVouchersOnClose = fromGallery;
+        this.cdr.markForCheck();
+      });
+      return;
+    }
+    const voucherId = params.get('editVoucher');
+    if (!voucherId) return;
+    this.vouchers$.pipe(
+      map(vouchers => vouchers.find(v => v.id === voucherId)),
+      filter((voucher): voucher is ServiceIVoucher => !!voucher),
+      take(1),
+      takeUntil(this.destroy$),
+    ).subscribe(voucher => {
+      this.startEditVoucher(voucher);
+      if (this.isAddModalOpen) this.returnToVouchersOnClose = fromGallery;
+      this.cdr.markForCheck();
+    });
   }
 
   @HostListener('window:popstate')
   onPopState(): void {
+    if (this.pendingReturnBack) {
+      this.pendingReturnBack = false;
+      history.back();
+      return;
+    }
     if (this.isDatePickerOpen) {
       this.closeDatePicker();
       history.pushState(null, '');
@@ -940,6 +999,8 @@ export class Expense implements OnInit, OnDestroy {
       });
       this.clearAllVoucherFiles();
       this.refreshVouchers$.next();
+      // Added from the gallery: go straight back to see it there.
+      if (this.returnToVouchersOnClose) this.closeAddModal();
     } catch (error: any) {
       Toast.fire({ icon: 'error', title: this.getVoucherErrorTitle(error, 'VOUCHER_ERROR_ADD') });
     } finally {

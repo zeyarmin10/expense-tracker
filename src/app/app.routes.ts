@@ -49,6 +49,11 @@ export const routes: Routes = [
         data: { titleKey: 'EXPENSE_ADD_TITLE' },
       },
       {
+        path: 'vouchers',
+        loadComponent: () => import('./components/voucher-gallery/voucher-gallery').then((m) => m.VoucherGallery),
+        data: { titleKey: 'VOUCHER_GALLERY_TITLE' },
+      },
+      {
         path: 'purchase',
         loadComponent: () => import('./components/purchase/purchase').then((m) => m.Purchase),
         data: { titleKey: 'PURCHASE_ADD_TITLE' },

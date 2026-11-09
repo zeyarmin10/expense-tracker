@@ -1,0 +1,528 @@
+.vg-wrapper {
+  background: var(--bg);
+  min-height: 100vh;
+  padding: 1.5rem 1rem calc(7rem + env(safe-area-inset-bottom, 0px));
+  color: var(--text);
+}
+
+@media (max-width: 991px) {
+  .vg-wrapper {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 4.5rem);
+  }
+}
+
+.vg-container {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+/* ── Header ── */
+.vg-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.vg-header-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--expense-color, #f4b11a);
+  background: rgba(244, 177, 26, 0.12);
+}
+
+.vg-header-text {
+  min-width: 0;
+}
+
+.vg-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.vg-subtitle {
+  margin: 0.15rem 0 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vg-space-name {
+  font-weight: 700;
+}
+
+.vg-dot {
+  margin: 0 0.3rem;
+}
+
+/* ── Month section ── */
+.vg-month + .vg-month {
+  margin-top: 0.5rem;
+}
+
+/* Sticky under the app's top bar: 60px desktop navbar, 58px + safe area
+   for the mobile topbar. */
+.vg-month-header {
+  position: sticky;
+  top: 60px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0;
+  padding: 0.6rem 0.25rem;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--text);
+  background: var(--bg);
+}
+
+@media (max-width: 991px) {
+  .vg-month-header {
+    top: calc(env(safe-area-inset-top, 0px) + 58px);
+  }
+}
+
+.vg-month-count {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+/* ── Grid ── */
+.vg-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 3px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+@media (min-width: 577px) {
+  .vg-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 4px;
+  }
+}
+
+@media (min-width: 992px) {
+  .vg-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+.vg-tile {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  padding: 0;
+  border: none;
+  background: var(--surface-2, rgba(148, 163, 184, 0.15));
+  cursor: pointer;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.vg-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.2s ease, opacity 0.15s ease;
+}
+
+.vg-tile:active img {
+  opacity: 0.8;
+}
+
+@media (hover: hover) {
+  .vg-tile:hover img {
+    transform: scale(1.04);
+  }
+}
+
+.vg-tile:focus-visible {
+  outline: 2px solid #0b74ff;
+  outline-offset: -2px;
+}
+
+.vg-tile-badge {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.55);
+  pointer-events: none;
+}
+
+/* ── Loading / empty ── */
+.vg-tile-skeleton {
+  cursor: default;
+  animation: vg-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes vg-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+.vg-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 3rem 1rem;
+  text-align: center;
+  color: var(--text-muted);
+  border: 1px dashed var(--border);
+  border-radius: 16px;
+}
+
+.vg-empty p {
+  margin: 0;
+  font-size: 0.88rem;
+}
+
+.vg-empty-link {
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #0b74ff;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* ── Viewer footer (projected into the lightbox) ──
+   Always on the lightbox's dark overlay, so light text regardless of theme. */
+.vg-viewer-footer {
+  flex-shrink: 0;
+  padding: 0.85rem 1rem calc(env(safe-area-inset-bottom, 0px) + 0.75rem);
+  /* Near-opaque: the overlay itself is translucent, and the page's bottom
+     nav would otherwise show through behind the action buttons. */
+  background: rgba(8, 11, 20, 0.97);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  color: #fff;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Keep the caption readable on wide screens without a full-width bar of text. */
+.vg-viewer-footer > * {
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.vg-viewer-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.vg-viewer-title {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vg-viewer-image-pos {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.vg-viewer-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.3rem;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.vg-viewer-cat {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  max-width: 160px;
+  padding: 0.1rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  background: hsl(var(--cat-hue, 220) 80% 55% / 0.22);
+  border: 1px solid hsl(var(--cat-hue, 220) 80% 60% / 0.45);
+  color: hsl(var(--cat-hue, 220) 85% 80%);
+}
+
+.vg-viewer-cat-img {
+  width: 11px;
+  height: 11px;
+  object-fit: contain;
+}
+
+.vg-viewer-cat-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vg-viewer-note {
+  margin: 0.4rem 0 0;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.85);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.vg-viewer-actions {
+  display: flex;
+  justify-content: space-around;
+  gap: 0.5rem;
+  margin-top: 0.7rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.vg-viewer-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.35rem 0;
+  border: none;
+  border-radius: 10px;
+  background: none;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.vg-viewer-btn:active,
+.vg-viewer-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.vg-viewer-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.vg-viewer-btn-danger {
+  color: #fca5a5;
+}
+
+/* ── Search + category chips ── */
+.vg-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 0.5rem;
+}
+
+.vg-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin: 0;
+}
+
+.vg-search-icon {
+  position: absolute;
+  left: 0.8rem;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.vg-search-input {
+  width: 100%;
+  height: 2.6rem;
+  padding: 0 2.4rem 0 2.4rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.9rem;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.vg-search-input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.vg-search-input:focus {
+  border-color: #0b74ff;
+  box-shadow: 0 0 0 3px rgba(11, 116, 255, 0.15);
+}
+
+.vg-search-clear {
+  position: absolute;
+  right: 0.45rem;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+/* One scrollable row on phones instead of wrapping into a tall block. */
+.vg-chips {
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin: 0 -1rem;
+  padding: 0 1rem 0.15rem;
+}
+
+.vg-chips::-webkit-scrollbar {
+  display: none;
+}
+
+.vg-chip {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  height: 2rem;
+  padding: 0 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.vg-chip lucide-icon,
+.vg-chip-img {
+  color: hsl(var(--cat-hue, 220) 70% 50%);
+}
+
+.vg-chip-img {
+  width: 12px;
+  height: 12px;
+  object-fit: contain;
+}
+
+.vg-chip-count {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.vg-chip-active {
+  border-color: #0b74ff;
+  background: #0b74ff;
+  color: #fff;
+}
+
+.vg-chip-active lucide-icon,
+.vg-chip-active .vg-chip-count {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+@media (min-width: 577px) {
+  .vg-chips {
+    flex-wrap: wrap;
+    overflow-x: visible;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+/* ── Add voucher FAB — same look/position as the expense page's add FAB ── */
+.vg-add-fab {
+  position: fixed;
+  right: 1rem;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 68px + 1rem);
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  border: 2.5px solid rgba(255, 255, 255, 0.5);
+  background: linear-gradient(150deg, #ffcc4d, var(--expense-color, #f4b11a));
+  color: #0a1120;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 22px rgba(244, 177, 26, 0.45);
+  z-index: 900;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.vg-add-fab:active {
+  transform: scale(0.94);
+}
+
+.vg-add-btn {
+  display: none;
+  margin-left: auto;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.35rem;
+  height: 2.5rem;
+  padding: 0 1rem;
+  border: none;
+  border-radius: 12px;
+  background: #0b74ff;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(11, 116, 255, 0.3);
+}
+
+/* Desktop has no bottom nav: header button instead of the FAB. */
+@media (min-width: 992px) {
+  .vg-add-fab {
+    display: none;
+  }
+
+  .vg-add-btn {
+    display: inline-flex;
+  }
+}

@@ -294,3 +294,48 @@
   72%  { opacity: 1; }
   100% { opacity: 0; }
 }
+
+/* ── Footer mode ──
+   The projected footer is a normal flex item under the stage, so the stage
+   shrinks to the space left above it; the image is sized to the stage
+   instead of the fixed 82vh used when nothing sits below it. */
+.lb-has-footer .lb-stage {
+  min-height: 0;
+  padding-top: calc(env(safe-area-inset-top, 0px) + 72px);
+  padding-bottom: 8px;
+  box-sizing: border-box;
+}
+
+.lb-has-footer .lb-img-wrap {
+  height: 100%;
+  max-width: 100%;
+}
+
+.lb-has-footer .lb-img {
+  max-height: 100%;
+}
+
+/* ── Loading state ──
+   Hide the <img> until its new src has loaded, so the previously shown
+   image never flashes while the next one downloads. */
+.lb-img.lb-img-pending {
+  opacity: 0;
+}
+
+.lb-spinner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 34px;
+  height: 34px;
+  margin: -17px 0 0 -17px;
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  border-top-color: rgba(255, 255, 255, 0.85);
+  border-radius: 50%;
+  animation: lb-spin 0.8s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes lb-spin {
+  to { transform: rotate(360deg); }
+}
