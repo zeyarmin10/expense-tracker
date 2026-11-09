@@ -454,6 +454,12 @@
   color: var(--text-muted);
 }
 
+/* "No category" chip: dashed outline, no category icon. */
+.vg-chip-none:not(.vg-chip-active) {
+  border-style: dashed;
+  color: var(--text-muted);
+}
+
 .vg-chip-active {
   border-color: #0b74ff;
   background: #0b74ff;

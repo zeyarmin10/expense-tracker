@@ -54,12 +54,16 @@
             class="vg-chip"
             *ngFor="let chip of chips; trackBy: trackByChip"
             [class.vg-chip-active]="selectedCategory === chip.value"
-            [style.--cat-hue]="categoryHue(chip.value)"
+            [class.vg-chip-none]="chip.value === UNCATEGORIZED"
+            [style.--cat-hue]="chip.value === UNCATEGORIZED ? null : categoryHue(chip.value)"
             (click)="selectCategory(chip.value)"
           >
-            <img *ngIf="categoryIconUrl(chip.value) as iconUrl" [src]="iconUrl" alt="" class="vg-chip-img" />
-            <lucide-icon *ngIf="!categoryIconUrl(chip.value)" [img]="categoryIcon(chip.value)" [size]="12"></lucide-icon>
-            <span>{{ chip.value }}</span>
+            <ng-container *ngIf="chip.value !== UNCATEGORIZED; else noCategoryLabel">
+              <img *ngIf="categoryIconUrl(chip.value) as iconUrl" [src]="iconUrl" alt="" class="vg-chip-img" />
+              <lucide-icon *ngIf="!categoryIconUrl(chip.value)" [img]="categoryIcon(chip.value)" [size]="12"></lucide-icon>
+              <span>{{ chip.value }}</span>
+            </ng-container>
+            <ng-template #noCategoryLabel><span>{{ 'VOUCHER_UNCATEGORIZED' | translate }}</span></ng-template>
             <span class="vg-chip-count">{{ formatService.formatCount(chip.count) }}</span>
           </button>
         </ng-container>

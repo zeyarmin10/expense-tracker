@@ -18,8 +18,11 @@ import { getIconData, getIconHue } from '../../utils/category-icons';
 
 const Toast = createAppToast();
 
+/** Category filter value for vouchers saved without a category. */
+export const UNCATEGORIZED = '__none__';
+
 export interface CategoryChip {
-  /** Category name. */
+  /** Category name, or UNCATEGORIZED. */
   value: string;
   count: number;
 }
@@ -72,6 +75,7 @@ export class VoucherGallery {
   readonly iconSearch = Search;
   readonly iconX = X;
   readonly iconSearchX = SearchX;
+  readonly UNCATEGORIZED = UNCATEGORIZED;
 
   private profile: UserProfile | null = null;
   readonly profile$ = this.authService.userProfile$.pipe(
@@ -95,21 +99,22 @@ export class VoucherGallery {
 
   /**
    * Chips for the categories actually used by this space's vouchers, most
-   * used first. Vouchers without a category get no chip at all.
+   * used first, plus a trailing "no category" chip when any voucher lacks one.
    */
   readonly categoryChips$: Observable<CategoryChip[]> = this.vouchers$.pipe(
     map(vouchers => {
       const counts = new Map<string, number>();
       for (const v of vouchers) {
-        const key = v.category?.trim();
-        if (key) counts.set(key, (counts.get(key) || 0) + 1);
+        const key = v.category?.trim() || UNCATEGORIZED;
+        counts.set(key, (counts.get(key) || 0) + 1);
       }
       const chips = [...counts.entries()]
         .map(([value, count]) => ({ value, count }))
-        .sort((a, b) => b.count - a.count);
-      // A lone chip covering every voucher wouldn't filter anything.
-      if (chips.length === 1 && chips[0].count === vouchers.length) return [];
-      return chips;
+        // "No category" always last; otherwise most used first.
+        .sort((a, b) =>
+          Number(a.value === UNCATEGORIZED) - Number(b.value === UNCATEGORIZED) || b.count - a.count);
+      // A lone chip covers every voucher, so it wouldn't filter anything.
+      return chips.length > 1 ? chips : [];
     }),
   );
 
@@ -132,7 +137,7 @@ export class VoucherGallery {
   private applyFilters(vouchers: ServiceIVoucher[], term: string, category: string): ServiceIVoucher[] {
     const needle = term.trim().toLowerCase();
     return vouchers.filter(v => {
-      if (category && v.category?.trim() !== category) return false;
+      if (category && (v.category?.trim() || UNCATEGORIZED) !== category) return false;
       if (!needle) return true;
       return [v.title, v.note, v.category, v.fileName]
         .some(field => field?.toLowerCase().includes(needle));

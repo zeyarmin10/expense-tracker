@@ -872,6 +872,7 @@
   "VOUCHER_SUCCESS_ADDED": "レシートを保存しました！",
   "VOUCHER_SUCCESS_DELETED": "レシートを削除しました！",
   "VOUCHER_ERROR_ADD": "レシートの保存中にエラーが発生しました。",
+  "VOUCHER_UNCATEGORIZED": "カテゴリなし",
   "VOUCHER_GALLERY_FILTERED_COUNT": "{{total}} 件中 {{shown}} 件",
   "VOUCHER_GALLERY_SEARCH_PLACEHOLDER": "タイトル・メモ・カテゴリで検索",
   "VOUCHER_GALLERY_NO_MATCH": "条件に一致するレシートはありません。",

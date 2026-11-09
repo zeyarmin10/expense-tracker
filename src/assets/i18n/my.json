@@ -872,6 +872,7 @@
   "VOUCHER_SUCCESS_ADDED": "ဘောင်ချာကို အောင်မြင်စွာ သိမ်းပြီးပါပြီ။",
   "VOUCHER_SUCCESS_DELETED": "ဘောင်ချာကို အောင်မြင်စွာ ဖျက်ပြီးပါပြီ။",
   "VOUCHER_ERROR_ADD": "ဘောင်ချာသိမ်းရာတွင် အမှားဖြစ်ခဲ့သည်။",
+  "VOUCHER_UNCATEGORIZED": "အမျိုးအစားမရှိ",
   "VOUCHER_GALLERY_FILTERED_COUNT": "ဘောင်ချာ {{total}} ခုအနက် {{shown}} ခု",
   "VOUCHER_GALLERY_SEARCH_PLACEHOLDER": "ခေါင်းစဉ်၊ မှတ်ချက်၊ အမျိုးအစားဖြင့် ရှာရန်",
   "VOUCHER_GALLERY_NO_MATCH": "ရှာဖွေမှုနှင့် ကိုက်ညီသော ဘောင်ချာမရှိပါ။",
