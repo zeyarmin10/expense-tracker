@@ -1217,7 +1217,11 @@ export class App implements OnInit, AfterViewInit {
       ? this.translate.instant('STOCK_SYNC_CONFLICT_TITLE')
       : operation.lastError || null;
     return {
-      title: `${this.translate.instant(this.getSyncActionKey(operation.kind))} · ${this.translate.instant(this.getSyncCollectionKey(collection))}`,
+      // Reads as one phrase in each language, e.g. "ဘောင်ချာများ ပြင်ဆင်ခြင်း".
+      title: this.translate.instant('SYNC_ITEM_TITLE', {
+        action: this.translate.instant(this.getSyncActionKey(operation.kind)),
+        collection: this.translate.instant(this.getSyncCollectionKey(collection, operation, spaces)),
+      }),
       spaceName: this.getSyncOperationSpaceName(operation, spaces, profile),
       summary: this.summarizeSyncPayload(collection, payload),
       error,
@@ -1230,12 +1234,7 @@ export class App implements OnInit, AfterViewInit {
     profile: UserProfile | null,
   ): string {
     const parts = operation.path.split('/');
-    let spaceId: string | null = null;
-    if (['space_data', 'group_data', 'spaces', 'spaceMembers', 'group_members', 'groups'].includes(parts[0])) {
-      spaceId = parts[1] || null;
-    } else if (parts[0] === 'users' && typeof operation.payload?.['currentSpaceId'] === 'string') {
-      spaceId = operation.payload['currentSpaceId'] as string;
-    }
+    const spaceId = this.getSyncOperationSpaceId(operation);
     const cachedSpace = spaceId ? spaces[spaceId] : undefined;
     if (cachedSpace?.name) {
       return cachedSpace.type === 'personal' || cachedSpace.name === 'My Personal'
@@ -1318,7 +1317,29 @@ export class App implements OnInit, AfterViewInit {
     return map[kind] || 'SYNC_ACTION_UPDATE';
   }
 
-  private getSyncCollectionKey(collection: string): string {
+  private getSyncOperationSpaceId(operation: OfflineOperation): string | null {
+    const parts = operation.path.split('/');
+    if (['space_data', 'group_data', 'spaces', 'spaceMembers', 'group_members', 'groups'].includes(parts[0])) {
+      return parts[1] || null;
+    }
+    if (parts[0] === 'users' && typeof operation.payload?.['currentSpaceId'] === 'string') {
+      return operation.payload['currentSpaceId'] as string;
+    }
+    return null;
+  }
+
+  private getSyncCollectionKey(
+    collection: string,
+    operation: OfflineOperation,
+    spaces: Record<string, UserSpaceSummary>,
+  ): string {
+    // `expenses` are purchases in a shop (inventory) space, plain expenses elsewhere.
+    if (collection === 'expenses') {
+      const spaceId = this.getSyncOperationSpaceId(operation);
+      return spaceId && spaces[spaceId]?.inventoryEnabled
+        ? 'SYNC_COLLECTION_PURCHASES'
+        : 'SYNC_COLLECTION_EXPENSES';
+    }
     const map: Record<string, string> = {
       expenses: 'SYNC_COLLECTION_EXPENSES',
       incomes: 'SYNC_COLLECTION_INCOMES',
