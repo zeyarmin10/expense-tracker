@@ -1,0 +1,168 @@
+<div class="vfs-backdrop" [class.open]="isOpen" (click)="close()"></div>
+
+<div class="vfs-sheet" [class.open]="isOpen" role="dialog" aria-modal="true" [attr.aria-hidden]="!isOpen">
+  <!-- Header: form title, or the date picker's own title while drilled in -->
+  <div class="vfs-header">
+    <ng-container *ngIf="!isDatePickerOpen; else dateHeader">
+      <span class="vfs-header-title">{{ (editing ? 'VOUCHER_EDIT_TITLE' : 'VOUCHER_GALLERY_ADD_LINK') | translate }}</span>
+      <button type="button" class="vfs-icon-btn" (click)="close()" [title]="'CANCEL_BUTTON_LABEL' | translate">
+        <lucide-icon [img]="iconX" [size]="18"></lucide-icon>
+      </button>
+    </ng-container>
+    <ng-template #dateHeader>
+      <button type="button" class="vfs-icon-btn vfs-back-btn" (click)="closeDatePicker()" [title]="'BACK_BUTTON' | translate">
+        <lucide-icon [img]="iconChevronDown" [size]="18"></lucide-icon>
+      </button>
+      <span class="vfs-header-title">{{ 'EXPENSE_DATE_LABEL' | translate }}</span>
+    </ng-template>
+  </div>
+
+  <!-- Date picker body (inline flatpickr) swaps in place of the form -->
+  <div class="vfs-body vfs-date-body" *ngIf="isDatePickerOpen">
+    <div id="vfs-date-picker-container"></div>
+    <div class="app-date-adjustment-notice" *ngIf="dateAdjustmentNotice" role="status">
+      {{ 'EXPENSE_DATE_MONTH_ADJUSTED' | translate }}
+    </div>
+  </div>
+
+  <form *ngIf="!isDatePickerOpen" class="vfs-body vfs-form" [formGroup]="form" (ngSubmit)="submit()">
+    <div class="vfs-date-row">
+      <button type="button" class="vfs-date-pill" (click)="openDatePicker()">
+        <lucide-icon [img]="iconCalendar" [size]="13"></lucide-icon>
+        <span>{{ formatService.formatLocalizedDate(form.value.date) }}</span>
+      </button>
+    </div>
+
+    <button type="button" class="vfs-field vfs-select" (click)="openCategoryPicker()">
+      <ng-container *ngIf="form.value.category as cat; else noCat">
+        <span class="vfs-cat-icon" [style.--cat-hue]="categoryHue(cat)">
+          <img *ngIf="categoryIconUrl(cat) as iconUrl" [src]="iconUrl" alt="" />
+          <lucide-icon *ngIf="!categoryIconUrl(cat)" [img]="categoryIcon(cat)" [size]="14"></lucide-icon>
+        </span>
+        <span class="vfs-select-value">{{ cat }}</span>
+      </ng-container>
+      <ng-template #noCat>
+        <span class="vfs-select-placeholder">{{ 'VOUCHER_NO_CATEGORY' | translate }}</span>
+      </ng-template>
+      <lucide-icon [img]="iconChevronDown" [size]="14" class="vfs-select-chevron"></lucide-icon>
+    </button>
+
+    <input
+      type="text"
+      class="vfs-field"
+      formControlName="title"
+      maxlength="50"
+      [placeholder]="('VOUCHER_TITLE_LABEL' | translate) + ' (' + ('OPTIONAL' | translate) + ')'"
+    />
+
+    <textarea
+      class="vfs-field vfs-textarea"
+      formControlName="note"
+      maxlength="250"
+      [placeholder]="('DESCRIPTION' | translate) + ' (' + ('OPTIONAL' | translate) + ')'"
+    ></textarea>
+
+    <input #galleryInput type="file" accept="image/*" multiple class="vfs-file-input" (change)="onFilesSelected($event)" />
+
+    <!-- No images yet: two large pick buttons -->
+    <div *ngIf="imageCount === 0" class="vfs-upload-actions">
+      <button type="button" class="vfs-upload-btn vfs-upload-camera" (click)="openCamera()">
+        <lucide-icon [img]="iconCamera" [size]="28"></lucide-icon>
+        <span>{{ 'VOUCHER_CAMERA' | translate }}</span>
+      </button>
+      <button type="button" class="vfs-upload-btn vfs-upload-gallery" (click)="openGallery()">
+        <lucide-icon [img]="iconImages" [size]="28"></lucide-icon>
+        <span>{{ 'VOUCHER_GALLERY' | translate }}</span>
+      </button>
+    </div>
+
+    <ng-container *ngIf="imageCount > 0">
+      <div class="vfs-image-grid">
+        <div class="vfs-thumb" *ngFor="let img of existingImages; let i = index; trackBy: trackByIndex">
+          <img [src]="img.url" [alt]="'VOUCHER_IMAGE_ALT' | translate" />
+          <button type="button" class="vfs-thumb-remove" (click)="removeExisting(i)" [title]="'CANCEL_BUTTON_LABEL' | translate">
+            <lucide-icon [img]="iconX" [size]="16"></lucide-icon>
+          </button>
+        </div>
+        <div class="vfs-thumb" *ngFor="let url of newPreviewUrls; let i = index; trackBy: trackByIndex">
+          <img [src]="url" [alt]="'VOUCHER_IMAGE_ALT' | translate" />
+          <button type="button" class="vfs-thumb-remove" (click)="removeNew(i)" [title]="'CANCEL_BUTTON_LABEL' | translate">
+            <lucide-icon [img]="iconX" [size]="16"></lucide-icon>
+          </button>
+        </div>
+        <div *ngIf="imageCount < MAX_IMAGES" class="vfs-add-more">
+          <button type="button" class="vfs-add-more-btn vfs-upload-camera" (click)="openCamera()" [title]="'VOUCHER_CAMERA' | translate">
+            <lucide-icon [img]="iconCamera" [size]="16"></lucide-icon>
+          </button>
+          <button type="button" class="vfs-add-more-btn vfs-upload-gallery" (click)="openGallery()" [title]="'VOUCHER_GALLERY' | translate">
+            <lucide-icon [img]="iconImages" [size]="16"></lucide-icon>
+          </button>
+        </div>
+      </div>
+
+      <div class="vfs-image-info">
+        <span class="vfs-image-counter">{{ formatService.formatCount(imageCount) }} / {{ formatService.formatCount(MAX_IMAGES) }}</span>
+        <button type="button" class="vfs-ghost-btn" (click)="clearAllImages()">
+          <lucide-icon [img]="iconX" [size]="16"></lucide-icon>
+          {{ 'VOUCHER_CLEAR_ALL' | translate }}
+        </button>
+      </div>
+    </ng-container>
+
+    <div class="vfs-footer">
+      <button type="submit" class="vfs-primary-btn" [disabled]="form.invalid || imageCount === 0 || isSaving">
+        <span *ngIf="isSaving" class="vfs-spinner" aria-hidden="true"></span>
+        <lucide-icon *ngIf="!isSaving" [img]="iconSave" [size]="16"></lucide-icon>
+        {{ (editing ? 'VOUCHER_UPDATE_BUTTON' : 'VOUCHER_SAVE_BUTTON') | translate }}
+      </button>
+    </div>
+  </form>
+
+  <!-- Category picker: layered over the form inside the same sheet -->
+  <div class="vfs-cat-backdrop" [class.open]="isCategoryPickerOpen" (click)="closeCategoryPicker()"></div>
+  <div class="vfs-cat-sheet" [class.open]="isCategoryPickerOpen">
+    <div class="vfs-header">
+      <span class="vfs-header-title">{{ 'EXPENSE_CATEGORY_LABEL' | translate }}</span>
+      <button type="button" class="vfs-icon-btn" (click)="closeCategoryPicker()" [title]="'BACK_BUTTON' | translate">
+        <lucide-icon [img]="iconX" [size]="18"></lucide-icon>
+      </button>
+    </div>
+    <div class="vfs-cat-search">
+      <lucide-icon [img]="iconSearch" [size]="15" class="vfs-cat-search-icon"></lucide-icon>
+      <input
+        type="text"
+        [(ngModel)]="categorySearch"
+        [ngModelOptions]="{ standalone: true }"
+        [placeholder]="'CUSTOM_SELECT_SEARCH' | translate"
+      />
+    </div>
+    <div class="vfs-cat-list">
+      <button
+        type="button"
+        class="vfs-cat-item"
+        *ngIf="!categorySearch"
+        [class.selected]="!form.value.category"
+        (click)="selectCategory('')"
+      >
+        <span class="vfs-cat-label">{{ 'VOUCHER_NO_CATEGORY' | translate }}</span>
+        <lucide-icon *ngIf="!form.value.category" [img]="iconCheck" [size]="16" class="vfs-cat-check"></lucide-icon>
+      </button>
+      <p class="vfs-cat-empty" *ngIf="filteredCategories.length === 0">{{ 'CUSTOM_SELECT_NO_RESULTS' | translate }}</p>
+      <button
+        type="button"
+        class="vfs-cat-item"
+        *ngFor="let cat of filteredCategories; trackBy: trackByCategory"
+        [class.selected]="form.value.category === cat.name"
+        [style.--cat-hue]="categoryHue(cat.name)"
+        (click)="selectCategory(cat.name)"
+      >
+        <span class="vfs-cat-icon">
+          <img *ngIf="categoryIconUrl(cat.name) as iconUrl" [src]="iconUrl" alt="" />
+          <lucide-icon *ngIf="!categoryIconUrl(cat.name)" [img]="categoryIcon(cat.name)" [size]="15"></lucide-icon>
+        </span>
+        <span class="vfs-cat-label">{{ cat.name }}</span>
+        <lucide-icon *ngIf="form.value.category === cat.name" [img]="iconCheck" [size]="16" class="vfs-cat-check"></lucide-icon>
+      </button>
+    </div>
+  </div>
+</div>

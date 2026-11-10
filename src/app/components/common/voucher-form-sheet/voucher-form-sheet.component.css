@@ -1,0 +1,547 @@
+/* Visual twin of the expense page's add/edit voucher modal (expense.css
+   .exp-add-modal-*), kept self-contained so this component doesn't pull in
+   the whole 60 kB expense stylesheet. Centered dialog on desktop,
+   full-screen slide-up sheet on phones. */
+
+.vfs-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1010;
+  background: rgba(0, 0, 0, 0.6);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+}
+
+.vfs-backdrop.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Standalone translate/scale (not transform): a transform here would become
+   the containing block for anything position:fixed inside. */
+.vfs-sheet {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 0.85rem);
+  left: 50%;
+  z-index: 1020;
+  width: 92%;
+  max-width: 480px;
+  max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 1.7rem);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--surface, #12151c);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.45);
+  color: var(--text);
+  translate: -50% 0;
+  scale: 0.96;
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+  transition: scale 0.2s ease, opacity 0.2s ease, visibility 0s linear 0.2s;
+}
+
+.vfs-sheet.open {
+  scale: 1;
+  opacity: 1;
+  pointer-events: auto;
+  visibility: visible;
+  transition: scale 0.2s ease, opacity 0.2s ease, visibility 0s;
+}
+
+/* ── Header ── */
+.vfs-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 0.6rem 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+
+.vfs-header-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.vfs-icon-btn {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.vfs-icon-btn:hover {
+  background: var(--border);
+}
+
+.vfs-back-btn lucide-icon {
+  rotate: 90deg;
+}
+
+/* ── Body / form ── */
+.vfs-body {
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+.vfs-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.vfs-date-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 320px;
+}
+
+.vfs-date-body > div {
+  width: min(100%, 620px);
+  margin-inline: auto;
+}
+
+.vfs-date-row {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.vfs-date-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-height: 38px;
+  padding: 0.4rem 0.72rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-2);
+  color: var(--text-sub, var(--text-muted));
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.vfs-field {
+  width: 100%;
+  height: 52px;
+  padding: 0 0.9rem;
+  box-sizing: border-box;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.9rem;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: border-color 0.15s;
+}
+
+.vfs-field:focus {
+  border-color: var(--accent, #0b74ff);
+}
+
+.vfs-field::placeholder {
+  color: var(--text-muted);
+}
+
+.vfs-textarea {
+  height: auto;
+  min-height: 92px;
+  padding: 0.8rem 0.9rem;
+  resize: vertical;
+  line-height: 1.45;
+}
+
+.vfs-select {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.vfs-select-value,
+.vfs-select-placeholder {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vfs-select-placeholder {
+  color: var(--text-muted);
+}
+
+.vfs-select-chevron {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.vfs-cat-icon {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: hsl(var(--cat-hue, 220) 80% 55% / 0.15);
+  color: hsl(var(--cat-hue, 220) 80% 60%);
+}
+
+.vfs-cat-icon img {
+  width: 15px;
+  height: 15px;
+  object-fit: contain;
+}
+
+/* ── Images ── */
+.vfs-file-input {
+  display: none;
+}
+
+.vfs-upload-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.vfs-upload-btn {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 112px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  border: 1.5px dashed;
+  border-radius: 12px;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.vfs-upload-camera {
+  border-color: rgba(52, 211, 153, 0.35);
+  background: rgba(52, 211, 153, 0.05);
+  color: rgb(52, 211, 153);
+}
+
+.vfs-upload-gallery {
+  border-color: rgba(96, 165, 250, 0.35);
+  background: rgba(96, 165, 250, 0.05);
+  color: var(--info, #3b82f6);
+}
+
+.vfs-image-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.vfs-thumb {
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+}
+
+.vfs-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.vfs-thumb-remove {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: rgba(10, 12, 16, 0.72);
+  color: #fff;
+  cursor: pointer;
+}
+
+.vfs-add-more {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.vfs-add-more-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px dashed;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.vfs-image-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.vfs-image-counter {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.vfs-ghost-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 36px;
+  padding: 0 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+/* ── Footer ── */
+.vfs-footer {
+  margin-top: 0.25rem;
+}
+
+.vfs-primary-btn {
+  width: 100%;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  border: 1px solid var(--accent, #0b74ff);
+  border-radius: 12px;
+  background: var(--accent, #0b74ff);
+  color: #fff;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(11, 116, 255, 0.28);
+}
+
+.vfs-primary-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+  box-shadow: none;
+}
+
+.vfs-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: vfs-spin 0.8s linear infinite;
+}
+
+@keyframes vfs-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Category picker (layered over the form, inside the sheet) ── */
+.vfs-cat-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 25;
+  background: rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+
+.vfs-cat-backdrop.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.vfs-cat-sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+  max-height: 80%;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  border-radius: 20px 20px 0 0;
+  translate: 0 100%;
+  pointer-events: none;
+  transition: translate 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+
+.vfs-cat-sheet.open {
+  translate: 0 0;
+  pointer-events: auto;
+  box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.28);
+}
+
+.vfs-cat-sheet .vfs-header {
+  border-radius: 20px 20px 0 0;
+}
+
+.vfs-cat-search {
+  position: relative;
+  padding: 0.75rem 1rem 0.25rem;
+}
+
+.vfs-cat-search-icon {
+  position: absolute;
+  left: 1.75rem;
+  top: 50%;
+  translate: 0 -35%;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.vfs-cat-search input {
+  width: 100%;
+  height: 42px;
+  box-sizing: border-box;
+  padding: 0 0.9rem 0 2.3rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.88rem;
+  outline: none;
+}
+
+.vfs-cat-list {
+  overflow-y: auto;
+  padding: 0.5rem 0.6rem calc(env(safe-area-inset-bottom, 0px) + 0.75rem);
+}
+
+.vfs-cat-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.65rem 0.7rem;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.88rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.vfs-cat-item:hover,
+.vfs-cat-item.selected {
+  background: var(--surface-2);
+}
+
+.vfs-cat-item .vfs-cat-icon {
+  width: 30px;
+  height: 30px;
+}
+
+.vfs-cat-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vfs-cat-check {
+  color: var(--accent, #0b74ff);
+  flex-shrink: 0;
+}
+
+.vfs-cat-empty {
+  margin: 0.75rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* Phones: full-screen sheet sliding up, like the expense page's form. */
+@media (max-width: 991.98px) {
+  .vfs-backdrop {
+    display: none;
+  }
+
+  .vfs-sheet {
+    top: 0;
+    left: 0;
+    width: 100%;
+    max-width: none;
+    height: 100dvh;
+    max-height: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    scale: 1;
+    opacity: 1;
+    translate: 0 100%;
+    transition: translate 0.28s cubic-bezier(0.34, 1.2, 0.64, 1), visibility 0s linear 0.28s;
+  }
+
+  .vfs-sheet.open {
+    translate: 0 0;
+    transition: translate 0.28s cubic-bezier(0.34, 1.2, 0.64, 1), visibility 0s;
+  }
+
+  .vfs-sheet > .vfs-header {
+    padding-top: calc(max(env(safe-area-inset-top, 0px), var(--native-status-bar-inset, 0px)) + 0.75rem);
+  }
+
+  .vfs-body {
+    flex: 1;
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem);
+  }
+
+  .vfs-primary-btn {
+    min-height: 56px;
+    border-radius: 14px;
+    font-size: 0.9rem;
+  }
+}

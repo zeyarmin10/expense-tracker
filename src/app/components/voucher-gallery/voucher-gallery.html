@@ -124,6 +124,8 @@
   <lucide-icon [img]="iconPlus" [size]="26"></lucide-icon>
 </button>
 
+<app-voucher-form-sheet (saved)="onFormSaved()"></app-voucher-form-sheet>
+
 <!-- Subscribed only for its side effect of filling categoryList. -->
 <ng-container *ngIf="categories$ | async"></ng-container>
 

@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ViewChild, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { LucideAngularModule, Images, Receipt, Pencil, Trash2, Share2, Plus, Search, X, SearchX } from 'lucide-angular';
 import { BehaviorSubject, Observable, combineLatest, map, shareReplay, switchMap, tap } from 'rxjs';
@@ -13,6 +13,7 @@ import { FormatService } from '../../services/format.service';
 import { canManageSharedSpace, UserProfile } from '../../services/user-data';
 import { createAppToast } from '../../services/toast';
 import { LightboxComponent } from '../common/lightbox/lightbox.component';
+import { VoucherFormSheetComponent } from '../common/voucher-form-sheet/voucher-form-sheet.component';
 import { BURMESE_MONTH_FULL_NAMES } from '../../core/constants/app.constants';
 import { getIconData, getIconHue } from '../../utils/category-icons';
 
@@ -50,7 +51,7 @@ interface ViewerEntry {
 @Component({
   selector: 'app-voucher-gallery',
   standalone: true,
-  imports: [CommonModule, RouterModule, TranslateModule, LucideAngularModule, LightboxComponent],
+  imports: [CommonModule, RouterModule, TranslateModule, LucideAngularModule, LightboxComponent, VoucherFormSheetComponent],
   templateUrl: './voucher-gallery.html',
   styleUrls: ['./voucher-gallery.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -59,12 +60,12 @@ export class VoucherGallery {
   private voucherService = inject(VoucherService);
   private authService = inject(AuthService);
   private translate = inject(TranslateService);
-  private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
   private categoryService = inject(CategoryService);
   formatService = inject(FormatService);
 
   @ViewChild(LightboxComponent) lightbox!: LightboxComponent;
+  @ViewChild(VoucherFormSheetComponent) formSheet!: VoucherFormSheetComponent;
 
   readonly iconImages = Images;
   readonly iconReceipt = Receipt;
@@ -166,9 +167,14 @@ export class VoucherGallery {
     this.category$.next('');
   }
 
-  /** Opens the expense page's voucher form; it returns here after saving or closing. */
+  /** Add form opens in place on this page (no trip to the expense page). */
   addVoucher(): void {
-    void this.router.navigate(['/expense'], { queryParams: { addVoucher: 1, from: 'vouchers' } });
+    this.formSheet.openAdd();
+  }
+
+  /** Re-pull after add/edit: offline reads are one-shot, not live listeners. */
+  onFormSaved(): void {
+    this.refresh$.next();
   }
 
   trackByChip(_: number, chip: CategoryChip): string {
@@ -300,12 +306,12 @@ export class VoucherGallery {
     return getIconHue(this.categoryList.find(c => c.name === categoryName)?.icon);
   }
 
-  /** Hands off to the expense page's voucher editor, which returns here after. */
+  /** Closes the viewer and opens the edit form in place on this page. */
   editCurrent(): void {
     const voucher = this.current?.voucher;
     if (!voucher?.id || !this.canManage) return;
     this.lightbox.hide();
-    void this.router.navigate(['/expense'], { queryParams: { editVoucher: voucher.id, from: 'vouchers' } });
+    this.formSheet.openEdit(voucher);
   }
 
   async deleteCurrent(): Promise<void> {
