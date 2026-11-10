@@ -554,4 +554,12 @@
 <router-outlet />
 
 <app-welcome-tour *ngIf="showWelcomeTour" (closed)="showWelcomeTour = false"></app-welcome-tour>
+
+<app-sync-details-sheet
+  [open]="isSyncSheetOpen"
+  [items]="syncItems"
+  [syncing]="isSyncing"
+  (closed)="closeSyncSheet()"
+  (syncNow)="syncFromSheet()"
+></app-sync-details-sheet>
 </ng-container>

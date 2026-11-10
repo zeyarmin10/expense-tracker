@@ -9,6 +9,7 @@ import { AuthService } from './services/auth';
 import { User } from '@angular/fire/auth';
 import { LucideAngularModule, LogOut, Users as LucideUsers, User as LucideUserIcon, ChevronDown, Sun, Moon, PiggyBank, ShoppingCart, Tags, ArrowDown, RotateCw, TrendingUp, Banknote, Package, HandCoins, ChartColumn, Images } from 'lucide-angular';
 import { InvitationService } from './services/invitation.service';
+import { SyncDetailItem, SyncDetailsSheetComponent } from './components/common/sync-details-sheet/sync-details-sheet.component';
 import { DataManagerService } from './services/data-manager';
 import { ToastService } from './services/toast';
 import { NetworkService } from './services/network.service';
@@ -50,6 +51,7 @@ import { FormatService } from './services/format.service';
     CurrentSpaceTitleComponent,
     UserAvatarComponent,
     WelcomeTourComponent,
+    SyncDetailsSheetComponent,
   ],
   templateUrl: './app.html',
   styleUrls: ['./app.css'],
@@ -1136,60 +1138,48 @@ export class App implements OnInit, AfterViewInit {
     return this.translate.instant(compact ? 'SYNC_PENDING_SHORT' : 'SYNC_PENDING_COUNT', { count: formatted });
   }
 
+  // ── Pending-sync sheet (styled like the add-expense sheet) ──
+  isSyncSheetOpen = false;
+  isSyncing = false;
+  syncItems: SyncDetailItem[] = [];
+
   async showSyncDetails(): Promise<void> {
-    const operations = await this.offlineSyncService.getPendingOperations();
-    if (operations.length === 0) {
-      await Swal.fire({
-        icon: 'success',
-        title: this.translate.instant('SYNC_DETAILS_TITLE'),
-        text: this.translate.instant('SYNC_NO_PENDING_CHANGES'),
-        confirmButtonText: this.translate.instant('OK_BUTTON'),
-      });
-      return;
-    }
+    await this.loadSyncItems();
+    this.isSyncSheetOpen = true;
+  }
 
-    const profile = await firstValueFrom(this.authService.userProfile$.pipe(take(1)));
-    const cachedSpaces = profile
-      ? await this.offlineStore.getCollection<UserSpaceSummary>(profile.uid, 'spaces')
-      : {};
+  closeSyncSheet(): void {
+    if (this.isSyncing) return;
+    this.isSyncSheetOpen = false;
+  }
 
-    const html = `
-      <div class="sync-detail-modal">
-        <p class="sync-detail-summary">${this.escapeHtml(this.translate.instant('SYNC_PENDING_SUMMARY', {
-          count: this.formatService.formatCount(operations.length),
-        }))}</p>
-        <ol class="sync-detail-list">
-          ${operations.map((operation, index) => this.buildSyncOperationHtml(operation, cachedSpaces, profile, index + 1)).join('')}
-        </ol>
-      </div>
-    `;
-
-    const result = await Swal.fire({
-      icon: 'info',
-      title: this.translate.instant('SYNC_DETAILS_TITLE'),
-      html,
-      allowOutsideClick: false,
-      showCancelButton: true,
-      confirmButtonText: this.translate.instant('SYNC_NOW_BUTTON'),
-      cancelButtonText: this.translate.instant('CLOSE_BUTTON_LABEL'),
-      reverseButtons: true,
-      customClass: {
-        container: 'sync-detail-container',
-        popup: 'sync-detail-swal',
-        htmlContainer: 'sync-detail-html',
-      },
-    });
-
-    if (result.isConfirmed) {
-      await this.manualSyncChanges();
+  async syncFromSheet(): Promise<void> {
+    if (this.isSyncing) return;
+    this.isSyncing = true;
+    try {
+      const done = await this.manualSyncChanges();
+      if (done) this.isSyncSheetOpen = false;
+      else await this.loadSyncItems(); // show what is still waiting / failed
+    } finally {
+      this.isSyncing = false;
     }
   }
 
-  async manualSyncChanges(): Promise<void> {
+  private async loadSyncItems(): Promise<void> {
+    const operations = await this.offlineSyncService.getPendingOperations();
+    const profile = await firstValueFrom(this.authService.userProfile$.pipe(take(1)));
+    const cachedSpaces = profile && operations.length
+      ? await this.offlineStore.getCollection<UserSpaceSummary>(profile.uid, 'spaces')
+      : {};
+    this.syncItems = operations.map(operation => this.buildSyncItem(operation, cachedSpaces, profile));
+  }
+
+  /** Returns true when nothing is left pending afterwards. */
+  async manualSyncChanges(): Promise<boolean> {
     await this.networkService.retryServerConnection();
     if (!this.networkService.isOnline$.value) {
       this.toastService.showError(this.translate.instant('SYNC_OFFLINE_MESSAGE'));
-      return;
+      return false;
     }
 
     await this.offlineSyncService.sync();
@@ -1205,37 +1195,33 @@ export class App implements OnInit, AfterViewInit {
       this.toastService.showError(this.translate.instant('SYNC_PENDING_REMAINING', {
         count: this.formatService.formatCount(pending.length),
       }));
-      return;
+      return false;
     }
 
     this.toastService.showSuccess(this.translate.instant('SYNC_COMPLETE_MESSAGE'));
+    return true;
   }
 
-  private buildSyncOperationHtml(
+  private buildSyncItem(
     operation: OfflineOperation,
     spaces: Record<string, UserSpaceSummary>,
     profile: UserProfile | null,
-    position: number,
-  ): string {
+  ): SyncDetailItem {
     const collection = operation.path.split('/').slice(-2, -1)[0] || operation.path;
-    const title = `${this.translate.instant(this.getSyncActionKey(operation.kind))} · ${this.translate.instant(this.getSyncCollectionKey(collection))}`;
-    const spaceName = this.getSyncOperationSpaceName(operation, spaces, profile);
-    const payload = this.summarizeSyncPayload(collection, operation.payload);
-    const errorText = operation.lastError === 'SYNC_CONFLICT:STOCK_INSUFFICIENT'
+    // A queued voucher upload wraps the record under `voucher`; the rest of
+    // its payload is internal plumbing (file keys, cache scope, ...).
+    const payload = operation.kind === 'uploadVoucher'
+      ? (operation.payload?.['voucher'] as Record<string, unknown> | undefined)
+      : operation.payload;
+    const error = operation.lastError === 'SYNC_CONFLICT:STOCK_INSUFFICIENT'
       ? this.translate.instant('STOCK_SYNC_CONFLICT_TITLE')
-      : operation.lastError;
-    const error = errorText ? `<div class="sync-detail-error">${this.escapeHtml(errorText)}</div>` : '';
-    return `
-      <li class="sync-detail-item">
-        <span class="sync-detail-index" aria-hidden="true">${this.escapeHtml(this.formatService.formatCount(position))}</span>
-        <div class="sync-detail-item-main">
-          <strong>${this.escapeHtml(title)}</strong>
-          <span class="sync-detail-space">${this.escapeHtml(this.translate.instant('SYNC_SPACE_LABEL'))}: ${this.escapeHtml(spaceName)}</span>
-          ${payload ? `<small>${this.escapeHtml(payload)}</small>` : ''}
-          ${error}
-        </div>
-      </li>
-    `;
+      : operation.lastError || null;
+    return {
+      title: `${this.translate.instant(this.getSyncActionKey(operation.kind))} · ${this.translate.instant(this.getSyncCollectionKey(collection))}`,
+      spaceName: this.getSyncOperationSpaceName(operation, spaces, profile),
+      summary: this.summarizeSyncPayload(collection, payload),
+      error,
+    };
   }
 
   private getSyncOperationSpaceName(
@@ -1305,18 +1291,18 @@ export class App implements OnInit, AfterViewInit {
       value !== ''
     );
     const visiblePayload = Object.fromEntries(visibleEntries);
-    const preferredKeys = ['name', 'category', 'description', 'itemName', 'amount', 'date', 'currency', 'status'];
+    // Values only (no raw field names), in the order a person would read
+    // them; dates in the app's localized format.
+    const preferredKeys = ['title', 'itemName', 'name', 'category', 'description', 'amount', 'date'];
     const picked = preferredKeys
       .filter(key => visiblePayload[key] !== undefined)
       .slice(0, 3)
-      .map(key => `${key}: ${String(visiblePayload[key])}`);
+      .map(key => key === 'date'
+        ? this.formatService.formatLocalizedDate(String(visiblePayload[key]))
+        : String(visiblePayload[key]));
 
-    if (picked.length > 0) {
-      return picked.join(' · ');
-    }
-
-    const keys = Object.keys(visiblePayload).slice(0, 3);
-    return keys.join(' · ');
+    // Nothing recognisable — internal field names would only confuse.
+    return picked.join(' · ');
   }
 
   private getSyncActionKey(kind: OfflineOperation['kind']): string {
@@ -1347,14 +1333,6 @@ export class App implements OnInit, AfterViewInit {
     return map[collection] || 'SYNC_COLLECTION_OTHER';
   }
 
-  private escapeHtml(value: unknown): string {
-    return String(value ?? '')
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
-  }
   // ────────────────────────────────────────────────────────────────
 
   private async handleInvitation(inviteCode: string): Promise<void> {
@@ -1646,6 +1624,11 @@ export class App implements OnInit, AfterViewInit {
       }
 
       // Drawer ဖွင့်ထားရင် အရင်ပိတ်
+      if (this.isSyncSheetOpen) {
+        this.closeSyncSheet();
+        return;
+      }
+
       if (this.mobileMenuOpen) {
         this.closeNavbarMenu();
         return;

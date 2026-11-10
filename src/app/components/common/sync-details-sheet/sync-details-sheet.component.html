@@ -1,0 +1,53 @@
+<div class="sds-backdrop" [class.open]="open" (click)="!syncing && closed.emit()"></div>
+
+<div class="sds-sheet" [class.open]="open" role="dialog" aria-modal="true" [attr.aria-hidden]="!open">
+  <div class="sds-header">
+    <span class="sds-header-title">{{ 'SYNC_DETAILS_TITLE' | translate }}</span>
+    <button type="button" class="sds-icon-btn" (click)="closed.emit()" [disabled]="syncing" [title]="'CLOSE_BUTTON_LABEL' | translate">
+      <lucide-icon [img]="iconX" [size]="18"></lucide-icon>
+    </button>
+  </div>
+
+  <div class="sds-body">
+    <!-- Nothing waiting -->
+    <div *ngIf="items.length === 0" class="sds-empty">
+      <span class="sds-empty-icon"><lucide-icon [img]="iconDone" [size]="30"></lucide-icon></span>
+      <p>{{ 'SYNC_NO_PENDING_CHANGES' | translate }}</p>
+    </div>
+
+    <ng-container *ngIf="items.length > 0">
+      <div class="sds-summary">
+        <span class="sds-summary-icon"><lucide-icon [img]="iconCloud" [size]="18"></lucide-icon></span>
+        <span>{{ 'SYNC_PENDING_SUMMARY' | translate: { count: formatService.formatCount(items.length) } }}</span>
+      </div>
+
+      <ol class="sds-list">
+        <li class="sds-item" *ngFor="let item of items; let i = index; trackBy: trackByIndex" [class.sds-item-error]="!!item.error">
+          <span class="sds-index" aria-hidden="true">{{ formatService.formatCount(i + 1) }}</span>
+          <div class="sds-item-main">
+            <strong class="sds-item-title">{{ item.title }}</strong>
+            <span class="sds-item-space">
+              <lucide-icon [img]="iconSpace" [size]="12"></lucide-icon>
+              {{ item.spaceName }}
+            </span>
+            <span *ngIf="item.summary" class="sds-item-summary">{{ item.summary }}</span>
+            <span *ngIf="item.error" class="sds-item-error-text">
+              <lucide-icon [img]="iconError" [size]="12"></lucide-icon>
+              {{ item.error }}
+            </span>
+          </div>
+        </li>
+      </ol>
+    </ng-container>
+  </div>
+
+  <div class="sds-footer">
+    <button *ngIf="items.length > 0" type="button" class="sds-primary-btn" [disabled]="syncing" (click)="syncNow.emit()">
+      <lucide-icon [img]="iconSync" [size]="16" [class.sds-spin]="syncing"></lucide-icon>
+      {{ 'SYNC_NOW_BUTTON' | translate }}
+    </button>
+    <button *ngIf="items.length === 0" type="button" class="sds-primary-btn" (click)="closed.emit()">
+      {{ 'OK_BUTTON' | translate }}
+    </button>
+  </div>
+</div>
