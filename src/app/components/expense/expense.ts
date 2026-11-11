@@ -64,7 +64,6 @@ import { DateRangeInputComponent } from '../common/date-range-input/date-range-i
 import { FormatService } from '../../services/format.service';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
 import { UserAvatarComponent } from '../common/user-avatar/user-avatar.component';
-import { ShowFullTextDirective } from '../../directives/show-full-text.directive';
 import { MobileFullscreenOverlayComponent } from '../common/mobile-fullscreen-overlay/mobile-fullscreen-overlay.component';
 
 // Matches the existing `min-width: 992px` breakpoint in expense.css that
@@ -93,7 +92,6 @@ interface ExpenseDateGroup {
     TranslateModule,
     CurrentSpaceTitleComponent,
     UserAvatarComponent,
-    ShowFullTextDirective,
     DateRangeInputComponent,
     MobileFullscreenOverlayComponent,
     RouterLink,

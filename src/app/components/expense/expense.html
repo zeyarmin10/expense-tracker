@@ -819,7 +819,7 @@
               <div *ngFor="let expense of group.expenses; trackBy: trackByExpenseId" class="exp-item" [style.--cat-hue]="getIconHueForCategory(expense.category)">
                 <div class="exp-item-inner">
                   <div class="exp-item-top">
-                    <span class="exp-item-name" appShowFullText>{{ expense.itemName }}</span>
+                    <span class="exp-item-name">{{ expense.itemName }}</span>
                     <span class="exp-item-amount"
                       [innerHTML]="formatService.formatAmountWithSymbolHtml(expense.totalCost, expense.currency)"
                     ></span>

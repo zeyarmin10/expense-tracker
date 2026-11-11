@@ -891,7 +891,9 @@ body.exp-add-modal-open {
     grid-template-columns: 1fr 1fr;
   }
 
-  .full-form-item-name, .full-form-quantity, .full-form-unit {
+  /* Item name keeps the full 52px field height so it lines up with the
+     category picker above it; only the paired qty/unit row is compact. */
+  .full-form-quantity, .full-form-unit {
     height: 2.5rem !important;
   }
 
@@ -912,7 +914,6 @@ body.exp-add-modal-open {
    back to the larger page-input sizing made the same form look different
    from mobile. */
 @media (min-width: 577px) {
-  .exp-add-modal-sheet .full-form-item-name,
   .exp-add-modal-sheet .full-form-quantity,
   .exp-add-modal-sheet .full-form-unit {
     height: 2.5rem !important;
@@ -1834,12 +1835,14 @@ body.light-mode .exp-item {
 .exp-item-name {
   font-size: 0.95rem;
   font-weight: 700;
+  line-height: 1.45;
   color: var(--text);
   flex: 1;
   min-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  /* Long names wrap onto the next line instead of being cut off; a long
+     unbroken word (e.g. a code or URL) still breaks inside the row. */
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .exp-item-amount {
