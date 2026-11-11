@@ -69,7 +69,7 @@
             {{ 'AMOUNT_REQUIRED' | translate }}
           </div>
           <div class="pnl-float-field">
-            <textarea id="incomeDesc" formControlName="description" class="pnl-input pnl-input-field pnl-textarea"
+            <textarea appAutoGrow="multi" id="incomeDesc" formControlName="description" class="pnl-input pnl-input-field pnl-textarea"
               placeholder=" " maxlength="250" [class.pnl-has-val]="incomeForm.get('description')?.value"></textarea>
   <label class="pnl-float-label" for="incomeDesc">
     {{ 'DESCRIPTION' | translate }} ({{ 'OPTIONAL' | translate }})

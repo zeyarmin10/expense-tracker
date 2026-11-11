@@ -2817,3 +2817,18 @@ body.light-mode .exp-seg-reset {
   from { opacity: 0; transform: translateY(-6px) scaleY(0.92); }
   to   { opacity: 1; transform: translateY(0) scaleY(1); }
 }
+
+/* Full-mode item name: a one-row textarea that grows with the text
+   (AutoGrowDirective sets the height). Padding centres a single line in the
+   same 52px box as the other fields. */
+textarea.exp-float-input.full-form-item-name {
+  display: block;
+  height: auto;
+  min-height: 52px;
+  padding: 0.9rem 0.9rem;
+  line-height: 1.4;
+  resize: none;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  font-family: inherit;
+}

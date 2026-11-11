@@ -505,7 +505,7 @@
           <div class="inv-shop-expense-field-error" *ngIf="shopExpenseForm.controls['category'].invalid && shopExpenseForm.controls['category'].touched">
             {{ 'CATEGORY_REQUIRED' | translate }}
           </div>
-          <textarea class="inv-input inv-shop-expense-description" formControlName="description" maxlength="250" rows="3"
+          <textarea appAutoGrow="multi" class="inv-input inv-shop-expense-description" formControlName="description" maxlength="250" rows="3"
             [placeholder]="'SHOP_EXPENSE_NOTE_PLACEHOLDER' | translate"></textarea>
           <div class="inv-shop-expense-receipt-row">
             <label class="inv-shop-receipt-upload">

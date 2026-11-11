@@ -58,6 +58,7 @@ import type { Instance as FlatpickrInstance } from 'flatpickr/dist/types/instanc
 import { Burmese } from 'flatpickr/dist/l10n/my';
 import { FlatpickrMonthMenu, installFlatpickrMonthMenu } from '../../utils/flatpickr-month-menu';
 
+import { AutoGrowDirective } from '../../directives/auto-grow.directive';
 Chart.register(...registerables);
 
 const Toast = createAppToast();
@@ -106,7 +107,7 @@ interface BudgetPeriodGroup {
 @Component({
   selector: 'app-budget',
   standalone: true,
-  imports: [
+  imports: [AutoGrowDirective, 
     CommonModule,
     ReactiveFormsModule,
     TranslateModule,

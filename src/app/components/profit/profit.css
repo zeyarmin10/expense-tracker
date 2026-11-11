@@ -1394,7 +1394,7 @@ app-date-input .di-trigger {
   border-radius: 10px;
   color: var(--text);
   /* font-family: 'Syne', sans-serif; */
-  font-size: 1.25rem;
+  font-size: 1rem;
   padding: 1.35rem 0.9rem 0.45rem;
   outline: none;
   transition: border-color 0.15s;

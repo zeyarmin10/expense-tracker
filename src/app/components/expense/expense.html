@@ -306,15 +306,18 @@
 
             <!-- Item Name (optional) -->
             <div class="exp-float-field">
-              <input
-                type="text"
+              <!-- Grows downward as the name wraps so the whole text stays visible -->
+              <textarea
+                appAutoGrow
+                rows="1"
+                enterkeyhint="done"
                 class="exp-float-input full-form-item-name"
                 id="itemName"
                 formControlName="itemName"
                 [placeholder]="('EXPENSE_ITEM_NAME_LABEL' | translate) + ' (' + ('OPTIONAL' | translate) + ')'"
                 maxlength="100"
                 [class.is-invalid]="newExpenseForm.controls['itemName'].invalid && newExpenseForm.controls['itemName'].touched"
-              />
+              ></textarea>
             </div>
 
             <div class="exp-form-row exp-form-row-qty-unit">
@@ -435,7 +438,7 @@
           </div>
 
           <div class="exp-float-field">
-            <textarea
+            <textarea appAutoGrow="multi"
               class="exp-float-input exp-textarea"
               id="voucher-note"
               formControlName="note"

@@ -65,6 +65,7 @@ import { FormatService } from '../../services/format.service';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
 import { UserAvatarComponent } from '../common/user-avatar/user-avatar.component';
 import { MobileFullscreenOverlayComponent } from '../common/mobile-fullscreen-overlay/mobile-fullscreen-overlay.component';
+import { AutoGrowDirective } from '../../directives/auto-grow.directive';
 
 // Matches the existing `min-width: 992px` breakpoint in expense.css that
 // switches from the mobile FAB to the desktop toolbar "Add Expense" button.
@@ -84,6 +85,7 @@ interface ExpenseDateGroup {
   standalone: true,
   imports: [
     CommonModule,
+    AutoGrowDirective,
     ReactiveFormsModule,
     FormsModule,
     LucideAngularModule,

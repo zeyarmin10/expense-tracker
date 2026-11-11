@@ -64,6 +64,7 @@ import type { Instance as FlatpickrInstance } from 'flatpickr/dist/types/instanc
 import { Burmese } from 'flatpickr/dist/l10n/my';
 import { FlatpickrMonthMenu, installFlatpickrMonthMenu } from '../../utils/flatpickr-month-menu';
 
+import { AutoGrowDirective } from '../../directives/auto-grow.directive';
 Chart.register(...registerables);
 
 const Toast = createAppToast();
@@ -81,7 +82,7 @@ interface IncomeDateGroup {
 @Component({
   selector: 'app-profit',
   standalone: true,
-  imports: [
+  imports: [AutoGrowDirective, 
     CommonModule,
     RouterLink,
     ReactiveFormsModule,

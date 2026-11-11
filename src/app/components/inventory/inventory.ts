@@ -40,6 +40,7 @@ import { MobileFullscreenOverlayComponent } from '../common/mobile-fullscreen-ov
 import { CustomSelectComponent, SelectOption } from '../common/custom-select/custom-select.component';
 import { CategoryModalComponent } from '../common/category-modal/category-modal';
 
+import { AutoGrowDirective } from '../../directives/auto-grow.directive';
 interface ShopExpenseDateGroup {
   date: string;
   expenses: ShopExpense[];
@@ -52,7 +53,7 @@ const Toast = createAppToast();
 @Component({
   selector: 'app-inventory',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, TranslateModule, LucideAngularModule, MobileFullscreenOverlayComponent, CustomSelectComponent, CategoryModalComponent],
+  imports: [AutoGrowDirective, CommonModule, ReactiveFormsModule, FormsModule, TranslateModule, LucideAngularModule, MobileFullscreenOverlayComponent, CustomSelectComponent, CategoryModalComponent],
   templateUrl: './inventory.html',
   styleUrls: ['./inventory.css'],
 })
