@@ -454,7 +454,7 @@
 
 .vfs-cat-list {
   overflow-y: auto;
-  padding: 0.5rem 0.6rem calc(env(safe-area-inset-bottom, 0px) + 0.75rem);
+  padding: 0.5rem 0.6rem calc(3.25rem + env(safe-area-inset-bottom, 0px));
 }
 
 .vfs-cat-item {

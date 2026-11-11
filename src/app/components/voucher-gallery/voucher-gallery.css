@@ -504,6 +504,43 @@
   transform: scale(0.94);
 }
 
+.vg-add-fab:active::after {
+  animation-play-state: paused;
+}
+
+/* Same expanding-ring pulse as the expense page's add FAB. Animates
+   transform/opacity on a pseudo-element, not box-shadow — animated
+   box-shadow on a round element paints black on some Android WebViews. */
+.vg-add-fab::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(244, 177, 26, 0.65);
+  animation: vg-fab-pulse 4.4s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  pointer-events: none;
+}
+
+@keyframes vg-fab-pulse {
+  0%, 10% {
+    transform: translateZ(0) scale(0.92);
+    opacity: 0;
+  }
+  18% { opacity: 0.62; }
+  72%, 100% {
+    transform: translateZ(0) scale(1.45);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vg-add-fab::after {
+    animation: none;
+  }
+}
+
 .vg-add-btn {
   display: none;
   margin-left: auto;
