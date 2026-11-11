@@ -171,6 +171,7 @@
   padding: 0.8rem 0.9rem;
   resize: vertical;
   line-height: 1.45;
+  font-size: 0.95rem;
 }
 
 .vfs-select {

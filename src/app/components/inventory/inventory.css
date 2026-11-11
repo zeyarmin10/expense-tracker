@@ -777,6 +777,7 @@ body.inv-settings-modal-open {
   border-color: color-mix(in srgb, var(--text-muted) 30%, var(--border));
   background: color-mix(in srgb, var(--surface-2) 82%, transparent);
   resize: vertical;
+  font-size: 0.95rem;
 }
 
 .inv-shop-expense-receipt-row {

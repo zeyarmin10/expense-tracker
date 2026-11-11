@@ -1761,6 +1761,7 @@ app-date-input .di-trigger {
   min-height: 80px;
   padding-top: 1.5rem;
   resize: vertical;
+  font-size: 0.95rem;
 }
 
 .pnl-input[type="date"]::-webkit-calendar-picker-indicator {

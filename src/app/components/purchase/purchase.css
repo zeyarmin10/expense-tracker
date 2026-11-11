@@ -952,6 +952,7 @@ body.exp-add-modal-open {
   resize: vertical;
   line-height: 1.35;
   padding: 0.85rem 0.9rem;
+  font-size: 0.95rem;
 }
 
 .exp-file-input {
