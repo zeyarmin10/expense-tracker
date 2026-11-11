@@ -289,6 +289,8 @@
   "CATEGORY_CLOSE_BUTTON": "បិទ",
   "CANCEL_BUTTON_LABEL": "បោះបង់",
   "DOWNLOAD_BUTTON_LABEL": "ទាញយក",
+  "IMAGE_SAVED_TO_DOCUMENTS": "បានរក្សាទុករូបភាពក្នុង Documents/Kyat Wise។",
+  "IMAGE_DOWNLOAD_ERROR": "មិនអាចទាញយករូបភាពបានទេ។ សូមព្យាយាមម្តងទៀត។",
   "CLOSE_BUTTON_LABEL": "បិទ",
   "PREVIOUS_BUTTON_LABEL": "មុន",
   "NEXT_BUTTON_LABEL": "បន្ទាប់",

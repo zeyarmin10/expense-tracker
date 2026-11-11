@@ -289,6 +289,8 @@
   "CATEGORY_CLOSE_BUTTON": "ပိတ်ရန်",
   "CANCEL_BUTTON_LABEL": "မလုပ်တော့",
   "DOWNLOAD_BUTTON_LABEL": "ဒေါင်းလုဒ်လုပ်ရန်",
+  "IMAGE_SAVED_TO_DOCUMENTS": "ပုံကို Documents/Kyat Wise တွင် သိမ်းပြီးပါပြီ။",
+  "IMAGE_DOWNLOAD_ERROR": "ပုံကို ဒေါင်းလုဒ်လုပ်၍ မရပါ။ ထပ်စမ်းကြည့်ပါ။",
   "CLOSE_BUTTON_LABEL": "ပိတ်ရန်",
   "PREVIOUS_BUTTON_LABEL": "နောက်သို့",
   "NEXT_BUTTON_LABEL": "ရှေ့သို့",

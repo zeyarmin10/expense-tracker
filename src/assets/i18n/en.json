@@ -289,6 +289,8 @@
   "CATEGORY_CLOSE_BUTTON": "Close",
   "CANCEL_BUTTON_LABEL": "Cancel",
   "DOWNLOAD_BUTTON_LABEL": "Download",
+  "IMAGE_SAVED_TO_DOCUMENTS": "Image saved to Documents/Kyat Wise.",
+  "IMAGE_DOWNLOAD_ERROR": "Couldn't download the image. Please try again.",
   "CLOSE_BUTTON_LABEL": "Close",
   "PREVIOUS_BUTTON_LABEL": "Previous",
   "NEXT_BUTTON_LABEL": "Next",

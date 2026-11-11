@@ -193,8 +193,14 @@ export class VoucherGallery {
   current: ViewerEntry | null = null;
   isDeleting = false;
 
+  /** Deleting stays owner/admin-only. */
   get canManage(): boolean {
     return canManageSharedSpace(this.profile);
+  }
+
+  /** Any member may edit a voucher, same as on the expense page. */
+  get canEdit(): boolean {
+    return !!this.profile;
   }
 
   get isGroupSpace(): boolean {
@@ -309,7 +315,7 @@ export class VoucherGallery {
   /** Closes the viewer and opens the edit form in place on this page. */
   editCurrent(): void {
     const voucher = this.current?.voucher;
-    if (!voucher?.id || !this.canManage) return;
+    if (!voucher?.id || !this.canEdit) return;
     this.lightbox.hide();
     this.formSheet.openEdit(voucher);
   }

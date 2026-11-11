@@ -289,6 +289,8 @@
   "CATEGORY_CLOSE_BUTTON": "閉じる",
   "CANCEL_BUTTON_LABEL": "キャンセル",
   "DOWNLOAD_BUTTON_LABEL": "ダウンロード",
+  "IMAGE_SAVED_TO_DOCUMENTS": "画像を Documents/Kyat Wise に保存しました。",
+  "IMAGE_DOWNLOAD_ERROR": "画像をダウンロードできませんでした。もう一度お試しください。",
   "CLOSE_BUTTON_LABEL": "閉じる",
   "PREVIOUS_BUTTON_LABEL": "前へ",
   "NEXT_BUTTON_LABEL": "次へ",

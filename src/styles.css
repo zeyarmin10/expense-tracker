@@ -365,6 +365,12 @@ body {
 
 
 /* ── SweetAlert2 safe-area insets (edge-to-edge Android / notch) ── */
+/* The image viewer overlay sits at z-index 99999; keep alerts and toasts
+   (e.g. a download error, a delete confirm) above it while it is open. */
+body:has(.lb-overlay.lb-open) .swal2-container {
+  z-index: 100000 !important;
+}
+
 .swal2-container {
   padding-top: calc(env(safe-area-inset-top, 0px) + 1rem) !important;
   padding-bottom: env(safe-area-inset-bottom, 0px) !important;

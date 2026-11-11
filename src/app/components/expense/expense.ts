@@ -955,8 +955,9 @@ export class Expense implements OnInit, OnDestroy {
     return this.canManageExpenseRecords;
   }
 
+  /** Any member may edit a voucher (like expenses); deleting stays owner/admin-only. */
   canEditVoucher(_voucher: ServiceIVoucher): boolean {
-    return this.canManageExpenseRecords;
+    return !!this.userProfile;
   }
 
   onDeleteVoucher(voucher: ServiceIVoucher): void {

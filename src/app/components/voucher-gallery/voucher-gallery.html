@@ -158,7 +158,7 @@
         <lucide-icon [img]="iconShare" [size]="18"></lucide-icon>
         <span>{{ 'VOUCHER_SHARE' | translate }}</span>
       </button>
-      <button *ngIf="canManage" type="button" class="vg-viewer-btn" (click)="editCurrent()">
+      <button *ngIf="canEdit" type="button" class="vg-viewer-btn" (click)="editCurrent()">
         <lucide-icon [img]="iconPencil" [size]="18"></lucide-icon>
         <span>{{ 'EDIT_BUTTON_LABEL' | translate }}</span>
       </button>

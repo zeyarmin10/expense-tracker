@@ -13,8 +13,20 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NgZone } from '@angular/core';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { Capacitor } from '@capacitor/core';
+import { Directory, Filesystem } from '@capacitor/filesystem';
 import { FormatService } from '../../../services/format.service';
+import { showAppToast } from '../../../services/toast';
+
+const IMAGE_EXTENSIONS: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/gif': 'gif',
+  'image/heic': 'heic',
+  'image/svg+xml': 'svg',
+};
 
 @Component({
   selector: 'app-lightbox',
@@ -28,6 +40,9 @@ export class LightboxComponent implements AfterViewInit, OnDestroy {
   private ngZone = inject(NgZone);
   private cdr = inject(ChangeDetectorRef);
   public formatService = inject(FormatService);
+  private translate = inject(TranslateService);
+
+  isDownloading = false;
 
   images: string[] = [];
   idx = 0;
@@ -271,6 +286,78 @@ export class LightboxComponent implements AfterViewInit, OnDestroy {
 
     if (this.scale < 1) this.resetZoom();
     this.n = e.touches.length;
+  }
+
+  /**
+   * Saves the current image. App: into Documents/Kyat Wise (same place as
+   * saved sales receipts). Web: a real file download via a same-origin
+   * blob: link, since `download` is ignored for cross-origin URLs.
+   */
+  async download(): Promise<void> {
+    const url = this.images[this.idx];
+    if (!url || this.isDownloading) return;
+    this.isDownloading = true;
+    try {
+      const stamp = Date.now();
+      if (Capacitor.isNativePlatform()) {
+        await this.ensureStoragePermission();
+        if (/^https?:/i.test(url)) {
+          // Downloaded natively, so the image bytes never cross the JS bridge.
+          await Filesystem.downloadFile({
+            url,
+            path: `Kyat Wise/kyat-wise-${stamp}.${this.extensionFromUrl(url)}`,
+            directory: Directory.Documents,
+            recursive: true,
+          });
+        } else {
+          // blob:/data: URLs (e.g. offline vouchers) only exist in this WebView.
+          const blob = await (await fetch(url)).blob();
+          await Filesystem.writeFile({
+            path: `Kyat Wise/kyat-wise-${stamp}.${IMAGE_EXTENSIONS[blob.type] || 'jpg'}`,
+            data: await this.blobToBase64(blob),
+            directory: Directory.Documents,
+            recursive: true,
+          });
+        }
+        await showAppToast(this.translate.instant('IMAGE_SAVED_TO_DOCUMENTS'), 'success');
+      } else {
+        const blob = await (await fetch(url)).blob();
+        const objectUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = objectUrl;
+        link.download = `kyat-wise-${stamp}.${IMAGE_EXTENSIONS[blob.type] || this.extensionFromUrl(url)}`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+      }
+    } catch (error) {
+      console.error('Image download failed:', error);
+      await showAppToast(this.translate.instant('IMAGE_DOWNLOAD_ERROR'), 'error');
+    } finally {
+      this.isDownloading = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  private async ensureStoragePermission(): Promise<void> {
+    const current = await Filesystem.checkPermissions();
+    const granted = current.publicStorage === 'granted' ? current : await Filesystem.requestPermissions();
+    if (granted.publicStorage !== 'granted') throw new Error('Storage permission was not granted');
+  }
+
+  private extensionFromUrl(url: string): string {
+    const match = url.split('?')[0].match(/\.(jpe?g|png|webp|gif|heic)$/i);
+    return match ? match[1].toLowerCase().replace('jpeg', 'jpg') : 'jpg';
+  }
+
+  private blobToBase64(blob: Blob): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result).split(',')[1] || '');
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(blob);
+    });
   }
 
   onStageClick(): void {
