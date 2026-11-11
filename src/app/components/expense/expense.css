@@ -1658,7 +1658,7 @@ a.exp-icon-btn {
 }
 
 .exp-date-label {
-  font-size: 0.73rem;
+  font-size: 0.85rem;
   font-weight: 800;
   color: var(--text-sub);
   white-space: nowrap;
@@ -1667,7 +1667,7 @@ a.exp-icon-btn {
 
 .exp-date-count {
   color: var(--text-muted);
-  font-size: 0.67rem;
+  font-size: 0.75rem;
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -1686,7 +1686,7 @@ a.exp-icon-btn {
   border: 1px solid rgba(244, 177, 26, 0.2);
   background: rgba(244, 177, 26, 0.07);
   color: var(--warning);
-  font-size: 0.7rem;
+  font-size: 0.85rem;
   font-weight: 700;
   padding: 0.18rem 0.5rem;
   white-space: nowrap;
@@ -1766,7 +1766,7 @@ body.light-mode .exp-category-title-chip:hover {
 
 .exp-category-count {
   color: var(--text-muted);
-  font-size: 0.68rem;
+  font-size: 0.85rem;
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -1785,7 +1785,7 @@ body.light-mode .exp-category-title-chip:hover {
   border: 1px solid rgba(244, 177, 26, 0.25);
   background: rgba(244, 177, 26, 0.08);
   color: var(--warning);
-  font-size: 0.7rem;
+  font-size: 0.85rem;
   font-weight: 700;
   padding: 0.2rem 0.5rem;
   white-space: nowrap;
@@ -1866,7 +1866,7 @@ body.light-mode .exp-item {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  font-size: 0.68rem;
+  font-size: 0.85rem;
   padding: 0.15rem 0.55rem;
   border-radius: 6px;
   background: hsl(var(--cat-hue, 220) 80% 55% / 0.13);
@@ -1893,7 +1893,7 @@ body.light-mode .exp-item {
 
 .exp-item-qty {
   /* font-family: 'DM Mono', monospace; */
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   color: var(--text-muted);
 }
 
@@ -2009,7 +2009,7 @@ body.light-mode .exp-item {
   align-items: center;
   justify-content: flex-end;
   gap: 0.35rem;
-  font-size: 0.72rem;
+  font-size: 0.85rem;
   color: var(--text-muted);
   text-align: right;
   position: relative;
@@ -2040,7 +2040,7 @@ body.light-mode .exp-item {
   gap: 0.75rem;
   margin-bottom: 0.8rem;
   color: var(--text-sub);
-  font-size: 0.76rem;
+  font-size: 0.85rem;
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -2112,7 +2112,7 @@ body.light-mode .exp-item {
 
 .exp-voucher-note {
   color: var(--text-muted);
-  font-size: 0.76rem;
+  font-size: 0.85rem;
   line-height: 1.35;
   overflow: hidden;
   display: -webkit-box;
