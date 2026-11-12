@@ -91,7 +91,7 @@
       <section class="vg-month" *ngFor="let group of groups; trackBy: trackByGroup">
         <h2 class="vg-month-header">
           <span>{{ group.label }}</span>
-          <span class="vg-month-count">{{ formatService.formatCount(group.vouchers.length) }}</span>
+          <span class="vg-month-count">{{ formatService.formatCount(group.total) }}</span>
         </h2>
         <div class="vg-grid">
           <button
@@ -110,6 +110,11 @@
           </button>
         </div>
       </section>
+
+      <!-- Paging: nearing this loads the next batch of tiles -->
+      <div *ngIf="hasMore" #moreSentinel class="vg-more" aria-hidden="true">
+        <span class="vg-more-spinner"></span>
+      </div>
     </ng-container>
 
     <ng-template #loading>

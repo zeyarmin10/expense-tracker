@@ -179,6 +179,26 @@ export class VoucherService {
     return { url: response.secure_url, publicId: response.public_id };
   }
 
+  /**
+   * Member name/photo lookups, shared across emissions. Every voucher change
+   * re-emits the whole list; without this each emission re-fetched every
+   * creator's/editor's profile. Short TTL so renamed members still update.
+   */
+  private readonly publicProfileCache = new Map<string, { at: number; profile: Promise<PublicUserProfile | null> }>();
+  private static readonly PROFILE_CACHE_TTL_MS = 5 * 60 * 1000;
+
+  private getCachedPublicProfile(userId: string): Promise<PublicUserProfile | null> {
+    const hit = this.publicProfileCache.get(userId);
+    if (hit && Date.now() - hit.at < VoucherService.PROFILE_CACHE_TTL_MS) return hit.profile;
+    const profile = firstValueFrom(this.userDataService.getPublicProfile(userId)).catch(() => null);
+    this.publicProfileCache.set(userId, { at: Date.now(), profile });
+    // Don't pin a miss (offline, permission blip): retry on the next emission.
+    profile.then(found => {
+      if (!found && this.publicProfileCache.get(userId)?.profile === profile) this.publicProfileCache.delete(userId);
+    });
+    return profile;
+  }
+
   getVouchers(profileOverride?: UserProfile): Observable<ServiceIVoucher[]> {
     const profile$ = profileOverride
       ? of(profileOverride)
@@ -223,14 +243,7 @@ export class VoucherService {
                 // Public mirror (name + photo only) — readable regardless of
                 // shared-space state on either side, unlike the full profile.
                 const userProfilesArray = await Promise.all(
-                  [...userIds].map(async userId => {
-                    try {
-                      const profile = await firstValueFrom(this.userDataService.getPublicProfile(userId));
-                      return { userId, profile };
-                    } catch {
-                      return { userId, profile: null };
-                    }
-                  }),
+                  [...userIds].map(async userId => ({ userId, profile: await this.getCachedPublicProfile(userId) })),
                 );
 
                 const userProfiles = userProfilesArray.reduce((acc, { userId, profile }) => {

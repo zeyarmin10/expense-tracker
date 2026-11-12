@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ViewChild, inject } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, NgZone, OnDestroy, ViewChild, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -33,7 +33,12 @@ export interface VoucherMonthGroup {
   key: string;
   label: string;
   vouchers: ServiceIVoucher[];
+  /** Vouchers in the whole month — `vouchers` may be cut short while paging. */
+  total: number;
 }
+
+/** Tiles rendered per batch; more are appended as the user scrolls down. */
+const TILE_PAGE_SIZE = 60;
 
 /** One image in the viewer's flat, cross-voucher image list. */
 interface ViewerEntry {
@@ -56,12 +61,13 @@ interface ViewerEntry {
   styleUrls: ['./voucher-gallery.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class VoucherGallery {
+export class VoucherGallery implements OnDestroy {
   private voucherService = inject(VoucherService);
   private authService = inject(AuthService);
   private translate = inject(TranslateService);
   private cdr = inject(ChangeDetectorRef);
   private categoryService = inject(CategoryService);
+  private zone = inject(NgZone);
   formatService = inject(FormatService);
 
   @ViewChild(LightboxComponent) lightbox!: LightboxComponent;
@@ -127,9 +133,63 @@ export class VoucherGallery {
     shareReplay({ bufferSize: 1, refCount: true }),
   );
 
-  readonly groups$: Observable<VoucherMonthGroup[]> = this.filtered$.pipe(
-    map(vouchers => this.groupByMonth(vouchers)),
+  // ── Paging ──
+  // Years of vouchers can mean thousands of tiles; render them in batches of
+  // TILE_PAGE_SIZE and append the next batch when the bottom sentinel nears
+  // the viewport. The viewer still swipes through every filtered voucher.
+  private tileLimit$ = new BehaviorSubject<number>(TILE_PAGE_SIZE);
+  hasMore = false;
+
+  readonly groups$: Observable<VoucherMonthGroup[]> = combineLatest([this.filtered$, this.tileLimit$]).pipe(
+    map(([vouchers, limit]) => {
+      this.hasMore = vouchers.length > limit;
+      return this.groupByMonth(vouchers.slice(0, limit), vouchers);
+    }),
   );
+
+  private moreObserver: IntersectionObserver | null = null;
+  private observedSentinel: HTMLElement | null = null;
+
+  @ViewChild('moreSentinel')
+  set moreSentinel(ref: ElementRef<HTMLElement> | undefined) {
+    const el = ref?.nativeElement ?? null;
+    if (el === this.observedSentinel) return;
+    if (this.observedSentinel) this.moreObserver?.unobserve(this.observedSentinel);
+    this.observedSentinel = el;
+    if (!el || typeof IntersectionObserver === 'undefined') return;
+    this.moreObserver ??= new IntersectionObserver(
+      entries => {
+        if (entries.some(e => e.isIntersecting)) this.zone.run(() => this.loadMore());
+      },
+      // Start loading well before the user actually reaches the bottom.
+      { rootMargin: '0px 0px 800px 0px' },
+    );
+    this.moreObserver.observe(el);
+  }
+
+  private loadMore(): void {
+    if (!this.hasMore) return;
+    this.tileLimit$.next(this.tileLimit$.value + TILE_PAGE_SIZE);
+    this.cdr.markForCheck();
+    // The sentinel stays mounted, so the observer won't fire again while it
+    // remains in range (tall screens, short batches). Re-observing after the
+    // new batch renders re-delivers its current state.
+    setTimeout(() => {
+      const el = this.observedSentinel;
+      if (!el || !this.moreObserver) return;
+      this.moreObserver.unobserve(el);
+      this.moreObserver.observe(el);
+    });
+  }
+
+  /** New search/filter results start again from the first batch. */
+  private resetPaging(): void {
+    if (this.tileLimit$.value !== TILE_PAGE_SIZE) this.tileLimit$.next(TILE_PAGE_SIZE);
+  }
+
+  ngOnDestroy(): void {
+    this.moreObserver?.disconnect();
+  }
 
   get hasActiveFilter(): boolean {
     return !!this.searchTerm.trim() || !!this.selectedCategory;
@@ -147,6 +207,7 @@ export class VoucherGallery {
 
   onSearchInput(value: string): void {
     this.searchTerm = value;
+    this.resetPaging();
     this.search$.next(value);
   }
 
@@ -157,12 +218,14 @@ export class VoucherGallery {
   selectCategory(value: string): void {
     // Tapping the active chip again clears it, like a toggle.
     this.selectedCategory = this.selectedCategory === value ? '' : value;
+    this.resetPaging();
     this.category$.next(this.selectedCategory);
   }
 
   clearFilters(): void {
     this.searchTerm = '';
     this.selectedCategory = '';
+    this.resetPaging();
     this.search$.next('');
     this.category$.next('');
   }
@@ -207,12 +270,22 @@ export class VoucherGallery {
     return this.profile?.accountType === 'group';
   }
 
-  private groupByMonth(vouchers: ServiceIVoucher[]): VoucherMonthGroup[] {
+  private monthKey(voucher: ServiceIVoucher): string {
+    return (voucher.date || voucher.createdAt || '').slice(0, 7) || 'unknown';
+  }
+
+  /** Groups the rendered `vouchers`; `all` supplies full per-month counts. */
+  private groupByMonth(vouchers: ServiceIVoucher[], all: ServiceIVoucher[] = vouchers): VoucherMonthGroup[] {
+    const totals = new Map<string, number>();
+    for (const voucher of all) {
+      const key = this.monthKey(voucher);
+      totals.set(key, (totals.get(key) || 0) + 1);
+    }
     const groups = new Map<string, ServiceIVoucher[]>();
     // getVouchers() is already sorted newest first, so insertion order
     // gives newest month first.
     for (const voucher of vouchers) {
-      const key = (voucher.date || voucher.createdAt || '').slice(0, 7) || 'unknown';
+      const key = this.monthKey(voucher);
       const list = groups.get(key);
       if (list) list.push(voucher);
       else groups.set(key, [voucher]);
@@ -221,6 +294,7 @@ export class VoucherGallery {
       key,
       label: this.monthLabel(key),
       vouchers: list,
+      total: totals.get(key) || list.length,
     }));
   }
 
