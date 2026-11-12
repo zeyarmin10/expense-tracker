@@ -116,4 +116,8 @@ export interface DataIVoucher {
   groupId?: string;
   createdAt?: string;
   device?: string;
+  /** Last edit — set by VoucherService.updateVoucher. */
+  updatedAt?: string;
+  updatedBy?: string;
+  updatedByName?: string;
 }

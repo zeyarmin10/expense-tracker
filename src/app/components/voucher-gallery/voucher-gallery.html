@@ -151,6 +151,13 @@
       </span>
     </div>
 
+    <!-- Last edit: when, and (group spaces) by whom -->
+    <div *ngIf="formatEditedAt(entry.voucher) as editedAt" class="vg-viewer-edited">
+      <lucide-icon [img]="iconPencil" [size]="11"></lucide-icon>
+      <span>{{ 'VOUCHER_LAST_EDITED' | translate }} · {{ editedAt }}</span>
+      <span *ngIf="isGroupSpace && entry.voucher.updatedByName as editor">· {{ editor }}</span>
+    </div>
+
     <p *ngIf="entry.voucher.note" class="vg-viewer-note">{{ entry.voucher.note }}</p>
 
     <div class="vg-viewer-actions">

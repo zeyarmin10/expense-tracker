@@ -295,6 +295,14 @@ export class VoucherGallery {
     return this.translate.currentLang === 'my' ? `${date}၊ ${time}` : `${date}, ${time}`;
   }
 
+  /** Date + time of the last edit, or '' when the voucher was never edited. */
+  formatEditedAt(voucher: ServiceIVoucher): string {
+    if (!voucher.updatedAt) return '';
+    const date = this.formatService.formatLocalizedDate(voucher.updatedAt);
+    const time = this.formatService.formatLocalizedTime(voucher.updatedAt);
+    return this.translate.currentLang === 'my' ? `${date}၊ ${time}` : `${date}, ${time}`;
+  }
+
   onViewerClosed(): void {
     this.current = null;
     this.cdr.markForCheck();

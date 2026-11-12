@@ -217,6 +217,7 @@ export class VoucherService {
                 const userIds = new Set<string>();
                 Object.values(vouchersData).forEach((v: any) => {
                   if (v.userId) userIds.add(v.userId);
+                  if (v.updatedBy) userIds.add(v.updatedBy);
                 });
 
                 // Public mirror (name + photo only) — readable regardless of
@@ -252,9 +253,15 @@ export class VoucherService {
                       ? this.getProfilePhotoURL(creatorProfile)
                       : (voucher.createdByPhotoURL || null);
 
+                    // Last editor: live name first, then the edit-time
+                    // snapshot (absent on vouchers edited before it was stored).
+                    const editorProfile = voucher.updatedBy ? userProfiles[voucher.updatedBy] : undefined;
+                    const updatedByName = editorProfile?.displayName || voucher.updatedByName || undefined;
+
                     return {
                       id: key,
                       ...voucher,
+                      updatedByName,
                       createdByName,
                       createdByPhotoURL,
                       userDisplayName: createdByName,
@@ -452,6 +459,8 @@ export class VoucherService {
       note: input.note?.trim() || '',
       updatedAt: new Date().toISOString(),
       updatedBy: profile.uid,
+      // Snapshot of the editor's name so it shows offline and after they leave.
+      updatedByName: profile.displayName || 'Anonymous',
       editedDevice,
     };
 

@@ -877,6 +877,7 @@
   "VOUCHER_SUCCESS_DELETED": "ลบใบเสร็จเรียบร้อยแล้ว!",
   "VOUCHER_ERROR_ADD": "เกิดข้อผิดพลาดในการบันทึกใบเสร็จ",
   "VOUCHER_UNCATEGORIZED": "ไม่มีหมวดหมู่",
+  "VOUCHER_LAST_EDITED": "แก้ไขล่าสุด",
   "VOUCHER_GALLERY_FILTERED_COUNT": "{{shown}} จาก {{total}} ใบเสร็จ",
   "VOUCHER_GALLERY_SEARCH_PLACEHOLDER": "ค้นหาตามชื่อ บันทึก หรือหมวดหมู่",
   "VOUCHER_GALLERY_NO_MATCH": "ไม่พบใบเสร็จที่ตรงกับการค้นหา",

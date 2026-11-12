@@ -877,6 +877,7 @@
   "VOUCHER_SUCCESS_DELETED": "បានលុបបង្កាន់ដៃដោយជោគជ័យ!",
   "VOUCHER_ERROR_ADD": "មានបញ្ហាក្នុងការរក្សាទុកបង្កាន់ដៃ។",
   "VOUCHER_UNCATEGORIZED": "គ្មានប្រភេទ",
+  "VOUCHER_LAST_EDITED": "បានកែប្រែ",
   "VOUCHER_GALLERY_FILTERED_COUNT": "{{shown}} ក្នុងចំណោម {{total}} បង្កាន់ដៃ",
   "VOUCHER_GALLERY_SEARCH_PLACEHOLDER": "ស្វែងរកតាមចំណងជើង កំណត់ចំណាំ ឬប្រភេទ",
   "VOUCHER_GALLERY_NO_MATCH": "មិនមានបង្កាន់ដៃត្រូវនឹងការស្វែងរកទេ។",

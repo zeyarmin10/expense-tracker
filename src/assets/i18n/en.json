@@ -877,6 +877,7 @@
   "VOUCHER_SUCCESS_DELETED": "Voucher deleted successfully!",
   "VOUCHER_ERROR_ADD": "An error occurred while saving the voucher.",
   "VOUCHER_UNCATEGORIZED": "No category",
+  "VOUCHER_LAST_EDITED": "Edited",
   "VOUCHER_GALLERY_FILTERED_COUNT": "{{shown}} of {{total}} vouchers",
   "VOUCHER_GALLERY_SEARCH_PLACEHOLDER": "Search title, note or category",
   "VOUCHER_GALLERY_NO_MATCH": "No vouchers match your search.",
