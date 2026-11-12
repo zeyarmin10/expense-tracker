@@ -41,8 +41,22 @@ export class SharedOfflineDataService {
     profile: UserProfile,
     collection: OfflineCollection,
     remoteRecords: Record<string, Record<string, unknown>>,
+    /**
+     * For a partial (queried) snapshot: true for cached records the query
+     * covered. Those are replaced by `remoteRecords` (and dropped if absent);
+     * records outside the query stay cached. Omit for a full snapshot.
+     */
+    covers?: (record: Record<string, unknown>) => boolean,
   ): Promise<void> {
     if (!Capacitor.isNativePlatform()) return;
+    if (covers) {
+      const cached = await this.store.getCollection<Record<string, unknown>>(this.scope(profile), collection);
+      const merged: Record<string, Record<string, unknown>> = {};
+      for (const [id, record] of Object.entries(cached)) {
+        if (!covers(record)) merged[id] = record;
+      }
+      remoteRecords = { ...merged, ...remoteRecords };
+    }
     const records = { ...remoteRecords };
     const prefix = `${this.path(profile, collection)}/`;
     for (const operation of await this.store.pendingOperations()) {

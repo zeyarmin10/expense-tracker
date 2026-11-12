@@ -9,9 +9,15 @@ import {
   set,
   update,
   objectVal,
+  query,
+  orderByChild,
+  startAt,
+  endAt,
+  limitToLast,
+  QueryConstraint,
 } from '@angular/fire/database';
 import { Observable, firstValueFrom, from, of, combineLatest } from 'rxjs';
-import { catchError, filter, switchMap } from 'rxjs/operators';
+import { catchError, filter, map, switchMap } from 'rxjs/operators';
 import { UAParser } from 'ua-parser-js';
 import { DataIVoucher as IVoucher } from '../core/models/data';
 import { AuthService } from './auth';
@@ -35,6 +41,18 @@ export type ServiceIVoucher = IVoucher & {
   syncStatus?: 'pending' | 'synced';
   offlineFileKeys?: string[];
 };
+
+/**
+ * Server-side slice of a space's vouchers, so years of history aren't
+ * downloaded for a one-month view. Needs `.indexOn: ["date"]` on vouchers.
+ */
+export interface VoucherQuery {
+  /** Inclusive `yyyy-MM-dd` bounds on the voucher date. */
+  startDate?: string;
+  endDate?: string;
+  /** Only the N newest vouchers by date (gallery paging). */
+  limit?: number;
+}
 
 export interface AddVoucherInput {
   date: string;
@@ -199,23 +217,66 @@ export class VoucherService {
     return profile;
   }
 
-  getVouchers(profileOverride?: UserProfile): Observable<ServiceIVoucher[]> {
-    const profile$ = profileOverride
-      ? of(profileOverride)
-      : this.authService.userProfile$.pipe(
-          filter((profile): profile is UserProfile => profile !== null),
-        );
+  /** Applies a VoucherQuery to an already newest-first list (offline cache). */
+  private applyQueryLocally(vouchers: ServiceIVoucher[], q?: VoucherQuery): ServiceIVoucher[] {
+    if (!q) return vouchers;
+    let result = vouchers;
+    if (q.startDate) result = result.filter(v => (v.date || '') >= q.startDate!);
+    if (q.endDate) result = result.filter(v => (v.date || '') <= q.endDate!);
+    if (q.limit) result = result.slice(0, q.limit);
+    return result;
+  }
+
+  private queryConstraints(q?: VoucherQuery): QueryConstraint[] {
+    if (!q || (!q.startDate && !q.endDate && !q.limit)) return [];
+    const constraints: QueryConstraint[] = [orderByChild('date')];
+    if (q.startDate) constraints.push(startAt(q.startDate));
+    if (q.endDate) constraints.push(endAt(q.endDate));
+    if (q.limit) constraints.push(limitToLast(q.limit));
+    return constraints;
+  }
+
+  /**
+   * Which cached records a queried snapshot speaks for (see cacheRemote's
+   * `covers`). A full limit page covers only dates strictly newer than its
+   * oldest record — same-date siblings may have been cut off by the limit.
+   */
+  private queryCoverage(
+    q: VoucherQuery | undefined,
+    data: Record<string, Record<string, unknown>>,
+  ): ((record: Record<string, unknown>) => boolean) | undefined {
+    if (!q || (!q.startDate && !q.endDate && !q.limit)) return undefined;
+    const inRange = (date: string) =>
+      (!q.startDate || date >= q.startDate) && (!q.endDate || date <= q.endDate);
+    const dates = Object.values(data).map(r => String(r['date'] || ''));
+    if (q.limit && dates.length >= q.limit) {
+      const oldest = dates.reduce((min, d) => (d < min ? d : min), dates[0]);
+      return record => {
+        const date = String(record['date'] || '');
+        return inRange(date) && date > oldest;
+      };
+    }
+    // Fewer than `limit` came back: everything in range was returned.
+    return record => inRange(String(record['date'] || ''));
+  }
+
+  getVouchers(q?: VoucherQuery): Observable<ServiceIVoucher[]> {
+    const profile$ = this.authService.userProfile$.pipe(
+      filter((profile): profile is UserProfile => profile !== null),
+    );
 
     return combineLatest([profile$, this.network.isOnline$]).pipe(
       switchMap(([profile]) => {
         if (this.sharedOfflineData.isOfflineShared(profile)) {
           return from(this.sharedOfflineData.read<ServiceIVoucher>(profile, 'vouchers')).pipe(
             switchMap(vouchers => from(this.withOfflineImageUrls(vouchers))),
+            map(vouchers => this.applyQueryLocally(vouchers, q)),
           );
         }
         if (this.personalOfflineData.isOfflinePersonal(profile)) {
           return from(this.personalOfflineData.read<ServiceIVoucher>(profile, 'vouchers')).pipe(
             switchMap(vouchers => from(this.withOfflineImageUrls(vouchers))),
+            map(vouchers => this.applyQueryLocally(vouchers, q)),
           );
         }
         return this.spaceSwitchLoadingService.track(
@@ -223,16 +284,17 @@ export class VoucherService {
         ).pipe(
           switchMap(({ canonicalRef, legacyRef }) => {
             const baseRef = canonicalRef || legacyRef;
-            const vouchers$ = objectVal<Record<string, Record<string, unknown>> | null>(baseRef).pipe(
-              switchMap(async vouchersData => {
-                if (!vouchersData) {
-                  if (getActiveGroupId(profile)) await this.sharedOfflineData.cacheRemote(profile, 'vouchers', {});
-                  else await this.personalOfflineData.cacheRemote(profile, 'vouchers', {});
-                  return [];
-                }
-
-                if (getActiveGroupId(profile)) await this.sharedOfflineData.cacheRemote(profile, 'vouchers', vouchersData);
-                else await this.personalOfflineData.cacheRemote(profile, 'vouchers', vouchersData);
+            const constraints = this.queryConstraints(q);
+            const source = constraints.length ? query(baseRef, ...constraints) : baseRef;
+            const vouchers$ = objectVal<Record<string, Record<string, unknown>> | null>(source).pipe(
+              switchMap(async rawData => {
+                const vouchersData = rawData || {};
+                // A queried snapshot only replaces the part of the offline
+                // cache it covers; other months stay available offline.
+                const covers = this.queryCoverage(q, vouchersData);
+                if (getActiveGroupId(profile)) await this.sharedOfflineData.cacheRemote(profile, 'vouchers', vouchersData, covers);
+                else await this.personalOfflineData.cacheRemote(profile, 'vouchers', vouchersData, covers);
+                if (!rawData) return [];
 
                 const userIds = new Set<string>();
                 Object.values(vouchersData).forEach((v: any) => {

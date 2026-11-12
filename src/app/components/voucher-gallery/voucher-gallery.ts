@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { LucideAngularModule, Images, Receipt, Pencil, Trash2, Share2, Plus, Search, X, SearchX } from 'lucide-angular';
-import { BehaviorSubject, Observable, combineLatest, map, shareReplay, switchMap, tap } from 'rxjs';
+import { BehaviorSubject, Observable, combineLatest, distinctUntilChanged, map, shareReplay, switchMap, tap } from 'rxjs';
 import { Share } from '@capacitor/share';
 import Swal from 'sweetalert2';
 import { ServiceIVoucher, VoucherService } from '../../services/voucher';
@@ -33,8 +33,8 @@ export interface VoucherMonthGroup {
   key: string;
   label: string;
   vouchers: ServiceIVoucher[];
-  /** Vouchers in the whole month — `vouchers` may be cut short while paging. */
-  total: number;
+  /** Vouchers in the whole month (null while not fully loaded yet). */
+  total: number | null;
 }
 
 /** Tiles rendered per batch; more are appended as the user scrolls down. */
@@ -91,22 +91,53 @@ export class VoucherGallery implements OnDestroy {
   );
   readonly spaceName$ = this.profile$.pipe(map(profile => profile?.currentSpaceName || ''));
 
-  // Offline reads are one-shot (not a live listener), so deletes re-pull.
-  private refresh$ = new BehaviorSubject<void>(undefined);
-  readonly vouchers$: Observable<ServiceIVoucher[]> = this.refresh$.pipe(
-    switchMap(() => this.voucherService.getVouchers()),
-    shareReplay({ bufferSize: 1, refCount: true }),
-  );
-
   // ── Filters ──
   searchTerm = '';
   selectedCategory = '';
   private search$ = new BehaviorSubject<string>('');
   private category$ = new BehaviorSubject<string>('');
 
+  // ── Paging ──
+  // Years of vouchers can mean thousands. Only the newest TILE_PAGE_SIZE are
+  // fetched from the server; nearing the bottom sentinel fetches the next
+  // batch. A search or category filter has to see every voucher, so while
+  // one is active the whole collection is loaded and rendered in batches.
+  private tileLimit$ = new BehaviorSubject<number>(TILE_PAGE_SIZE);
+  hasMore = false;
+  /** A bigger page was requested and hasn't arrived yet. */
+  private awaitingPage = false;
+  /** Whether the loaded list is the whole collection (a filter is active). */
+  private loadedAll = false;
+
+  private readonly filtering$ = combineLatest([this.search$, this.category$]).pipe(
+    map(([term, category]) => !!term.trim() || !!category),
+    distinctUntilChanged(),
+  );
+
+  /** null = load everything; otherwise one extra row tells whether more exist. */
+  private readonly queryLimit$ = combineLatest([this.tileLimit$, this.filtering$]).pipe(
+    map(([limit, filtering]) => (filtering ? null : limit + 1)),
+    distinctUntilChanged(),
+  );
+
+  // Offline reads are one-shot (not a live listener), so deletes re-pull.
+  private refresh$ = new BehaviorSubject<void>(undefined);
+  readonly vouchers$: Observable<ServiceIVoucher[]> = combineLatest([this.refresh$, this.queryLimit$]).pipe(
+    switchMap(([, limit]) =>
+      this.voucherService.getVouchers(limit === null ? undefined : { limit }).pipe(
+        tap(() => {
+          this.loadedAll = limit === null;
+          this.awaitingPage = false;
+        }),
+      ),
+    ),
+    shareReplay({ bufferSize: 1, refCount: true }),
+  );
+
   /**
    * Chips for the categories actually used by this space's vouchers, most
    * used first, plus a trailing "no category" chip when any voucher lacks one.
+   * Counts cover the vouchers loaded so far; picking a chip loads them all.
    */
   readonly categoryChips$: Observable<CategoryChip[]> = this.vouchers$.pipe(
     map(vouchers => {
@@ -133,19 +164,24 @@ export class VoucherGallery implements OnDestroy {
     shareReplay({ bufferSize: 1, refCount: true }),
   );
 
-  // ── Paging ──
-  // Years of vouchers can mean thousands of tiles; render them in batches of
-  // TILE_PAGE_SIZE and append the next batch when the bottom sentinel nears
-  // the viewport. The viewer still swipes through every filtered voucher.
-  private tileLimit$ = new BehaviorSubject<number>(TILE_PAGE_SIZE);
-  hasMore = false;
-
   readonly groups$: Observable<VoucherMonthGroup[]> = combineLatest([this.filtered$, this.tileLimit$]).pipe(
     map(([vouchers, limit]) => {
-      this.hasMore = vouchers.length > limit;
-      return this.groupByMonth(vouchers.slice(0, limit), vouchers);
+      const more = vouchers.length > limit;
+      this.hasMore = more || this.awaitingPage;
+      const groups = this.groupByMonth(vouchers.slice(0, limit), vouchers);
+      // When only a page is loaded, the last month may continue in the next
+      // page — its count isn't known yet, so it is hidden until then.
+      if (more && !this.loadedAll && groups.length) groups[groups.length - 1].total = null;
+      return groups;
     }),
   );
+
+  /** Header count; "60+" while older vouchers are still unloaded. */
+  totalCountLabel(vouchers: ServiceIVoucher[]): string {
+    const limit = this.tileLimit$.value;
+    if (!this.loadedAll && vouchers.length > limit) return `${this.formatService.formatCount(limit)}+`;
+    return this.formatService.formatCount(vouchers.length);
+  }
 
   private moreObserver: IntersectionObserver | null = null;
   private observedSentinel: HTMLElement | null = null;
@@ -169,6 +205,8 @@ export class VoucherGallery implements OnDestroy {
 
   private loadMore(): void {
     if (!this.hasMore) return;
+    // Server paging: keep the spinner until the bigger page arrives.
+    if (!this.loadedAll) this.awaitingPage = true;
     this.tileLimit$.next(this.tileLimit$.value + TILE_PAGE_SIZE);
     this.cdr.markForCheck();
     // The sentinel stays mounted, so the observer won't fire again while it

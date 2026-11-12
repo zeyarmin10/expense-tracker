@@ -11,10 +11,10 @@
           <ng-container *ngIf="vouchers$ | async as vouchers">
             <span class="vg-dot" *ngIf="spaceName$ | async">·</span>
             <ng-container *ngIf="hasActiveFilter && (filtered$ | async) as shown; else totalCount">
-              {{ 'VOUCHER_GALLERY_FILTERED_COUNT' | translate: { shown: formatService.formatCount(shown.length), total: formatService.formatCount(vouchers.length) } }}
+              {{ 'VOUCHER_GALLERY_FILTERED_COUNT' | translate: { shown: formatService.formatCount(shown.length), total: totalCountLabel(vouchers) } }}
             </ng-container>
             <ng-template #totalCount>
-              {{ 'VOUCHER_GALLERY_COUNT' | translate: { count: formatService.formatCount(vouchers.length) } }}
+              {{ 'VOUCHER_GALLERY_COUNT' | translate: { count: totalCountLabel(vouchers) } }}
             </ng-template>
           </ng-container>
         </p>
@@ -91,7 +91,7 @@
       <section class="vg-month" *ngFor="let group of groups; trackBy: trackByGroup">
         <h2 class="vg-month-header">
           <span>{{ group.label }}</span>
-          <span class="vg-month-count">{{ formatService.formatCount(group.total) }}</span>
+          <span *ngIf="group.total !== null" class="vg-month-count">{{ formatService.formatCount(group.total) }}</span>
         </h2>
         <div class="vg-grid">
           <button

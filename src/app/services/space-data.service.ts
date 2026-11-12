@@ -3,6 +3,8 @@ import {
   Database,
   DatabaseReference,
   get,
+  limitToFirst,
+  query,
   ref,
   update,
 } from '@angular/fire/database';
@@ -72,20 +74,25 @@ export class SpaceDataService {
     // normal case for any space that was always canonical-only) — it must
     // not be treated the same as a denied CANONICAL read, which is the only
     // one that should actually block using space_data.
-    const [legacySnapshot, canonicalSnapshot] = await Promise.all([
+    //
+    // The canonical read here doubles as the permission probe, so one row
+    // is enough — the full collection is only fetched when there is legacy
+    // data to merge (years of records otherwise downloaded on every launch).
+    const [legacySnapshot] = await Promise.all([
       get(legacyRef).catch((error: any) => {
         if (this.isPermissionDenied(error)) {
           return null;
         }
         throw error;
       }),
-      get(canonicalRef),
+      get(query(canonicalRef, limitToFirst(1))),
     ]);
 
     if (!legacySnapshot || !legacySnapshot.exists()) {
       return;
     }
 
+    const canonicalSnapshot = await get(canonicalRef);
     const legacyData = legacySnapshot.val() || {};
     const canonicalData = canonicalSnapshot.exists() ? canonicalSnapshot.val() || {} : {};
     const updates: Record<string, unknown> = {};

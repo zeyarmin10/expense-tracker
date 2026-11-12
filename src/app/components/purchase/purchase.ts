@@ -1027,8 +1027,10 @@ export class Purchase implements OnInit, OnDestroy {
   }
 
   loadVouchers(): void {
+    // Every date-filter change fires refreshVouchers$, so the range is read
+    // fresh here and only that slice is fetched from the server.
     this.vouchers$ = this.refreshVouchers$.pipe(
-      switchMap(() => this.voucherService.getVouchers())
+      switchMap(() => this.voucherService.getVouchers(this.getDateModeRange()))
     );
 
     this.displayedVouchers$ = combineLatest([
@@ -1356,6 +1358,35 @@ export class Purchase implements OnInit, OnDestroy {
       this.resetActiveFilters();
       this.refreshExpenses$.next();
       this.refreshVouchers$.next();
+    }
+  }
+
+  /** Inclusive `yyyy-MM-dd` bounds of the active date filter (same rules as filterByDateMode). */
+  private getDateModeRange(): { startDate: string; endDate: string } {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const fmt = (d: Date) => this.datePipe.transform(d, 'yyyy-MM-dd') || '';
+    const todayStr = fmt(today);
+    switch (this.dateFilterMode) {
+      case 'week': {
+        const start = new Date(today);
+        start.setDate(today.getDate() - today.getDay());
+        const end = new Date(start);
+        end.setDate(start.getDate() + 6);
+        return { startDate: fmt(start), endDate: fmt(end) };
+      }
+      case 'month': {
+        const start = new Date(today.getFullYear(), today.getMonth(), 1);
+        const end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        return { startDate: fmt(start), endDate: fmt(end) };
+      }
+      case 'custom':
+        if (this.customStartDate && this.customEndDate) {
+          return { startDate: this.customStartDate, endDate: this.customEndDate };
+        }
+        return { startDate: todayStr, endDate: todayStr };
+      default:
+        return { startDate: todayStr, endDate: todayStr };
     }
   }
 

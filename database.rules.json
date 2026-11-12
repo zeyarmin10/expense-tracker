@@ -65,6 +65,10 @@
           ".indexOn": ["date", "category"]
         },
 
+        "vouchers": {
+          ".indexOn": ["date"]
+        },
+
         "incomes": {
           ".indexOn": ["date", "productId"],
           ".write": "$uid === auth.uid",
@@ -186,6 +190,10 @@
           ".indexOn": ["date", "category"]
         },
 
+        "vouchers": {
+          ".indexOn": ["date"]
+        },
+
         "incomes": {
           ".indexOn": ["date", "productId"],
           "$incomeId": {
@@ -265,6 +273,10 @@
 
         "shopExpenses": {
           ".indexOn": ["date", "category"]
+        },
+
+        "vouchers": {
+          ".indexOn": ["date"]
         },
 
         "incomes": {
