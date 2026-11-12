@@ -476,6 +476,7 @@
             <!-- Already-uploaded images of the voucher being edited -->
             <div class="exp-image-thumb" *ngFor="let img of editVoucherExistingImages; let i = index; trackBy: trackByIndex">
               <img
+                appImgFallback
                 [src]="img.url"
                 [alt]="'VOUCHER_IMAGE_ALT' | translate"
                 (click)="openLightbox(voucherFormImageUrls, i)"
@@ -654,6 +655,7 @@
               (click)="openLightbox(getVoucherImages(voucher), 0)"
             >
               <img
+                appImgFallback
                 [src]="voucher.imageUrl"
                 [alt]="'VOUCHER_IMAGE_ALT' | translate"
               />

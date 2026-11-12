@@ -75,15 +75,38 @@ export class LightboxComponent implements AfterViewInit, OnDestroy {
    */
   private settledSrc: string | null = null;
 
+  /** `src` that last failed to load — shows the error panel instead of a blank stage. */
+  private failedSrc: string | null = null;
+
   get isPending(): boolean {
     const src = this.images[this.idx];
     return !!src && src !== this.settledSrc;
   }
 
+  get hasError(): boolean {
+    const src = this.images[this.idx];
+    return !!src && src === this.failedSrc && src === this.settledSrc;
+  }
+
   onImgSettled(event: Event): void {
     // getAttribute, not .src: .src is resolved to an absolute URL and would
     // never equal a relative entry in `images`.
-    this.settledSrc = (event.target as HTMLImageElement).getAttribute('src');
+    const src = (event.target as HTMLImageElement).getAttribute('src');
+    this.settledSrc = src;
+    if (event.type === 'error') this.failedSrc = src;
+    else if (this.failedSrc === src) this.failedSrc = null;
+  }
+
+  /** Re-requests the current image after a failure (e.g. connection came back). */
+  retryImage(): void {
+    const img = this.imgEl?.nativeElement;
+    const src = this.images[this.idx];
+    if (!img || !src) return;
+    this.failedSrc = null;
+    this.settledSrc = null; // back to the loading spinner
+    // Re-assigning the same URL doesn't refetch; clear it first.
+    img.removeAttribute('src');
+    img.setAttribute('src', src);
   }
 
   @ViewChild('vp') vp!: ElementRef<HTMLElement>;

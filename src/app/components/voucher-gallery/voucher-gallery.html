@@ -102,7 +102,7 @@
             [attr.aria-label]="voucher.title || voucher.fileName"
             [title]="voucher.title || voucher.fileName"
           >
-            <img [src]="thumbUrl(voucher)" [alt]="voucher.title || ('VOUCHER_IMAGE_ALT' | translate)" loading="lazy" decoding="async" />
+            <img appImgFallback [src]="thumbUrl(voucher)" [alt]="voucher.title || ('VOUCHER_IMAGE_ALT' | translate)" loading="lazy" decoding="async" />
             <span *ngIf="(voucher.imageCount || 1) > 1" class="vg-tile-badge">
               <lucide-icon [img]="iconImages" [size]="11"></lucide-icon>
               {{ formatService.formatCount(voucher.imageCount || 1) }}

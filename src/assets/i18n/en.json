@@ -878,6 +878,8 @@
   "VOUCHER_ERROR_ADD": "An error occurred while saving the voucher.",
   "VOUCHER_UNCATEGORIZED": "No category",
   "VOUCHER_LAST_EDITED": "Edited",
+  "IMAGE_LOAD_ERROR": "Couldn't load image",
+  "IMAGE_LOAD_ERROR_HINT": "Check your internet connection and try again.",
   "VOUCHER_GALLERY_FILTERED_COUNT": "{{shown}} of {{total}} vouchers",
   "VOUCHER_GALLERY_SEARCH_PLACEHOLDER": "Search title, note or category",
   "VOUCHER_GALLERY_NO_MATCH": "No vouchers match your search.",

@@ -17,6 +17,7 @@ import { VoucherFormSheetComponent } from '../common/voucher-form-sheet/voucher-
 import { BURMESE_MONTH_FULL_NAMES } from '../../core/constants/app.constants';
 import { getIconData, getIconHue } from '../../utils/category-icons';
 
+import { ImgFallbackDirective } from '../../directives/img-fallback.directive';
 const Toast = createAppToast();
 
 /** Category filter value for vouchers saved without a category. */
@@ -56,7 +57,7 @@ interface ViewerEntry {
 @Component({
   selector: 'app-voucher-gallery',
   standalone: true,
-  imports: [CommonModule, RouterModule, TranslateModule, LucideAngularModule, LightboxComponent, VoucherFormSheetComponent],
+  imports: [ImgFallbackDirective, CommonModule, RouterModule, TranslateModule, LucideAngularModule, LightboxComponent, VoucherFormSheetComponent],
   templateUrl: './voucher-gallery.html',
   styleUrls: ['./voucher-gallery.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,

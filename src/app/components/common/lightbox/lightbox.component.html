@@ -48,7 +48,7 @@
         #img
         class="lb-img"
         [class.lb-img-shaped]="!!shapeBorderRadius"
-        [class.lb-img-pending]="isPending"
+        [class.lb-img-pending]="isPending || hasError"
         [style.border-radius]="shapeBorderRadius"
         [src]="images[idx]"
         alt=""
@@ -60,6 +60,14 @@
 
     <!-- Shown while the current image is still loading -->
     <div class="lb-spinner" *ngIf="visible && isPending" aria-hidden="true"></div>
+
+    <!-- The current image failed to load -->
+    <div class="lb-error" *ngIf="visible && hasError" role="alert" (click)="$event.stopPropagation()">
+      <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="2" x2="22" y1="2" y2="22"/><path d="M10.41 10.41a2 2 0 1 1-2.83-2.83"/><line x1="13.5" x2="6" y1="13.5" y2="21"/><line x1="18" x2="21" y1="12" y2="15"/><path d="M3.59 3.59A1.99 1.99 0 0 0 3 5v14a2 2 0 0 0 2 2h14c.55 0 1.052-.22 1.41-.59"/><path d="M21 15V5a2 2 0 0 0-2-2H9"/></svg>
+      <p class="lb-error-title">{{ 'IMAGE_LOAD_ERROR' | translate }}</p>
+      <p class="lb-error-hint">{{ 'IMAGE_LOAD_ERROR_HINT' | translate }}</p>
+      <button type="button" class="lb-error-retry" (click)="$event.stopPropagation(); retryImage()">{{ 'WEB_RETRY_CONNECTION' | translate }}</button>
+    </div>
 
     <!-- Zoom badge (shown/updated imperatively from TS — see applyZoomBadge) -->
     <div #zoomBadge class="lb-zoom-badge"></div>

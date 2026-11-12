@@ -70,6 +70,7 @@ import { ShowFullTextDirective } from '../../directives/show-full-text.directive
 import { MobileFullscreenOverlayComponent } from '../common/mobile-fullscreen-overlay/mobile-fullscreen-overlay.component';
 
 import { AutoGrowDirective } from '../../directives/auto-grow.directive';
+import { ImgFallbackDirective } from '../../directives/img-fallback.directive';
 const Toast = createAppToast();
 
 interface ExpenseDateGroup {
@@ -92,7 +93,7 @@ interface CartLine {
 @Component({
   selector: 'app-purchase',
   standalone: true,
-  imports: [AutoGrowDirective, 
+  imports: [ImgFallbackDirective, AutoGrowDirective, 
     CommonModule,
     ReactiveFormsModule,
     FormsModule,

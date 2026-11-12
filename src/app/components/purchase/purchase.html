@@ -568,6 +568,7 @@
               (click)="openLightbox(getVoucherImages(voucher), 0)"
             >
               <img
+                appImgFallback
                 [src]="voucher.imageUrl"
                 [alt]="'VOUCHER_IMAGE_ALT' | translate"
               />

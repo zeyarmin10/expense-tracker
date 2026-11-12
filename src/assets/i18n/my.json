@@ -878,6 +878,8 @@
   "VOUCHER_ERROR_ADD": "ဘောင်ချာသိမ်းရာတွင် အမှားဖြစ်ခဲ့သည်။",
   "VOUCHER_UNCATEGORIZED": "အမျိုးအစားမရှိ",
   "VOUCHER_LAST_EDITED": "ပြင်ဆင်ခဲ့သည်",
+  "IMAGE_LOAD_ERROR": "ပုံကို ဖွင့်လို့မရပါ",
+  "IMAGE_LOAD_ERROR_HINT": "အင်တာနက်ချိတ်ဆက်မှုကို စစ်ပြီး ပြန်ကြိုးစားကြည့်ပါ။",
   "VOUCHER_GALLERY_FILTERED_COUNT": "ဘောင်ချာ {{total}} ခုအနက် {{shown}} ခု",
   "VOUCHER_GALLERY_SEARCH_PLACEHOLDER": "ခေါင်းစဉ်၊ မှတ်ချက်၊ အမျိုးအစားဖြင့် ရှာရန်",
   "VOUCHER_GALLERY_NO_MATCH": "ရှာဖွေမှုနှင့် ကိုက်ညီသော ဘောင်ချာမရှိပါ။",

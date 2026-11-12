@@ -79,7 +79,7 @@
     <ng-container *ngIf="imageCount > 0">
       <div class="vfs-image-grid">
         <div class="vfs-thumb" *ngFor="let img of existingImages; let i = index; trackBy: trackByIndex">
-          <img [src]="img.url" [alt]="'VOUCHER_IMAGE_ALT' | translate" />
+          <img appImgFallback [src]="img.url" [alt]="'VOUCHER_IMAGE_ALT' | translate" />
           <button type="button" class="vfs-thumb-remove" (click)="removeExisting(i)" [title]="'CANCEL_BUTTON_LABEL' | translate">
             <lucide-icon [img]="iconX" [size]="16"></lucide-icon>
           </button>

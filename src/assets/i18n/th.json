@@ -878,6 +878,8 @@
   "VOUCHER_ERROR_ADD": "เกิดข้อผิดพลาดในการบันทึกใบเสร็จ",
   "VOUCHER_UNCATEGORIZED": "ไม่มีหมวดหมู่",
   "VOUCHER_LAST_EDITED": "แก้ไขล่าสุด",
+  "IMAGE_LOAD_ERROR": "โหลดรูปภาพไม่ได้",
+  "IMAGE_LOAD_ERROR_HINT": "ตรวจสอบการเชื่อมต่ออินเทอร์เน็ตแล้วลองอีกครั้ง",
   "VOUCHER_GALLERY_FILTERED_COUNT": "{{shown}} จาก {{total}} ใบเสร็จ",
   "VOUCHER_GALLERY_SEARCH_PLACEHOLDER": "ค้นหาตามชื่อ บันทึก หรือหมวดหมู่",
   "VOUCHER_GALLERY_NO_MATCH": "ไม่พบใบเสร็จที่ตรงกับการค้นหา",
