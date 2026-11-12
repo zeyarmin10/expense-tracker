@@ -2,13 +2,16 @@ import { Injectable, inject } from '@angular/core';
 import {
   Database,
   DatabaseReference,
+  child,
   get,
   limitToFirst,
   query,
   ref,
   update,
 } from '@angular/fire/database';
+import { Auth } from '@angular/fire/auth';
 import { getActiveGroupId, UserProfile } from './user-data';
+import { environment } from '../../environments/environment';
 
 export type SpaceCollection = 'expenses' | 'incomes' | 'budgets' | 'categories' | 'vouchers' | 'products' | 'shopExpenses';
 
@@ -24,6 +27,7 @@ export interface ActiveSpaceDataContext {
 })
 export class SpaceDataService {
   private db = inject(Database);
+  private auth = inject(Auth);
   private readonly ensuredSpaces = new Set<string>();
   private readonly ensuringSpaces = new Map<string, Promise<void>>();
   private readonly ensuredCollections = new Set<string>();
@@ -66,7 +70,69 @@ export class SpaceDataService {
     return ref(this.db, `space_data/${spaceId}/${collection}`);
   }
 
+  /**
+   * Keys only (RTDB REST `shallow=true`): ~25 bytes per record instead of the
+   * whole record. Returns `'denied'` on a rules denial; throws on anything
+   * else (offline, REST unreachable) so callers can fall back to the SDK.
+   */
+  private async shallowKeys(dbRef: DatabaseReference): Promise<string[] | 'denied'> {
+    const token = await this.auth.currentUser?.getIdToken();
+    if (!token) throw new Error('No auth token for shallow read');
+    const base = new URL(environment.firebaseConfig.databaseURL);
+    const url = new URL(`${base.origin}${new URL(dbRef.toString()).pathname}.json`);
+    const ns = base.searchParams.get('ns'); // emulator namespace
+    if (ns) url.searchParams.set('ns', ns);
+    url.searchParams.set('shallow', 'true');
+    url.searchParams.set('auth', token);
+    const response = await fetch(url.toString());
+    if (response.status === 401 || response.status === 403) return 'denied';
+    if (!response.ok) throw new Error(`Shallow read failed: ${response.status}`);
+    const body = await response.json();
+    return body && typeof body === 'object' ? Object.keys(body) : [];
+  }
+
+  /**
+   * Per-device "nothing left to migrate" flag. After a check finds every
+   * legacy record already in space_data, the key comparison is skipped for
+   * MIGRATION_RECHECK_MS. It still re-runs periodically, because members on
+   * older app versions may keep writing to the legacy path.
+   */
+  private static readonly MIGRATION_RECHECK_MS = 24 * 60 * 60 * 1000;
+
+  private migrationFlagKey(profile: UserProfile, spaceId: string, collection: SpaceCollection): string {
+    return `kw_migrated:${profile.uid}:${spaceId}:${collection}`;
+  }
+
+  private isMigrationRecentlyVerified(key: string): boolean {
+    try {
+      const at = Number(localStorage.getItem(key));
+      return Number.isFinite(at) && at > 0 && Date.now() - at < SpaceDataService.MIGRATION_RECHECK_MS;
+    } catch {
+      return false;
+    }
+  }
+
+  private markMigrationVerified(key: string): void {
+    try {
+      localStorage.setItem(key, String(Date.now()));
+    } catch {
+      // Storage unavailable (private mode): just re-check next launch.
+    }
+  }
+
   private async backfillCollection(spaceId: string, collection: SpaceCollection, profile: UserProfile): Promise<void> {
+    const flagKey = this.migrationFlagKey(profile, spaceId, collection);
+    if (this.isMigrationRecentlyVerified(flagKey)) {
+      // Still probe canonical access: callers rely on this throwing when
+      // space_data is denied (one row, so it's cheap).
+      await get(query(this.getCanonicalCollectionRef(spaceId, collection), limitToFirst(1)));
+      return;
+    }
+    await this.runBackfill(spaceId, collection, profile);
+    this.markMigrationVerified(flagKey);
+  }
+
+  private async runBackfill(spaceId: string, collection: SpaceCollection, profile: UserProfile): Promise<void> {
     const legacyRef = this.getLegacyCollectionRef(profile, collection);
     const canonicalRef = this.getCanonicalCollectionRef(spaceId, collection);
 
@@ -75,22 +141,62 @@ export class SpaceDataService {
     // not be treated the same as a denied CANONICAL read, which is the only
     // one that should actually block using space_data.
     //
-    // The canonical read here doubles as the permission probe, so one row
-    // is enough — the full collection is only fetched when there is legacy
-    // data to merge (years of records otherwise downloaded on every launch).
-    const [legacySnapshot] = await Promise.all([
-      get(legacyRef).catch((error: any) => {
-        if (this.isPermissionDenied(error)) {
-          return null;
-        }
-        throw error;
-      }),
+    // This runs for every collection on every launch, so it compares KEYS
+    // first and only downloads legacy records missing from space_data
+    // (normally none). Old accounts whose legacy copy was never deleted used
+    // to re-download both full copies each time.
+    const [legacyKeys] = await Promise.all([
+      this.shallowKeys(legacyRef).catch(() => null),
+      // Permission probe for the canonical path (throws if denied).
       get(query(canonicalRef, limitToFirst(1))),
     ]);
 
-    if (!legacySnapshot || !legacySnapshot.exists()) {
+    if (legacyKeys === 'denied') return;
+    if (legacyKeys === null) {
+      // REST unavailable — previous full-snapshot comparison.
+      await this.backfillFromSnapshots(spaceId, collection, legacyRef, canonicalRef);
       return;
     }
+    if (legacyKeys.length === 0) return;
+
+    const canonicalKeys = await this.shallowKeys(canonicalRef).catch(() => null);
+    if (canonicalKeys === null || canonicalKeys === 'denied') {
+      await this.backfillFromSnapshots(spaceId, collection, legacyRef, canonicalRef);
+      return;
+    }
+
+    const existing = new Set(canonicalKeys);
+    const missing = legacyKeys.filter(key => !existing.has(key));
+    if (missing.length === 0) return;
+
+    const updates: Record<string, unknown> = {};
+    const BATCH = 25;
+    for (let i = 0; i < missing.length; i += BATCH) {
+      const snapshots = await Promise.all(missing.slice(i, i + BATCH).map(key => get(child(legacyRef, key))));
+      for (const snapshot of snapshots) {
+        if (snapshot.exists() && snapshot.key) {
+          updates[`/space_data/${spaceId}/${collection}/${snapshot.key}`] = snapshot.val();
+        }
+      }
+    }
+
+    if (Object.keys(updates).length > 0) {
+      await update(ref(this.db), updates);
+    }
+  }
+
+  /** Full-download comparison; only used when the shallow REST read fails. */
+  private async backfillFromSnapshots(
+    spaceId: string,
+    collection: SpaceCollection,
+    legacyRef: DatabaseReference,
+    canonicalRef: DatabaseReference,
+  ): Promise<void> {
+    const legacySnapshot = await get(legacyRef).catch((error: any) => {
+      if (this.isPermissionDenied(error)) return null;
+      throw error;
+    });
+    if (!legacySnapshot || !legacySnapshot.exists()) return;
 
     const canonicalSnapshot = await get(canonicalRef);
     const legacyData = legacySnapshot.val() || {};
