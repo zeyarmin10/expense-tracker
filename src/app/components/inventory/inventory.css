@@ -868,6 +868,9 @@ body.inv-settings-modal-open {
   border: 0;
 }
 .inv-shop-expense-date-back lucide-icon { transform: rotate(90deg); }
+/* Date header is back button + title only (no ✕): keep the title next to
+   the back button instead of space-between pushing it to the far edge. */
+.inv-shop-expense-date-back + .inv-add-overlay-title { flex: 1; }
 
 .inv-shop-expense-fab {
   display: none;

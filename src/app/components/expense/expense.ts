@@ -69,6 +69,7 @@ import { AutoGrowDirective } from '../../directives/auto-grow.directive';
 
 import { ImgFallbackDirective } from '../../directives/img-fallback.directive';
 import { SwipeToCloseDirective } from '../../directives/swipe-to-close.directive';
+import { AvatarTipComponent } from '../common/avatar-tip/avatar-tip.component';
 // Matches the existing `min-width: 992px` breakpoint in expense.css that
 // switches from the mobile FAB to the desktop toolbar "Add Expense" button.
 const DESKTOP_BREAKPOINT = 992;
@@ -85,7 +86,7 @@ interface ExpenseDateGroup {
 @Component({
   selector: 'app-expense',
   standalone: true,
-  imports: [SwipeToCloseDirective, ImgFallbackDirective, 
+  imports: [AvatarTipComponent, SwipeToCloseDirective, ImgFallbackDirective, 
     CommonModule,
     AutoGrowDirective,
     ReactiveFormsModule,
@@ -271,8 +272,6 @@ export class Expense implements OnInit, OnDestroy {
   readonly iconSearch = Search;
   readonly iconCheck = Check;
 
-  activeAvatarExpenseId: string | null = null;
-  activeAvatarVoucherId: string | null = null;
 
   userProfile: UserProfile | null = null;
 
@@ -1362,27 +1361,9 @@ export class Expense implements OnInit, OnDestroy {
       </span>`;
   }
 
-  @HostListener('click')
-  closeAvatarBubbles(): void {
-    this.activeAvatarExpenseId = null;
-    this.activeAvatarVoucherId = null;
-  }
-
   @HostListener('window:resize')
   onWindowResize(): void {
     this.isDesktopView = window.innerWidth >= DESKTOP_BREAKPOINT;
-  }
-
-  toggleAvatarName(expenseId: string, event: Event): void {
-    event.stopPropagation();
-    this.activeAvatarExpenseId = this.activeAvatarExpenseId === expenseId ? null : expenseId;
-    this.activeAvatarVoucherId = null;
-  }
-
-  toggleVoucherAvatarName(voucherId: string, event: Event): void {
-    event.stopPropagation();
-    this.activeAvatarVoucherId = this.activeAvatarVoucherId === voucherId ? null : voucherId;
-    this.activeAvatarExpenseId = null;
   }
 
   showExpenseInfo(expense: IExpense): void {

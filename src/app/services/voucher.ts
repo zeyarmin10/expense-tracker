@@ -31,6 +31,7 @@ import { SharedOfflineDataService } from './shared-offline-data.service';
 import { OfflineStoreService } from './offline-store.service';
 import { NetworkService } from './network.service';
 
+import { changedFields } from '../utils/changed-fields';
 export type ServiceIVoucher = IVoucher & {
   id: string;
   createdByName?: string;
@@ -536,6 +537,15 @@ export class VoucherService {
       updatedBy: profile.uid,
       // Snapshot of the editor's name so it shows offline and after they leave.
       updatedByName: profile.displayName || 'Anonymous',
+      updatedFields: [
+        ...changedFields(voucher as unknown as Record<string, unknown>, {
+          date: input.date,
+          title: input.title?.trim() || voucher.title || voucher.fileName,
+          category: input.category || '',
+          note: input.note?.trim() || '',
+        }, ['date', 'title', 'category', 'note']),
+        ...(imagesChanged ? ['images'] : []),
+      ],
       editedDevice,
     };
 

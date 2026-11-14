@@ -24,6 +24,7 @@ import { toLocalDateKey } from './date-filter.service';
 import { PersonalOfflineDataService } from './personal-offline-data.service';
 import { SharedOfflineDataService } from './shared-offline-data.service';
 import { NetworkService } from './network.service';
+import { changedFields } from '../utils/changed-fields';
 import { getExpenseLineItems, ServiceIExpense } from './expense';
 import type { OfflineOperation } from './offline-store.service';
 
@@ -64,6 +65,8 @@ export interface ServiceIIncome {
   updatedBy?: string;
   updatedByName?: string;
   updatedByPhotoURL?: string | null;
+  /** Fields the last edit changed (e.g. ['amount']). */
+  updatedFields?: string[];
   device: string;
   editedDevice?: string;
   // ── Soft delete — absent/'active' means normal; 'void' means cancelled.
@@ -509,14 +512,16 @@ export class IncomeService {
       throw new Error('Income ID is required for update.');
     }
     await this.refreshConnectionStateForWrite();
-    // Who/when of the last edit, shown on the income card.
-    const editMeta = {
+    // Who/when/what of the last edit, shown in the income card's avatar tooltip.
+    const TRACKED = ['description', 'amount', 'date', 'productId', 'quantity', 'unitPrice'] as const;
+    const editMeta = (current: Record<string, unknown> | null | undefined) => ({
       editedDevice: navigator.userAgent,
       updatedAt: new Date().toISOString(),
       updatedBy: profile.uid,
       updatedByName: profile.displayName || 'Anonymous',
       updatedByPhotoURL: profile.photoURL || null,
-    };
+      updatedFields: changedFields(current, updatedData as Record<string, unknown>, TRACKED),
+    });
 
     if (this.sharedOfflineData.isOfflineShared(profile)) {
       const records = await this.sharedOfflineData.read<ServiceIIncome>(profile, 'incomes');
@@ -527,7 +532,7 @@ export class IncomeService {
         await this.assertOfflineProductSaleStock(profile, { ...current, ...updatedData } as ServiceIIncome, incomeId);
       }
       await this.sharedOfflineData.write(profile, 'incomes', isProductSaleEdit ? 'stockSaleUpdate' : 'update', incomeId, {
-        ...updatedData, ...editMeta,
+        ...updatedData, ...editMeta(current as unknown as Record<string, unknown>),
       }, current.updatedAt || current.createdAt || null);
       return 'queued';
     }
@@ -540,7 +545,7 @@ export class IncomeService {
         await this.assertOfflineProductSaleStock(profile, { ...current, ...updatedData } as ServiceIIncome, incomeId);
       }
       await this.personalOfflineData.write(profile, 'incomes', isProductSaleEdit ? 'stockSaleUpdate' : 'update', incomeId, {
-        ...updatedData, ...editMeta,
+        ...updatedData, ...editMeta(current as unknown as Record<string, unknown>),
       });
       return 'queued';
     }
@@ -559,7 +564,7 @@ export class IncomeService {
 
     const currentSnapshot = await get(incomeRef);
     const current = currentSnapshot.val() as ServiceIIncome | null;
-    const patch = { ...updatedData, ...editMeta };
+    const patch = { ...updatedData, ...editMeta(current as unknown as Record<string, unknown>) };
     if (current?.isProductSale || updatedData.isProductSale) {
       await this.saveProductSaleTransaction(await this.getStockTransactionRoot(profile), incomeId, patch, 'update');
       return 'saved';

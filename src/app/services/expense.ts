@@ -28,6 +28,10 @@ import { PersonalOfflineDataService } from './personal-offline-data.service';
 import { SharedOfflineDataService } from './shared-offline-data.service';
 import { NetworkService } from './network.service';
 
+import { changedFields } from '../utils/changed-fields';
+/** Fields whose change is reported as "X changed …" (same as editHistory). */
+const EXPENSE_TRACKED_FIELDS = ['itemName', 'price', 'quantity', 'unit', 'category', 'date', 'productId'] as const;
+
 export type ServiceIExpense = IExpense & {
   id: string;
   unit?: string;
@@ -407,6 +411,7 @@ export class ExpenseService {
         editedDevice,
         updatedBy: profile.uid,
         updatedByPhotoURL: this.getProfilePhotoURL(profile) || currentUser?.photoURL || null,
+        updatedFields: changedFields(currentExpense as unknown as Record<string, unknown>, updates as Record<string, unknown>, EXPENSE_TRACKED_FIELDS),
         totalCost: (quantity ?? 0) * (price ?? 0),
       });
       return;
@@ -424,6 +429,7 @@ export class ExpenseService {
         editedDevice,
         updatedBy: profile.uid,
         updatedByPhotoURL: this.getProfilePhotoURL(profile) || currentUser?.photoURL || null,
+        updatedFields: changedFields(currentExpense as unknown as Record<string, unknown>, updates as Record<string, unknown>, EXPENSE_TRACKED_FIELDS),
         totalCost: (quantity ?? 0) * (price ?? 0),
       }, currentExpense.updatedAt || currentExpense.createdAt || null);
       return;
@@ -442,7 +448,7 @@ export class ExpenseService {
     const currentExpense = await this.getExpense(expenseId);
 
     // ── Changed fields ကို detect ──
-    const TRACKED_FIELDS: (keyof IExpense)[] = ['itemName', 'price', 'quantity', 'unit', 'category', 'date', 'productId'];
+    const TRACKED_FIELDS = EXPENSE_TRACKED_FIELDS;
     const changes: Record<string, { from: any; to: any }> = {};
     const sanitize = (val: any) => (val === undefined || val === null) ? '' : val;
     for (const field of TRACKED_FIELDS) {
@@ -468,6 +474,8 @@ export class ExpenseService {
       editedDevice: editedDevice,
       updatedBy: profile.uid,
       updatedByPhotoURL: this.getProfilePhotoURL(profile) || currentUser?.photoURL || null,
+      // Same diff as editHistory below, kept on the record for the avatar tooltip.
+      updatedFields: Object.keys(changes),
       totalCost: (quantity ?? 0) * (price ?? 0),
     };
 

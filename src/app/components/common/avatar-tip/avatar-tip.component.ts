@@ -9,28 +9,32 @@ import { UserAvatarComponent } from '../user-avatar/user-avatar.component';
 let openInstance: AvatarTipComponent | null = null;
 
 /**
- * Compact avatar that reveals who/what on tap — the same speech-bubble
- * tooltip as the expense list's creator avatar, but with a second line for
- * the role and time (e.g. "Edited · 14 Nov 2026, 16:29"). `badge="edit"`
- * adds a small pencil so the last editor is distinguishable from the creator.
+ * Compact avatar that reveals details on tap — the same speech-bubble
+ * tooltip as the expense list's creator avatar. Line 1 is "name · detail"
+ * (e.g. who added it and when); an optional `note` adds a second line (e.g.
+ * "Edited by X on 14 Nov 2026, 16:29"). `badge="edit"` marks the avatar
+ * with a small pencil so an edited record is recognisable at a glance.
  */
 @Component({
   selector: 'app-avatar-tip',
   standalone: true,
   imports: [CommonModule, LucideAngularModule, UserAvatarComponent],
   template: `
-    <button type="button" class="at-btn" [attr.aria-label]="name + (label ? ' · ' + label : '')"
+    <button type="button" class="at-btn" [attr.aria-label]="name + (detail ? ' · ' + detail : '') + (note ? '. ' + note : '')"
       [attr.aria-expanded]="open" (click)="toggle($event)">
       <app-user-avatar [name]="name" [photoUrl]="photoUrl" [size]="size"></app-user-avatar>
       <span *ngIf="badge === 'edit'" class="at-badge" aria-hidden="true">
-        <lucide-icon [img]="iconEdit" [size]="8"></lucide-icon>
+        <lucide-icon [img]="iconEdit" [size]="9"></lucide-icon>
       </span>
     </button>
-    <span class="at-bubble" [class.visible]="open" role="tooltip">
-      <app-user-avatar [name]="name" [photoUrl]="photoUrl" [size]="26"></app-user-avatar>
+    <span class="at-bubble" [class.visible]="open" [class.at-right]="align === 'right'" role="tooltip">
+      <app-user-avatar [name]="name" [photoUrl]="photoUrl" [size]="30"></app-user-avatar>
       <span class="at-text">
-        <span class="at-name">{{ name }}</span>
-        <span class="at-detail" *ngIf="label || detail">{{ label }}<ng-container *ngIf="label && detail"> · </ng-container>{{ detail }}</span>
+        <span class="at-line"><span class="at-name">{{ name }}</span><span class="at-detail" *ngIf="detail"> · {{ detail }}</span></span>
+        <span class="at-note" *ngIf="note">
+          <lucide-icon [img]="iconEdit" [size]="11"></lucide-icon>
+          <span>{{ note }}</span>
+        </span>
       </span>
     </span>
   `,
@@ -51,8 +55,8 @@ let openInstance: AvatarTipComponent | null = null;
       position: absolute;
       right: -3px;
       bottom: -3px;
-      width: 14px;
-      height: 14px;
+      width: 16px;
+      height: 16px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -72,7 +76,8 @@ let openInstance: AvatarTipComponent | null = null;
       align-items: center;
       gap: 0.5rem;
       width: max-content;
-      max-width: min(270px, 78vw);
+      max-width: min(290px, 80vw);
+      text-align: start; /* don't inherit right-aligned rows (expense list) */
       padding: 6px 12px 6px 6px;
       border-radius: 10px 10px 10px 2px;
       border: 1px solid var(--border);
@@ -85,6 +90,14 @@ let openInstance: AvatarTipComponent | null = null;
       transform-origin: bottom left;
       transition: opacity 0.15s ease, transform 0.15s ease;
     }
+    /* Avatar at the card's right edge: open leftwards instead. */
+    .at-bubble.at-right {
+      left: auto;
+      right: 0;
+      border-radius: 10px 10px 2px 10px;
+      transform-origin: bottom right;
+    }
+    .at-bubble.at-right::after, .at-bubble.at-right::before { left: auto; right: 7px; }
     .at-bubble.visible {
       opacity: 1;
       pointer-events: auto;
@@ -98,20 +111,31 @@ let openInstance: AvatarTipComponent | null = null;
     }
     .at-bubble::after { top: 100%; border-top-color: var(--border); }
     .at-bubble::before { top: calc(100% - 1px); border-top-color: var(--surface-2); z-index: 1; }
-    .at-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.3; }
-    .at-name { font-size: 0.8rem; font-weight: 700; color: var(--text); }
-    .at-detail { font-size: 0.72rem; color: var(--text-muted); }
+    .at-text { display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; line-height: 1.35; }
+    .at-line { font-size: 0.78rem; }
+    .at-name { font-weight: 700; color: var(--text); }
+    .at-detail { color: var(--text-muted); }
+    .at-note {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.3rem;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+    .at-note lucide-icon { flex-shrink: 0; margin-top: 0.15rem; color: var(--accent); }
   `],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AvatarTipComponent implements OnDestroy {
   @Input() name = '';
   @Input() photoUrl: string | null | undefined = null;
-  @Input() size = 22;
-  /** Role line, e.g. "Added" / "Edited". */
-  @Input() label = '';
-  /** Extra detail after the role, e.g. a date/time. */
+  @Input() size = 28;
+  /** Which way the bubble opens: from a left-edge avatar (default) or a right-edge one. */
+  @Input() align: 'left' | 'right' = 'left';
+  /** Shown after the name on line 1, e.g. when it was added. */
   @Input() detail = '';
+  /** Optional second line, e.g. who last edited it and when. */
+  @Input() note = '';
   @Input() badge: 'edit' | null = null;
 
   readonly iconEdit = Pencil;

@@ -82,6 +82,7 @@ export interface DataIExpense {
   updatedAt?: string;
   updatedBy?: string;      // UID of last editor
   updatedByPhotoURL?: string | null;
+  updatedFields?: string[]; // fields the last edit changed (avatar tooltip)
   device?: string;
   editedDevice?: string;
   // ── Edit history: key = timestamp (Date.now()), value = IEditHistoryEntry ──
@@ -120,4 +121,5 @@ export interface DataIVoucher {
   updatedAt?: string;
   updatedBy?: string;
   updatedByName?: string;
+  updatedFields?: string[];
 }

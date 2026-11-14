@@ -232,6 +232,29 @@ export class FormatService {
   // formatLocalizedDate's own 'longDateTime'/'medium' branches already use
   // internally, exposed standalone for callers that need to show a
   // record's time separately from its (possibly backdated) date field.
+  /** Translation keys for fields named in an edit note ("X changed the amount"). */
+  private static readonly FIELD_KEYS: Record<string, string> = {
+    amount: 'FIELD_AMOUNT', description: 'FIELD_DESCRIPTION', date: 'FIELD_DATE', period: 'FIELD_PERIOD',
+    category: 'FIELD_CATEGORY', type: 'FIELD_TYPE', itemName: 'FIELD_ITEM_NAME', price: 'FIELD_PRICE',
+    quantity: 'FIELD_QUANTITY', unit: 'FIELD_UNIT', productId: 'FIELD_PRODUCT', unitPrice: 'FIELD_PRICE',
+    title: 'FIELD_TITLE', note: 'FIELD_DESCRIPTION', images: 'FIELD_IMAGES',
+  };
+
+  /**
+   * "Who changed what, when" for an edited record, e.g.
+   * "Zeyar Min က ၁၄ နို ၂၀၂၆၊ ၁၆:၅၂ တွင် ပမာဏ ကို ပြင်ဆင်ခဲ့ပါသည်".
+   * Without known fields (older edits) it falls back to just who/when.
+   */
+  formatEditNote(name: string | null | undefined, at: string | null | undefined, fields?: string[] | null): string {
+    const time = this.formatLocalizedDateTime(at);
+    const who = name || '—';
+    const labels = [...new Set((fields || []).map(f => FormatService.FIELD_KEYS[f]).filter(Boolean))]
+      .map(key => this.translate.instant(key));
+    if (!labels.length) return this.translate.instant('EDITED_BY_SENTENCE', { name: who, time });
+    const sep = this.translate.currentLang === 'my' ? '၊ ' : ', ';
+    return this.translate.instant('EDITED_FIELDS_SENTENCE', { name: who, time, fields: labels.join(sep) });
+  }
+
   /** "date, time" (Myanmar: "date၊ time") — e.g. when a record was last edited. */
   formatLocalizedDateTime(date: string | Date | null | undefined): string {
     if (!date) return '';

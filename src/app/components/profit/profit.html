@@ -26,9 +26,6 @@
           <lucide-icon [img]="iconChevronDown" [size]="18" class="pnl-add-modal-back-icon"></lucide-icon>
         </button>
         <span class="pnl-add-modal-header-title">{{ 'INCOME_DATE_LABEL' | translate }}</span>
-        <button type="button" class="pnl-add-modal-close" (click)="closeDatePicker()" [title]="'BACK_BUTTON' | translate">
-          <lucide-icon [img]="iconX" [size]="18"></lucide-icon>
-        </button>
       </div>
 
       <!-- Date picker body — inline flatpickr calendar, swaps in place of the form -->
@@ -275,18 +272,17 @@
                       [showEdit]="canManageProfitActions" [showDelete]="canDeleteIncome"
                       (edit)="startEditIncome(income)" (delete)="confirmDeleteIncome(income.id)"></app-row-menu>
                   </div>
-                  <!-- Who added it (group spaces) and who last edited it — just
-                       avatars; tapping one shows name, role and time. -->
+                  <!-- One avatar: who added it (group spaces, or any edited income).
+                       ✎ badge when edited; tap for "name · added" and, if
+                       edited, a second line with the last edit only. -->
                   <div class="pnl-people"
                     *ngIf="(isGroupUser && income.createdByName) || (income.updatedBy && income.updatedAt)">
-                    <app-avatar-tip *ngIf="isGroupUser && income.createdByName"
-                      [name]="income.createdByName" [photoUrl]="income.createdByPhotoURL"
-                      [label]="'ADDED_LABEL' | translate"
-                      [detail]="formatService.formatLocalizedDateTime(income.createdAt)"></app-avatar-tip>
-                    <app-avatar-tip *ngIf="income.updatedBy && income.updatedAt" badge="edit"
-                      [name]="income.updatedByName || ''" [photoUrl]="income.updatedByPhotoURL"
-                      [label]="'LAST_EDITED' | translate"
-                      [detail]="formatService.formatLocalizedDateTime(income.updatedAt)"></app-avatar-tip>
+                    <app-avatar-tip
+                      [name]="income.createdByName || userProfile?.displayName || ''"
+                      [photoUrl]="income.createdByName ? income.createdByPhotoURL : userProfile?.photoURL"
+                      [detail]="formatService.formatLocalizedDateTime(income.createdAt)"
+                      [badge]="income.updatedBy && income.updatedAt ? 'edit' : null"
+                      [note]="income.updatedBy && income.updatedAt ? formatService.formatEditNote(income.updatedByName, income.updatedAt, income.updatedFields) : ''"></app-avatar-tip>
                   </div>
                 </div>
               </div>

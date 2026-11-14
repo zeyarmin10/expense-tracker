@@ -26,9 +26,6 @@
           <lucide-icon [img]="iconChevronDown" [size]="18" class="bgt-add-modal-back-icon"></lucide-icon>
         </button>
         <span class="bgt-add-modal-header-title">{{ 'BUDGET_PERIOD_LABEL' | translate }}</span>
-        <button type="button" class="bgt-add-modal-close" (click)="closeDatePicker()" [title]="'BACK_BUTTON' | translate">
-          <lucide-icon [img]="iconX" [size]="18"></lucide-icon>
-        </button>
       </div>
 
       <!-- Date picker body — inline flatpickr calendar, swaps in place of the form -->
@@ -409,18 +406,17 @@
                           <div class="bgt-budget-card-meta" *ngIf="budget.description">
                             <app-clamp-text class="bgt-budget-card-desc" [text]="budget.description" [lines]="2"></app-clamp-text>
                           </div>
-                          <!-- Who added it (group spaces) and who last edited it — just
-                               avatars; tapping one shows name, role and time. -->
+                          <!-- One avatar: who added it (group spaces, or any edited budget).
+                               ✎ badge when edited; tap for "name · added" and, if
+                               edited, a second line with the last edit only. -->
                           <div class="bgt-people"
                             *ngIf="(userProfile?.accountType === 'group' && budget.createdByName) || (budget.updatedBy && budget.updatedAt)">
-                            <app-avatar-tip *ngIf="userProfile?.accountType === 'group' && budget.createdByName"
-                              [name]="budget.createdByName" [photoUrl]="budget.createdByPhotoURL"
-                              [label]="'ADDED_LABEL' | translate"
-                              [detail]="formatService.formatLocalizedDateTime(budget.createdAt)"></app-avatar-tip>
-                            <app-avatar-tip *ngIf="budget.updatedBy && budget.updatedAt" badge="edit"
-                              [name]="budget.updatedByName || ''" [photoUrl]="budget.updatedByPhotoURL"
-                              [label]="'LAST_EDITED' | translate"
-                              [detail]="formatService.formatLocalizedDateTime(budget.updatedAt)"></app-avatar-tip>
+                            <app-avatar-tip
+                              [name]="budget.createdByName || userProfile?.displayName || ''"
+                              [photoUrl]="budget.createdByName ? budget.createdByPhotoURL : userProfile?.photoURL"
+                              [detail]="formatService.formatLocalizedDateTime(budget.createdAt)"
+                              [badge]="budget.updatedBy && budget.updatedAt ? 'edit' : null"
+                              [note]="budget.updatedBy && budget.updatedAt ? formatService.formatEditNote(budget.updatedByName, budget.updatedAt, budget.updatedFields) : ''"></app-avatar-tip>
                           </div>
                         </div>
                         <!-- Facebook-style ⋯ menu: Edit (members+) / Delete (admins) -->

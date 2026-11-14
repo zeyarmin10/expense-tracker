@@ -18,6 +18,7 @@ import { SpaceSwitchLoadingService } from './space-switch-loading.service';
 import { PersonalOfflineDataService } from './personal-offline-data.service';
 import { SharedOfflineDataService } from './shared-offline-data.service';
 import { NetworkService } from './network.service';
+import { changedFields } from '../utils/changed-fields';
 
 export interface ServiceIBudget {
   id?: string;
@@ -41,6 +42,8 @@ export interface ServiceIBudget {
   updatedBy?: string;
   updatedByName?: string;
   updatedByPhotoURL?: string | null;
+  /** Fields the last edit changed (e.g. ['amount']). */
+  updatedFields?: string[];
 }
 
 @Injectable({
@@ -230,28 +233,31 @@ export class BudgetService {
     if (!budgetId) {
       throw new Error('Budget ID is required for update.');
     }
-    // Who/when of the last edit, shown on the budget card.
-    const editMeta = {
+    // Who/when/what of the last edit, shown in the budget card's avatar tooltip.
+    const TRACKED = ['type', 'period', 'category', 'amount', 'description'] as const;
+    const editMeta = (current: Record<string, unknown> | null | undefined) => ({
       editedDevice: navigator.userAgent,
       updatedAt: new Date().toISOString(),
       updatedBy: profile.uid,
       updatedByName: profile.displayName || 'Anonymous',
       updatedByPhotoURL: profile.photoURL || null,
-    };
+      updatedFields: changedFields(current, updatedData as Record<string, unknown>, TRACKED),
+    });
 
     if (this.sharedOfflineData.isOfflineShared(profile)) {
       const records = await this.sharedOfflineData.read<ServiceIBudget>(profile, 'budgets');
       const current = records[budgetId];
       if (!current) throw new Error('Budget not found on this device.');
       await this.sharedOfflineData.write(profile, 'budgets', 'update', budgetId, {
-        ...updatedData, ...editMeta,
+        ...updatedData, ...editMeta(current as unknown as Record<string, unknown>),
       }, current.updatedAt || current.createdAt || null);
       return;
     }
 
     if (this.personalOfflineData.isOfflinePersonal(profile)) {
+      const records = await this.personalOfflineData.read<ServiceIBudget>(profile, 'budgets');
       await this.personalOfflineData.write(profile, 'budgets', 'update', budgetId, {
-        ...updatedData, ...editMeta,
+        ...updatedData, ...editMeta(records[budgetId] as unknown as Record<string, unknown>),
       });
       return;
     }
@@ -268,7 +274,8 @@ export class BudgetService {
         budgetRef = ref(this.db, `users/${profile.uid}/budgets/${budgetId}`);
     }
 
-    await update(budgetRef, { ...updatedData, ...editMeta });
+    const currentSnapshot = await get(budgetRef);
+    await update(budgetRef, { ...updatedData, ...editMeta(currentSnapshot.val()) });
   }
 
   async deleteBudget(id: string): Promise<void> {

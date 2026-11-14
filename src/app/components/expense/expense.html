@@ -46,9 +46,6 @@
           <lucide-icon [img]="iconChevronDown" [size]="18" class="exp-add-modal-back-icon"></lucide-icon>
         </button>
         <span class="exp-add-modal-header-title">{{ 'EXPENSE_DATE_LABEL' | translate }}</span>
-        <button type="button" class="exp-add-modal-close" (click)="closeDatePicker()" [title]="'BACK_BUTTON' | translate">
-          <lucide-icon [img]="iconX" [size]="18"></lucide-icon>
-        </button>
       </div>
 
       <!-- Date picker body — inline flatpickr calendar, swaps in place of the form.
@@ -719,32 +716,13 @@
               >
                 <lucide-icon [img]="iconTrash2" [size]="16"></lucide-icon>
               </button>
-              <div
-                *ngIf="userProfile?.accountType === 'group' && voucher.userDisplayName"
-                class="exp-avatar-btn"
-                role="button"
-                tabindex="0"
-                (click)="toggleVoucherAvatarName(voucher.id!, $event)"
-                (keydown.enter)="toggleVoucherAvatarName(voucher.id!, $event)"
-                (keydown.space)="toggleVoucherAvatarName(voucher.id!, $event); $event.preventDefault()"
-              >
-                <app-user-avatar
-                  [name]="voucher.userDisplayName || voucher.createdByName || 'Former Member'"
-                  [photoUrl]="voucher.userPhotoURL || voucher.createdByPhotoURL"
-                  [size]="26"
-                ></app-user-avatar>
-                <span
-                  class="exp-avatar-name-bubble"
-                  [class.visible]="activeAvatarVoucherId === voucher.id"
-                >
-                  <app-user-avatar
-                    [name]="voucher.userDisplayName || voucher.createdByName || 'Former Member'"
-                    [photoUrl]="voucher.userPhotoURL || voucher.createdByPhotoURL"
-                    [size]="20"
-                  ></app-user-avatar>
-                  <span class="exp-avatar-name-bubble-text">{{ voucher.userDisplayName || voucher.createdByName || 'Former Member' }}</span>
-                </span>
-              </div>
+              <!-- Creator avatar; ✎ when edited. Tap: "name · added" + who changed what. -->
+              <app-avatar-tip *ngIf="userProfile?.accountType === 'group' && voucher.userDisplayName" align="right"
+                [name]="voucher.userDisplayName || voucher.createdByName || 'Former Member'"
+                [photoUrl]="voucher.userPhotoURL || voucher.createdByPhotoURL"
+                [detail]="formatService.formatLocalizedDateTime(voucher.createdAt)"
+                [badge]="voucher.updatedBy && voucher.updatedAt ? 'edit' : null"
+                [note]="voucher.updatedBy && voucher.updatedAt ? formatService.formatEditNote(voucher.updatedByName, voucher.updatedAt, voucher.updatedFields) : ''"></app-avatar-tip>
             </div>
           </div>
         </div>
@@ -879,32 +857,13 @@
                         (keydown.space)="showExpenseInfo(expense); $event.preventDefault()"
                         [title]="'EXPENSE_INFO_TITLE' | translate"
                       ></lucide-icon>
-                      <div
-                        *ngIf="userProfile?.accountType === 'group' && expense.userDisplayName"
-                        class="exp-avatar-btn"
-                        role="button"
-                        tabindex="0"
-                        (click)="toggleAvatarName(expense.id!, $event)"
-                        (keydown.enter)="toggleAvatarName(expense.id!, $event)"
-                        (keydown.space)="toggleAvatarName(expense.id!, $event); $event.preventDefault()"
-                      >
-                        <app-user-avatar
-                          [name]="expense.userDisplayName || expense.createdByName || 'Former Member'"
-                          [photoUrl]="expense.userPhotoURL || expense.createdByPhotoURL"
-                          [size]="26"
-                        ></app-user-avatar>
-                        <span
-                          class="exp-avatar-name-bubble"
-                          [class.visible]="activeAvatarExpenseId === expense.id"
-                        >
-                          <app-user-avatar
-                            [name]="expense.userDisplayName || expense.createdByName || 'Former Member'"
-                            [photoUrl]="expense.userPhotoURL || expense.createdByPhotoURL"
-                            [size]="20"
-                          ></app-user-avatar>
-                          <span class="exp-avatar-name-bubble-text">{{ expense.userDisplayName || expense.createdByName || 'Former Member' }}</span>
-                        </span>
-                      </div>
+                      <!-- Creator avatar; ✎ when edited. Tap: "name · added" + who changed what. -->
+                      <app-avatar-tip *ngIf="userProfile?.accountType === 'group' && expense.userDisplayName" align="right"
+                        [name]="expense.userDisplayName || expense.createdByName || 'Former Member'"
+                        [photoUrl]="expense.userPhotoURL || expense.createdByPhotoURL"
+                        [detail]="formatService.formatLocalizedDateTime(expense.createdAt)"
+                        [badge]="expense.updatedBy && expense.updatedAt ? 'edit' : null"
+                        [note]="expense.updatedBy && expense.updatedAt ? formatService.formatEditNote(expense.updatedByName, expense.updatedAt, expense.updatedFields) : ''"></app-avatar-tip>
                     </div>
                   </div>
                 </div>

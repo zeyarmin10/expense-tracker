@@ -467,10 +467,6 @@
             <lucide-icon [img]="iconChevronDown" [size]="20"></lucide-icon>
           </button>
           <span class="inv-add-overlay-title">{{ 'EXPENSE_DATE_LABEL' | translate }}</span>
-          <button type="button" class="inv-add-overlay-close" (click)="closeShopExpenseDatePicker()"
-            [attr.aria-label]="'BACK_BUTTON' | translate">
-            <lucide-icon [img]="iconTimes" [size]="20"></lucide-icon>
-          </button>
         </div>
         <div class="inv-add-overlay-scroll inv-shop-expense-date-picker-body" *ngIf="isShopExpenseDatePickerOpen">
           <div id="inv-shop-expense-date-picker-container"></div>
