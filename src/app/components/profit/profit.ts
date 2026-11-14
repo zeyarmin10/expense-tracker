@@ -67,6 +67,7 @@ import { FlatpickrMonthMenu, installFlatpickrMonthMenu } from '../../utils/flatp
 import { AutoGrowDirective } from '../../directives/auto-grow.directive';
 import { SwipeToCloseDirective } from '../../directives/swipe-to-close.directive';
 import { RowMenuComponent } from '../common/row-menu/row-menu.component';
+import { AvatarTipComponent } from '../common/avatar-tip/avatar-tip.component';
 Chart.register(...registerables);
 
 const Toast = createAppToast();
@@ -84,7 +85,7 @@ interface IncomeDateGroup {
 @Component({
   selector: 'app-profit',
   standalone: true,
-  imports: [RowMenuComponent, SwipeToCloseDirective, AutoGrowDirective, 
+  imports: [AvatarTipComponent, RowMenuComponent, SwipeToCloseDirective, AutoGrowDirective, 
     CommonModule,
     RouterLink,
     ReactiveFormsModule,

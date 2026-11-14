@@ -887,6 +887,7 @@
   "BUDGET_UPDATE_SUCCESS": "បានកែសម្រួលថវិកា",
   "BUDGET_UPDATE_ERROR": "មិនអាចកែសម្រួលថវិកាបានទេ",
   "LAST_EDITED": "បានកែប្រែ",
+  "ADDED_LABEL": "បានបន្ថែម",
   "VOUCHER_GALLERY_FILTERED_COUNT": "{{shown}} ក្នុងចំណោម {{total}} បង្កាន់ដៃ",
   "VOUCHER_GALLERY_SEARCH_PLACEHOLDER": "ស្វែងរកតាមចំណងជើង កំណត់ចំណាំ ឬប្រភេទ",
   "VOUCHER_GALLERY_NO_MATCH": "មិនមានបង្កាន់ដៃត្រូវនឹងការស្វែងរកទេ។",

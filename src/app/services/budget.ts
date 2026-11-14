@@ -12,7 +12,7 @@ import {
   objectVal,
 } from '@angular/fire/database';
 import { AuthService } from './auth';
-import { getActiveGroupId, UserProfile } from './user-data';
+import { getActiveGroupId, PublicUserProfile, UserDataService, UserProfile } from './user-data';
 import { SpaceDataService } from './space-data.service';
 import { SpaceSwitchLoadingService } from './space-switch-loading.service';
 import { PersonalOfflineDataService } from './personal-offline-data.service';
@@ -34,6 +34,9 @@ export interface ServiceIBudget {
   device: string;
   editedDevice?: string;
   updatedAt?: string;
+  /** Creator's name/photo snapshot at creation (live profile preferred when shown). */
+  createdByName?: string;
+  createdByPhotoURL?: string | null;
   /** Last edit — who made it (uid) plus a name/photo snapshot for display. */
   updatedBy?: string;
   updatedByName?: string;
@@ -47,6 +50,7 @@ export class BudgetService {
   private db: Database = inject(Database);
   private authService = inject(AuthService);
   private spaceDataService = inject(SpaceDataService);
+  private userDataService = inject(UserDataService);
   private spaceSwitchLoadingService = inject(SpaceSwitchLoadingService);
   private personalOfflineData = inject(PersonalOfflineDataService);
   private sharedOfflineData = inject(SharedOfflineDataService);
@@ -73,6 +77,9 @@ export class BudgetService {
     const newBudget: Omit<ServiceIBudget, 'id'> = {
       ...budgetData,
       userId: profile.uid,
+      // Snapshot so the creator still shows offline / after leaving the space.
+      createdByName: profile.displayName || 'Anonymous',
+      createdByPhotoURL: profile.photoURL || null,
       createdAt: new Date().toISOString(),
       device: navigator.userAgent,
     };
@@ -137,7 +144,7 @@ export class BudgetService {
         ).pipe(
           switchMap(({ canonicalRef, legacyRef }) =>
             this.spaceSwitchLoadingService.track(objectVal<Record<string, Record<string, unknown>> | null>(canonicalRef || legacyRef)).pipe(
-          map(budgetsData => {
+          switchMap(async budgetsData => {
             if (!budgetsData) {
               if (getActiveGroupId(profile)) {
                 void this.sharedOfflineData.cacheRemote(profile, 'budgets', {});
@@ -157,7 +164,7 @@ export class BudgetService {
               ...budgetsData[key] as unknown as ServiceIBudget
             }));
 
-            return this.filterBudgets(allBudgets, startDate, endDate);
+            return this.filterBudgets(await this.withPeople(allBudgets), startDate, endDate);
           }),
           catchError(error => {
             console.error('Error fetching budgets:', error);
@@ -168,6 +175,48 @@ export class BudgetService {
         )
       })
     );
+  }
+
+  /**
+   * Member name/photo lookups (public mirror), shared across emissions with a
+   * short TTL so a renamed member still updates. Misses aren't cached.
+   */
+  private readonly publicProfileCache = new Map<string, { at: number; profile: Promise<PublicUserProfile | null> }>();
+
+  private getCachedPublicProfile(userId: string): Promise<PublicUserProfile | null> {
+    const hit = this.publicProfileCache.get(userId);
+    if (hit && Date.now() - hit.at < 5 * 60 * 1000) return hit.profile;
+    const profile = firstValueFrom(this.userDataService.getPublicProfile(userId)).catch(() => null);
+    this.publicProfileCache.set(userId, { at: Date.now(), profile });
+    profile.then(found => {
+      if (!found && this.publicProfileCache.get(userId)?.profile === profile) this.publicProfileCache.delete(userId);
+    });
+    return profile;
+  }
+
+  /** Creator / last editor names + photos: live profile first, then the stored snapshot. */
+  private async withPeople(budgets: ServiceIBudget[]): Promise<ServiceIBudget[]> {
+    const ids = new Set<string>();
+    for (const b of budgets) {
+      if (b.userId) ids.add(b.userId);
+      if (b.updatedBy) ids.add(b.updatedBy);
+    }
+    const profiles = new Map<string, PublicUserProfile>();
+    await Promise.all([...ids].map(async id => {
+      const p = await this.getCachedPublicProfile(id);
+      if (p) profiles.set(id, p);
+    }));
+    return budgets.map(b => {
+      const creator = b.userId ? profiles.get(b.userId) : undefined;
+      const editor = b.updatedBy ? profiles.get(b.updatedBy) : undefined;
+      return {
+        ...b,
+        createdByName: creator?.displayName || b.createdByName,
+        createdByPhotoURL: creator ? (creator.photoURL || null) : (b.createdByPhotoURL ?? null),
+        updatedByName: editor?.displayName || b.updatedByName,
+        updatedByPhotoURL: editor ? (editor.photoURL || null) : (b.updatedByPhotoURL ?? null),
+      };
+    });
   }
 
   async updateBudget(

@@ -887,6 +887,7 @@
   "BUDGET_UPDATE_SUCCESS": "Budget updated",
   "BUDGET_UPDATE_ERROR": "Couldn't update the budget",
   "LAST_EDITED": "Edited",
+  "ADDED_LABEL": "Added",
   "VOUCHER_GALLERY_FILTERED_COUNT": "{{shown}} of {{total}} vouchers",
   "VOUCHER_GALLERY_SEARCH_PLACEHOLDER": "Search title, note or category",
   "VOUCHER_GALLERY_NO_MATCH": "No vouchers match your search.",

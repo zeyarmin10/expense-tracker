@@ -62,6 +62,7 @@ import { AutoGrowDirective } from '../../directives/auto-grow.directive';
 import { SwipeToCloseDirective } from '../../directives/swipe-to-close.directive';
 import { RowMenuComponent } from '../common/row-menu/row-menu.component';
 import { UserAvatarComponent } from '../common/user-avatar/user-avatar.component';
+import { AvatarTipComponent } from '../common/avatar-tip/avatar-tip.component';
 Chart.register(...registerables);
 
 const Toast = createAppToast();
@@ -110,7 +111,7 @@ interface BudgetPeriodGroup {
 @Component({
   selector: 'app-budget',
   standalone: true,
-  imports: [RowMenuComponent, UserAvatarComponent, SwipeToCloseDirective, AutoGrowDirective, 
+  imports: [AvatarTipComponent, RowMenuComponent, UserAvatarComponent, SwipeToCloseDirective, AutoGrowDirective, 
     CommonModule,
     ReactiveFormsModule,
     TranslateModule,

@@ -887,6 +887,7 @@
   "BUDGET_UPDATE_SUCCESS": "ဘတ်ဂျက်ကို ပြင်ဆင်ပြီးပါပြီ",
   "BUDGET_UPDATE_ERROR": "ဘတ်ဂျက်ကို ပြင်ဆင်လို့ မရပါ",
   "LAST_EDITED": "ပြင်ဆင်ခဲ့သည်",
+  "ADDED_LABEL": "ထည့်သွင်းခဲ့သည်",
   "VOUCHER_GALLERY_FILTERED_COUNT": "ဘောင်ချာ {{total}} ခုအနက် {{shown}} ခု",
   "VOUCHER_GALLERY_SEARCH_PLACEHOLDER": "ခေါင်းစဉ်၊ မှတ်ချက်၊ အမျိုးအစားဖြင့် ရှာရန်",
   "VOUCHER_GALLERY_NO_MATCH": "ရှာဖွေမှုနှင့် ကိုက်ညီသော ဘောင်ချာမရှိပါ။",

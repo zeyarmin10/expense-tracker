@@ -275,16 +275,18 @@
                       [showEdit]="canManageProfitActions" [showDelete]="canDeleteIncome"
                       (edit)="startEditIncome(income)" (delete)="confirmDeleteIncome(income.id)"></app-row-menu>
                   </div>
-                  <div class="pnl-income-item-member" *ngIf="isGroupUser && income.createdByName">
-                    <app-user-avatar [name]="income.createdByName" [photoUrl]="income.createdByPhotoURL || null" [size]="20"></app-user-avatar>
-                    <span>{{ income.createdByName }}</span>
-                  </div>
-                  <!-- Last edit: who (avatar) and when -->
-                  <div class="pnl-edited" *ngIf="income.updatedBy && income.updatedAt">
-                    <app-user-avatar [name]="income.updatedByName || ''" [photoUrl]="income.updatedByPhotoURL || null" [size]="18"></app-user-avatar>
-                    <span class="pnl-edited-text">
-                      {{ 'LAST_EDITED' | translate }} · {{ formatService.formatLocalizedDateTime(income.updatedAt) }}<ng-container *ngIf="isGroupUser && income.updatedByName"> · {{ income.updatedByName }}</ng-container>
-                    </span>
+                  <!-- Who added it (group spaces) and who last edited it — just
+                       avatars; tapping one shows name, role and time. -->
+                  <div class="pnl-people"
+                    *ngIf="(isGroupUser && income.createdByName) || (income.updatedBy && income.updatedAt)">
+                    <app-avatar-tip *ngIf="isGroupUser && income.createdByName"
+                      [name]="income.createdByName" [photoUrl]="income.createdByPhotoURL"
+                      [label]="'ADDED_LABEL' | translate"
+                      [detail]="formatService.formatLocalizedDateTime(income.createdAt)"></app-avatar-tip>
+                    <app-avatar-tip *ngIf="income.updatedBy && income.updatedAt" badge="edit"
+                      [name]="income.updatedByName || ''" [photoUrl]="income.updatedByPhotoURL"
+                      [label]="'LAST_EDITED' | translate"
+                      [detail]="formatService.formatLocalizedDateTime(income.updatedAt)"></app-avatar-tip>
                   </div>
                 </div>
               </div>

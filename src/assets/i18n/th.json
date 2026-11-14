@@ -887,6 +887,7 @@
   "BUDGET_UPDATE_SUCCESS": "อัปเดตงบประมาณแล้ว",
   "BUDGET_UPDATE_ERROR": "อัปเดตงบประมาณไม่สำเร็จ",
   "LAST_EDITED": "แก้ไขล่าสุด",
+  "ADDED_LABEL": "เพิ่มเมื่อ",
   "VOUCHER_GALLERY_FILTERED_COUNT": "{{shown}} จาก {{total}} ใบเสร็จ",
   "VOUCHER_GALLERY_SEARCH_PLACEHOLDER": "ค้นหาตามชื่อ บันทึก หรือหมวดหมู่",
   "VOUCHER_GALLERY_NO_MATCH": "ไม่พบใบเสร็จที่ตรงกับการค้นหา",

@@ -2138,18 +2138,11 @@ app-date-input .di-trigger {
   align-self: flex-start;
 }
 
-.pnl-edited {
+
+/* Creator / last-editor avatars (tap for details — AvatarTipComponent). */
+.pnl-people {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  margin-top: 0.35rem;
-  min-width: 0;
-}
-
-.pnl-edited-text {
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  gap: 0.45rem;
+  margin-top: 0.4rem;
 }

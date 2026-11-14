@@ -409,12 +409,18 @@
                           <div class="bgt-budget-card-meta" *ngIf="budget.description">
                             <app-clamp-text class="bgt-budget-card-desc" [text]="budget.description" [lines]="2"></app-clamp-text>
                           </div>
-                          <!-- Last edit: who (avatar) and when -->
-                          <div class="bgt-edited" *ngIf="budget.updatedBy && budget.updatedAt">
-                            <app-user-avatar [name]="budget.updatedByName || ''" [photoUrl]="budget.updatedByPhotoURL || null" [size]="18"></app-user-avatar>
-                            <span class="bgt-edited-text">
-                              {{ 'LAST_EDITED' | translate }} · {{ formatService.formatLocalizedDateTime(budget.updatedAt) }}<ng-container *ngIf="userProfile?.accountType === 'group' && budget.updatedByName"> · {{ budget.updatedByName }}</ng-container>
-                            </span>
+                          <!-- Who added it (group spaces) and who last edited it — just
+                               avatars; tapping one shows name, role and time. -->
+                          <div class="bgt-people"
+                            *ngIf="(userProfile?.accountType === 'group' && budget.createdByName) || (budget.updatedBy && budget.updatedAt)">
+                            <app-avatar-tip *ngIf="userProfile?.accountType === 'group' && budget.createdByName"
+                              [name]="budget.createdByName" [photoUrl]="budget.createdByPhotoURL"
+                              [label]="'ADDED_LABEL' | translate"
+                              [detail]="formatService.formatLocalizedDateTime(budget.createdAt)"></app-avatar-tip>
+                            <app-avatar-tip *ngIf="budget.updatedBy && budget.updatedAt" badge="edit"
+                              [name]="budget.updatedByName || ''" [photoUrl]="budget.updatedByPhotoURL"
+                              [label]="'LAST_EDITED' | translate"
+                              [detail]="formatService.formatLocalizedDateTime(budget.updatedAt)"></app-avatar-tip>
                           </div>
                         </div>
                         <!-- Facebook-style ⋯ menu: Edit (members+) / Delete (admins) -->
