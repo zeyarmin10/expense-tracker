@@ -260,18 +260,19 @@
               </div>
             </div>
 
-            <div class="exp-list">
-              <div *ngFor="let income of group.incomes; trackBy: trackByIncomeId" class="exp-item pnl-income-item">
-                <div class="exp-item-inner">
-                  <div class="exp-item-top">
-                    <app-clamp-text class="exp-item-name" [text]="income.description || '—'" [lines]="2"></app-clamp-text>
-                    <span class="exp-item-amount pnl-income-item-amount"
-                      [innerHTML]="formatService.formatAmountWithSymbolHtml(income.amount, income.currency)"></span>
-                    <!-- Facebook-style ⋯ menu: Edit (members+) / Delete (admins) -->
-                    <app-row-menu *ngIf="canManageProfitActions" class="pnl-row-menu"
-                      [showEdit]="canManageProfitActions" [showDelete]="canDeleteIncome"
-                      (edit)="startEditIncome(income)" (delete)="confirmDeleteIncome(income.id)"></app-row-menu>
-                  </div>
+            <!-- Same card layout as Recorded Budgets: icon · amount on top,
+                 the description (only when there is one) under it, then the
+                 avatar; ⋯ menu in the top-right corner. -->
+            <div class="pnl-income-list">
+              <div *ngFor="let income of group.incomes; trackBy: trackByIncomeId" class="pnl-income-card">
+                <div class="pnl-income-card-icon">
+                  <lucide-icon [img]="iconBanknote" [size]="16"></lucide-icon>
+                </div>
+                <div class="pnl-income-card-body">
+                  <span class="pnl-income-card-amount"
+                    [innerHTML]="formatService.formatAmountWithSymbolHtml(income.amount, income.currency)"></span>
+                  <app-clamp-text *ngIf="income.description?.trim()" class="pnl-income-card-desc"
+                    [text]="income.description" [lines]="2"></app-clamp-text>
                   <!-- One avatar: who added it (group spaces, or any edited income).
                        ✎ badge when edited; tap for "name · added" and, if
                        edited, a second line with the last edit only. -->
@@ -285,6 +286,10 @@
                       [note]="income.updatedBy && income.updatedAt ? formatService.formatEditNote(income.updatedByName, income.updatedAt, income.updatedFields) : ''"></app-avatar-tip>
                   </div>
                 </div>
+                <!-- Facebook-style ⋯ menu: Edit (members+) / Delete (admins) -->
+                <app-row-menu *ngIf="canManageProfitActions" class="pnl-row-menu"
+                  [showEdit]="canManageProfitActions" [showDelete]="canDeleteIncome"
+                  (edit)="startEditIncome(income)" (delete)="confirmDeleteIncome(income.id)"></app-row-menu>
               </div>
             </div>
           </section>
