@@ -68,6 +68,7 @@ import { MobileFullscreenOverlayComponent } from '../common/mobile-fullscreen-ov
 import { AutoGrowDirective } from '../../directives/auto-grow.directive';
 
 import { ImgFallbackDirective } from '../../directives/img-fallback.directive';
+import { SwipeToCloseDirective } from '../../directives/swipe-to-close.directive';
 // Matches the existing `min-width: 992px` breakpoint in expense.css that
 // switches from the mobile FAB to the desktop toolbar "Add Expense" button.
 const DESKTOP_BREAKPOINT = 992;
@@ -84,7 +85,7 @@ interface ExpenseDateGroup {
 @Component({
   selector: 'app-expense',
   standalone: true,
-  imports: [ImgFallbackDirective, 
+  imports: [SwipeToCloseDirective, ImgFallbackDirective, 
     CommonModule,
     AutoGrowDirective,
     ReactiveFormsModule,

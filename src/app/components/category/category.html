@@ -24,7 +24,7 @@
     </button>
 
     <div class="cat-add-modal-backdrop" [class.open]="isAddModalOpen"></div>
-    <div class="cat-add-modal-sheet" [class.open]="isAddModalOpen">
+    <div appSwipeToClose (swipeClose)="closeAddModal()" class="cat-add-modal-sheet" [class.open]="isAddModalOpen">
       <div class="cat-add-modal-handle"></div>
 
       <div class="cat-add-modal-header">

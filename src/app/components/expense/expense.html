@@ -11,7 +11,7 @@
     </button>
 
     <div class="exp-add-modal-backdrop" [class.open]="isAddModalOpen"></div>
-    <div class="exp-add-modal-sheet" [class.open]="isAddModalOpen" [class.date-picker-open]="isDatePickerOpen">
+    <div appSwipeToClose (swipeClose)="isDatePickerOpen ? closeDatePicker() : closeAddModal()" class="exp-add-modal-sheet" [class.open]="isAddModalOpen" [class.date-picker-open]="isDatePickerOpen">
       <div class="exp-add-modal-handle"></div>
       <div class="exp-add-modal-header" *ngIf="!isDatePickerOpen">
         <!-- Edit mode: plain title instead of the add/voucher tabs -->
@@ -66,7 +66,7 @@
       <!-- Category picker is layered over the still-visible add form on mobile. -->
       <div class="exp-category-picker-backdrop" [class.open]="isCategoryPickerOpen"
         (click)="closeCategoryPicker()"></div>
-      <div class="exp-category-bottom-sheet" [class.open]="isCategoryPickerOpen"
+      <div appSwipeToClose (swipeClose)="closeCategoryPicker()" class="exp-category-bottom-sheet" [class.open]="isCategoryPickerOpen"
         [style.--exp-picker-top.px]="categoryPickerMenuTop"
         [style.--exp-picker-left.px]="categoryPickerMenuLeft"
         [style.--exp-picker-width.px]="categoryPickerMenuWidth">

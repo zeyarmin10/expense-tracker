@@ -5,7 +5,7 @@
          top of the page on desktop; on mobile it's reached via the FAB
          below and opens as a full-screen overlay (no modal box). ── -->
     <div class="pnl-cart-overlay-backdrop" [class.open]="showAddCartOverlay"></div>
-    <div class="pnl-cart-overlay" [class.pnl-cart-overlay-open]="showAddCartOverlay" [class.pnl-cart-overlay-date-picker]="isMobileViewport && !editingIncome && isDatePickerOpen" [class.pnl-cart-overlay-picker-open]="isMobileViewport && !editingIncome && isProductPickerOpen" *ngIf="canManageProfitActions">
+    <div appSwipeToClose (swipeClose)="isDatePickerOpen ? closeDatePicker() : closeAddCartOverlay()" class="pnl-cart-overlay" [class.pnl-cart-overlay-open]="showAddCartOverlay" [class.pnl-cart-overlay-date-picker]="isMobileViewport && !editingIncome && isDatePickerOpen" [class.pnl-cart-overlay-picker-open]="isMobileViewport && !editingIncome && isProductPickerOpen" *ngIf="canManageProfitActions">
       <div class="pnl-cart-overlay-topbar">
         <h2 class="pnl-pos-section-title">
           <lucide-icon [img]="iconHandCoins" [size]="18" class="pnl-icon-accent"></lucide-icon>
@@ -374,7 +374,7 @@
 <div class="pnl-pos-picker-backdrop pnl-pos-picker-backdrop-date"
   [class.open]="!isMobileViewport && !editingIncome && isDatePickerOpen"
   (click)="closeDatePicker()"></div>
-<div class="pnl-pos-picker-sheet pnl-pos-picker-sheet-date"
+<div appSwipeToClose (swipeClose)="closeDatePicker()" class="pnl-pos-picker-sheet pnl-pos-picker-sheet-date"
   [class.open]="!isMobileViewport && !editingIncome && isDatePickerOpen">
   <ng-container *ngIf="!isMobileViewport && !editingIncome && isDatePickerOpen">
   <div class="pnl-add-modal-header">
@@ -397,7 +397,7 @@
 
 <div class="pnl-pos-picker-backdrop" [class.open]="!editingIncome && isProductPickerOpen"
   (click)="closeProductPicker()"></div>
-<div class="pnl-pos-picker-sheet" [class.open]="!editingIncome && isProductPickerOpen"
+<div appSwipeToClose (swipeClose)="closeProductPicker()" class="pnl-pos-picker-sheet" [class.open]="!editingIncome && isProductPickerOpen"
   [class.pnl-pos-picker-sheet-product]="!editingIncome && productPickerMode === 'cart' && (isProductPickerOpen || isCartProductPickerClosing)"
   [class.pnl-pos-picker-sheet-product-closing]="!editingIncome && isCartProductPickerClosing">
   <div class="pnl-pos-picker-handle"></div>
@@ -448,7 +448,7 @@
 <!-- Edit modal — legacy single-item sale editing only (see the row menu's
      Edit guard above; Add is handled by the cart section on the page). -->
 <div class="pnl-add-modal-backdrop" [class.open]="isAddModalOpen"></div>
-<div class="pnl-add-modal-sheet" [class.open]="isAddModalOpen" [class.date-picker-open]="isDatePickerOpen">
+<div appSwipeToClose (swipeClose)="isDatePickerOpen ? closeDatePicker() : closeAddModal()" class="pnl-add-modal-sheet" [class.open]="isAddModalOpen" [class.date-picker-open]="isDatePickerOpen">
   <div class="pnl-add-modal-handle"></div>
 
   <div class="pnl-add-modal-header" *ngIf="!isDatePickerOpen && !isProductPickerOpen">
@@ -654,7 +654,7 @@
 </div>
 
 <!-- ── Printable receipt — shown right after a successful checkout ── -->
-<section class="pnl-receipt-overlay" [class.open]="showReceipt"
+<section appSwipeToClose (swipeClose)="closeReceipt()" class="pnl-receipt-overlay" [class.open]="showReceipt"
   role="dialog" aria-modal="true" [attr.aria-label]="'SALE_RECEIPT_TITLE' | translate">
   <header class="pnl-receipt-overlay-header">
     <span class="pnl-receipt-overlay-title">

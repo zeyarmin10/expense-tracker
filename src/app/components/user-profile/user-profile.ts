@@ -36,6 +36,7 @@ import { ImageUploadService } from '../../services/image-upload.service';
 import { CustomSelectComponent, SelectOption } from '../common/custom-select/custom-select.component';
 import { passwordComplexityValidator, passwordsMatchValidator } from '../../utils/form-validators';
 
+import { SwipeToCloseDirective } from '../../directives/swipe-to-close.directive';
 export const AVAILABLE_BUDGET_PERIODS = [
   { code: null, nameKey: 'BUDGET_PERIOD.NONE' },
   { code: 'weekly', nameKey: 'BUDGET_PERIOD.WEEKLY' },
@@ -48,7 +49,7 @@ const Toast = createAppToast();
 @Component({
   selector: 'app-user-profile',
   standalone: true,
-  imports: [
+  imports: [SwipeToCloseDirective, 
     CommonModule,
     ReactiveFormsModule,
     TranslateModule,

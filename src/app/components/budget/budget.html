@@ -10,7 +10,7 @@
     </button>
 
     <div class="bgt-add-modal-backdrop" [class.open]="isAddModalOpen"></div>
-    <div class="bgt-add-modal-sheet" [class.open]="isAddModalOpen" [class.date-picker-open]="isDatePickerOpen">
+    <div appSwipeToClose (swipeClose)="isDatePickerOpen ? closeDatePicker() : closeAddModal()" class="bgt-add-modal-sheet" [class.open]="isAddModalOpen" [class.date-picker-open]="isDatePickerOpen">
       <div class="bgt-add-modal-handle"></div>
 
       <div class="bgt-add-modal-header" *ngIf="!isDatePickerOpen">
@@ -42,7 +42,7 @@
       <!-- Category list overlays the still-visible Add Budget form. -->
       <div class="bgt-selection-picker-backdrop" [class.open]="isCategoryPickerOpen"
         (click)="closeCategoryPicker()"></div>
-      <div class="bgt-selection-bottom-sheet bgt-category-floating-menu" [class.open]="isCategoryPickerOpen"
+      <div appSwipeToClose (swipeClose)="closeCategoryPicker()" class="bgt-selection-bottom-sheet bgt-category-floating-menu" [class.open]="isCategoryPickerOpen"
         [style.--bgt-picker-top.px]="budgetPickerMenuTop" [style.--bgt-picker-left.px]="budgetPickerMenuLeft" [style.--bgt-picker-width.px]="budgetPickerMenuWidth">
         <div class="bgt-selection-sheet-handle"></div>
         <div class="bgt-add-modal-header">
@@ -91,7 +91,7 @@
       <!-- Budget type list also overlays the base form as a bottom sheet. -->
       <div class="bgt-selection-picker-backdrop" [class.open]="isTypePickerOpen"
         (click)="closeTypePicker()"></div>
-      <div class="bgt-selection-bottom-sheet bgt-type-floating-menu" [class.open]="isTypePickerOpen"
+      <div appSwipeToClose (swipeClose)="closeTypePicker()" class="bgt-selection-bottom-sheet bgt-type-floating-menu" [class.open]="isTypePickerOpen"
         [style.--bgt-picker-top.px]="budgetPickerMenuTop" [style.--bgt-picker-left.px]="budgetPickerMenuLeft" [style.--bgt-picker-width.px]="budgetPickerMenuWidth">
         <div class="bgt-selection-sheet-handle"></div>
         <div class="bgt-add-modal-header">

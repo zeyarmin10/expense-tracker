@@ -71,6 +71,7 @@ import { MobileFullscreenOverlayComponent } from '../common/mobile-fullscreen-ov
 
 import { AutoGrowDirective } from '../../directives/auto-grow.directive';
 import { ImgFallbackDirective } from '../../directives/img-fallback.directive';
+import { SwipeToCloseDirective } from '../../directives/swipe-to-close.directive';
 const Toast = createAppToast();
 
 interface ExpenseDateGroup {
@@ -93,7 +94,7 @@ interface CartLine {
 @Component({
   selector: 'app-purchase',
   standalone: true,
-  imports: [ImgFallbackDirective, AutoGrowDirective, 
+  imports: [SwipeToCloseDirective, ImgFallbackDirective, AutoGrowDirective, 
     CommonModule,
     ReactiveFormsModule,
     FormsModule,

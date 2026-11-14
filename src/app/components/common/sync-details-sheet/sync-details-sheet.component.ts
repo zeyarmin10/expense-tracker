@@ -4,6 +4,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { LucideAngularModule, CloudUpload, CircleCheck, MapPin, RefreshCw, TriangleAlert, X } from 'lucide-angular';
 import { FormatService } from '../../../services/format.service';
 
+import { SwipeToCloseDirective } from '../../../directives/swipe-to-close.directive';
 /** One pending offline change, already translated for display. */
 export interface SyncDetailItem {
   /** e.g. "ပုံတင်ခြင်း · ဘောင်ချာများ" */
@@ -22,7 +23,7 @@ export interface SyncDetailItem {
 @Component({
   selector: 'app-sync-details-sheet',
   standalone: true,
-  imports: [CommonModule, TranslateModule, LucideAngularModule],
+  imports: [SwipeToCloseDirective, CommonModule, TranslateModule, LucideAngularModule],
   templateUrl: './sync-details-sheet.component.html',
   styleUrls: ['./sync-details-sheet.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,

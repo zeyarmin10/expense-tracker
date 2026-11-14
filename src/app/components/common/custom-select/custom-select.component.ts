@@ -10,6 +10,7 @@ import {
 } from 'lucide-angular';
 import { getIconData, getCategoryHue } from '../../../utils/category-icons';
 
+import { SwipeToCloseDirective } from '../../../directives/swipe-to-close.directive';
 export interface SelectOption {
   value: string;
   label: string;
@@ -25,7 +26,7 @@ const MOBILE_BREAKPOINT = 768;
 @Component({
   selector: 'app-custom-select',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, LucideAngularModule],
+  imports: [SwipeToCloseDirective, CommonModule, FormsModule, TranslateModule, LucideAngularModule],
   templateUrl: './custom-select.component.html',
   styleUrls: ['./custom-select.component.css'],
 })

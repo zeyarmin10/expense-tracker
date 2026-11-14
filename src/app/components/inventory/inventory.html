@@ -50,7 +50,7 @@
            overlay on mobile (reached via the FAB below) — same two-mode
            shell Expense/Budget/Income's own Add modal uses. -->
       <div class="inv-add-overlay-backdrop" [class.open]="showAddOverlay"></div>
-      <div class="inv-add-overlay" [class.inv-add-overlay-open]="showAddOverlay">
+      <div appSwipeToClose (swipeClose)="closeAddOverlay()" class="inv-add-overlay" [class.inv-add-overlay-open]="showAddOverlay">
         <div class="inv-add-overlay-topbar">
           <span class="inv-add-overlay-title">
             <lucide-icon [img]="iconPlus" [size]="16" class="inv-icon-accent"></lucide-icon>
@@ -450,7 +450,7 @@
       </button>
 
       <div class="inv-add-overlay-backdrop" [class.open]="showShopExpenseOverlay"></div>
-      <div class="inv-add-overlay inv-shop-expense-overlay" [class.inv-add-overlay-open]="showShopExpenseOverlay">
+      <div appSwipeToClose (swipeClose)="isShopExpenseDatePickerOpen ? closeShopExpenseDatePicker() : closeShopExpenseOverlay()" class="inv-add-overlay inv-shop-expense-overlay" [class.inv-add-overlay-open]="showShopExpenseOverlay">
         <div class="inv-add-overlay-topbar" *ngIf="!isShopExpenseDatePickerOpen">
           <span class="inv-add-overlay-title">
             <lucide-icon [img]="iconWallet" [size]="17" class="inv-icon-accent"></lucide-icon>
@@ -569,7 +569,7 @@
     </div>
 
     <div class="inv-filter-sheet-backdrop" [class.open]="isInventoryFilterSheetOpen" (click)="closeInventoryFilterSheet()"></div>
-    <section class="inv-filter-sheet" [class.open]="isInventoryFilterSheetOpen" role="dialog" [attr.aria-modal]="isInventoryFilterSheetOpen"
+    <section appSwipeToClose (swipeClose)="closeInventoryFilterSheet()" class="inv-filter-sheet" [class.open]="isInventoryFilterSheetOpen" role="dialog" [attr.aria-modal]="isInventoryFilterSheetOpen"
       [style.--inv-filter-top.px]="inventoryFilterMenuTop" [style.--inv-filter-left.px]="inventoryFilterMenuLeft"
       [style.--inv-filter-width.px]="inventoryFilterMenuWidth">
       <div class="inv-filter-sheet-handle"></div>
@@ -588,7 +588,7 @@
     </section>
 
     <div class="inv-settings-backdrop" [class.open]="showSettingsOverlay" (click)="closeSettingsOverlay()"></div>
-    <section class="inv-settings-modal" [class.open]="showSettingsOverlay" role="dialog" aria-modal="true"
+    <section appSwipeToClose (swipeClose)="closeSettingsOverlay()" class="inv-settings-modal" [class.open]="showSettingsOverlay" role="dialog" aria-modal="true"
       [attr.aria-label]="'INVENTORY_SETTINGS_TITLE' | translate">
       <header class="inv-settings-modal-header">
         <span class="inv-settings-modal-title">

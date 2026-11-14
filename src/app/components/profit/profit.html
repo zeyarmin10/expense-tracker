@@ -10,7 +10,7 @@
     </button>
 
     <div class="pnl-add-modal-backdrop" [class.open]="isAddModalOpen"></div>
-    <div class="pnl-add-modal-sheet" [class.open]="isAddModalOpen" [class.date-picker-open]="isDatePickerOpen">
+    <div appSwipeToClose (swipeClose)="isDatePickerOpen ? closeDatePicker() : closeAddModal()" class="pnl-add-modal-sheet" [class.open]="isAddModalOpen" [class.date-picker-open]="isDatePickerOpen">
       <div class="pnl-add-modal-handle"></div>
 
       <div class="pnl-add-modal-header" *ngIf="!isDatePickerOpen">

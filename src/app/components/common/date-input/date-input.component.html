@@ -24,7 +24,7 @@
 <ng-container *ngIf="isMobile">
   <div class="di-backdrop" [class.di-backdrop-open]="isOpen" (click)="close()"></div>
 
-  <div class="di-sheet" [class.di-sheet-open]="isOpen" (click)="$event.stopPropagation()">
+  <div appSwipeToClose (swipeClose)="close()" class="di-sheet" [class.di-sheet-open]="isOpen" (click)="$event.stopPropagation()">
     <div class="di-handle"></div>
     <div class="di-sheet-header">
       <span class="di-sheet-title">{{ label }}</span>

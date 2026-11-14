@@ -1,6 +1,6 @@
 <div class="vfs-backdrop" [class.open]="isOpen" (click)="close()"></div>
 
-<div class="vfs-sheet" [class.open]="isOpen" role="dialog" aria-modal="true" [attr.aria-hidden]="!isOpen">
+<div appSwipeToClose (swipeClose)="isDatePickerOpen ? closeDatePicker() : close()" class="vfs-sheet" [class.open]="isOpen" role="dialog" aria-modal="true" [attr.aria-hidden]="!isOpen">
   <!-- Header: form title, or the date picker's own title while drilled in -->
   <div class="vfs-header">
     <ng-container *ngIf="!isDatePickerOpen; else dateHeader">
@@ -120,7 +120,7 @@
 
   <!-- Category picker: layered over the form inside the same sheet -->
   <div class="vfs-cat-backdrop" [class.open]="isCategoryPickerOpen" (click)="closeCategoryPicker()"></div>
-  <div class="vfs-cat-sheet" [class.open]="isCategoryPickerOpen">
+  <div appSwipeToClose (swipeClose)="closeCategoryPicker()" class="vfs-cat-sheet" [class.open]="isCategoryPickerOpen">
     <div class="vfs-header">
       <span class="vfs-header-title">{{ 'EXPENSE_CATEGORY_LABEL' | translate }}</span>
       <button type="button" class="vfs-icon-btn" (click)="closeCategoryPicker()" [title]="'BACK_BUTTON' | translate">

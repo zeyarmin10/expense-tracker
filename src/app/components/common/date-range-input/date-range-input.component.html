@@ -27,7 +27,7 @@
      MOBILE — Bottom Sheet
      ════════════════════════════════ -->
 <ng-container *ngIf="isMobile && (isOpen || isClosing)">
-  <div class="dri-sheet" [class.dri-sheet-open]="isOpen" (click)="$event.stopPropagation()">
+  <div appSwipeToClose (swipeClose)="close()" class="dri-sheet" [class.dri-sheet-open]="isOpen" (click)="$event.stopPropagation()">
     <div class="dri-handle"></div>
     <div class="dri-sheet-header">
       <span class="dri-sheet-title">

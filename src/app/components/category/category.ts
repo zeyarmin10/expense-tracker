@@ -35,12 +35,13 @@ import { createAppToast } from '../../services/toast';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
 import { FormatService } from '../../services/format.service';
 
+import { SwipeToCloseDirective } from '../../directives/swipe-to-close.directive';
 const Toast = createAppToast();
 
 @Component({
   selector: 'app-category',
   standalone: true,
-  imports: [
+  imports: [SwipeToCloseDirective, 
     CommonModule,
     ReactiveFormsModule,
     TranslateModule,

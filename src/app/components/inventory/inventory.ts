@@ -41,6 +41,7 @@ import { CustomSelectComponent, SelectOption } from '../common/custom-select/cus
 import { CategoryModalComponent } from '../common/category-modal/category-modal';
 
 import { AutoGrowDirective } from '../../directives/auto-grow.directive';
+import { SwipeToCloseDirective } from '../../directives/swipe-to-close.directive';
 interface ShopExpenseDateGroup {
   date: string;
   expenses: ShopExpense[];
@@ -53,7 +54,7 @@ const Toast = createAppToast();
 @Component({
   selector: 'app-inventory',
   standalone: true,
-  imports: [AutoGrowDirective, CommonModule, ReactiveFormsModule, FormsModule, TranslateModule, LucideAngularModule, MobileFullscreenOverlayComponent, CustomSelectComponent, CategoryModalComponent],
+  imports: [SwipeToCloseDirective, AutoGrowDirective, CommonModule, ReactiveFormsModule, FormsModule, TranslateModule, LucideAngularModule, MobileFullscreenOverlayComponent, CustomSelectComponent, CategoryModalComponent],
   templateUrl: './inventory.html',
   styleUrls: ['./inventory.css'],
 })

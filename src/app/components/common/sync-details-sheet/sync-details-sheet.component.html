@@ -1,6 +1,6 @@
 <div class="sds-backdrop" [class.open]="open" (click)="!syncing && closed.emit()"></div>
 
-<div class="sds-sheet" [class.open]="open" role="dialog" aria-modal="true" [attr.aria-hidden]="!open">
+<div appSwipeToClose (swipeClose)="closed.emit()" [swipeDisabled]="syncing" class="sds-sheet" [class.open]="open" role="dialog" aria-modal="true" [attr.aria-hidden]="!open">
   <div class="sds-header">
     <span class="sds-header-title">{{ 'SYNC_DETAILS_TITLE' | translate }}</span>
     <button type="button" class="sds-icon-btn" (click)="closed.emit()" [disabled]="syncing" [title]="'CLOSE_BUTTON_LABEL' | translate">

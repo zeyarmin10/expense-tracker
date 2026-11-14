@@ -11,6 +11,7 @@ import type { Instance } from 'flatpickr/dist/types/instance';
 import { Burmese } from 'flatpickr/dist/l10n/my';
 import { FlatpickrMonthMenu, installFlatpickrMonthMenu } from '../../../utils/flatpickr-month-menu';
 
+import { SwipeToCloseDirective } from '../../../directives/swipe-to-close.directive';
 function pad(n: number): string { return String(n).padStart(2, '0'); }
 function toDate(s: string): Date | null {
   if (!s) return null;
@@ -36,7 +37,7 @@ function fmt(s: string): string {
 @Component({
   selector: 'app-date-range-input',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule],
+  imports: [SwipeToCloseDirective, CommonModule, LucideAngularModule],
   templateUrl: './date-range-input.component.html',
   styleUrls: ['./date-range-input.component.css'],
 })

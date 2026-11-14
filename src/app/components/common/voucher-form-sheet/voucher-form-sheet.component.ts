@@ -40,6 +40,7 @@ import { getIconData, getIconHue } from '../../../utils/category-icons';
 
 import { AutoGrowDirective } from '../../../directives/auto-grow.directive';
 import { ImgFallbackDirective } from '../../../directives/img-fallback.directive';
+import { SwipeToCloseDirective } from '../../../directives/swipe-to-close.directive';
 const Toast = createAppToast();
 const MAX_IMAGES = 10;
 const MAX_FILE_SIZE = 8 * 1024 * 1024;
@@ -60,7 +61,7 @@ function toDateString(d: Date): string {
 @Component({
   selector: 'app-voucher-form-sheet',
   standalone: true,
-  imports: [ImgFallbackDirective, AutoGrowDirective, CommonModule, ReactiveFormsModule, FormsModule, TranslateModule, LucideAngularModule],
+  imports: [SwipeToCloseDirective, ImgFallbackDirective, AutoGrowDirective, CommonModule, ReactiveFormsModule, FormsModule, TranslateModule, LucideAngularModule],
   providers: [DatePipe],
   templateUrl: './voucher-form-sheet.component.html',
   styleUrls: ['./voucher-form-sheet.component.css'],
