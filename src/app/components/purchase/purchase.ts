@@ -1150,8 +1150,9 @@ export class Purchase implements OnInit, OnDestroy {
           updatedByName: this.userProfile?.displayName,
           editedDevice: 'Web Browser',
         };
-        await this.expenseService.updateExpense(this.editingExpense.id!, updated);
-        Toast.fire({ icon: 'success', title: this.translate.instant('PURCHASE_SUCCESS_UPDATED') });
+        const result = await this.expenseService.updateExpense(this.editingExpense.id!, updated);
+        // Saved without changing anything: say so instead of "updated".
+        Toast.fire(result === 'unchanged' ? { icon: 'info', title: this.translate.instant('NO_CHANGES_MADE') } : { icon: 'success', title: this.translate.instant('PURCHASE_SUCCESS_UPDATED') });
         this.refreshExpenses$.next();
         this.closeAddModal(); // also clears editingExpense + resets the form
         return;

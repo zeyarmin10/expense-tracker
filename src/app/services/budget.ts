@@ -225,7 +225,7 @@ export class BudgetService {
   async updateBudget(
     budgetId: string,
     updatedData: Partial<Omit<ServiceIBudget, 'id' | 'userId' | 'groupId' | 'createdAt'>>
-  ): Promise<void> {
+  ): Promise<'saved' | 'unchanged'> {
     const profile = await firstValueFrom(this.authService.userProfile$);
     if (!profile?.uid) {
       throw new Error('User not authenticated.');
@@ -249,20 +249,20 @@ export class BudgetService {
       const current = records[budgetId];
       if (!current) throw new Error('Budget not found on this device.');
       // Saved without changing anything: not an edit.
-      if (!hasRealChanges(current as unknown as Record<string, unknown>, updatedData as Record<string, unknown>)) return;
+      if (!hasRealChanges(current as unknown as Record<string, unknown>, updatedData as Record<string, unknown>)) return 'unchanged';
       await this.sharedOfflineData.write(profile, 'budgets', 'update', budgetId, {
         ...updatedData, ...editMeta(current as unknown as Record<string, unknown>),
       }, current.updatedAt || current.createdAt || null);
-      return;
+      return 'saved';
     }
 
     if (this.personalOfflineData.isOfflinePersonal(profile)) {
       const records = await this.personalOfflineData.read<ServiceIBudget>(profile, 'budgets');
-      if (!hasRealChanges(records[budgetId] as unknown as Record<string, unknown>, updatedData as Record<string, unknown>)) return;
+      if (!hasRealChanges(records[budgetId] as unknown as Record<string, unknown>, updatedData as Record<string, unknown>)) return 'unchanged';
       await this.personalOfflineData.write(profile, 'budgets', 'update', budgetId, {
         ...updatedData, ...editMeta(records[budgetId] as unknown as Record<string, unknown>),
       });
-      return;
+      return 'saved';
     }
 
     let budgetRef: DatabaseReference;
@@ -278,8 +278,9 @@ export class BudgetService {
     }
 
     const currentSnapshot = await get(budgetRef);
-    if (!hasRealChanges(currentSnapshot.val(), updatedData as Record<string, unknown>)) return;
+    if (!hasRealChanges(currentSnapshot.val(), updatedData as Record<string, unknown>)) return 'unchanged';
     await update(budgetRef, { ...updatedData, ...editMeta(currentSnapshot.val()) });
+    return 'saved';
   }
 
   async deleteBudget(id: string): Promise<void> {

@@ -755,8 +755,9 @@ export class Expense implements OnInit, OnDestroy {
           updatedByName: this.userProfile?.displayName,
           editedDevice: 'Web Browser',
         };
-        await this.expenseService.updateExpense(this.editingExpense.id!, updated);
-        Toast.fire({ icon: 'success', title: this.translate.instant('EXPENSE_SUCCESS_UPDATED') });
+        const result = await this.expenseService.updateExpense(this.editingExpense.id!, updated);
+        // Saved without changing anything: say so instead of "updated".
+        Toast.fire(result === 'unchanged' ? { icon: 'info', title: this.translate.instant('NO_CHANGES_MADE') } : { icon: 'success', title: this.translate.instant('EXPENSE_SUCCESS_UPDATED') });
         this.refreshExpenses$.next();
         this.closeAddModal(); // also clears editingExpense + resets the form
         return;
@@ -906,7 +907,7 @@ export class Expense implements OnInit, OnDestroy {
 
     if (this.editingVoucher) {
       try {
-        await this.voucherService.updateVoucher(this.editingVoucher, {
+        const result = await this.voucherService.updateVoucher(this.editingVoucher, {
           date: fv.date,
           title: fv.title,
           category: fv.category,
@@ -914,7 +915,7 @@ export class Expense implements OnInit, OnDestroy {
           keptImages: [...this.editVoucherExistingImages],
           newFiles: [...this.selectedVoucherFiles],
         });
-        Toast.fire({ icon: 'success', title: this.translate.instant('VOUCHER_SUCCESS_UPDATED') });
+        Toast.fire(result === 'unchanged' ? { icon: 'info', title: this.translate.instant('NO_CHANGES_MADE') } : { icon: 'success', title: this.translate.instant('VOUCHER_SUCCESS_UPDATED') });
         this.closeAddModal(); // also resets the voucher edit state
         this.refreshVouchers$.next();
       } catch (error: any) {

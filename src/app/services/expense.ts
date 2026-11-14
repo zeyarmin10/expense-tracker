@@ -385,7 +385,7 @@ export class ExpenseService {
   async updateExpense(
     expenseId: string,
     updates: Partial<Omit<IExpense, 'id' | 'userId' | 'groupId' | 'totalCost'>>
-  ): Promise<void> {
+  ): Promise<'saved' | 'unchanged'> {
     const profile = await firstValueFrom(this.authService.userProfile$);
     if (!profile?.uid) {
       throw new Error('User not authenticated.');
@@ -403,7 +403,7 @@ export class ExpenseService {
       const currentExpense = cached[expenseId];
       if (!currentExpense) throw new Error('Expense not found on this device.');
       // Saved without changing anything: not an edit.
-      if (!hasRealChanges(currentExpense as unknown as Record<string, unknown>, updates as Record<string, unknown>)) return;
+      if (!hasRealChanges(currentExpense as unknown as Record<string, unknown>, updates as Record<string, unknown>)) return 'unchanged';
       const quantity = updates.quantity ?? currentExpense.quantity;
       const price = updates.price ?? currentExpense.price;
       const now = new Date().toISOString();
@@ -416,7 +416,7 @@ export class ExpenseService {
         updatedFields: changedFields(currentExpense as unknown as Record<string, unknown>, updates as Record<string, unknown>, EXPENSE_TRACKED_FIELDS),
         totalCost: (quantity ?? 0) * (price ?? 0),
       });
-      return;
+      return 'saved';
     }
 
     if (this.sharedOfflineData.isOfflineShared(profile)) {
@@ -424,7 +424,7 @@ export class ExpenseService {
       const currentExpense = cached[expenseId];
       if (!currentExpense) throw new Error('Expense not found on this device.');
       // Saved without changing anything: not an edit.
-      if (!hasRealChanges(currentExpense as unknown as Record<string, unknown>, updates as Record<string, unknown>)) return;
+      if (!hasRealChanges(currentExpense as unknown as Record<string, unknown>, updates as Record<string, unknown>)) return 'unchanged';
       const quantity = updates.quantity ?? currentExpense.quantity;
       const price = updates.price ?? currentExpense.price;
       await this.sharedOfflineData.write(profile, 'expenses', 'update', expenseId, {
@@ -436,7 +436,7 @@ export class ExpenseService {
         updatedFields: changedFields(currentExpense as unknown as Record<string, unknown>, updates as Record<string, unknown>, EXPENSE_TRACKED_FIELDS),
         totalCost: (quantity ?? 0) * (price ?? 0),
       }, currentExpense.updatedAt || currentExpense.createdAt || null);
-      return;
+      return 'saved';
     }
 
     const activeGroupId = getActiveGroupId(profile);
@@ -451,7 +451,7 @@ export class ExpenseService {
     // ── ပြောင်းလဲမှုမတိုင်မှီ current data ယူပြီး diff စစ်မည် ──
     const currentExpense = await this.getExpense(expenseId);
     // Saved without changing anything: not an edit (no write, no history).
-    if (!hasRealChanges(currentExpense as unknown as Record<string, unknown>, updates as Record<string, unknown>)) return;
+    if (!hasRealChanges(currentExpense as unknown as Record<string, unknown>, updates as Record<string, unknown>)) return 'unchanged';
 
     // ── Changed fields ကို detect ──
     const TRACKED_FIELDS = EXPENSE_TRACKED_FIELDS;
@@ -510,6 +510,7 @@ export class ExpenseService {
         changes,
       });
     }
+    return 'saved';
   }
 
   async deleteExpense(expenseId: string): Promise<void> {

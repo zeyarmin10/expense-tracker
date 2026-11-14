@@ -678,8 +678,9 @@ export class Profit implements OnInit, OnDestroy {
 
     this.isSubmittingIncome = true;
     savePromise
-      .then(() => {
-        Toast.fire({ icon: 'success', title: this.translate.instant(successKey) });
+      .then((saveStatus) => {
+        // Saved without changing anything: say so instead of "updated".
+        Toast.fire(saveStatus === 'unchanged' ? { icon: 'info', title: this.translate.instant('NO_CHANGES_MADE') } : { icon: 'success', title: this.translate.instant(successKey) });
         this.refreshIncomes$.next();
         this.closeAddModal(); // also clears editingIncome + resets the form
       })

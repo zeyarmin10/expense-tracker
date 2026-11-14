@@ -508,7 +508,7 @@ export class VoucherService {
     return urls.map((url, index) => ({ url, publicId: ids[index] || '' }));
   }
 
-  async updateVoucher(voucher: ServiceIVoucher, input: UpdateVoucherInput): Promise<void> {
+  async updateVoucher(voucher: ServiceIVoucher, input: UpdateVoucherInput): Promise<'saved' | 'unchanged'> {
     const profile = await firstValueFrom(this.authService.userProfile$);
     if (!profile?.uid) throw new Error('User not authenticated.');
     if (!voucher.id) throw new Error('Voucher ID is required.');
@@ -551,7 +551,7 @@ export class VoucherService {
     };
     // Saved without changing anything (no text change, no image added or
     // removed): not an edit — leave the voucher untouched.
-    if ((metadata['updatedFields'] as string[]).length === 0) return;
+    if ((metadata['updatedFields'] as string[]).length === 0) return 'unchanged';
 
     const offlineShared = this.sharedOfflineData.isOfflineShared(profile);
     const offlinePersonal = this.personalOfflineData.isOfflinePersonal(profile);
@@ -563,7 +563,7 @@ export class VoucherService {
     if (offlineShared || offlinePersonal) {
       if (offlinePersonal) {
         await this.personalOfflineData.write(profile, 'vouchers', 'update', voucher.id, metadata);
-        return;
+        return 'saved';
       }
       if (offlineShared) {
         const records = await this.sharedOfflineData.read<ServiceIVoucher>(profile, 'vouchers');
@@ -572,7 +572,7 @@ export class VoucherService {
           profile, 'vouchers', 'update', voucher.id, metadata,
           (current as any)?.updatedAt || current?.createdAt || null,
         );
-        return;
+        return 'saved';
       }
     }
 
@@ -587,7 +587,7 @@ export class VoucherService {
 
     if (!imagesChanged) {
       await update(voucherRef, metadata);
-      return;
+      return 'saved';
     }
 
     const ownerSegment = spaceId
@@ -627,6 +627,7 @@ export class VoucherService {
 
     // Free removed images only after the record no longer points at them.
     if (removed.length) void this.imageUploadService.deleteImages(removed.map(img => img.publicId));
+    return 'saved';
   }
 
   private async withOfflineImageUrls(

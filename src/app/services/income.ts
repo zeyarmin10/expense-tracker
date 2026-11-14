@@ -502,7 +502,7 @@ export class IncomeService {
   async updateIncome(
     incomeId: string,
     updatedData: Partial<Omit<ServiceIIncome, 'id' | 'userId' | 'groupId' | 'createdAt'>>
-  ): Promise<'saved' | 'queued'> {
+  ): Promise<'saved' | 'queued' | 'unchanged'> {
     const profile = await firstValueFrom(this.authService.userProfile$);
     if (!profile?.uid) {
         throw new Error('User not authenticated.');
@@ -528,7 +528,7 @@ export class IncomeService {
       const current = records[incomeId];
       if (!current) throw new Error('Income not found on this device.');
       // Saved without changing anything: not an edit.
-      if (!hasRealChanges(current as unknown as Record<string, unknown>, updatedData as Record<string, unknown>)) return 'saved';
+      if (!hasRealChanges(current as unknown as Record<string, unknown>, updatedData as Record<string, unknown>)) return 'unchanged';
       const isProductSaleEdit = current.isProductSale || updatedData.isProductSale;
       if (isProductSaleEdit) {
         await this.assertOfflineProductSaleStock(profile, { ...current, ...updatedData } as ServiceIIncome, incomeId);
@@ -542,7 +542,7 @@ export class IncomeService {
     if (this.personalOfflineData.isOfflinePersonal(profile)) {
       const records = await this.personalOfflineData.read<ServiceIIncome>(profile, 'incomes');
       const current = records[incomeId];
-      if (current && !hasRealChanges(current as unknown as Record<string, unknown>, updatedData as Record<string, unknown>)) return 'saved';
+      if (current && !hasRealChanges(current as unknown as Record<string, unknown>, updatedData as Record<string, unknown>)) return 'unchanged';
       const isProductSaleEdit = current?.isProductSale || updatedData.isProductSale;
       if (isProductSaleEdit) {
         await this.assertOfflineProductSaleStock(profile, { ...current, ...updatedData } as ServiceIIncome, incomeId);
@@ -567,7 +567,7 @@ export class IncomeService {
 
     const currentSnapshot = await get(incomeRef);
     const current = currentSnapshot.val() as ServiceIIncome | null;
-    if (current && !hasRealChanges(current as unknown as Record<string, unknown>, updatedData as Record<string, unknown>)) return 'saved';
+    if (current && !hasRealChanges(current as unknown as Record<string, unknown>, updatedData as Record<string, unknown>)) return 'unchanged';
     const patch = { ...updatedData, ...editMeta(current as unknown as Record<string, unknown>) };
     if (current?.isProductSale || updatedData.isProductSale) {
       await this.saveProductSaleTransaction(await this.getStockTransactionRoot(profile), incomeId, patch, 'update');

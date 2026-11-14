@@ -890,6 +890,7 @@
   "ADDED_LABEL": "追加",
   "EDITED_BY_SENTENCE": "{{name}}が{{date}} {{time}}に編集しました",
   "LIST_AND": "と",
+  "NO_CHANGES_MADE": "変更はありません",
   "EDITED_FIELDS_SENTENCE": "{{name}}が{{date}} {{time}}に{{fields}}を編集しました",
   "FIELD_AMOUNT": "金額",
   "FIELD_DESCRIPTION": "説明",

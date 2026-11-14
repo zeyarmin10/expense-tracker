@@ -890,6 +890,7 @@
   "ADDED_LABEL": "เพิ่มเมื่อ",
   "EDITED_BY_SENTENCE": "{{name}} แก้ไขเมื่อ {{date}} เวลา {{time}}",
   "LIST_AND": " และ ",
+  "NO_CHANGES_MADE": "ไม่มีการเปลี่ยนแปลง",
   "EDITED_FIELDS_SENTENCE": "{{name}} แก้ไข{{fields}}เมื่อ {{date}} เวลา {{time}}",
   "FIELD_AMOUNT": "จำนวนเงิน",
   "FIELD_DESCRIPTION": "คำอธิบาย",

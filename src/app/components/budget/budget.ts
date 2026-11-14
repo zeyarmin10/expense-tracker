@@ -1324,8 +1324,9 @@ export class BudgetComponent implements OnInit, OnDestroy {
             ? this.budgetService.updateBudget(editingId, budgetData)
             : this.budgetService.addBudget(budgetData);
           save
-            .then(() => {
-              Toast.fire({ icon: 'success', title: this.translate.instant(editingId ? 'BUDGET_UPDATE_SUCCESS' : 'BUDGET_SAVE_SUCCESS') });
+            .then((status) => {
+              // Saved without changing anything: say so instead of "updated".
+              Toast.fire(status === 'unchanged' ? { icon: 'info', title: this.translate.instant('NO_CHANGES_MADE') } : { icon: 'success', title: this.translate.instant(editingId ? 'BUDGET_UPDATE_SUCCESS' : 'BUDGET_SAVE_SUCCESS') });
               this.resetForm();
               this.refreshBudgets$.next();
               this.closeAddModal();

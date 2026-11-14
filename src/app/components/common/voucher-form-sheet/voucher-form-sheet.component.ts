@@ -430,7 +430,7 @@ export class VoucherFormSheetComponent implements OnInit, OnDestroy {
     const editing = this.editing;
     try {
       if (editing) {
-        await this.voucherService.updateVoucher(editing, {
+        const result = await this.voucherService.updateVoucher(editing, {
           date: value.date || this.dateMax,
           title: value.title || '',
           category: value.category || '',
@@ -438,7 +438,7 @@ export class VoucherFormSheetComponent implements OnInit, OnDestroy {
           keptImages: [...this.existingImages],
           newFiles: [...this.newFiles],
         });
-        Toast.fire({ icon: 'success', title: this.translate.instant('VOUCHER_SUCCESS_UPDATED') });
+        Toast.fire(result === 'unchanged' ? { icon: 'info', title: this.translate.instant('NO_CHANGES_MADE') } : { icon: 'success', title: this.translate.instant('VOUCHER_SUCCESS_UPDATED') });
       } else {
         await this.voucherService.addVoucher({
           date: value.date || this.dateMax,

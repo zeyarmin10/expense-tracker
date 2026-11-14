@@ -890,6 +890,7 @@
   "ADDED_LABEL": "Added",
   "EDITED_BY_SENTENCE": "{{name}} edited this on {{date}} at {{time}}",
   "LIST_AND": " and ",
+  "NO_CHANGES_MADE": "No changes to save",
   "EDITED_FIELDS_SENTENCE": "{{name}} changed {{fields}} on {{date}} at {{time}}",
   "FIELD_AMOUNT": "the amount",
   "FIELD_DESCRIPTION": "the description",

@@ -890,6 +890,7 @@
   "ADDED_LABEL": "បានបន្ថែម",
   "EDITED_BY_SENTENCE": "{{name}} បានកែនៅថ្ងៃ {{date}} ម៉ោង {{time}}",
   "LIST_AND": " និង ",
+  "NO_CHANGES_MADE": "គ្មានការផ្លាស់ប្តូរទេ",
   "EDITED_FIELDS_SENTENCE": "{{name}} បានកែ {{fields}} នៅថ្ងៃ {{date}} ម៉ោង {{time}}",
   "FIELD_AMOUNT": "ចំនួនទឹកប្រាក់",
   "FIELD_DESCRIPTION": "ការពិពណ៌នា",

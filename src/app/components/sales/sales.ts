@@ -1378,7 +1378,7 @@ export class Sales implements OnInit, OnDestroy {
     this.isSubmittingIncome = true;
     savePromise
       .then((saveStatus) => {
-        Toast.fire({ icon: 'success', title: this.translate.instant(
+        Toast.fire(saveStatus === 'unchanged' ? { icon: 'info', title: this.translate.instant('NO_CHANGES_MADE') } : { icon: 'success', title: this.translate.instant(
           saveStatus === 'queued' ? 'SALE_PENDING_SYNC' : successKey,
         ) });
         this.refreshIncomes$.next();

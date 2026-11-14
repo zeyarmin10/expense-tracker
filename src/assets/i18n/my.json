@@ -890,6 +890,7 @@
   "ADDED_LABEL": "ထည့်သွင်းခဲ့သည်",
   "EDITED_BY_SENTENCE": "{{name}} က {{date}} {{time}} မှာ ပြင်လိုက်ပါတယ်",
   "LIST_AND": " နဲ့ ",
+  "NO_CHANGES_MADE": "ပြောင်းလဲမှု မရှိပါ",
   "EDITED_FIELDS_SENTENCE": "{{name}} က {{date}} {{time}} မှာ {{fields}}ကို ပြင်လိုက်ပါတယ်",
   "FIELD_AMOUNT": "ပမာဏ",
   "FIELD_DESCRIPTION": "ဖော်ပြချက်",
