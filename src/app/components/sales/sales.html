@@ -302,19 +302,13 @@
                             <lucide-icon [img]="iconBan" [size]="16"></lucide-icon>
                           </button>
                         </div>
-                        <div *ngIf="isGroupUser && income.createdByName" class="pnl-avatar-btn" role="button"
-                          tabindex="0" (click)="toggleAvatarName(income.id!, $event)"
-                          (keydown.enter)="toggleAvatarName(income.id!, $event)"
-                          (keydown.space)="toggleAvatarName(income.id!, $event); $event.preventDefault()">
-                          <app-user-avatar [name]="income.createdByName || 'Former Member'"
-                            [photoUrl]="income.createdByPhotoURL || null" [size]="26"></app-user-avatar>
-                          <span class="pnl-avatar-name-bubble" [class.visible]="activeAvatarIncomeId === income.id">
-                            <app-user-avatar [name]="income.createdByName || 'Former Member'"
-                              [photoUrl]="income.createdByPhotoURL || null" [size]="20"></app-user-avatar>
-                            <span class="pnl-avatar-name-bubble-text">{{ income.createdByName || 'Former Member'
-                              }}</span>
-                          </span>
-                        </div>
+                        <!-- Creator avatar; ✎ when edited. Tap: "name · added" + who changed what. -->
+                        <app-avatar-tip *ngIf="isGroupUser && income.createdByName" align="right"
+                          [name]="income.createdByName || 'Former Member'"
+                          [photoUrl]="income.createdByPhotoURL"
+                          [detail]="formatService.formatLocalizedDateTime(income.createdAt)"
+                          [badge]="income.updatedBy && income.updatedAt ? 'edit' : null"
+                          [note]="income.updatedBy && income.updatedAt ? formatService.formatEditNote(income.updatedByName, income.updatedAt, income.updatedFields) : ''"></app-avatar-tip>
                       </div>
                     </div>
                   </div>

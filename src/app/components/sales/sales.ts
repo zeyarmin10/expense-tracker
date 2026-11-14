@@ -75,6 +75,7 @@ import { FlatpickrMonthMenu, installFlatpickrMonthMenu } from '../../utils/flatp
 
 import { AutoGrowDirective } from '../../directives/auto-grow.directive';
 import { SwipeToCloseDirective } from '../../directives/swipe-to-close.directive';
+import { AvatarTipComponent } from '../common/avatar-tip/avatar-tip.component';
 const Toast = createAppToast();
 
 // Type alias for clarity
@@ -100,7 +101,7 @@ interface IncomeDateGroup {
 @Component({
   selector: 'app-sales',
   standalone: true,
-  imports: [SwipeToCloseDirective, AutoGrowDirective, 
+  imports: [AvatarTipComponent, SwipeToCloseDirective, AutoGrowDirective, 
     CommonModule,
     RouterLink,
     ReactiveFormsModule,
@@ -244,21 +245,6 @@ export class Sales implements OnInit, OnDestroy {
   }
   get isGroupUser(): boolean {
     return this.userProfile?.accountType === 'group';
-  }
-
-  // Row actions — direct inline Edit/Delete buttons + a tap-to-reveal
-  // creator-name bubble on the avatar, matching Purchase/Expense's list
-  // item pattern (see purchase.ts's toggleAvatarName/closeAvatarBubbles).
-  activeAvatarIncomeId: string | null = null;
-
-  @HostListener('click')
-  closeAvatarBubbles(): void {
-    this.activeAvatarIncomeId = null;
-  }
-
-  toggleAvatarName(incomeId: string, event: Event): void {
-    event.stopPropagation();
-    this.activeAvatarIncomeId = this.activeAvatarIncomeId === incomeId ? null : incomeId;
   }
 
   readonly iconBanknote = Banknote;

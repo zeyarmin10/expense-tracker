@@ -72,6 +72,7 @@ import { MobileFullscreenOverlayComponent } from '../common/mobile-fullscreen-ov
 import { AutoGrowDirective } from '../../directives/auto-grow.directive';
 import { ImgFallbackDirective } from '../../directives/img-fallback.directive';
 import { SwipeToCloseDirective } from '../../directives/swipe-to-close.directive';
+import { AvatarTipComponent } from '../common/avatar-tip/avatar-tip.component';
 const Toast = createAppToast();
 
 interface ExpenseDateGroup {
@@ -94,7 +95,7 @@ interface CartLine {
 @Component({
   selector: 'app-purchase',
   standalone: true,
-  imports: [SwipeToCloseDirective, ImgFallbackDirective, AutoGrowDirective, 
+  imports: [AvatarTipComponent, SwipeToCloseDirective, ImgFallbackDirective, AutoGrowDirective, 
     CommonModule,
     ReactiveFormsModule,
     FormsModule,
@@ -615,8 +616,6 @@ export class Purchase implements OnInit, OnDestroy {
   readonly iconShoppingCart = ShoppingCart;
   readonly iconPackage = Package;
 
-  activeAvatarExpenseId: string | null = null;
-  activeAvatarVoucherId: string | null = null;
 
   userProfile: UserProfile | null = null;
 
@@ -1619,27 +1618,9 @@ export class Purchase implements OnInit, OnDestroy {
       </span>`;
   }
 
-  @HostListener('click')
-  closeAvatarBubbles(): void {
-    this.activeAvatarExpenseId = null;
-    this.activeAvatarVoucherId = null;
-  }
-
   @HostListener('window:resize')
   onWindowResize(): void {
     this.isDesktopView = window.innerWidth >= 992;
-  }
-
-  toggleAvatarName(expenseId: string, event: Event): void {
-    event.stopPropagation();
-    this.activeAvatarExpenseId = this.activeAvatarExpenseId === expenseId ? null : expenseId;
-    this.activeAvatarVoucherId = null;
-  }
-
-  toggleVoucherAvatarName(voucherId: string, event: Event): void {
-    event.stopPropagation();
-    this.activeAvatarVoucherId = this.activeAvatarVoucherId === voucherId ? null : voucherId;
-    this.activeAvatarExpenseId = null;
   }
 
   showExpenseInfo(expense: IExpense): void {
