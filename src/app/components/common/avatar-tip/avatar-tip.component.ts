@@ -1,9 +1,10 @@
 import {
-  ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, HostListener, Input, OnDestroy, inject,
+  ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, HostListener, Input, OnDestroy, ViewChild, inject,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LucideAngularModule, Pencil } from 'lucide-angular';
 import { UserAvatarComponent } from '../user-avatar/user-avatar.component';
+import { clipToAncestors, getVisibleViewportBounds } from '../../../utils/viewport-bounds';
 
 /** Only one avatar tooltip is open at a time across the app. */
 let openInstance: AvatarTipComponent | null = null;
@@ -14,6 +15,10 @@ let openInstance: AvatarTipComponent | null = null;
  * (e.g. who added it and when); an optional `note` adds a second line (e.g.
  * "Edited by X on 14 Nov 2026, 16:29"). `badge="edit"` marks the avatar
  * with a small pencil so an edited record is recognisable at a glance.
+ *
+ * Placement is dynamic: it opens above the avatar, but flips below when the
+ * space above is hidden (fixed top bar, a clipping panel edge), and opens
+ * towards whichever side keeps it inside the screen.
  */
 @Component({
   selector: 'app-avatar-tip',
@@ -27,7 +32,7 @@ let openInstance: AvatarTipComponent | null = null;
         <lucide-icon [img]="iconEdit" [size]="9"></lucide-icon>
       </span>
     </button>
-    <span class="at-bubble" [class.visible]="open" [class.at-right]="align === 'right'" role="tooltip">
+    <span #bubble class="at-bubble" [class.visible]="open" [class.at-right]="side === 'right'" [class.at-below]="below" role="tooltip">
       <app-user-avatar [name]="name" [photoUrl]="photoUrl" [size]="30"></app-user-avatar>
       <span class="at-text">
         <span class="at-line"><span class="at-name">{{ name }}</span><span class="at-detail" *ngIf="detail"> · {{ detail }}</span></span>
@@ -98,7 +103,18 @@ let openInstance: AvatarTipComponent | null = null;
       transform-origin: bottom right;
     }
     .at-bubble.at-right::after, .at-bubble.at-right::before { left: auto; right: 7px; }
-    .at-bubble.visible {
+    /* Not enough room above: open below the avatar, arrow on top. */
+    .at-bubble.at-below {
+      bottom: auto;
+      top: calc(100% + 9px);
+      border-radius: 2px 10px 10px 10px;
+      transform: translateY(-5px) scale(0.9);
+      transform-origin: top left;
+    }
+    .at-bubble.at-below.at-right { border-radius: 10px 2px 10px 10px; transform-origin: top right; }
+    .at-bubble.at-below::after { top: auto; bottom: 100%; border-top-color: transparent; border-bottom-color: var(--border); }
+    .at-bubble.at-below::before { top: auto; bottom: calc(100% - 1px); border-top-color: transparent; border-bottom-color: var(--surface-2); }
+    .at-bubble.visible, .at-bubble.at-below.visible {
       opacity: 1;
       pointer-events: auto;
       transform: translateY(0) scale(1);
@@ -138,12 +154,23 @@ export class AvatarTipComponent implements OnDestroy {
   @Input() note = '';
   @Input() badge: 'edit' | null = null;
 
+  @ViewChild('bubble', { static: true }) private bubbleRef!: ElementRef<HTMLElement>;
+
   readonly iconEdit = Pencil;
   open = false;
+  /** Resolved placement for the current opening. */
+  below = false;
+  side: 'left' | 'right' = 'left';
 
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
-  private readonly onAnyScroll = () => this.close();
+  // Close when the avatar is really scrolled away; ignore a pixel or two of
+  // scroll settling right after opening.
+  private openedAtTop = 0;
+  private readonly onAnyScroll = () => {
+    const moved = Math.abs(this.host.nativeElement.getBoundingClientRect().top - this.openedAtTop);
+    if (moved > 12) this.close();
+  };
 
   toggle(event: Event): void {
     // Cards/rows are often tappable themselves.
@@ -154,9 +181,32 @@ export class AvatarTipComponent implements OnDestroy {
     }
     if (openInstance && openInstance !== this) openInstance.close();
     openInstance = this;
+    this.place();
     this.open = true;
+    this.openedAtTop = this.host.nativeElement.getBoundingClientRect().top;
     window.addEventListener('scroll', this.onAnyScroll, { capture: true, passive: true });
     this.cdr.markForCheck();
+  }
+
+  /**
+   * Picks above/below and left/right from the bubble's real size (it's laid
+   * out even while hidden) and the space that is actually visible.
+   */
+  private place(): void {
+    const btn = this.host.nativeElement.getBoundingClientRect();
+    const bubble = this.bubbleRef.nativeElement;
+    const height = bubble.offsetHeight + 12; // + arrow gap
+    const width = bubble.offsetWidth;
+    const { top, bottom } = clipToAncestors(this.host.nativeElement, getVisibleViewportBounds());
+    const spaceAbove = btn.top - top;
+    const spaceBelow = bottom - btn.bottom;
+    this.below = spaceAbove < height && (spaceBelow >= height || spaceBelow > spaceAbove);
+
+    const margin = 8;
+    const fitsRightward = btn.left + width <= window.innerWidth - margin;
+    const fitsLeftward = btn.right - width >= margin;
+    if (this.align === 'right') this.side = fitsLeftward || !fitsRightward ? 'right' : 'left';
+    else this.side = fitsRightward || !fitsLeftward ? 'left' : 'right';
   }
 
   close(): void {

@@ -5,6 +5,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { LucideAngularModule, Ellipsis, Pen, Trash2 } from 'lucide-angular';
+import { getVisibleViewportBounds } from '../../../utils/viewport-bounds';
 
 /** Only one row menu is open at a time across the whole app. */
 let openInstance: RowMenuComponent | null = null;
@@ -161,10 +162,16 @@ export class RowMenuComponent implements OnDestroy {
     const rect = this.trigger.nativeElement.getBoundingClientRect();
     const items = (this.showEdit ? 1 : 0) + (this.showDelete ? 1 : 0);
     const menuHeight = items * 46 + 14;
-    this.openUp = rect.bottom + 6 + menuHeight > window.innerHeight - 72; // keep clear of the bottom nav
+    // Below by default; above only when the bottom nav would cover it AND
+    // there's room above (the fixed top bar hides that area too).
+    const { top, bottom } = getVisibleViewportBounds();
+    const spaceBelow = bottom - (rect.bottom + 6);
+    const spaceAbove = (rect.top - 6) - top;
+    this.openUp = spaceBelow < menuHeight && spaceAbove > spaceBelow;
     this.top = this.openUp ? rect.top - 6 - menuHeight : rect.bottom + 6;
     this.left = Math.max(8, Math.min(rect.right - MENU_WIDTH, window.innerWidth - MENU_WIDTH - 8));
     this.open = true;
+    this.openedAtTop = rect.top;
     window.addEventListener('scroll', this.onAnyScroll, { capture: true, passive: true });
     this.cdr.markForCheck();
   }
@@ -181,8 +188,14 @@ export class RowMenuComponent implements OnDestroy {
   }
 
   // A fixed menu would stay put while its row scrolls away. Captured, so a
-  // scroll inside any container (not only the window) closes it too.
-  private readonly onAnyScroll = () => this.close();
+  // scroll inside any container (not only the window) counts too. A pixel
+  // or two of settling (scroll anchoring, momentum ending) is ignored —
+  // only a real scroll that moves the ⋯ button closes it.
+  private openedAtTop = 0;
+  private readonly onAnyScroll = () => {
+    const moved = Math.abs(this.trigger.nativeElement.getBoundingClientRect().top - this.openedAtTop);
+    if (moved > 12) this.close();
+  };
 
   ngOnDestroy(): void {
     window.removeEventListener('scroll', this.onAnyScroll, true);
