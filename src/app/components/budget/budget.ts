@@ -1733,23 +1733,20 @@ export class BudgetComponent implements OnInit, OnDestroy {
       return '0%';
     }
 
-    const currentLang = this.translate.currentLang;
-
-    if (currentLang === 'my') {
-      return new Intl.NumberFormat('my-MM', {
-        style: 'percent',
-        minimumFractionDigits: 1,
-        maximumFractionDigits: 1,
-        numberingSystem: 'mymr',
-      }).format(value / 100);
-    } else {
-      return new Intl.NumberFormat(undefined, {
-        style: 'percent',
-        minimumFractionDigits: 1,
-        maximumFractionDigits: 1,
-      }).format(value / 100);
+    // Called from the template on every change detection; building an
+    // Intl.NumberFormat each time was a large share of the cost of opening
+    // the Add-Budget sheet. Reuse one formatter per language.
+    const currentLang = this.translate.currentLang === 'my' ? 'my' : 'other';
+    let formatter = this.percentFormatters.get(currentLang);
+    if (!formatter) {
+      formatter = currentLang === 'my'
+        ? new Intl.NumberFormat('my-MM', { style: 'percent', minimumFractionDigits: 1, maximumFractionDigits: 1, numberingSystem: 'mymr' })
+        : new Intl.NumberFormat(undefined, { style: 'percent', minimumFractionDigits: 1, maximumFractionDigits: 1 });
+      this.percentFormatters.set(currentLang, formatter);
     }
+    return formatter.format(value / 100);
   }
+  private readonly percentFormatters = new Map<string, Intl.NumberFormat>();
 
   getBalanceIcon(balances: { [key: string]: number } | null): LucideIconData {
     const totalBalance = balances

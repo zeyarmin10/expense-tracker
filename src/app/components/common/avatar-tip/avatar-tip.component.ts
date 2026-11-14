@@ -1,5 +1,5 @@
 import {
-  ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, HostListener, Input, OnDestroy, ViewChild, inject,
+  ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, Input, NgZone, OnDestroy, ViewChild, inject,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LucideAngularModule, Pencil } from 'lucide-angular';
@@ -164,12 +164,13 @@ export class AvatarTipComponent implements OnDestroy {
 
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly zone = inject(NgZone);
   // Close when the avatar is really scrolled away; ignore a pixel or two of
   // scroll settling right after opening.
   private openedAtTop = 0;
   private readonly onAnyScroll = () => {
     const moved = Math.abs(this.host.nativeElement.getBoundingClientRect().top - this.openedAtTop);
-    if (moved > 12) this.close();
+    if (moved > 12) this.zone.run(() => this.close());
   };
 
   toggle(event: Event): void {
@@ -184,7 +185,7 @@ export class AvatarTipComponent implements OnDestroy {
     this.place();
     this.open = true;
     this.openedAtTop = this.host.nativeElement.getBoundingClientRect().top;
-    window.addEventListener('scroll', this.onAnyScroll, { capture: true, passive: true });
+    this.addGlobalListeners();
     this.cdr.markForCheck();
   }
 
@@ -212,23 +213,37 @@ export class AvatarTipComponent implements OnDestroy {
   close(): void {
     if (!this.open) return;
     this.open = false;
-    window.removeEventListener('scroll', this.onAnyScroll, true);
+    this.removeGlobalListeners();
     if (openInstance === this) openInstance = null;
     this.cdr.markForCheck();
   }
 
-  @HostListener('document:click', ['$event'])
-  onDocumentClick(event: Event): void {
-    if (this.open && !this.host.nativeElement.contains(event.target as Node)) this.close();
+  // Global listeners exist only while this tooltip is open (see RowMenu):
+  // permanent @HostListeners on every avatar ran on every tap anywhere.
+  private readonly onDocClick = (event: Event) => {
+    if (!this.host.nativeElement.contains(event.target as Node)) this.zone.run(() => this.close());
+  };
+  private readonly onKeyDown = (event: KeyboardEvent) => {
+    if (event.key === 'Escape') this.zone.run(() => this.close());
+  };
+
+  private addGlobalListeners(): void {
+    this.zone.runOutsideAngular(() => {
+      window.addEventListener('scroll', this.onAnyScroll, { capture: true, passive: true });
+      document.addEventListener('keydown', this.onKeyDown);
+      // Next tick: the opening tap must not count as an outside tap.
+      setTimeout(() => { if (this.open) document.addEventListener('click', this.onDocClick); });
+    });
   }
 
-  @HostListener('document:keydown.escape')
-  onEscape(): void {
-    this.close();
+  private removeGlobalListeners(): void {
+    window.removeEventListener('scroll', this.onAnyScroll, true);
+    document.removeEventListener('keydown', this.onKeyDown);
+    document.removeEventListener('click', this.onDocClick);
   }
 
   ngOnDestroy(): void {
-    window.removeEventListener('scroll', this.onAnyScroll, true);
+    this.removeGlobalListeners();
     if (openInstance === this) openInstance = null;
   }
 }

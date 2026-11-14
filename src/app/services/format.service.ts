@@ -17,7 +17,65 @@ export class FormatService {
   private translate = inject(TranslateService);
   datePipe = inject(DatePipe);
 
-  private buildAmountWithSymbolParts(
+  // ── Result cache ──
+  // Templates call these formatters on every change-detection pass (e.g.
+  // [innerHTML]="formatAmountWithSymbolHtml(...)" for every row), and each
+  // call built a fresh Intl.NumberFormat — opening a modal on a page with
+  // many rows re-ran them all and visibly delayed it on phones. Results are
+  // cached per language; the cache is dropped whenever the language or the
+  // loaded translations change, and nothing is cached before translations
+  // have loaded (instant() would still return raw keys).
+  private readonly cache = new Map<string, unknown>();
+  private static readonly CACHE_LIMIT = 5000;
+
+  /** Language whose translations are known to be loaded (checked once, not per call). */
+  private readyLang: string | null = null;
+
+  constructor() {
+    const reset = () => {
+      this.cache.clear();
+      this.readyLang = null;
+    };
+    this.translate.onLangChange.subscribe(reset);
+    this.translate.onTranslationChange.subscribe(reset);
+    this.translate.onDefaultLangChange.subscribe(reset);
+  }
+
+  private translationsReady(lang: string): boolean {
+    if (!lang) return false;
+    if (this.readyLang === lang) return true;
+    const translations = (this.translate as unknown as { translations?: Record<string, Record<string, unknown>> }).translations;
+    const table = translations?.[lang];
+    if (table && typeof table === 'object') {
+      for (const _ in table) {
+        this.readyLang = lang; // at least one key loaded
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private memo<T>(key: string, compute: () => T): T {
+    const lang = this.translate.currentLang || '';
+    if (!this.translationsReady(lang)) return compute();
+    const fullKey = `${lang}|${key}`;
+    if (this.cache.has(fullKey)) return this.cache.get(fullKey) as T;
+    const value = compute();
+    if (this.cache.size >= FormatService.CACHE_LIMIT) this.cache.clear();
+    this.cache.set(fullKey, value);
+    return value;
+  }
+
+  private buildAmountWithSymbolParts(amount: number, currencyCode: string) {
+    return this.memo(`sym|${amount}|${currencyCode}`, () => this.computeAmountWithSymbolParts(amount, currencyCode));
+  }
+
+  private buildAmountShortParts(amount: number, currencyCode?: string, showSymbol = true, wholeHighDenomination = false) {
+    return this.memo(`short|${amount}|${currencyCode ?? ''}|${showSymbol}|${wholeHighDenomination}`,
+      () => this.computeAmountShortParts(amount, currencyCode, showSymbol, wholeHighDenomination));
+  }
+
+  private computeAmountWithSymbolParts(
     amount: number,
     currencyCode: string,
   ): { amountText: string; label: string; labelFirst: boolean } {
@@ -77,6 +135,10 @@ export class FormatService {
   // Plain integer counts (quantities, list counts) — not a currency amount,
   // just digits rendered in the app's current numbering system.
   formatCount(n: number, preferredLanguage?: string | null): string {
+    return this.memo(`count|${n}|${preferredLanguage ?? ''}`, () => this.computeCount(n, preferredLanguage));
+  }
+
+  private computeCount(n: number, preferredLanguage?: string | null): string {
     // The active ngx-translate language is the UI source of truth. A user's
     // profile language can be stale after changing language in the app, so
     // it must never override the language currently rendered on screen.
@@ -103,7 +165,7 @@ export class FormatService {
     return normalizedUnit ? `${quantity} ${normalizedUnit}` : quantity;
   }
 
-  private buildAmountShortParts(
+  private computeAmountShortParts(
     amount: number,
     currencyCode?: string,
     showSymbol = true,
@@ -281,6 +343,11 @@ export class FormatService {
   }
 
   formatLocalizedTime(date: string | Date | null | undefined): string {
+    if (typeof date === 'string') return this.memo(`time|${date}`, () => this.computeLocalizedTime(date));
+    return this.computeLocalizedTime(date);
+  }
+
+  private computeLocalizedTime(date: string | Date | null | undefined): string {
     if (!date) return '';
     const currentLang = this.translate.currentLang;
     const d = new Date(date);
@@ -297,6 +364,15 @@ export class FormatService {
   }
 
   formatLocalizedDate(
+    date: string | Date | null | undefined,
+    format?: string,
+  ): string {
+    // Date objects aren't cached (mutable); 'yyyy-MM-dd' strings are the common case.
+    if (typeof date !== 'string') return this.computeLocalizedDate(date, format);
+    return this.memo(`date|${date}|${format ?? ''}`, () => this.computeLocalizedDate(date, format));
+  }
+
+  private computeLocalizedDate(
     date: string | Date | null | undefined,
     format?: string,
   ): string {

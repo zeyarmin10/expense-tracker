@@ -1,6 +1,6 @@
 import {
   ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, EventEmitter,
-  HostListener, Input, OnDestroy, Output, ViewChild, inject,
+  Input, NgZone, OnDestroy, Output, ViewChild, inject,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
@@ -134,6 +134,7 @@ export class RowMenuComponent implements OnDestroy {
 
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly zone = inject(NgZone);
 
   toggle(event: Event): void {
     // Rows are often tappable themselves.
@@ -150,7 +151,7 @@ export class RowMenuComponent implements OnDestroy {
 
   close(): void {
     if (!this.open) return;
-    window.removeEventListener('scroll', this.onAnyScroll, true);
+    this.removeGlobalListeners();
     this.open = false;
     if (openInstance === this) openInstance = null;
     this.cdr.markForCheck();
@@ -172,19 +173,37 @@ export class RowMenuComponent implements OnDestroy {
     this.left = Math.max(8, Math.min(rect.right - MENU_WIDTH, window.innerWidth - MENU_WIDTH - 8));
     this.open = true;
     this.openedAtTop = rect.top;
-    window.addEventListener('scroll', this.onAnyScroll, { capture: true, passive: true });
+    this.addGlobalListeners();
     this.cdr.markForCheck();
   }
 
-  @HostListener('document:click', ['$event'])
-  onDocumentClick(event: Event): void {
-    if (this.open && !this.host.nativeElement.contains(event.target as Node)) this.close();
+  // Global listeners exist only while this menu is open. As permanent
+  // @HostListeners, every ⋯ on the page (one per card) ran — and marked its
+  // view for change detection — on every tap anywhere, which slowed things
+  // like opening the Add sheet on long lists.
+  private readonly onDocClick = (event: Event) => {
+    if (!this.host.nativeElement.contains(event.target as Node)) this.zone.run(() => this.close());
+  };
+  private readonly onKeyDown = (event: KeyboardEvent) => {
+    if (event.key === 'Escape') this.zone.run(() => this.close());
+  };
+  private readonly onResize = () => this.zone.run(() => this.close());
+
+  private addGlobalListeners(): void {
+    this.zone.runOutsideAngular(() => {
+      window.addEventListener('scroll', this.onAnyScroll, { capture: true, passive: true });
+      window.addEventListener('resize', this.onResize);
+      document.addEventListener('keydown', this.onKeyDown);
+      // Next tick: the opening tap must not count as an outside tap.
+      setTimeout(() => { if (this.open) document.addEventListener('click', this.onDocClick); });
+    });
   }
 
-  @HostListener('window:resize')
-  @HostListener('document:keydown.escape')
-  onDismiss(): void {
-    this.close();
+  private removeGlobalListeners(): void {
+    window.removeEventListener('scroll', this.onAnyScroll, true);
+    window.removeEventListener('resize', this.onResize);
+    document.removeEventListener('keydown', this.onKeyDown);
+    document.removeEventListener('click', this.onDocClick);
   }
 
   // A fixed menu would stay put while its row scrolls away. Captured, so a
@@ -194,11 +213,11 @@ export class RowMenuComponent implements OnDestroy {
   private openedAtTop = 0;
   private readonly onAnyScroll = () => {
     const moved = Math.abs(this.trigger.nativeElement.getBoundingClientRect().top - this.openedAtTop);
-    if (moved > 12) this.close();
+    if (moved > 12) this.zone.run(() => this.close());
   };
 
   ngOnDestroy(): void {
-    window.removeEventListener('scroll', this.onAnyScroll, true);
+    this.removeGlobalListeners();
     if (openInstance === this) openInstance = null;
   }
 }
