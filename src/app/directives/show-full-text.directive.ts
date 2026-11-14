@@ -1,6 +1,21 @@
 import { Directive, ElementRef, HostListener, Input } from '@angular/core';
 import Swal from 'sweetalert2';
 
+/** Full-text popup used for truncated names/descriptions across the app. */
+export function showFullTextPopup(text: string): void {
+  const value = text.trim();
+  if (!value) return;
+  Swal.fire({
+    text: value,
+    showConfirmButton: false,
+    showCloseButton: true,
+    customClass: {
+      popup: 'swal-fulltext-popup',
+      closeButton: 'swal-fulltext-close',
+    },
+  });
+}
+
 @Directive({
   selector: '[appShowFullText]',
   standalone: true,
@@ -19,18 +34,6 @@ export class ShowFullTextDirective {
       el.scrollHeight > el.offsetHeight;
 
     if (!isTruncated) return;
-
-    const text = (this.label || el.textContent || '').trim();
-    if (!text) return;
-
-    Swal.fire({
-      text,
-      showConfirmButton: false,
-      showCloseButton: true,
-      customClass: {
-        popup: 'swal-fulltext-popup',
-        closeButton: 'swal-fulltext-close',
-      },
-    });
+    showFullTextPopup(this.label || el.textContent || '');
   }
 }

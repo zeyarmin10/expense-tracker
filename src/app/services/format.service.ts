@@ -232,6 +232,20 @@ export class FormatService {
   // formatLocalizedDate's own 'longDateTime'/'medium' branches already use
   // internally, exposed standalone for callers that need to show a
   // record's time separately from its (possibly backdated) date field.
+  /** "date, time" (Myanmar: "date၊ time") — e.g. when a record was last edited. */
+  formatLocalizedDateTime(date: string | Date | null | undefined): string {
+    if (!date) return '';
+    const d = new Date(date);
+    if (Number.isNaN(d.getTime())) return '';
+    const datePart = this.formatLocalizedDate(this.toLocalDateString(d));
+    const timePart = this.formatLocalizedTime(d);
+    return this.translate.currentLang === 'my' ? `${datePart}၊ ${timePart}` : `${datePart}, ${timePart}`;
+  }
+
+  private toLocalDateString(d: Date): string {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+
   formatLocalizedTime(date: string | Date | null | undefined): string {
     if (!date) return '';
     const currentLang = this.translate.currentLang;

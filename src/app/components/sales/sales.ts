@@ -66,7 +66,7 @@ import { UserAvatarComponent } from '../common/user-avatar/user-avatar.component
 import { ProductModalComponent } from '../common/product-modal/product-modal';
 import { SelectOption } from '../common/custom-select/custom-select.component';
 import { DateRangeInputComponent } from '../common/date-range-input/date-range-input.component';
-import { ShowFullTextDirective } from '../../directives/show-full-text.directive';
+import { ClampTextComponent } from '../common/clamp-text/clamp-text.component';
 import { MobileFullscreenOverlayComponent } from '../common/mobile-fullscreen-overlay/mobile-fullscreen-overlay.component';
 import flatpickr from 'flatpickr';
 import type { Instance as FlatpickrInstance } from 'flatpickr/dist/types/instance';
@@ -109,7 +109,7 @@ interface IncomeDateGroup {
     UserAvatarComponent,
     LucideAngularModule,
     DateRangeInputComponent,
-    ShowFullTextDirective,
+    ClampTextComponent,
     ProductModalComponent,
     MobileFullscreenOverlayComponent,
   ],

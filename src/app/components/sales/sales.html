@@ -252,19 +252,16 @@
                               </button>
                             </ng-container>
                             <ng-template #singleLineItem>
-                              <span class="pnl-item-name" appShowFullText>{{ getLineItemName(income.lineItems[0])
-                                }}</span>
+                              <app-clamp-text class="pnl-item-name" [text]="getLineItemName(income.lineItems[0])" [lines]="2"></app-clamp-text>
                             </ng-template>
                           </ng-container>
                           <ng-template #singleItemOrPlain>
                             <ng-container *ngIf="income.isProductSale && income.productId; else plainDescText">
-                              <span class="pnl-item-name" appShowFullText>
-                                {{ getSelectedProductName(income.productId) || '—' }}
-                                <span *ngIf="income.quantity"> × {{ formatQuantity(income.quantity, getSelectedProductUnit(income.productId)) }}</span>
-                              </span>
+                              <app-clamp-text class="pnl-item-name" [lines]="2"
+                                [text]="(getSelectedProductName(income.productId) || '—') + (income.quantity ? ' × ' + formatQuantity(income.quantity, getSelectedProductUnit(income.productId)) : '')"></app-clamp-text>
                             </ng-container>
                             <ng-template #plainDescText>
-                              <span class="pnl-item-name" appShowFullText>{{ income.description || '—' }}</span>
+                              <app-clamp-text class="pnl-item-name" [text]="income.description || '—'" [lines]="2"></app-clamp-text>
                             </ng-template>
                           </ng-template>
                           <span class="pnl-receipt-code">#{{ getReceiptCode(income) }}</span>
@@ -283,9 +280,8 @@
                         </div>
                       </div>
 
-                      <span class="pnl-item-desc-sub"
-                        *ngIf="income.description && income.lineItems && income.lineItems.length > 0" appShowFullText>{{
-                        income.description }}</span>
+                      <app-clamp-text class="pnl-item-desc-sub" [text]="income.description" [lines]="2"
+                        *ngIf="income.description && income.lineItems && income.lineItems.length > 0"></app-clamp-text>
 
                       <div class="pnl-item-actions">
                         <div class="pnl-item-actions-left">

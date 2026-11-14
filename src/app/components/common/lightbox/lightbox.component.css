@@ -409,3 +409,14 @@
   font-weight: 700;
   cursor: pointer;
 }
+
+/* Swipe-down-to-close in progress: chrome (top bar, arrows, footer, filmstrip)
+   fades out so only the image follows the finger. */
+.lb-overlay.lb-dismissing > :not(.lb-stage),
+/* The footer is projected content from the host page, so the scoped rule
+   above doesn't match it. */
+.lb-overlay.lb-dismissing ::ng-deep > [lbFooter] {
+  opacity: 0;
+  transition: opacity 0.15s ease-out;
+  pointer-events: none;
+}

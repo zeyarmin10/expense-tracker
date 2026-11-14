@@ -14,7 +14,7 @@
       <div class="bgt-add-modal-handle"></div>
 
       <div class="bgt-add-modal-header" *ngIf="!isDatePickerOpen">
-        <span class="bgt-add-modal-header-title">{{ 'ADD_BUDGET' | translate }}</span>
+        <span class="bgt-add-modal-header-title">{{ (editingBudget ? 'EDIT_BUDGET' : 'ADD_BUDGET') | translate }}</span>
         <button type="button" class="bgt-add-modal-close" (click)="closeAddModal()" [title]="'CANCEL_BUTTON_LABEL' | translate">
           <lucide-icon [img]="iconX" [size]="18"></lucide-icon>
         </button>
@@ -185,7 +185,7 @@
             <button type="submit" class="bgt-btn bgt-btn-primary" [disabled]="budgetForm.invalid || isSubmittingBudget">
               <span *ngIf="isSubmittingBudget" class="bgt-btn-spinner"></span>
               <lucide-icon *ngIf="!isSubmittingBudget" [img]="iconSave" [size]="16"></lucide-icon>
-              {{ "SAVE_BUTTON_LABEL" | translate }}
+              {{ (editingBudget ? "UPDATE_BUTTON_LABEL" : "SAVE_BUTTON_LABEL") | translate }}
             </button>
           </div>
         </form>
@@ -407,13 +407,20 @@
                             </div>
                           </div>
                           <div class="bgt-budget-card-meta" *ngIf="budget.description">
-                            <span class="bgt-budget-card-desc" appShowFullText>{{ budget.description }}</span>
+                            <app-clamp-text class="bgt-budget-card-desc" [text]="budget.description" [lines]="2"></app-clamp-text>
+                          </div>
+                          <!-- Last edit: who (avatar) and when -->
+                          <div class="bgt-edited" *ngIf="budget.updatedBy && budget.updatedAt">
+                            <app-user-avatar [name]="budget.updatedByName || ''" [photoUrl]="budget.updatedByPhotoURL || null" [size]="18"></app-user-avatar>
+                            <span class="bgt-edited-text">
+                              {{ 'LAST_EDITED' | translate }} · {{ formatService.formatLocalizedDateTime(budget.updatedAt) }}<ng-container *ngIf="userProfile?.accountType === 'group' && budget.updatedByName"> · {{ budget.updatedByName }}</ng-container>
+                            </span>
                           </div>
                         </div>
-                        <button *ngIf="canDeleteBudgets"
-                          class="bgt-delete-btn" type="button" (click)="confirmDeleteBudget(budget.id)">
-                          <lucide-icon [img]="iconTrash2" [size]="15"></lucide-icon>
-                        </button>
+                        <!-- Facebook-style ⋯ menu: Edit (members+) / Delete (admins) -->
+                        <app-row-menu *ngIf="canManageBudgets" class="bgt-row-menu"
+                          [showEdit]="canManageBudgets" [showDelete]="canDeleteBudgets"
+                          (edit)="startEditBudget(budget)" (delete)="confirmDeleteBudget(budget.id)"></app-row-menu>
                       </div>
                     </div>
                   </section>

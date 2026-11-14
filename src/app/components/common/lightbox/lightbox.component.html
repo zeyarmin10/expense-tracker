@@ -1,4 +1,5 @@
 <div
+  #overlay
   class="lb-overlay"
   [class.lb-open]="visible"
   [class.lb-has-footer]="hasFooter"
@@ -39,6 +40,7 @@
     class="lb-stage"
     (touchstart)="onStart($event)"
     (touchend)="onEnd($event)"
+    (touchcancel)="onEnd($event)"
     (mousedown)="onMouseDown($event)"
     (click)="onStageClick()"
   >

@@ -66,7 +66,7 @@ import { DateRangeInputComponent } from '../common/date-range-input/date-range-i
 import { FormatService } from '../../services/format.service';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
 import { UserAvatarComponent } from '../common/user-avatar/user-avatar.component';
-import { ShowFullTextDirective } from '../../directives/show-full-text.directive';
+import { ClampTextComponent } from '../common/clamp-text/clamp-text.component';
 import { MobileFullscreenOverlayComponent } from '../common/mobile-fullscreen-overlay/mobile-fullscreen-overlay.component';
 
 import { AutoGrowDirective } from '../../directives/auto-grow.directive';
@@ -105,7 +105,7 @@ interface CartLine {
     TranslateModule,
     CurrentSpaceTitleComponent,
     UserAvatarComponent,
-    ShowFullTextDirective,
+    ClampTextComponent,
     DateRangeInputComponent,
     MobileFullscreenOverlayComponent,
   ],

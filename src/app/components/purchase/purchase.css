@@ -3267,3 +3267,10 @@ body.light-mode .exp-seg-reset {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* Names rendered by ClampTextComponent wrap to 2 lines with an inline
+   "See more" instead of the single-line ellipsis above. */
+app-clamp-text.exp-item-name {
+  white-space: normal;
+  line-height: 1.45;
+}

@@ -732,13 +732,11 @@
                         </button>
                       </ng-container>
                       <ng-template #singleLineItemName>
-                        <span class="exp-item-name" appShowFullText>
-                          {{ getLineItemName(expense.lineItems[0]) }}
-                        </span>
+                        <app-clamp-text class="exp-item-name" [text]="getLineItemName(expense.lineItems[0])" [lines]="2"></app-clamp-text>
                       </ng-template>
                     </ng-container>
                     <ng-template #singleItemName>
-                      <span class="exp-item-name" appShowFullText>{{ expense.itemName }}</span>
+                      <app-clamp-text class="exp-item-name" [text]="expense.itemName" [lines]="2"></app-clamp-text>
                     </ng-template>
                     <span class="exp-item-amount"
                       [innerHTML]="formatService.formatAmountWithSymbolHtml(expense.totalCost, expense.currency)"

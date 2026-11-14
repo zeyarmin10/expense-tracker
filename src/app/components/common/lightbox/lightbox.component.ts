@@ -109,6 +109,7 @@ export class LightboxComponent implements AfterViewInit, OnDestroy {
     img.setAttribute('src', src);
   }
 
+  @ViewChild('overlay') overlayEl!: ElementRef<HTMLElement>;
   @ViewChild('vp') vp!: ElementRef<HTMLElement>;
   @ViewChild('imgWrap') imgWrapEl!: ElementRef<HTMLElement>;
   @ViewChild('img') imgEl!: ElementRef<HTMLImageElement>;
@@ -135,6 +136,15 @@ export class LightboxComponent implements AfterViewInit, OnDestroy {
   // .lb-img-wrap. Kept separate from tx/ty (which are the zoom-pan offset
   // applied to the inner <img>) so the two gestures never fight.
   private dragX = 0;
+
+  // Swipe-down-to-close (not zoomed). A one-finger gesture is locked to one
+  // direction once it has moved a little: 'h' = browse images, 'v' = dismiss.
+  private gesture: 'none' | 'h' | 'v' = 'none';
+  private dragY = 0;
+  private lastMoveY = 0;
+  private lastMoveT = 0;
+  private velocityY = 0; // px/ms, positive = downward
+  private dismissTimer?: ReturnType<typeof setTimeout>;
 
   // Desktop: mouse drag pans a zoomed image. A drag that ends over the
   // stage must not count as the stage's click-to-close.
@@ -168,7 +178,8 @@ export class LightboxComponent implements AfterViewInit, OnDestroy {
     this.idx = Math.max(0, Math.min(startIdx, images.length - 1));
     this.shapeBorderRadius = shapeBorderRadius;
     this.resetZoom();
-    this.clearDragInlineStyles();
+    clearTimeout(this.dismissTimer);
+    this.resetDismissStyles();
     this.fading = false;
     this.visible = true;
     this.indexChange.emit(this.idx);
@@ -210,6 +221,11 @@ export class LightboxComponent implements AfterViewInit, OnDestroy {
         this.dragX = 0;
         this.applyDragTransform(1, false);
       }
+      this.gesture = 'none';
+      this.dragY = 0;
+      this.velocityY = 0;
+      this.lastMoveY = this.sy0;
+      this.lastMoveT = e.timeStamp;
     } else if (e.touches.length === 2) {
       this.dist0 = this.pinchDist(e);
       this.s0 = this.scale;
@@ -222,6 +238,8 @@ export class LightboxComponent implements AfterViewInit, OnDestroy {
       // swipe-drag never apply at the same time.
       this.dragX = 0;
       this.applyDragTransform(1, false);
+      if (this.gesture === 'v') this.springBackDismiss();
+      this.gesture = 'none';
     }
   }
 
@@ -243,10 +261,30 @@ export class LightboxComponent implements AfterViewInit, OnDestroy {
       this.clamp();
       this.applyImgTransform();
     } else if (e.touches.length === 1) {
-      // Not zoomed — live-follow the finger horizontally so a swipe feels
-      // like an actual drag instead of only reacting once the finger lifts.
       let dx = e.touches[0].clientX - this.px0;
       const dy = e.touches[0].clientY - this.py0;
+
+      // Lock the gesture's direction once it has moved a little.
+      if (this.gesture === 'none') {
+        if (Math.max(Math.abs(dx), Math.abs(dy)) < 10) return;
+        this.gesture = dy > 0 && Math.abs(dy) > Math.abs(dx) * 1.2 ? 'v' : 'h';
+        if (this.gesture === 'v') this.overlayEl?.nativeElement.classList.add('lb-dismissing');
+      }
+
+      if (this.gesture === 'v') {
+        // Pull down: the image follows the finger and shrinks a little while
+        // the dark background fades, like a native photo viewer.
+        const dt = Math.max(1, e.timeStamp - this.lastMoveT);
+        this.velocityY = (e.touches[0].clientY - this.lastMoveY) / dt;
+        this.lastMoveY = e.touches[0].clientY;
+        this.lastMoveT = e.timeStamp;
+        this.dragY = Math.max(0, dy);
+        this.applyDismissTransform(false);
+        return;
+      }
+
+      // Not zoomed — live-follow the finger horizontally so a swipe feels
+      // like an actual drag instead of only reacting once the finger lifts.
       if (Math.abs(dy) > Math.abs(dx) * 1.5) return; // vertical gesture — ignore
       const atStart = dx > 0 && this.idx === 0;
       const atEnd = dx < 0 && this.idx === this.images.length - 1;
@@ -275,6 +313,19 @@ export class LightboxComponent implements AfterViewInit, OnDestroy {
         this.tx0 = this.tx;
         this.ty0 = this.ty;
       }
+      return;
+    }
+
+    if (this.gesture === 'v') {
+      this.gesture = 'none';
+      this.n = e.touches.length;
+      // The finger moved, but don't let a synthesized click reach the stage
+      // (its click closes instantly, skipping the slide-out).
+      this.suppressNextClick = true;
+      setTimeout(() => (this.suppressNextClick = false), 400);
+      const flicked = this.velocityY > 0.5 && this.dragY > 40;
+      if (this.dragY > 120 || flicked) this.dismissBySwipe();
+      else this.springBackDismiss();
       return;
     }
 
@@ -618,6 +669,51 @@ export class LightboxComponent implements AfterViewInit, OnDestroy {
       : 'none';
     el.style.transform = `translateX(${this.dragX}px)`;
     el.style.opacity = `${opacity}`;
+  }
+
+  private applyDismissTransform(withTransition: boolean, ms = 260, ease = 'cubic-bezier(0.2, 0.9, 0.3, 1.15)'): void {
+    const wrap = this.imgWrapEl?.nativeElement;
+    const overlay = this.overlayEl?.nativeElement;
+    if (!wrap || !overlay) return;
+    const progress = Math.min(1, this.dragY / (window.innerHeight * 0.6));
+    wrap.style.transition = withTransition ? `transform ${ms}ms ${ease}` : 'none';
+    wrap.style.transform = `translate3d(0, ${this.dragY}px, 0) scale(${1 - progress * 0.2})`;
+    overlay.style.transition = withTransition ? `background-color ${ms}ms ease-out` : 'none';
+    overlay.style.backgroundColor = `rgba(4, 8, 18, ${(0.82 * (1 - progress)).toFixed(3)})`;
+  }
+
+  /** Released far/fast enough: slide the image off the bottom, then close. */
+  private dismissBySwipe(): void {
+    const ms = 230;
+    this.dragY = window.innerHeight;
+    this.applyDismissTransform(true, ms, 'cubic-bezier(0.32, 0.72, 0, 1)');
+    clearTimeout(this.dismissTimer);
+    this.dismissTimer = setTimeout(() => {
+      this.hide();
+      this.cdr.markForCheck();
+      // Let the overlay's own fade (0.28s) finish before restoring styles.
+      this.dismissTimer = setTimeout(() => this.resetDismissStyles(), 320);
+    }, ms);
+  }
+
+  /** Not far enough: spring the image back and bring the background back. */
+  private springBackDismiss(): void {
+    this.dragY = 0;
+    this.applyDismissTransform(true);
+    const overlay = this.overlayEl?.nativeElement;
+    if (overlay) overlay.style.backgroundColor = ''; // back to the stylesheet colour (transitioned)
+    clearTimeout(this.dismissTimer);
+    this.dismissTimer = setTimeout(() => this.resetDismissStyles(), 280);
+  }
+
+  private resetDismissStyles(): void {
+    this.dragY = 0;
+    this.clearDragInlineStyles();
+    const overlay = this.overlayEl?.nativeElement;
+    if (!overlay) return;
+    overlay.style.removeProperty('background-color');
+    overlay.style.removeProperty('transition');
+    overlay.classList.remove('lb-dismissing');
   }
 
   /** Reverts .lb-img-wrap's inline styles so the fading/[class] driven

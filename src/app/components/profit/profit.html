@@ -267,24 +267,24 @@
               <div *ngFor="let income of group.incomes; trackBy: trackByIncomeId" class="exp-item pnl-income-item">
                 <div class="exp-item-inner">
                   <div class="exp-item-top">
-                    <span class="exp-item-name" appShowFullText>{{ income.description || '—' }}</span>
+                    <app-clamp-text class="exp-item-name" [text]="income.description || '—'" [lines]="2"></app-clamp-text>
                     <span class="exp-item-amount pnl-income-item-amount"
                       [innerHTML]="formatService.formatAmountWithSymbolHtml(income.amount, income.currency)"></span>
+                    <!-- Facebook-style ⋯ menu: Edit (members+) / Delete (admins) -->
+                    <app-row-menu *ngIf="canManageProfitActions" class="pnl-row-menu"
+                      [showEdit]="canManageProfitActions" [showDelete]="canDeleteIncome"
+                      (edit)="startEditIncome(income)" (delete)="confirmDeleteIncome(income.id)"></app-row-menu>
                   </div>
                   <div class="pnl-income-item-member" *ngIf="isGroupUser && income.createdByName">
                     <app-user-avatar [name]="income.createdByName" [photoUrl]="income.createdByPhotoURL || null" [size]="20"></app-user-avatar>
                     <span>{{ income.createdByName }}</span>
                   </div>
-                  <div class="exp-item-actions" *ngIf="canManageProfitActions">
-                    <div class="exp-item-actions-left">
-                      <button class="exp-btn exp-btn-sm exp-btn-outline-info" type="button" (click)="startEditIncome(income)">
-                        <lucide-icon [img]="iconPen" [size]="16"></lucide-icon>
-                        {{ 'EDIT_BUTTON_LABEL' | translate }}
-                      </button>
-                      <button *ngIf="canDeleteIncome" class="exp-btn exp-btn-sm exp-btn-outline-danger" type="button" (click)="confirmDeleteIncome(income.id)">
-                        <lucide-icon [img]="iconTrash2" [size]="16"></lucide-icon>
-                      </button>
-                    </div>
+                  <!-- Last edit: who (avatar) and when -->
+                  <div class="pnl-edited" *ngIf="income.updatedBy && income.updatedAt">
+                    <app-user-avatar [name]="income.updatedByName || ''" [photoUrl]="income.updatedByPhotoURL || null" [size]="18"></app-user-avatar>
+                    <span class="pnl-edited-text">
+                      {{ 'LAST_EDITED' | translate }} · {{ formatService.formatLocalizedDateTime(income.updatedAt) }}<ng-container *ngIf="isGroupUser && income.updatedByName"> · {{ income.updatedByName }}</ng-container>
+                    </span>
                   </div>
                 </div>
               </div>

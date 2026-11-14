@@ -60,6 +60,10 @@ export interface ServiceIIncome {
   lastOfflineOperationId?: string;
   createdByName?: string;
   createdByPhotoURL?: string | null;
+  /** Last edit — who made it (uid) plus a name/photo snapshot for display. */
+  updatedBy?: string;
+  updatedByName?: string;
+  updatedByPhotoURL?: string | null;
   device: string;
   editedDevice?: string;
   // ── Soft delete — absent/'active' means normal; 'void' means cancelled.
@@ -422,6 +426,7 @@ export class IncomeService {
               if (income.userId) {
                 userIds.add(income.userId);
               }
+              if (income.updatedBy) userIds.add(income.updatedBy);
             });
 
             // Reads the public display-identity mirror (name + photo only) —
@@ -455,11 +460,17 @@ export class IncomeService {
               const createdByPhotoURL = creatorProfile
                 ? (creatorProfile.photoURL || null)
                 : (income.createdByPhotoURL ?? null);
+              // Last editor: live profile first, then the edit-time snapshot.
+              const editorProfile = income.updatedBy ? userProfiles[income.updatedBy] : undefined;
+              const updatedByName = editorProfile?.displayName || income.updatedByName;
+              const updatedByPhotoURL = editorProfile ? (editorProfile.photoURL || null) : (income.updatedByPhotoURL ?? null);
               return {
                 id: key,
                 ...income,
                 createdByName,
                 createdByPhotoURL,
+                updatedByName,
+                updatedByPhotoURL,
               } as ServiceIIncome;
             })
               // Voided (soft-deleted) records stay in Firebase forever for
@@ -498,6 +509,14 @@ export class IncomeService {
       throw new Error('Income ID is required for update.');
     }
     await this.refreshConnectionStateForWrite();
+    // Who/when of the last edit, shown on the income card.
+    const editMeta = {
+      editedDevice: navigator.userAgent,
+      updatedAt: new Date().toISOString(),
+      updatedBy: profile.uid,
+      updatedByName: profile.displayName || 'Anonymous',
+      updatedByPhotoURL: profile.photoURL || null,
+    };
 
     if (this.sharedOfflineData.isOfflineShared(profile)) {
       const records = await this.sharedOfflineData.read<ServiceIIncome>(profile, 'incomes');
@@ -508,7 +527,7 @@ export class IncomeService {
         await this.assertOfflineProductSaleStock(profile, { ...current, ...updatedData } as ServiceIIncome, incomeId);
       }
       await this.sharedOfflineData.write(profile, 'incomes', isProductSaleEdit ? 'stockSaleUpdate' : 'update', incomeId, {
-        ...updatedData, editedDevice: navigator.userAgent, updatedAt: new Date().toISOString(),
+        ...updatedData, ...editMeta,
       }, current.updatedAt || current.createdAt || null);
       return 'queued';
     }
@@ -521,8 +540,7 @@ export class IncomeService {
         await this.assertOfflineProductSaleStock(profile, { ...current, ...updatedData } as ServiceIIncome, incomeId);
       }
       await this.personalOfflineData.write(profile, 'incomes', isProductSaleEdit ? 'stockSaleUpdate' : 'update', incomeId, {
-        ...updatedData,
-        editedDevice: navigator.userAgent,
+        ...updatedData, ...editMeta,
       });
       return 'queued';
     }
@@ -541,7 +559,7 @@ export class IncomeService {
 
     const currentSnapshot = await get(incomeRef);
     const current = currentSnapshot.val() as ServiceIIncome | null;
-    const patch = { ...updatedData, editedDevice: navigator.userAgent };
+    const patch = { ...updatedData, ...editMeta };
     if (current?.isProductSale || updatedData.isProductSale) {
       await this.saveProductSaleTransaction(await this.getStockTransactionRoot(profile), incomeId, patch, 'update');
       return 'saved';

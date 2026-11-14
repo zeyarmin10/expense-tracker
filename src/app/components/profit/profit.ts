@@ -57,7 +57,7 @@ import { createAppToast } from '../../services/toast';
 import { UserAvatarComponent } from '../common/user-avatar/user-avatar.component';
 import { CustomSelectComponent, SelectOption } from '../common/custom-select/custom-select.component';
 import { DateRangeInputComponent } from '../common/date-range-input/date-range-input.component';
-import { ShowFullTextDirective } from '../../directives/show-full-text.directive';
+import { ClampTextComponent } from '../common/clamp-text/clamp-text.component';
 import { MobileFullscreenOverlayComponent } from '../common/mobile-fullscreen-overlay/mobile-fullscreen-overlay.component';
 import flatpickr from 'flatpickr';
 import type { Instance as FlatpickrInstance } from 'flatpickr/dist/types/instance';
@@ -66,6 +66,7 @@ import { FlatpickrMonthMenu, installFlatpickrMonthMenu } from '../../utils/flatp
 
 import { AutoGrowDirective } from '../../directives/auto-grow.directive';
 import { SwipeToCloseDirective } from '../../directives/swipe-to-close.directive';
+import { RowMenuComponent } from '../common/row-menu/row-menu.component';
 Chart.register(...registerables);
 
 const Toast = createAppToast();
@@ -83,7 +84,7 @@ interface IncomeDateGroup {
 @Component({
   selector: 'app-profit',
   standalone: true,
-  imports: [SwipeToCloseDirective, AutoGrowDirective, 
+  imports: [RowMenuComponent, SwipeToCloseDirective, AutoGrowDirective, 
     CommonModule,
     RouterLink,
     ReactiveFormsModule,
@@ -93,7 +94,7 @@ interface IncomeDateGroup {
     LucideAngularModule,
     CustomSelectComponent,
     DateRangeInputComponent,
-    ShowFullTextDirective,
+    ClampTextComponent,
     MobileFullscreenOverlayComponent,
   ],
   providers: [DatePipe],

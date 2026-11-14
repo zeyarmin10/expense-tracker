@@ -34,6 +34,10 @@ export interface ServiceIBudget {
   device: string;
   editedDevice?: string;
   updatedAt?: string;
+  /** Last edit — who made it (uid) plus a name/photo snapshot for display. */
+  updatedBy?: string;
+  updatedByName?: string;
+  updatedByPhotoURL?: string | null;
 }
 
 @Injectable({
@@ -177,20 +181,28 @@ export class BudgetService {
     if (!budgetId) {
       throw new Error('Budget ID is required for update.');
     }
+    // Who/when of the last edit, shown on the budget card.
+    const editMeta = {
+      editedDevice: navigator.userAgent,
+      updatedAt: new Date().toISOString(),
+      updatedBy: profile.uid,
+      updatedByName: profile.displayName || 'Anonymous',
+      updatedByPhotoURL: profile.photoURL || null,
+    };
 
     if (this.sharedOfflineData.isOfflineShared(profile)) {
       const records = await this.sharedOfflineData.read<ServiceIBudget>(profile, 'budgets');
       const current = records[budgetId];
       if (!current) throw new Error('Budget not found on this device.');
       await this.sharedOfflineData.write(profile, 'budgets', 'update', budgetId, {
-        ...updatedData, editedDevice: navigator.userAgent, updatedAt: new Date().toISOString(),
+        ...updatedData, ...editMeta,
       }, current.updatedAt || current.createdAt || null);
       return;
     }
 
     if (this.personalOfflineData.isOfflinePersonal(profile)) {
       await this.personalOfflineData.write(profile, 'budgets', 'update', budgetId, {
-        ...updatedData, editedDevice: navigator.userAgent,
+        ...updatedData, ...editMeta,
       });
       return;
     }
@@ -207,7 +219,7 @@ export class BudgetService {
         budgetRef = ref(this.db, `users/${profile.uid}/budgets/${budgetId}`);
     }
 
-    await update(budgetRef, { ...updatedData, editedDevice: navigator.userAgent });
+    await update(budgetRef, { ...updatedData, ...editMeta });
   }
 
   async deleteBudget(id: string): Promise<void> {

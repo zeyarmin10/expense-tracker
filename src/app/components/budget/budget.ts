@@ -52,7 +52,7 @@ import { DateRangeInputComponent } from '../common/date-range-input/date-range-i
 import Swal from 'sweetalert2';
 import { createAppToast } from '../../services/toast';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
-import { ShowFullTextDirective } from '../../directives/show-full-text.directive';
+import { ClampTextComponent } from '../common/clamp-text/clamp-text.component';
 import flatpickr from 'flatpickr';
 import type { Instance as FlatpickrInstance } from 'flatpickr/dist/types/instance';
 import { Burmese } from 'flatpickr/dist/l10n/my';
@@ -60,6 +60,8 @@ import { FlatpickrMonthMenu, installFlatpickrMonthMenu } from '../../utils/flatp
 
 import { AutoGrowDirective } from '../../directives/auto-grow.directive';
 import { SwipeToCloseDirective } from '../../directives/swipe-to-close.directive';
+import { RowMenuComponent } from '../common/row-menu/row-menu.component';
+import { UserAvatarComponent } from '../common/user-avatar/user-avatar.component';
 Chart.register(...registerables);
 
 const Toast = createAppToast();
@@ -108,14 +110,14 @@ interface BudgetPeriodGroup {
 @Component({
   selector: 'app-budget',
   standalone: true,
-  imports: [SwipeToCloseDirective, AutoGrowDirective, 
+  imports: [RowMenuComponent, UserAvatarComponent, SwipeToCloseDirective, AutoGrowDirective, 
     CommonModule,
     ReactiveFormsModule,
     TranslateModule,
     LucideAngularModule,
     FormsModule,
     CurrentSpaceTitleComponent,
-    ShowFullTextDirective,
+    ClampTextComponent,
     CustomSelectComponent,
     DateRangeInputComponent,
     MobileFullscreenOverlayComponent,
@@ -201,6 +203,8 @@ export class BudgetComponent implements OnInit, OnDestroy {
   isAddModalOpen = false;
   private addModalHistoryActive = false;
   isSubmittingBudget = false;
+  /** Non-null while the Add-Budget modal is editing an existing budget. */
+  editingBudget: ServiceIBudget | null = null;
   isCategoryPickerOpen = false;
   categoryPickerSearch = '';
   isDatePickerOpen = false;
@@ -255,7 +259,33 @@ export class BudgetComponent implements OnInit, OnDestroy {
     document.body.classList.add('bgt-add-modal-open');
   }
 
+  /** Edit reuses the Add-Budget modal, pre-filled (same pattern as income). */
+  startEditBudget(budget: ServiceIBudget): void {
+    if (!this.canManageBudgets || !budget.id) return;
+    this.openAddModal();
+    this.editingBudget = budget;
+    // The form holds a category id ('all' for the total budget); budgets
+    // store the category name.
+    const category = !budget.category || budget.category === 'all'
+      ? 'all'
+      : (this.categories.find(c => c.name === budget.category)?.id ?? budget.category);
+    this.budgetForm.patchValue({
+      type: budget.type === 'yearly' ? 'yearly' : 'monthly',
+      category,
+      amount: budget.amount,
+      period: budget.period,
+      description: budget.description || '',
+    });
+    this.amountDisplayValue = budget.amount > 0 ? this.formatWithCommas(budget.amount) : '';
+    this.cdr.markForCheck();
+  }
+
   closeAddModal(): void {
+    if (this.editingBudget) {
+      // Leaving edit mode: the next "Add" must start from a blank form.
+      this.editingBudget = null;
+      this.resetForm();
+    }
     const shouldPopHistory = this.addModalHistoryActive;
     this.addModalHistoryActive = false;
     this.isAddModalOpen = false;
@@ -1207,7 +1237,10 @@ export class BudgetComponent implements OnInit, OnDestroy {
           )!;
           const periodYear = this.datePipe.transform(periodDate, 'yyyy')!;
 
+          const editingId = this.editingBudget?.id;
           const existingBudgets = budgets.filter((budget) => {
+            // The budget being edited doesn't conflict with itself.
+            if (editingId && budget.id === editingId) return false;
             if (!budget.period) return false;
             const budgetDate = new Date(budget.period);
             const budgetMonthYear = this.datePipe.transform(
@@ -1286,10 +1319,12 @@ export class BudgetComponent implements OnInit, OnDestroy {
             period: formValue.period,
           };
 
-          this.budgetService
-            .addBudget(budgetData)
+          const save = editingId
+            ? this.budgetService.updateBudget(editingId, budgetData)
+            : this.budgetService.addBudget(budgetData);
+          save
             .then(() => {
-              Toast.fire({ icon: 'success', title: this.translate.instant('BUDGET_SAVE_SUCCESS') });
+              Toast.fire({ icon: 'success', title: this.translate.instant(editingId ? 'BUDGET_UPDATE_SUCCESS' : 'BUDGET_SAVE_SUCCESS') });
               this.resetForm();
               this.refreshBudgets$.next();
               this.closeAddModal();
@@ -1300,8 +1335,8 @@ export class BudgetComponent implements OnInit, OnDestroy {
               this.ensureDateFilterCovers(budgetData.period!, budgetData.type);
             })
             .catch((error) => {
-              console.error('Error adding budget:', error);
-              Toast.fire({ icon: 'error', title: this.translate.instant('BUDGET_SAVE_ERROR') });
+              console.error(editingId ? 'Error updating budget:' : 'Error adding budget:', error);
+              Toast.fire({ icon: 'error', title: this.translate.instant(editingId ? 'BUDGET_UPDATE_ERROR' : 'BUDGET_SAVE_ERROR') });
             })
             .finally(() => {
               this.isSubmittingBudget = false;

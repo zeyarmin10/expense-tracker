@@ -3279,3 +3279,11 @@ app-date-input .di-trigger {
     overscroll-behavior: contain;
   }
 }
+
+/* Names/descriptions rendered by ClampTextComponent wrap to 2 lines with an
+   inline "See more" instead of the single-line ellipsis above. */
+app-clamp-text.pnl-item-name,
+app-clamp-text.pnl-item-desc-sub {
+  white-space: normal;
+  line-height: 1.45;
+}

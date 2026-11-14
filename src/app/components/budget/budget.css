@@ -1697,11 +1697,11 @@ app-date-input .di-trigger {
 
 .bgt-budget-card-desc {
   font-size: 0.78rem;
+  line-height: 1.45;
   color: var(--text-muted);
   font-style: italic;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  /* Wraps to 2 lines, then "See more" (ClampTextComponent). */
+  min-width: 0;
 }
 
 /* ── Budget List Empty State ── */
@@ -2272,3 +2272,24 @@ app-date-input .di-trigger {
 body.light-mode .bgt-badge-monthly { background: rgba(59, 130, 246, 0.08); }
 body.light-mode .bgt-badge-yearly  { background: rgba(217, 119, 6, 0.08); }
 body.light-mode .bgt-badge-cat     { background: hsl(var(--cat-hue, 220) 80% 55% / 0.1); color: hsl(var(--cat-hue, 220) 65% 38%); }
+
+/* ── Card: ⋯ menu + last-edited line ── */
+.bgt-row-menu {
+  margin: -0.35rem -0.4rem 0 0; /* sit snugly in the top-right corner */
+}
+
+.bgt-edited {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.1rem;
+  min-width: 0;
+}
+
+.bgt-edited-text {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
