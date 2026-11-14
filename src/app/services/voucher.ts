@@ -538,7 +538,8 @@ export class VoucherService {
       // Snapshot of the editor's name so it shows offline and after they leave.
       updatedByName: profile.displayName || 'Anonymous',
       updatedFields: [
-        ...changedFields(voucher as unknown as Record<string, unknown>, {
+        // Stored title falls back to the file name, same as the value saved below.
+        ...changedFields({ ...voucher, title: voucher.title || voucher.fileName } as unknown as Record<string, unknown>, {
           date: input.date,
           title: input.title?.trim() || voucher.title || voucher.fileName,
           category: input.category || '',
@@ -548,6 +549,9 @@ export class VoucherService {
       ],
       editedDevice,
     };
+    // Saved without changing anything (no text change, no image added or
+    // removed): not an edit — leave the voucher untouched.
+    if ((metadata['updatedFields'] as string[]).length === 0) return;
 
     const offlineShared = this.sharedOfflineData.isOfflineShared(profile);
     const offlinePersonal = this.personalOfflineData.isOfflinePersonal(profile);

@@ -18,7 +18,7 @@ import { SpaceSwitchLoadingService } from './space-switch-loading.service';
 import { PersonalOfflineDataService } from './personal-offline-data.service';
 import { SharedOfflineDataService } from './shared-offline-data.service';
 import { NetworkService } from './network.service';
-import { changedFields } from '../utils/changed-fields';
+import { changedFields, hasRealChanges } from '../utils/changed-fields';
 
 export interface ServiceIBudget {
   id?: string;
@@ -248,6 +248,8 @@ export class BudgetService {
       const records = await this.sharedOfflineData.read<ServiceIBudget>(profile, 'budgets');
       const current = records[budgetId];
       if (!current) throw new Error('Budget not found on this device.');
+      // Saved without changing anything: not an edit.
+      if (!hasRealChanges(current as unknown as Record<string, unknown>, updatedData as Record<string, unknown>)) return;
       await this.sharedOfflineData.write(profile, 'budgets', 'update', budgetId, {
         ...updatedData, ...editMeta(current as unknown as Record<string, unknown>),
       }, current.updatedAt || current.createdAt || null);
@@ -256,6 +258,7 @@ export class BudgetService {
 
     if (this.personalOfflineData.isOfflinePersonal(profile)) {
       const records = await this.personalOfflineData.read<ServiceIBudget>(profile, 'budgets');
+      if (!hasRealChanges(records[budgetId] as unknown as Record<string, unknown>, updatedData as Record<string, unknown>)) return;
       await this.personalOfflineData.write(profile, 'budgets', 'update', budgetId, {
         ...updatedData, ...editMeta(records[budgetId] as unknown as Record<string, unknown>),
       });
@@ -275,6 +278,7 @@ export class BudgetService {
     }
 
     const currentSnapshot = await get(budgetRef);
+    if (!hasRealChanges(currentSnapshot.val(), updatedData as Record<string, unknown>)) return;
     await update(budgetRef, { ...updatedData, ...editMeta(currentSnapshot.val()) });
   }
 

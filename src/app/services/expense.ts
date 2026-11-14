@@ -28,7 +28,7 @@ import { PersonalOfflineDataService } from './personal-offline-data.service';
 import { SharedOfflineDataService } from './shared-offline-data.service';
 import { NetworkService } from './network.service';
 
-import { changedFields } from '../utils/changed-fields';
+import { changedFields, hasRealChanges } from '../utils/changed-fields';
 /** Fields whose change is reported as "X changed …" (same as editHistory). */
 const EXPENSE_TRACKED_FIELDS = ['itemName', 'price', 'quantity', 'unit', 'category', 'date', 'productId'] as const;
 
@@ -402,6 +402,8 @@ export class ExpenseService {
       const cached = await this.personalOfflineData.read<IExpense>(profile, 'expenses');
       const currentExpense = cached[expenseId];
       if (!currentExpense) throw new Error('Expense not found on this device.');
+      // Saved without changing anything: not an edit.
+      if (!hasRealChanges(currentExpense as unknown as Record<string, unknown>, updates as Record<string, unknown>)) return;
       const quantity = updates.quantity ?? currentExpense.quantity;
       const price = updates.price ?? currentExpense.price;
       const now = new Date().toISOString();
@@ -421,6 +423,8 @@ export class ExpenseService {
       const cached = await this.sharedOfflineData.read<IExpense>(profile, 'expenses');
       const currentExpense = cached[expenseId];
       if (!currentExpense) throw new Error('Expense not found on this device.');
+      // Saved without changing anything: not an edit.
+      if (!hasRealChanges(currentExpense as unknown as Record<string, unknown>, updates as Record<string, unknown>)) return;
       const quantity = updates.quantity ?? currentExpense.quantity;
       const price = updates.price ?? currentExpense.price;
       await this.sharedOfflineData.write(profile, 'expenses', 'update', expenseId, {
@@ -446,6 +450,8 @@ export class ExpenseService {
 
     // ── ပြောင်းလဲမှုမတိုင်မှီ current data ယူပြီး diff စစ်မည် ──
     const currentExpense = await this.getExpense(expenseId);
+    // Saved without changing anything: not an edit (no write, no history).
+    if (!hasRealChanges(currentExpense as unknown as Record<string, unknown>, updates as Record<string, unknown>)) return;
 
     // ── Changed fields ကို detect ──
     const TRACKED_FIELDS = EXPENSE_TRACKED_FIELDS;
@@ -454,7 +460,8 @@ export class ExpenseService {
     for (const field of TRACKED_FIELDS) {
       const oldVal = (currentExpense as any)[field];
       const newVal = (updates as any)[field];
-      if (newVal !== undefined && String(newVal) !== String(oldVal)) {
+      // Same rule as changedFields(): '' vs undefined/null isn't a change.
+      if (changedFields({ [field]: oldVal }, { [field]: newVal }, [field]).length) {
         changes[field] = {
           from: sanitize(oldVal),
           to: sanitize(newVal)

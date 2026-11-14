@@ -241,18 +241,29 @@ export class FormatService {
   };
 
   /**
-   * "Who changed what, when" for an edited record, e.g.
-   * "Zeyar Min က ၁၄ နို ၂၀၂၆၊ ၁၆:၅၂ တွင် ပမာဏ ကို ပြင်ဆင်ခဲ့ပါသည်".
-   * Without known fields (older edits) it falls back to just who/when.
+   * "Who changed what, on which day, at what time" for an edited record, e.g.
+   * "Zeyar Min က ၁၄ နို ၂၀၂၆ ၁၆:၅၂ မှာ ပမာဏ နဲ့ ဖော်ပြချက်ကို ပြင်လိုက်ပါတယ်".
+   * Without known fields (edits saved before fields were tracked) it says
+   * just who/when.
    */
   formatEditNote(name: string | null | undefined, at: string | null | undefined, fields?: string[] | null): string {
-    const time = this.formatLocalizedDateTime(at);
+    const d = at ? new Date(at) : null;
+    const valid = !!d && !Number.isNaN(d.getTime());
+    const date = valid ? this.formatLocalizedDate(this.toLocalDateString(d!)) : '';
+    const time = valid ? this.formatLocalizedTime(d!) : '';
     const who = name || '—';
     const labels = [...new Set((fields || []).map(f => FormatService.FIELD_KEYS[f]).filter(Boolean))]
       .map(key => this.translate.instant(key));
-    if (!labels.length) return this.translate.instant('EDITED_BY_SENTENCE', { name: who, time });
+    if (!labels.length) return this.translate.instant('EDITED_BY_SENTENCE', { name: who, date, time });
+    return this.translate.instant('EDITED_FIELDS_SENTENCE', { name: who, date, time, fields: this.joinWithAnd(labels) });
+  }
+
+  /** "A", "A and B", "A, B and C" — localized. */
+  private joinWithAnd(items: string[]): string {
+    if (items.length <= 1) return items[0] || '';
+    const and = this.translate.instant('LIST_AND');
     const sep = this.translate.currentLang === 'my' ? '၊ ' : ', ';
-    return this.translate.instant('EDITED_FIELDS_SENTENCE', { name: who, time, fields: labels.join(sep) });
+    return `${items.slice(0, -1).join(sep)}${and}${items[items.length - 1]}`;
   }
 
   /** "date, time" (Myanmar: "date၊ time") — e.g. when a record was last edited. */
