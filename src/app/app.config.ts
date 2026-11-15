@@ -6,7 +6,7 @@ import {
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { COMPOSITION_BUFFER_MODE } from '@angular/forms';
-import { provideRouter, withPreloading, PreloadAllModules } from '@angular/router';
+import { provideRouter, withPreloading, PreloadAllModules, withInMemoryScrolling } from '@angular/router';
 import { AngularFireModule } from '@angular/fire/compat';
 import {
   AngularFireDatabaseModule,
@@ -45,7 +45,13 @@ export const appConfig: ApplicationConfig = {
     { provide: COMPOSITION_BUFFER_MODE, useValue: false },
     // provideBrowserGlobalErrorListeners(),
     // provideZonelessChangeDetection(),
-    provideRouter(routes, withPreloading(PreloadAllModules)),
+    // Every page change (incl. Android back) opens the new page at its top
+    // instead of keeping the previous page's scroll offset.
+    provideRouter(
+      routes,
+      withPreloading(PreloadAllModules),
+      withInMemoryScrolling({ scrollPositionRestoration: 'top' }),
+    ),
     provideHttpClient(),
     provideAnimationsAsync(),
     provideFirebaseApp(() => initializeApp(environment.firebaseConfig)),

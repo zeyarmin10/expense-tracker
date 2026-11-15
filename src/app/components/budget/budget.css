@@ -1658,7 +1658,8 @@ app-date-input .di-trigger {
 }
 
 .bgt-budget-card-amount {
-  font-size: 1rem;
+  font-size: 1.15rem;
+  line-height: 1.25; /* keeps amount + activity line ≈ the 40px avatar */
   font-weight: 700;
   color: var(--budget-color);
   white-space: nowrap;

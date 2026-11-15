@@ -300,7 +300,7 @@
                   <div class="pnl-income-card-top" [class.pnl-has-menu]="canManageProfitActions">
                     <!-- Who added it (group spaces, or any edited income); ✎ when
                          edited. Tap: "name · added" + the last edit. -->
-                    <app-avatar-tip class="pnl-card-avatar" *ngIf="(isGroupUser && income.createdByName) || (income.updatedBy && income.updatedAt)"
+                    <app-avatar-tip class="pnl-card-avatar" [size]="40" *ngIf="(isGroupUser && income.createdByName) || (income.updatedBy && income.updatedAt)"
                       [name]="income.createdByName || userProfile?.displayName || ''"
                       [photoUrl]="income.createdByName ? income.createdByPhotoURL : userProfile?.photoURL"
                       [detail]="formatService.formatLocalizedDateTime(income.createdAt)"

@@ -803,7 +803,7 @@
                 <div class="exp-item-inner">
                   <div class="exp-item-top">
                     <!-- Who added it; ✎ when edited. Tap: "name · added" + who changed what. -->
-                    <app-avatar-tip class="exp-card-avatar" *ngIf="userProfile?.accountType === 'group' && expense.userDisplayName"
+                    <app-avatar-tip class="exp-card-avatar" [size]="40" *ngIf="userProfile?.accountType === 'group' && expense.userDisplayName"
                       [name]="expense.userDisplayName || expense.createdByName || 'Former Member'"
                       [photoUrl]="expense.userPhotoURL || expense.createdByPhotoURL"
                       [detail]="formatService.formatLocalizedDateTime(expense.createdAt)"

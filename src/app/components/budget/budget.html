@@ -353,7 +353,7 @@
                           <div class="bgt-budget-card-top" [class.bgt-has-menu]="canManageBudgets">
                             <!-- Who added it (group spaces, or any edited budget); ✎ when
                                  edited. Tap: "name · added" + the last edit. -->
-                            <app-avatar-tip class="bgt-card-avatar" *ngIf="(userProfile?.accountType === 'group' && budget.createdByName) || (budget.updatedBy && budget.updatedAt)"
+                            <app-avatar-tip class="bgt-card-avatar" [size]="40" *ngIf="(userProfile?.accountType === 'group' && budget.createdByName) || (budget.updatedBy && budget.updatedAt)"
                               [name]="budget.createdByName || userProfile?.displayName || ''"
                               [photoUrl]="budget.createdByName ? budget.createdByPhotoURL : userProfile?.photoURL"
                               [detail]="formatService.formatLocalizedDateTime(budget.createdAt)"
