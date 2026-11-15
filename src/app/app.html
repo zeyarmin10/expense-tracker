@@ -65,7 +65,10 @@
             'NAV_EXPENSE_OVERVIEW' | translate }}</a></li>
         <li><a routerLink="/budget" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_BUDGET' | translate
             }}</a></li>
-        <li><a routerLink="/profit" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_PROFIT' | translate
+        <!-- Cash Flow has no menu entry of its own in personal spaces: it opens
+             from the Income page, so Income stays highlighted there. -->
+        <li><a routerLink="/profit" routerLinkActive="active-link" [class.active-link]="isPersonalCashFlowRoute$ | async"
+            (click)="closeNavbarMenu()">{{ 'NAV_PROFIT' | translate
             }}</a></li>
       </ng-container>
 
@@ -82,11 +85,6 @@
             }}</a></li>
       </ng-container>
 
-      <li *ngIf="!(inventoryEnabled$ | async)">
-        <a routerLink="/cash-flow" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_CASH_FLOW' |
-          translate
-          }}</a>
-      </li>
       <li *ngIf="inventoryEnabled$ | async">
         <a routerLink="/cash-flow" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_CASH_IN_OUT' |
           translate
@@ -297,7 +295,8 @@
     </a>
 
     <!-- Income (formerly labeled "Profit") -->
-    <a id="tour-nav-income" class="mob-nav-item" routerLink="/profit" routerLinkActive="mob-nav-active">
+    <a id="tour-nav-income" class="mob-nav-item" routerLink="/profit" routerLinkActive="mob-nav-active"
+      [class.mob-nav-active]="isPersonalCashFlowRoute$ | async">
       <span class="mob-nav-icon">
         <lucide-icon [img]="iconBanknote" [size]="24"></lucide-icon>
       </span>
@@ -456,12 +455,6 @@
       <span>{{ 'NAV_EXPENSE_OVERVIEW' | translate }}</span>
     </a>
 
-    <a class="mob-drawer-link" *ngIf="!(inventoryEnabled$ | async)" routerLink="/cash-flow" routerLinkActive="mob-drawer-active" (click)="closeNavbarMenu()">
-      <span class="mob-drawer-link-icon">
-        <lucide-icon [img]="iconTrendingUp" [size]="16"></lucide-icon>
-      </span>
-      <span>{{ 'NAV_CASH_FLOW' | translate }}</span>
-    </a>
     <a class="mob-drawer-link" *ngIf="inventoryEnabled$ | async" routerLink="/cash-flow" routerLinkActive="mob-drawer-active" (click)="closeNavbarMenu()">
       <span class="mob-drawer-link-icon">
         <lucide-icon [img]="iconTrendingUp" [size]="16"></lucide-icon>

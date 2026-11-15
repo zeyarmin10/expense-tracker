@@ -69,6 +69,8 @@ export class App implements OnInit, AfterViewInit {
   groupMembers$: Observable<any[]>;
   groupName$: Observable<string | null>;
   inventoryEnabled$: Observable<boolean>;
+  /** On /cash-flow in a personal space — highlights Income, its parent page. */
+  isPersonalCashFlowRoute$!: Observable<boolean>;
   userSpaces$: Observable<UserSpaceSummary[]>;
   currentSpaceName$: Observable<string | null>;
   currentSpaceId$: Observable<string | null>;
@@ -347,16 +349,20 @@ export class App implements OnInit, AfterViewInit {
       )
     );
 
-    const drawerRoutes = ['/expense-overview', '/cash-flow', '/sales-report', '/vouchers', '/category', '/member-management', '/profile', '/privacy-policy', '/about'];
-    this.isDrawerRouteActive$ = this.router.events.pipe(
+    const drawerRoutes = ['/expense-overview', '/sales-report', '/vouchers', '/category', '/member-management', '/profile', '/privacy-policy', '/about'];
+    const routeBase$ = this.router.events.pipe(
       filter((event): event is NavigationEnd => event instanceof NavigationEnd),
       map((e: NavigationEnd) => e.urlAfterRedirects.split('?')[0]),
-      startWith(this.router.url.split('?')[0])
-    ).pipe(
-      map(url => {
-        const base = '/' + (url.split('/')[1] || '');
-        return drawerRoutes.includes(base);
-      })
+      startWith(this.router.url.split('?')[0]),
+      map(url => '/' + (url.split('/')[1] || '')),
+    );
+    // Cash Flow is a drawer page in shop spaces ("Cash In/Out"), but in
+    // personal spaces it opens from the Income page instead of a menu.
+    this.isDrawerRouteActive$ = combineLatest([routeBase$, this.inventoryEnabled$]).pipe(
+      map(([base, inventory]) => drawerRoutes.includes(base) || (base === '/cash-flow' && inventory))
+    );
+    this.isPersonalCashFlowRoute$ = combineLatest([routeBase$, this.inventoryEnabled$]).pipe(
+      map(([base, inventory]) => base === '/cash-flow' && !inventory)
     );
 
     this.translate.onLangChange.subscribe(event => {

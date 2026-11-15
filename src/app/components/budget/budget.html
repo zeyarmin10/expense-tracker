@@ -297,29 +297,6 @@
       </div>
     </ng-container>
 
-    <!-- ── Budget Comparison Chart ── -->
-    <div class="bgt-chart-panel ps-1 pe-1">
-      <h5 class="bgt-chart-title">
-        <lucide-icon [img]="iconChartColumn" class="bgt-icon-info ms-3"></lucide-icon>
-        {{ "BUDGET_COMPARISON" | translate }}
-      </h5>
-      <div class="bgt-chart-container">
-        <canvas id="budgetChart"></canvas>
-        <div *ngIf="!isChartDataLoaded" class="bgt-no-chart-data">
-          <div class="exp-loading"><span class="exp-spinner-sm"></span></div>
-        </div>
-        <div *ngIf="isChartDataLoaded && !hasChartData" class="bgt-no-chart-data">
-          <div class="bgt-no-chart-inner">
-            <lucide-icon [img]="iconChartColumn" class="bgt-no-chart-icon-fa"></lucide-icon>
-            <p class="bgt-no-chart-msg">{{ 'NO_BUDGET_CHART_DATA' | translate }}</p>
-            <button type="button" class="bgt-no-chart-cta" (click)="openBudgetFormAndFocus()">
-              + {{ 'SET_BUDGET' | translate }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- ── Recorded Budgets Panel ── -->
     <div class="bgt-panel">
       <button class="bgt-panel-toggle" type="button" (click)="toggleRecordedList($event)"
@@ -431,6 +408,29 @@
             <ng-template #loadingBudget>
               <div class="exp-loading"><span class="exp-spinner-sm"></span></div>
             </ng-template>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Budget Comparison Chart ── -->
+    <div class="bgt-chart-panel ps-1 pe-1">
+      <h5 class="bgt-chart-title">
+        <lucide-icon [img]="iconChartColumn" class="bgt-icon-info ms-3"></lucide-icon>
+        {{ "BUDGET_COMPARISON" | translate }}
+      </h5>
+      <div class="bgt-chart-container">
+        <canvas id="budgetChart"></canvas>
+        <div *ngIf="!isChartDataLoaded" class="bgt-no-chart-data">
+          <div class="exp-loading"><span class="exp-spinner-sm"></span></div>
+        </div>
+        <div *ngIf="isChartDataLoaded && !hasChartData" class="bgt-no-chart-data">
+          <div class="bgt-no-chart-inner">
+            <lucide-icon [img]="iconChartColumn" class="bgt-no-chart-icon-fa"></lucide-icon>
+            <p class="bgt-no-chart-msg">{{ 'NO_BUDGET_CHART_DATA' | translate }}</p>
+            <button type="button" class="bgt-no-chart-cta" (click)="openBudgetFormAndFocus()">
+              + {{ 'SET_BUDGET' | translate }}
+            </button>
           </div>
         </div>
       </div>
