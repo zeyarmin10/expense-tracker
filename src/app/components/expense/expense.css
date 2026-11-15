@@ -1873,7 +1873,7 @@ body.light-mode .exp-item {
   background: hsl(var(--cat-hue, 220) 80% 55% / 0.13);
   border: 1px solid hsl(var(--cat-hue, 220) 80% 55% / 0.35);
   color: hsl(var(--cat-hue, 220) 80% 70%);
-  max-width: 140px;
+  max-width: 100%;
   min-width: 0;
 }
 
