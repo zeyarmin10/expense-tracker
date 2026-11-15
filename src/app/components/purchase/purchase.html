@@ -705,20 +705,33 @@
               <div *ngFor="let expense of group.expenses; trackBy: trackByExpenseId" class="exp-item" [style.--cat-hue]="getIconHueForCategory(expense.category)">
                 <div class="exp-item-inner">
                   <div class="exp-item-top">
-                    <ng-container *ngIf="expense.lineItems && expense.lineItems.length > 0; else singleItemName">
-                      <ng-container *ngIf="expense.lineItems.length > 1; else singleLineItemName">
-                        <button type="button" class="exp-item-name exp-lineitems-toggle" (click)="toggleLineItems(expense.id!)">
-                          {{ 'PURCHASE_ITEMS_COUNT' | translate: { count: formatCount(expense.lineItems.length) } }}
-                          <lucide-icon [img]="expandedExpenseId === expense.id ? iconChevronUp : iconChevronDown" [size]="12"></lucide-icon>
-                        </button>
+                    <!-- Who added it; ✎ when edited. Tap: "name · added" + who changed what. -->
+                    <app-avatar-tip class="exp-card-avatar" *ngIf="userProfile?.accountType === 'group' && expense.userDisplayName"
+                      [name]="expense.userDisplayName || expense.createdByName || 'Former Member'"
+                      [photoUrl]="expense.userPhotoURL || expense.createdByPhotoURL"
+                      [detail]="formatService.formatLocalizedDateTime(expense.createdAt)"
+                      [badge]="expense.updatedBy && expense.updatedAt ? 'edit' : null"
+                      [note]="expense.updatedBy && expense.updatedAt ? formatService.formatEditNote(expense.updatedByName, expense.updatedAt, expense.updatedFields) : ''"></app-avatar-tip>
+                    <div class="exp-card-head">
+                      <ng-container *ngIf="expense.lineItems && expense.lineItems.length > 0; else singleItemName">
+                        <ng-container *ngIf="expense.lineItems.length > 1; else singleLineItemName">
+                          <button type="button" class="exp-item-name exp-lineitems-toggle" (click)="toggleLineItems(expense.id!)">
+                            {{ 'PURCHASE_ITEMS_COUNT' | translate: { count: formatCount(expense.lineItems.length) } }}
+                            <lucide-icon [img]="expandedExpenseId === expense.id ? iconChevronUp : iconChevronDown" [size]="12"></lucide-icon>
+                          </button>
+                        </ng-container>
+                        <ng-template #singleLineItemName>
+                          <app-clamp-text class="exp-item-name" [text]="getLineItemName(expense.lineItems[0])" [lines]="2"></app-clamp-text>
+                        </ng-template>
                       </ng-container>
-                      <ng-template #singleLineItemName>
-                        <app-clamp-text class="exp-item-name" [text]="getLineItemName(expense.lineItems[0])" [lines]="2"></app-clamp-text>
+                      <ng-template #singleItemName>
+                        <app-clamp-text class="exp-item-name" [text]="expense.itemName" [lines]="2"></app-clamp-text>
                       </ng-template>
-                    </ng-container>
-                    <ng-template #singleItemName>
-                      <app-clamp-text class="exp-item-name" [text]="expense.itemName" [lines]="2"></app-clamp-text>
-                    </ng-template>
+                      <!-- Who added it, or who last edited it, and how long ago. -->
+                      <span class="exp-card-activity" *ngIf="userProfile?.accountType === 'group' && expense.userDisplayName"
+                        [class.exp-card-activity-edited]="expense.updatedBy && expense.updatedAt"
+                        [attr.title]="formatService.formatRecordActivityFull(expense)">{{ formatService.formatRecordActivity(expense, expense.userDisplayName || expense.createdByName || '') }}</span>
+                    </div>
                     <span class="exp-item-amount"
                       [innerHTML]="formatService.formatAmountWithSymbolHtml(expense.totalCost, expense.currency)"
                     ></span>
@@ -784,13 +797,6 @@
                         (keydown.space)="showExpenseInfo(expense); $event.preventDefault()"
                         [title]="'EXPENSE_INFO_TITLE' | translate"
                       ></lucide-icon>
-                      <!-- Creator avatar; ✎ when edited. Tap: "name · added" + who changed what. -->
-                      <app-avatar-tip *ngIf="userProfile?.accountType === 'group' && expense.userDisplayName" align="right"
-                        [name]="expense.userDisplayName || expense.createdByName || 'Former Member'"
-                        [photoUrl]="expense.userPhotoURL || expense.createdByPhotoURL"
-                        [detail]="formatService.formatLocalizedDateTime(expense.createdAt)"
-                        [badge]="expense.updatedBy && expense.updatedAt ? 'edit' : null"
-                        [note]="expense.updatedBy && expense.updatedAt ? formatService.formatEditNote(expense.updatedByName, expense.updatedAt, expense.updatedFields) : ''"></app-avatar-tip>
                     </div>
                   </div>
                 </div>

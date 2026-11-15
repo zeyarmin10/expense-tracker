@@ -260,31 +260,32 @@
               </div>
             </div>
 
-            <!-- Same card layout as Recorded Budgets: icon · amount on top,
-                 the description (only when there is one) under it, then the
-                 avatar; ⋯ menu in the top-right corner. -->
+            <!-- Same card layout as Recorded Budgets: one column — avatar ·
+                 amount on top, the description (only when there is one) under
+                 it; ⋯ menu in the top-right corner. -->
             <div class="pnl-income-list">
               <div *ngFor="let income of group.incomes; trackBy: trackByIncomeId" class="pnl-income-card">
-                <div class="pnl-income-card-icon">
-                  <lucide-icon [img]="iconBanknote" [size]="16"></lucide-icon>
-                </div>
                 <div class="pnl-income-card-body">
-                  <span class="pnl-income-card-amount" [class.pnl-has-menu]="canManageProfitActions"
-                    [innerHTML]="formatService.formatAmountWithSymbolHtml(income.amount, income.currency)"></span>
-                  <app-clamp-text *ngIf="income.description?.trim()" class="pnl-income-card-desc"
-                    [text]="income.description" [lines]="2"></app-clamp-text>
-                  <!-- One avatar: who added it (group spaces, or any edited income).
-                       ✎ badge when edited; tap for "name · added" and, if
-                       edited, a second line with the last edit only. -->
-                  <div class="pnl-people"
-                    *ngIf="(isGroupUser && income.createdByName) || (income.updatedBy && income.updatedAt)">
-                    <app-avatar-tip
+                  <div class="pnl-income-card-top" [class.pnl-has-menu]="canManageProfitActions">
+                    <!-- Who added it (group spaces, or any edited income); ✎ when
+                         edited. Tap: "name · added" + the last edit. -->
+                    <app-avatar-tip class="pnl-card-avatar" *ngIf="(isGroupUser && income.createdByName) || (income.updatedBy && income.updatedAt)"
                       [name]="income.createdByName || userProfile?.displayName || ''"
                       [photoUrl]="income.createdByName ? income.createdByPhotoURL : userProfile?.photoURL"
                       [detail]="formatService.formatLocalizedDateTime(income.createdAt)"
                       [badge]="income.updatedBy && income.updatedAt ? 'edit' : null"
                       [note]="income.updatedBy && income.updatedAt ? formatService.formatEditNote(income.updatedByName, income.updatedAt, income.updatedFields) : ''"></app-avatar-tip>
+                    <div class="pnl-card-head">
+                      <span class="pnl-income-card-amount"
+                        [innerHTML]="formatService.formatAmountWithSymbolHtml(income.amount, income.currency)"></span>
+                      <!-- Who added it, or who last edited it, and when. -->
+                      <span class="pnl-card-activity" *ngIf="(isGroupUser && income.createdByName) || (income.updatedBy && income.updatedAt)"
+                        [class.pnl-card-activity-edited]="income.updatedBy && income.updatedAt"
+                        [attr.title]="formatService.formatRecordActivityFull(income)">{{ formatService.formatRecordActivity(income, userProfile?.displayName || '') }}</span>
+                    </div>
                   </div>
+                  <app-clamp-text *ngIf="income.description?.trim()" class="pnl-income-card-desc"
+                    [text]="income.description" [lines]="2"></app-clamp-text>
                 </div>
                 <!-- Facebook-style ⋯ menu: Edit (members+) / Delete (admins) -->
                 <app-row-menu *ngIf="canManageProfitActions" class="pnl-row-menu"

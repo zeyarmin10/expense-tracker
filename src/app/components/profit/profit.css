@@ -2142,17 +2142,41 @@ app-date-input .di-trigger {
   right: 0.5rem;
 }
 
-.pnl-income-card-amount.pnl-has-menu {
+.pnl-income-card-top {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.pnl-income-card-top.pnl-has-menu {
   padding-right: 2rem;
 }
 
 
-/* Creator / last-editor avatars (tap for details — AvatarTipComponent). */
-.pnl-people {
+/* Creator avatar sits before the amount (tap for details — AvatarTipComponent). */
+.pnl-card-avatar {
+  align-self: flex-start; /* stays by the first line when the name wraps */
+}
+
+/* Avatar · [amount / "X added · date, time"] — the avatar spans both lines. */
+.pnl-card-head {
   display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  margin-top: 0.25rem;
+  flex-direction: column;
+  gap: 0.1rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.pnl-card-activity {
+  font-size: 0.7rem;
+  line-height: 1.35;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
+.pnl-card-activity-edited {
+  color: var(--text-sub, var(--text-muted));
 }
 
 /* ── Recorded income cards — same layout as Recorded Budgets' cards ── */
@@ -2178,18 +2202,6 @@ app-date-input .di-trigger {
 
 .pnl-income-card:hover {
   background: var(--surface);
-}
-
-.pnl-income-card-icon {
-  width: 34px;
-  height: 34px;
-  border-radius: 9px;
-  background: var(--income-dim);
-  color: var(--income-color);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
 }
 
 .pnl-income-card-body {

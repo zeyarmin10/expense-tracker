@@ -10,6 +10,15 @@ import {
 } from '../core/constants/app.constants';
 import { CommonModule, DatePipe } from '@angular/common';
 
+/** Who/when fields a record card's activity line reads. */
+export interface RecordActivitySource {
+  createdByName?: string | null;
+  createdAt?: string | Date | null;
+  updatedBy?: string | null;
+  updatedByName?: string | null;
+  updatedAt?: string | Date | null;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -318,6 +327,50 @@ export class FormatService {
       .map(key => this.translate.instant(key));
     if (!labels.length) return this.translate.instant('EDITED_BY_SENTENCE', { name: who, date, time });
     return this.translate.instant('EDITED_FIELDS_SENTENCE', { name: who, date, time, fields: this.joinWithAnd(labels) });
+  }
+
+  /**
+   * One line for a record card: who last touched it and how long ago — "X
+   * edited · 4h" once it has been edited, otherwise "X added · 2d".
+   * `fallbackName` covers records without a stored name (personal spaces).
+   */
+  formatRecordActivity(record: RecordActivitySource, fallbackName = ''): string {
+    const edited = !!(record.updatedBy && record.updatedAt);
+    const name = (edited ? record.updatedByName : record.createdByName) || fallbackName || '—';
+    const when = this.formatRelativeShort(this.recordActivityDate(record));
+    return this.translate.instant(edited ? 'RECORD_EDITED_LINE' : 'RECORD_ADDED_LINE', { name, when });
+  }
+
+  /** Full "date, time" of the same moment, for a tooltip/title. */
+  formatRecordActivityFull(record: RecordActivitySource): string {
+    return this.formatLocalizedDateTime(this.recordActivityDate(record));
+  }
+
+  private recordActivityDate(record: RecordActivitySource): string | Date | null | undefined {
+    return record.updatedBy && record.updatedAt ? record.updatedAt : record.createdAt;
+  }
+
+  /**
+   * Facebook-style elapsed time: "Just now", "5m", "4h", "3d"; a week or
+   * older falls back to a short date ("Nov 1", or "Nov 1, 2025" in an
+   * earlier year). The avatar tooltip carries the full date and time.
+   * Numbers use the UI language's digits.
+   */
+  formatRelativeShort(at: string | Date | null | undefined): string {
+    if (!at) return '';
+    const d = new Date(at);
+    if (Number.isNaN(d.getTime())) return '';
+    const now = new Date();
+    const minutes = Math.floor((now.getTime() - d.getTime()) / 60000);
+    if (minutes < 1) return this.translate.instant('TIME_JUST_NOW');
+    if (minutes < 60) return this.translate.instant('TIME_MINUTES_SHORT', { n: this.formatCount(minutes) });
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return this.translate.instant('TIME_HOURS_SHORT', { n: this.formatCount(hours) });
+    const days = Math.floor(hours / 24);
+    if (days < 7) return this.translate.instant('TIME_DAYS_SHORT', { n: this.formatCount(days) });
+    return d.getFullYear() === now.getFullYear()
+      ? this.formatMobileDate(d)
+      : this.formatLocalizedDate(this.toLocalDateString(d));
   }
 
   /** "A", "A and B", "A, B and C" — localized. */

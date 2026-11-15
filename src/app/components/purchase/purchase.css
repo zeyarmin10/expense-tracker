@@ -1720,11 +1720,14 @@ body.light-mode .exp-item {
   gap: 0.4rem;
 }
 
+/* Grid so the "X added · 4h" line (row 2) can run under the amount too:
+   [avatar] [item name] [amount]
+   [avatar] [activity ─────────] */
 .exp-item-top {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.5rem;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  row-gap: 0.1rem;
 }
 
 .exp-item-name {
@@ -1745,6 +1748,43 @@ body.light-mode .exp-item {
   color: var(--accent);
   white-space: nowrap;
   flex-shrink: 0;
+}
+
+/* Avatar · [item name / "X added · 4h"] · amount — same header as the
+   Recorded Budgets / Incomes cards. The head wrapper is dissolved so its
+   name and activity line sit directly in .exp-item-top's grid. */
+.exp-card-avatar {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  margin-right: 0.5rem;
+}
+
+.exp-card-head {
+  display: contents;
+}
+
+.exp-item-top .exp-item-name {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.exp-item-top .exp-item-amount {
+  grid-column: 3;
+  grid-row: 1;
+  margin-left: 0.5rem;
+}
+
+.exp-card-activity {
+  grid-column: 2 / 4;
+  grid-row: 2;
+  font-size: 0.7rem;
+  line-height: 1.35;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
+.exp-card-activity-edited {
+  color: var(--text-sub, var(--text-muted));
 }
 
 .exp-item-meta {

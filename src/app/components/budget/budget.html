@@ -372,51 +372,44 @@
 
                     <div class="bgt-budget-group-list">
                       <div *ngFor="let budget of group.budgets; trackBy: trackByBudgetId" class="bgt-budget-card" [style.--date-hue]="getDateHue(group.period)">
-                        <div class="bgt-budget-card-icon-wrap"
-                          [class.bgt-budget-card-icon-cat]="budget.category && budget.category !== 'all'"
-                          [style.--cat-hue]="budget.category && budget.category !== 'all' ? getIconHueForCategory(budget.category) : null">
-                          <img *ngIf="budget.category && budget.category !== 'all' && getIconUrlForCategory(budget.category)"
-                            [src]="getIconUrlForCategory(budget.category)!" alt="" class="cat-img-icon" style="width:16px;height:16px" />
-                          <lucide-icon
-                            *ngIf="!(budget.category && budget.category !== 'all' && getIconUrlForCategory(budget.category))"
-                            [img]="budget.category && budget.category !== 'all' ? getIconForCategory(budget.category) : iconPiggyBank"
-                            [size]="16">
-                          </lucide-icon>
-                        </div>
                         <div class="bgt-budget-card-body">
                           <div class="bgt-budget-card-top" [class.bgt-has-menu]="canManageBudgets">
-                            <span class="bgt-budget-card-amount"
-                              [innerHTML]="formatService.formatAmountWithSymbolHtml(budget.amount, budget.currency)"
-                            ></span>
-                            <div class="bgt-budget-card-badges">
-                              <span class="bgt-row-badge bgt-badge-monthly" *ngIf="budget.type === 'monthly'">
-                                {{ 'MONTHLY' | translate }}
-                              </span>
-                              <span class="bgt-row-badge bgt-badge-yearly" *ngIf="budget.type === 'yearly'">
-                                {{ 'YEARLY' | translate }}
-                              </span>
-                              <span class="bgt-row-badge bgt-badge-cat" *ngIf="budget.category && budget.category !== 'all'"
-                                [style.--cat-hue]="getIconHueForCategory(budget.category)">
-                                <img *ngIf="getIconUrlForCategory(budget.category)" [src]="getIconUrlForCategory(budget.category)!" alt="" class="cat-img-icon" style="width:11px;height:11px" />
-                                <lucide-icon *ngIf="!getIconUrlForCategory(budget.category)" [img]="getIconForCategory(budget.category)" [size]="11" style="flex-shrink:0"></lucide-icon>
-                                {{ budget.category }}
-                              </span>
-                            </div>
-                          </div>
-                          <div class="bgt-budget-card-meta" *ngIf="budget.description">
-                            <app-clamp-text class="bgt-budget-card-desc" [text]="budget.description" [lines]="2"></app-clamp-text>
-                          </div>
-                          <!-- One avatar: who added it (group spaces, or any edited budget).
-                               ✎ badge when edited; tap for "name · added" and, if
-                               edited, a second line with the last edit only. -->
-                          <div class="bgt-people"
-                            *ngIf="(userProfile?.accountType === 'group' && budget.createdByName) || (budget.updatedBy && budget.updatedAt)">
-                            <app-avatar-tip
+                            <!-- Who added it (group spaces, or any edited budget); ✎ when
+                                 edited. Tap: "name · added" + the last edit. -->
+                            <app-avatar-tip class="bgt-card-avatar" *ngIf="(userProfile?.accountType === 'group' && budget.createdByName) || (budget.updatedBy && budget.updatedAt)"
                               [name]="budget.createdByName || userProfile?.displayName || ''"
                               [photoUrl]="budget.createdByName ? budget.createdByPhotoURL : userProfile?.photoURL"
                               [detail]="formatService.formatLocalizedDateTime(budget.createdAt)"
                               [badge]="budget.updatedBy && budget.updatedAt ? 'edit' : null"
                               [note]="budget.updatedBy && budget.updatedAt ? formatService.formatEditNote(budget.updatedByName, budget.updatedAt, budget.updatedFields) : ''"></app-avatar-tip>
+                            <div class="bgt-card-head">
+                              <div class="bgt-card-head-line">
+                                <span class="bgt-budget-card-amount"
+                                  [innerHTML]="formatService.formatAmountWithSymbolHtml(budget.amount, budget.currency)"
+                                ></span>
+                                <div class="bgt-budget-card-badges">
+                                  <span class="bgt-row-badge bgt-badge-monthly" *ngIf="budget.type === 'monthly'">
+                                    {{ 'MONTHLY' | translate }}
+                                  </span>
+                                  <span class="bgt-row-badge bgt-badge-yearly" *ngIf="budget.type === 'yearly'">
+                                    {{ 'YEARLY' | translate }}
+                                  </span>
+                                  <span class="bgt-row-badge bgt-badge-cat" *ngIf="budget.category && budget.category !== 'all'"
+                                    [style.--cat-hue]="getIconHueForCategory(budget.category)">
+                                    <img *ngIf="getIconUrlForCategory(budget.category)" [src]="getIconUrlForCategory(budget.category)!" alt="" class="cat-img-icon" style="width:11px;height:11px" />
+                                    <lucide-icon *ngIf="!getIconUrlForCategory(budget.category)" [img]="getIconForCategory(budget.category)" [size]="11" style="flex-shrink:0"></lucide-icon>
+                                    {{ budget.category }}
+                                  </span>
+                                </div>
+                              </div>
+                              <!-- Who added it, or who last edited it, and when. -->
+                              <span class="bgt-card-activity" *ngIf="(userProfile?.accountType === 'group' && budget.createdByName) || (budget.updatedBy && budget.updatedAt)"
+                                [class.bgt-card-activity-edited]="budget.updatedBy && budget.updatedAt"
+                        [attr.title]="formatService.formatRecordActivityFull(budget)">{{ formatService.formatRecordActivity(budget, userProfile?.displayName || '') }}</span>
+                            </div>
+                          </div>
+                          <div class="bgt-budget-card-meta" *ngIf="budget.description">
+                            <app-clamp-text class="bgt-budget-card-desc" [text]="budget.description" [lines]="2"></app-clamp-text>
                           </div>
                         </div>
                         <!-- Facebook-style ⋯ menu: Edit (members+) / Delete (admins) -->
