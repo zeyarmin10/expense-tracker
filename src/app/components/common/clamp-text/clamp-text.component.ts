@@ -15,8 +15,8 @@ function graphemes(text: string): string[] {
 /**
  * Text that wraps onto at most `lines` lines. When it is longer, it is cut
  * so that "… See more" fits at the end of the last line (like a Facebook
- * post); tapping it unfolds the rest in place with a height animation and
- * "See less" then follows the last word. Typography (size, colour, italic)
+ * post); tapping it — or anywhere on the text — unfolds the rest in place
+ * with a height animation and "See less" then follows the last word. Typography (size, colour, italic)
  * comes from whatever class the host element is given.
  *
  * The cut point is measured, not CSS line-clamp: line-clamp can't put an
@@ -28,7 +28,7 @@ function graphemes(text: string): string[] {
   standalone: true,
   imports: [CommonModule, TranslateModule],
   template: `
-    <span #box class="ct-text">
+    <span #box class="ct-text" [class.ct-toggleable]="overflowing" (click)="onTextClick($event)">
       <ng-container *ngIf="!overflowing || expanded; else cut">{{ text }}</ng-container>
       <ng-template #cut>{{ truncated }}…</ng-template>
       <button *ngIf="overflowing" type="button" class="ct-more"
@@ -44,6 +44,10 @@ function graphemes(text: string): string[] {
       display: block;
       white-space: normal;
       overflow-wrap: anywhere;
+    }
+    .ct-toggleable {
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
     }
     .ct-more {
       display: inline;
@@ -159,6 +163,14 @@ export class ClampTextComponent implements AfterViewInit, OnChanges, OnDestroy {
         this.cdr.detectChanges();
       }
     });
+  }
+
+  /** Tapping the text itself toggles too — unless the user is selecting it. */
+  onTextClick(event: MouseEvent): void {
+    if (!this.overflowing) return;
+    const selection = window.getSelection();
+    if (selection && !selection.isCollapsed && this.box?.nativeElement.contains(selection.anchorNode)) return;
+    this.toggle(event);
   }
 
   private animateHeight(el: HTMLElement, from: number, to: number, done: () => void): void {

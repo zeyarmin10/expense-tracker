@@ -269,7 +269,7 @@
                   <lucide-icon [img]="iconBanknote" [size]="16"></lucide-icon>
                 </div>
                 <div class="pnl-income-card-body">
-                  <span class="pnl-income-card-amount"
+                  <span class="pnl-income-card-amount" [class.pnl-has-menu]="canManageProfitActions"
                     [innerHTML]="formatService.formatAmountWithSymbolHtml(income.amount, income.currency)"></span>
                   <app-clamp-text *ngIf="income.description?.trim()" class="pnl-income-card-desc"
                     [text]="income.description" [lines]="2"></app-clamp-text>

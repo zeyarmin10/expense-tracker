@@ -4,7 +4,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { LucideAngularModule, Pencil } from 'lucide-angular';
 import { UserAvatarComponent } from '../user-avatar/user-avatar.component';
-import { clipToAncestors, getVisibleViewportBounds } from '../../../utils/viewport-bounds';
+import { getVisibleViewportBounds } from '../../../utils/viewport-bounds';
 
 /** Only one avatar tooltip is open at a time across the app. */
 let openInstance: AvatarTipComponent | null = null;
@@ -16,9 +16,10 @@ let openInstance: AvatarTipComponent | null = null;
  * "Edited by X on 14 Nov 2026, 16:29"). `badge="edit"` marks the avatar
  * with a small pencil so an edited record is recognisable at a glance.
  *
- * Placement is dynamic: it opens above the avatar, but flips below when the
- * space above is hidden (fixed top bar, a clipping panel edge), and opens
- * towards whichever side keeps it inside the screen.
+ * Placement is dynamic: while open the bubble is moved to <body> and laid
+ * out with `position: fixed`, so card/panel `overflow` can't clip it. It
+ * opens above the avatar (below when the top bar would hide it), is clamped
+ * to the screen with a side gutter, and its arrow tracks the avatar.
  */
 @Component({
   selector: 'app-avatar-tip',
@@ -32,7 +33,7 @@ let openInstance: AvatarTipComponent | null = null;
         <lucide-icon [img]="iconEdit" [size]="9"></lucide-icon>
       </span>
     </button>
-    <span #bubble class="at-bubble" [class.visible]="open" [class.at-right]="side === 'right'" [class.at-below]="below" role="tooltip">
+    <span #bubble class="at-bubble" [class.visible]="open" [class.at-below]="below" role="tooltip">
       <app-user-avatar [name]="name" [photoUrl]="photoUrl" [size]="30"></app-user-avatar>
       <span class="at-text">
         <span class="at-line"><span class="at-name">{{ name }}</span><span class="at-detail" *ngIf="detail"> · {{ detail }}</span></span>
@@ -70,63 +71,55 @@ let openInstance: AvatarTipComponent | null = null;
       background: var(--accent);
       color: #fff;
     }
-    /* Speech bubble above the avatar, opening to the right (avatars sit at
-       the left edge of the card). Same look as .exp-avatar-name-bubble. */
+    /* Floating speech bubble. Moved to <body> while open and positioned
+       with fixed left/top from place(); --at-arrow-x points the arrow at
+       the avatar's centre. */
     .at-bubble {
-      position: absolute;
-      bottom: calc(100% + 9px);
+      position: fixed;
+      top: 0;
       left: 0;
-      z-index: 30;
+      z-index: 10070;
       display: flex;
       align-items: center;
       gap: 0.5rem;
+      box-sizing: border-box;
       width: max-content;
-      max-width: min(290px, 80vw);
-      text-align: start; /* don't inherit right-aligned rows (expense list) */
-      padding: 6px 12px 6px 6px;
-      border-radius: 10px 10px 10px 2px;
+      max-width: min(300px, calc(100vw - 24px));
+      text-align: start;
+      padding: 7px 12px 7px 7px;
+      border-radius: 12px;
       border: 1px solid var(--border);
       background: var(--surface-2);
       color: var(--text-sub, var(--text));
-      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.14);
+      box-shadow: 0 10px 28px rgba(2, 8, 23, 0.22), 0 2px 6px rgba(2, 8, 23, 0.1);
       opacity: 0;
+      visibility: hidden;
       pointer-events: none;
-      transform: translateY(5px) scale(0.9);
-      transform-origin: bottom left;
-      transition: opacity 0.15s ease, transform 0.15s ease;
+      transform: translateY(5px) scale(0.94);
+      transform-origin: var(--at-arrow-x, 16px) bottom;
+      transition: opacity 0.15s ease, transform 0.15s ease, visibility 0s linear 0.15s;
     }
-    /* Avatar at the card's right edge: open leftwards instead. */
-    .at-bubble.at-right {
-      left: auto;
-      right: 0;
-      border-radius: 10px 10px 2px 10px;
-      transform-origin: bottom right;
-    }
-    .at-bubble.at-right::after, .at-bubble.at-right::before { left: auto; right: 7px; }
-    /* Not enough room above: open below the avatar, arrow on top. */
     .at-bubble.at-below {
-      bottom: auto;
-      top: calc(100% + 9px);
-      border-radius: 2px 10px 10px 10px;
-      transform: translateY(-5px) scale(0.9);
-      transform-origin: top left;
+      transform: translateY(-5px) scale(0.94);
+      transform-origin: var(--at-arrow-x, 16px) top;
     }
-    .at-bubble.at-below.at-right { border-radius: 10px 2px 10px 10px; transform-origin: top right; }
-    .at-bubble.at-below::after { top: auto; bottom: 100%; border-top-color: transparent; border-bottom-color: var(--border); }
-    .at-bubble.at-below::before { top: auto; bottom: calc(100% - 1px); border-top-color: transparent; border-bottom-color: var(--surface-2); }
-    .at-bubble.visible, .at-bubble.at-below.visible {
+    .at-bubble.visible {
       opacity: 1;
+      visibility: visible;
       pointer-events: auto;
       transform: translateY(0) scale(1);
+      transition: opacity 0.15s ease, transform 0.15s ease, visibility 0s;
     }
     .at-bubble::after, .at-bubble::before {
       content: '';
       position: absolute;
-      left: 7px;
-      border: 5px solid transparent;
+      left: calc(var(--at-arrow-x, 16px) - 6px);
+      border: 6px solid transparent;
     }
     .at-bubble::after { top: 100%; border-top-color: var(--border); }
     .at-bubble::before { top: calc(100% - 1px); border-top-color: var(--surface-2); z-index: 1; }
+    .at-bubble.at-below::after { top: auto; bottom: 100%; border-top-color: transparent; border-bottom-color: var(--border); }
+    .at-bubble.at-below::before { top: auto; bottom: calc(100% - 1px); border-top-color: transparent; border-bottom-color: var(--surface-2); }
     .at-text { display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; line-height: 1.35; }
     .at-line { font-size: 0.78rem; }
     .at-name { font-weight: 700; color: var(--text); }
@@ -146,7 +139,7 @@ export class AvatarTipComponent implements OnDestroy {
   @Input() name = '';
   @Input() photoUrl: string | null | undefined = null;
   @Input() size = 28;
-  /** Which way the bubble opens: from a left-edge avatar (default) or a right-edge one. */
+  /** Preferred direction: extend rightwards from a left-edge avatar (default) or leftwards from a right-edge one. */
   @Input() align: 'left' | 'right' = 'left';
   /** Shown after the name on line 1, e.g. when it was added. */
   @Input() detail = '';
@@ -160,7 +153,7 @@ export class AvatarTipComponent implements OnDestroy {
   open = false;
   /** Resolved placement for the current opening. */
   below = false;
-  side: 'left' | 'right' = 'left';
+  private portaled = false;
 
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
@@ -182,6 +175,7 @@ export class AvatarTipComponent implements OnDestroy {
     }
     if (openInstance && openInstance !== this) openInstance.close();
     openInstance = this;
+    this.portal();
     this.place();
     this.open = true;
     this.openedAtTop = this.host.nativeElement.getBoundingClientRect().top;
@@ -189,25 +183,42 @@ export class AvatarTipComponent implements OnDestroy {
     this.cdr.markForCheck();
   }
 
+  /** Lifts the bubble out of clipping cards/panels (once, kept until destroy). */
+  private portal(): void {
+    if (this.portaled) return;
+    document.body.appendChild(this.bubbleRef.nativeElement);
+    this.portaled = true;
+  }
+
   /**
-   * Picks above/below and left/right from the bubble's real size (it's laid
-   * out even while hidden) and the space that is actually visible.
+   * Fixed-position placement from the bubble's real size and the part of the
+   * screen not covered by app chrome: above or below the avatar, then slid
+   * horizontally to stay inside a side gutter, with the arrow on the avatar.
    */
   private place(): void {
     const btn = this.host.nativeElement.getBoundingClientRect();
     const bubble = this.bubbleRef.nativeElement;
-    const height = bubble.offsetHeight + 12; // + arrow gap
     const width = bubble.offsetWidth;
-    const { top, bottom } = clipToAncestors(this.host.nativeElement, getVisibleViewportBounds());
+    const height = bubble.offsetHeight;
+    const gap = 10; // arrow
+    const gutter = 12;
+    const { top, bottom } = getVisibleViewportBounds();
+
     const spaceAbove = btn.top - top;
     const spaceBelow = bottom - btn.bottom;
-    this.below = spaceAbove < height && (spaceBelow >= height || spaceBelow > spaceAbove);
+    this.below = spaceAbove < height + gap && (spaceBelow >= height + gap || spaceBelow > spaceAbove);
+    let y = this.below ? btn.bottom + gap : btn.top - gap - height;
+    y = Math.max(top, Math.min(y, bottom - height));
 
-    const margin = 8;
-    const fitsRightward = btn.left + width <= window.innerWidth - margin;
-    const fitsLeftward = btn.right - width >= margin;
-    if (this.align === 'right') this.side = fitsLeftward || !fitsRightward ? 'right' : 'left';
-    else this.side = fitsRightward || !fitsLeftward ? 'left' : 'right';
+    const centerX = btn.left + btn.width / 2;
+    let x = this.align === 'right' ? btn.right - width : btn.left;
+    const vw = document.documentElement.clientWidth || window.innerWidth;
+    x = Math.max(gutter, Math.min(x, vw - gutter - width));
+
+    const arrowX = Math.max(14, Math.min(centerX - x, width - 14));
+    bubble.style.left = `${Math.round(x)}px`;
+    bubble.style.top = `${Math.round(y)}px`;
+    bubble.style.setProperty('--at-arrow-x', `${Math.round(arrowX)}px`);
   }
 
   close(): void {
@@ -221,8 +232,12 @@ export class AvatarTipComponent implements OnDestroy {
   // Global listeners exist only while this tooltip is open (see RowMenu):
   // permanent @HostListeners on every avatar ran on every tap anywhere.
   private readonly onDocClick = (event: Event) => {
-    if (!this.host.nativeElement.contains(event.target as Node)) this.zone.run(() => this.close());
+    const target = event.target as Node;
+    if (!this.host.nativeElement.contains(target) && !this.bubbleRef.nativeElement.contains(target)) {
+      this.zone.run(() => this.close());
+    }
   };
+  private readonly onResize = () => this.zone.run(() => this.close());
   private readonly onKeyDown = (event: KeyboardEvent) => {
     if (event.key === 'Escape') this.zone.run(() => this.close());
   };
@@ -230,6 +245,7 @@ export class AvatarTipComponent implements OnDestroy {
   private addGlobalListeners(): void {
     this.zone.runOutsideAngular(() => {
       window.addEventListener('scroll', this.onAnyScroll, { capture: true, passive: true });
+      window.addEventListener('resize', this.onResize);
       document.addEventListener('keydown', this.onKeyDown);
       // Next tick: the opening tap must not count as an outside tap.
       setTimeout(() => { if (this.open) document.addEventListener('click', this.onDocClick); });
@@ -238,12 +254,14 @@ export class AvatarTipComponent implements OnDestroy {
 
   private removeGlobalListeners(): void {
     window.removeEventListener('scroll', this.onAnyScroll, true);
+    window.removeEventListener('resize', this.onResize);
     document.removeEventListener('keydown', this.onKeyDown);
     document.removeEventListener('click', this.onDocClick);
   }
 
   ngOnDestroy(): void {
     this.removeGlobalListeners();
+    if (this.portaled) this.bubbleRef.nativeElement.remove();
     if (openInstance === this) openInstance = null;
   }
 }

@@ -384,7 +384,7 @@
                           </lucide-icon>
                         </div>
                         <div class="bgt-budget-card-body">
-                          <div class="bgt-budget-card-top">
+                          <div class="bgt-budget-card-top" [class.bgt-has-menu]="canManageBudgets">
                             <span class="bgt-budget-card-amount"
                               [innerHTML]="formatService.formatAmountWithSymbolHtml(budget.amount, budget.currency)"
                             ></span>

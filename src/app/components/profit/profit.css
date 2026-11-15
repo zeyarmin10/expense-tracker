@@ -2133,8 +2133,17 @@ app-date-input .di-trigger {
 }
 
 /* ── Income card: ⋯ menu + last-edited line ── */
+/* ⋯ floats in the card's top-right corner instead of taking a column, so
+   the description and avatar below can use the full width. Only the amount
+   line reserves room for it. */
 .pnl-row-menu {
-  margin: -0.35rem -0.4rem 0 0; /* sit snugly in the card's top-right corner */
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+}
+
+.pnl-income-card-amount.pnl-has-menu {
+  padding-right: 2rem;
 }
 
 
@@ -2155,6 +2164,7 @@ app-date-input .di-trigger {
 }
 
 .pnl-income-card {
+  position: relative; /* anchors the ⋯ menu (.pnl-row-menu) */
   display: flex;
   align-items: flex-start;
   gap: 0.75rem;
