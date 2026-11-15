@@ -908,3 +908,46 @@ body.light-mode .ov-bar-active {
     word-break: break-word;
   }
 }
+
+/* Desktop: fit all columns (incl. total cost) without horizontal scroll */
+@media (min-width: 640px) {
+  .table-responsive .expense-table {
+    min-width: 0;
+    table-layout: fixed;
+  }
+
+  .expense-table th,
+  .expense-table td {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .expense-table th {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .expense-table th.th-date { width: 125px; }
+  .expense-table th.td-created-by { width: 160px; }
+  .expense-table th.td-category { width: 140px; }
+  .expense-table th.th-amount { width: 170px; white-space: nowrap; }
+
+  .expense-table td.td-created-by,
+  .expense-table td.td-category,
+  .expense-table td.td-name {
+    overflow: hidden;
+  }
+
+  .expense-table .created-by-badge {
+    display: flex;
+  }
+
+  .expense-table .created-by-name {
+    white-space: nowrap;
+  }
+
+  .expense-table .category-badge {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+}

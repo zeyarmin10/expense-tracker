@@ -131,11 +131,11 @@
             <table class="expense-table">
               <thead>
                 <tr>
-                  <th width="90">{{ "DATE_LABEL" | translate }}</th>
+                  <th class="th-date">{{ "DATE_LABEL" | translate }}</th>
                   <th class="td-created-by" *ngIf="isGroupUser">{{ "ADDED_BY" | translate }}</th>
                   <th class="td-category">{{ "CATEGORY_LABEL" | translate }}</th>
-                  <th>{{ "ITEM_NAME_LABEL" | translate }}</th>
-                  <th>{{ "TOTAL_COST_LABEL" | translate }}</th>
+                  <th class="th-name">{{ "ITEM_NAME_LABEL" | translate }}</th>
+                  <th class="th-amount">{{ "TOTAL_COST_LABEL" | translate }}</th>
                 </tr>
               </thead>
               <tbody>
