@@ -73,6 +73,7 @@ import { AutoGrowDirective } from '../../directives/auto-grow.directive';
 import { ImgFallbackDirective } from '../../directives/img-fallback.directive';
 import { SwipeToCloseDirective } from '../../directives/swipe-to-close.directive';
 import { AvatarTipComponent } from '../common/avatar-tip/avatar-tip.component';
+import { personIconSvg } from '../common/user-avatar/person-icon';
 const Toast = createAppToast();
 
 interface ExpenseDateGroup {
@@ -1575,16 +1576,6 @@ export class Purchase implements OnInit, OnDestroy {
     return expense.userPhotoURL || expense.createdByPhotoURL || null;
   }
 
-  private getUserAvatarInitials(name: string): string {
-    const words = (name || 'User')
-      .split(/[\s_-]+/)
-      .map(word => Array.from(word.trim())[0])
-      .filter(Boolean)
-      .slice(0, 2);
-
-    return (words.join('') || Array.from(name || 'User')[0] || 'U').toUpperCase();
-  }
-
   private getUserAvatarHue(name: string): number {
     let hash = 0;
     for (const char of Array.from(name || 'User')) {
@@ -1606,7 +1597,7 @@ export class Purchase implements OnInit, OnDestroy {
     const safeName = this.escapeHtml(name || 'User');
     const safePhotoURL = photoURL ? this.escapeHtml(photoURL) : '';
     const hue = this.getUserAvatarHue(name);
-    const initials = this.escapeHtml(this.getUserAvatarInitials(name));
+    const personIcon = personIconSvg(Math.round(size * 0.68));
     const fallbackDisplay = safePhotoURL ? 'none' : 'inline-flex';
     const imageHtml = safePhotoURL
       ? `<img src="${safePhotoURL}" alt="${safeName}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-flex';">`
@@ -1615,7 +1606,7 @@ export class Purchase implements OnInit, OnDestroy {
     return `
       <span title="${safeName}" style="width:${size}px;height:${size}px;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;border-radius:50%;border:1px solid hsl(${hue} 82% 64%);background:linear-gradient(135deg, hsl(${hue} 82% 52%), hsl(${(hue + 34) % 360} 82% 42%));color:#ffffff;font-size:${Math.max(10, Math.round(size * 0.45))}px;font-weight:800;line-height:1;text-transform:uppercase;text-shadow:0 1px 2px rgba(0,0,0,0.22);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.2),0 4px 10px rgba(2,8,23,0.18);vertical-align:middle;">
         ${imageHtml}
-        <span style="display:${fallbackDisplay};align-items:center;justify-content:center;width:100%;height:100%;">${initials}</span>
+        <span style="display:${fallbackDisplay};align-items:center;justify-content:center;width:100%;height:100%;">${personIcon}</span>
       </span>`;
   }
 

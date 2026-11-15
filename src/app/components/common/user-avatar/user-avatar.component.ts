@@ -16,7 +16,6 @@ import { LightboxComponent } from '../lightbox/lightbox.component';
       [attr.aria-label]="clickable && shouldShowImage ? (title || displayName) : null"
       [style.width.px]="size"
       [style.height.px]="size"
-      [style.font-size.px]="fontSize"
       [style.background]="avatarBackground"
       [style.border-color]="avatarBorder"
       [style.color]="avatarTextColor"
@@ -32,9 +31,18 @@ import { LightboxComponent } from '../lightbox/lightbox.component';
         [alt]="displayName"
         (error)="imageFailed = true"
       />
-      <span *ngIf="!shouldShowImage" class="user-avatar-initials">
-        {{ initials }}
-      </span>
+      <svg
+        *ngIf="!shouldShowImage"
+        class="user-avatar-person"
+        viewBox="0 0 24 24"
+        fill="currentColor"
+        aria-hidden="true"
+        [attr.width]="iconSize"
+        [attr.height]="iconSize"
+      >
+        <circle cx="12" cy="9" r="4.25" />
+        <path d="M4 21.5c0-4.14 3.58-7.25 8-7.25s8 3.11 8 7.25z" />
+      </svg>
     </span>
     <app-lightbox *ngIf="clickable"></app-lightbox>
   `,
@@ -78,10 +86,10 @@ import { LightboxComponent } from '../lightbox/lightbox.component';
       display: block;
     }
 
-    .user-avatar-initials {
-      transform: translateY(0.02em);
-      max-width: 100%;
-      white-space: nowrap;
+    .user-avatar-person {
+      display: block;
+      flex: 0 0 auto;
+      filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.18));
     }
 
     .user-avatar-clickable {
@@ -123,18 +131,8 @@ export class UserAvatarComponent implements OnChanges {
     return !!this.photoUrl && !this.imageFailed;
   }
 
-  get initials(): string {
-    const words = this.displayName
-      .split(/[\s_-]+/)
-      .map(word => Array.from(word.trim())[0])
-      .filter(Boolean)
-      .slice(0, 2);
-
-    return (words.join('') || Array.from(this.displayName)[0] || 'U').toUpperCase();
-  }
-
-  get fontSize(): number {
-    return Math.max(10, Math.round(this.size * 0.45));
+  get iconSize(): number {
+    return Math.round(this.size * 0.68);
   }
 
   get avatarBorder(): string {
