@@ -49,7 +49,7 @@
     </div>
 
     <div class="exp-loading" *ngIf="isLoadingSales">
-      <div class="exp-spinner"></div>
+      <app-brand-loader [size]="96"></app-brand-loader>
     </div>
 
     <div class="table-section" *ngIf="!isLoadingSales && hasLoadError">

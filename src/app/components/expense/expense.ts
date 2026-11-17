@@ -1,3 +1,4 @@
+import { BrandLoaderComponent } from '../common/brand-loader/brand-loader.component';
 import {
   Component,
   OnDestroy,
@@ -87,7 +88,7 @@ interface ExpenseDateGroup {
 @Component({
   selector: 'app-expense',
   standalone: true,
-  imports: [AvatarTipComponent, SwipeToCloseDirective, ImgFallbackDirective, 
+  imports: [BrandLoaderComponent, AvatarTipComponent, SwipeToCloseDirective, ImgFallbackDirective, 
     CommonModule,
     AutoGrowDirective,
     ReactiveFormsModule,

@@ -1,3 +1,4 @@
+import { BrandLoaderComponent } from './components/common/brand-loader/brand-loader.component';
 import { Component, inject, OnInit, AfterViewInit, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, NavigationEnd, RouterOutlet, RouterModule, ActivatedRoute } from '@angular/router';
@@ -42,7 +43,7 @@ import { FormatService } from './services/format.service';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [
+  imports: [BrandLoaderComponent, 
     CommonModule,
     RouterOutlet,
     RouterModule,

@@ -1,3 +1,4 @@
+import { BrandLoaderComponent } from '../common/brand-loader/brand-loader.component';
 import {
   Component,
   OnInit,
@@ -41,7 +42,7 @@ const Toast = createAppToast();
 @Component({
   selector: 'app-category',
   standalone: true,
-  imports: [SwipeToCloseDirective, 
+  imports: [BrandLoaderComponent, SwipeToCloseDirective, 
     CommonModule,
     ReactiveFormsModule,
     TranslateModule,

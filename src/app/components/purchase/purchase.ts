@@ -1,3 +1,4 @@
+import { BrandLoaderComponent } from '../common/brand-loader/brand-loader.component';
 import {
   Component,
   OnDestroy,
@@ -96,7 +97,7 @@ interface CartLine {
 @Component({
   selector: 'app-purchase',
   standalone: true,
-  imports: [AvatarTipComponent, SwipeToCloseDirective, ImgFallbackDirective, AutoGrowDirective, 
+  imports: [BrandLoaderComponent, AvatarTipComponent, SwipeToCloseDirective, ImgFallbackDirective, AutoGrowDirective, 
     CommonModule,
     ReactiveFormsModule,
     FormsModule,

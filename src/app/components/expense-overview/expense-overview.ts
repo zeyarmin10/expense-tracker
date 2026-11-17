@@ -1,3 +1,4 @@
+import { BrandLoaderComponent } from '../common/brand-loader/brand-loader.component';
 import { Component, inject, OnInit, OnDestroy, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -42,7 +43,7 @@ interface CategoryTotal {
 @Component({
   selector: 'app-expense-overview',
   standalone: true,
-  imports: [
+  imports: [BrandLoaderComponent, 
     CommonModule,
     FormsModule,
     TranslateModule,
