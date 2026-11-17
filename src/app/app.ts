@@ -596,7 +596,11 @@ export class App implements OnInit, AfterViewInit {
       // .lb-overlay: the voucher/avatar image viewer (app-lightbox) —
       // pinch-zoom-and-drag on the photo reads as a downward pull otherwise,
       // triggering a reload that tears down and closes the viewer mid-gesture.
-      'input, textarea, select, button, a, .mob-bottom-nav, .mob-drawer, .swal2-container, .lb-overlay'
+      // [data-swipe-sheet]/[data-swipe-backdrop]: any sheet using
+      // appSwipeToClose (e.g. the sync details sheet, which sets no
+      // "-modal-open" body class) — swiping it down to close must not also
+      // count as a pull-to-refresh on the page underneath.
+      'input, textarea, select, button, a, .mob-bottom-nav, .mob-drawer, .swal2-container, .lb-overlay, [data-swipe-sheet], [data-swipe-backdrop]'
     );
   }
 
