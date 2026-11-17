@@ -975,11 +975,16 @@ body.prof-bp-modal-open {
     translate: 0 0;
   }
 
-  .prof-pw-modal-header {
-    padding-top: calc(env(safe-area-inset-top, 0px) + 0.75rem);
+  /* `.prof-pw-modal-sheet` prefix: the base .prof-pw-modal-header/-body
+     rules come later in this file with the same specificity, and their
+     `padding` shorthand would otherwise wipe these safe-area paddings.
+     Android's edge-to-edge WebView reports a 0 inset, hence the max() with
+     --native-status-bar-inset (same as the other full-screen overlays). */
+  .prof-pw-modal-sheet .prof-pw-modal-header {
+    padding-top: calc(max(env(safe-area-inset-top, 0px), var(--native-status-bar-inset, 0px)) + 0.75rem);
   }
 
-  .prof-pw-modal-body {
+  .prof-pw-modal-sheet .prof-pw-modal-body {
     flex: 1;
     padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem);
   }
