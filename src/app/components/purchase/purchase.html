@@ -10,7 +10,7 @@
          top of the page on desktop; on mobile it's reached via the FAB
          below and opens as a full-screen overlay (no modal box). ── -->
     <div class="exp-cart-overlay-backdrop" [class.open]="showAddCartOverlay"></div>
-    <div appSwipeToClose (swipeClose)="isDatePickerOpen ? closeDatePicker() : closeAddCartOverlay()" class="exp-cart-overlay" [class.exp-cart-overlay-open]="showAddCartOverlay" [class.exp-cart-overlay-date-picker]="isMobileViewport && isDatePickerOpen && (datePickerTarget === 'cart' || datePickerTarget === 'voucher')" [class.exp-cart-overlay-picker-open]="isMobileViewport && isCartNonDatePickerOpen" *ngIf="canCreateExpenseRecords">
+    <div appSwipeToClose (swipeClose)="isDatePickerOpen ? closeDatePicker() : closeAddCartOverlay()" [swipeSubview]="isDatePickerOpen" class="exp-cart-overlay" [class.exp-cart-overlay-open]="showAddCartOverlay" [class.exp-cart-overlay-date-picker]="isMobileViewport && isDatePickerOpen && (datePickerTarget === 'cart' || datePickerTarget === 'voucher')" [class.exp-cart-overlay-picker-open]="isMobileViewport && isCartNonDatePickerOpen" *ngIf="canCreateExpenseRecords">
       <div class="exp-cart-overlay-topbar">
         <div class="exp-seg-ctrl exp-cart-overlay-tabs">
           <div class="exp-seg-track">
@@ -825,7 +825,7 @@
 <!-- ── Edit/Voucher modal — legacy single-item purchase editing, or adding
      a receipt voucher (the cart above is the real "Add Purchase" flow). ── -->
 <div class="exp-add-modal-backdrop" [class.open]="isAddModalOpen"></div>
-<div appSwipeToClose (swipeClose)="isDatePickerOpen ? closeDatePicker() : closeAddModal()" class="exp-add-modal-sheet" [class.open]="isAddModalOpen" [class.date-picker-open]="isDatePickerOpen">
+<div appSwipeToClose (swipeClose)="isDatePickerOpen ? closeDatePicker() : closeAddModal()" [swipeSubview]="isDatePickerOpen" class="exp-add-modal-sheet" [class.open]="isAddModalOpen" [class.date-picker-open]="isDatePickerOpen">
   <div class="exp-add-modal-handle"></div>
   <div class="exp-add-modal-header" *ngIf="!isCategoryPickerOpen && !isProductPickerOpen && !isDatePickerOpen">
     <span class="exp-add-modal-header-title">

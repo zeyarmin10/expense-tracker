@@ -10,7 +10,7 @@
     </button>
 
     <div class="bgt-add-modal-backdrop" [class.open]="isAddModalOpen"></div>
-    <div appSwipeToClose (swipeClose)="isDatePickerOpen ? closeDatePicker() : closeAddModal()" class="bgt-add-modal-sheet" [class.open]="isAddModalOpen" [class.date-picker-open]="isDatePickerOpen">
+    <div appSwipeToClose (swipeClose)="isDatePickerOpen ? closeDatePicker() : closeAddModal()" [swipeSubview]="isDatePickerOpen" class="bgt-add-modal-sheet" [class.open]="isAddModalOpen" [class.date-picker-open]="isDatePickerOpen">
       <div class="bgt-add-modal-handle"></div>
 
       <div class="bgt-add-modal-header" *ngIf="!isDatePickerOpen">

@@ -1,6 +1,6 @@
 <div class="vfs-backdrop" [class.open]="isOpen" (click)="close()"></div>
 
-<div appSwipeToClose (swipeClose)="isDatePickerOpen ? closeDatePicker() : close()" class="vfs-sheet" [class.open]="isOpen" role="dialog" aria-modal="true" [attr.aria-hidden]="!isOpen">
+<div appSwipeToClose (swipeClose)="isDatePickerOpen ? closeDatePicker() : close()" [swipeSubview]="isDatePickerOpen" class="vfs-sheet" [class.open]="isOpen" role="dialog" aria-modal="true" [attr.aria-hidden]="!isOpen">
   <!-- Header: form title, or the date picker's own title while drilled in -->
   <div class="vfs-header">
     <ng-container *ngIf="!isDatePickerOpen; else dateHeader">

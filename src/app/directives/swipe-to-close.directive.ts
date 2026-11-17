@@ -23,6 +23,12 @@ const SLOP_PX = 8;
  * - `swipeClose` should call the same handler as the sheet's ✕ button, so
  *   history/back-button bookkeeping stays in one place.
  * - Elements marked `data-no-swipe` (and range sliders) never start a swipe.
+ * - `swipeSubview` = the sheet is currently showing a sub-view drawn inside
+ *   itself (e.g. the in-overlay date picker) and `swipeClose` only closes that
+ *   sub-view, not the sheet. Then only the sub-view appears to slide away: an
+ *   empty copy of the sheet's shell stays behind it while dragging, and on
+ *   dismiss a visual clone slides down off-screen while the real sheet stays
+ *   in place underneath, already showing its main content again.
  *
  * Moves the sheet with an inline `transform`, which composes with the
  * `translate`/`scale` properties the sheets use for their own open/close
@@ -35,6 +41,7 @@ const SLOP_PX = 8;
 })
 export class SwipeToCloseDirective implements OnInit, AfterViewInit, OnDestroy {
   @Input() swipeDisabled = false;
+  @Input() swipeSubview = false;
   @Output() swipeClose = new EventEmitter<void>();
 
   private readonly el = inject<ElementRef<HTMLElement>>(ElementRef);
@@ -57,6 +64,8 @@ export class SwipeToCloseDirective implements OnInit, AfterViewInit, OnDestroy {
   /** The current gesture started on the backdrop rather than the sheet. */
   private fromBackdrop = false;
   private closing = false;
+  /** Empty shell of the sheet shown behind it while a sub-view is dragged. */
+  private underlay: HTMLElement | null = null;
 
   private readonly onStart = (e: TouchEvent) => this.handleStart(e);
   private readonly onMove = (e: TouchEvent) => this.handleMove(e);
@@ -98,6 +107,7 @@ export class SwipeToCloseDirective implements OnInit, AfterViewInit, OnDestroy {
     }
     this.ownBackdrop?.removeAttribute('data-swipe-backdrop');
     if (this.resetTimer) clearTimeout(this.resetTimer);
+    this.removeUnderlay();
   }
 
   private handleStart(e: TouchEvent): void {
@@ -145,8 +155,11 @@ export class SwipeToCloseDirective implements OnInit, AfterViewInit, OnDestroy {
       }
       this.state = 'dragging';
       this.startY = touch.clientY; // start moving from here: no jump by the slop
+      // Sub-view: the sheet itself stays open, so keep its backdrop as is and
+      // show its empty shell behind the sub-view being pulled down.
+      if (this.swipeSubview) this.addUnderlay();
       this.el.nativeElement.style.transition = 'none';
-      this.backdrop = this.ownBackdrop ?? this.findBackdrop();
+      this.backdrop = this.swipeSubview ? null : this.ownBackdrop ?? this.findBackdrop();
       if (this.backdrop) this.backdrop.style.transition = 'none';
     }
 
@@ -199,6 +212,11 @@ export class SwipeToCloseDirective implements OnInit, AfterViewInit, OnDestroy {
     const duration = Math.round(Math.min(320, Math.max(180, remaining / speed)));
     const ease = 'cubic-bezier(0.32, 0.72, 0, 1)';
 
+    if (this.swipeSubview) {
+      this.slideOutSubview(height, duration, ease);
+      return;
+    }
+
     this.closing = true;
     host.style.transition = `transform ${duration}ms ${ease}`;
     host.style.transform = `translate3d(0, ${height}px, 0)`;
@@ -220,6 +238,60 @@ export class SwipeToCloseDirective implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
+  /**
+   * Leave a visual clone of the sub-view where the finger let go and slide
+   * that away, while the real sheet snaps back into place and (via
+   * `swipeClose`) swaps back to its main content behind it.
+   */
+  private slideOutSubview(height: number, duration: number, ease: string): void {
+    const host = this.el.nativeElement;
+    const ghost = host.cloneNode(true) as HTMLElement;
+    ghost.removeAttribute('data-swipe-sheet');
+    for (const node of [ghost, ...Array.from(ghost.querySelectorAll('[id]'))]) node.removeAttribute('id');
+    ghost.setAttribute('aria-hidden', 'true');
+    ghost.style.pointerEvents = 'none';
+    ghost.style.transition = 'none';
+    ghost.style.transform = `translate3d(0, ${this.offset}px, 0)`;
+    host.after(ghost); // same stacking level, later in the DOM: on top
+
+    this.closing = true;
+    host.style.transition = 'none';
+    host.style.transform = '';
+    this.removeUnderlay();
+    this.zone.run(() => this.swipeClose.emit());
+
+    requestAnimationFrame(() => {
+      ghost.style.transition = `transform ${duration}ms ${ease}`;
+      ghost.style.transform = `translate3d(0, ${height}px, 0)`;
+    });
+    if (this.resetTimer) clearTimeout(this.resetTimer);
+    this.resetTimer = setTimeout(() => {
+      this.resetTimer = null;
+      ghost.remove();
+      this.clearInline();
+      this.closing = false;
+    }, duration + 60);
+  }
+
+  private addUnderlay(): void {
+    this.removeUnderlay();
+    const host = this.el.nativeElement;
+    const shell = host.cloneNode(false) as HTMLElement; // classes/position only, no content
+    shell.removeAttribute('data-swipe-sheet');
+    shell.removeAttribute('id');
+    shell.setAttribute('aria-hidden', 'true');
+    shell.style.transition = 'none';
+    shell.style.transform = '';
+    shell.style.pointerEvents = 'none';
+    host.before(shell); // same stacking level, earlier in the DOM: behind
+    this.underlay = shell;
+  }
+
+  private removeUnderlay(): void {
+    this.underlay?.remove();
+    this.underlay = null;
+  }
+
   private springBack(): void {
     const host = this.el.nativeElement;
     const ease = 'cubic-bezier(0.2, 0.9, 0.3, 1.15)'; // slight overshoot
@@ -229,7 +301,10 @@ export class SwipeToCloseDirective implements OnInit, AfterViewInit, OnDestroy {
       this.backdrop.style.transition = 'opacity 280ms ease-out';
       this.backdrop.style.opacity = '';
     }
-    this.afterTransition(280, () => this.clearInline());
+    this.afterTransition(280, () => {
+      this.clearInline();
+      this.removeUnderlay();
+    });
   }
 
   private afterTransition(ms: number, done: () => void): void {

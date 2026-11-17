@@ -5,7 +5,7 @@
          top of the page on desktop; on mobile it's reached via the FAB
          below and opens as a full-screen overlay (no modal box). ── -->
     <div class="pnl-cart-overlay-backdrop" [class.open]="showAddCartOverlay"></div>
-    <div appSwipeToClose (swipeClose)="isDatePickerOpen ? closeDatePicker() : closeAddCartOverlay()" class="pnl-cart-overlay" [class.pnl-cart-overlay-open]="showAddCartOverlay" [class.pnl-cart-overlay-date-picker]="isMobileViewport && !editingIncome && isDatePickerOpen" [class.pnl-cart-overlay-picker-open]="isMobileViewport && !editingIncome && isProductPickerOpen" *ngIf="canManageProfitActions">
+    <div appSwipeToClose (swipeClose)="isDatePickerOpen ? closeDatePicker() : closeAddCartOverlay()" [swipeSubview]="isDatePickerOpen" class="pnl-cart-overlay" [class.pnl-cart-overlay-open]="showAddCartOverlay" [class.pnl-cart-overlay-date-picker]="isMobileViewport && !editingIncome && isDatePickerOpen" [class.pnl-cart-overlay-picker-open]="isMobileViewport && !editingIncome && isProductPickerOpen" *ngIf="canManageProfitActions">
       <div class="pnl-cart-overlay-topbar">
         <h2 class="pnl-pos-section-title">
           <lucide-icon [img]="iconHandCoins" [size]="18" class="pnl-icon-accent"></lucide-icon>
@@ -438,7 +438,7 @@
 <!-- Edit modal — legacy single-item sale editing only (see the row menu's
      Edit guard above; Add is handled by the cart section on the page). -->
 <div class="pnl-add-modal-backdrop" [class.open]="isAddModalOpen"></div>
-<div appSwipeToClose (swipeClose)="isDatePickerOpen ? closeDatePicker() : closeAddModal()" class="pnl-add-modal-sheet" [class.open]="isAddModalOpen" [class.date-picker-open]="isDatePickerOpen">
+<div appSwipeToClose (swipeClose)="isDatePickerOpen ? closeDatePicker() : closeAddModal()" [swipeSubview]="isDatePickerOpen" class="pnl-add-modal-sheet" [class.open]="isAddModalOpen" [class.date-picker-open]="isDatePickerOpen">
   <div class="pnl-add-modal-handle"></div>
 
   <div class="pnl-add-modal-header" *ngIf="!isDatePickerOpen && !isProductPickerOpen">

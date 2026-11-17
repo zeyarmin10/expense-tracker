@@ -450,7 +450,7 @@
       </button>
 
       <div class="inv-add-overlay-backdrop" [class.open]="showShopExpenseOverlay"></div>
-      <div appSwipeToClose (swipeClose)="isShopExpenseDatePickerOpen ? closeShopExpenseDatePicker() : closeShopExpenseOverlay()" class="inv-add-overlay inv-shop-expense-overlay" [class.inv-add-overlay-open]="showShopExpenseOverlay">
+      <div appSwipeToClose (swipeClose)="isShopExpenseDatePickerOpen ? closeShopExpenseDatePicker() : closeShopExpenseOverlay()" [swipeSubview]="isShopExpenseDatePickerOpen" class="inv-add-overlay inv-shop-expense-overlay" [class.inv-add-overlay-open]="showShopExpenseOverlay">
         <div class="inv-add-overlay-topbar" *ngIf="!isShopExpenseDatePickerOpen">
           <span class="inv-add-overlay-title">
             <lucide-icon [img]="iconWallet" [size]="17" class="inv-icon-accent"></lucide-icon>

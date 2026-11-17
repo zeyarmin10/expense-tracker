@@ -11,7 +11,7 @@
     </button>
 
     <div class="exp-add-modal-backdrop" [class.open]="isAddModalOpen"></div>
-    <div appSwipeToClose (swipeClose)="isDatePickerOpen ? closeDatePicker() : closeAddModal()" class="exp-add-modal-sheet" [class.open]="isAddModalOpen" [class.date-picker-open]="isDatePickerOpen">
+    <div appSwipeToClose (swipeClose)="isDatePickerOpen ? closeDatePicker() : closeAddModal()" [swipeSubview]="isDatePickerOpen" class="exp-add-modal-sheet" [class.open]="isAddModalOpen" [class.date-picker-open]="isDatePickerOpen">
       <div class="exp-add-modal-handle"></div>
       <div class="exp-add-modal-header" *ngIf="!isDatePickerOpen">
         <!-- Edit mode: plain title instead of the add/voucher tabs -->
