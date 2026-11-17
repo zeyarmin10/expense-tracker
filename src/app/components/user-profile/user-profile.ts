@@ -19,7 +19,8 @@ import { Capacitor } from '@capacitor/core';
 import { environment } from '../../../environments/environment';
 import { FormsModule } from '@angular/forms';
 import { APP_LANGUAGES, APP_LANGUAGE_CODES, AVAILABLE_CURRENCIES } from '../../core/constants/app.constants';
-import { CustomBudgetPeriodModalComponent } from '../common/custom-budget-period-modal/custom-budget-period-modal.component';
+import { DateRangeInputComponent } from '../common/date-range-input/date-range-input.component';
+import { toLocalDateKey } from '../../services/date-filter.service';
 import { CustomBudgetPeriod, CustomBudgetPeriodService } from '../../services/custom-budget-period.service';
 import { DataManagerService } from '../../services/data-manager';
 import { SpaceContextService } from '../../services/space-context.service';
@@ -55,7 +56,7 @@ const Toast = createAppToast();
     TranslateModule,
     LucideAngularModule,
     FormsModule,
-    CustomBudgetPeriodModalComponent,
+    DateRangeInputComponent,
     CurrentSpaceTitleComponent,
     UserAvatarComponent,
     ImageCropperComponent,
@@ -179,7 +180,6 @@ export class UserProfileComponent implements OnInit, OnDestroy {
       : this.canEnableNotifications;
   }
 
-  @ViewChild(CustomBudgetPeriodModalComponent) private modalComponent!: CustomBudgetPeriodModalComponent;
   @ViewChild('avatarFileInput') avatarFileInput!: ElementRef<HTMLInputElement>;
 
   readonly iconPlus = Plus;
@@ -221,6 +221,10 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   showConfirmPassword = false;
   changePasswordForm: FormGroup;
 
+  // Create Custom Budget Period — same full-screen overlay as Change Password.
+  isBudgetPeriodModalOpen = false;
+  budgetPeriodForm: FormGroup;
+
   constructor() {
     this.userProfileForm = this.fb.group({
       displayName: ['', [Validators.required, Validators.maxLength(50)]],
@@ -235,6 +239,12 @@ export class UserProfileComponent implements OnInit, OnDestroy {
       newPassword: ['', [Validators.required, Validators.minLength(8), Validators.maxLength(4096), passwordComplexityValidator]],
       confirmPassword: ['', Validators.required],
     }, { validators: passwordsMatchValidator });
+
+    this.budgetPeriodForm = this.fb.group({
+      name: ['', [Validators.required, Validators.maxLength(50)]],
+      startDate: ['', Validators.required],
+      endDate: ['', Validators.required],
+    });
 
     const getRole = (profile: UserProfile | null | undefined): string => {
       if (!profile) {
@@ -437,6 +447,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
     this.themeSubscription.unsubscribe();
     document.body.classList.remove('prof-pw-modal-open');
+    document.body.classList.remove('prof-bp-modal-open');
   }
 
   trackByPeriodId(index: number, period: CustomBudgetPeriod): string {
@@ -1057,7 +1068,30 @@ export class UserProfileComponent implements OnInit, OnDestroy {
       Swal.fire({ icon: 'error', title: this.translate.instant('ERROR_TITLE'), text: this.translate.instant('CUSTOM_BUDGET_PERIOD_LIMIT_REACHED') });
       return;
     }
-    this.modalComponent.open();
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    const sixMonthsHence = new Date();
+    sixMonthsHence.setMonth(sixMonthsHence.getMonth() + 6);
+    this.budgetPeriodForm.reset({
+      name: '',
+      startDate: toLocalDateKey(sixMonthsAgo),
+      endDate: toLocalDateKey(sixMonthsHence),
+    });
+    this.isBudgetPeriodModalOpen = true;
+    document.body.classList.add('prof-bp-modal-open');
+    setTimeout(() => document.getElementById('bp-name')?.focus(), 0);
+  }
+
+  closeBudgetPeriodModal(): void {
+    this.isBudgetPeriodModalOpen = false;
+    document.body.classList.remove('prof-bp-modal-open');
+  }
+
+  saveBudgetPeriod(): void {
+    if (this.budgetPeriodForm.invalid) return;
+    const v = this.budgetPeriodForm.value;
+    this.closeBudgetPeriodModal();
+    void this.onPeriodSaved({ ...v, name: (v.name || '').trim() });
   }
 
   async onPeriodSaved(period: { name: string, startDate: string, endDate: string }): Promise<void> {

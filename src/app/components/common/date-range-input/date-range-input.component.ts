@@ -280,11 +280,12 @@ export class DateRangeInputComponent implements OnChanges, OnDestroy {
   }
 
   private getOverlayAncestor(): HTMLElement | null {
-    // Custom Budget Period is a component-owned full-screen overlay rather
-    // than Bootstrap's `.modal`. Keep the range picker/backdrop inside that
-    // overlay so its sheet can sit above the dimmer instead of being trapped
-    // beneath a body-level backdrop by the overlay's stacking context.
-    return this.elRef.nativeElement.closest('.modal, .cbp-dialog') as HTMLElement | null;
+    // `.dri-overlay-host` marks a component-owned full-screen overlay (e.g.
+    // profile's Create Custom Budget Period) rather than Bootstrap's `.modal`.
+    // Keep the range picker/backdrop inside that overlay so its sheet can sit
+    // above the dimmer instead of being trapped beneath a body-level backdrop
+    // by the overlay's stacking context.
+    return this.elRef.nativeElement.closest('.modal, .dri-overlay-host') as HTMLElement | null;
   }
 
   private _createBodyBackdrop(): void {
@@ -323,12 +324,12 @@ export class DateRangeInputComponent implements OnChanges, OnDestroy {
     const trigger = this.elRef.nativeElement.querySelector('.dri-trigger') as HTMLElement;
     if (!trigger) return;
     const rect = trigger.getBoundingClientRect();
-    // `.cbp-dialog` uses CSS translate/scale for its open animation. That
+    // `.dri-overlay-host` uses CSS translate/scale for its open animation. That
     // makes it the containing block for this otherwise fixed panel, so page
     // coordinates would be offset by the dialog a second time and send the
     // calendar to the right of the modal. Use dialog-relative coordinates so
     // the panel stays directly below the range field.
-    const customBudgetDialog = trigger.closest('.cbp-dialog') as HTMLElement | null;
+    const customBudgetDialog = trigger.closest('.dri-overlay-host') as HTMLElement | null;
     const dialogRect = customBudgetDialog?.getBoundingClientRect();
     const offsetLeft = dialogRect ? dialogRect.left : 0;
     const offsetTop = dialogRect ? dialogRect.top : 0;

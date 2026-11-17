@@ -303,7 +303,45 @@
   </div>
 </div>
 
-<app-custom-budget-period-modal (periodSaved)="onPeriodSaved($event)"></app-custom-budget-period-modal>
+<!-- ── Create Custom Budget Period (same full-screen overlay as Change
+     Password below; dri-overlay-host keeps the date-range picker inside it) ── -->
+<div class="prof-pw-modal-backdrop" [class.open]="isBudgetPeriodModalOpen" (click)="closeBudgetPeriodModal()"></div>
+<div appSwipeToClose (swipeClose)="closeBudgetPeriodModal()" class="prof-pw-modal-sheet dri-overlay-host" [class.open]="isBudgetPeriodModalOpen">
+  <div class="prof-pw-modal-header">
+    <span class="prof-pw-modal-header-title">{{ 'CREATE_CUSTOM_BUDGET_PERIOD' | translate }}</span>
+    <button type="button" class="prof-pw-modal-close" (click)="closeBudgetPeriodModal()" [title]="'CANCEL_BUTTON_LABEL' | translate">
+      <lucide-icon [img]="iconX" [size]="18"></lucide-icon>
+    </button>
+  </div>
+
+  <div class="prof-pw-modal-body">
+    <form [formGroup]="budgetPeriodForm" (ngSubmit)="saveBudgetPeriod()" class="prof-pw-form" autocomplete="off">
+      <div class="prof-float-field">
+        <input type="text" id="bp-name" class="prof-input" formControlName="name" placeholder=" " maxlength="50" />
+        <label class="prof-float-label" for="bp-name">{{ 'BUDGET_PERIOD_NAME' | translate }}</label>
+      </div>
+      <div class="prof-field-error" *ngIf="(budgetPeriodForm.get('name')?.value?.length ?? 0) >= 50">
+        {{ 'BUDGET_PERIOD_NAME_MAX_LENGTH_ERROR' | translate }}
+      </div>
+
+      <app-date-range-input
+        [startDate]="budgetPeriodForm.get('startDate')?.value || ''"
+        (startDateChange)="budgetPeriodForm.patchValue({ startDate: $event })"
+        [endDate]="budgetPeriodForm.get('endDate')?.value || ''"
+        (endDateChange)="budgetPeriodForm.patchValue({ endDate: $event })"
+        [startLabel]="'START_DATE' | translate"
+        [endLabel]="'END_DATE' | translate">
+      </app-date-range-input>
+
+      <div class="prof-pw-form-footer">
+        <button type="submit" class="prof-pw-btn-primary prof-btn-block" [disabled]="budgetPeriodForm.invalid">
+          <lucide-icon [img]="iconSave" [size]="16"></lucide-icon>
+          <span>{{ 'SAVE_BUTTON_LABEL' | translate }}</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
 
 <!-- ── Change Password (bottom-sheet modal — same look as Add
      Expense/Budget/Income's *-add-modal-*) ── -->

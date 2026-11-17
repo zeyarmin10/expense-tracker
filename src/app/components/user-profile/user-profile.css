@@ -899,7 +899,8 @@
 /* ── Change Password modal — same structure/behavior as the Add
    Expense/Budget/Income bottom-sheet dialogs (exp-add-modal-*), just
    renamed to this component's own prof-pw-* prefix. ── */
-body.prof-pw-modal-open {
+body.prof-pw-modal-open,
+body.prof-bp-modal-open {
   overflow: hidden;
 }
 
@@ -1176,6 +1177,12 @@ body.prof-pw-modal-open {
   color: #fff;
   cursor: pointer;
   transition: all 0.15s;
+}
+
+/* Full-width variant (Create Custom Budget Period's Save). */
+.prof-pw-btn-primary.prof-btn-block {
+  width: 100%;
+  justify-content: center;
 }
 
 .prof-pw-btn-primary:hover:not(:disabled) {
