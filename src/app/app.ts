@@ -305,6 +305,21 @@ export class App implements OnInit, AfterViewInit {
       distinctUntilChanged()
     );
 
+    // Open each new page at its top — but ONLY when the path actually changes.
+    // Router's withInMemoryScrolling('top') was dropped because it also scrolls
+    // on same-URL NavigationSkipped events, which every full-screen overlay
+    // fires when it closes via history.back() (its pushState(null,'') entry),
+    // jumping the page underneath to the top.
+    let lastScrollPath = this.router.url.split(/[?#]/)[0];
+    this.router.events.pipe(
+      filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+      map((e: NavigationEnd) => e.urlAfterRedirects.split(/[?#]/)[0])
+    ).subscribe((path) => {
+      if (path === lastScrollPath) return;
+      lastScrollPath = path;
+      window.scrollTo(0, 0);
+    });
+
     // Close mobile menu on route change
     this.router.events.pipe(
       filter((event): event is NavigationEnd => event instanceof NavigationEnd)
