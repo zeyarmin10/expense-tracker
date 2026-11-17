@@ -130,8 +130,11 @@
   </div>
 
   <!-- ── Create-space modal (replaces the old SweetAlert form) ── -->
-  <div class="ob-modal-backdrop" *ngIf="isCreateSpaceModalOpen"></div>
-  <div class="ob-modal" *ngIf="isCreateSpaceModalOpen" role="dialog" aria-modal="true">
+  <!-- Always rendered and toggled with .open (not *ngIf) so the sheet can
+       slide up in and back down out, like the app's other bottom sheets. -->
+  <div class="ob-modal-backdrop" [class.open]="isCreateSpaceModalOpen"></div>
+  <div class="ob-modal" appSwipeToClose (swipeClose)="closeCreateSpaceModal()" [swipeDisabled]="isCreatingSpace"
+    [class.open]="isCreateSpaceModalOpen" role="dialog" aria-modal="true" [attr.aria-hidden]="!isCreateSpaceModalOpen">
     <div class="ob-modal-header">
       <span class="ob-modal-title">{{ 'ONBOARDING.CREATE_NEW_GROUP' | translate }}</span>
       <button type="button" class="ob-modal-close" (click)="closeCreateSpaceModal()"
@@ -199,8 +202,9 @@
   </div>
 
   <!-- Join-space uses the same modal flow as Create Space. -->
-  <div class="ob-modal-backdrop" *ngIf="isJoinSpaceModalOpen"></div>
-  <div class="ob-modal ob-join-modal" *ngIf="isJoinSpaceModalOpen" role="dialog" aria-modal="true"
+  <div class="ob-modal-backdrop" [class.open]="isJoinSpaceModalOpen"></div>
+  <div class="ob-modal ob-join-modal" appSwipeToClose (swipeClose)="closeJoinSpaceModal()" [swipeDisabled]="isJoiningSpace"
+    [class.open]="isJoinSpaceModalOpen" role="dialog" aria-modal="true" [attr.aria-hidden]="!isJoinSpaceModalOpen"
     aria-labelledby="ob-join-space-title">
     <div class="ob-modal-header">
       <span class="ob-modal-title" id="ob-join-space-title">{{ 'ONBOARDING.JOIN_EXISTING_GROUP' | translate }}</span>

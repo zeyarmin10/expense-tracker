@@ -925,6 +925,14 @@
   inset: 0;
   background: rgba(0, 0, 0, 0.6);
   z-index: 1040;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+}
+
+.ob-modal-backdrop.open {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .ob-modal {
@@ -932,7 +940,6 @@
   left: 0;
   right: 0;
   bottom: 0;
-  transform: none;
   z-index: 1041;
   width: 100%;
   height: min(80dvh, calc(100dvh - env(safe-area-inset-top, 0px) - 1rem));
@@ -946,6 +953,22 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  /* Slide up from / back down below the viewport — same curve as the other
+     bottom sheets (sync details, add-expense, …). visibility lags the close
+     so the sheet stays visible while sliding out. Positioned with the
+     `translate` property (not `transform`) so appSwipeToClose's inline
+     drag transform composes with it. */
+  translate: 0 100%;
+  pointer-events: none;
+  visibility: hidden;
+  transition: translate 0.28s cubic-bezier(0.34, 1.2, 0.64, 1), visibility 0s linear 0.28s;
+}
+
+.ob-modal.open {
+  translate: 0 0;
+  pointer-events: auto;
+  visibility: visible;
+  transition: translate 0.28s cubic-bezier(0.34, 1.2, 0.64, 1), visibility 0s;
 }
 
 .ob-modal-header {
@@ -1254,13 +1277,24 @@
     bottom: auto;
     left: 50%;
     right: auto;
-    transform: translateX(-50%);
     width: min(92vw, 380px);
     height: auto;
     max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 2rem);
     border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.1));
     border-radius: 18px;
     box-shadow: 0 18px 48px rgba(0, 0, 0, 0.4);
+    /* Centered dialog: fade + scale in, like the sync details sheet. */
+    translate: -50% 0;
+    scale: 0.96;
+    opacity: 0;
+    transition: scale 0.2s ease, opacity 0.2s ease, visibility 0s linear 0.2s;
+  }
+
+  .ob-modal.open {
+    translate: -50% 0;
+    scale: 1;
+    opacity: 1;
+    transition: scale 0.2s ease, opacity 0.2s ease, visibility 0s;
   }
 
   .ob-modal-body {

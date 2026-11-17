@@ -1,4 +1,5 @@
 import { Component, HostListener, inject, OnDestroy, OnInit } from '@angular/core';
+import { SwipeToCloseDirective } from '../../directives/swipe-to-close.directive';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -23,7 +24,7 @@ import { showAppToast } from '../../services/toast';
 @Component({
   selector: 'app-onboarding',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, LucideAngularModule, CurrentSpaceTitleComponent],
+  imports: [CommonModule, FormsModule, TranslateModule, LucideAngularModule, CurrentSpaceTitleComponent, SwipeToCloseDirective],
   templateUrl: './onboarding.html',
   styleUrls: ['./onboarding.css'],
 })
