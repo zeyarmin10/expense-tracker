@@ -72,6 +72,8 @@ export class App implements OnInit, AfterViewInit {
   inventoryEnabled$: Observable<boolean>;
   /** On /cash-flow in a personal space — highlights Income, its parent page. */
   isPersonalCashFlowRoute$!: Observable<boolean>;
+  /** On /cash-flow in a shop space — highlights Sales, which links to it. */
+  isShopCashFlowRoute$!: Observable<boolean>;
   userSpaces$: Observable<UserSpaceSummary[]>;
   currentSpaceName$: Observable<string | null>;
   currentSpaceId$: Observable<string | null>;
@@ -344,12 +346,12 @@ export class App implements OnInit, AfterViewInit {
         const isExactExpense = url === '/expense' ||
                                url.startsWith('/expense/') ||
                                (url.includes('/expense') && !url.includes('/expense-overview'));
-        // Shop mode's FAB targets /sales (not /expense) — same "on the FAB's
-        // own page" rule so its icon swaps from + to the page icon there too.
-        const isSalesRoute = url === '/sales' || url.startsWith('/sales/');
-        return isExactExpense || isSalesRoute;
+        // Shop mode's FAB targets /purchase (not /expense) — same "on the
+        // FAB's own page" rule so its icon swaps from + to the page icon there.
+        const isPurchaseRoute = url === '/purchase' || url.startsWith('/purchase/');
+        return isExactExpense || isPurchaseRoute;
       }),
-      // Without this, a late subscriber (e.g. the shop-mode Sales FAB,
+      // Without this, a late subscriber (e.g. the shop-mode Purchase FAB,
       // which only renders once the async inventoryEnabled$ check resolves)
       // misses the initial NavigationEnd and falls back to the frozen
       // startWith() snapshot forever — shareReplay hands it the latest
@@ -372,13 +374,16 @@ export class App implements OnInit, AfterViewInit {
       startWith(this.router.url.split('?')[0]),
       map(url => '/' + (url.split('/')[1] || '')),
     );
-    // Cash Flow is a drawer page in shop spaces ("Cash In/Out"), but in
-    // personal spaces it opens from the Income page instead of a menu.
-    this.isDrawerRouteActive$ = combineLatest([routeBase$, this.inventoryEnabled$]).pipe(
-      map(([base, inventory]) => drawerRoutes.includes(base) || (base === '/cash-flow' && inventory))
+    // Cash Flow has no menu item: it opens from the Income page (personal
+    // spaces) or the Sales page (shop spaces), and highlights that parent.
+    this.isDrawerRouteActive$ = routeBase$.pipe(
+      map((base) => drawerRoutes.includes(base))
     );
     this.isPersonalCashFlowRoute$ = combineLatest([routeBase$, this.inventoryEnabled$]).pipe(
       map(([base, inventory]) => base === '/cash-flow' && !inventory)
+    );
+    this.isShopCashFlowRoute$ = combineLatest([routeBase$, this.inventoryEnabled$]).pipe(
+      map(([base, inventory]) => base === '/cash-flow' && inventory)
     );
 
     this.translate.onLangChange.subscribe(event => {

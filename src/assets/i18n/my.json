@@ -1124,5 +1124,18 @@
   "SHOP_PHONE_LABEL": "ဖုန်းနံပါတ်",
   "SHOP_INFO_SAVED": "ဆိုင်အချက်အလက် သိမ်းဆည်းပြီးပါပြီ။",
   "SALE_PRICE_BELOW_COST_WARNING": "ရောင်းဈေးသည် ပျမ်းမျှဝယ်ဈေး ({{cost}}) ထက်နည်းနေပါသည်။",
-  "EXPENSE_DATE_MONTH_ADJUSTED": "ရွေးချယ်သည့်လကို မခွင့်ပြုထားပါ။ အနီးဆုံးခွင့်ပြုထားသောလကို ရွေးပေးထားပါသည်။"
+  "EXPENSE_DATE_MONTH_ADJUSTED": "ရွေးချယ်သည့်လကို မခွင့်ပြုထားပါ။ အနီးဆုံးခွင့်ပြုထားသောလကို ရွေးပေးထားပါသည်။",
+  "DASH_MONEY_IN": "ဝင်ငွေ",
+  "DASH_MONEY_OUT": "ထွက်ငွေ",
+  "DASH_BUDGET_TITLE": "ဘတ်ဂျက်",
+  "DASH_BUDGET_LEFT": "{{amount}} ကျန်သေးသည်",
+  "DASH_BUDGET_OVER": "ဘတ်ဂျက်ထက် {{amount}} ကျော်နေသည်",
+  "DASH_BUDGET_SPENT": "{{budget}} အနက် {{spent}} သုံးပြီး",
+  "DASH_DAYS_LEFT": "{{count}} ရက် ကျန်",
+  "DASH_DAILY_ALLOWANCE": "တစ်ရက်ကို {{amount}} ခန့် သုံးနိုင်ပါသည်",
+  "DASH_NO_BUDGET": "ဘတ်ဂျက်သတ်မှတ်ထားရင် ဘယ်လောက်ထပ်သုံးနိုင်သေးလဲ သိရပါမယ်။",
+  "DASH_TOP_SPENDING": "ငွေ ဘယ်မှာ သုံးခဲ့လဲ",
+  "DASH_RECENT": "နောက်ဆုံး အသုံးစရိတ်များ",
+  "DASH_SEE_ALL": "အားလုံးကြည့်ရန်",
+  "DASH_NO_BUDGET_SHORT": "ဘယ်လောက် ထပ်သုံးနိုင်သေးလဲ သိရအောင်"
 }

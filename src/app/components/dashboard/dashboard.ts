@@ -55,13 +55,15 @@ import {
   UserDataService,
   canManageSharedSpace,
 } from '../../services/user-data';
-import { LucideAngularModule, TrendingUp, TrendingDown, Banknote, PiggyBank, ShoppingCart, ChartColumn, ChartPie, RotateCw, Eye, EyeOff, LucideIconData } from 'lucide-angular';
+import { LucideAngularModule, TrendingUp, TrendingDown, Banknote, PiggyBank, ShoppingCart, ChartColumn, ChartPie, RotateCw, Eye, EyeOff, ArrowDown, ArrowUp, ChevronRight, CalendarClock, LucideIconData } from 'lucide-angular';
+import { getCategoryHue, getIconData, getIconHue } from '../../utils/category-icons';
 import { FormatService } from '../../services/format.service';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
 import { CustomBudgetPeriod, CustomBudgetPeriodService } from '../../services/custom-budget-period.service';
 import { SpaceDataService } from '../../services/space-data.service';
 import { SpaceContextService } from '../../services/space-context.service';
 import { ShopDashboardComponent } from '../shop-dashboard/shop-dashboard';
+import { BrandLoaderComponent } from '../common/brand-loader/brand-loader.component';
 
 Chart.register(...registerables);
 type CurrencyMap = { [currency: string]: number };
@@ -73,11 +75,36 @@ type DashboardData = {
 type DashboardDataState = DashboardData & {
   loading: boolean;
 };
+/** One row of "Where your money went". */
+export type DashCategory = { name: string; amount: number; pct: number; icon: LucideIconData; hue: number };
+/** One row of "Recent expenses". */
+export type DashRecent = { expense: ServiceIExpense; icon: LucideIconData; hue: number };
+/** Everything the personal dashboard shows, in the profile's currency. */
+export type DashOverview = {
+  currency: string;
+  hasAny: boolean;
+  income: number;
+  expense: number;
+  balance: number;
+  budget: number;
+  hasBudget: boolean;
+  /** 0–100+ share of the budget already spent. */
+  usedPct: number;
+  remaining: number;
+  /** Days left in the period, counting today; 0 once it has ended. */
+  daysLeft: number;
+  /** What's left per remaining day — only when there is budget left. */
+  dailyAllowance: number;
+  topCategories: DashCategory[];
+  recent: DashRecent[];
+  /** The trend chart only says something when the period spans months. */
+  showTrend: boolean;
+};
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, LucideAngularModule, RouterModule, CurrentSpaceTitleComponent, ShopDashboardComponent],
+  imports: [CommonModule, FormsModule, TranslateModule, LucideAngularModule, RouterModule, CurrentSpaceTitleComponent, ShopDashboardComponent, BrandLoaderComponent],
   providers: [DatePipe],
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.css'],
@@ -114,10 +141,19 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   private spaceContextService = inject(SpaceContextService);
   private customBudgetPeriods: CustomBudgetPeriod[] = [];
 
+  // The trend canvas lives inside an *ngIf (only once data has loaded), so
+  // it can appear after the chart data first arrives — render then.
+  private expenseChartCanvas?: ElementRef<HTMLCanvasElement>;
+  private lastTrendData: { labels: string[]; datasets: any[] } | null = null;
   @ViewChild('expenseChartCanvas')
-  private expenseChartCanvas!: ElementRef<HTMLCanvasElement>;
-  @ViewChild('categoryDonutChartCanvas')
-  private categoryDonutChartCanvas!: ElementRef<HTMLCanvasElement>;
+  set expenseChartCanvasRef(ref: ElementRef<HTMLCanvasElement> | undefined) {
+    const appeared = !!ref && ref !== this.expenseChartCanvas;
+    this.expenseChartCanvas = ref;
+    if (appeared && this.lastTrendData) {
+      const data = this.lastTrendData;
+      setTimeout(() => this.renderExpenseChart(data));
+    }
+  }
 
   userDisplayName$!: Observable<string | null>;
   totalExpensesByCurrency$!: Observable<{ [currency: string]: number }>;
@@ -132,6 +168,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   }>;
   totalIncomesByCurrency$!: Observable<{ [currency: string]: number }>;
   inventoryEnabled$!: Observable<boolean>;
+  overview$!: Observable<DashOverview>;
 
   private dashboardAllData$!: Observable<DashboardData>;
   expenseFilterForm!: FormGroup;
@@ -152,33 +189,30 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly iconTrendingDown = TrendingDown;
   readonly iconEye = Eye;
   readonly iconEyeOff = EyeOff;
+  readonly iconArrowDown = ArrowDown;
+  readonly iconArrowUp = ArrowUp;
+  readonly iconChevronRight = ChevronRight;
+  readonly iconCalendarClock = CalendarClock;
 
-  // Remaining-balance / Total-income visibility toggles (banking-app
-  // style) — each persisted independently across visits so the user's
-  // show/hide choice sticks per card.
-  isBalanceHidden = localStorage.getItem('dashboardBalanceHidden') === 'true';
-  isIncomeHidden = localStorage.getItem('dashboardIncomeHidden') === 'true';
+  // Banking-app style eye toggle: hides every amount on the balance card
+  // (balance, money in, money out). Persisted across visits.
+  isBalanceHidden = this.readHiddenPref();
+
+  private readHiddenPref(): boolean {
+    try { return localStorage.getItem('dashboardBalanceHidden') === 'true'; } catch { return false; }
+  }
 
   toggleBalanceVisibility(event: Event): void {
     event.preventDefault();
     event.stopPropagation();
     this.isBalanceHidden = !this.isBalanceHidden;
-    localStorage.setItem('dashboardBalanceHidden', String(this.isBalanceHidden));
-  }
-
-  toggleIncomeVisibility(event: Event): void {
-    event.preventDefault();
-    event.stopPropagation();
-    this.isIncomeHidden = !this.isIncomeHidden;
-    localStorage.setItem('dashboardIncomeHidden', String(this.isIncomeHidden));
+    try { localStorage.setItem('dashboardBalanceHidden', String(this.isBalanceHidden)); } catch { /* private mode */ }
   }
 
   availableCurrencies = AVAILABLE_CURRENCIES;
   private expenseChartInstance: Chart | undefined;
-  private categoryDonutChart: Chart | undefined;
   private themeObserver: MutationObserver | undefined;
   hasExpenseDataForChart: boolean = false;
-  hasCategoryDataForChart: boolean = false;
   currentSummaryDateRange$: Observable<string> | undefined;
   userProfile: UserProfile | null = null;
   private activeSpaceModeKey: string | null = null;
@@ -207,7 +241,6 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     this.destroy$.next();
     this.destroy$.complete();
     this.expenseChartInstance?.destroy();
-    this.categoryDonutChart?.destroy();
     this.themeObserver?.disconnect();
   }
 
@@ -569,95 +602,136 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         return of({ labels: [], datasets: [] });
       })
     );
+
+    const categories$ = this.categoryService.getCategories().pipe(
+      startWith([] as ServiceICategory[]),
+      catchError(() => of([] as ServiceICategory[]))
+    );
+
+    this.overview$ = combineLatest([
+      data$,
+      this.totalBudgetsByCurrency$,
+      categories$,
+    ]).pipe(
+      map(([data, budgets, categories]) => this.buildOverview(data, budgets, categories)),
+      catchError(err => {
+        console.error('Error in overview$', err);
+        return of(this.buildOverview({ expenses: [], incomes: [], budgets: [] }, {}, []));
+      }),
+      shareReplay(1)
+    );
+  }
+
+  private buildOverview(
+    data: DashboardData,
+    budgetTotals: CurrencyMap,
+    categories: ServiceICategory[],
+  ): DashOverview {
+    const { expenses, incomes } = data;
+    const currency =
+      this.userProfile?.currency ||
+      expenses[0]?.currency ||
+      incomes[0]?.currency ||
+      Object.keys(budgetTotals)[0] ||
+      'MMK';
+    const inCurrency = <T extends { currency?: string }>(items: T[]) =>
+      items.filter((i) => !i.currency || i.currency === currency);
+
+    const curExpenses = inCurrency(expenses);
+    const income = inCurrency(incomes).reduce((sum, i) => sum + (i.amount || 0), 0);
+    const expense = curExpenses.reduce((sum, e) => sum + (e.totalCost || 0), 0);
+    const budget = budgetTotals[currency] || 0;
+    const remaining = budget - expense;
+
+    // Days left in the dashboard period, counting today.
+    const start = this.safeParseDate(this._startDate$.getValue() || '');
+    const end = this.safeParseDate(this._endDate$.getValue() || '');
+    const today = new Date();
+    today.setHours(12, 0, 0, 0);
+    const dayMs = 86_400_000;
+    const daysLeft = today > end ? 0 : Math.max(0, Math.round((end.getTime() - Math.max(today.getTime(), start.getTime())) / dayMs) + 1);
+
+    // Where the money went: categories by total, biggest first.
+    const iconByName = new Map(categories.map((c) => [c.name, c.icon] as const));
+    const byCategory = new Map<string, number>();
+    for (const e of curExpenses) {
+      const name = e.category || this.translate.instant('UNCATEGORIZED');
+      byCategory.set(name, (byCategory.get(name) || 0) + (e.totalCost || 0));
+    }
+    const look = (name: string) => {
+      const icon = iconByName.get(name);
+      return { icon: getIconData(icon), hue: icon ? getIconHue(icon) : getCategoryHue(name) };
+    };
+    const topCategories: DashCategory[] = [...byCategory.entries()]
+      .filter(([, amount]) => amount > 0)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([name, amount]) => ({
+        name,
+        amount,
+        pct: expense > 0 ? Math.round((amount / expense) * 100) : 0,
+        ...look(name),
+      }));
+
+    const recent: DashRecent[] = [...curExpenses]
+      .sort((a, b) =>
+        (b.date || '').localeCompare(a.date || '') ||
+        (b.createdAt || '').localeCompare(a.createdAt || ''))
+      .slice(0, 5)
+      .map((expense) => ({ expense, ...look(expense.category || '') }));
+
+    const months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth()) + 1;
+
+    return {
+      currency,
+      hasAny: income > 0 || expense > 0 || budget > 0,
+      income,
+      expense,
+      balance: income - expense,
+      budget,
+      hasBudget: budget > 0,
+      usedPct: budget > 0 ? Math.round((expense / budget) * 100) : 0,
+      remaining,
+      daysLeft,
+      dailyAllowance: remaining > 0 && daysLeft > 0 ? remaining / daysLeft : 0,
+      topCategories,
+      recent,
+      showTrend: months > 1,
+    };
+  }
+
+  /** Bar colour: calm while there's room, amber when close, red when over. */
+  budgetLevel(ov: DashOverview): 'ok' | 'warn' | 'over' {
+    if (ov.usedPct >= 100) return 'over';
+    if (ov.usedPct >= 80) return 'warn';
+    return 'ok';
+  }
+
+  trackByCategory(_: number, c: DashCategory): string {
+    return c.name;
+  }
+
+  trackByRecent(_: number, r: DashRecent): string {
+    return r.expense.id;
   }
 
   private subscribeToChartData(): void {
     this.monthlyExpenseChartData$
       .pipe(takeUntil(this.destroy$))
       .subscribe((data) => {
-        if (data) this.renderExpenseChart(data);
-      });
-
-    this.filteredExpensesAndIncomes$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(({ expenses }) => {
-        this.createCategoryDonutChart(expenses);
+        if (!data) return;
+        this.lastTrendData = data;
+        this.renderExpenseChart(data);
       });
 
     // Re-render charts when theme changes (body.light-mode class toggled)
     this.themeObserver = new MutationObserver(() => {
-      combineLatest([
-        this.monthlyExpenseChartData$,
-        this.filteredExpensesAndIncomes$,
-      ])
-        .pipe(take(1), takeUntil(this.destroy$))
-        .subscribe(([chartData, { expenses }]) => {
-          if (chartData) this.renderExpenseChart(chartData);
-          this.createCategoryDonutChart(expenses);
-        });
+      if (this.lastTrendData) this.renderExpenseChart(this.lastTrendData);
     });
 
     this.themeObserver.observe(document.body, {
       attributes: true,
       attributeFilter: ['class'],
-    });
-  }
-
-  private createCategoryDonutChart(expenses: ServiceIExpense[]): void {
-    const canvas = this.categoryDonutChartCanvas?.nativeElement;
-    if (!canvas) return;
-
-    const categoryTotals = expenses.reduce((acc, expense) => {
-      const categoryName =
-        expense.category || this.translate.instant('UNCATEGORIZED');
-      acc[categoryName] = (acc[categoryName] || 0) + expense.totalCost;
-      return acc;
-    }, {} as { [category: string]: number });
-
-    const labels = Object.keys(categoryTotals);
-    const data = Object.values(categoryTotals);
-    this.hasCategoryDataForChart = data.length > 0;
-    this.cdr.detectChanges();
-
-    if (this.categoryDonutChart) {
-      this.categoryDonutChart.destroy();
-    }
-
-    if (!this.hasCategoryDataForChart) {
-      return;
-    }
-
-    const isLight = document.body.classList.contains('light-mode');
-    const legendColor = isLight ? '#4a5568' : '#9ca3af';
-
-    this.categoryDonutChart = new Chart(canvas, {
-      type: 'doughnut',
-      data: {
-        labels: labels,
-        datasets: [
-          {
-            data: data,
-            backgroundColor: [
-              '#0b74ff', '#60a5fa', '#f4b11a', '#f87171', '#a78bfa',
-              '#2f8cff', '#38bdf8', '#fb923c', '#e879f9', '#facc15'
-            ],
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            position: 'bottom',
-            labels: {
-              boxWidth: 20,
-              color: legendColor,
-              font: { family: 'MyanmarUIFont, Arial, sans-serif', size: 11 }
-            }
-          },
-        },
-      },
     });
   }
 

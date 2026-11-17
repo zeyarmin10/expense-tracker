@@ -871,3 +871,426 @@
   background: rgba(11, 116, 255, 0.18);
   transform: translateY(-1px);
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   Personal overview (dov-*) — balance · budget · where it went · recent
+   ══════════════════════════════════════════════════════════════════ */
+.dov-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+}
+
+@media (min-width: 992px) {
+  .dov-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+  }
+  .dov-balance { grid-column: 1 / -1; }
+  /* Categories fill the right column beside budget + recent on the left. */
+  .dov-cats { grid-column: 2; grid-row: span 2; }
+  .dov-trend { grid-column: 1 / -1; }
+}
+
+.dov-loading {
+  display: flex;
+  justify-content: center;
+  padding: 3rem 0;
+}
+
+.dov-hidden {
+  filter: blur(9px);
+  user-select: none;
+}
+
+/* ── 1. Balance ── */
+.dov-balance {
+  position: relative;
+  overflow: hidden;
+  padding: 1.25rem 1.25rem 1rem;
+  border-radius: 20px;
+  color: #fff;
+  background:
+    radial-gradient(120% 120% at 0% 0%, rgba(255, 255, 255, 0.18) 0%, transparent 55%),
+    linear-gradient(135deg, #2f7bff 0%, #0b5be0 55%, #0846b8 100%);
+  box-shadow: 0 10px 28px -12px rgba(11, 91, 224, 0.7);
+}
+
+.dov-balance-neg {
+  background:
+    radial-gradient(120% 120% at 0% 0%, rgba(255, 255, 255, 0.16) 0%, transparent 55%),
+    linear-gradient(135deg, #f0646b 0%, #d6404a 55%, #b02e39 100%);
+  box-shadow: 0 10px 28px -12px rgba(214, 64, 74, 0.7);
+}
+
+.dov-balance-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dov-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.dov-eye {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  cursor: pointer;
+}
+
+.dov-balance-amount {
+  margin: 0.35rem 0 1rem;
+  font-size: clamp(1.75rem, 7.5vw, 2.4rem);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  word-break: break-word;
+}
+
+.dov-flows {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+
+.dov-flow {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+  padding: 0.65rem 0.7rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s;
+}
+
+.dov-flow:hover { background: rgba(255, 255, 255, 0.22); }
+
+.dov-flow-icon {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.dov-flow-in .dov-flow-icon { color: #0f9f6e; }
+.dov-flow-out .dov-flow-icon { color: #d6404a; }
+
+.dov-flow-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.dov-flow-label {
+  font-size: 0.75rem;
+  opacity: 0.85;
+}
+
+.dov-flow-amount {
+  font-size: 1rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Shared card ── */
+.dov-card {
+  display: block;
+  padding: 1rem 1.1rem;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  text-decoration: none;
+}
+
+a.dov-card {
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color 0.15s, transform 0.1s;
+}
+
+a.dov-card:active { transform: scale(0.99); }
+
+.dov-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.85rem;
+}
+
+.dov-card-title {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.dov-chip {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+}
+
+.dov-chip-budget {
+  background: var(--budget-dim);
+  color: var(--budget-color);
+}
+
+.dov-chevron { color: var(--text-muted); }
+
+.dov-see-all {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+  padding: 0.3rem 0.1rem;
+}
+
+.dov-muted {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.dov-link-btn {
+  display: inline-block;
+  margin-top: 0.7rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+/* ── 2. Budget ── */
+.dov-budget-figures {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.dov-budget-left {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.dov-budget-left.dov-over { color: var(--danger); }
+
+.dov-budget-pct {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.dov-bar {
+  height: 10px;
+  margin: 0.6rem 0 0.55rem;
+  border-radius: 99px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.dov-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--success);
+  transition: width 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.dov-bar-fill[data-level="warn"] { background: var(--warning); }
+.dov-bar-fill[data-level="over"] { background: var(--danger); }
+
+.dov-budget-meta {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.dov-budget-days {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.dov-allowance {
+  margin-top: 0.7rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 12px;
+  background: var(--success-dim);
+  color: var(--success);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* ── 3. Categories & 4. Recent ── */
+.dov-cat-list,
+.dov-recent-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.dov-cat,
+.dov-recent {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.dov-cat-icon {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: hsl(var(--cat-hue, 210) 85% 55% / 0.14);
+  color: hsl(var(--cat-hue, 210) 80% 55%);
+}
+
+.dov-cat-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.dov-cat-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.dov-cat-name,
+.dov-recent-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.dov-cat-amount,
+.dov-recent-amount {
+  font-size: 0.9rem;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.dov-cat-bar {
+  height: 6px;
+  border-radius: 99px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.dov-cat-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: hsl(var(--cat-hue, 210) 80% 55%);
+}
+
+.dov-cat-pct {
+  width: 2.6rem;
+  flex-shrink: 0;
+  text-align: right;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.dov-recent-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.dov-recent-sub {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dov-recent-amount { color: var(--text); }
+
+/* ── Budget not set yet: compact single row ── */
+.dov-budget-compact {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0.9rem;
+}
+
+.dov-compact-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+}
+
+.dov-compact-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.dov-compact-hint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dov-compact-btn {
+  flex-shrink: 0;
+  padding: 0.4rem 0.75rem;
+  border-radius: 99px;
+  background: var(--accent-dim);
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+}

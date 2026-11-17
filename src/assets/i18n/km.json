@@ -1124,5 +1124,18 @@
   "SHOP_PHONE_LABEL": "លេខទូរស័ព្ទ",
   "SHOP_INFO_SAVED": "បានរក្សាទុកព័ត៌មានហាង!",
   "SALE_PRICE_BELOW_COST_WARNING": "តម្លៃលក់ទាបជាងតម្លៃទិញមធ្យម ({{cost}})។",
-  "EXPENSE_DATE_MONTH_ADJUSTED": "ខែមិនអាចជ្រើសបានទេ។ បានជ្រើសខែដែលនៅជិតបំផុតដែលអាចប្រើបាន។"
+  "EXPENSE_DATE_MONTH_ADJUSTED": "ខែមិនអាចជ្រើសបានទេ។ បានជ្រើសខែដែលនៅជិតបំផុតដែលអាចប្រើបាន។",
+  "DASH_MONEY_IN": "ប្រាក់ចូល",
+  "DASH_MONEY_OUT": "ប្រាក់ចេញ",
+  "DASH_BUDGET_TITLE": "ថវិកា",
+  "DASH_BUDGET_LEFT": "នៅសល់ {{amount}}",
+  "DASH_BUDGET_OVER": "លើសថវិកា {{amount}}",
+  "DASH_BUDGET_SPENT": "បានចំណាយ {{spent}} ក្នុងចំណោម {{budget}}",
+  "DASH_DAYS_LEFT": "នៅសល់ {{count}} ថ្ងៃ",
+  "DASH_DAILY_ALLOWANCE": "អាចចំណាយប្រហែល {{amount}} ក្នុងមួយថ្ងៃ",
+  "DASH_NO_BUDGET": "កំណត់ថវិកា ដើម្បីដឹងថាអ្នកនៅអាចចំណាយបានប៉ុន្មានទៀត។",
+  "DASH_TOP_SPENDING": "លុយរបស់អ្នកចាយទៅណា",
+  "DASH_RECENT": "ការចំណាយថ្មីៗ",
+  "DASH_SEE_ALL": "មើលទាំងអស់",
+  "DASH_NO_BUDGET_SHORT": "ដឹងថានៅអាចចំណាយបានប៉ុន្មាន"
 }

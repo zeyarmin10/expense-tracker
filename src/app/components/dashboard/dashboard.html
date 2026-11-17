@@ -14,186 +14,147 @@
       </div>
     </div>
 
-    <!-- ── Summary Cards — data ရှိမှသာ ပြမည် ── -->
-    <div class="dash-data-shell">
-    <ng-container *ngIf="hasData$ | async">
+    <!-- Personal overview, top to bottom in the order people ask:
+         how much do I have → can I still spend → where did it go → what
+         did I just spend on. Trend chart last, only for multi-month periods. -->
+    <ng-container *ngIf="overview$ | async as ov; else dashLoading">
+      <ng-container *ngIf="ov.hasAny; else dashEmpty">
+      <div class="dov-grid">
 
-    <!-- Wraps the hero card + the 3-card grid so desktop (≥992px) can lay
-         them out side by side — hero on the left, the 3 cards stacked in
-         a column on the right — instead of the hero spanning the full
-         1100px container width with a lone number in a lot of empty
-         space. Below that breakpoint this is just a plain block wrapper;
-         the two children stack top to bottom same as before. -->
-    <div class="dash-summary-row">
-
-    <!-- Total Balance — hero card, shown above the other summary cards
-         and bigger than them so it's the first thing visible. The eye
-         toggle blurs/reveals the amount, banking/pay-app style (choice
-         persisted in localStorage — see isBalanceHidden). Total Income
-         below has its own independent toggle (isIncomeHidden). -->
-    <div class="dash-card dash-hero-card" [ngClass]="getProfitLossCardClass(totalProfitLossByCurrency$ | async)">
-      <ng-container *ngIf="totalProfitLossByCurrency$ | async as profitLosses; else balanceCardLoading">
-        <ng-container *ngIf="(profitLosses | keyvalue).length > 0; else balanceEmptyCta">
-          <div class="dash-card-left" *ngFor="let profit of profitLosses | keyvalue; trackBy: trackByKey; first as isFirst">
-            <span class="dash-card-label-row">
-              <span class="dash-card-label">
-                {{ ($any(profit).value >= 0 ? 'BALANCE_LABEL' : 'EXPENSE_DEFICIT') | translate }}
-              </span>
-              <button *ngIf="isFirst" type="button" class="dash-balance-eye-btn" (click)="toggleBalanceVisibility($event)"
-                [attr.aria-label]="(isBalanceHidden ? 'SHOW_BALANCE' : 'HIDE_BALANCE') | translate">
-                <lucide-icon [img]="isBalanceHidden ? iconEye : iconEyeOff" [size]="15"></lucide-icon>
-              </button>
-            </span>
-            <span class="dash-card-amount dash-hero-amount" [ngClass]="getProfitLossAmountClass($any(profit).value)">
-              <span [class.dash-amount-blurred]="isBalanceHidden" [innerHTML]="formatService.formatAmountWithSymbolHtml($any(profit).value, $any(profit).key)"></span>
-            </span>
-          </div>
-          <div class="dash-card-right dash-hero-right">
-            <span class="dash-card-icon dash-hero-icon" [ngClass]="getProfitLossIconClass(totalProfitLossByCurrency$ | async)">
-              <lucide-icon [img]="getProfitLossIcon(totalProfitLossByCurrency$ | async)" [size]="30"></lucide-icon>
-            </span>
-          </div>
-        </ng-container>
-        <ng-template #balanceEmptyCta>
-          <div class="dash-card-left">
-            <span class="dash-card-label">{{ 'BALANCE_LABEL' | translate }}</span>
-            <span class="dash-card-empty-cta">+ {{ 'ADD_INCOME' | translate }}</span>
-          </div>
-          <div class="dash-card-right">
-            <span class="dash-card-icon dash-icon-income dash-hero-icon">
-              <lucide-icon [img]="iconTrendingUp" [size]="34"></lucide-icon>
-            </span>
-          </div>
-        </ng-template>
-      </ng-container>
-      <ng-template #balanceCardLoading>
-        <div class="dash-card-left">
-          <span class="dash-card-label">{{ 'BALANCE_LABEL' | translate }}</span>
-          <div class="dash-card-spinner" aria-hidden="true">
-            <div class="exp-spinner-sm"></div>
-          </div>
-        </div>
-        <div class="dash-card-right">
-          <span class="dash-card-icon dash-hero-icon text-success">
-            <lucide-icon [img]="iconTrendingUp" [size]="34"></lucide-icon>
-          </span>
-        </div>
-      </ng-template>
-    </div>
-
-    <div class="dash-summary-grid">
-
-      <!-- Income -->
-      <a class="dash-card dash-card-income dash-card-link" routerLink="/profit">
-        <div class="dash-card-left">
-          <span class="dash-card-label-row">
-            <span class="dash-card-label">{{ 'TOTAL_INCOMES' | translate }}</span>
-            <button type="button" class="dash-balance-eye-btn" (click)="toggleIncomeVisibility($event)"
-              [attr.aria-label]="(isIncomeHidden ? 'SHOW_BALANCE' : 'HIDE_BALANCE') | translate">
-              <lucide-icon [img]="isIncomeHidden ? iconEye : iconEyeOff" [size]="15"></lucide-icon>
+        <!-- ── 1. Balance: in − out for the period ── -->
+        <section class="dov-balance" [class.dov-balance-neg]="ov.balance < 0">
+          <div class="dov-balance-top">
+            <span class="dov-label">{{ (ov.balance >= 0 ? 'BALANCE_LABEL' : 'EXPENSE_DEFICIT') | translate }}</span>
+            <button type="button" class="dov-eye" (click)="toggleBalanceVisibility($event)"
+              [attr.aria-label]="(isBalanceHidden ? 'SHOW_BALANCE' : 'HIDE_BALANCE') | translate">
+              <lucide-icon [img]="isBalanceHidden ? iconEye : iconEyeOff" [size]="16"></lucide-icon>
             </button>
-          </span>
-          <ng-container *ngIf="totalIncomesByCurrency$ | async as totals; else cardLoading">
-            <ng-container *ngIf="totals && (totals | keyvalue).length > 0; else incomeEmptyCta">
-              <span *ngFor="let total of totals | keyvalue; trackBy: trackByKey" class="dash-card-amount dash-amount-income">
-                <span [class.dash-amount-blurred]="isIncomeHidden" [innerHTML]="formatService.formatAmountShortHtml(total.value, total.key)"></span>
+          </div>
+          <div class="dov-balance-amount" [class.dov-hidden]="isBalanceHidden"
+            [innerHTML]="formatService.formatAmountWithSymbolHtml(ov.balance, ov.currency)"></div>
+
+          <div class="dov-flows">
+            <a class="dov-flow dov-flow-in" routerLink="/profit">
+              <span class="dov-flow-icon"><lucide-icon [img]="iconArrowDown" [size]="16"></lucide-icon></span>
+              <span class="dov-flow-text">
+                <span class="dov-flow-label">{{ 'DASH_MONEY_IN' | translate }}</span>
+                <span class="dov-flow-amount" [class.dov-hidden]="isBalanceHidden"
+                  [innerHTML]="formatService.formatAmountShortHtml(ov.income, ov.currency)"></span>
               </span>
-            </ng-container>
-          </ng-container>
-          <!-- Visual button only — the whole card already links to /profit,
-               where incomes are entered, so a nested <a> isn't needed. -->
-          <ng-template #incomeEmptyCta>
-            <span class="dash-card-empty-cta">+ {{ 'ADD_INCOME' | translate }}</span>
-          </ng-template>
+            </a>
+            <a class="dov-flow dov-flow-out" [routerLink]="ov.expense > 0 ? '/expense-overview' : '/expense'">
+              <span class="dov-flow-icon"><lucide-icon [img]="iconArrowUp" [size]="16"></lucide-icon></span>
+              <span class="dov-flow-text">
+                <span class="dov-flow-label">{{ 'DASH_MONEY_OUT' | translate }}</span>
+                <span class="dov-flow-amount" [class.dov-hidden]="isBalanceHidden"
+                  [innerHTML]="formatService.formatAmountShortHtml(ov.expense, ov.currency)"></span>
+              </span>
+            </a>
           </div>
-        <div class="dash-card-right">
-          <span class="dash-card-icon dash-icon-income">
-            <lucide-icon [img]="iconBanknote" [size]="30"></lucide-icon>
+        </section>
+
+        <!-- ── 2. Budget: how much can I still spend ── -->
+        <!-- No budget yet: one compact row instead of a full card. -->
+        <a class="dov-card dov-budget-compact" routerLink="/budget" *ngIf="!ov.hasBudget && canManageBudgetActions">
+          <span class="dov-chip dov-chip-budget"><lucide-icon [img]="iconPiggyBank" [size]="16"></lucide-icon></span>
+          <span class="dov-compact-text">
+            <span class="dov-compact-title">{{ 'DASH_BUDGET_TITLE' | translate }}</span>
+            <span class="dov-compact-hint">{{ 'DASH_NO_BUDGET_SHORT' | translate }}</span>
           </span>
-        </div>
+          <span class="dov-compact-btn">+ {{ 'SET_BUDGET' | translate }}</span>
         </a>
 
-      <!-- Budget -->
-      <a class="dash-card dash-card-budget dash-card-link" routerLink="/budget">
-        <div class="dash-card-left">
-          <span class="dash-card-label">{{ 'TOTAL_BUDGET' | translate }}</span>
-          <ng-container *ngIf="totalBudgetsByCurrency$ | async as totals; else cardLoading">
-            <ng-container *ngIf="totals && (totals | keyvalue).length > 0; else budgetEmptyCta">
-              <span *ngFor="let total of totals | keyvalue; trackBy: trackByKey" class="dash-card-amount dash-amount-budget"
-                [innerHTML]="formatService.formatAmountShortHtml(total.value, total.key)"
-              ></span>
-            </ng-container>
-          </ng-container>
-          <!-- Visual button only — the whole card already links to /budget.
-               Members without budget-manage permission just get the hint. -->
-          <ng-template #budgetEmptyCta>
-            <span class="dash-card-empty-cta" *ngIf="canManageBudgetActions; else cardNoData">+ {{ 'SET_BUDGET' | translate }}</span>
-          </ng-template>
-          </div>
-        <div class="dash-card-right">
-          <span class="dash-card-icon dash-icon-budget">
-            <lucide-icon [img]="iconPiggyBank" [size]="30"></lucide-icon>
-          </span>
-        </div>
-        </a>
-
-      <!-- Expenses — links to the overview once there's data to browse,
-           otherwise straight to /expense (where expenses are actually
-           added), matching the empty-state CTA below. -->
-      <ng-container *ngIf="totalExpensesByCurrency$ | async as totals; else expenseCardLoading">
-        <a class="dash-card dash-card-expense dash-card-link"
-          [routerLink]="(totals | keyvalue).length > 0 ? '/expense-overview' : '/expense'">
-          <div class="dash-card-left">
-            <span class="dash-card-label">{{ 'TOTAL_EXPENSES' | translate }}</span>
-            <ng-container *ngIf="(totals | keyvalue).length > 0; else expenseEmptyCta">
-              <span *ngFor="let total of totals | keyvalue; trackBy: trackByKey" class="dash-card-amount dash-amount-expense"
-                [innerHTML]="formatService.formatAmountShortHtml(total.value, total.key)"
-              ></span>
-            </ng-container>
-            <!-- Visual button only — the whole card already links to /expense
-                 when there's nothing to browse yet. -->
-            <ng-template #expenseEmptyCta>
-              <!-- Unlike budgets, adding an expense isn't restricted to
-                   owner/admin (see canManageSharedSpace / the space_data
-                   security rules — any member can write expenses), so this
-                   CTA shouldn't be gated either. Matches the always-visible
-                   "+ Add Expense" in the empty-state banner below and the
-                   ungated Add button on the Expense page itself. -->
-              <span class="dash-card-empty-cta">+ {{ 'ADD_EXPENSE' | translate }}</span>
-            </ng-template>
-          </div>
-          <div class="dash-card-right">
-            <span class="dash-card-icon dash-icon-expense">
-              <lucide-icon [img]="iconShoppingCart" [size]="30"></lucide-icon>
+        <a class="dov-card dov-budget" routerLink="/budget" *ngIf="ov.hasBudget">
+          <div class="dov-card-head">
+            <span class="dov-card-title">
+              <span class="dov-chip dov-chip-budget"><lucide-icon [img]="iconPiggyBank" [size]="16"></lucide-icon></span>
+              {{ 'DASH_BUDGET_TITLE' | translate }}
             </span>
+            <lucide-icon [img]="iconChevronRight" [size]="18" class="dov-chevron"></lucide-icon>
           </div>
+
+          <ng-container>
+            <div class="dov-budget-figures">
+              <span class="dov-budget-left" [class.dov-over]="ov.remaining < 0">
+                {{ (ov.remaining >= 0 ? 'DASH_BUDGET_LEFT' : 'DASH_BUDGET_OVER') | translate: { amount: formatService.formatAmountShort(ov.remaining < 0 ? -ov.remaining : ov.remaining, ov.currency) } }}
+              </span>
+              <span class="dov-budget-pct">{{ formatService.formatCount(ov.usedPct) }}%</span>
+            </div>
+            <div class="dov-bar" role="progressbar" [attr.aria-valuenow]="ov.usedPct" aria-valuemin="0" aria-valuemax="100">
+              <span class="dov-bar-fill" [attr.data-level]="budgetLevel(ov)" [style.width.%]="ov.usedPct > 100 ? 100 : ov.usedPct"></span>
+            </div>
+            <div class="dov-budget-meta">
+              <span>{{ 'DASH_BUDGET_SPENT' | translate: { spent: formatService.formatAmountShort(ov.expense, ov.currency), budget: formatService.formatAmountShort(ov.budget, ov.currency) } }}</span>
+              <span class="dov-budget-days" *ngIf="ov.daysLeft > 0">
+                <lucide-icon [img]="iconCalendarClock" [size]="13"></lucide-icon>
+                {{ 'DASH_DAYS_LEFT' | translate: { count: formatService.formatCount(ov.daysLeft) } }}
+              </span>
+            </div>
+            <div class="dov-allowance" *ngIf="ov.dailyAllowance > 0">
+              {{ 'DASH_DAILY_ALLOWANCE' | translate: { amount: formatService.formatAmountShort(ov.dailyAllowance, ov.currency) } }}
+            </div>
+          </ng-container>
         </a>
-      </ng-container>
-      <ng-template #expenseCardLoading>
-        <a class="dash-card dash-card-expense dash-card-link" routerLink="/expense-overview">
-          <div class="dash-card-left">
-            <span class="dash-card-label">{{ 'TOTAL_EXPENSES' | translate }}</span>
-            <div class="dash-card-spinner" aria-hidden="true">
-              <div class="exp-spinner-sm"></div>
+
+        <!-- ── 3. Where the money went ── -->
+        <section class="dov-card dov-cats" *ngIf="ov.topCategories.length > 0">
+          <div class="dov-card-head">
+            <span class="dov-card-title">{{ 'DASH_TOP_SPENDING' | translate }}</span>
+            <a class="dov-see-all" routerLink="/expense-overview">{{ 'DASH_SEE_ALL' | translate }}</a>
+          </div>
+          <ul class="dov-cat-list">
+            <li *ngFor="let c of ov.topCategories; trackBy: trackByCategory" class="dov-cat" [style.--cat-hue]="c.hue">
+              <span class="dov-cat-icon"><lucide-icon [img]="c.icon" [size]="17"></lucide-icon></span>
+              <span class="dov-cat-main">
+                <span class="dov-cat-row">
+                  <span class="dov-cat-name">{{ c.name }}</span>
+                  <span class="dov-cat-amount" [innerHTML]="formatService.formatAmountShortHtml(c.amount, ov.currency)"></span>
+                </span>
+                <span class="dov-cat-bar"><span [style.width.%]="c.pct"></span></span>
+              </span>
+              <span class="dov-cat-pct">{{ formatService.formatCount(c.pct) }}%</span>
+            </li>
+          </ul>
+        </section>
+
+        <!-- ── 4. Recent expenses ── -->
+        <section class="dov-card" *ngIf="ov.recent.length > 0">
+          <div class="dov-card-head">
+            <span class="dov-card-title">{{ 'DASH_RECENT' | translate }}</span>
+            <a class="dov-see-all" routerLink="/expense">{{ 'DASH_SEE_ALL' | translate }}</a>
+          </div>
+          <ul class="dov-recent-list">
+            <li *ngFor="let r of ov.recent; trackBy: trackByRecent" class="dov-recent" [style.--cat-hue]="r.hue">
+              <span class="dov-cat-icon"><lucide-icon [img]="r.icon" [size]="17"></lucide-icon></span>
+              <span class="dov-recent-main">
+                <span class="dov-recent-name">{{ r.expense.itemName || r.expense.category || ('UNCATEGORIZED' | translate) }}</span>
+                <span class="dov-recent-sub">{{ r.expense.category }} · {{ formatService.formatLocalizedDate(r.expense.date, 'MMM d') }}</span>
+              </span>
+              <span class="dov-recent-amount" [innerHTML]="formatService.formatAmountShortHtml(r.expense.totalCost, ov.currency)"></span>
+            </li>
+          </ul>
+        </section>
+
+        <!-- ── 5. Trend (multi-month periods only) ── -->
+        <section class="dov-card dov-trend" *ngIf="ov.showTrend">
+          <div class="dov-card-head">
+            <span class="dov-card-title">{{ 'DASHBOARD_EXPENSES_CHART_TITLE' | translate }}</span>
+          </div>
+          <div class="dash-chart-container">
+            <canvas #expenseChartCanvas></canvas>
+            <div *ngIf="!hasExpenseDataForChart" class="dash-no-chart-data">
+              <p class="dov-muted">{{ 'NO_EXPENSE_FOR_CHART' | translate }}</p>
             </div>
           </div>
-          <div class="dash-card-right">
-            <span class="dash-card-icon dash-icon-expense">
-              <lucide-icon [img]="iconShoppingCart" [size]="30"></lucide-icon>
-            </span>
-          </div>
-        </a>
-      </ng-template>
+        </section>
 
-    </div>
-    </div>
+      </div>
+      </ng-container>
     </ng-container>
-    <!-- END Summary Cards -->
 
-    <!-- ── Empty State Banner (data မရှိသေးတဲ့အချိန်) ── -->
-    <ng-container *ngIf="(totalExpensesByCurrency$ | async) as expTotals">
-      <div class="dash-empty-banner"
-           *ngIf="!expTotals || (expTotals | keyvalue).length === 0">
+    <!-- Nothing recorded yet for this period -->
+    <ng-template #dashEmpty>
+      <div class="dash-empty-banner">
         <div class="dash-empty-icon"><lucide-icon [img]="iconChartColumn" [size]="32"></lucide-icon></div>
         <div class="dash-empty-content">
           <p class="dash-empty-title">{{ 'EMPTY_STATE_TITLE' | translate }}</p>
@@ -203,70 +164,19 @@
           <a routerLink="/expense" class="dash-empty-btn dash-empty-btn-primary">
             + {{ 'ADD_EXPENSE' | translate }}
           </a>
+          <a routerLink="/profit" class="dash-empty-btn dash-empty-btn-secondary">
+            + {{ 'ADD_INCOME' | translate }}
+          </a>
           <a *ngIf="canManageBudgetActions" routerLink="/budget" class="dash-empty-btn dash-empty-btn-secondary">
             {{ 'SET_BUDGET' | translate }}
           </a>
         </div>
       </div>
-    </ng-container>
-
-    <!-- Shared no-data / loading templates -->
-    <ng-template #cardLoading>
-      <div class="dash-card-spinner" aria-hidden="true">
-        <div class="exp-spinner-sm"></div>
-      </div>
-    </ng-template>
-    <ng-template #cardNoData>
-      <span class="dash-card-empty-hint">{{ 'NO_DATA_YET' | translate }}</span>
     </ng-template>
 
-    <!-- ── Charts — data ရှိမှသာ ပြမည် ── -->
-    <!-- <ng-container *ngIf="hasData$ | async"> -->
-    <div class="dash-charts-grid">
-
-      <!-- Bar Chart -->
-      <div class="dash-chart-panel p-1">
-        <h5 class="dash-chart-title">
-          {{ 'DASHBOARD_EXPENSES_CHART_TITLE' | translate }}
-        </h5>
-        <div class="dash-chart-container">
-          <canvas #expenseChartCanvas></canvas>
-          <div *ngIf="!hasExpenseDataForChart" class="dash-no-chart-data">
-            <div class="dash-no-chart-inner">
-                <div class="dash-no-chart-icon"><lucide-icon [img]="iconChartColumn" [size]="32"></lucide-icon></div>
-                <p class="dash-no-chart-msg">{{ 'NO_EXPENSE_FOR_CHART' | translate }}</p>
-                <a routerLink="/expense" class="dash-no-chart-cta">
-                + {{ 'ADD_FIRST_EXPENSE' | translate }}
-                </a>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Donut Chart -->
-      <div class="dash-chart-panel p-1">
-        <h5 class="dash-chart-title">
-          {{ 'DASHBOARD_EXPENSE_BREAKDOWN_BY_CATEGORY' | translate }}
-        </h5>
-        <div class="dash-chart-container dash-chart-donut">
-          <canvas #categoryDonutChartCanvas></canvas>
-          <div *ngIf="!hasCategoryDataForChart" class="dash-no-chart-data">
-            <div class="dash-no-chart-inner">
-              <div class="dash-no-chart-icon"><lucide-icon [img]="iconChartPie" [size]="32"></lucide-icon></div>
-              <p class="dash-no-chart-msg">{{ 'NO_EXPENSE_FOR_CATEGORY' | translate }}</p>
-              <a routerLink="/expense" class="dash-no-chart-cta">
-                + {{ 'ADD_FIRST_EXPENSE' | translate }}
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </div>
-    <!-- </ng-container> -->
-    <!-- END Charts -->
-
-    </div>
+    <ng-template #dashLoading>
+      <div class="dov-loading"><app-brand-loader [size]="72"></app-brand-loader></div>
+    </ng-template>
 
     </ng-template>
 

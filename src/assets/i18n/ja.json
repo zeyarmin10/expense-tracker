@@ -1124,5 +1124,18 @@
   "SHOP_PHONE_LABEL": "電話番号",
   "SHOP_INFO_SAVED": "店舗情報を保存しました！",
   "SALE_PRICE_BELOW_COST_WARNING": "販売価格が平均仕入原価（{{cost}}）を下回っています。",
-  "EXPENSE_DATE_MONTH_ADJUSTED": "この月は選択できません。最も近い選択可能な月を選択しました。"
+  "EXPENSE_DATE_MONTH_ADJUSTED": "この月は選択できません。最も近い選択可能な月を選択しました。",
+  "DASH_MONEY_IN": "入金",
+  "DASH_MONEY_OUT": "出金",
+  "DASH_BUDGET_TITLE": "予算",
+  "DASH_BUDGET_LEFT": "残り {{amount}}",
+  "DASH_BUDGET_OVER": "予算を {{amount}} 超過",
+  "DASH_BUDGET_SPENT": "{{budget}} 中 {{spent}} 使用",
+  "DASH_DAYS_LEFT": "残り {{count}} 日",
+  "DASH_DAILY_ALLOWANCE": "1日あたり約 {{amount}} 使えます",
+  "DASH_NO_BUDGET": "予算を設定すると、あといくら使えるか分かります。",
+  "DASH_TOP_SPENDING": "お金の使い道",
+  "DASH_RECENT": "最近の支出",
+  "DASH_SEE_ALL": "すべて表示",
+  "DASH_NO_BUDGET_SHORT": "あといくら使えるか確認"
 }
