@@ -187,7 +187,6 @@ export class Sales implements OnInit, OnDestroy {
   // --- State for Modals/Visibility ---
   private subscriptions: Subscription = new Subscription();
 
-  isRecordedIncomesCollapsed: boolean = true;
 
   // ── Edit Bottom-sheet Modal ──
   // Editing a pre-existing single-item legacy sale still uses this bottom
@@ -1496,21 +1495,6 @@ export class Sales implements OnInit, OnDestroy {
     });
     this.toggleIsProductSale(true);
     this.cdr.markForCheck();
-  }
-
-  toggleVisibility(section: 'recordedIncomes', event?: MouseEvent): void {
-    if (section === 'recordedIncomes') {
-      this.isRecordedIncomesCollapsed = !this.isRecordedIncomesCollapsed;
-      if (!this.isRecordedIncomesCollapsed && event) {
-        // The panel's grid-template-rows expand transition (.pnl-panel-body,
-        // 0.38s) hasn't grown the page height yet at 50ms, so scrollIntoView
-        // would clamp against the still-collapsed (shorter) document and
-        // stop short whenever there isn't much content after this panel.
-        // Wait for the expand transition to finish so there's room to scroll.
-        const toggleEl = event.currentTarget as HTMLElement;
-        setTimeout(() => toggleEl.scrollIntoView({ behavior: 'smooth', block: 'start' }), 400);
-      }
-    }
   }
 
   // Closes the edit modal — wired to its own X button and (via

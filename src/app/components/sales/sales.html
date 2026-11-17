@@ -184,23 +184,49 @@
       </div>
     </div>
 
-    <!-- Recorded Incomes -->
+    <!-- Cash Flow entry point (it has no menu item of its own in personal
+         spaces): one tappable row — icon · title + net figure for the
+         selected period · chevron. -->
+    <a class="pnl-cash-flow-link" routerLink="/cash-flow">
+      <span class="pnl-cash-flow-link-icon" aria-hidden="true">
+        <lucide-icon [img]="iconChartColumn" [size]="18"></lucide-icon>
+      </span>
+      <span class="pnl-cash-flow-link-text">
+        <span class="pnl-cash-flow-link-title">{{ 'CASH_FLOW_TITLE' | translate }}</span>
+        <span class="pnl-cash-flow-link-sub">{{ 'NET_CASH_FLOW' | translate }}</span>
+      </span>
+      <span class="pnl-cash-flow-preview-amounts">
+        <ng-container *ngIf="totalProfitLossByCurrency$ | async as totals; else cfwPreviewLoading">
+          <ng-container *ngIf="(totals | keyvalue).length > 0; else cfwPreviewEmpty">
+            <span *ngFor="let t of totals | keyvalue; trackBy: trackByKey"
+              class="pnl-cash-flow-preview-amount"
+              [ngClass]="getProfitLossAmountClass($any(t).value)"
+              [innerHTML]="formatService.formatAmountShortHtml($any(t).value, $any(t).key)"
+            ></span>
+          </ng-container>
+          <ng-template #cfwPreviewEmpty>
+            <span class="pnl-card-empty-hint">{{ 'NO_DATA_YET' | translate }}</span>
+          </ng-template>
+        </ng-container>
+        <ng-template #cfwPreviewLoading>
+          <span class="exp-spinner-sm"></span>
+        </ng-template>
+      </span>
+      <lucide-icon [img]="iconChevronRight" [size]="18" class="pnl-cash-flow-link-arrow"></lucide-icon>
+    </a>
+
+    <!-- Recorded Sales — always shown open (same as Income page's list). -->
     <div class="pnl-panel">
-      <button class="pnl-panel-toggle" type="button" (click)="toggleVisibility('recordedIncomes', $event)">
+      <div class="pnl-panel-toggle pnl-panel-header-static">
         <span class="pnl-panel-toggle-left">
           <span class="pnl-toggle-pill pnl-toggle-pill-income">
             <lucide-icon [img]="iconBanknote" [size]="13"></lucide-icon>
           </span>
           {{ 'RECORDED_SALES' | translate }}
         </span>
-        <span class="grid grid-cols-2 gap-2">
-          <span class="pnl-table-count" *ngIf="incomes$ | async as headerIncomes">{{ formatCount(headerIncomes.length)
-            }}</span>
-          <lucide-icon [img]="iconChevronDown" [size]="15" class="pnl-chevron"
-            [class.open]="!isRecordedIncomesCollapsed"></lucide-icon>
-        </span>
-      </button>
-      <div class="pnl-panel-body" [class.open]="!isRecordedIncomesCollapsed">
+        <span class="pnl-table-count" *ngIf="incomes$ | async as headerIncomes">{{ formatCount(headerIncomes.length) }}</span>
+      </div>
+      <div class="pnl-panel-body open">
         <div class="pnl-panel-inner">
           <!-- Sum of exactly what's listed below (same profitLossData$
                source as incomes$/totalIncomesByCurrency$), shown right at
@@ -322,37 +348,6 @@
         </div>
       </div>
     </div>
-
-    <!-- Cash Flow (now its own page) -->
-    <a class="pnl-panel pnl-cash-flow-link" routerLink="/cash-flow">
-      <div class="pnl-cash-flow-link-head">
-        <span class="pnl-panel-toggle-left">
-          <span class="pnl-toggle-pill pnl-toggle-pill-accent">
-            <lucide-icon [img]="iconChartColumn" [size]="13"></lucide-icon>
-          </span>
-          {{ 'DAILY_CASH_FLOW' | translate }}
-        </span>
-        <lucide-icon [img]="iconChevronRight" [size]="16" class="pnl-cash-flow-link-arrow"></lucide-icon>
-      </div>
-      <div class="pnl-cash-flow-link-preview">
-        <span class="pnl-cash-flow-preview-label">{{ 'NET_CASH_FLOW' | translate }}</span>
-        <span class="pnl-cash-flow-preview-amounts">
-          <ng-container *ngIf="totalProfitLossByCurrency$ | async as totals; else cfwPreviewLoading">
-            <ng-container *ngIf="(totals | keyvalue).length > 0; else cfwPreviewEmpty">
-              <span *ngFor="let t of totals | keyvalue; trackBy: trackByKey" class="pnl-cash-flow-preview-amount"
-                [ngClass]="getProfitLossAmountClass($any(t).value)"
-                [innerHTML]="formatService.formatAmountShortHtml($any(t).value, $any(t).key)"></span>
-            </ng-container>
-            <ng-template #cfwPreviewEmpty>
-              <span class="pnl-card-empty-hint">{{ 'NO_DATA_YET' | translate }}</span>
-            </ng-template>
-          </ng-container>
-          <ng-template #cfwPreviewLoading>
-            <div class="exp-spinner-sm"></div>
-          </ng-template>
-        </span>
-      </div>
-    </a>
 
   </div>
 </div>
