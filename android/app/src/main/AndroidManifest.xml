@@ -53,4 +53,12 @@
          Android 11+ uses scoped storage for files created by this app. -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
+
+    <!-- Hardware features: none are required to install the app.
+         The ML Kit code-scanner activity is locked to portrait, which makes
+         Play treat android.hardware.screen.portrait as required and hides the
+         app from tablets / Chromebooks / XR. The CAMERA permission likewise
+         implies a required camera. Scanning is optional, so mark both optional. -->
+    <uses-feature android:name="android.hardware.screen.portrait" android:required="false" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
 </manifest>
