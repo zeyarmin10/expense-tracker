@@ -954,18 +954,29 @@
   color: rgba(255, 255, 255, 0.85);
 }
 
+/* Show/hide amount toggle: solid white disc with the icon in the card's own
+   colour, so it stands out clearly on both the blue and the coral card. */
 .dov-eye {
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: none;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.14);
-  color: #fff;
+  background: rgba(255, 255, 255, 0.92);
+  color: #2f63b8;
+  box-shadow: 0 4px 12px -4px rgba(0, 0, 0, 0.3);
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.15s, background 0.15s;
 }
+
+.dov-eye:hover { background: #fff; }
+.dov-eye:active { transform: scale(0.92); }
+
+.dov-balance-neg .dov-eye { color: #c9505a; }
 
 .dov-balance-amount {
   margin: 0.35rem 0 1rem;

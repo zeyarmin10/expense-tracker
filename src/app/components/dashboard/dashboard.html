@@ -27,7 +27,7 @@
             <span class="dov-label">{{ (ov.balance >= 0 ? 'BALANCE_LABEL' : 'EXPENSE_DEFICIT') | translate }}</span>
             <button type="button" class="dov-eye" (click)="toggleBalanceVisibility($event)"
               [attr.aria-label]="(isBalanceHidden ? 'SHOW_BALANCE' : 'HIDE_BALANCE') | translate">
-              <lucide-icon [img]="isBalanceHidden ? iconEye : iconEyeOff" [size]="16"></lucide-icon>
+              <lucide-icon [img]="isBalanceHidden ? iconEye : iconEyeOff" [size]="19" [strokeWidth]="2.25"></lucide-icon>
             </button>
           </div>
           <div class="dov-balance-amount" [class.dov-hidden]="isBalanceHidden"
