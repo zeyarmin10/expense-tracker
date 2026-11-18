@@ -39,7 +39,11 @@
       <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon</item>
       <item name="windowSplashScreenAnimationDuration">1000</item>
       <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
-      <item name="android:windowBackground">@color/window_background</item>
-      <item name="android:windowLightStatusBar">false</item>
+      <!-- Do NOT override android:windowBackground here: on Android 11 and below the
+           compat splash is drawn through it (Theme.SplashScreen sets it to
+           @drawable/compat_splash_screen). Overriding it gives a blank black splash. -->
+      <item name="android:statusBarColor">@color/splash_background</item>
+      <item name="android:navigationBarColor">@color/splash_background</item>
+      <item name="android:windowLightStatusBar">true</item>
     </style>
 </resources>
