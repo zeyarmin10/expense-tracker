@@ -1,7 +1,7 @@
+@let inventoryEnabled = inventoryEnabled$ | async;
 <div class="dash-wrapper">
-  <div class="dash-container mb-5">
-
-    <app-shop-dashboard *ngIf="inventoryEnabled$ | async; else personalDashboard"></app-shop-dashboard>
+  <div class="dash-container mb-5" [class.dash-personal]="!inventoryEnabled">
+    <app-shop-dashboard *ngIf="inventoryEnabled; else personalDashboard"></app-shop-dashboard>
     <ng-template #personalDashboard>
 
     <!-- ── Header ── -->
@@ -21,40 +21,74 @@
       <ng-container *ngIf="ov.hasAny; else dashEmpty">
       <div class="dov-grid">
 
-        <!-- ── 1. Balance: in − out for the period ── -->
-        <section class="dov-balance" [class.dov-balance-neg]="ov.balance < 0">
-          <div class="dov-balance-top">
-            <span class="dov-label">{{ (ov.balance >= 0 ? 'BALANCE_LABEL' : 'EXPENSE_DEFICIT') | translate }}</span>
-            <button type="button" class="dov-eye" (click)="toggleBalanceVisibility($event)"
-              [attr.aria-label]="(isBalanceHidden ? 'SHOW_BALANCE' : 'HIDE_BALANCE') | translate">
-              <lucide-icon [img]="isBalanceHidden ? iconEye : iconEyeOff" [size]="19" [strokeWidth]="2.25"></lucide-icon>
-            </button>
-          </div>
-          <div class="dov-balance-amount" [class.dov-hidden]="isBalanceHidden"
-            [innerHTML]="formatService.formatAmountWithSymbolHtml(ov.balance, ov.currency)"></div>
+        <div class="dov-row dov-summary">
+          <!-- ── 1. Balance: in − out for the period ── -->
+          <section class="dov-balance" [class.dov-balance-neg]="ov.balance < 0">
+            <div class="dov-balance-top">
+              <span class="dov-label">{{ (ov.balance >= 0 ? 'BALANCE_LABEL' : 'EXPENSE_DEFICIT') | translate }}</span>
+              <button type="button" class="dov-eye" (click)="toggleBalanceVisibility($event)"
+                [attr.aria-label]="(isBalanceHidden ? 'SHOW_BALANCE' : 'HIDE_BALANCE') | translate">
+                <lucide-icon [img]="isBalanceHidden ? iconEye : iconEyeOff" [size]="19" [strokeWidth]="2.25"></lucide-icon>
+              </button>
+            </div>
+            <div class="dov-balance-amount" [class.dov-hidden]="isBalanceHidden"
+              [innerHTML]="formatService.formatAmountWithSymbolHtml(ov.balance, ov.currency)"></div>
 
-          <div class="dov-flows">
-            <a class="dov-flow dov-flow-in" routerLink="/profit">
-              <span class="dov-flow-icon"><lucide-icon [img]="iconArrowDown" [size]="16"></lucide-icon></span>
-              <span class="dov-flow-text">
-                <span class="dov-flow-label">{{ 'DASH_MONEY_IN' | translate }}</span>
-                <span class="dov-flow-amount" [class.dov-hidden]="isBalanceHidden"
-                  [innerHTML]="formatService.formatAmountShortHtml(ov.income, ov.currency)"></span>
-              </span>
-            </a>
-            <a class="dov-flow dov-flow-out" [routerLink]="ov.expense > 0 ? '/expense-overview' : '/expense'">
-              <span class="dov-flow-icon"><lucide-icon [img]="iconArrowUp" [size]="16"></lucide-icon></span>
-              <span class="dov-flow-text">
-                <span class="dov-flow-label">{{ 'DASH_MONEY_OUT' | translate }}</span>
-                <span class="dov-flow-amount" [class.dov-hidden]="isBalanceHidden"
-                  [innerHTML]="formatService.formatAmountShortHtml(ov.expense, ov.currency)"></span>
-              </span>
-            </a>
-          </div>
-        </section>
+            <div class="dov-flows">
+              <a class="dov-flow dov-flow-in" routerLink="/profit">
+                <span class="dov-flow-icon"><lucide-icon [img]="iconArrowDown" [size]="16"></lucide-icon></span>
+                <span class="dov-flow-text">
+                  <span class="dov-flow-label">{{ 'DASH_MONEY_IN' | translate }}</span>
+                  <span class="dov-flow-amount" [class.dov-hidden]="isBalanceHidden"
+                    [innerHTML]="formatService.formatAmountShortHtml(ov.income, ov.currency)"></span>
+                </span>
+              </a>
+              <a class="dov-flow dov-flow-out" [routerLink]="ov.expense > 0 ? '/expense-overview' : '/expense'">
+                <span class="dov-flow-icon"><lucide-icon [img]="iconArrowUp" [size]="16"></lucide-icon></span>
+                <span class="dov-flow-text">
+                  <span class="dov-flow-label">{{ 'DASH_MONEY_OUT' | translate }}</span>
+                  <span class="dov-flow-amount" [class.dov-hidden]="isBalanceHidden"
+                    [innerHTML]="formatService.formatAmountShortHtml(ov.expense, ov.currency)"></span>
+                </span>
+              </a>
+            </div>
+          </section>
 
-        <!-- ── 2. Budget: how much can I still spend ── -->
-        <!-- No budget yet: one compact row instead of a full card. -->
+          <!-- ── 2. Budget: how much can I still spend ── -->
+          <a class="dov-card dov-budget" routerLink="/budget" *ngIf="ov.hasBudget">
+            <div class="dov-card-head">
+              <span class="dov-card-title">
+                <span class="dov-chip dov-chip-budget"><lucide-icon [img]="iconPiggyBank" [size]="16"></lucide-icon></span>
+                {{ 'DASH_BUDGET_TITLE' | translate }}
+              </span>
+              <lucide-icon [img]="iconChevronRight" [size]="18" class="dov-chevron"></lucide-icon>
+            </div>
+
+            <ng-container>
+              <div class="dov-budget-figures">
+                <span class="dov-budget-left" [class.dov-over]="ov.remaining < 0">
+                  {{ (ov.remaining >= 0 ? 'DASH_BUDGET_LEFT' : 'DASH_BUDGET_OVER') | translate: { amount: formatService.formatAmountShort(ov.remaining < 0 ? -ov.remaining : ov.remaining, ov.currency) } }}
+                </span>
+                <span class="dov-budget-pct">{{ formatService.formatCount(ov.usedPct) }}%</span>
+              </div>
+              <div class="dov-bar" role="progressbar" [attr.aria-valuenow]="ov.usedPct" aria-valuemin="0" aria-valuemax="100">
+                <span class="dov-bar-fill" [attr.data-level]="budgetLevel(ov)" [style.width.%]="ov.usedPct > 100 ? 100 : ov.usedPct"></span>
+              </div>
+              <div class="dov-budget-meta">
+                <span>{{ 'DASH_BUDGET_SPENT' | translate: { spent: formatService.formatAmountShort(ov.expense, ov.currency), budget: formatService.formatAmountShort(ov.budget, ov.currency) } }}</span>
+                <span class="dov-budget-days" *ngIf="ov.daysLeft > 0">
+                  <lucide-icon [img]="iconCalendarClock" [size]="13"></lucide-icon>
+                  {{ 'DASH_DAYS_LEFT' | translate: { count: formatService.formatCount(ov.daysLeft) } }}
+                </span>
+              </div>
+              <div class="dov-allowance" *ngIf="ov.dailyAllowance > 0">
+                {{ 'DASH_DAILY_ALLOWANCE' | translate: { amount: formatService.formatAmountShort(ov.dailyAllowance, ov.currency) } }}
+              </div>
+            </ng-container>
+          </a>
+        </div>
+
+        <!-- No budget yet: show a compact setup link below the balance. -->
         <a class="dov-card dov-budget-compact" routerLink="/budget" *ngIf="!ov.hasBudget && canManageBudgetActions">
           <span class="dov-chip dov-chip-budget"><lucide-icon [img]="iconPiggyBank" [size]="16"></lucide-icon></span>
           <span class="dov-compact-text">
@@ -64,76 +98,46 @@
           <span class="dov-compact-btn">+ {{ 'SET_BUDGET' | translate }}</span>
         </a>
 
-        <a class="dov-card dov-budget" routerLink="/budget" *ngIf="ov.hasBudget">
-          <div class="dov-card-head">
-            <span class="dov-card-title">
-              <span class="dov-chip dov-chip-budget"><lucide-icon [img]="iconPiggyBank" [size]="16"></lucide-icon></span>
-              {{ 'DASH_BUDGET_TITLE' | translate }}
-            </span>
-            <lucide-icon [img]="iconChevronRight" [size]="18" class="dov-chevron"></lucide-icon>
-          </div>
-
-          <ng-container>
-            <div class="dov-budget-figures">
-              <span class="dov-budget-left" [class.dov-over]="ov.remaining < 0">
-                {{ (ov.remaining >= 0 ? 'DASH_BUDGET_LEFT' : 'DASH_BUDGET_OVER') | translate: { amount: formatService.formatAmountShort(ov.remaining < 0 ? -ov.remaining : ov.remaining, ov.currency) } }}
-              </span>
-              <span class="dov-budget-pct">{{ formatService.formatCount(ov.usedPct) }}%</span>
+        <div class="dov-row dov-activity" *ngIf="ov.topCategories.length || ov.recent.length">
+          <!-- ── 3. Where the money went ── -->
+          <section class="dov-card dov-cats" *ngIf="ov.topCategories.length > 0">
+            <div class="dov-card-head">
+              <span class="dov-card-title">{{ 'DASH_TOP_SPENDING' | translate }}</span>
+              <a class="dov-see-all" routerLink="/expense-overview">{{ 'DASH_SEE_ALL' | translate }}</a>
             </div>
-            <div class="dov-bar" role="progressbar" [attr.aria-valuenow]="ov.usedPct" aria-valuemin="0" aria-valuemax="100">
-              <span class="dov-bar-fill" [attr.data-level]="budgetLevel(ov)" [style.width.%]="ov.usedPct > 100 ? 100 : ov.usedPct"></span>
-            </div>
-            <div class="dov-budget-meta">
-              <span>{{ 'DASH_BUDGET_SPENT' | translate: { spent: formatService.formatAmountShort(ov.expense, ov.currency), budget: formatService.formatAmountShort(ov.budget, ov.currency) } }}</span>
-              <span class="dov-budget-days" *ngIf="ov.daysLeft > 0">
-                <lucide-icon [img]="iconCalendarClock" [size]="13"></lucide-icon>
-                {{ 'DASH_DAYS_LEFT' | translate: { count: formatService.formatCount(ov.daysLeft) } }}
-              </span>
-            </div>
-            <div class="dov-allowance" *ngIf="ov.dailyAllowance > 0">
-              {{ 'DASH_DAILY_ALLOWANCE' | translate: { amount: formatService.formatAmountShort(ov.dailyAllowance, ov.currency) } }}
-            </div>
-          </ng-container>
-        </a>
-
-        <!-- ── 3. Where the money went ── -->
-        <section class="dov-card dov-cats" *ngIf="ov.topCategories.length > 0">
-          <div class="dov-card-head">
-            <span class="dov-card-title">{{ 'DASH_TOP_SPENDING' | translate }}</span>
-            <a class="dov-see-all" routerLink="/expense-overview">{{ 'DASH_SEE_ALL' | translate }}</a>
-          </div>
-          <ul class="dov-cat-list">
-            <li *ngFor="let c of ov.topCategories; trackBy: trackByCategory" class="dov-cat" [style.--cat-hue]="c.hue">
-              <span class="dov-cat-icon"><lucide-icon [img]="c.icon" [size]="17"></lucide-icon></span>
-              <span class="dov-cat-main">
-                <span class="dov-cat-row">
-                  <span class="dov-cat-name">{{ c.name }}</span>
-                  <span class="dov-cat-amount" [innerHTML]="formatService.formatAmountShortHtml(c.amount, ov.currency)"></span>
+            <ul class="dov-cat-list">
+              <li *ngFor="let c of ov.topCategories; trackBy: trackByCategory" class="dov-cat" [style.--cat-hue]="c.hue">
+                <span class="dov-cat-icon"><lucide-icon [img]="c.icon" [size]="17"></lucide-icon></span>
+                <span class="dov-cat-main">
+                  <span class="dov-cat-row">
+                    <span class="dov-cat-name">{{ c.name }}</span>
+                    <span class="dov-cat-amount" [innerHTML]="formatService.formatAmountShortHtml(c.amount, ov.currency)"></span>
+                  </span>
+                  <span class="dov-cat-bar"><span [style.width.%]="c.pct"></span></span>
                 </span>
-                <span class="dov-cat-bar"><span [style.width.%]="c.pct"></span></span>
-              </span>
-              <span class="dov-cat-pct">{{ formatService.formatCount(c.pct) }}%</span>
-            </li>
-          </ul>
-        </section>
+                <span class="dov-cat-pct">{{ formatService.formatCount(c.pct) }}%</span>
+              </li>
+            </ul>
+          </section>
 
-        <!-- ── 4. Recent expenses ── -->
-        <section class="dov-card" *ngIf="ov.recent.length > 0">
-          <div class="dov-card-head">
-            <span class="dov-card-title">{{ 'DASH_RECENT' | translate }}</span>
-            <a class="dov-see-all" routerLink="/expense">{{ 'DASH_SEE_ALL' | translate }}</a>
-          </div>
-          <ul class="dov-recent-list">
-            <li *ngFor="let r of ov.recent; trackBy: trackByRecent" class="dov-recent" [style.--cat-hue]="r.hue">
-              <span class="dov-cat-icon"><lucide-icon [img]="r.icon" [size]="17"></lucide-icon></span>
-              <span class="dov-recent-main">
-                <span class="dov-recent-name">{{ r.expense.itemName || r.expense.category || ('UNCATEGORIZED' | translate) }}</span>
-                <span class="dov-recent-sub">{{ r.expense.category }} · {{ formatService.formatLocalizedDate(r.expense.date, 'MMM d') }}</span>
-              </span>
-              <span class="dov-recent-amount" [innerHTML]="formatService.formatAmountShortHtml(r.expense.totalCost, ov.currency)"></span>
-            </li>
-          </ul>
-        </section>
+          <!-- ── 4. Recent expenses ── -->
+          <section class="dov-card" *ngIf="ov.recent.length > 0">
+            <div class="dov-card-head">
+              <span class="dov-card-title">{{ 'DASH_RECENT' | translate }}</span>
+              <a class="dov-see-all" routerLink="/expense">{{ 'DASH_SEE_ALL' | translate }}</a>
+            </div>
+            <ul class="dov-recent-list">
+              <li *ngFor="let r of ov.recent; trackBy: trackByRecent" class="dov-recent" [style.--cat-hue]="r.hue">
+                <span class="dov-cat-icon"><lucide-icon [img]="r.icon" [size]="17"></lucide-icon></span>
+                <span class="dov-recent-main">
+                  <span class="dov-recent-name">{{ r.expense.itemName || r.expense.category || ('UNCATEGORIZED' | translate) }}</span>
+                  <span class="dov-recent-sub">{{ r.expense.category }} · {{ formatService.formatLocalizedDate(r.expense.date, 'MMM d') }}</span>
+                </span>
+                <span class="dov-recent-amount" [innerHTML]="formatService.formatAmountShortHtml(r.expense.totalCost, ov.currency)"></span>
+              </li>
+            </ul>
+          </section>
+        </div>
 
         <!-- ── 5. Trend (multi-month periods only) ── -->
         <section class="dov-card dov-trend" *ngIf="ov.showTrend">
@@ -179,6 +183,5 @@
     </ng-template>
 
     </ng-template>
-
   </div>
 </div>
