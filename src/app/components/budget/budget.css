@@ -1,121 +1,676 @@
-/* ============================================================
-   Budget — Dark Theme (matches navbar + expense design)
-   ============================================================ */
-
 :host {
   display: block;
 }
 
 .bgt-wrapper {
-  /* font-family: 'Syne', sans-serif; */
+  --bgt-gap: clamp(0.8rem, 2vw, 1.25rem);
+  --bgt-radius: 18px;
+  --bgt-inset: clamp(0.9rem, 2.6vw, 1.5rem);
+  --bgt-muted: var(--text-sub);
+  --bgt-primary: color-mix(in srgb, var(--accent) 85%, #00265c);
+  min-height: 100dvh;
+  padding: 1.65rem clamp(0.8rem, 3vw, 2rem);
   background: var(--bg);
-  min-height: 100vh;
-  padding: 1.5rem 1rem calc(7rem + env(safe-area-inset-bottom, 0px));
   color: var(--text);
 }
 
-@media (max-width: 991px) {
+@media (max-width: 991.98px) {
   .bgt-wrapper {
-    padding-top: calc(env(safe-area-inset-top, 0px) + 4.5rem);
+    padding-top: calc(max(env(safe-area-inset-top, 0px), var(--native-status-bar-inset)) + 4.5rem);
+    /* Clear the fixed bottom navigation and the Add Budget button at the end of the page. */
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 68px + 58px + 2rem);
   }
 }
 
 .bgt-container {
-  max-width: 900px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
+  max-width: 66rem;
+  margin-inline: auto;
+  display: grid;
+  gap: var(--bgt-gap);
+  min-width: 0;
 }
 
-/* ── Add FAB + Bottom-sheet Modal ──
-   The bottom nav's own Add-Expense button is a plain blue circle with a
-   "+" glyph, and this FAB used to look identical to it, leaving users
-   unsure which button added what. Using the piggy-bank icon (instead of
-   a bare "+") plus a distinct budget-blue tint makes the icon itself say
-   "budget", with a small "+" badge overlapping its corner — like a
-   messaging app's "new chat" icon — to still read as an add action. */
-.bgt-add-fab {
-  position: fixed;
-  right: 1rem;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 68px + 1rem);
-  width: 58px;
-  height: 58px;
-  border-radius: 50%;
-  border: 2.5px solid rgba(255, 255, 255, 0.5);
-  background: linear-gradient(150deg, #7cb4ff, var(--budget-color, #60a5fa));
-  color: #0a1120;
+.bgt-overview-heading,
+.bgt-usage-heading,
+.bgt-panel-heading,
+.bgt-progress-heading,
+.bgt-progress-description {
   display: flex;
   align-items: center;
-  justify-content: center;
-  box-shadow: 0 8px 22px rgba(96, 165, 250, 0.45);
-  z-index: 900;
-  cursor: pointer;
-  transition: transform 0.15s, box-shadow 0.15s;
+  justify-content: space-between;
+  gap: 0.65rem;
 }
 
-/* Pulsing ring via a pseudo-element animating transform/opacity only (never
-   box-shadow itself) — animating box-shadow directly on a border-radius:50%
-   element is a known Android WebView rendering trap that can paint the
-   corners/glow solid black instead of the intended translucent color (same
-   root cause category as the overflow:visible→hidden fix already applied to
-   expense.css; see git history "black rendering artifact on Android"). */
-.bgt-add-fab::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: 2px solid rgba(96, 165, 250, 0.65);
-  animation: bgt-fab-pulse 4.4s cubic-bezier(0.16, 1, 0.3, 1) infinite;
-  will-change: transform, opacity;
-  backface-visibility: hidden;
-  pointer-events: none;
+.exp-add-fab.bgt-add-fab {
+  background: linear-gradient(150deg, #7cb4ff, var(--budget-color));
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--budget-color) 45%, transparent);
+}
+
+.exp-add-fab.bgt-add-fab::after {
+  border-color: color-mix(in srgb, var(--budget-color) 65%, transparent);
 }
 
 .bgt-add-fab-badge {
   position: absolute;
   top: -2px;
   right: -2px;
+  z-index: 1;
+  display: grid;
+  place-items: center;
   width: 22px;
   height: 22px;
+  border: 2.5px solid var(--bg);
   border-radius: 50%;
-  background: var(--accent, #0b74ff);
-  border: 2.5px solid var(--bg, #020817);
+  background: var(--accent);
   color: #fff;
+  line-height: 0;
+}
+
+.bgt-primary-action {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 44px;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  background: var(--bgt-primary);
+  color: #fff;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1.45;
+  cursor: pointer;
+}
+
+.bgt-primary-action:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--bgt-primary) 85%, #003568);
+}
+
+.bgt-primary-action:disabled {
+  opacity: 0.75;
+  cursor: wait;
+}
+
+.bgt-wrapper :is(button, summary, input, textarea):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.bgt-container > .exp-filter-bar {
+  position: static;
+  z-index: auto;
+}
+
+.bgt-container .exp-seg-btn:focus-visible {
+  outline-offset: -2px;
+}
+
+.bgt-overviews {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr));
+  gap: var(--bgt-gap);
+  min-width: 0;
+}
+
+.bgt-overview,
+.bgt-empty-overview {
+  display: grid;
+  min-width: 0;
+  gap: clamp(0.8rem, 2vw, 1.25rem);
+  padding: var(--bgt-inset);
+  border: 1px solid var(--budget-border);
+  border-radius: var(--bgt-radius);
+  background:
+    radial-gradient(ellipse at 100% 0, var(--budget-dim), transparent 68%),
+    var(--surface);
+}
+
+.bgt-overview[data-level='over'] {
+  border-color: color-mix(in srgb, var(--danger) 36%, var(--border));
+  background:
+    radial-gradient(ellipse at 100% 0, var(--danger-dim), transparent 68%),
+    var(--surface);
+}
+
+.bgt-overview-main {
+  min-width: 0;
+}
+
+.bgt-overview h2,
+.bgt-empty-overview h2 {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.bgt-overview h2 {
+  color: var(--bgt-muted);
+  overflow-wrap: anywhere;
+}
+
+.bgt-overview-amount {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--text);
+  font-size: clamp(1.5rem, 5.9vw, 2.75rem);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.bgt-overview-amount[data-balance='remaining'] {
+  color: color-mix(in srgb, var(--success) 42%, var(--text));
+}
+
+.bgt-overview-amount[data-balance='deficit'] {
+  color: color-mix(in srgb, var(--danger) 72%, var(--text));
+}
+
+.bgt-amount-words {
+  display: block;
+  color: color-mix(in srgb, var(--gold) 60%, var(--text));
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.bgt-overview-main .bgt-amount-words {
+  margin-top: 0.25rem;
+}
+
+.bgt-overview-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: var(--budget-dim);
+  color: var(--budget-color);
+}
+
+.bgt-overview-heading .bgt-overview-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+}
+
+.bgt-overview[data-level='over'] .bgt-overview-icon {
+  background: var(--danger-dim);
+  color: var(--danger);
+}
+
+.bgt-overview-usage {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.bgt-usage-heading {
+  font-size: 0.8rem;
+  color: var(--bgt-muted);
+}
+
+.bgt-usage-heading strong,
+.bgt-progress-status {
+  color: color-mix(in srgb, var(--bgt-status-color, var(--text-sub)) 72%, var(--text));
+}
+
+[data-level='normal'] { --bgt-status-color: var(--success); }
+[data-level='near'] { --bgt-status-color: var(--warning); }
+[data-level='over'] { --bgt-status-color: var(--danger); }
+
+.bgt-usage-track {
+  display: block;
+  height: 7px;
+  overflow: hidden;
+  border-radius: 100px;
+  background: color-mix(in srgb, var(--text-sub) 16%, var(--surface-2));
+}
+
+.bgt-usage-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--bgt-status-color, var(--accent));
+  transition: width 0.25s ease;
+}
+
+.bgt-overview-totals {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(0.45rem, 2vw, 1.1rem);
+  margin: 0;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--border);
+}
+
+.bgt-overview-totals > div + div {
+  padding-inline-start: clamp(0.45rem, 2vw, 1.1rem);
+  border-inline-start: 1px solid var(--border);
+}
+
+.bgt-overview-totals dt {
   display: flex;
   align-items: center;
-  justify-content: center;
-  z-index: 1; /* stay above the ::after pulse ring so the ring reads as emanating from underneath the badge, not over it */
+  gap: 0.4rem;
+  margin: 0 0 0.25rem;
+  color: var(--bgt-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
 }
 
-.bgt-add-fab:active {
-  transform: scale(0.94);
+.bgt-overview-totals lucide-icon {
+  flex: none;
+  color: var(--budget-color);
 }
 
-.bgt-add-fab:active::after {
-  animation-play-state: paused;
+.bgt-overview-totals > div + div lucide-icon {
+  color: var(--expense-color);
 }
 
-@keyframes bgt-fab-pulse {
-  0%, 10% {
-    transform: translateZ(0) scale(0.92);
-    opacity: 0;
+.bgt-overview-totals dd {
+  margin: 0;
+  font-size: clamp(0.96rem, 3.5vw, 1.26rem);
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.bgt-empty-overview {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+}
+
+.bgt-empty-overview p {
+  margin: 0.25rem 0 0;
+  color: var(--bgt-muted);
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+
+.bgt-detail-views {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: var(--bgt-gap);
+}
+
+@media (min-width: 860px) {
+  .bgt-detail-views {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
   }
-  18% { opacity: 0.62; }
-  72%, 100% {
-    transform: translateZ(0) scale(1.45);
-    opacity: 0;
-  }
 }
 
-@media (min-width: 992px) {
-  .bgt-add-fab {
-    display: none;
-  }
+.bgt-panel {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--bgt-radius);
+  background: var(--surface);
 }
 
-body.bgt-add-modal-open {
-  overflow: hidden;
+.bgt-panel-heading {
+  justify-content: flex-start;
+  min-height: 59px;
+  padding: 0.8rem var(--bgt-inset);
+  list-style: none;
+  border-radius: var(--bgt-radius);
+}
+
+summary.bgt-panel-heading {
+  cursor: pointer;
+}
+
+summary.bgt-panel-heading::-webkit-details-marker {
+  display: none;
+}
+
+summary.bgt-panel-heading:hover {
+  background: color-mix(in srgb, var(--surface-2) 50%, var(--surface));
+}
+
+.bgt-panel-heading h2 {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.94rem;
+  font-weight: 750;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.bgt-panel-icon {
+  display: grid;
+  place-items: center;
+  width: 33px;
+  height: 33px;
+  flex: none;
+  border-radius: 10px;
+  background: var(--budget-dim);
+  color: var(--budget-color);
+}
+
+.bgt-panel-icon-spending {
+  background: var(--expense-dim);
+  color: var(--expense-color);
+}
+
+.bgt-panel-chevron {
+  flex: none;
+  color: var(--bgt-muted);
+}
+
+.bgt-panel[open] .bgt-panel-chevron {
+  transform: rotate(180deg);
+}
+
+.bgt-monitor,
+.bgt-records {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.85rem var(--bgt-inset) var(--bgt-inset);
+  border-top: 1px solid var(--border);
+}
+
+.bgt-monitor-period + .bgt-monitor-period,
+.bgt-date-group + .bgt-date-group {
+  border-top: 1px solid var(--border);
+  padding-top: 0.8rem;
+}
+
+.bgt-monitor-period h3,
+.bgt-date-label {
+  margin: 0;
+  font-size: 0.86rem;
+  font-weight: 750;
+  line-height: 1.5;
+}
+
+.bgt-monitor-period h3 {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.55rem;
+  margin-bottom: 0.6rem;
+}
+
+.bgt-currency-code,
+.bgt-date-count,
+.bgt-record-count {
+  color: var(--bgt-muted);
+  font-size: 0.74rem;
+  font-weight: 600;
+}
+
+.bgt-record-count {
+  padding: 0.15rem 0.45rem;
+  border-radius: 99px;
+  background: var(--surface-2);
+}
+
+.bgt-progress-card {
+  display: grid;
+  gap: 0.48rem;
+  min-width: 0;
+  padding: 0.72rem;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--surface-2) 58%, var(--surface));
+}
+
+.bgt-progress-heading {
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.55rem;
+  font-size: 0.81rem;
+  font-weight: 700;
+}
+
+.bgt-progress-name,
+.bgt-budget-identity {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 0.4rem;
+  overflow-wrap: anywhere;
+}
+
+.bgt-progress-name lucide-icon,
+.bgt-budget-identity lucide-icon {
+  flex: none;
+  color: var(--budget-color);
+}
+
+.bgt-progress-description {
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.55rem;
+  color: var(--bgt-muted);
+  font-size: 0.76rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.bgt-progress-description .bgt-progress-status {
+  font-weight: 700;
+}
+
+.bgt-category-list {
+  margin-top: 0.45rem;
+}
+
+.bgt-category-list summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.45rem;
+  min-height: 44px;
+  border-radius: 6px;
+  color: var(--bgt-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.bgt-category-list summary::-webkit-details-marker {
+  display: none;
+}
+
+.bgt-category-list[open] summary lucide-icon {
+  transform: rotate(180deg);
+}
+
+.bgt-category-list .bgt-progress-card + .bgt-progress-card {
+  margin-top: 0.4rem;
+}
+
+.bgt-category-icon {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  flex: none;
+}
+
+.bgt-list-total,
+.bgt-date-group-header {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.6rem;
+  min-width: 0;
+}
+
+.bgt-list-total {
+  padding: 0.5rem 0.7rem;
+  border-radius: 9px;
+  background: var(--budget-dim);
+  font-size: 0.8rem;
+}
+
+.bgt-list-total-label,
+.bgt-date-totals {
+  flex: 1;
+}
+
+.bgt-list-total-amount,
+.bgt-date-total,
+.bgt-budget-card-amount {
+  color: color-mix(in srgb, var(--budget-color) 65%, var(--text));
+  font-weight: 750;
+  overflow-wrap: anywhere;
+}
+
+.bgt-date-list,
+.bgt-budget-group-list,
+.bgt-budget-card-body {
+  display: grid;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.bgt-date-totals {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.25rem;
+  font-size: 0.73rem;
+}
+
+.bgt-budget-group-list {
+  margin-top: 0.55rem;
+}
+
+.bgt-budget-card {
+  position: relative;
+  min-width: 0;
+  padding: 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--surface-2) 45%, var(--surface));
+}
+
+.bgt-budget-card-body,
+.bgt-card-head {
+  min-width: 0;
+  gap: 0.22rem;
+}
+
+.bgt-budget-card-top,
+.bgt-card-head-line {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem 0.55rem;
+  min-width: 0;
+}
+
+.bgt-budget-card-top.bgt-has-menu {
+  padding-inline-end: 2.1rem;
+  min-height: 32px;
+}
+
+.bgt-card-head-line {
+  flex-wrap: wrap;
+}
+
+.bgt-budget-identity {
+  font-size: 0.9rem;
+  font-weight: 750;
+}
+
+.bgt-budget-card-amount {
+  justify-self: start;
+  max-width: 100%;
+  padding: 0.18rem 0.62rem;
+  border-radius: 999px;
+  background: radial-gradient(
+    ellipse at top left,
+    color-mix(in srgb, var(--budget-color) 20%, transparent),
+    var(--budget-dim) 85%
+  );
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+.bgt-card-activity,
+.bgt-budget-card-desc {
+  color: var(--bgt-muted);
+  font-size: 0.74rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.bgt-card-avatar {
+  flex: none;
+}
+
+.bgt-row-badge {
+  display: inline-block;
+  padding: 0.13rem 0.42rem;
+  border-radius: 99px;
+  background: var(--budget-dim);
+  color: color-mix(in srgb, var(--budget-color) 68%, var(--text));
+  font-size: 0.69rem;
+  font-weight: 650;
+  line-height: 1.45;
+}
+
+.bgt-badge-yearly {
+  background: var(--warning-dim);
+  color: color-mix(in srgb, var(--warning) 53%, var(--text));
+}
+
+.bgt-row-menu {
+  position: absolute;
+  inset-block-start: 0.55rem;
+  inset-inline-end: 0.5rem;
+}
+
+.bgt-chart-container {
+  position: relative;
+  height: clamp(13rem, 36vw, 19rem);
+  margin: 0 var(--bgt-inset) var(--bgt-inset);
+}
+
+.bgt-chart-container.bgt-chart-empty {
+  height: auto;
+}
+
+.bgt-chart-container.bgt-chart-empty canvas {
+  position: absolute;
+  inset: 0;
+  visibility: hidden;
+}
+
+.bgt-empty-text,
+.bgt-loading {
+  margin: 0;
+  padding: 0.65rem 0;
+  color: var(--bgt-muted);
+  font-size: 0.82rem;
+  text-align: center;
+  line-height: 1.65;
+}
+
+.bgt-empty-text p {
+  margin: 0;
+}
+
+.bgt-spinner {
+  display: inline-block;
+  width: 17px;
+  height: 17px;
+  border: 2px solid currentColor;
+  border-inline-end-color: transparent;
+  border-radius: 50%;
+  vertical-align: middle;
+  animation: bgt-spin 0.7s linear infinite;
+}
+
+@keyframes bgt-spin {
+  to { transform: rotate(1turn); }
 }
 
 .bgt-add-modal-backdrop {
@@ -195,6 +750,7 @@ body.bgt-add-modal-open {
 
 .bgt-add-modal-body {
   overflow-y: auto;
+  overscroll-behavior-y: contain;
   padding: 1rem;
 }
 
@@ -311,23 +867,16 @@ body.bgt-add-modal-open {
   .bgt-selection-picker-backdrop { display: none; }
   .bgt-selection-bottom-sheet {
     bottom: auto; left: var(--bgt-picker-left, 1.25rem); width: var(--bgt-picker-width, calc(100% - 6.9rem)); height: auto;
-    max-height: min(420px, calc(100dvh - 300px)); border: 1px solid var(--border);
+    max-height: min(300px, calc(100dvh - 2rem)); border: 1px solid var(--border);
     border-radius: 12px; translate: 0 -6px; opacity: 0;
     transition: translate .16s ease, opacity .16s ease; box-shadow: 0 12px 28px rgba(0,0,0,.2);
   }
   .bgt-category-floating-menu { top: var(--bgt-picker-top, 214px); }
-  .bgt-type-floating-menu { top: var(--bgt-picker-top, 121px); max-height: none; }
   .bgt-selection-bottom-sheet.open { translate: 0 0; opacity: 1; box-shadow: 0 12px 28px rgba(0,0,0,.2); }
   .bgt-selection-sheet-handle, .bgt-selection-bottom-sheet .bgt-add-modal-header { display: none; }
   .bgt-selection-bottom-sheet .bgt-cat-picker-body { padding-top: .55rem; min-height: 0; }
-  .bgt-selection-bottom-sheet .bgt-cat-picker-list { padding-bottom: 0; max-height: min(340px, calc(100dvh - 380px)); overflow-y: auto; }
-  .bgt-type-floating-menu .bgt-cat-picker-body {
-    flex: 0 0 auto;
-    padding: .35rem .4rem;
-  }
-  .bgt-type-floating-menu .bgt-cat-picker-list { max-height: none; overflow: visible; }
-  .bgt-type-floating-menu .bgt-cat-picker-item { gap: .45rem; padding: .5rem .4rem; }
-  .bgt-type-floating-menu .bgt-cat-picker-item-icon { width: 28px; height: 28px; }
+  .bgt-selection-bottom-sheet .bgt-cat-picker-list { padding-bottom: 0; max-height: 225px; overflow-y: auto; }
+
 }
 
 .bgt-add-modal-back {
@@ -410,11 +959,6 @@ body.bgt-add-modal-open {
   white-space: nowrap;
 }
 
-/* Budget-type trigger with nothing selected yet — label reads as placeholder */
-.bgt-type-trigger-placeholder {
-  color: var(--text-muted);
-}
-
 .bgt-cat-select-trigger-chevron {
   flex-shrink: 0;
   color: var(--text-muted);
@@ -441,6 +985,11 @@ body.bgt-add-modal-open {
   flex-shrink: 0;
 }
 
+.bgt-cat-picker-search:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-dim);
+}
+
 .bgt-cat-picker-search-icon {
   color: var(--text-muted);
   flex-shrink: 0;
@@ -454,6 +1003,10 @@ body.bgt-add-modal-open {
   outline: none;
   color: var(--text);
   font-size: 0.88rem;
+}
+
+.bgt-wrapper .bgt-cat-picker-search .bgt-cat-picker-search-input:focus-visible {
+  outline: none;
 }
 
 .bgt-cat-picker-search-input::placeholder {
@@ -536,1771 +1089,190 @@ body.bgt-add-modal-open {
   margin-inline: auto;
 }
 
-/* ── Page Header ── */
-.bgt-page-title {
-  font-size: clamp(1.4rem, 3.5vw, 2rem);
-  font-weight: 800;
-  letter-spacing: -0.03em;
+.bgt-add-modal-header-title {
   margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
+  font-size: 1rem;
 }
 
-/* ── Filter Bar ── */
-.bgt-filter-bar {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 0.75rem;
-  margin-bottom: 0.25rem;
-  width: 100%;
+.bgt-add-modal-back {
+  width: 44px;
+  height: 44px;
 }
 
-/* align-items: stretch above stretches the date-filter select to the full
-   row width on mobile even in [fitContent] mode — width: auto on the
-   select itself doesn't override a flex container's cross-axis stretch,
-   only align-self does. Keep it out of the >=640px row layout, where the
-   container switches to align-items: flex-end and this isn't needed. */
-@media (max-width: 639px) {
-  .bgt-filter-bar > app-custom-select {
-    align-self: flex-start;
-  }
+.bgt-add-modal-sheet.open {
+  animation: bgt-modal-enter 0.18s ease-out;
 }
 
-/* PC: select + date pickers တစ်ကြောင်းတည်း */
-@media (min-width: 640px) {
-  .bgt-filter-bar {
-    flex-direction: row;
-    align-items: flex-end;
-    width: auto;
-  }
-
-  .bgt-filter-bar-custom .bgt-date-row {
-    display: contents;
-  }
-}
-
-/* Desktop-only "Add Budget" toolbar button — the FAB (.bgt-add-fab) is
-   hidden at this breakpoint since there's no bottom nav to float above, so
-   this is the only entry point to the add modal on desktop. */
-.bgt-add-toolbar-btn {
-  display: none;
-}
-
-@media (min-width: 992px) {
-  .bgt-filter-bar {
-    width: 100%;
-  }
-
-  .bgt-add-toolbar-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    border: none;
-    border-radius: 10px;
-    padding: 0.65rem 1rem;
-    background: var(--accent, #0b74ff);
-    color: #fff;
-    font-size: 0.8rem;
-    font-weight: 600;
-    cursor: pointer;
-    box-shadow: 0 4px 14px rgba(11, 116, 255, 0.35);
-    transition: transform 0.15s, box-shadow 0.15s;
-    white-space: nowrap;
-  }
-
-  .bgt-add-toolbar-btn:hover {
-    box-shadow: 0 6px 18px rgba(11, 116, 255, 0.45);
-  }
-
-  .bgt-add-toolbar-btn:active {
-    transform: scale(0.96);
-  }
-}
-
-/* Mobile: custom mode — select fit-content + date picker fills rest */
-@media (max-width: 639px) {
-  .bgt-filter-bar-custom {
-    flex-direction: row;
-    align-items: stretch;
-    flex-wrap: nowrap;
-    gap: 0.25rem;
-  }
-
-  .bgt-filter-bar-custom app-custom-select {
-    flex: 0 0 auto;
-    width: fit-content;
-    max-width: 44%;
-    min-width: 0;
-  }
-
-  .bgt-filter-bar-custom .bgt-date-row {
-    display: flex;
-    flex: 1;
-    min-width: 0;
-    width: auto;
-  }
-
-  .bgt-filter-bar-custom .bgt-date-row app-date-range-input {
-    width: 100% !important;
-    flex: 1 1 auto !important;
-  }
-}
-
-/* ── Filter floating label inputs (bgt-fl-*) ── */
-.bgt-fl-wrap {
-  position: relative;
-  min-width: 0;
-}
-
-.bgt-fl-input {
-  width: 100%;
-  min-width: 0;
-  box-sizing: border-box;
-  height: 54px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  color: var(--text);
-  /* font-family: 'DM Mono', monospace; */
-  font-size: 0.85rem;
-  padding: 1.3rem 0.95rem 0.4rem;
-  outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s;
-  -webkit-appearance: none;
-  appearance: none;
-}
-
-.bgt-fl-input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(11, 116, 255, 0.12);
-}
-
-.bgt-fl-select {
-  background-repeat: no-repeat;
-  background-position: right 0.95rem center;
-  padding-right: 2.4rem;
-  cursor: pointer;
-  min-width: 150px;
-  width: auto;
-}
-
-.bgt-fl-select option {
-  background: var(--surface-2);
-  color: var(--text);
-}
-
-.bgt-fl-label {
-  position: absolute;
-  left: 0.95rem;
-  top: 0.52rem;
-  font-size: 0.63rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--accent);
-  pointer-events: none;
-  line-height: 1;
-}
-
-.bgt-fl-input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(0.45);
-  cursor: pointer;
-  margin-top: -4px;
-}
-
-.bgt-select,
-.bgt-input {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  color: var(--text);
-  /* font-family: 'Syne', sans-serif; */
-  font-size: 0.85rem;
-  padding: 0.6rem 0.9rem;
-  outline: none;
-  transition: border-color 0.15s;
-  -webkit-appearance: none;
-  appearance: none;
-}
-
-.bgt-select {
-  background-repeat: no-repeat;
-  background-position: right 0.9rem center;
-  padding-right: 2.2rem;
-  cursor: pointer;
-}
-
-.bgt-select option {
-  background: var(--surface-2);
-  color: var(--text);
-}
-
-.bgt-input:focus,
-.bgt-select:focus {
-  border-color: var(--accent);
-}
-
-.bgt-input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(0.5);
-  cursor: pointer;
-}
-
-.bgt-date-row {
-  display: flex;
-  gap: 0.75rem;
-  width: 100%;
-}
-
-.bgt-date-row .bgt-fl-wrap {
-  flex: 1 1 0;
-  min-width: 0;
-}
-
-.bgt-date-row .bgt-fl-input {
-  width: 100%;
-  min-width: 0;
-}
-
-@media (min-width: 640px) {
-  .bgt-date-row .bgt-fl-wrap {
-    flex: 0 0 auto;
-  }
-
-  .bgt-date-row .bgt-fl-input[type="date"] {
-    width: 150px;
-  }
-}
-
-/* ── Collapsible Panel ── */
-.bgt-panel {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  overflow: hidden;
-}
-
-.bgt-panel-toggle {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1rem 1.3rem;
-  background: none;
-  border: none;
-  /* Sits flush against .bgt-panel's own rounded top corners (14px) —
-     .bgt-panel's overflow: hidden clips this in theory, but border-radius
-     clipping on a parent is unreliable for a child's hover/focus paint in
-     some browsers (square corners can visibly peek out past the rounded
-     edge). Matching the radius here means the hover background and focus
-     outline are rounded on their own, not dependent on the parent's clip. */
-  border-radius: 14px;
-  color: var(--text);
-  /* font-family: 'Syne', sans-serif; */
-  font-size: 0.88rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.15s;
-  /* So scrollIntoView() (triggered on expand) stops below the fixed
-     mobile topbar instead of tucking the title underneath it. */
-  scroll-margin-top: calc(env(safe-area-inset-top, 0px) + 58px + 12px);
-}
-
-.bgt-panel-toggle:hover {
-  background: var(--surface-2);
-}
-
-.bgt-panel-toggle:focus-visible {
-  background: var(--surface-2);
-  /* Inset (negative offset) so the ring can't extend past the button's own
-     box no matter what — the previous default outline sat right on the
-     edge and, combined with the clipping issue above, is what read as
-     "color escaping past the border". */
-  outline: 2px solid var(--accent, #0b74ff);
-  outline-offset: -2px;
-}
-
-.bgt-panel-toggle-left {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-}
-
-.bgt-chevron {
-  font-size: 0.7rem;
-  color: var(--text-muted);
-  transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1);
-  flex-shrink: 0;
-}
-
-.bgt-chevron.open {
-  transform: rotate(180deg);
-}
-
-.bgt-panel-body {
-  display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows 0.38s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.bgt-panel-inner {
-  overflow: hidden;
-  min-height: 0;
-  opacity: 0;
-  transition: opacity 0.18s ease;
-}
-
-.bgt-panel-body.open {
-  grid-template-rows: 1fr;
-  border-top: 1px solid var(--border);
-}
-
-.bgt-panel-body.open .bgt-panel-inner {
-  opacity: 1;
-  transition: opacity 0.3s ease 0.14s;
-}
-
-/* Sum of the list right below it — same pattern as profit.css's
-   .pnl-list-total for the income list. */
-.bgt-list-total {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 0.3rem 0.6rem;
-  padding: 0.65rem 0.75rem;
-  margin: 0.75rem 0.75rem 0.85rem;
-  background: var(--budget-dim);
-  border-radius: 10px;
-}
-
-.bgt-list-total-label {
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
-.bgt-list-total-amount {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--budget-color);
-}
-
-/* Static header (no toggle) */
-.bgt-panel-static-header {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 1rem 1.3rem;
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: var(--text);
-  border-bottom: 1px solid var(--border);
-}
-
-/* ── Form ── */
-.bgt-form {
-  padding: 1.3rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.9rem;
-}
-
-.bgt-form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.85rem;
-}
-
-/* app-date-input's own trigger padding/alignment was tuned to leave room for
-   its floating [label] above the value; we don't pass a label here (the field
-   always has a value — defaults to today), so re-center the date text instead
-   of leaving it pushed to the bottom of a tall, mostly-empty box. */
-app-date-input .di-trigger {
-  align-items: center !important;
-  padding: 0 2.4rem 0 0.9rem !important;
-  height: 56px !important;
-}
-
-@media (max-width: 576px) {
-  .bgt-form-row {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* Floating label */
-.bgt-float-field {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-}
-
-.bgt-float-group {
-  flex-direction: row;
-  align-items: stretch;
-}
-
-.bgt-input.bgt-select-field,
-.bgt-input {
-  height: 56px;
-  background: var(--surface-2) !important;
-  padding: 1.35rem 0.9rem 0.45rem;
-  background-color: var(--surface-2);
-  border-radius: 10px;
-  width: 100%;
-}
-
-.bgt-input.bgt-select-field {
-  padding-right: 2.2rem;
-  background: var(--surface-2) !important;
-  background-repeat: no-repeat;
-  background-position: right 0.9rem center;
-  cursor: pointer;
-}
-
-.bgt-input.bgt-textarea {
-  height: auto;
-  min-height: 80px;
-  padding-top: 1.5rem;
-  resize: vertical;
-  font-size: 0.95rem;
-}
-
-.bgt-float-label {
-  position: absolute;
-  left: 0.9rem;
-  /* Default: centered inside input (placeholder state) */
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 0.82rem;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  text-transform: none;
-  color: var(--text-muted);
-  pointer-events: none;
-  line-height: 1;
-  transition: top 0.15s ease, transform 0.15s ease, font-size 0.15s ease,
-    letter-spacing 0.15s ease, color 0.15s ease;
-}
-
-/* Floated state: when input has value OR is focused */
-.bgt-input:focus~.bgt-float-label,
-.bgt-input.bgt-has-val~.bgt-float-label,
-.bgt-input:not(:placeholder-shown)~.bgt-float-label {
-  top: 0.55rem;
-  transform: translateY(0);
-  font-size: 0.63rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--accent);
-}
-
-/* Textarea: center label at top area when empty */
-.bgt-input.bgt-textarea~.bgt-float-label {
-  top: 1rem;
-  transform: translateY(0);
-}
-
-.bgt-input.bgt-textarea:focus~.bgt-float-label,
-.bgt-input.bgt-textarea.bgt-has-val~.bgt-float-label {
-  top: 0.55rem;
-  font-size: 0.63rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--accent);
-}
-
-/* Currency badge in float group */
-.bgt-float-group .bgt-currency-badge {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-right: none;
-  border-radius: 10px 0 0 10px;
-  padding: 0 0.85rem;
-  /* font-family: 'DM Mono', monospace; */
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  white-space: nowrap;
-  flex-shrink: 0;
-  height: 56px;
-  transition: border-color 0.15s;
-}
-
-/* The badge and the joined input meet at a borderless seam (each has the
-   touching side's border removed so they read as one pill) — without this,
-   focusing the input only turned *its own* border blue, leaving the badge's
-   left/top/bottom border stuck at the muted default and the pill's left
-   edge looking unhighlighted. */
-.bgt-float-group:focus-within .bgt-currency-badge {
-  border-color: var(--accent);
-}
-
-.bgt-float-group>.bgt-float-field {
-  flex: 1;
-  min-width: 0;
-}
-
-.bgt-input.bgt-input-joined {
-  border-radius: 0 10px 10px 0;
-  /* border-left: none; */
-}
-
-.bgt-form-footer {
-  display: flex;
-}
-
-/* Save fills the whole row instead of sitting small and right-aligned —
-   easier to hit and reads as the form's one clear primary action, now that
-   the surrounding overlay itself is full-screen on mobile. */
-.bgt-form-footer .bgt-btn-primary {
-  flex: 1;
-  justify-content: center;
+@keyframes bgt-modal-enter {
+  from { opacity: 0; scale: 0.98; }
 }
 
 @media (max-width: 991.98px) {
-  .bgt-add-modal-sheet .bgt-form-footer .bgt-btn-primary {
-    min-height: 56px;
-    padding-inline: 1.25rem;
-    border-radius: 14px;
-    font-size: 0.9rem;
+  .bgt-add-modal-sheet.open {
+    animation-name: bgt-mobile-modal-enter;
+  }
+
+  @keyframes bgt-mobile-modal-enter {
+    from { translate: 0 100%; }
+  }
+
+  .bgt-add-modal-sheet > .bgt-add-modal-body {
+    padding-inline: clamp(0.85rem, 4vw, 1.5rem);
   }
 }
 
-/* ── Date pill (pinned top-right, like Add Expense's mode-toggle row) ── */
-.bgt-date-pill-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  /* margin: 0 0 0.85rem; */
-}
-
-/* Budget-type pill — same compact look as the date pill, left-aligned */
-.bgt-type-pill.is-invalid {
-  border-color: var(--danger, #ef4444);
-}
-
-.bgt-type-pill-chevron {
-  opacity: 0.6;
-}
-
-.bgt-date-pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.3rem;
-  min-height: 38px;
-  padding: 0.4rem 0.72rem;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: var(--surface-2);
-  color: var(--text-sub);
-  font: inherit;
-  font-size: 0.72rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.15s;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.bgt-date-pill:hover {
-  border-color: var(--accent);
-  color: var(--text);
-}
-
-.bgt-date-pill lucide-icon { flex: 0 0 auto; color: currentColor; }
-.bgt-date-pill:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-
-/* ── Amount — prominent hero field, matching Add Expense's price field.
-   Placeholder and typed value share the same large size (no floating label). */
-.bgt-amount-hero {
-  /* margin-bottom: 0.5rem; */
-}
-
-.bgt-amount-hero-currency {
-  font-size: 1rem;
-  font-weight: 700;
-  padding: 0.5rem 0.8rem;
-  height: 4rem !important;
-}
-
-.bgt-amount-hero-input {
-  font-size: 2rem !important;
-  font-weight: 800;
-  padding: 0.5rem 0.9rem !important;
-  height: 4rem !important;
-  text-align: right;
-}
-
-.bgt-amount-hero-input::placeholder {
-  color: var(--text-muted) !important;
-  opacity: 0.4 !important;
-}
-
-/* Budget amount mirrors the focused, amount-first Personal Expense card. */
-.bgt-amount-card {
-  border: 1px solid color-mix(in srgb, var(--accent) 38%, var(--border));
-  border-radius: 18px;
-  padding: 0.85rem;
-  background:
-    radial-gradient(circle at 100% 0, color-mix(in srgb, var(--accent) 18%, transparent), transparent 48%),
-    var(--surface-2);
-  box-shadow: 0 12px 28px color-mix(in srgb, var(--accent) 10%, transparent);
-}
-
-.bgt-amount-card-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin: 0 0 0.48rem 0.15rem;
-  color: var(--text-sub);
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.055em;
-  line-height: 1.2;
-  text-transform: uppercase;
-}
-
-.bgt-amount-card-heading span:last-child {
-  color: var(--accent);
-  letter-spacing: 0.025em;
-}
-
-.bgt-amount-card .bgt-amount-hero-input {
-  height: 4.5rem !important;
-  font-size: clamp(1.8rem, 8vw, 2.45rem) !important;
-  border-radius: 12px;
-  border-color: color-mix(in srgb, var(--accent) 42%, var(--border));
-  background: color-mix(in srgb, var(--surface) 74%, transparent);
-}
-
-/* ── Buttons ── */
-.bgt-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  /* font-family: 'Syne', sans-serif; */
-  font-size: 0.82rem;
-  font-weight: 700;
-  padding: 0.55rem 1.1rem;
-  border-radius: 10px;
-  border: 1px solid transparent;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.bgt-btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.bgt-btn-primary {
-  background: var(--accent);
-  color: #fff;
-  border-color: var(--accent);
-}
-
-.bgt-field-error {
-  font-size: 0.72rem;
-  color: var(--danger);
-  padding-left: 0.2rem;
-  font-weight: 500;
-  margin-top: -0.5rem;
-}
-
-.bgt-btn-spinner {
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-  border: 2px solid rgba(255, 255, 255, 0.35);
-  border-top-color: #fff;
-  border-radius: 50%;
-  animation: exp-spin 0.8s linear infinite;
-}
-
-/* Disabled primary button was only dimmed via opacity while keeping the
-   same vivid accent background, so it still read as "active" at a glance.
-   Flip to a flat muted surface color instead so enabled vs. disabled is
-   unmistakable regardless of the accent hue or background contrast. */
-.bgt-btn-primary:disabled {
-  background: var(--surface-2);
-  color: var(--text-muted);
-  border-color: var(--border);
-  box-shadow: none;
-  opacity: 1;
-}
-
-.bgt-btn-primary:not(:disabled) {
-  animation: bgt-shine 2s infinite ease-in-out;
-}
-
-@keyframes bgt-shine {
-
-  0%,
-  100% {
-    box-shadow: 0 0 6px rgba(11, 116, 255, 0.25);
-  }
-
-  50% {
-    box-shadow: 0 0 18px rgba(11, 116, 255, 0.5);
-  }
-}
-
-/* ── Recorded Budget Items ── */
-.bgt-recorded-body {
-  padding: 0.5rem 0;
-}
-
-.bgt-record-item {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.9rem 1.3rem;
-  border-bottom: 1px solid var(--border);
-  transition: background 0.15s;
-}
-
-.bgt-record-item:last-child {
-  border-bottom: none;
-}
-
-.bgt-record-item:hover {
-  background: var(--surface-2);
-}
-
-.bgt-record-left {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  min-width: 0;
-  flex: 1;
-}
-
-.bgt-record-meta {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.bgt-record-date {
-  /* font-family: 'DM Mono', monospace; */
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
-
-.bgt-type-badge {
-  /* font-family: 'DM Mono', monospace; */
-  font-size: 0.65rem;
-  font-weight: 500;
-  padding: 0.15rem 0.55rem;
-  border-radius: 6px;
-  background: var(--budget-dim);
-  border: 1px solid rgba(96, 165, 250, 0.2);
-  color: var(--budget-color);
-  letter-spacing: 0.05em;
-}
-
-.bgt-record-amount {
-  /* font-family: 'DM Mono', monospace; */
-  font-size: 1.05rem;
-  font-weight: 500;
-  color: var(--budget-color);
-}
-
-.bgt-record-cat {
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: var(--text-sub);
-}
-
-.bgt-record-desc {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
-
-.bgt-delete-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 8px;
-  border: 1px solid rgba(248, 113, 113, 0.25);
-  background: rgba(248, 113, 113, 0.08);
-  color: var(--danger);
-  cursor: pointer;
-  transition: all 0.15s;
-  flex-shrink: 0;
-  font-size: 1rem;
-}
-
-.bgt-delete-btn:hover {
-  background: var(--danger);
-  color: #0a0c10;
-}
-
-/* ── Summary Cards ── */
-.bgt-summary-grid {
+.bgt-form {
   display: grid;
-  grid-template-columns: 1fr;
   gap: 0.85rem;
+  max-width: 32rem;
+  margin-inline: auto;
 }
 
-@media (min-width: 576px) {
-  .bgt-summary-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-.bgt-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 1.1rem 1.2rem;
+.bgt-form-field {
   display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: center;
-  gap: 0.75rem;
-  position: relative;
-  overflow: hidden;
-  transition: transform 0.18s;
-}
-
-.bgt-card-left {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.32rem;
   min-width: 0;
-  overflow: hidden;
+  padding: 0;
+  margin: 0;
+  border: 0;
 }
 
-.bgt-card-right {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.bgt-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-}
-
-.bgt-card:hover {
-  transform: translateY(-2px);
-}
-
-.bgt-card-budget {
-  border-color: rgba(96, 165, 250, 0.25);
-  background: linear-gradient(145deg, var(--surface), var(--budget-dim));
-}
-
-.bgt-card-budget::before {
-  background: linear-gradient(90deg, var(--budget-color), transparent);
-}
-
-.bgt-card-expense {
-  border-color: rgba(244, 177, 26, 0.25);
-  background: linear-gradient(145deg, var(--surface), var(--expense-dim));
-}
-
-.bgt-card-expense::before {
-  background: linear-gradient(90deg, var(--expense-color), transparent);
-}
-
-/* Balance dynamic classes (used by getBalanceCardClass) */
-.balance-positive {
-  border-color: rgba(52, 211, 153, 0.25) !important;
-  background: linear-gradient(145deg, var(--surface), var(--success-dim)) !important;
-}
-
-.balance-positive::before {
-  background: linear-gradient(90deg, var(--success), transparent) !important;
-}
-
-.balance-negative {
-  border-color: rgba(248, 113, 113, 0.25) !important;
-  background: linear-gradient(145deg, var(--surface), var(--danger-dim)) !important;
-}
-
-.balance-negative::before {
-  background: linear-gradient(90deg, var(--danger), transparent) !important;
-}
-
-.bgt-card-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.bgt-card-label {
-  font-size: clamp(0.9rem, 1.2vw, 1.1rem);
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.bgt-card-icon {
-  font-size: 1.75rem;
-  opacity: 0.85;
-  line-height: 1;
-}
-
-.bgt-icon-budget {
-  color: var(--budget-color);
-}
-
-.bgt-icon-expense {
-  color: var(--expense-color);
-}
-
-.bgt-card-amount {
-  /* font-family: 'DM Mono', monospace; */
-  font-size: clamp(1.25rem, 2vw, 1.5rem);
-;
-  font-weight: 500;
-  line-height: 1.3;
+.bgt-field-label {
   display: block;
-  white-space: nowrap;
-}
-
-.bgt-amount-budget {
-  color: var(--budget-color);
-}
-
-.bgt-amount-expense {
-  color: var(--expense-color);
-}
-
-.balance-positive-amount {
-  color: var(--success) !important;
-}
-
-.balance-negative-amount {
-  color: var(--danger) !important;
-}
-
-.text-success {
-  color: var(--success) !important;
-}
-
-.text-danger {
-  color: var(--danger) !important;
-}
-
-.bgt-card-muted {
+  margin: 0;
+  color: var(--bgt-muted);
   font-size: 0.8rem;
-  color: var(--text-muted);
-}
-
-.bgt-card-spinner {
-  display: inline-flex;
-  align-items: center;
-  min-height: 1.8rem;
-}
-
-.bgt-card-spinner .exp-spinner-sm {
-  display: block;
-  width: 18px;
-  height: 18px;
-  margin: 0;
-  border-width: 2px;
-}
-
-/* ── Toggle Pill Icons ── */
-.bgt-toggle-pill {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.bgt-toggle-pill-budget {
-  background: var(--budget-dim);
-  color: var(--budget-color);
-}
-
-.bgt-toggle-pill-accent {
-  background: rgba(11, 116, 255, 0.1);
-  color: var(--accent);
-}
-
-.bgt-toggle-pill-warning {
-  background: rgba(245, 158, 11, 0.12);
-  color: var(--warning);
-}
-
-/* ── Budget Card List ── */
-.bgt-budget-list {
-  display: flex;
-  flex-direction: column;
-}
-
-.bgt-date-list {
-  display: flex;
-  flex-direction: column;
-}
-
-.bgt-date-group {
-  border-bottom: 1px solid var(--border);
-}
-
-.bgt-date-group:last-child {
-  border-bottom: none;
-}
-
-.bgt-date-group-header {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-wrap: nowrap;
-  padding: 0.45rem 0.85rem;
-  background: var(--surface-2);
-  border-bottom: 1px solid var(--border);
-  border-left: 3px solid hsl(var(--date-hue, 213) 75% 55% / 0.85);
-  min-width: 0;
-}
-
-.bgt-date-label {
-  font-size: 0.73rem;
-  font-weight: 800;
-  color: var(--text-sub);
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.bgt-date-count {
-  color: var(--text-muted);
-  font-size: 0.67rem;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.bgt-date-totals {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 0.3rem;
-  flex-shrink: 0;
-}
-
-.bgt-date-total {
-  border-radius: 999px;
-  border: 1px solid hsl(var(--date-hue, 213) 75% 55% / 0.25);
-  background: hsl(var(--date-hue, 213) 75% 55% / 0.08);
-  color: var(--budget-color);
-  font-size: 0.7rem;
   font-weight: 700;
-  padding: 0.18rem 0.5rem;
-  white-space: nowrap;
-}
-
-.bgt-budget-group-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding: 0.75rem 0.85rem;
-}
-
-.bgt-budget-card {
-  position: relative; /* anchors the ⋯ menu (.bgt-row-menu) */
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  padding: 0.85rem 0.9rem;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  border-left: 3px solid hsl(var(--date-hue, 213) 70% 55% / 0.55);
-  background: var(--surface-2);
-  transition: background 0.15s;
-}
-
-.bgt-budget-card:hover {
-  background: var(--surface);
-}
-
-.bgt-budget-card-body {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.28rem;
-}
-
-.bgt-budget-card-top {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.bgt-budget-card-amount {
-  font-size: 1.15rem;
-  line-height: 1.25; /* keeps amount + activity line ≈ the 40px avatar */
-  font-weight: 700;
-  color: var(--budget-color);
-  white-space: nowrap;
-}
-
-.bgt-budget-card-badges {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  flex-wrap: wrap;
-}
-
-.bgt-budget-card-meta {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  flex-wrap: wrap;
-}
-
-.bgt-budget-card-desc {
-  font-size: 0.78rem;
-  line-height: 1.45;
-  color: var(--text-muted);
-  font-style: italic;
-  /* Wraps to 2 lines, then "See more" (ClampTextComponent). */
-  min-width: 0;
-}
-
-/* ── Budget List Empty State ── */
-.bgt-list-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 2.5rem 1rem;
-  color: var(--text-muted);
-  font-size: 0.85rem;
-  text-align: center;
-}
-
-.bgt-list-empty p { margin: 0; }
-
-.bgt-list-empty-icon {
-  opacity: 0.25;
-  color: var(--budget-color);
-}
-
-/* ── Chart Panel ── */
-.bgt-chart-panel {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 1.3rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.85rem;
-}
-
-.bgt-chart-title {
-  font-size: 0.82rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--text-sub);
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.bgt-chart-container {
-  position: relative;
-  height: 320px;
-  width: 100%;
-}
-
-/* ── Spending Monitor ── */
-.bgt-spending-panel {
-  overflow: visible;
-}
-
-.bgt-spending-body {
-  padding: 1rem 1.3rem 1.3rem;
-  overflow-x: hidden;
-}
-
-.bgt-month-block {
-  margin-bottom: 1.5rem;
-}
-
-.bgt-month-title {
-  font-size: 0.82rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--accent);
-  margin-bottom: 0.6rem;
-}
-
-/* Progress card */
-.bgt-progress-card {
-  background: var(--surface-2);
-  border-radius: 10px;
-  border-left: 3px solid transparent;
-  padding: 0.85rem 1rem;
-  margin-bottom: 0.5rem;
-}
-
-.bgt-progress-card-sm {
-  padding: 0.6rem 0.85rem;
-  font-size: 0.85rem;
-}
-
-.bgt-prog-green {
-  border-left-color: var(--success);
-}
-
-.bgt-prog-yellow {
-  border-left-color: var(--warning);
-}
-
-.bgt-prog-red {
-  border-left-color: var(--danger);
-}
-
-.bgt-progress-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.4rem;
-}
-
-.bgt-progress-amounts {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  /* font-family: 'DM Mono', monospace; */
-  font-size: 0.82rem;
-  justify-content: flex-end;
-  margin-bottom: 0.4rem;
-}
-
-.bgt-slash {
-  color: var(--text-muted);
-}
-
-.bgt-progress-bar-wrap {
-  height: 6px;
-  background: rgba(255, 255, 255, 0.42);
-  border-radius: 100px;
-  overflow: hidden;
-  margin-bottom: 0.4rem;
-}
-
-.bgt-progress-bar {
-  height: 100%;
-  border-radius: 100px;
-  transition: width 0.4s ease;
-}
-
-.bgt-bar-green {
-  background: var(--success);
-}
-
-.bgt-bar-yellow {
-  background: var(--warning);
-}
-
-.bgt-bar-red {
-  background: var(--danger);
-}
-
-.bgt-progress-footer {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.75rem;
-}
-
-.bgt-icon-success-color {
-  color: var(--success);
-}
-
-.bgt-icon-warning-color {
-  color: var(--warning);
-}
-
-.bgt-icon-danger-color {
-  color: var(--danger);
-}
-
-/* No budget card */
-.bgt-no-budget-card {
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 0.85rem 1rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.3rem;
-  text-align: center;
-  margin-bottom: 0.5rem;
-}
-
-.bgt-no-budget-card-sm {
-  padding: 0.6rem 0.85rem;
-}
-
-.bgt-no-budget-title {
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: var(--text-sub);
-}
-
-.bgt-no-budget-row {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-}
-
-.bgt-cat-name {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  font-weight: 700;
-  color: hsl(var(--cat-hue, 220) 80% 70%);
-}
-
-.bgt-muted-text {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
-
-/* ── Icon helpers ── */
-.bgt-icon-accent {
-  color: var(--accent);
-}
-
-.bgt-icon-success {
-  color: var(--success);
-}
-
-.bgt-icon-warning {
-  color: var(--warning);
-}
-
-.bgt-icon-info {
-  color: var(--info);
-}
-
-/* ── Empty state ── */
-.bgt-empty {
-  text-align: center;
-  color: var(--text-muted);
-  font-size: 0.85rem;
-  padding: 1.5rem;
-  margin: 0;
-}
-
-/* ══════════════════════════════════════════════
-   BUDGET EMPTY STATE
-   ══════════════════════════════════════════════ */
-
-.bgt-empty-banner {
-  background: linear-gradient(135deg,
-    rgba(11, 116, 255, 0.06) 0%,
-    var(--surface) 50%,
-    rgba(11, 116, 255, 0.03) 100%);
-  border: 1px solid rgba(11, 116, 255, 0.2);
-  border-radius: 16px;
-  padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-  animation: bgt-fadein 0.4s ease both;
-}
-
-.bgt-empty-banner::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--accent), transparent);
-}
-
-@keyframes bgt-fadein {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-@media (min-width: 576px) {
-  .bgt-empty-banner {
-    flex-direction: row;
-    text-align: left;
-    padding: 1.75rem 2rem;
-  }
-}
-
-.bgt-empty-icon {
-  font-size: 2.4rem;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: bgt-bounce 3s ease-in-out infinite;
-}
-
-@keyframes bgt-bounce {
-  0%, 100% { transform: translateY(0); }
-  50%       { transform: translateY(-5px); }
-}
-
-.bgt-empty-content { flex: 1; min-width: 0; }
-
-.bgt-empty-title {
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--text);
-  margin: 0 0 0.3rem;
-}
-
-.bgt-empty-sub {
-  font-size: 0.82rem;
-  color: var(--text-muted);
-  margin: 0;
   line-height: 1.5;
 }
 
-.bgt-empty-actions { flex-shrink: 0; }
-
-.bgt-empty-btn {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.55rem 1.1rem;
-  border-radius: 10px;
-  font-size: 0.8rem;
-  font-weight: 700;
-  border: none;
-  cursor: pointer;
-  transition: all 0.15s;
-  white-space: nowrap;
+.bgt-form-field legend {
+  margin-bottom: 0.32rem;
 }
 
-.bgt-empty-btn-primary {
-  background: var(--accent);
-  color: #fff;
-  box-shadow: 0 4px 14px rgba(11, 116, 255, 0.25);
+.bgt-type-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.38rem;
 }
 
-.bgt-empty-btn-primary:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(11, 116, 255, 0.35);
-}
-
-/* ══════════════════════════════════════════════
-   IMPROVED BUDGET LIST ITEMS
-   ══════════════════════════════════════════════ */
-
-.bgt-record-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.9rem 1rem;
-  border-radius: 12px;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  margin-bottom: 0.6rem;
-  transition: border-color 0.15s, transform 0.15s;
-}
-
-.bgt-record-item:hover {
-  border-color: rgba(11, 116, 255, 0.2);
-  transform: translateX(2px);
-}
-
-.bgt-record-main {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.bgt-record-amount-lg {
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: var(--budget-color, #60a5fa);
-  letter-spacing: -0.01em;
-}
-
-.bgt-record-badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  align-items: center;
-}
-
-.bgt-type-badge {
-  font-size: 0.68rem;
-  font-weight: 700;
-  padding: 0.2rem 0.55rem;
-  border-radius: 20px;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
-.bgt-badge-monthly {
-  background: rgba(96, 165, 250, 0.15);
-  color: #60a5fa;
-  border: 1px solid rgba(96, 165, 250, 0.25);
-}
-
-.bgt-badge-yearly {
-  background: rgba(244, 177, 26, 0.15);
-  color: #f4b11a;
-  border: 1px solid rgba(244, 177, 26, 0.25);
-}
-
-.bgt-cat-badge {
-  font-size: 0.68rem;
-  font-weight: 500;
-  padding: 0.2rem 0.55rem;
-  border-radius: 20px;
-  background: rgba(11, 116, 255, 0.1);
-  color: var(--accent);
-  border: 1px solid rgba(11, 116, 255, 0.2);
-}
-
-.bgt-record-bottom {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  flex-wrap: wrap;
-}
-
-.bgt-record-date {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
-
-.bgt-record-desc {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  font-style: italic;
-}
-
-/* ══════════════════════════════════════════════
-   CHART EMPTY STATE
-   ══════════════════════════════════════════════ */
-
-.bgt-chart-container {
+.bgt-type-options label {
   position: relative;
+  display: grid;
+  cursor: pointer;
 }
 
-.bgt-no-chart-data {
-  position: absolute;
-  inset: 0;
+.bgt-type-options span {
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.bgt-no-chart-inner {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.6rem;
-  text-align: center;
-  padding: 1rem;
-}
-
-.bgt-no-chart-icon-fa {
-  font-size: 2rem;
-  color: var(--text-muted);
-  opacity: 0.5;
-}
-
-.bgt-no-chart-msg {
-  font-size: 0.82rem;
-  color: var(--text-muted);
-  margin: 0;
-}
-
-.bgt-no-chart-cta {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.45rem 1rem;
-  border-radius: 8px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  background: rgba(11, 116, 255, 0.1);
-  color: var(--accent);
-  border: 1px solid rgba(11, 116, 255, 0.2);
-  cursor: pointer;
-  transition: all 0.15s;
-  margin-top: 0.2rem;
-}
-
-.bgt-no-chart-cta:hover {
-  background: rgba(11, 116, 255, 0.18);
-  transform: translateY(-1px);
-}
-
-
-/* ══════════════════════════════════════════════
-   COMPACT BUDGET LIST ROW
-   ══════════════════════════════════════════════ */
-
-.bgt-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  padding: 0.55rem 1rem;
-  border-bottom: 1px solid var(--border);
-  transition: background 0.12s;
-}
-
-.bgt-row:last-child { border-bottom: none; }
-
-.bgt-row:hover { background: var(--surface-2); }
-
-.bgt-row-left {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
   gap: 0.35rem;
-  flex: 1;
+  min-height: 46px;
+  padding: 0.45rem;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--surface-2);
+  color: var(--text-sub);
+  font-size: 0.84rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.bgt-type-options lucide-icon {
+  flex: none;
+}
+
+.bgt-type-options input:checked + span {
+  border-color: var(--budget-color);
+  background: var(--budget-dim);
+  color: var(--text);
+}
+
+.bgt-type-options input:focus-visible + span {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.bgt-cat-select-trigger {
+  height: auto;
+  min-height: 46px;
+  padding: 0.45rem 0.7rem;
+}
+
+.bgt-picker-image {
+  width: 15px;
+  height: 15px;
+  object-fit: contain;
+}
+
+.bgt-input {
+  width: 100%;
   min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--surface-2);
+  color: var(--text);
+  padding: 0.55rem 0.7rem;
+  font: inherit;
 }
 
-.bgt-row-amount {
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: var(--budget-color, #60a5fa);
-  white-space: nowrap;
-  flex-shrink: 0;
+.bgt-wrapper .exp-personal-amount-card .exp-amount-hero-input {
+  background: var(--surface-2);
 }
 
-.bgt-row-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  font-size: 0.62rem;
-  font-weight: 700;
-  padding: 0.15rem 0.45rem;
-  border-radius: 20px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  flex-shrink: 0;
+.bgt-wrapper .exp-personal-amount-card .exp-amount-hero-input:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: -1px;
 }
 
-.bgt-badge-monthly {
-  background: rgba(96, 165, 250, 0.12);
-  color: #60a5fa;
-  border: 1px solid rgba(96, 165, 250, 0.22);
+.bgt-field-error {
+  margin: 0;
+  color: var(--danger);
+  font-size: 0.76rem;
+  font-weight: 650;
 }
 
-.bgt-badge-yearly {
-  background: rgba(244, 177, 26, 0.12);
-  color: #f4b11a;
-  border: 1px solid rgba(244, 177, 26, 0.22);
+.bgt-textarea {
+  min-height: 80px;
+  padding: 1.5rem 0.9rem 0.55rem;
+  border-radius: 10px;
+  font-size: 0.95rem;
 }
 
-.bgt-badge-cat {
-  background: hsl(var(--cat-hue, 220) 80% 55% / 0.13);
-  border: 1px solid hsl(var(--cat-hue, 220) 80% 55% / 0.35);
-  color: hsl(var(--cat-hue, 220) 80% 70%);
-}
-
-.bgt-row-date {
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  white-space: nowrap;
-}
-
-.bgt-row-desc {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  font-style: italic;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-/* Light mode adjustments */
-body.light-mode .bgt-badge-monthly { background: rgba(59, 130, 246, 0.08); }
-body.light-mode .bgt-badge-yearly  { background: rgba(217, 119, 6, 0.08); }
-body.light-mode .bgt-badge-cat     { background: hsl(var(--cat-hue, 220) 80% 55% / 0.1); color: hsl(var(--cat-hue, 220) 65% 38%); }
-
-/* ── Card: ⋯ menu + last-edited line ── */
-/* ⋯ floats in the card's top-right corner instead of taking a column, so
-   the description and avatar below can use the full width. Only the top
-   row (amount + badges) reserves room for it. */
-.bgt-row-menu {
+.bgt-description-label {
   position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-}
-
-.bgt-budget-card-top.bgt-has-menu {
-  padding-right: 2rem;
-}
-
-
-
-/* Creator avatar sits before the amount (tap for details — AvatarTipComponent). */
-.bgt-card-avatar {
-  align-self: flex-start; /* stays by the first line when the name wraps */
-}
-
-/* Avatar · [amount / "X added · date, time"] — the avatar spans both lines. */
-.bgt-card-head {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-  flex: 1;
-  min-width: 0;
-}
-
-.bgt-card-activity {
-  font-size: 0.7rem;
-  line-height: 1.35;
+  top: 1rem;
+  inset-inline-start: 0.9rem;
   color: var(--text-muted);
-  overflow-wrap: anywhere;
+  font-size: 0.82rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  pointer-events: none;
+  transition: top 0.15s ease, font-size 0.15s ease, color 0.15s ease;
 }
 
-.bgt-card-activity-edited {
-  color: var(--text-sub, var(--text-muted));
+.bgt-textarea:is(:focus, :not(:placeholder-shown)) + .bgt-description-label {
+  top: 0.55rem;
+  color: var(--accent);
+  font-size: 0.63rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
-.bgt-card-head-line {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
+.bgt-save {
+  width: 100%;
+  min-height: 48px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bgt-description-label,
+  .exp-add-fab.bgt-add-fab::after,
+  .bgt-usage-track span,
+  .bgt-add-modal-sheet.open,
+  .bgt-selection-bottom-sheet {
+    transition: none;
+    animation: none;
+  }
 }

@@ -142,4 +142,58 @@ describe('FormatService', () => {
       expect(service.formatAmountWithSymbol(1234.5, 'USD')).toBe('$1,234.50');
     });
   });
+
+  describe('formatAmountInWords', () => {
+    it('updates the spelling and currency label when the app language changes', () => {
+      expect(service.formatAmountInWords(200000, 'MMK')).toBe('two hundred thousand Kyat');
+      translate.use('my');
+      expect(service.formatAmountInWords(200000, 'MMK')).toBe('နှစ်သိန်း ကျပ်');
+      expect(service.formatAmountInWords(12345, 'MMK')).toBe('တစ်သောင်းနှစ်ထောင့်သုံးရာ့လေးဆယ့်ငါး ကျပ်');
+    });
+
+    it('spells the same rounded amount as the numeric display', () => {
+      expect(service.formatAmountInWords(199999.5, 'MMK')).toBe('two hundred thousand Kyat');
+      expect(service.formatAmountInWords(12.046, 'USD')).toBe('twelve point zero five US dollars');
+    });
+
+    it('spells large kyat amounts in lakh and puts သိန်း first from twenty lakh', () => {
+      translate.use('my');
+
+      expect(service.formatAmountInWords(1_000_000, 'MMK')).toBe('ဆယ်သိန်း ကျပ်');
+      expect(service.formatAmountInWords(2_000_000, 'MMK')).toBe('သိန်းနှစ်ဆယ် ကျပ်');
+      expect(service.formatAmountInWords(2_100_000, 'MMK')).toBe('သိန်းနှစ်ဆယ့်တစ် ကျပ်');
+      expect(service.formatAmountInWords(10_000_000, 'MMK')).toBe('သိန်းတရာ ကျပ်');
+      expect(service.formatAmountInWords(100_000_000, 'MMK')).toBe('သိန်းတထောင် ကျပ်');
+      expect(service.formatAmountInWords(1_000_000_000, 'MMK')).toBe('သိန်းတစ်သောင်း ကျပ်');
+    });
+
+    it('keeps the remaining kyat after the lakh count and applies the unit only to kyat', () => {
+      expect(service.formatAmountInWords(1_000_000_000, 'MMK')).toBe('ten thousand lakh Kyat');
+      expect(service.formatAmountInWords(1_000_000, 'USD')).toBe('one million US dollars');
+
+      translate.use('my');
+      expect(service.formatAmountInWords(2_025_001, 'MMK')).toBe('သိန်းနှစ်ဆယ် နှစ်သောင်းငါးထောင့်တစ် ကျပ်');
+      expect(service.formatAmountInWords(999_999.5, 'MMK')).toBe('ဆယ်သိန်း ကျပ်');
+    });
+
+    it('uses ထောင့် with an explicit တ before the teens in a Burmese lakh count', () => {
+      translate.use('my');
+
+      expect(service.formatAmountInWords(101_000_000, 'MMK')).toBe('သိန်းတထောင့်တဆယ် ကျပ်');
+      expect(service.formatAmountInWords(101_018_295, 'MMK'))
+        .toBe('သိန်းတထောင့်တဆယ် တစ်သောင်းရှစ်ထောင့်နှစ်ရာ့ကိုးဆယ့်ငါး ကျပ်');
+      expect(service.formatAmountInWords(201_900_000, 'MMK')).toBe('သိန်းနှစ်ထောင့်တဆယ့်ကိုး ကျပ်');
+    });
+
+    it('uses the spoken Burmese forms of hundreds and thousands in lakh counts', () => {
+      translate.use('my');
+
+      expect(service.formatAmountInWords(12_000_000, 'MMK')).toBe('သိန်းတရာ့နှစ်ဆယ် ကျပ်');
+      expect(service.formatAmountInWords(25_000_000, 'MMK')).toBe('သိန်းနှစ်ရာ့ငါးဆယ် ကျပ်');
+      expect(service.formatAmountInWords(102_000_000, 'MMK')).toBe('သိန်းတထောင့်နှစ်ဆယ် ကျပ်');
+      expect(service.formatAmountInWords(110_000_000, 'MMK')).toBe('သိန်းတထောင့်တရာ ကျပ်');
+      expect(service.formatAmountInWords(150_000_000, 'MMK')).toBe('သိန်းတထောင့်ငါးရာ ကျပ်');
+      expect(service.formatAmountInWords(200_000_000, 'MMK')).toBe('သိန်းနှစ်ထောင် ကျပ်');
+    });
+  });
 });

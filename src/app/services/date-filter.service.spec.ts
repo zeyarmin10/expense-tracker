@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { registerLocaleData } from '@angular/common';
+import { DatePipe, registerLocaleData } from '@angular/common';
 import localeMy from '@angular/common/locales/my';
 import localeKm from '@angular/common/locales/km';
 import localeTh from '@angular/common/locales/th';
@@ -22,6 +22,15 @@ describe('DateFilterService', () => {
 
   it('should be created', () => {
     expect(service).toBeTruthy();
+  });
+
+  it('calculates a rolling 12-month range on leap day', () => {
+    jasmine.clock().withMock(() => {
+      jasmine.clock().mockDate(new Date(2024, 1, 29, 12));
+
+      expect(service.getDateRange(new DatePipe('en-US'), 'last12Months'))
+        .toEqual({ start: '2023-02-28', end: '2024-02-29' });
+    });
   });
 
   it('formats the date label in the selected app language', () => {

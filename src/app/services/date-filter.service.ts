@@ -178,6 +178,14 @@ export class DateFilterService {
         );
         endDate = now;
         break;
+      case 'last12Months': {
+        const previousYear = now.getFullYear() - 1;
+        const month = now.getMonth();
+        const daysInMonth = new Date(previousYear, month + 1, 0).getDate();
+        startDate = new Date(previousYear, month, Math.min(now.getDate(), daysInMonth));
+        endDate = now;
+        break;
+      }
       case 'currentYear':
         startDate = new Date(now.getFullYear(), 0, 1);
         endDate = now;

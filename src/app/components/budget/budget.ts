@@ -1,5 +1,6 @@
-import { Component, OnInit, inject, OnDestroy, ChangeDetectorRef, ChangeDetectionStrategy, HostListener } from '@angular/core';
+import { Component, OnInit, inject, OnDestroy, ChangeDetectorRef, ChangeDetectionStrategy, HostListener, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
+import { CdkTrapFocus } from '@angular/cdk/a11y';
 import {
   FormBuilder,
   FormGroup,
@@ -11,26 +12,25 @@ import {
   Observable,
   BehaviorSubject,
   combineLatest,
+  debounceTime,
   map,
   Subscription,
   of,
   take,
   switchMap,
+  shareReplay,
 } from 'rxjs';
 import { ServiceIBudget, BudgetService } from '../../services/budget';
 import { ServiceIExpense, ExpenseService } from '../../services/expense';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import {
   LucideAngularModule, LucideIconData,
-  Trash2, Save, ChevronDown, TriangleAlert, CircleCheck,
-  PiggyBank, ShoppingCart, ChartLine, ListChecks,
-  ChartColumn, Wallet, Plus, X, Search, Check, CalendarDays, CalendarRange, RotateCcw,
+  Save, ChevronDown, TriangleAlert, PiggyBank, ShoppingCart, ListChecks,
+  ChartColumn, Wallet, Plus, X, Search, Check, CalendarDays, CalendarRange,
 } from 'lucide-angular';
 import { Chart, registerables } from 'chart.js';
-import { MobileFullscreenOverlayComponent } from '../common/mobile-fullscreen-overlay/mobile-fullscreen-overlay.component';
 import { AuthService } from '../../services/auth';
 import {
-  UserDataService,
   UserProfile,
   getCurrentSpaceRole,
 } from '../../services/user-data';
@@ -46,12 +46,10 @@ import {
   DateRange,
 } from '../../services/date-filter.service';
 import { CategoryService, ServiceICategory } from '../../services/category';
-import { getIconData, getIconHue, getCategoryHue } from '../../utils/category-icons';
-import { CustomSelectComponent, SelectOption } from '../common/custom-select/custom-select.component';
+import { getIconData, getIconHue } from '../../utils/category-icons';
 import { DateRangeInputComponent } from '../common/date-range-input/date-range-input.component';
 import Swal from 'sweetalert2';
 import { createAppToast } from '../../services/toast';
-import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
 import { ClampTextComponent } from '../common/clamp-text/clamp-text.component';
 import flatpickr from 'flatpickr';
 import type { Instance as FlatpickrInstance } from 'flatpickr/dist/types/instance';
@@ -61,7 +59,6 @@ import { FlatpickrMonthMenu, installFlatpickrMonthMenu } from '../../utils/flatp
 import { AutoGrowDirective } from '../../directives/auto-grow.directive';
 import { SwipeToCloseDirective } from '../../directives/swipe-to-close.directive';
 import { RowMenuComponent } from '../common/row-menu/row-menu.component';
-import { UserAvatarComponent } from '../common/user-avatar/user-avatar.component';
 import { AvatarTipComponent } from '../common/avatar-tip/avatar-tip.component';
 Chart.register(...registerables);
 
@@ -101,6 +98,19 @@ interface SpendingMonitorItem {
   }>;
 }
 
+interface BudgetOverview {
+  currency: string;
+  budget: number;
+  spent: number;
+  remaining: number;
+  balance: number;
+  percentage: number;
+}
+
+const MIN_BUDGET_AMOUNT = 0.01;
+const MAX_BUDGET_AMOUNT = 999999999;
+const DESKTOP_BREAKPOINT = 992;
+
 interface BudgetPeriodGroup {
   period: string;
   budgets: ServiceIBudget[];
@@ -111,17 +121,19 @@ interface BudgetPeriodGroup {
 @Component({
   selector: 'app-budget',
   standalone: true,
-  imports: [AvatarTipComponent, RowMenuComponent, UserAvatarComponent, SwipeToCloseDirective, AutoGrowDirective, 
+  imports: [
+    AvatarTipComponent,
+    RowMenuComponent,
+    SwipeToCloseDirective,
+    AutoGrowDirective,
+    CdkTrapFocus,
     CommonModule,
     ReactiveFormsModule,
     TranslateModule,
     LucideAngularModule,
     FormsModule,
-    CurrentSpaceTitleComponent,
     ClampTextComponent,
-    CustomSelectComponent,
     DateRangeInputComponent,
-    MobileFullscreenOverlayComponent,
   ],
   providers: [DatePipe],
   templateUrl: './budget.html',
@@ -129,6 +141,19 @@ interface BudgetPeriodGroup {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BudgetComponent implements OnInit, OnDestroy {
+  @ViewChild('addBudgetButton') private addBudgetButton?: ElementRef<HTMLButtonElement>;
+  @ViewChild('closeBudgetButton') private closeBudgetButton?: ElementRef<HTMLButtonElement>;
+  @ViewChild('closeCategoryButton') private closeCategoryButton?: ElementRef<HTMLButtonElement>;
+  @ViewChild('dateBackButton') private dateBackButton?: ElementRef<HTMLButtonElement>;
+  @ViewChild('categorySearchInput') private categorySearchInput?: ElementRef<HTMLInputElement>;
+  @ViewChild('budgetCategoryButton') private budgetCategoryButton?: ElementRef<HTMLButtonElement>;
+  @ViewChild('budgetDateButton') private budgetDateButton?: ElementRef<HTMLButtonElement>;
+  @ViewChild('budgetAmountInput') private budgetAmountInput?: ElementRef<HTMLInputElement>;
+  @ViewChild('budgetChart') private budgetChart?: ElementRef<HTMLCanvasElement>;
+  @ViewChild(DateRangeInputComponent) private dateRangeInput?: DateRangeInputComponent;
+  private budgetDialogTrigger: HTMLElement | null = null;
+  isDesktopView = typeof window !== 'undefined' && window.innerWidth >= DESKTOP_BREAKPOINT;
+
   budgetPickerMenuTop = 0;
   budgetPickerMenuLeft = 0;
   budgetPickerMenuWidth = 0;
@@ -142,10 +167,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
   private categoryService = inject(CategoryService);
 
   categoryList: ServiceICategory[] = [];
-  categorySelectOptions$!: Observable<SelectOption[]>;
-  getIconHueForCategory(categoryName: string): number {
-    return getIconHue(this.categoryList.find(c => c.name === categoryName)?.icon);
-  }
 
   getIconForCategory(categoryName: string) {
     return getIconData(this.categoryList.find(c => c.name === categoryName)?.icon);
@@ -163,9 +184,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
 
   budgetChartData$: Observable<{ labels: string[]; datasets: any[] }>;
 
-  totalBudgetByCurrency$: Observable<{ [key: string]: number }>;
-  totalExpensesByCurrency$: Observable<{ [key: string]: number }>;
-  remainingBalanceByCurrency$: Observable<{ [key: string]: number }>;
+  budgetOverview$: Observable<BudgetOverview[]>;
 
   // Updated type declaration to match the emitted structure
   monthlySummary$: Observable<MonthlySummaryItem[]>;
@@ -175,14 +194,11 @@ export class BudgetComponent implements OnInit, OnDestroy {
   totalBudgetsByCurrency$: Observable<{ [key: string]: number }>;
   spendingMonitorData$: Observable<SpendingMonitorItem[]>;
 
-  readonly iconTrash2 = Trash2;
   readonly iconSave = Save;
   readonly iconChevronDown = ChevronDown;
   readonly iconTriangleAlert = TriangleAlert;
-  readonly iconCircleCheck = CircleCheck;
   readonly iconPiggyBank = PiggyBank;
   readonly iconShoppingCart = ShoppingCart;
-  readonly iconChartLine = ChartLine;
   readonly iconListChecks = ListChecks;
   readonly iconChartColumn = ChartColumn;
   readonly iconWallet = Wallet;
@@ -192,15 +208,12 @@ export class BudgetComponent implements OnInit, OnDestroy {
   readonly iconCheck = Check;
   readonly iconCalendarDays = CalendarDays;
   readonly iconCalendarRange = CalendarRange;
-  readonly iconRotateCcw = RotateCcw;
 
   hasChartData: boolean = false;
   isChartDataLoaded: boolean = false;
   amountDisplayValue: string = '';
-  isRecordedBudgetsCollapsed: boolean = true;
-  isSpendingMonitorCollapsed: boolean = false;
 
-  // ── Add Budget FAB + Bottom-sheet Modal ──
+  // Add and edit dialog
   isAddModalOpen = false;
   private addModalHistoryActive = false;
   isSubmittingBudget = false;
@@ -211,11 +224,9 @@ export class BudgetComponent implements OnInit, OnDestroy {
   isDatePickerOpen = false;
   datePickerAdjustmentNotice = false;
   private datePickerAdjustmentNoticeTimer: number | null = null;
-  isTypePickerOpen = false;
   private datePickerFp: FlatpickrInstance | null = null;
   private datePickerMonthMenu: FlatpickrMonthMenu | null = null;
 
-  get isRecordedOpen(): boolean { return !this.isRecordedBudgetsCollapsed; }
   get canManageBudgets(): boolean {
     if (!this.userProfile) return false;
     if (this.userProfile.accountType === 'personal') return true;
@@ -228,41 +239,24 @@ export class BudgetComponent implements OnInit, OnDestroy {
     const role = getCurrentSpaceRole(this.userProfile);
     return role === 'admin' || role === 'owner';
   }
-  toggleRecordedList(event: MouseEvent): void {
-    this.isRecordedBudgetsCollapsed = !this.isRecordedBudgetsCollapsed;
-    if (!this.isRecordedBudgetsCollapsed) {
-      // Wait for the panel's grid-template-rows expand transition (0.38s)
-      // to finish before scrolling — otherwise scrollIntoView clamps against
-      // the still-collapsed (shorter) document and can stop short.
-      const toggleEl = event.currentTarget as HTMLElement;
-      setTimeout(() => toggleEl.scrollIntoView({ behavior: 'smooth', block: 'start' }), 400);
-    }
-  }
-  toggleSpendingMonitor(): void { this.isSpendingMonitorCollapsed = !this.isSpendingMonitorCollapsed; }
-
-  openBudgetFormAndFocus(): void {
-    if (!this.canManageBudgets) {
-      return;
-    }
-    this.openAddModal();
-  }
-
   openAddModal(): void {
-    if (!this.canManageBudgets) {
-      return;
-    }
+    if (!this.canManageBudgets || this.isAddModalOpen || this.isSubmittingBudget) return;
+    const activeElement = document.activeElement;
+    this.budgetDialogTrigger = activeElement instanceof HTMLElement
+      ? activeElement.closest('.bgt-row-menu')?.querySelector('button') ?? activeElement
+      : null;
     this.isAddModalOpen = true;
     this.addModalHistoryActive = true;
     history.pushState(null, '');
     this.isCategoryPickerOpen = false;
-    this.isTypePickerOpen = false;
     this.closeDatePicker();
     document.body.classList.add('bgt-add-modal-open');
+    requestAnimationFrame(() => this.closeBudgetButton?.nativeElement.focus());
   }
 
   /** Edit reuses the Add-Budget modal, pre-filled (same pattern as income). */
   startEditBudget(budget: ServiceIBudget): void {
-    if (!this.canManageBudgets || !budget.id) return;
+    if (!this.canManageBudgets || !budget.id || this.isSubmittingBudget) return;
     this.openAddModal();
     this.editingBudget = budget;
     // The form holds a category id ('all' for the total budget); budgets
@@ -283,30 +277,42 @@ export class BudgetComponent implements OnInit, OnDestroy {
 
   closeAddModal(): void {
     if (this.editingBudget) {
-      // Leaving edit mode: the next "Add" must start from a blank form.
       this.editingBudget = null;
       this.resetForm();
     }
+    if (this.isAddModalOpen) {
+      const trigger = this.budgetDialogTrigger;
+      requestAnimationFrame(() => {
+        if (this.isAddModalOpen) return;
+        if (trigger?.isConnected && trigger !== document.body) {
+          trigger.focus({ preventScroll: true });
+        } else {
+          this.addBudgetButton?.nativeElement.focus({ preventScroll: true });
+        }
+      });
+    }
+    this.budgetDialogTrigger = null;
     const shouldPopHistory = this.addModalHistoryActive;
     this.addModalHistoryActive = false;
     this.isAddModalOpen = false;
     this.isCategoryPickerOpen = false;
-    this.isTypePickerOpen = false;
     this.closeDatePicker();
     document.body.classList.remove('bgt-add-modal-open');
     if (shouldPopHistory) history.back();
   }
 
+  @HostListener('window:resize')
+  onViewportResize(): void {
+    this.isDesktopView = window.innerWidth >= DESKTOP_BREAKPOINT;
+  }
+
   @HostListener('window:popstate')
   onPopState(): void {
     if (this.isDatePickerOpen) {
-      this.closeDatePicker();
+      this.closeDatePicker(true);
       history.pushState(null, '');
     } else if (this.isCategoryPickerOpen) {
-      this.closeCategoryPicker();
-      history.pushState(null, '');
-    } else if (this.isTypePickerOpen) {
-      this.closeTypePicker();
+      this.closeCategoryPicker(true);
       history.pushState(null, '');
     } else if (this.isAddModalOpen) {
       this.addModalHistoryActive = false;
@@ -314,84 +320,71 @@ export class BudgetComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ── Budget-type picker (drill-down within the Add-Budget modal) ──
-  // Same pattern as the category picker below, replacing the old native
-  // <select> so both dropdowns in this form share one look and behavior.
+  onDialogEscape(event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    if (this.isDatePickerOpen) {
+      this.closeDatePicker(true);
+    } else if (this.isCategoryPickerOpen) {
+      this.closeCategoryPicker(true);
+    } else {
+      this.closeAddModal();
+    }
+  }
+
   readonly budgetTypeOptions: { value: 'monthly' | 'yearly'; labelKey: string }[] = [
-    { value: 'monthly', labelKey: 'MONTHLY_BUDGET' },
-    { value: 'yearly', labelKey: 'YEARLY_BUDGET' },
+    { value: 'monthly', labelKey: 'MONTHLY' },
+    { value: 'yearly', labelKey: 'YEARLY' },
   ];
-
-  openTypePicker(event?: MouseEvent): void {
-    event?.stopPropagation();
-    if (this.isTypePickerOpen) { this.closeTypePicker(); return; }
-    // The compact type pill is intentionally narrow; give its menu enough
-    // room for the translated option labels instead of inheriting that width.
-    this.positionBudgetPicker(event, 150);
-    this.isTypePickerOpen = true;
-    this.isCategoryPickerOpen = false;
-    this.closeDatePicker();
-  }
-
-  closeTypePicker(): void {
-    this.isTypePickerOpen = false;
-  }
-
-  selectBudgetType(type: 'monthly' | 'yearly'): void {
-    this.budgetForm.get('type')?.setValue(type);
-    this.budgetForm.get('type')?.markAsTouched();
-    this.onBudgetTypeChange(type);
-    this.closeTypePicker();
-  }
-
-  get selectedTypeLabelKey(): string | null {
-    const type = this.budgetForm.get('type')?.value;
-    return this.budgetTypeOptions.find((option) => option.value === type)?.labelKey ?? null;
-  }
 
   // ── Category picker (drill-down within the Add-Budget modal) ──
   // Not using app-custom-select's own bottom-sheet here: that component
   // manages its own history-based close on mobile, and nesting it inside
   // this modal left the picker/backdrop stuck open after selecting an item
   // (same issue documented in expense.ts).
-  openCategoryPicker(event?: MouseEvent): void {
-    event?.stopPropagation();
-    if (this.isCategoryPickerOpen) { this.closeCategoryPicker(); return; }
+  openCategoryPicker(event: MouseEvent): void {
     this.positionBudgetPicker(event);
     this.categoryPickerSearch = '';
     this.isCategoryPickerOpen = true;
-    this.isTypePickerOpen = false;
-    this.closeDatePicker();
+    requestAnimationFrame(() => {
+      if (!this.isCategoryPickerOpen) return;
+      const focusTarget = window.innerWidth >= 992 ? this.categorySearchInput : this.closeCategoryButton;
+      focusTarget?.nativeElement.focus({ preventScroll: true });
+    });
   }
 
-  closeCategoryPicker(): void {
+  closeCategoryPicker(restoreFocus = false): void {
     this.isCategoryPickerOpen = false;
+    if (restoreFocus) {
+      requestAnimationFrame(() => this.budgetCategoryButton?.nativeElement.focus({ preventScroll: true }));
+    }
   }
 
-  private positionBudgetPicker(event?: MouseEvent, extraWidth = 0): void {
-    const trigger = event?.currentTarget as HTMLElement | null;
-    const dialog = document.querySelector('.bgt-add-modal-sheet') as HTMLElement | null;
-    if (!trigger || !dialog || window.innerWidth < 992) return;
+  private positionBudgetPicker(event: MouseEvent): void {
+    const trigger = event.currentTarget as HTMLElement;
+    const dialog = trigger.closest('.bgt-add-modal-sheet');
+    if (!dialog || window.innerWidth < 992) return;
     const triggerRect = trigger.getBoundingClientRect();
     const dialogRect = dialog.getBoundingClientRect();
-    this.budgetPickerMenuTop = triggerRect.bottom - dialogRect.top + 4;
+    const preferredTop = triggerRect.bottom - dialogRect.top + 4;
+    const availableTop = Math.max(0, window.innerHeight - dialogRect.top - 320);
+    this.budgetPickerMenuTop = Math.min(preferredTop, availableTop);
     this.budgetPickerMenuLeft = triggerRect.left - dialogRect.left;
-    this.budgetPickerMenuWidth = triggerRect.width + extraWidth;
+    this.budgetPickerMenuWidth = triggerRect.width;
   }
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
-    if (window.innerWidth < 992) return;
+    if (!this.isCategoryPickerOpen || window.innerWidth < 992) return;
     const target = event.target as Element | null;
-    if (!target?.closest('.bgt-selection-bottom-sheet, .bgt-cat-select-trigger, .bgt-type-pill')) {
-      this.closeCategoryPicker();
-      this.closeTypePicker();
+    if (!target?.closest('#budget-category-picker, [aria-controls="budget-category-picker"]')) {
+      this.closeCategoryPicker(true);
     }
   }
 
   selectBudgetCategory(categoryId: string): void {
     this.budgetForm.get('category')?.setValue(categoryId);
-    this.closeCategoryPicker();
+    this.closeCategoryPicker(true);
   }
 
   get filteredPickerCategories(): { id?: string; name: string; icon?: string }[] {
@@ -402,7 +395,8 @@ export class BudgetComponent implements OnInit, OnDestroy {
 
   get selectedCategoryName(): string {
     const id = this.budgetForm.get('category')?.value;
-    return this.categories.find(c => c.id === id)?.name || '';
+    if (id === 'all') return this.translate.instant('ALL_CATEGORIES');
+    return this.categories.find(c => c.id === id)?.name || id || '';
   }
 
   getIconForCategoryId(categoryId: string | undefined): LucideIconData {
@@ -426,14 +420,20 @@ export class BudgetComponent implements OnInit, OnDestroy {
   // instead, with no separate backdrop/sheet/history of its own.
   openDatePicker(): void {
     this.isCategoryPickerOpen = false;
-    this.isTypePickerOpen = false;
     this.isDatePickerOpen = true;
-    setTimeout(() => this.initDatePickerFlatpickr(), 0);
+    requestAnimationFrame(() => {
+      if (!this.isDatePickerOpen) return;
+      this.initDatePickerFlatpickr();
+      this.dateBackButton?.nativeElement.focus({ preventScroll: true });
+    });
   }
 
-  closeDatePicker(): void {
+  closeDatePicker(restoreFocus = false): void {
     this.isDatePickerOpen = false;
     this.destroyDatePickerFlatpickr();
+    if (restoreFocus) {
+      requestAnimationFrame(() => this.budgetDateButton?.nativeElement.focus({ preventScroll: true }));
+    }
   }
 
   private initDatePickerFlatpickr(): void {
@@ -456,7 +456,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
       defaultDate: currentValue || undefined,
       maxDate: 'today',
       disableMobile: true,
-      locale: isMy ? Burmese : undefined,
+      locale: isMy ? Burmese : 'default',
       onReady: (_dates, _dateStr, instance) => {
         this.datePickerMonthMenu = installFlatpickrMonthMenu(instance as FlatpickrInstance, {
           showAllMonths: true,
@@ -472,7 +472,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
         const d = dates[0];
         const str = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
         this.budgetForm.get('period')?.setValue(str);
-        this.closeDatePicker();
+        this.closeDatePicker(true);
         this.cdr.markForCheck();
       },
     }) as unknown as FlatpickrInstance;
@@ -499,18 +499,20 @@ export class BudgetComponent implements OnInit, OnDestroy {
 
   private refreshBudgets$ = new BehaviorSubject<void>(undefined);
 
-  private _startDate$ = new BehaviorSubject<string>('');
-  private _endDate$ = new BehaviorSubject<string>('');
-  private _selectedDateRange$ = new BehaviorSubject<string>('currentMonth');
-
   private authService = inject(AuthService);
   private cdr = inject(ChangeDetectorRef);
   private activeSpaceModeKey: string | null = null;
   userProfile$: Observable<UserProfile | null> = of(null);
 
   public selectedDateFilter: string = 'currentMonth';
-  public showCustomDatePicker = false;
-  public dateFilterOptions: SelectOption[] = [];
+  readonly budgetDateFilters = [
+    { value: 'currentMonth', label: 'THIS_MONTH' },
+    { value: 'lastMonth', label: 'LAST_MONTH' },
+    { value: 'currentYear', label: 'CURRENT_YEAR' },
+    { value: 'custom', label: 'CUSTOM' },
+  ];
+  isChoosingDateRange = false;
+  private dateRangePicked = false;
   public startDate: string | null = null;
   public endDate: string | null = null;
   public dateFilter$ = new BehaviorSubject<DateRange>({ start: '', end: '' });
@@ -523,17 +525,10 @@ export class BudgetComponent implements OnInit, OnDestroy {
   categories: any[] = [];
 
   constructor() {
-    const now = new Date();
-    const oneYearAgo = new Date(
-      now.getFullYear() - 1,
-      now.getMonth(),
-      now.getDate()
-    );
-
     this.budgetForm = this.fb.group({
       type: ['monthly', Validators.required],
       category: ['all', Validators.required],
-      amount: ['', [Validators.required, Validators.min(0.01), Validators.max(999999999)]],
+      amount: ['', [Validators.required, Validators.min(MIN_BUDGET_AMOUNT), Validators.max(MAX_BUDGET_AMOUNT)]],
       currency: ['MMK', Validators.required],
       period: [
         this.datePipe.transform(new Date(), 'yyyy-MM-dd'), // Full date format
@@ -546,11 +541,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
     );
 
     this.expenses$ = this.expenseService.getExpenses();
-
-    this.startDate = this.datePipe.transform(oneYearAgo, 'yyyy-MM-dd') || '';
-    this.endDate = this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
-    this._startDate$.next(this.startDate);
-    this._endDate$.next(this.endDate);
 
     const filteredData$ = combineLatest([
       this.budgets$,
@@ -584,7 +574,8 @@ export class BudgetComponent implements OnInit, OnDestroy {
         });
 
         return { budgets: filteredBudgets, expenses: filteredExpenses };
-      })
+      }),
+      shareReplay({ bufferSize: 1, refCount: true }),
     );
 
     this.filteredBudgets$ = filteredData$.pipe(map((data) => data.budgets));
@@ -812,12 +803,12 @@ export class BudgetComponent implements OnInit, OnDestroy {
           });
         });
 
-        return Array.from(monthlyDataMap.values());
+        return Array.from(monthlyDataMap.values()).sort((a, b) => b.sortDate.getTime() - a.sortDate.getTime());
       })
     );
 
-    this.totalBudgetByCurrency$ = filteredData$.pipe(
-      map(({ budgets }) => {
+    this.budgetOverview$ = filteredData$.pipe(
+      map(({ budgets, expenses }) => {
         const monthlyBudgetsMap = new Map<
           string,
           { total: number; individual: number }
@@ -844,7 +835,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
           monthlyBudgetsMap.set(key, currentData);
         });
 
-        return Array.from(monthlyBudgetsMap.entries()).reduce(
+        const budgetTotals = Array.from(monthlyBudgetsMap.entries()).reduce(
           (acc, [key, data]) => {
             const [, currency] = key.split('_');
             const amount = data.total > 0 ? data.total : data.individual;
@@ -853,73 +844,27 @@ export class BudgetComponent implements OnInit, OnDestroy {
           },
           {} as { [currency: string]: number }
         );
-      })
-    );
 
-    this.totalExpensesByCurrency$ = filteredData$.pipe(
-      map(({ expenses }) => {
-        return expenses.reduce((acc, expense) => {
-          if (!expense.currency) return acc; // B5: guard undefined currency
-          acc[expense.currency] =
-            (acc[expense.currency] || 0) + expense.totalCost;
-          return acc;
-        }, {} as { [currency: string]: number });
-      })
-    );
+        const spending = expenses.reduce<Record<string, number>>((totals, expense) => {
+          if (expense.currency) {
+            totals[expense.currency] = (totals[expense.currency] || 0) + expense.totalCost;
+          }
+          return totals;
+        }, {});
 
-    this.remainingBalanceByCurrency$ = filteredData$.pipe(
-      map(({ budgets, expenses }) => {
-        const balance: { [currency: string]: number } = {};
-        const allCurrencies = new Set<string>();
-
-        const monthlyBudgetsMap = new Map<
-          string,
-          { total: number; individual: number }
-        >();
-
-        budgets.forEach((budget) => {
-          if (!budget.period) return;
-
-          const budgetDate = new Date(budget.period);
-          const monthYear = this.datePipe.transform(budgetDate, 'yyyy-MM')!;
-          const key = `${monthYear}_${budget.currency}`;
-
-          const currentData = monthlyBudgetsMap.get(key) || {
-            total: 0,
-            individual: 0,
+        return Object.entries(budgetTotals).map(([currency, budget]) => {
+          const spent = spending[currency] ?? 0;
+          const remaining = budget - spent;
+          return {
+            currency,
+            budget,
+            spent,
+            remaining,
+            balance: Math.abs(remaining),
+            percentage: budget > 0 ? spent / budget * 100 : 0,
           };
-
-          if (budget.category === 'all') {
-            currentData.total += budget.amount;
-          } else {
-            currentData.individual += budget.amount;
-          }
-
-          monthlyBudgetsMap.set(key, currentData);
-          allCurrencies.add(budget.currency);
         });
-
-        monthlyBudgetsMap.forEach((data, key) => {
-          const [, currency] = key.split('_');
-          const effectiveBudget = data.total > 0 ? data.total : data.individual;
-          balance[currency] = (balance[currency] || 0) + effectiveBudget;
-        });
-
-        expenses.forEach((expense) => {
-          if (!expense.currency) return; // B6: guard undefined currency
-          allCurrencies.add(expense.currency);
-          balance[expense.currency] =
-            (balance[expense.currency] || 0) - expense.totalCost;
-        });
-
-        allCurrencies.forEach((currency) => {
-          if (balance[currency] === undefined) {
-            balance[currency] = 0;
-          }
-        });
-
-        return balance;
-      })
+      }),
     );
 
     this.budgetChartData$ = filteredData$.pipe(
@@ -981,15 +926,12 @@ export class BudgetComponent implements OnInit, OnDestroy {
         end.setDate(1);
 
         const labels: string[] = [];
-        const monthDates: Date[] = [];
-
         let current = new Date(start);
         while (current <= end) {
           labels.push(
             this.datePipe.transform(current, dateFormat, undefined, locale) ||
             ''
           );
-          monthDates.push(new Date(current));
           current.setMonth(current.getMonth() + 1);
         }
 
@@ -1030,13 +972,8 @@ export class BudgetComponent implements OnInit, OnDestroy {
       })
     );
 
-    // B1: add to subscriptions so ngOnDestroy cleans it up
     this.subscriptions.add(
-      this.budgetChartData$.subscribe((data) => {
-        setTimeout(() => {
-          this.renderChart(data);
-        }, 100);
-      })
+      this.budgetChartData$.pipe(debounceTime(0)).subscribe((data) => this.renderChart(data))
     );
 
     // B2: use take(1) so each theme-change creates at most one emission, not an ever-growing leak
@@ -1065,23 +1002,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
     Chart.defaults.font.family = 'MyanmarUIFont, Arial, sans-serif';
 
     // --- Initialize Date Filter & User Profile ---
-    this.subscriptions.add(
-      this.translate.stream([
-        'CURRENT_WEEK', 'LAST_30_DAYS', 'CURRENT_MONTH',
-        'LAST_SIX_MONTHS', 'CURRENT_YEAR', 'LAST_YEAR', 'CUSTOM_DATE',
-      ]).subscribe(t => {
-        this.dateFilterOptions = [
-          { value: 'currentWeek',   label: t['CURRENT_WEEK'] },
-          { value: 'last30Days',    label: t['LAST_30_DAYS'] },
-          { value: 'currentMonth',  label: t['CURRENT_MONTH'] },
-          { value: 'lastSixMonths', label: t['LAST_SIX_MONTHS'] },
-          { value: 'currentYear',   label: t['CURRENT_YEAR'] },
-          { value: 'lastYear',      label: t['LAST_YEAR'] },
-          { value: 'custom',        label: t['CUSTOM_DATE'] },
-        ];
-        this.cdr.markForCheck();
-      })
-    );
     this.setDateFilter(this.selectedDateFilter);
 
     this.userProfile$ = this.authService.userProfile$;
@@ -1118,9 +1038,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
           ...categories,
         ])
       );
-    this.categorySelectOptions$ = this.categories$.pipe(
-      map(cats => cats.map(c => ({ value: c.id ?? '', label: c.name, icon: c.icon, iconUrl: c.iconUrl ?? null })))
-    );
     this.subscriptions.add(
       this.categories$.subscribe((categories) => {
         this.categories = categories;
@@ -1138,6 +1055,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
     }
     this.themeObserver?.disconnect();
     this.destroyDatePickerFlatpickr();
+    if (this.datePickerAdjustmentNoticeTimer) clearTimeout(this.datePickerAdjustmentNoticeTimer);
     document.body.classList.remove('bgt-add-modal-open');
   }
 
@@ -1151,10 +1069,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
 
   trackByBudgetGroupPeriod(index: number, group: BudgetPeriodGroup): string {
     return group.period;
-  }
-
-  getDateHue(dateStr: string): number {
-    return getCategoryHue(dateStr);
   }
 
   formatCount(n: number): string {
@@ -1216,144 +1130,162 @@ export class BudgetComponent implements OnInit, OnDestroy {
     periodControl?.updateValueAndValidity();
   }
 
+  get showAmountError(): boolean {
+    const amount = this.budgetForm.controls['amount'];
+    return amount.invalid && amount.touched;
+  }
+
+  get budgetAmountErrorKey(): string {
+    return this.budgetForm.controls['amount'].hasError('required') ? 'AMOUNT_REQUIRED' : 'BUDGET_AMOUNT_RANGE';
+  }
+
+  readonly minimumAmount = MIN_BUDGET_AMOUNT;
+  readonly maximumAmount = MAX_BUDGET_AMOUNT;
+
   onSubmitBudget(): void {
     if (!this.canManageBudgets || this.isSubmittingBudget) {
       return;
     }
-    const defaultCurrency = this.userProfile?.currency || 'MMK';
-    if (this.budgetForm.valid) {
-      const formValue = this.budgetForm.value;
-      this.isSubmittingBudget = true;
+    if (this.budgetForm.invalid) {
+      this.budgetForm.markAllAsTouched();
+      if (this.showAmountError) this.budgetAmountInput?.nativeElement.focus();
+      return;
+    }
 
-      this.budgetService
-        .getBudgets()
-        .pipe(
-          take(1)
-        )
-        .subscribe((budgets) => {
-          const periodDate = new Date(formValue.period);
-          const periodMonthYear = this.datePipe.transform(
-            periodDate,
+    const defaultCurrency = this.userProfile?.currency || 'MMK';
+    const editingId = this.editingBudget?.id;
+    const formValue = this.budgetForm.value;
+    this.isSubmittingBudget = true;
+
+    this.budgetService
+      .getBudgets()
+      .pipe(
+        take(1)
+      )
+      .subscribe((budgets) => {
+        const periodDate = new Date(formValue.period);
+        const periodMonthYear = this.datePipe.transform(
+          periodDate,
+          'yyyy-MM'
+        )!;
+        const periodYear = this.datePipe.transform(periodDate, 'yyyy')!;
+
+        const existingBudgets = budgets.filter((budget) => {
+          // The budget being edited doesn't conflict with itself.
+          if (editingId && budget.id === editingId) return false;
+          if (!budget.period) return false;
+          const budgetDate = new Date(budget.period);
+          const budgetMonthYear = this.datePipe.transform(
+            budgetDate,
             'yyyy-MM'
           )!;
-          const periodYear = this.datePipe.transform(periodDate, 'yyyy')!;
+          const budgetYear = this.datePipe.transform(budgetDate, 'yyyy')!;
 
-          const editingId = this.editingBudget?.id;
-          const existingBudgets = budgets.filter((budget) => {
-            // The budget being edited doesn't conflict with itself.
-            if (editingId && budget.id === editingId) return false;
-            if (!budget.period) return false;
-            const budgetDate = new Date(budget.period);
-            const budgetMonthYear = this.datePipe.transform(
-              budgetDate,
-              'yyyy-MM'
-            )!;
-            const budgetYear = this.datePipe.transform(budgetDate, 'yyyy')!;
+          return (
+            budget.currency === defaultCurrency &&
+            ((formValue.type === 'monthly' &&
+              budgetMonthYear === periodMonthYear) ||
+              (formValue.type === 'yearly' && budgetYear === periodYear))
+          );
+        });
 
-            return (
-              budget.currency === defaultCurrency &&
-              ((formValue.type === 'monthly' &&
-                budgetMonthYear === periodMonthYear) ||
-                (formValue.type === 'yearly' && budgetYear === periodYear))
-            );
-          });
+        const hasDifferentTypeBudget = existingBudgets.some(
+          (budget) => budget.type !== formValue.type
+        );
 
-          const hasDifferentTypeBudget = existingBudgets.some(
-            (budget) => budget.type !== formValue.type
+        if (hasDifferentTypeBudget) {
+          this.showBudgetErrorModal('MIXED_BUDGET_TYPES_ERROR');
+          return;
+        }
+
+        let categoryName: string | undefined;
+
+        if (formValue.category === 'all') {
+          categoryName = 'all';
+
+          const hasIndividualBudgets = existingBudgets.some(
+            (budget) =>
+              budget.category !== 'all' && budget.category !== undefined
           );
 
-          if (hasDifferentTypeBudget) {
-            this.showBudgetErrorModal('MIXED_BUDGET_TYPES_ERROR');
+          if (hasIndividualBudgets) {
+            this.showBudgetErrorModal('INDIVIDUAL_CATEGORIES_EXIST_ERROR');
+            return;
+          }
+        } else {
+          const selectedCategory = this.categories.find(
+            (c) => c.id === formValue.category
+          );
+          categoryName = selectedCategory
+            ? selectedCategory.name
+            : formValue.category;
+
+          const hasTotalBudget = existingBudgets.some(
+            (budget) => budget.category === 'all'
+          );
+
+          if (hasTotalBudget) {
+            this.showBudgetErrorModal('TOTAL_BUDGET_EXISTS_ERROR');
             return;
           }
 
-          let categoryName: string | undefined;
+          const hasCategoryBudget = existingBudgets.some(
+            (budget) => budget.category === categoryName
+          );
 
-          if (formValue.category === 'all') {
-            categoryName = 'all';
-
-            const hasIndividualBudgets = existingBudgets.some(
-              (budget) =>
-                budget.category !== 'all' && budget.category !== undefined
-            );
-
-            if (hasIndividualBudgets) {
-              this.showBudgetErrorModal('INDIVIDUAL_CATEGORIES_EXIST_ERROR');
-              return;
-            }
-          } else {
-            const selectedCategory = this.categories.find(
-              (c) => c.id === formValue.category
-            );
-            categoryName = selectedCategory
-              ? selectedCategory.name
-              : formValue.category;
-
-            const hasTotalBudget = existingBudgets.some(
-              (budget) => budget.category === 'all'
-            );
-
-            if (hasTotalBudget) {
-              this.showBudgetErrorModal('TOTAL_BUDGET_EXISTS_ERROR');
-              return;
-            }
-
-            const hasCategoryBudget = existingBudgets.some(
-              (budget) => budget.category === categoryName
-            );
-
-            if (hasCategoryBudget) {
-              this.showBudgetErrorModal('CATEGORY_BUDGET_EXISTS_ERROR');
-              return;
-            }
+          if (hasCategoryBudget) {
+            this.showBudgetErrorModal('CATEGORY_BUDGET_EXISTS_ERROR');
+            return;
           }
+        }
 
-          const budgetData: Omit<
-            ServiceIBudget,
-            'id' | 'userId' | 'createdAt' | 'device' | 'editedDevice'
-          > = {
-            type: formValue.type,
-            category: categoryName,
-            description: (formValue.description || '').trim(),
-            amount: formValue.amount,
-            currency: defaultCurrency,
-            period: formValue.period,
-          };
+        const budgetData: Omit<
+          ServiceIBudget,
+          'id' | 'userId' | 'createdAt' | 'device' | 'editedDevice'
+        > = {
+          type: formValue.type,
+          category: categoryName,
+          description: (formValue.description || '').trim(),
+          amount: formValue.amount,
+          currency: defaultCurrency,
+          period: formValue.period,
+        };
 
-          const save = editingId
-            ? this.budgetService.updateBudget(editingId, budgetData)
-            : this.budgetService.addBudget(budgetData);
-          save
-            .then((status) => {
-              // Saved without changing anything: say so instead of "updated".
-              Toast.fire(status === 'unchanged' ? { icon: 'info', title: this.translate.instant('NO_CHANGES_MADE') } : { icon: 'success', title: this.translate.instant(editingId ? 'BUDGET_UPDATE_SUCCESS' : 'BUDGET_SAVE_SUCCESS') });
-              this.resetForm();
-              this.refreshBudgets$.next();
-              this.closeAddModal();
-              // Otherwise a budget saved outside the currently active date
-              // filter (e.g. viewing "Last Month" while the form still
-              // defaults to today) succeeds silently and then just doesn't
-              // show up in the list — reading as a failed save.
-              this.ensureDateFilterCovers(budgetData.period!, budgetData.type);
-            })
-            .catch((error) => {
-              console.error(editingId ? 'Error updating budget:' : 'Error adding budget:', error);
-              Toast.fire({ icon: 'error', title: this.translate.instant(editingId ? 'BUDGET_UPDATE_ERROR' : 'BUDGET_SAVE_ERROR') });
-            })
-            .finally(() => {
-              this.isSubmittingBudget = false;
-            });
-        }, (error) => {
-          // getBudgets() already swallows normal fetch failures into an
-          // empty array internally — this only fires for something upstream
-          // of that (e.g. resolving the active space). Still worth guarding:
-          // without it, isSubmittingBudget would stay stuck true and the
-          // Save button permanently disabled.
-          console.error('Error loading budgets before save:', error);
-          this.isSubmittingBudget = false;
-          Toast.fire({ icon: 'error', title: this.translate.instant('BUDGET_SAVE_ERROR') });
-        });
-    }
+        const save = editingId
+          ? this.budgetService.updateBudget(editingId, budgetData)
+          : this.budgetService.addBudget(budgetData);
+        save
+          .then((status) => {
+            // Saved without changing anything: say so instead of "updated".
+            Toast.fire(status === 'unchanged' ? { icon: 'info', title: this.translate.instant('NO_CHANGES_MADE') } : { icon: 'success', title: this.translate.instant(editingId ? 'BUDGET_UPDATE_SUCCESS' : 'BUDGET_SAVE_SUCCESS') });
+            this.resetForm();
+            this.refreshBudgets$.next();
+            this.closeAddModal();
+            // Otherwise a budget saved outside the currently active date
+            // filter (e.g. viewing "Last Month" while the form still
+            // defaults to today) succeeds silently and then just doesn't
+            // show up in the list — reading as a failed save.
+            this.ensureDateFilterCovers(budgetData.period!, budgetData.type);
+          })
+          .catch((error) => {
+            console.error(editingId ? 'Error updating budget:' : 'Error adding budget:', error);
+            Toast.fire({ icon: 'error', title: this.translate.instant(editingId ? 'BUDGET_UPDATE_ERROR' : 'BUDGET_SAVE_ERROR') });
+          })
+          .finally(() => {
+            this.isSubmittingBudget = false;
+            this.cdr.markForCheck();
+          });
+      }, (error) => {
+        // getBudgets() already swallows normal fetch failures into an
+        // empty array internally — this only fires for something upstream
+        // of that (e.g. resolving the active space). Still worth guarding:
+        // without it, isSubmittingBudget would stay stuck true and the
+        // Save button permanently disabled.
+        console.error('Error loading budgets before save:', error);
+        this.isSubmittingBudget = false;
+        Toast.fire({ icon: 'error', title: this.translate.instant(editingId ? 'BUDGET_UPDATE_ERROR' : 'BUDGET_SAVE_ERROR') });
+        this.cdr.markForCheck();
+      });
   }
 
   private showBudgetErrorModal(errorType: string): void {
@@ -1361,6 +1293,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
     // this is the one place that needs to clear the in-flight flag for all
     // of them.
     this.isSubmittingBudget = false;
+    this.cdr.markForCheck();
     let title = '';
     let message = '';
 
@@ -1467,9 +1400,13 @@ export class BudgetComponent implements OnInit, OnDestroy {
       }
 
       switch (budgetPeriod) {
-        case 'weekly':
-          filterValue = 'currentWeek';
+        case 'weekly': {
+          const { start, end } = this.dateFilterService.getDateRange(this.datePipe, 'currentWeek');
+          this.startDate = start;
+          this.endDate = end;
+          filterValue = 'custom';
           break;
+        }
         case 'monthly':
           filterValue = 'currentMonth';
           break;
@@ -1516,24 +1453,19 @@ export class BudgetComponent implements OnInit, OnDestroy {
 
     this.startDate = this.datePipe.transform(rangeStart, 'yyyy-MM-dd') || '';
     this.endDate = this.datePipe.transform(rangeEnd, 'yyyy-MM-dd') || '';
-    this.selectedDateFilter = 'custom';
-    this.showCustomDatePicker = true;
-    this.dateFilter$.next({ start: this.startDate, end: this.endDate });
+    this.setDateFilter('custom');
   }
 
   setDateFilter(filter: string): void {
     this.selectedDateFilter = filter;
-    this.showCustomDatePicker = filter === 'custom';
 
     const serviceFilters = [
-      'today',
       'last30Days',
       'currentMonth',
       'lastMonth',
       'lastSixMonths',
       'currentYear',
       'lastYear',
-      'currentWeek',
     ];
 
     if (serviceFilters.includes(filter)) {
@@ -1557,36 +1489,42 @@ export class BudgetComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
-  setBudgetDateFilterMode(mode: 'today' | 'week' | 'month' | 'custom'): void {
-    const filterByMode = { today: 'today', week: 'currentWeek', month: 'currentMonth', custom: 'custom' } as const;
-    this.showCustomDatePicker = mode === 'custom';
-    this.setDateFilter(filterByMode[mode]);
+  selectDateFilter(filter: string): void {
+    if (filter !== 'custom') {
+      this.setDateFilter(filter);
+      return;
+    }
+
+    this.isChoosingDateRange = true;
+    // Mount the shared picker so it can position the calendar against its trigger.
+    this.cdr.detectChanges();
+    this.dateRangeInput?.open();
   }
 
-  getBudgetDateFilterIndex(): number {
-    if (this.selectedDateFilter === 'today') return 0;
-    if (this.selectedDateFilter === 'currentWeek') return 1;
-    if (this.selectedDateFilter === 'currentMonth') return 2;
-    return 3;
+  onDateRangeOpenChange(isOpen: boolean): void {
+    this.isChoosingDateRange = isOpen;
+    if (isOpen) {
+      this.dateRangePicked = false;
+    } else if (!this.dateRangePicked) {
+      this.applyCustomDateRange(this.dateFilterService.getDateRange(this.datePipe, 'last12Months'));
+    }
   }
 
-  isBudgetCustomFilter(): boolean {
-    return !['today', 'currentWeek', 'currentMonth'].includes(this.selectedDateFilter);
+  onCustomDateRangeChange(range: DateRange): void {
+    this.dateRangePicked = true;
+    this.applyCustomDateRange(range);
   }
 
-  resetBudgetDateFilter(): void {
-    this.setBudgetDateFilterMode('today');
-  }
-
-  onBudgetCustomDateChange(): void {
+  private applyCustomDateRange({ start, end }: DateRange): void {
+    this.startDate = start;
+    this.endDate = end;
     this.setDateFilter('custom');
   }
 
-  getBudgetFilterLabel(): string {
-    const range = this.dateFilterService.getDateRange(this.datePipe, this.selectedDateFilter, this.startDate, this.endDate);
-    return range.start === range.end
-      ? this.formatService.formatLocalizedDate(range.start)
-      : `${this.formatService.formatLocalizedDate(range.start)} – ${this.formatService.formatLocalizedDate(range.end)}`;
+  get dateFilterLabel(): string {
+    const { start, end } = this.dateFilter$.value;
+    const formattedStart = this.formatService.formatLocalizedDate(start);
+    return start === end ? formattedStart : `${formattedStart} – ${this.formatService.formatLocalizedDate(end)}`;
   }
 
   private chartInstance: Chart | undefined;
@@ -1604,7 +1542,9 @@ export class BudgetComponent implements OnInit, OnDestroy {
 
   onAmountInput(event: Event): void {
     const input = event.target as HTMLInputElement;
-    let raw = input.value.replace(/[^\d.]/g, '');
+    const localDigits = '၀၁၂၃၄၅၆၇၈၉០១២៣៤៥៦៧៨៩๐๑๒๓๔๕๖๗๘๙０１２３４５６７８９';
+    const digits = input.value.replace(/[၀-၉០-៩๐-๙０-９]/g, (digit) => String(localDigits.indexOf(digit) % 10));
+    let raw = digits.replace(/[^\d.]/g, '');
     const parts = raw.split('.');
     if (parts.length > 2) raw = parts[0] + '.' + parts.slice(1).join('');
     const numericValue = parseFloat(raw.replace(/,/g, '')) || null;
@@ -1617,14 +1557,9 @@ export class BudgetComponent implements OnInit, OnDestroy {
   // ─────────────────────────────────────────────────────────────
 
   renderChart(data: any): void {
+    const canvas = this.budgetChart?.nativeElement;
+    if (!canvas) return;
     this.isChartDataLoaded = true;
-    const canvas = document.getElementById('budgetChart') as HTMLCanvasElement;
-
-    if (!canvas) {
-      console.warn('Canvas element not found');
-      this.cdr.markForCheck();
-      return;
-    }
 
     if (this.chartInstance) {
       this.chartInstance.destroy();
@@ -1642,9 +1577,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
 
     const isLight = document.body.classList.contains('light-mode');
     const gridColor = isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.05)';
-    const tickColor = isLight ? '#4a5568' : '#6b7280';
-
-    const component = this;
+    const tickColor = getComputedStyle(canvas).getPropertyValue('--text-sub').trim();
 
     try {
       this.chartInstance = new Chart(canvas, {
@@ -1654,11 +1587,20 @@ export class BudgetComponent implements OnInit, OnDestroy {
           indexAxis: 'x',
           responsive: true,
           maintainAspectRatio: false,
+          animation: false,
+          datasets: {
+            bar: { maxBarThickness: 56, borderRadius: 5 },
+          },
+          plugins: {
+            legend: {
+              labels: { color: tickColor, boxWidth: 10, boxHeight: 10, useBorderRadius: true, borderRadius: 3 },
+            },
+          },
           scales: {
             x: {
               stacked: false,
               beginAtZero: true,
-              grid: { color: gridColor },
+              grid: { display: false },
               ticks: { color: tickColor },
             },
             y: {
@@ -1704,24 +1646,17 @@ export class BudgetComponent implements OnInit, OnDestroy {
     }
   }
 
-  getBalanceCardClass(balances: any): string {
-    if (!balances) {
-      return 'balance-positive';
-    }
-
-    const balanceValues = Object.values(balances);
-    const totalBalance = balanceValues.reduce(
-      (sum: number, value: any) => sum + value,
-      0
-    );
-
-    return totalBalance >= 0
-      ? 'balance-positive'
-      : 'balance-negative';
+  trackByOverviewCurrency(index: number, entry: BudgetOverview): string {
+    return entry.currency;
   }
 
-  getBalanceAmountClass(value: number): string {
-    return value >= 0 ? 'text-success' : 'text-danger';
+  getUsageLevel(percentage: number): 'normal' | 'near' | 'over' {
+    if (percentage > 100) return 'over';
+    return percentage >= 75 ? 'near' : 'normal';
+  }
+
+  clampPercentage(percentage: number): number {
+    return Math.max(0, Math.min(100, percentage));
   }
 
   getMath(): Math {
@@ -1736,33 +1671,19 @@ export class BudgetComponent implements OnInit, OnDestroy {
     // Called from the template on every change detection; building an
     // Intl.NumberFormat each time was a large share of the cost of opening
     // the Add-Budget sheet. Reuse one formatter per language.
-    const currentLang = this.translate.currentLang === 'my' ? 'my' : 'other';
+    const currentLang = this.translate.currentLang || 'en';
     let formatter = this.percentFormatters.get(currentLang);
     if (!formatter) {
-      formatter = currentLang === 'my'
-        ? new Intl.NumberFormat('my-MM', { style: 'percent', minimumFractionDigits: 1, maximumFractionDigits: 1, numberingSystem: 'mymr' })
-        : new Intl.NumberFormat(undefined, { style: 'percent', minimumFractionDigits: 1, maximumFractionDigits: 1 });
+      const numberingSystems: Record<string, string> = { my: 'mymr', km: 'khmr', th: 'thai' };
+      formatter = new Intl.NumberFormat(currentLang, {
+        style: 'percent',
+        maximumFractionDigits: 1,
+        numberingSystem: numberingSystems[currentLang],
+      });
       this.percentFormatters.set(currentLang, formatter);
     }
     return formatter.format(value / 100);
   }
   private readonly percentFormatters = new Map<string, Intl.NumberFormat>();
 
-  getBalanceIcon(balances: { [key: string]: number } | null): LucideIconData {
-    const totalBalance = balances
-      ? Object.values(balances).reduce((sum, value) => sum + value, 0)
-      : 1;
-    return totalBalance >= 0 ? Wallet : TriangleAlert;
-  }
-
-  getBalanceIconClass(balances: { [key: string]: number } | null): string {
-    if (!balances) {
-      return 'text-success';
-    }
-    const totalBalance = Object.values(balances).reduce(
-      (sum, value) => sum + value,
-      0
-    );
-    return totalBalance >= 0 ? 'text-success' : 'text-danger';
-  }
 }

@@ -9,6 +9,7 @@ import {
   ZERO_DECIMAL_CURRENCIES,
 } from '../core/constants/app.constants';
 import { CommonModule, DatePipe } from '@angular/common';
+import { spellNumberParts } from '../utils/number-words';
 
 /** Who/when fields a record card's activity line reads. */
 export interface RecordActivitySource {
@@ -139,6 +140,33 @@ export class FormatService {
     const { amountText, label, labelFirst } = this.buildAmountWithSymbolParts(amount, currencyCode);
     const labelHtml = `<span class="fmt-currency-unit">${label}</span>`;
     return labelFirst ? `${labelHtml}${amountText}` : `${amountText} ${labelHtml}`;
+  }
+
+  formatAmountInWords(amount: number, currencyCode: string): string | null {
+    return this.memo(`words|${amount}|${currencyCode}`, () => {
+      const locale = this.translate.currentLang || this.translate.getDefaultLang() || 'en';
+      const currency = currencyCode.toUpperCase();
+      const isMMK = currency === MMK_CURRENCY_CODE;
+      const fractionDigits = ZERO_DECIMAL_CURRENCIES.has(currency) ? 0 : 2;
+      const currencyOptions: Intl.NumberFormatOptions = /^[A-Z]{3}$/.test(currency)
+        ? { style: 'currency', currency, currencyDisplay: 'name' }
+        : {};
+      const parts = new Intl.NumberFormat(locale, {
+        ...currencyOptions,
+        numberingSystem: 'latn',
+        useGrouping: false,
+        minimumFractionDigits: fractionDigits,
+        maximumFractionDigits: fractionDigits,
+      }).formatToParts(amount);
+      const lakhUnit = isMMK ? this.translate.instant('ABBREVIATIONS.LAKH').toLocaleLowerCase(locale) : undefined;
+      const number = spellNumberParts(parts, locale.toLowerCase().split('-')[0], lakhUnit);
+      if (number === null) return null;
+
+      const name = isMMK
+        ? this.translate.instant('MMK_CURRENCY_LABEL')
+        : parts.find(part => part.type === 'currency')?.value ?? currency;
+      return `${number} ${name}`;
+    });
   }
 
   // Plain integer counts (quantities, list counts) — not a currency amount,

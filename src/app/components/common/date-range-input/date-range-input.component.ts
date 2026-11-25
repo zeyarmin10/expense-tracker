@@ -10,6 +10,7 @@ import flatpickr from 'flatpickr';
 import type { Instance } from 'flatpickr/dist/types/instance';
 import { Burmese } from 'flatpickr/dist/l10n/my';
 import { FlatpickrMonthMenu, installFlatpickrMonthMenu } from '../../../utils/flatpickr-month-menu';
+import { getVisibleViewportBounds } from '../../../utils/viewport-bounds';
 
 import { SwipeToCloseDirective } from '../../../directives/swipe-to-close.directive';
 function pad(n: number): string { return String(n).padStart(2, '0'); }
@@ -23,6 +24,7 @@ function fromDate(d: Date): string {
 }
 
 const MOBILE_BP = 768;
+const FILTER_SHEET_GAP = 8;
 const MONTHS_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const MONTHS_MY = ['ဇန်','ဖေ','မတ်','ဧပြီ','မေ','ဇွန်','ဇူ','သြ','စက်','အောက်','နို','ဒီ'];
 const MY_DIGITS = '၀၁၂၃၄၅၆၇၈၉';
@@ -69,6 +71,7 @@ export class DateRangeInputComponent implements OnChanges, OnDestroy {
   // the calendar first and left only the sheet header visible briefly.
   isClosing = false;
   isMobile = typeof window !== 'undefined' ? window.innerWidth < MOBILE_BP : true;
+  mobileSheetTop: number | null = null;
 
   private _backdropEl: HTMLDivElement | null = null;
   private _closeTimer: number | null = null;
@@ -90,7 +93,7 @@ export class DateRangeInputComponent implements OnChanges, OnDestroy {
   private translate = inject(TranslateService);
   private cdr = inject(ChangeDetectorRef);
 
-  constructor(private elRef: ElementRef) {}
+  constructor(private elRef: ElementRef<HTMLElement>) {}
 
   formatDate(dateStr: string | null, compact = false): string {
     if (!dateStr) return '?';
@@ -137,9 +140,11 @@ export class DateRangeInputComponent implements OnChanges, OnDestroy {
       this.calcPanelPos();
     } else {
       this._createBodyBackdrop();
+      this.updateMobileSheetTop();
       if (!this._insideModal()) history.pushState(null, '');
     }
     this.isOpen = true;
+    this.cdr.markForCheck();
     this.isOpenChange.emit(true);
     setTimeout(() => this.initFlatpickr(), 0);
   }
@@ -149,6 +154,7 @@ export class DateRangeInputComponent implements OnChanges, OnDestroy {
     const insideModal = this._insideModal();
     this.isOpen = false;
     this.isClosing = true;
+    this.cdr.markForCheck();
     this._animateBackdropOut();
     if (this._closeTimer) clearTimeout(this._closeTimer);
     this._closeTimer = window.setTimeout(() => {
@@ -157,6 +163,7 @@ export class DateRangeInputComponent implements OnChanges, OnDestroy {
       this.rangeError = '';
       this.destroyFlatpickr();
       this._removeBodyBackdrop();
+      this.cdr.markForCheck();
       if (this.isMobile && !insideModal) {
         history.back();
         this.isOpenChange.emit(false);
@@ -200,7 +207,7 @@ export class DateRangeInputComponent implements OnChanges, OnDestroy {
       minDate: this.min || undefined,
       maxDate: this.max || undefined,
       disableMobile: true,
-      locale: isMy ? Burmese : undefined,
+      locale: isMy ? Burmese : 'default',
       onDayCreate: (_dArr, _dStr, _fp, dayElem) => {
         if (!isMy) return;
         dayElem.textContent = (dayElem.textContent ?? '').replace(/\d/g, (d: string) => MY_DIGITS[+d]);
@@ -320,6 +327,16 @@ export class DateRangeInputComponent implements OnChanges, OnDestroy {
     document.body.classList.remove('dri-scroll-locked');
   }
 
+  private updateMobileSheetTop(): void {
+    const filterBar = this.elRef.nativeElement.closest('.exp-filter-bar');
+    this.mobileSheetTop = filterBar
+      ? Math.max(
+          getVisibleViewportBounds(FILTER_SHEET_GAP).top,
+          Math.ceil(filterBar.getBoundingClientRect().bottom) + FILTER_SHEET_GAP,
+        )
+      : null;
+  }
+
   private calcPanelPos(): void {
     const trigger = this.elRef.nativeElement.querySelector('.dri-trigger') as HTMLElement;
     if (!trigger) return;
@@ -352,7 +369,10 @@ export class DateRangeInputComponent implements OnChanges, OnDestroy {
   @HostListener('window:resize')
   onResize(): void {
     const nowMobile = window.innerWidth < MOBILE_BP;
-    if (nowMobile === this.isMobile) return;
+    if (nowMobile === this.isMobile) {
+      if (nowMobile && this.isOpen) this.updateMobileSheetTop();
+      return;
+    }
     if (this.isOpen) {
       this._removeBodyBackdrop();
       this.destroyFlatpickr();
@@ -378,6 +398,7 @@ export class DateRangeInputComponent implements OnChanges, OnDestroy {
         this.rangeError = '';
         this.destroyFlatpickr();
         this._removeBodyBackdrop();
+        this.cdr.markForCheck();
       }, 220);
     }
   }
