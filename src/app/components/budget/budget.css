@@ -293,19 +293,6 @@
   line-height: 1.6;
 }
 
-.bgt-detail-views {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  align-items: start;
-  gap: var(--bgt-gap);
-}
-
-@media (min-width: 860px) {
-  .bgt-detail-views {
-    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-  }
-}
-
 .bgt-panel {
   min-width: 0;
   border: 1px solid var(--border);
@@ -367,22 +354,19 @@ summary.bgt-panel-heading:hover {
   transform: rotate(180deg);
 }
 
-.bgt-monitor,
-.bgt-records {
+.bgt-monitor {
   display: grid;
   gap: 0.75rem;
   padding: 0.85rem var(--bgt-inset) var(--bgt-inset);
   border-top: 1px solid var(--border);
 }
 
-.bgt-monitor-period + .bgt-monitor-period,
-.bgt-date-group + .bgt-date-group {
+.bgt-monitor-period + .bgt-monitor-period {
   border-top: 1px solid var(--border);
   padding-top: 0.8rem;
 }
 
-.bgt-monitor-period h3,
-.bgt-date-label {
+.bgt-monitor-period h3 {
   margin: 0;
   font-size: 0.86rem;
   font-weight: 750;
@@ -398,7 +382,6 @@ summary.bgt-panel-heading:hover {
 }
 
 .bgt-currency-code,
-.bgt-date-count,
 .bgt-record-count {
   color: var(--bgt-muted);
   font-size: 0.74rem;
@@ -494,108 +477,90 @@ summary.bgt-panel-heading:hover {
   flex: none;
 }
 
-.bgt-list-total,
-.bgt-date-group-header {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 0.25rem 0.6rem;
+/* ── Budget records listed under each month's progress ── */
+.bgt-month-records summary span {
   min-width: 0;
 }
 
-.bgt-list-total {
-  padding: 0.5rem 0.7rem;
-  border-radius: 9px;
-  background: var(--budget-dim);
-  font-size: 0.8rem;
-}
-
-.bgt-list-total-label,
-.bgt-date-totals {
-  flex: 1;
-}
-
-.bgt-list-total-amount,
-.bgt-date-total,
-.bgt-budget-card-amount {
-  color: color-mix(in srgb, var(--budget-color) 65%, var(--text));
-  font-weight: 750;
-  overflow-wrap: anywhere;
-}
-
-.bgt-date-list,
-.bgt-budget-group-list,
-.bgt-budget-card-body {
+.bgt-entry-list {
   display: grid;
-  gap: 0.55rem;
-  min-width: 0;
-}
-
-.bgt-date-totals {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 0.25rem;
-  font-size: 0.73rem;
-}
-
-.bgt-budget-group-list {
-  margin-top: 0.55rem;
-}
-
-.bgt-budget-card {
-  position: relative;
-  min-width: 0;
-  padding: 0.7rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
   border: 1px solid var(--border);
   border-radius: 11px;
   background: color-mix(in srgb, var(--surface-2) 45%, var(--surface));
 }
 
-.bgt-budget-card-body,
-.bgt-card-head {
+.bgt-entry {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 0.15rem 0.6rem;
   min-width: 0;
-  gap: 0.22rem;
+  padding: 0.55rem 0.4rem 0.55rem 0.75rem;
 }
 
-.bgt-budget-card-top,
-.bgt-card-head-line {
+.bgt-entry + .bgt-entry {
+  border-top: 1px solid var(--border);
+}
+
+.bgt-entry-main {
   display: flex;
   align-items: center;
-  gap: 0.35rem 0.55rem;
+  gap: 0.4rem;
   min-width: 0;
 }
 
-.bgt-budget-card-top.bgt-has-menu {
-  padding-inline-end: 2.1rem;
-  min-height: 32px;
+.bgt-entry-main .bgt-budget-identity {
+  min-width: 0;
+  font-size: 0.85rem;
+  font-weight: 700;
 }
 
-.bgt-card-head-line {
-  flex-wrap: wrap;
+.bgt-entry-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.bgt-budget-identity {
+.bgt-entry-main .bgt-row-badge {
+  flex: none;
+}
+
+.bgt-entry-amount {
+  color: color-mix(in srgb, var(--budget-color) 65%, var(--text));
   font-size: 0.9rem;
   font-weight: 750;
+  white-space: nowrap;
 }
 
-.bgt-budget-card-amount {
-  justify-self: start;
-  max-width: 100%;
-  padding: 0.18rem 0.62rem;
-  border-radius: 999px;
-  background: radial-gradient(
-    ellipse at top left,
-    color-mix(in srgb, var(--budget-color) 20%, transparent),
-    var(--budget-dim) 85%
-  );
-  font-size: 1rem;
-  line-height: 1.4;
+.bgt-entry-menu {
+  flex: none;
+}
+
+.bgt-entry-meta,
+.bgt-entry-desc {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+.bgt-entry-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.bgt-entry-meta .bgt-card-activity {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .bgt-card-activity,
-.bgt-budget-card-desc {
+.bgt-entry-desc {
   color: var(--bgt-muted);
   font-size: 0.74rem;
   line-height: 1.5;
@@ -620,12 +585,6 @@ summary.bgt-panel-heading:hover {
 .bgt-badge-yearly {
   background: var(--warning-dim);
   color: color-mix(in srgb, var(--warning) 53%, var(--text));
-}
-
-.bgt-row-menu {
-  position: absolute;
-  inset-block-start: 0.55rem;
-  inset-inline-end: 0.5rem;
 }
 
 .bgt-chart-container {

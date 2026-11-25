@@ -97,140 +97,80 @@
       </div>
     </ng-template>
 
-    <div class="bgt-detail-views">
-      <details class="bgt-panel" open>
-        <summary class="bgt-panel-heading">
-          <span class="bgt-panel-icon bgt-panel-icon-spending" aria-hidden="true"><lucide-icon [img]="iconShoppingCart" [size]="17"></lucide-icon></span>
-          <h2>{{ 'SPENDING_MONITOR' | translate }}</h2>
-          <lucide-icon [img]="iconChevronDown" [size]="17" class="bgt-panel-chevron" aria-hidden="true"></lucide-icon>
-        </summary>
-        <div class="bgt-monitor">
-          <ng-container *ngIf="spendingMonitorData$ | async as monitorData; else budgetLoading">
-            <section class="bgt-monitor-period" *ngFor="let monthData of monitorData; trackBy: trackByMonthCurrency">
-              <h3>{{ monthData.month }} <span class="bgt-currency-code">{{ monthData.currency }}</span></h3>
+    <details class="bgt-panel bgt-months-panel" open>
+      <summary class="bgt-panel-heading">
+        <span class="bgt-panel-icon" aria-hidden="true"><lucide-icon [img]="iconListChecks" [size]="17"></lucide-icon></span>
+        <h2>{{ 'BUDGET_BY_MONTH' | translate }}</h2>
+        <span *ngIf="filteredBudgets$ | async as records" class="bgt-record-count">{{ formatCount(records.length) }}</span>
+        <lucide-icon [img]="iconChevronDown" [size]="17" class="bgt-panel-chevron" aria-hidden="true"></lucide-icon>
+      </summary>
+      <div class="bgt-monitor">
+        <ng-container *ngIf="spendingMonitorData$ | async as monitorData; else budgetLoading">
+          <section class="bgt-monitor-period" *ngFor="let monthData of monitorData; trackBy: trackByMonthCurrency">
+            <h3>{{ monthData.month }} <span class="bgt-currency-code">{{ monthData.currency }}</span></h3>
 
-              <ng-container *ngIf="monthData.total.budget > 0 || monthData.total.spent !== 0">
-                <ng-container *ngTemplateOutlet="spendingProgress; context: { $implicit: monthData.total, currency: monthData.currency }"></ng-container>
-              </ng-container>
-
-              <details class="bgt-category-list" *ngIf="monthData.total.budgetType === 'category' && monthData.categories.length">
-                <summary>
-                  {{ 'CATEGORY_BREAKDOWN' | translate }}
-                  <lucide-icon [img]="iconChevronDown" [size]="15" aria-hidden="true"></lucide-icon>
-                </summary>
-                <ng-container *ngFor="let category of monthData.categories; trackBy: trackByCategoryName">
-                  <ng-container *ngTemplateOutlet="spendingProgress; context: { $implicit: category, currency: monthData.currency, category: category.name }"></ng-container>
-                </ng-container>
-              </details>
-            </section>
-            <p *ngIf="!monitorData.length" class="bgt-empty-text">{{ 'NO_SPENDING_DATA' | translate }}</p>
-          </ng-container>
-        </div>
-      </details>
-
-      <details class="bgt-panel" open>
-        <summary class="bgt-panel-heading">
-          <span class="bgt-panel-icon" aria-hidden="true"><lucide-icon [img]="iconListChecks" [size]="17"></lucide-icon></span>
-          <h2>{{ 'RECORDED_BUDGETS' | translate }}</h2>
-          <span *ngIf="filteredBudgets$ | async as records" class="bgt-record-count">{{ formatCount(records.length) }}</span>
-          <lucide-icon [img]="iconChevronDown" [size]="17" class="bgt-panel-chevron" aria-hidden="true"></lucide-icon>
-        </summary>
-        <div class="bgt-records">
-          <ng-container *ngIf="totalBudgetsByCurrency$ | async as budgetTotals">
-            <div class="bgt-list-total" *ngIf="(budgetTotals | keyvalue).length > 0">
-              <span class="bgt-list-total-label">{{ 'TOTAL' | translate }}</span>
-              <span *ngFor="let t of budgetTotals | keyvalue; trackBy: trackByKey" class="bgt-list-total-amount"
-                [innerHTML]="formatService.formatAmountWithSymbolHtml(t.value, t.key)"
-              ></span>
-            </div>
-          </ng-container>
-          <div class="bgt-budget-list">
-            <ng-container *ngIf="groupedBudgets$ | async as dateGroups; else budgetLoading">
-              <ng-container *ngIf="dateGroups.length > 0; else noBudgetsTemplate">
-                <div class="bgt-date-list">
-                  <section
-                    *ngFor="let group of dateGroups; trackBy: trackByBudgetGroupPeriod"
-                    class="bgt-date-group"
-                  >
-                    <div class="bgt-date-group-header">
-                      <span class="bgt-date-label">
-                        {{ formatBudgetPeriodLabel(group) }}
-                      </span>
-                      <span class="bgt-date-count">
-                        {{ "EXPENSE_GROUP_COUNT" | translate: { count: formatCount(group.count) } }}
-                      </span>
-                      <div class="bgt-date-totals">
-                        <span
-                          class="bgt-date-total"
-                          *ngFor="let total of group.totalsByCurrency | keyvalue; trackBy: trackByKey"
-                          [innerHTML]="formatService.formatAmountShortHtml(total.value, total.key)"
-                        ></span>
-                      </div>
-                    </div>
-
-                    <div class="bgt-budget-group-list">
-                      <div *ngFor="let budget of group.budgets; trackBy: trackByBudgetId" class="bgt-budget-card">
-                        <div class="bgt-budget-card-body">
-                          <div class="bgt-budget-card-top" [class.bgt-has-menu]="canManageBudgets">
-                            <app-avatar-tip class="bgt-card-avatar" [size]="40" *ngIf="(userProfile?.accountType === 'group' && budget.createdByName) || (budget.updatedBy && budget.updatedAt)"
-                              [name]="budget.createdByName || userProfile?.displayName || ''"
-                              [photoUrl]="budget.createdByName ? budget.createdByPhotoURL : userProfile?.photoURL"
-                              [detail]="formatService.formatLocalizedDateTime(budget.createdAt)"
-                              [badge]="budget.updatedBy && budget.updatedAt ? 'edit' : null"
-                              [note]="budget.updatedBy && budget.updatedAt ? formatService.formatEditNote(budget.updatedByName, budget.updatedAt, budget.updatedFields) : ''"></app-avatar-tip>
-                            <div class="bgt-card-head">
-                              <div class="bgt-card-head-line">
-                                <span class="bgt-budget-identity">
-                                  <ng-container *ngIf="budget.category && budget.category !== 'all'; else allBudgetCategories">
-                                    <img *ngIf="getIconUrlForCategory(budget.category) as iconUrl; else budgetCategoryIcon" [src]="iconUrl" alt="" class="bgt-category-icon" />
-                                    <ng-template #budgetCategoryIcon><lucide-icon [img]="getIconForCategory(budget.category)" [size]="15" aria-hidden="true"></lucide-icon></ng-template>
-                                    {{ budget.category }}
-                                  </ng-container>
-                                  <ng-template #allBudgetCategories>
-                                    <lucide-icon [img]="iconPiggyBank" [size]="15" aria-hidden="true"></lucide-icon>
-                                    {{ 'ALL_CATEGORIES' | translate }}
-                                  </ng-template>
-                                </span>
-                                <div class="bgt-budget-card-badges">
-                                  <span class="bgt-row-badge" *ngIf="budget.type === 'monthly'">
-                                    {{ 'MONTHLY' | translate }}
-                                  </span>
-                                  <span class="bgt-row-badge bgt-badge-yearly" *ngIf="budget.type === 'yearly'">
-                                    {{ 'YEARLY' | translate }}
-                                  </span>
-                                </div>
-                              </div>
-                              <span class="bgt-card-activity" *ngIf="(userProfile?.accountType === 'group' && budget.createdByName) || (budget.updatedBy && budget.updatedAt)"
-                                [attr.title]="formatService.formatRecordActivityFull(budget)">
-                                {{ formatService.formatRecordActivity(budget, userProfile?.displayName || '') }}
-                              </span>
-                            </div>
-                          </div>
-                          <strong class="bgt-budget-card-amount"
-                            [innerHTML]="formatService.formatAmountWithSymbolHtml(budget.amount, budget.currency)"></strong>
-                          <span *ngIf="formatService.formatAmountInWords(budget.amount, budget.currency) as amountInWords"
-                            class="bgt-amount-words">{{ amountInWords }}</span>
-                          <div class="bgt-budget-card-meta" *ngIf="budget.description">
-                            <app-clamp-text class="bgt-budget-card-desc" [text]="budget.description" [lines]="2"></app-clamp-text>
-                          </div>
-                        </div>
-                        <app-row-menu *ngIf="canManageBudgets" class="bgt-row-menu"
-                          [showEdit]="canManageBudgets" [showDelete]="canDeleteBudgets"
-                          (edit)="startEditBudget(budget)" (delete)="confirmDeleteBudget(budget.id)"></app-row-menu>
-                      </div>
-                    </div>
-                  </section>
-                </div>
-              </ng-container>
-              <ng-template #noBudgetsTemplate>
-                <p class="bgt-empty-text">{{ 'NO_BUDGETS_FOUND' | translate }}</p>
-              </ng-template>
+            <ng-container *ngIf="monthData.total.budget > 0 || monthData.total.spent !== 0">
+              <ng-container *ngTemplateOutlet="spendingProgress; context: { $implicit: monthData.total, currency: monthData.currency }"></ng-container>
             </ng-container>
-          </div>
 
-        </div>
-      </details>
-    </div>
+            <details class="bgt-category-list" *ngIf="monthData.total.budgetType === 'category' && monthData.categories.length">
+              <summary>
+                {{ 'CATEGORY_BREAKDOWN' | translate }}
+                <lucide-icon [img]="iconChevronDown" [size]="15" aria-hidden="true"></lucide-icon>
+              </summary>
+              <ng-container *ngFor="let category of monthData.categories; trackBy: trackByCategoryName">
+                <ng-container *ngTemplateOutlet="spendingProgress; context: { $implicit: category, currency: monthData.currency, category: category.name }"></ng-container>
+              </ng-container>
+            </details>
+
+            <details class="bgt-category-list bgt-month-records" *ngIf="monthData.budgets.length" open>
+              <summary>
+                <span>{{ 'RECORDED_BUDGETS' | translate }} · {{ 'EXPENSE_GROUP_COUNT' | translate: { count: formatCount(monthData.budgets.length) } }}</span>
+                <lucide-icon [img]="iconChevronDown" [size]="15" aria-hidden="true"></lucide-icon>
+              </summary>
+              <ul class="bgt-entry-list">
+                <li *ngFor="let budget of monthData.budgets; trackBy: trackByBudgetId" class="bgt-entry">
+                  <div class="bgt-entry-main">
+                    <span class="bgt-budget-identity">
+                      <ng-container *ngIf="budget.category && budget.category !== 'all'; else allBudgetCategories">
+                        <img *ngIf="getIconUrlForCategory(budget.category) as iconUrl; else budgetCategoryIcon" [src]="iconUrl" alt="" class="bgt-category-icon" />
+                        <ng-template #budgetCategoryIcon><lucide-icon [img]="getIconForCategory(budget.category)" [size]="15" aria-hidden="true"></lucide-icon></ng-template>
+                        <span class="bgt-entry-name">{{ budget.category }}</span>
+                      </ng-container>
+                      <ng-template #allBudgetCategories>
+                        <lucide-icon [img]="iconPiggyBank" [size]="15" aria-hidden="true"></lucide-icon>
+                        <span class="bgt-entry-name">{{ 'ALL_CATEGORIES' | translate }}</span>
+                      </ng-template>
+                    </span>
+                    <span class="bgt-row-badge" *ngIf="budget.type === 'monthly'">{{ 'MONTHLY' | translate }}</span>
+                    <span class="bgt-row-badge bgt-badge-yearly" *ngIf="budget.type === 'yearly'">{{ 'YEARLY' | translate }}</span>
+                  </div>
+                  <strong class="bgt-entry-amount"
+                    [innerHTML]="formatService.formatAmountWithSymbolHtml(budget.amount, budget.currency)"></strong>
+                  <app-row-menu *ngIf="canManageBudgets" class="bgt-entry-menu"
+                    [showEdit]="canManageBudgets" [showDelete]="canDeleteBudgets"
+                    (edit)="startEditBudget(budget)" (delete)="confirmDeleteBudget(budget.id)"></app-row-menu>
+
+                  <div class="bgt-entry-meta" *ngIf="(userProfile?.accountType === 'group' && budget.createdByName) || (budget.updatedBy && budget.updatedAt)">
+                    <app-avatar-tip class="bgt-card-avatar" [size]="22"
+                      [name]="budget.createdByName || userProfile?.displayName || ''"
+                      [photoUrl]="budget.createdByName ? budget.createdByPhotoURL : userProfile?.photoURL"
+                      [detail]="formatService.formatLocalizedDateTime(budget.createdAt)"
+                      [badge]="budget.updatedBy && budget.updatedAt ? 'edit' : null"
+                      [note]="budget.updatedBy && budget.updatedAt ? formatService.formatEditNote(budget.updatedByName, budget.updatedAt, budget.updatedFields) : ''"></app-avatar-tip>
+                    <span class="bgt-card-activity" [attr.title]="formatService.formatRecordActivityFull(budget)">
+                      {{ formatService.formatRecordActivity(budget, userProfile?.displayName || '') }}
+                    </span>
+                  </div>
+                  <app-clamp-text *ngIf="budget.description" class="bgt-entry-desc" [text]="budget.description" [lines]="1"></app-clamp-text>
+                </li>
+              </ul>
+            </details>
+          </section>
+          <p *ngIf="!monitorData.length" class="bgt-empty-text">{{ 'NO_BUDGETS_FOUND' | translate }}</p>
+        </ng-container>
+      </div>
+    </details>
 
     <section class="bgt-panel bgt-chart-panel">
       <header class="bgt-panel-heading">

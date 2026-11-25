@@ -98,6 +98,9 @@ interface SpendingMonitorItem {
     percentage: number;
     hasBudget: boolean;
   }>;
+  // Budget records set for this month (same currency), newest first —
+  // listed under the month's progress so usage and its budgets read together.
+  budgets: ServiceIBudget[];
 }
 
 interface BudgetOverview {
@@ -113,12 +116,6 @@ const MIN_BUDGET_AMOUNT = 0.01;
 const MAX_BUDGET_AMOUNT = 999999999;
 const DESKTOP_BREAKPOINT = 992;
 
-interface BudgetPeriodGroup {
-  period: string;
-  budgets: ServiceIBudget[];
-  totalsByCurrency: { [currency: string]: number };
-  count: number;
-}
 
 @Component({
   selector: 'app-budget',
@@ -192,8 +189,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
   monthlySummary$: Observable<MonthlySummaryItem[]>;
 
   filteredBudgets$: Observable<ServiceIBudget[]>;
-  groupedBudgets$: Observable<BudgetPeriodGroup[]>;
-  totalBudgetsByCurrency$: Observable<{ [key: string]: number }>;
   spendingMonitorData$: Observable<SpendingMonitorItem[]>;
 
   readonly iconSave = Save;
@@ -582,20 +577,6 @@ export class BudgetComponent implements OnInit, OnDestroy {
     );
 
     this.filteredBudgets$ = filteredData$.pipe(map((data) => data.budgets));
-    this.groupedBudgets$ = this.filteredBudgets$.pipe(
-      map((budgets) => this.groupBudgetsByPeriod(budgets))
-    );
-    // Sum across every period group shown below (same filteredBudgets$
-    // source as groupedBudgets$), for the "Total" row above the list —
-    // same idea as profit.ts's totalIncomesByCurrency$.
-    this.totalBudgetsByCurrency$ = this.filteredBudgets$.pipe(
-      map((budgets) => budgets.reduce((totals, budget) => {
-        if (budget.currency) {
-          totals[budget.currency] = (totals[budget.currency] || 0) + budget.amount;
-        }
-        return totals;
-      }, {} as { [key: string]: number }))
-    );
 
     this.monthlySummary$ = filteredData$.pipe(
       map(({ budgets, expenses }) => {
@@ -704,6 +685,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
                 percentage: 0,
               },
               categories: [],
+              budgets: [],
             });
           }
 
@@ -753,10 +735,12 @@ export class BudgetComponent implements OnInit, OnDestroy {
                 percentage: 0,
               },
               categories: [],
+              budgets: [],
             });
           }
 
           const monthData = monthlyDataMap.get(key)!;
+          monthData.budgets.push(budget);
 
           if (budget.category === 'all') {
             monthData.total.budget += budget.amount;
@@ -783,6 +767,10 @@ export class BudgetComponent implements OnInit, OnDestroy {
         });
 
         monthlyDataMap.forEach((monthData) => {
+          monthData.budgets.sort((a, b) =>
+            (b.period || '').localeCompare(a.period || '') ||
+            (b.createdAt || '').localeCompare(a.createdAt || '')
+          );
           if (monthData.total.budget === 0 && monthData.categories.length > 0) {
             monthData.total.budget = monthData.categories.reduce(
               (sum, category) => sum + category.budget,
@@ -1070,39 +1058,8 @@ export class BudgetComponent implements OnInit, OnDestroy {
     return budget.id ?? String(index);
   }
 
-  trackByBudgetGroupPeriod(index: number, group: BudgetPeriodGroup): string {
-    return group.period;
-  }
-
   formatCount(n: number): string {
     return this.formatService.formatCount(n);
-  }
-
-  formatBudgetPeriodLabel(group: BudgetPeriodGroup): string {
-    const sample = group.budgets[0];
-    return sample?.type === 'monthly'
-      ? this.formatService.formatLocalizedDate(group.period)
-      : group.period;
-  }
-
-  private groupBudgetsByPeriod(budgets: ServiceIBudget[]): BudgetPeriodGroup[] {
-    const groups = new Map<string, BudgetPeriodGroup>();
-
-    budgets.forEach(budget => {
-      const period = budget.period || '';
-      if (!groups.has(period)) {
-        groups.set(period, { period, budgets: [], totalsByCurrency: {}, count: 0 });
-      }
-      const group = groups.get(period)!;
-      group.budgets.push(budget);
-      group.count += 1;
-      if (budget.currency) {
-        group.totalsByCurrency[budget.currency] =
-          (group.totalsByCurrency[budget.currency] || 0) + budget.amount;
-      }
-    });
-
-    return [...groups.values()].sort((a, b) => b.period.localeCompare(a.period));
   }
 
   trackByMonthCurrency(index: number, item: SpendingMonitorItem): string {
