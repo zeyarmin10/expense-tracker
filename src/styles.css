@@ -114,6 +114,16 @@ body {
   margin: 0;
 }
 
+/* Dark app background for the body before any page renders. bootstrap.css is
+   loaded after this file (angular.json) and sets `body { background-color:
+   #fff }`, which beat index.html's inline dark background and showed a white
+   strip under the mobile top bar while the app was loading. `html body`
+   outranks Bootstrap's bare `body`, while `body.light-mode` and index.html's
+   `html.theme-light body` still win for the light theme. */
+html body {
+  background-color: #020817;
+}
+
 /* Month menus keep unavailable months visible and snap to the nearest valid
    one. This centered notice explains that change without a hard outline: its
    warning colour is concentrated in the middle and dissolves at both edges. */
