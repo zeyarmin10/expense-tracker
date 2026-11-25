@@ -1146,7 +1146,11 @@ export class UserProfileComponent implements OnInit, OnDestroy {
 
     const currentUser = await firstValueFrom(this.authService.currentUser$);
     if (currentUser) {
-      const userProfile = await firstValueFrom(this.userDataService.getUserProfile(currentUser.uid));
+      // Use the active-space profile: in a group space the selected period
+      // lives on the space, not on the user's personal profile. Checking the
+      // personal profile let the group's active period be deleted, leaving the
+      // space on 'custom' with orphaned start/end dates.
+      const userProfile = await firstValueFrom(this.authService.userProfile$);
       if (userProfile && userProfile.selectedBudgetPeriodId === periodId) {
         Swal.fire({ icon: 'error', title: this.translate.instant('ERROR_TITLE'), text: this.translate.instant('DELETE_ACTIVE_BUDGET_PERIOD_ERROR') });
         return;

@@ -1,5 +1,5 @@
 import { BrandLoaderComponent } from '../common/brand-loader/brand-loader.component';
-import { Component, inject, OnInit, OnDestroy, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, ChangeDetectorRef, ChangeDetectionStrategy, ViewChild } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ExpenseService, ServiceIExpense as IExpense } from '../../services/expense';
@@ -18,7 +18,7 @@ import {
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Router } from '@angular/router';
 import { FormatService } from '../../services/format.service';
-import { DateFilterService, DateRange } from '../../services/date-filter.service';
+import { DateFilterService, DateRange, getCustomBudgetPeriodRange, getDefaultCustomDateRange } from '../../services/date-filter.service';
 import { AuthService } from '../../services/auth';
 import { UserDataService, UserProfile } from '../../services/user-data';
 import { CategoryService, ServiceICategory } from '../../services/category';
@@ -131,6 +131,11 @@ export class ExpenseOverview implements OnInit, OnDestroy {
   dateFilterOptions: SelectOption[] = [];
   startDate: string = '';
   endDate: string = '';
+  @ViewChild('filterDateRangeInput') private filterDateRangeInput?: DateRangeInputComponent;
+  isChoosingDateRange = false;
+  private dateRangePicked = false;
+  private applyDefaultRangeOnDismiss = false;
+  private userProfile: UserProfile | null = null;
   searchTerm: string = '';
   userProfile$: Observable<UserProfile | null> = of(null);
   isGroupUser = false;
@@ -205,6 +210,7 @@ export class ExpenseOverview implements OnInit, OnDestroy {
 
     // Fix #4 + #8: takeUntil + setInitialDateFilter only on space change
     this.userProfile$.pipe(takeUntil(this.destroy$)).subscribe((profile) => {
+      this.userProfile = profile;
       if (profile) {
         const key = this.getSpaceModeKey(profile);
         if (key !== this.activeSpaceModeKey) {
@@ -359,6 +365,10 @@ export class ExpenseOverview implements OnInit, OnDestroy {
   }
 
   setOverviewDateFilterMode(mode: 'today' | 'week' | 'month' | 'custom'): void {
+    if (mode === 'custom') {
+      this.selectCustomDateFilter();
+      return;
+    }
     const filterByMode = { today: 'today', week: 'currentWeek', month: 'currentMonth', custom: 'custom' } as const;
     this.setDateFilter(filterByMode[mode]);
   }
@@ -378,7 +388,42 @@ export class ExpenseOverview implements OnInit, OnDestroy {
     this.setOverviewDateFilterMode('today');
   }
 
+  // Custom tab: apply the profile's custom budget period straight away; with
+  // none set, open the picker (dismissing it falls back to the last 12 months).
+  private selectCustomDateFilter(): void {
+    const budgetPeriodRange = getCustomBudgetPeriodRange(this.userProfile);
+    if (budgetPeriodRange) {
+      this.applyCustomDateRange(budgetPeriodRange);
+      return;
+    }
+    this.applyDefaultRangeOnDismiss = !this.isOverviewCustomFilter();
+    this.isChoosingDateRange = true;
+    // Mount the shared picker so it can position the calendar against its trigger.
+    this.cdr.detectChanges();
+    this.filterDateRangeInput?.open();
+  }
+
+  onDateRangeOpenChange(isOpen: boolean): void {
+    this.isChoosingDateRange = isOpen;
+    if (isOpen) {
+      this.dateRangePicked = false;
+      return;
+    }
+    if (!this.dateRangePicked && this.applyDefaultRangeOnDismiss) {
+      this.applyCustomDateRange(getDefaultCustomDateRange(this.userProfile));
+    }
+    this.applyDefaultRangeOnDismiss = false;
+    this.cdr.markForCheck();
+  }
+
+  private applyCustomDateRange({ start, end }: DateRange): void {
+    this.startDate = start;
+    this.endDate = end;
+    this.setDateFilter('custom');
+  }
+
   onOverviewCustomDateChange(): void {
+    this.dateRangePicked = true;
     this.setDateFilter('custom');
   }
 

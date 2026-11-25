@@ -23,7 +23,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../services/auth';
 import { ExpenseService } from '../../services/expense';
 import { IncomeService } from '../../services/income';
-import { DateFilterService } from '../../services/date-filter.service';
+import { DateFilterService, DateRange, getCustomBudgetPeriodRange, getDefaultCustomDateRange } from '../../services/date-filter.service';
 import { FormatService } from '../../services/format.service';
 import { DailyCashFlowData, ProfitLossService } from '../../services/profit-loss.service';
 import { UserProfile } from '../../services/user-data';
@@ -90,6 +90,10 @@ export class CashFlow implements OnInit, OnDestroy {
   showCustomDatePicker = false;
   startDate: string = '';
   endDate: string = '';
+  @ViewChild('filterDateRangeInput') private filterDateRangeInput?: DateRangeInputComponent;
+  isChoosingDateRange = false;
+  private dateRangePicked = false;
+  private applyDefaultRangeOnDismiss = false;
 
   readonly iconTrendingUp = TrendingUp;
   readonly iconTrendingDown = TrendingDown;
@@ -262,14 +266,52 @@ export class CashFlow implements OnInit, OnDestroy {
   }
 
   setDateFilterMode(mode: 'today' | 'week' | 'month' | 'custom'): void {
+    if (mode === 'custom') {
+      this.selectCustomDateFilter();
+      return;
+    }
     const filter = mode === 'today' ? 'today'
       : mode === 'week' ? 'currentWeek'
-      : mode === 'month' ? 'currentMonth'
-      : 'custom';
+      : 'currentMonth';
     this.setDateFilter(filter);
   }
 
+  // Custom tab: apply the profile's custom budget period straight away; with
+  // none set, open the picker (dismissing it falls back to the last 12 months).
+  private selectCustomDateFilter(): void {
+    const budgetPeriodRange = getCustomBudgetPeriodRange(this.userProfile);
+    if (budgetPeriodRange) {
+      this.applyCustomDateRange(budgetPeriodRange);
+      return;
+    }
+    this.applyDefaultRangeOnDismiss = this.dateFilterMode !== 'custom';
+    this.isChoosingDateRange = true;
+    // Mount the shared picker so it can position the calendar against its trigger.
+    this.cdr.detectChanges();
+    this.filterDateRangeInput?.open();
+  }
+
+  onDateRangeOpenChange(isOpen: boolean): void {
+    this.isChoosingDateRange = isOpen;
+    if (isOpen) {
+      this.dateRangePicked = false;
+      return;
+    }
+    if (!this.dateRangePicked && this.applyDefaultRangeOnDismiss) {
+      this.applyCustomDateRange(getDefaultCustomDateRange(this.userProfile));
+    }
+    this.applyDefaultRangeOnDismiss = false;
+    this.cdr.markForCheck();
+  }
+
+  private applyCustomDateRange({ start, end }: DateRange): void {
+    this.startDate = start;
+    this.endDate = end;
+    this.setDateFilter('custom');
+  }
+
   onCustomDateChange(): void {
+    this.dateRangePicked = true;
     if (this.startDate && this.endDate) {
       this.setDateFilter('custom');
     }

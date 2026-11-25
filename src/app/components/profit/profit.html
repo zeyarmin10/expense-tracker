@@ -102,8 +102,8 @@
         </button>
       </div>
       <div class="exp-filter-bottom-row">
-        <ng-container *ngIf="showCustomDatePicker || isIncomeCustomFilter(); else incomeFilterLabel">
-          <app-date-range-input [(startDate)]="startDate" [(endDate)]="endDate" (rangeChange)="onIncomeCustomDateChange()" [showLabel]="false" [startLabel]="'DATE_FROM' | translate" [endLabel]="'DATE_TO' | translate"></app-date-range-input>
+        <ng-container *ngIf="showCustomDatePicker || isIncomeCustomFilter() || isChoosingDateRange; else incomeFilterLabel">
+          <app-date-range-input #filterDateRangeInput [(startDate)]="startDate" [(endDate)]="endDate" (rangeChange)="onIncomeCustomDateChange()" (isOpenChange)="onDateRangeOpenChange($event)" [showLabel]="false" [startLabel]="'DATE_FROM' | translate" [endLabel]="'DATE_TO' | translate"></app-date-range-input>
         </ng-container>
         <ng-template #incomeFilterLabel><div class="exp-filter-label">
           <span class="exp-filter-label-date">

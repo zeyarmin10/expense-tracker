@@ -44,6 +44,8 @@ import { FormatService } from '../../services/format.service';
 import {
   DateFilterService,
   DateRange,
+  getCustomBudgetPeriodRange,
+  getDefaultCustomDateRange,
 } from '../../services/date-filter.service';
 import { CategoryService, ServiceICategory } from '../../services/category';
 import { getIconData, getIconHue } from '../../utils/category-icons';
@@ -513,6 +515,7 @@ export class BudgetComponent implements OnInit, OnDestroy {
   ];
   isChoosingDateRange = false;
   private dateRangePicked = false;
+  private applyDefaultRangeOnDismiss = false;
   public startDate: string | null = null;
   public endDate: string | null = null;
   public dateFilter$ = new BehaviorSubject<DateRange>({ start: '', end: '' });
@@ -1495,6 +1498,18 @@ export class BudgetComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // A custom budget period set in the profile is applied straight away —
+    // no need to make the user pick dates for a range they already defined.
+    const budgetPeriodRange = getCustomBudgetPeriodRange(this.userProfile);
+    if (budgetPeriodRange) {
+      this.applyCustomDateRange(budgetPeriodRange);
+      return;
+    }
+
+    // Only fall back to a default range when Custom wasn't already active —
+    // re-opening the picker on an existing custom range and dismissing it
+    // keeps that range.
+    this.applyDefaultRangeOnDismiss = this.selectedDateFilter !== 'custom';
     this.isChoosingDateRange = true;
     // Mount the shared picker so it can position the calendar against its trigger.
     this.cdr.detectChanges();
@@ -1505,9 +1520,13 @@ export class BudgetComponent implements OnInit, OnDestroy {
     this.isChoosingDateRange = isOpen;
     if (isOpen) {
       this.dateRangePicked = false;
-    } else if (!this.dateRangePicked) {
-      this.applyCustomDateRange(this.dateFilterService.getDateRange(this.datePipe, 'last12Months'));
+      return;
     }
+    if (!this.dateRangePicked && this.applyDefaultRangeOnDismiss) {
+      this.applyCustomDateRange(getDefaultCustomDateRange(this.userProfile));
+    }
+    this.applyDefaultRangeOnDismiss = false;
+    this.cdr.markForCheck();
   }
 
   onCustomDateRangeChange(range: DateRange): void {

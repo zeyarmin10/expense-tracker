@@ -219,3 +219,38 @@ export class DateFilterService {
     };
   }
 }
+
+type BudgetPeriodSource = {
+  budgetPeriod?: string | null;
+  budgetStartDate?: string | null;
+  budgetEndDate?: string | null;
+} | null | undefined;
+
+/**
+ * The custom budget period from the profile (Profile → Budget period →
+ * Custom), or null when none is set. Custom date filters apply it directly
+ * instead of asking the user to pick dates.
+ */
+export function getCustomBudgetPeriodRange(profile: BudgetPeriodSource): DateRange | null {
+  if (profile?.budgetPeriod !== 'custom') return null;
+  const start = profile.budgetStartDate;
+  const end = profile.budgetEndDate;
+  return start && end ? { start, end } : null;
+}
+
+/** Same date as today one year ago (clamped to month end) through today. */
+export function getLast12MonthsRange(now: Date = new Date()): DateRange {
+  const previousYear = now.getFullYear() - 1;
+  const month = now.getMonth();
+  const daysInMonth = new Date(previousYear, month + 1, 0).getDate();
+  const start = new Date(previousYear, month, Math.min(now.getDate(), daysInMonth));
+  return { start: toLocalDateKey(start), end: toLocalDateKey(now) };
+}
+
+/**
+ * Range a Custom date filter falls back to when the user closes the picker
+ * without choosing dates: the custom budget period if set, else the last 12 months.
+ */
+export function getDefaultCustomDateRange(profile: BudgetPeriodSource): DateRange {
+  return getCustomBudgetPeriodRange(profile) ?? getLast12MonthsRange();
+}

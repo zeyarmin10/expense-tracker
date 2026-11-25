@@ -596,11 +596,12 @@
       </div>
 
       <div class="exp-filter-bottom-row">
-        <ng-container *ngIf="showCustomDatePicker; else expenseFilterLabel">
-          <app-date-range-input
+        <ng-container *ngIf="showCustomDatePicker || isChoosingDateRange; else expenseFilterLabel">
+          <app-date-range-input #filterDateRangeInput
             [(startDate)]="customStartDate"
             [(endDate)]="customEndDate"
             (rangeChange)="onCustomDateChange()"
+            (isOpenChange)="onDateRangeOpenChange($event)"
             [showLabel]="false"
             [startLabel]="'DATE_FROM' | translate"
             [endLabel]="'DATE_TO' | translate">

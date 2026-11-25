@@ -20,9 +20,9 @@
         </div>
       </div>
       <div class="exp-filter-bottom-row">
-        <ng-container *ngIf="showCustomDatePicker; else cashFlowFilterLabel">
-          <app-date-range-input [(startDate)]="startDate" [(endDate)]="endDate"
-            (rangeChange)="onCustomDateChange()" [showLabel]="false"
+        <ng-container *ngIf="showCustomDatePicker || isChoosingDateRange; else cashFlowFilterLabel">
+          <app-date-range-input #filterDateRangeInput [(startDate)]="startDate" [(endDate)]="endDate"
+            (rangeChange)="onCustomDateChange()" (isOpenChange)="onDateRangeOpenChange($event)" [showLabel]="false"
             [startLabel]="'START_DATE' | translate" [endLabel]="'END_DATE' | translate">
           </app-date-range-input>
         </ng-container>

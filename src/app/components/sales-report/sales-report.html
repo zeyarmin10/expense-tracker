@@ -21,9 +21,9 @@
       </div>
 
       <div class="exp-filter-bottom-row">
-        <ng-container *ngIf="showCustomDatePicker; else salesReportFilterLabel">
-          <app-date-range-input [(startDate)]="startDate" [(endDate)]="endDate"
-            (rangeChange)="onCustomDateChange()" [showLabel]="false"
+        <ng-container *ngIf="showCustomDatePicker || isChoosingDateRange; else salesReportFilterLabel">
+          <app-date-range-input #filterDateRangeInput [(startDate)]="startDate" [(endDate)]="endDate"
+            (rangeChange)="onCustomDateChange()" (isOpenChange)="onDateRangeOpenChange($event)" [showLabel]="false"
             [startLabel]="'DATE_FROM' | translate" [endLabel]="'DATE_TO' | translate">
           </app-date-range-input>
         </ng-container>

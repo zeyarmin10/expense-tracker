@@ -33,7 +33,7 @@ import { ServiceIIncome, IncomeService, IncomeLineItem, getIncomeLineItems } fro
 import { CategoryService, ServiceICategory } from '../../services/category';
 import { ServiceIProduct, ProductService } from '../../services/product';
 import { SpaceContextService } from '../../services/space-context.service';
-import { formatDateFilterLabel } from '../../services/date-filter.service';
+import { DateRange, formatDateFilterLabel, getCustomBudgetPeriodRange, getDefaultCustomDateRange } from '../../services/date-filter.service';
 import { BarcodeScannerService } from '../../services/barcode-scanner.service';
 import { LucideAngularModule } from 'lucide-angular';
 import { getIconData } from '../../utils/category-icons';
@@ -183,6 +183,10 @@ export class Sales implements OnInit, OnDestroy {
   showCustomDatePicker = false;
   startDate: string = '';
   endDate: string = '';
+  @ViewChild('filterDateRangeInput') private filterDateRangeInput?: DateRangeInputComponent;
+  isChoosingDateRange = false;
+  private dateRangePicked = false;
+  private applyDefaultRangeOnDismiss = false;
 
   // --- State for Modals/Visibility ---
   private subscriptions: Subscription = new Subscription();
@@ -1264,24 +1268,58 @@ export class Sales implements OnInit, OnDestroy {
   }
 
   setDateFilterMode(mode: 'today' | 'week' | 'month' | 'custom'): void {
+    if (mode === 'custom') {
+      this.selectCustomDateFilter();
+      return;
+    }
+    this.applyDateFilterMode(mode);
+  }
+
+  private applyDateFilterMode(mode: 'today' | 'week' | 'month' | 'custom'): void {
     this.dateFilterMode = mode;
     this.showCustomDatePicker = mode === 'custom';
-    if (mode === 'custom') {
-      if (!this.startDate) {
-        const oneYearAgo = new Date();
-        oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-        this.startDate = this.datePipe.transform(oneYearAgo, 'yyyy-MM-dd') || '';
-      }
-      if (!this.endDate) {
-        this.endDate = this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
-      }
-    }
     this.updateDateRange();
+    this.cdr.markForCheck();
+  }
+
+  // Custom tab: apply the profile's custom budget period straight away; with
+  // none set, open the picker (dismissing it falls back to the last 12 months).
+  private selectCustomDateFilter(): void {
+    const budgetPeriodRange = getCustomBudgetPeriodRange(this.userProfile);
+    if (budgetPeriodRange) {
+      this.applyCustomDateRange(budgetPeriodRange);
+      return;
+    }
+    this.applyDefaultRangeOnDismiss = this.dateFilterMode !== 'custom';
+    this.isChoosingDateRange = true;
+    // Mount the shared picker so it can position the calendar against its trigger.
+    this.cdr.detectChanges();
+    this.filterDateRangeInput?.open();
+  }
+
+  onDateRangeOpenChange(isOpen: boolean): void {
+    this.isChoosingDateRange = isOpen;
+    if (isOpen) {
+      this.dateRangePicked = false;
+      return;
+    }
+    if (!this.dateRangePicked && this.applyDefaultRangeOnDismiss) {
+      this.applyCustomDateRange(getDefaultCustomDateRange(this.userProfile));
+    }
+    this.applyDefaultRangeOnDismiss = false;
+    this.cdr.markForCheck();
+  }
+
+  private applyCustomDateRange({ start, end }: DateRange): void {
+    this.startDate = start;
+    this.endDate = end;
+    this.applyDateFilterMode('custom');
   }
 
   onCustomDateChange(): void {
+    this.dateRangePicked = true;
     if (this.startDate && this.endDate) {
-      this.updateDateRange();
+      this.applyDateFilterMode('custom');
     }
   }
 

@@ -1,5 +1,5 @@
 import { BrandLoaderComponent } from '../common/brand-loader/brand-loader.component';
-import { Component, inject, OnInit, OnDestroy, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, ChangeDetectorRef, ChangeDetectionStrategy, ViewChild } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IncomeService, ServiceIIncome, IncomeLineItem, getIncomeLineItems } from '../../services/income';
@@ -19,7 +19,7 @@ import {
 } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { FormatService } from '../../services/format.service';
-import { DateRange, formatDateFilterLabel, toLocalDateKey } from '../../services/date-filter.service';
+import { DateRange, formatDateFilterLabel, getCustomBudgetPeriodRange, getDefaultCustomDateRange, toLocalDateKey } from '../../services/date-filter.service';
 import { AuthService } from '../../services/auth';
 import { UserDataService, UserProfile } from '../../services/user-data';
 import { LucideAngularModule, Search, ChartColumn, List, Trophy, Package, CalendarDays, ChevronDown } from 'lucide-angular';
@@ -235,6 +235,11 @@ export class SalesReport implements OnInit, OnDestroy {
   showCustomDatePicker = false;
   startDate: string = '';
   endDate: string = '';
+  @ViewChild('filterDateRangeInput') private filterDateRangeInput?: DateRangeInputComponent;
+  isChoosingDateRange = false;
+  private dateRangePicked = false;
+  private applyDefaultRangeOnDismiss = false;
+  private userProfile: UserProfile | null = null;
   searchTerm: string = '';
   userProfile$: Observable<UserProfile | null> = of(null);
   isGroupUser = false;
@@ -330,6 +335,7 @@ export class SalesReport implements OnInit, OnDestroy {
       .subscribe(products => { this.productList = products; this.cdr.markForCheck(); });
 
     this.userProfile$.pipe(takeUntil(this.destroy$)).subscribe((profile) => {
+      this.userProfile = profile;
       if (profile) {
         const key = this.getSpaceModeKey(profile);
         if (key !== this.activeSpaceModeKey) {
@@ -455,6 +461,14 @@ export class SalesReport implements OnInit, OnDestroy {
   }
 
   setDateFilterMode(mode: 'today' | 'week' | 'month' | 'custom'): void {
+    if (mode === 'custom') {
+      this.selectCustomDateFilter();
+      return;
+    }
+    this.applyDateFilterMode(mode);
+  }
+
+  private applyDateFilterMode(mode: 'today' | 'week' | 'month' | 'custom'): void {
     this.dateFilterMode = mode;
     this.showCustomDatePicker = mode === 'custom';
     const filter = mode === 'today' ? 'today'
@@ -465,10 +479,44 @@ export class SalesReport implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
+  // Custom tab: apply the profile's custom budget period straight away; with
+  // none set, open the picker (dismissing it falls back to the last 12 months).
+  private selectCustomDateFilter(): void {
+    const budgetPeriodRange = getCustomBudgetPeriodRange(this.userProfile);
+    if (budgetPeriodRange) {
+      this.applyCustomDateRange(budgetPeriodRange);
+      return;
+    }
+    this.applyDefaultRangeOnDismiss = this.dateFilterMode !== 'custom';
+    this.isChoosingDateRange = true;
+    // Mount the shared picker so it can position the calendar against its trigger.
+    this.cdr.detectChanges();
+    this.filterDateRangeInput?.open();
+  }
+
+  onDateRangeOpenChange(isOpen: boolean): void {
+    this.isChoosingDateRange = isOpen;
+    if (isOpen) {
+      this.dateRangePicked = false;
+      return;
+    }
+    if (!this.dateRangePicked && this.applyDefaultRangeOnDismiss) {
+      this.applyCustomDateRange(getDefaultCustomDateRange(this.userProfile));
+    }
+    this.applyDefaultRangeOnDismiss = false;
+    this.cdr.markForCheck();
+  }
+
+  private applyCustomDateRange({ start, end }: DateRange): void {
+    this.startDate = start;
+    this.endDate = end;
+    this.applyDateFilterMode('custom');
+  }
+
   onCustomDateChange(): void {
+    this.dateRangePicked = true;
     if (this.startDate && this.endDate) {
-      this.setDateFilter('custom');
-      this.cdr.markForCheck();
+      this.applyDateFilterMode('custom');
     }
   }
 

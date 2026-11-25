@@ -49,7 +49,7 @@ import {
 import { AVAILABLE_CURRENCIES } from '../../core/constants/app.constants';
 
 import { FormatService } from '../../services/format.service';
-import { DateFilterService } from '../../services/date-filter.service';
+import { DateFilterService, DateRange, getCustomBudgetPeriodRange, getDefaultCustomDateRange } from '../../services/date-filter.service';
 import { ExpenseService } from '../../services/expense'; // Added missing import
 import { ProfitLossService } from '../../services/profit-loss.service';
 import Swal from 'sweetalert2';
@@ -162,6 +162,10 @@ export class Profit implements OnInit, OnDestroy {
   dateFilterOptions: SelectOption[] = [];
   startDate: string = '';
   endDate: string = '';
+  @ViewChild('filterDateRangeInput') private filterDateRangeInput?: DateRangeInputComponent;
+  isChoosingDateRange = false;
+  private dateRangePicked = false;
+  private applyDefaultRangeOnDismiss = false;
 
   // --- State for Modals/Visibility ---
   private subscriptions: Subscription = new Subscription();
@@ -588,13 +592,16 @@ export class Profit implements OnInit, OnDestroy {
   }
 
   setIncomeDateFilterMode(mode: 'today' | 'week' | 'month' | 'custom'): void {
+    if (mode === 'custom') {
+      this.selectCustomDateFilter();
+      return;
+    }
     const filterByMode = {
       today: 'today',
       week: 'currentWeek',
       month: 'currentMonth',
       custom: 'custom',
     } as const;
-    this.showCustomDatePicker = mode === 'custom';
     this.setDateFilter(filterByMode[mode]);
     this.cdr.markForCheck();
   }
@@ -616,7 +623,42 @@ export class Profit implements OnInit, OnDestroy {
     this.setIncomeDateFilterMode('today');
   }
 
+  // Custom tab: apply the profile's custom budget period straight away; with
+  // none set, open the picker (dismissing it falls back to the last 12 months).
+  private selectCustomDateFilter(): void {
+    const budgetPeriodRange = getCustomBudgetPeriodRange(this.userProfile);
+    if (budgetPeriodRange) {
+      this.applyCustomDateRange(budgetPeriodRange);
+      return;
+    }
+    this.applyDefaultRangeOnDismiss = !this.isIncomeCustomFilter();
+    this.isChoosingDateRange = true;
+    // Mount the shared picker so it can position the calendar against its trigger.
+    this.cdr.detectChanges();
+    this.filterDateRangeInput?.open();
+  }
+
+  onDateRangeOpenChange(isOpen: boolean): void {
+    this.isChoosingDateRange = isOpen;
+    if (isOpen) {
+      this.dateRangePicked = false;
+      return;
+    }
+    if (!this.dateRangePicked && this.applyDefaultRangeOnDismiss) {
+      this.applyCustomDateRange(getDefaultCustomDateRange(this.userProfile));
+    }
+    this.applyDefaultRangeOnDismiss = false;
+    this.cdr.markForCheck();
+  }
+
+  private applyCustomDateRange({ start, end }: DateRange): void {
+    this.startDate = start;
+    this.endDate = end;
+    this.setDateFilter('custom');
+  }
+
   onIncomeCustomDateChange(): void {
+    this.dateRangePicked = true;
     this.setDateFilter('custom');
   }
 

@@ -13,8 +13,8 @@
         </div>
       </div>
       <div class="exp-filter-bottom-row">
-        <ng-container *ngIf="showCustomDatePicker || isOverviewCustomFilter(); else overviewFilterLabel">
-          <app-date-range-input [(startDate)]="startDate" [(endDate)]="endDate" (rangeChange)="onOverviewCustomDateChange()" [showLabel]="false" [startLabel]="'DATE_FROM' | translate" [endLabel]="'DATE_TO' | translate"></app-date-range-input>
+        <ng-container *ngIf="showCustomDatePicker || isOverviewCustomFilter() || isChoosingDateRange; else overviewFilterLabel">
+          <app-date-range-input #filterDateRangeInput [(startDate)]="startDate" [(endDate)]="endDate" (rangeChange)="onOverviewCustomDateChange()" (isOpenChange)="onDateRangeOpenChange($event)" [showLabel]="false" [startLabel]="'DATE_FROM' | translate" [endLabel]="'DATE_TO' | translate"></app-date-range-input>
         </ng-container>
         <ng-template #overviewFilterLabel><div class="exp-filter-label"><span class="exp-filter-label-date"><lucide-icon [img]="iconCalendarDays" [size]="16" class="exp-filter-label-icon"></lucide-icon><span>{{ getOverviewFilterLabel() }}</span></span></div></ng-template>
       </div>

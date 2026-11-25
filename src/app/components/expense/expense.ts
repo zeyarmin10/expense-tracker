@@ -72,6 +72,7 @@ import { ImgFallbackDirective } from '../../directives/img-fallback.directive';
 import { SwipeToCloseDirective } from '../../directives/swipe-to-close.directive';
 import { AvatarTipComponent } from '../common/avatar-tip/avatar-tip.component';
 import { personIconSvg } from '../common/user-avatar/person-icon';
+import { DateRange, getCustomBudgetPeriodRange, getDefaultCustomDateRange } from '../../services/date-filter.service';
 // Matches the existing `min-width: 992px` breakpoint in expense.css that
 // switches from the mobile FAB to the desktop toolbar "Add Expense" button.
 const DESKTOP_BREAKPOINT = 992;
@@ -190,6 +191,10 @@ export class Expense implements OnInit, OnDestroy {
   public dateFilterMode: 'today' | 'week' | 'month' | 'custom' = 'today';
   public customStartDate: string = '';
   public customEndDate: string = '';
+  @ViewChild('filterDateRangeInput') private filterDateRangeInput?: DateRangeInputComponent;
+  isChoosingDateRange = false;
+  private dateRangePicked = false;
+  private applyDefaultRangeOnDismiss = false;
   public showCustomDatePicker = false;
   // ──────────────────────────────────────────────────
   objectKeys = Object.keys;
@@ -1038,29 +1043,63 @@ export class Expense implements OnInit, OnDestroy {
   }
 
   setDateFilterMode(mode: 'today' | 'week' | 'month' | 'custom'): void {
+    if (mode === 'custom') {
+      this.selectCustomDateFilter();
+      return;
+    }
+    this.applyDateFilterMode(mode);
+  }
+
+  private applyDateFilterMode(mode: 'today' | 'week' | 'month' | 'custom'): void {
     this.dateFilterMode = mode;
     this.showCustomDatePicker = mode === 'custom';
-    if (mode === 'custom') {
-      if (!this.customStartDate) {
-        const start = new Date();
-        start.setDate(start.getDate() - 6);
-        this.customStartDate = this.datePipe.transform(start, 'yyyy-MM-dd') || '';
-        this.customEndDate = this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '';
-      }
-      this.refreshExpenses$.next();
-      this.refreshVouchers$.next();
-    } else {
+    if (mode !== 'custom') {
       this.resetActiveFilters();
-      this.refreshExpenses$.next();
-      this.refreshVouchers$.next();
     }
+    this.refreshExpenses$.next();
+    this.refreshVouchers$.next();
+  }
+
+  // Custom tab: apply the profile's custom budget period straight away; with
+  // none set, open the picker (dismissing it falls back to the last 12 months).
+  private selectCustomDateFilter(): void {
+    const budgetPeriodRange = getCustomBudgetPeriodRange(this.userProfile);
+    if (budgetPeriodRange) {
+      this.applyCustomDateRange(budgetPeriodRange);
+      return;
+    }
+    this.applyDefaultRangeOnDismiss = this.dateFilterMode !== 'custom';
+    this.isChoosingDateRange = true;
+    // Mount the shared picker so it can position the calendar against its trigger.
+    this.cdr.detectChanges();
+    this.filterDateRangeInput?.open();
+  }
+
+  onDateRangeOpenChange(isOpen: boolean): void {
+    this.isChoosingDateRange = isOpen;
+    if (isOpen) {
+      this.dateRangePicked = false;
+      return;
+    }
+    if (!this.dateRangePicked && this.applyDefaultRangeOnDismiss) {
+      this.applyCustomDateRange(getDefaultCustomDateRange(this.userProfile));
+    }
+    this.applyDefaultRangeOnDismiss = false;
+    this.cdr.markForCheck();
+  }
+
+  private applyCustomDateRange({ start, end }: DateRange): void {
+    this.customStartDate = start;
+    this.customEndDate = end;
+    this.resetActiveFilters();
+    this.applyDateFilterMode('custom');
   }
 
   onCustomDateChange(): void {
+    this.dateRangePicked = true;
     if (this.customStartDate && this.customEndDate) {
       this.resetActiveFilters();
-      this.refreshExpenses$.next();
-      this.refreshVouchers$.next();
+      this.applyDateFilterMode('custom');
     }
   }
 
