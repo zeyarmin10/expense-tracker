@@ -322,13 +322,8 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 34px;
-  height: 34px;
-  margin: -17px 0 0 -17px;
-  border: 3px solid rgba(255, 255, 255, 0.2);
-  border-top-color: rgba(255, 255, 255, 0.85);
-  border-radius: 50%;
-  animation: lb-spin 0.8s linear infinite;
+  transform: translate(-50%, -50%);
+  display: flex;
   pointer-events: none;
 }
 

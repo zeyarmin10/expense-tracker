@@ -71,9 +71,9 @@ export class App implements OnInit, AfterViewInit {
   groupName$: Observable<string | null>;
   inventoryEnabled$: Observable<boolean>;
   /** On /cash-flow in a personal space — highlights Income, its parent page. */
-  isPersonalCashFlowRoute$!: Observable<boolean>;
+  isIncomeNavActive$!: Observable<boolean>;
   /** On /cash-flow in a shop space — highlights Sales, which links to it. */
-  isShopCashFlowRoute$!: Observable<boolean>;
+  isSalesNavActive$!: Observable<boolean>;
   userSpaces$: Observable<UserSpaceSummary[]>;
   currentSpaceName$: Observable<string | null>;
   currentSpaceId$: Observable<string | null>;
@@ -379,11 +379,16 @@ export class App implements OnInit, AfterViewInit {
     this.isDrawerRouteActive$ = routeBase$.pipe(
       map((base) => drawerRoutes.includes(base))
     );
-    this.isPersonalCashFlowRoute$ = combineLatest([routeBase$, this.inventoryEnabled$]).pipe(
-      map(([base, inventory]) => base === '/cash-flow' && !inventory)
+    // These drive the Income / Sales highlight on their own (no
+    // routerLinkActive on those links): a [class.x] binding and
+    // routerLinkActive fighting over the same class made the binding's
+    // late `false` (inventoryEnabled$ resolves after the first navigation)
+    // strip the class on a hard reload.
+    this.isIncomeNavActive$ = combineLatest([routeBase$, this.inventoryEnabled$]).pipe(
+      map(([base, inventory]) => base === '/profit' || (base === '/cash-flow' && !inventory))
     );
-    this.isShopCashFlowRoute$ = combineLatest([routeBase$, this.inventoryEnabled$]).pipe(
-      map(([base, inventory]) => base === '/cash-flow' && inventory)
+    this.isSalesNavActive$ = combineLatest([routeBase$, this.inventoryEnabled$]).pipe(
+      map(([base, inventory]) => base === '/sales' || (base === '/cash-flow' && !!inventory))
     );
 
     this.translate.onLangChange.subscribe(event => {

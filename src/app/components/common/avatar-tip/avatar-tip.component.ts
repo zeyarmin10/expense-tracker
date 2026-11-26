@@ -29,8 +29,9 @@ let openInstance: AvatarTipComponent | null = null;
     <button type="button" class="at-btn" [attr.aria-label]="name + (detail ? ' · ' + detail : '') + (note ? '. ' + note : '')"
       [attr.aria-expanded]="open" (click)="toggle($event)">
       <app-user-avatar [name]="name" [photoUrl]="photoUrl" [size]="size"></app-user-avatar>
-      <span *ngIf="badge === 'edit'" class="at-badge" aria-hidden="true">
-        <lucide-icon [img]="iconEdit" [size]="9"></lucide-icon>
+      <span *ngIf="badge === 'edit'" class="at-badge" aria-hidden="true"
+        [style.--at-badge.px]="badgeSize" [class.at-badge-sm]="badgeSize < 14">
+        <lucide-icon [img]="iconEdit" [size]="badgeIconSize"></lucide-icon>
       </span>
     </button>
     <span #bubble class="at-bubble" [class.visible]="open" [class.at-below]="below" role="tooltip">
@@ -61,8 +62,8 @@ let openInstance: AvatarTipComponent | null = null;
       position: absolute;
       right: -3px;
       bottom: -3px;
-      width: 16px;
-      height: 16px;
+      width: var(--at-badge, 16px);
+      height: var(--at-badge, 16px);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -70,6 +71,13 @@ let openInstance: AvatarTipComponent | null = null;
       border: 1.5px solid var(--surface, #fff);
       background: var(--accent);
       color: #fff;
+    }
+    /* Small avatars: thinner ring and pushed further out so the pencil
+       covers less of the face. */
+    .at-badge-sm {
+      right: -4px;
+      bottom: -3px;
+      border-width: 1px;
     }
     /* Floating speech bubble. Moved to <body> while open and positioned
        with fixed left/top from place(); --at-arrow-x points the arrow at
@@ -146,6 +154,14 @@ export class AvatarTipComponent implements OnDestroy {
   /** Optional second line, e.g. who last edited it and when. */
   @Input() note = '';
   @Input() badge: 'edit' | null = null;
+
+  /** Edit badge scales with the avatar (16px at 40px, 11px at 22px). */
+  get badgeSize(): number {
+    return Math.max(11, Math.min(16, Math.round(this.size * 0.4)));
+  }
+  get badgeIconSize(): number {
+    return this.badgeSize >= 14 ? 9 : 7;
+  }
 
   @ViewChild('bubble', { static: true }) private bubbleRef!: ElementRef<HTMLElement>;
 

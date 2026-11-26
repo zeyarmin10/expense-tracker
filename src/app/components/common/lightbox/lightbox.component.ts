@@ -18,6 +18,7 @@ import { Capacitor } from '@capacitor/core';
 import { Directory, Filesystem } from '@capacitor/filesystem';
 import { FormatService } from '../../../services/format.service';
 import { showAppToast } from '../../../services/toast';
+import { BrandLoaderComponent } from '../brand-loader/brand-loader.component';
 
 const IMAGE_EXTENSIONS: Record<string, string> = {
   'image/jpeg': 'jpg',
@@ -31,7 +32,7 @@ const IMAGE_EXTENSIONS: Record<string, string> = {
 @Component({
   selector: 'app-lightbox',
   standalone: true,
-  imports: [CommonModule, TranslateModule],
+  imports: [CommonModule, TranslateModule, BrandLoaderComponent],
   templateUrl: './lightbox.component.html',
   styleUrls: ['./lightbox.component.css'],
 })

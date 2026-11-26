@@ -67,7 +67,7 @@
             }}</a></li>
         <!-- Cash Flow has no menu entry of its own in personal spaces: it opens
              from the Income page, so Income stays highlighted there. -->
-        <li><a routerLink="/profit" routerLinkActive="active-link" [class.active-link]="isPersonalCashFlowRoute$ | async"
+        <li><a routerLink="/profit" [class.active-link]="isIncomeNavActive$ | async"
             (click)="closeNavbarMenu()">{{ 'NAV_PROFIT' | translate
             }}</a></li>
       </ng-container>
@@ -77,7 +77,7 @@
         <li><a routerLink="/purchase" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_PURCHASE' |
             translate
             }}</a></li>
-        <li><a routerLink="/sales" routerLinkActive="active-link" [class.active-link]="isShopCashFlowRoute$ | async" (click)="closeNavbarMenu()">{{ 'NAV_SALES' |
+        <li><a routerLink="/sales" [class.active-link]="isSalesNavActive$ | async" (click)="closeNavbarMenu()">{{ 'NAV_SALES' |
             translate
             }}</a></li>
         <li><a routerLink="/sales-report" routerLinkActive="active-link" (click)="closeNavbarMenu()">{{ 'NAV_SALES_REPORT' |
@@ -260,8 +260,8 @@
   <!-- Income / Expense FAB / Budget, or in shop mode Sales / Purchase FAB / Summary — swapped as a set -->
   <ng-container *ngIf="!(inventoryEnabled$ | async)">
     <!-- Income (formerly labeled "Profit") -->
-    <a id="tour-nav-income" class="mob-nav-item" routerLink="/profit" routerLinkActive="mob-nav-active"
-      [class.mob-nav-active]="isPersonalCashFlowRoute$ | async">
+    <a id="tour-nav-income" class="mob-nav-item" routerLink="/profit"
+      [class.mob-nav-active]="isIncomeNavActive$ | async">
       <span class="mob-nav-icon">
         <lucide-icon [img]="iconBanknote" [size]="24"></lucide-icon>
       </span>
@@ -300,8 +300,8 @@
 
   <ng-container *ngIf="inventoryEnabled$ | async">
     <!-- Sales -->
-    <a id="tour-nav-sales" class="mob-nav-item" routerLink="/sales" routerLinkActive="mob-nav-active"
-      [class.mob-nav-active]="isShopCashFlowRoute$ | async">
+    <a id="tour-nav-sales" class="mob-nav-item" routerLink="/sales"
+      [class.mob-nav-active]="isSalesNavActive$ | async">
       <span class="mob-nav-icon">
         <lucide-icon [img]="iconHandCoins" [size]="24"></lucide-icon>
       </span>
