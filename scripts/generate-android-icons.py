@@ -103,8 +103,8 @@ SPLASH_SIDE = R * 3          # 288dp canvas; the icon must fit a 192dp circle
 NS = 'http://schemas.android.com/apk/res/android'
 tree = ET.fromstring(svg_src)
 CLIPS = {cp.get('id'): ' '.join(
-    f"M{float(r.get('x')):g} {float(r.get('y')):g} h{float(r.get('width')):g} v{float(r.get('height')):g} h{-float(r.get('width')):g} Z"
-    for r in cp.iter('rect')) for cp in tree.iter('clipPath')}
+    [f"M{float(r.get('x')):g} {float(r.get('y')):g} h{float(r.get('width')):g} v{float(r.get('height')):g} h{-float(r.get('width')):g} Z"
+     for r in cp.iter('rect')] + [pth.get('d') for pth in cp.iter('path')]) for cp in tree.iter('clipPath')}
 
 
 def color(c):
