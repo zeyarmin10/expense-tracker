@@ -185,7 +185,25 @@ export class FormatService {
       .split('-')[0];
     const value = Number(n);
     if (!Number.isFinite(value)) return '0';
-    const raw = String(value);
+    return this.localizeDigits(String(value), lang);
+  }
+
+  /**
+   * A number with a fixed count of decimals (e.g. a percentage shown as `62.0`),
+   * in the app's current numbering system. Unlike formatCount it keeps trailing zeros.
+   */
+  formatFixed(n: number, fractionDigits = 1, preferredLanguage?: string | null): string {
+    return this.memo(`fixed|${n}|${fractionDigits}|${preferredLanguage ?? ''}`, () => {
+      const storedLanguage = typeof localStorage === 'undefined' ? '' : localStorage.getItem('selectedLanguage') || '';
+      const lang = (this.translate.currentLang || preferredLanguage || storedLanguage || this.translate.getDefaultLang() || 'en')
+        .toLowerCase()
+        .split('-')[0];
+      const value = Number(n);
+      return this.localizeDigits(Number.isFinite(value) ? value.toFixed(fractionDigits) : (0).toFixed(fractionDigits), lang);
+    });
+  }
+
+  private localizeDigits(raw: string, lang: string): string {
     const digitsByLanguage: Record<string, string> = {
       my: '၀၁၂၃၄၅၆၇၈၉',
       th: '๐๑๒๓๔๕๖๗๘๙',

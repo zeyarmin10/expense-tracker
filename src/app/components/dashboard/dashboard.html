@@ -69,7 +69,7 @@
                 <span class="dov-budget-left" [class.dov-over]="ov.remaining < 0">
                   {{ (ov.remaining >= 0 ? 'DASH_BUDGET_LEFT' : 'DASH_BUDGET_OVER') | translate: { amount: formatService.formatAmountShort(ov.remaining < 0 ? -ov.remaining : ov.remaining, ov.currency) } }}
                 </span>
-                <span class="dov-budget-pct">{{ formatService.formatCount(ov.usedPct) }}%</span>
+                <span class="dov-budget-pct">{{ formatService.formatFixed(ov.usedPct, 1) }}%</span>
               </div>
               <div class="dov-bar" role="progressbar" [attr.aria-valuenow]="ov.usedPct" aria-valuemin="0" aria-valuemax="100">
                 <span class="dov-bar-fill" [attr.data-level]="budgetLevel(ov)" [style.width.%]="ov.usedPct > 100 ? 100 : ov.usedPct"></span>

@@ -690,7 +690,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       balance: income - expense,
       budget,
       hasBudget: budget > 0,
-      usedPct: budget > 0 ? Math.round((expense / budget) * 100) : 0,
+      usedPct: budget > 0 ? Math.round((expense / budget) * 1000) / 10 : 0, // one decimal, e.g. 62.4
       remaining,
       daysLeft,
       dailyAllowance: remaining > 0 && daysLeft > 0 ? remaining / daysLeft : 0,
@@ -762,22 +762,24 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
     if (!this.hasExpenseDataForChart) return;
 
+    // Same look as the Budget page's comparison chart (budget.ts renderChart):
+    // rounded bars, no vertical grid lines, small rounded legend keys on top,
+    // half-transparent fills with a solid 1px edge, ticks in the theme's --text-sub.
     const isLight = document.body.classList.contains('light-mode');
     const gridColor = isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.05)';
-    const tickColor = isLight ? '#4a5568' : '#6b7280';
-    const legendColor = isLight ? '#4a5568' : '#9ca3af';
+    const tickColor = getComputedStyle(canvas).getPropertyValue('--text-sub').trim();
 
     // Colors match the summary cards above (--income-color, --budget-color, --expense-color)
     const palette = isLight
       ? [
-          { border: '#00b894', bg: 'rgba(0,184,148,0.25)' },   // income
-          { border: '#0984e3', bg: 'rgba(9,132,227,0.25)' },   // budget
-          { border: '#d99800', bg: 'rgba(217,152,0,0.25)' },   // expense
+          { border: '#00b894', bg: 'rgba(0,184,148,0.5)' },    // income
+          { border: '#0984e3', bg: 'rgba(9,132,227,0.5)' },    // budget
+          { border: '#d99800', bg: 'rgba(217,152,0,0.5)' },    // expense
         ]
       : [
-          { border: '#34d399', bg: 'rgba(52,211,153,0.25)' },  // income
-          { border: '#60a5fa', bg: 'rgba(96,165,250,0.25)' },  // budget
-          { border: '#f4b11a', bg: 'rgba(244,177,26,0.25)' },  // expense
+          { border: '#34d399', bg: 'rgba(52,211,153,0.5)' },   // income
+          { border: '#60a5fa', bg: 'rgba(96,165,250,0.5)' },   // budget
+          { border: '#f4b11a', bg: 'rgba(244,177,26,0.5)' },   // expense
         ];
 
     const themedData = {
@@ -786,6 +788,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         ...ds,
         borderColor: palette[i]?.border ?? ds.borderColor,
         backgroundColor: palette[i]?.bg ?? ds.backgroundColor,
+        borderWidth: 1,
       })),
     };
 
@@ -796,15 +799,13 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         indexAxis: 'x',
         responsive: true,
         maintainAspectRatio: false,
+        animation: false,
+        datasets: {
+          bar: { maxBarThickness: 56, borderRadius: 5 },
+        },
         plugins: {
           legend: {
-            display: true,
-            position: 'bottom',
-            labels: {
-              boxWidth: 14,
-              color: legendColor,
-              font: { family: 'MyanmarUIFont, Arial, sans-serif', size: 11 },
-            },
+            labels: { color: tickColor, boxWidth: 10, boxHeight: 10, useBorderRadius: true, borderRadius: 3 },
           },
           tooltip: {
             callbacks: {
@@ -814,16 +815,17 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         },
         scales: {
           x: {
+            stacked: false,
             beginAtZero: true,
-            grid: { color: gridColor },
-            ticks: { color: tickColor, font: { family: 'MyanmarUIFont, Arial, sans-serif', size: 11 } },
+            grid: { display: false },
+            ticks: { color: tickColor },
           },
           y: {
+            stacked: false,
             beginAtZero: true,
             grid: { color: gridColor },
             ticks: {
               color: tickColor,
-              font: { family: 'MyanmarUIFont, Arial, sans-serif', size: 11 },
               callback: (value: any) => this.formatService.formatAmountShort(value, this.userProfile?.currency, false),
             },
           },

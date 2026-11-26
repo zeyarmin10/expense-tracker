@@ -131,6 +131,19 @@ describe('FormatService', () => {
     });
   });
 
+  describe('formatFixed', () => {
+    it('keeps exactly one decimal, including a trailing zero', () => {
+      expect(service.formatFixed(62.4, 1)).toBe('62.4');
+      expect(service.formatFixed(62, 1)).toBe('62.0');
+      expect(service.formatFixed(104.5, 1)).toBe('104.5');
+    });
+
+    it('uses Burmese digits in the my locale', () => {
+      translate.use('my');
+      expect(service.formatFixed(62.4, 1)).toBe('၆၂.၄');
+    });
+  });
+
   describe('formatAmountWithSymbol', () => {
     it('shows no decimals for zero-decimal currencies', () => {
       expect(service.formatAmountWithSymbol(1234.5, 'MMK')).toBe('1,235 Kyat');
