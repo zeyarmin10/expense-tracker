@@ -1,4 +1,5 @@
 import { BrandLoaderComponent } from './components/common/brand-loader/brand-loader.component';
+import { installLocalDigitInput } from './utils/local-digits';
 import { Component, inject, OnInit, AfterViewInit, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, NavigationEnd, RouterOutlet, RouterModule, ActivatedRoute } from '@angular/router';
@@ -150,6 +151,8 @@ export class App implements OnInit, AfterViewInit {
   private ngZone = inject(NgZone);
 
   constructor(private translate: TranslateService) {
+    // Number fields accept Myanmar/Thai/Khmer/full-width digits app-wide.
+    this.ngZone.runOutsideAngular(() => installLocalDigitInput());
     this.translate.setDefaultLang('en');
     const savedLang = localStorage.getItem('selectedLanguage') || 'en';
     this.translate.use(savedLang);

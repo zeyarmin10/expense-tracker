@@ -1089,6 +1089,15 @@ a.dov-card:active { transform: scale(0.99); }
   font-weight: 700;
 }
 
+/* Trend chart: title sits centred above the chart */
+.dov-trend .dov-card-head {
+  justify-content: center;
+}
+
+.dov-trend .dov-card-title {
+  text-align: center;
+}
+
 .dov-chip {
   width: 30px;
   height: 30px;
