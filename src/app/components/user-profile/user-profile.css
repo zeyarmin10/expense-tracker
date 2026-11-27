@@ -27,18 +27,42 @@
   gap: 1rem;
 }
 
-/* ── Hero Card ── */
+/* The form only groups the controls; its cards are spaced by the container's gap. */
+.prof-form {
+  display: contents;
+}
+
+/* ── Hero Card: avatar on the left, details on the right ── */
 .prof-hero {
   background: linear-gradient(160deg, #122448 0%, #07162f 100%);
   border: 1px solid rgba(148, 190, 255, 0.22);
   border-radius: 20px;
-  padding: 2rem 1.5rem 1.4rem;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-start; /* avatar sits at the top, next to the name */
+  gap: 1rem;
+  text-align: left;
+}
+
+/* Badges + member-since/group rows: full card width under avatar and name */
+.prof-hero-details {
+  flex: 1 0 100%;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 0.45rem;
-  text-align: center;
-  margin-bottom: 1rem;
+  gap: 0.6rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--border);
+}
+
+.prof-hero-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
 }
 
 :host-context(body.light-mode) .prof-hero {
@@ -48,18 +72,18 @@
 
 .prof-hero .prof-avatar-wrap {
   position: relative;
-  width: 88px;
-  height: 88px;
-  margin-bottom: 0.3rem;
+  width: 72px;
+  height: 72px;
+  flex-shrink: 0;
 }
 
 /* Camera edit button — bottom-right badge */
 .prof-avatar-cam-btn {
   position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 30px;
-  height: 30px;
+  bottom: -4px;
+  right: -4px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   background: #0b74ff;
   border: 2.5px solid var(--surface);
@@ -72,6 +96,19 @@
   box-shadow: 0 2px 8px rgba(11,116,255,0.4);
   transition: background 0.15s, transform 0.15s;
   z-index: 1;
+}
+
+/* Invisible 44px tap target around the 32px badge */
+.prof-avatar-cam-btn::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+}
+
+.prof-avatar-cam-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .prof-avatar-cam-btn:hover {
@@ -135,8 +172,10 @@
 .prof-hero-name-row {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  justify-content: center;
+  gap: 0.25rem;
+  justify-content: flex-start;
+  width: 100%;
+  min-width: 0;
 }
 
 .prof-hero-name {
@@ -144,6 +183,8 @@
   font-weight: 700;
   color: var(--text);
   letter-spacing: -0.02em;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 /* Borderless pencil button — icon only, no background */
@@ -151,8 +192,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  /* min-width: 46px; */
-  min-height: 46px;
+  min-width: 44px;
+  min-height: 44px;
   border: none;
   background: transparent;
   cursor: pointer;
@@ -171,111 +212,148 @@
   filter: brightness(0);
 }
 
+/* Edit mode: field and Cancel / Save on one line, all the same height */
+.prof-hero-name-row-editing {
+  flex-wrap: nowrap;
+  gap: 0.5rem;
+}
+
 .prof-hero-name-input {
-  background: transparent;
-  border: none;
-  border-bottom: 1.5px solid var(--accent);
-  border-radius: 0;
-  color: var(--text);
-  font-size: 1rem;
-  font-weight: 600;
-  padding: 0.4rem 0.25rem;
-  outline: none;
-  text-align: center;
-  width: 190px;
-  max-width: 55vw;
-}
-
-.prof-hero-action-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 44px;
-  min-height: 44px;
+  flex: 1 1 auto;
+  min-width: 0;
+  width: auto;
+  height: 44px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
   border-radius: 10px;
-  border: none;
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: all 0.15s;
-  flex-shrink: 0;
+  color: var(--text);
+  /* Same font as the rest of the app, at a normal reading size/weight while editing */
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.4;
+  padding: 0 0.75rem;
+  outline: none;
+  text-align: left;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 
-.prof-hero-action-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.prof-hero-save-btn {
-  background: transparent;
-  color: var(--accent);
-}
-
-.prof-hero-save-btn:hover:not(:disabled) {
-  background: var(--accent-dim);
-  color: var(--accent);
-}
-
-.prof-save-icon {
-  font-size: 1.5rem;
-}
-
-.prof-hero-cancel-btn {
-  background: transparent;
-  color: var(--text-muted);
-}
-
-.prof-hero-cancel-btn:hover {
-  color: var(--danger);
-}
-
-.prof-cancel-icon {
-  font-size: 1.5rem;
+.prof-hero-name-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
 }
 
 .prof-hero-edit-actions {
   display: flex;
-  gap: 0;
+  gap: 0.5rem;
+  flex-shrink: 0;
 }
 
-.prof-hero-edit-actions .prof-hero-action-btn {
-  min-width: 44px;
-  min-height: 44px;
+.prof-hero-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  height: 44px;
+  padding: 0 0.9rem;
   border-radius: 10px;
-  font-size: 1rem;
+  border: 1px solid transparent;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.1s;
+}
+
+.prof-hero-action-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.prof-hero-action-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.prof-hero-action-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.prof-hero-save-btn {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 2px 8px var(--accent-glow);
+}
+
+.prof-hero-save-btn:hover:not(:disabled) {
+  background: #0059cc;
+}
+
+.prof-hero-cancel-btn {
+  background: var(--surface-2);
+  border-color: var(--border);
+  color: var(--text-sub);
+}
+
+.prof-hero-cancel-btn:hover {
+  color: var(--text);
+  border-color: var(--text-muted);
+}
+
+/* Mobile: icon-only ✕ / ✓ (labels stay for screen readers via aria-label) */
+@media (max-width: 991px) {
+  .prof-hero-name-row-editing,
+  .prof-hero-edit-actions {
+    gap: 0.4rem;
+  }
+
+  .prof-hero-action-btn {
+    width: 44px;
+    padding: 0;
+  }
+
+  .prof-hero-action-label {
+    display: none;
+  }
 }
 
 .prof-hero-email {
   font-size: 0.8rem;
   color: var(--text-sub);
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 
 .prof-hero-badges {
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 .prof-hero-meta {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 0.35rem 0.7rem;
-  margin-top: 0.2rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid var(--border);
-  width: 100%;
+  flex-direction: column;
+  gap: 0.45rem;
 }
 
+/* One detail per row: label on the left, value on the right */
 .prof-hero-meta-item {
   display: flex;
-  align-items: center;
-  gap: 0.35rem;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.prof-hero-meta-item .prof-hero-meta-value {
+  text-align: right;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .prof-hero-meta-label {
-  font-size: 0.63rem;
+  font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.09em;
@@ -283,7 +361,7 @@
 }
 
 .prof-hero-meta-value {
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   color: var(--text-sub);
 }
 
@@ -346,7 +424,109 @@
   border: 1px solid var(--border);
   border-radius: 16px;
   overflow: hidden;
-  margin-bottom: 1rem;
+}
+
+/* Row with text on the left and a button on the right (e.g. change password) */
+.prof-action-item {
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+/* Currency title + select on one line, hint underneath */
+.prof-currency-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.prof-field-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.prof-field-hint lucide-icon {
+  flex-shrink: 0;
+  margin-top: 0.15rem;
+}
+
+.prof-field-hint-lock {
+  color: var(--text-sub);
+}
+
+/* Budget period title row inside the Records card (select follows below) */
+.prof-subhead {
+  justify-content: space-between;
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+/* ── General card: About / Privacy / Sign out ── */
+.prof-link-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 52px;
+  padding: 0.8rem 1.1rem;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.9rem;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.prof-link-row:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.prof-link-row:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.prof-link-row:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.prof-link-label {
+  flex: 1;
+  min-width: 0;
+}
+
+.prof-link-icon {
+  color: var(--text-sub);
+  flex-shrink: 0;
+}
+
+.prof-link-chevron {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.prof-link-logout,
+.prof-link-logout:hover,
+.prof-link-logout .prof-link-icon {
+  color: var(--danger);
+}
+
+.prof-version {
+  padding: 0.75rem 1.1rem;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-align: center;
 }
 
 /* ── Section icon pills (match budget/profit panel pill style) ── */

@@ -11,7 +11,10 @@ import { switchMap, tap, catchError, distinctUntilChanged, takeUntil, take } fro
 import { AuthService } from '../../services/auth';
 import { getActiveGroupId, getCurrentSpaceRole, UserDataService, UserProfile } from '../../services/user-data';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { LucideAngularModule, Save, Trash2, Plus, ChevronDown, ChevronUp, X, Bell, BellOff, Clock, Camera as LucideCamera, Images, Moon, Monitor, Sun, CalendarRange, Pencil, PencilLine, Settings2, ShieldAlert, KeyRound, Eye, EyeOff, CircleCheckBig, Circle } from 'lucide-angular';
+import { LucideAngularModule, Save, Trash2, Plus, ChevronDown, ChevronUp, X, Bell, BellOff, Clock, Camera as LucideCamera, Images, Moon, Monitor, Sun, CalendarRange, Pencil, PencilLine, Settings2, ShieldAlert, KeyRound, Eye, EyeOff, CircleCheckBig, Circle, Check, Lock, Info, LogOut, ChevronRight, Shield, Coins } from 'lucide-angular';
+import { Router, RouterModule } from '@angular/router';
+import { App as CapacitorApp } from '@capacitor/app';
+import { APP_VERSION } from '../../core/constants/app.constants';
 import { updateProfile } from '@angular/fire/auth';
 import { HttpClient } from '@angular/common/http';
 import { Camera } from '@capacitor/camera';
@@ -61,6 +64,7 @@ const Toast = createAppToast();
     UserAvatarComponent,
     ImageCropperComponent,
     CustomSelectComponent,
+    RouterModule,
   ],
   providers: [DatePipe],
   templateUrl: './user-profile.html',
@@ -139,6 +143,18 @@ export class UserProfileComponent implements OnInit, OnDestroy {
     return this.customBudgetPeriods.some(p => p.id === selectedPeriodId);
   }
 
+  /** A group member who can see, but not change, the space's currency/budget period. */
+  get isSettingsLockedForMember(): boolean {
+    return this.accountType === 'group' && !this.canEditSettings;
+  }
+
+  /** Translation key for the hero's role badge (owner/admin/member). */
+  roleLabelKey(role: string | null | undefined): string {
+    if (role === 'owner') return 'NAV_OWNER';
+    if (role === 'admin') return 'NAV_ADMIN';
+    return 'NAV_MEMBER';
+  }
+
   get canEditSettings(): boolean {
     if (this.accountType !== 'group') {
       return true; // Personal account users can always edit
@@ -206,6 +222,18 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   readonly iconCheckCircle = CircleCheckBig;
   readonly iconCircle = Circle;
   readonly iconX = X;
+  readonly iconLock = Lock;
+  readonly iconCheck = Check;
+  readonly iconInfo = Info;
+  readonly iconLogOut = LogOut;
+  readonly iconChevronRight = ChevronRight;
+  readonly iconShield = Shield;
+  readonly iconCoins = Coins;
+
+  private readonly router = inject(Router);
+  /** Shown at the bottom of the profile; the real installed version on native builds. */
+  appVersion = APP_VERSION;
+  isLoggingOut = false;
   imageLoadError: boolean = false;
   isEditingName: boolean = false;
   isFormReady: boolean = false;
@@ -372,6 +400,11 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    if (Capacitor.isNativePlatform()) {
+      CapacitorApp.getInfo()
+        .then((info) => { this.appVersion = info.version; })
+        .catch(() => undefined); // keep the fallback version
+    }
     const storedLang = localStorage.getItem('selectedLanguage');
     if (storedLang) {
       this.selectedLanguage = storedLang;
@@ -585,13 +618,26 @@ export class UserProfileComponent implements OnInit, OnDestroy {
     const result = await Swal.fire({
       icon: 'warning',
       title: this.translate.instant('CURRENCY_CHANGE_CONFIRM_TITLE'),
-      text: this.translate.instant('CURRENCY_CHANGE_CONFIRM_TEXT', { from: fromName, to: toName }),
+      text: this.translate.instant('CURRENCY_CHANGE_CONFIRM_TEXT', { from: fromName, to: toName })
+        + (this.accountType === 'group' ? ' ' + this.translate.instant('CURRENCY_CHANGE_GROUP_NOTE') : ''),
       showCancelButton: true,
       confirmButtonText: this.translate.instant('CONTINUE_BUTTON'),
       cancelButtonText: this.translate.instant('CANCEL_BUTTON_LABEL'),
       reverseButtons: true,
     });
     return result.isConfirmed;
+  }
+
+  async logout(): Promise<void> {
+    if (this.isLoggingOut) return;
+    this.isLoggingOut = true;
+    try {
+      await this.authService.logout(true);
+      this.router.navigate(['/login']);
+    } catch (error) {
+      console.error('Logout failed', error);
+      this.isLoggingOut = false;
+    }
   }
 
   // ✅ Display name: edit mode toggle

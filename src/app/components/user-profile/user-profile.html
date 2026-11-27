@@ -1,9 +1,10 @@
 <div class="prof-wrapper">
   <div class="prof-container mb-5">
     <ng-container *ngIf="userDisplayData$ | async as userData; else profileLoading">
-      <form [formGroup]="userProfileForm" (ngSubmit)="onSubmit()">
+      <!-- display: contents — the cards below are spaced by .prof-container's gap -->
+      <form class="prof-form" [formGroup]="userProfileForm" (ngSubmit)="onSubmit()">
 
-        <!-- ── Hero Card ── -->
+        <!-- ── Hero: avatar (top-aligned) + name/email, details full width below ── -->
         <div class="prof-hero">
           <!-- Hidden file input for avatar -->
           <input #avatarFileInput type="file" accept="image/*" style="display:none"
@@ -13,7 +14,7 @@
             <app-user-avatar
               [name]="userProfileForm.get('displayName')?.value || 'User'"
               [photoUrl]="userPhotoUrl$ | async"
-              [size]="88"
+              [size]="72"
               [clickable]="true">
             </app-user-avatar>
 
@@ -22,124 +23,95 @@
               <div class="prof-spinner-ring"></div>
             </div>
 
-            <!-- Camera edit button (bottom-right) -->
+            <!-- Camera edit button (bottom-right); its tap area is 44px via ::before -->
             <button type="button" class="prof-avatar-cam-btn" (click)="pickAvatar()"
-              *ngIf="!isUploadingAvatar" [title]="'AVATAR_PICK_TITLE' | translate">
-              <lucide-icon [img]="iconCamera" [size]="14"></lucide-icon>
+              *ngIf="!isUploadingAvatar" [title]="'AVATAR_PICK_TITLE' | translate"
+              [attr.aria-label]="'AVATAR_PICK_TITLE' | translate">
+              <lucide-icon [img]="iconCamera" [size]="16"></lucide-icon>
             </button>
           </div>
 
-          <!-- Name view mode -->
-          <div class="prof-hero-name-row" *ngIf="!isEditingName">
-            <span class="prof-hero-name">{{ userProfileForm.get('displayName')?.value || '—' }}</span>
-            <button type="button" class="prof-hero-edit-btn" (click)="startEditName()">
-              <!-- <fa-icon [icon]="faEdit"></fa-icon> -->
-              <lucide-icon [img]="iconPencilLine" [size]="18" class="edit-pencil-icon"></lucide-icon>
-            </button>
-          </div>
-
-          <!-- Name edit mode -->
-          <div class="prof-hero-name-row" *ngIf="isEditingName">
-            <input type="text" id="displayName" class="prof-hero-name-input" formControlName="displayName" placeholder=" "
-              maxlength="50" (keyup.enter)="saveDisplayName()" (keyup.escape)="cancelEditName()">
-            <div class="prof-hero-edit-actions">
-              <button type="button" class="prof-hero-action-btn prof-hero-save-btn" (click)="saveDisplayName()"
-                [disabled]="userProfileForm.get('displayName')?.invalid" title="{{ 'SAVE_BUTTON_LABEL' | translate }}">
-                <lucide-icon [img]="iconSave" [size]="18" class="prof-save-icon"></lucide-icon>
-              </button>
-              <button type="button" class="prof-hero-action-btn prof-hero-cancel-btn" (click)="cancelEditName()"
-                title="{{ 'CANCEL_BUTTON' | translate }}">
-                <lucide-icon [img]="iconTimes" [size]="18" class="prof-cancel-icon"></lucide-icon>
+          <div class="prof-hero-info">
+            <!-- Name view mode -->
+            <div class="prof-hero-name-row" *ngIf="!isEditingName">
+              <span class="prof-hero-name">{{ userProfileForm.get('displayName')?.value || '—' }}</span>
+              <button type="button" class="prof-hero-edit-btn" (click)="startEditName()">
+                <!-- <fa-icon [icon]="faEdit"></fa-icon> -->
+                <lucide-icon [img]="iconPencilLine" [size]="18" class="edit-pencil-icon"></lucide-icon>
               </button>
             </div>
-          </div>
 
-          <div class="prof-hero-email">{{ userData.email }}</div>
-
-          <div class="prof-hero-badges">
-            <span class="prof-badge" [ngClass]="userData.accountType === 'group' ? 'prof-badge-info' : 'prof-badge-success'">
-              {{ (userData.accountType === 'group' ? 'ACCOUNT_TYPE_GROUP' : 'ACCOUNT_TYPE_PERSONAL') | translate }}
-            </span>
-            <span class="prof-badge prof-badge-neutral" *ngIf="userData.accountType === 'group'">
-              {{ userData.roles }}
-            </span>
-          </div>
-          <div class="prof-hero-meta">
-            <div class="prof-hero-meta-item">
-              <span class="prof-hero-meta-label">{{ 'MEMBER_SINCE_LABEL' | translate }}</span>
-              <span class="prof-hero-meta-value">{{ this.formatService.formatLocalizedDate(userData.createdAt, 'MMM d,
-                yyyy')
-                }}</span>
-            </div>
-            <span class="prof-hero-meta-sep" *ngIf="userData.accountType === 'group' && userData.groupName">·</span>
-            <div class="prof-hero-meta-item" *ngIf="userData.accountType === 'group' && userData.groupName">
-              <span class="prof-hero-meta-label">{{ 'GROUP_NAME' | translate }}</span>
-              <span class="prof-hero-meta-value">{{ userData.groupName }}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- ── Budget Period ── -->
-        <div class="prof-list-card" *ngIf="canEditSettings && !(isInventorySpace$ | async)">
-          <div class="prof-card-header-row">
-            <div class="prof-card-header-left">
-              <span class="prof-section-pill prof-section-pill-accent">
-                <lucide-icon [img]="iconCalendarRange" [size]="14"></lucide-icon>
-              </span>
-              <span class="prof-card-label">{{ 'BUDGET_PERIOD_LABEL' | translate }}</span>
-            </div>
-            <button class="prof-icon-btn" type="button" (click)="openBudgetPeriodModal()"
-              title="{{ 'CREATE_CUSTOM_BUDGET_PERIOD' | translate }}">
-              <lucide-icon [img]="iconPlus" [size]="15"></lucide-icon>
-            </button>
-          </div>
-
-          <div class="prof-select-row">
-            <app-custom-select
-              formControlName="budgetPeriod"
-              [options]="budgetPeriodSelectOptions"
-              [showSearch]="false"
-              [expandList]="true">
-            </app-custom-select>
-          </div>
-
-          <div class="prof-period-range-text" *ngIf="showCustomDateRange">
-            <lucide-icon [img]="iconCalendarRange" [size]="13"></lucide-icon>
-            <span *ngIf="userProfileForm.get('budgetStartDate')?.value && userProfileForm.get('budgetEndDate')?.value">
-              {{ 'BUDGET_PERIOD_RANGE_TEXT' | translate: {
-                start: formatService.formatLocalizedDate(userProfileForm.get('budgetStartDate')?.value, 'MMM d, yyyy'),
-                end: formatService.formatLocalizedDate(userProfileForm.get('budgetEndDate')?.value, 'MMM d, yyyy')
-              } }}
-            </span>
-          </div>
-
-          <div class="prof-custom-list-panel" *ngIf="customBudgetPeriods.length > 0">
-            <button class="prof-custom-list-toggle" type="button" (click)="toggleCustomBudgetList()">
-              <span>
-                <lucide-icon [img]="iconCalendarRange" [size]="15" class="calendar-range-icon"></lucide-icon>
-                {{ 'CUSTOM_BUDGET_PERIOD' | translate }}
-              </span>
-              <lucide-icon [img]="isCustomBudgetListCollapsed ? iconChevronDown : iconChevronUp" [size]="15" class="prof-chevron"></lucide-icon>
-            </button>
-            <div class="prof-custom-list-body" [class.open]="!isCustomBudgetListCollapsed">
-              <div *ngFor="let period of customBudgetPeriods; trackBy: trackByPeriodId" class="prof-custom-period-item">
-                <div class="prof-custom-period-info">
-                  <span class="prof-custom-period-name">{{ period.name }}</span>
-                  <span class="prof-custom-period-range">
-                    {{ this.formatService.formatLocalizedDate(period.startDate, 'shortDate') }} — {{
-                    this.formatService.formatLocalizedDate(period.endDate, 'shortDate') }}
-                  </span>
-                </div>
-                <button class="prof-delete-btn" type="button" (click)="deleteCustomPeriod(period.id, $event)"
-                  title="{{ 'CONFIRM_DELETE_BUDGET_PERIOD_TITLE' | translate }}">
-                  <lucide-icon [img]="iconTrash2" [size]="15" class="fa-delete-btn"></lucide-icon>
+            <!-- Name edit mode: field + Cancel / Save on one line; buttons are icon-only on mobile -->
+            <div class="prof-hero-name-row prof-hero-name-row-editing" *ngIf="isEditingName">
+              <input type="text" id="displayName" class="prof-hero-name-input" formControlName="displayName" placeholder=" "
+                maxlength="50" (keyup.enter)="saveDisplayName()" (keyup.escape)="cancelEditName()"
+                [attr.aria-label]="'DISPLAY_NAME_LABEL' | translate">
+              <div class="prof-hero-edit-actions">
+                <button type="button" class="prof-hero-action-btn prof-hero-cancel-btn" (click)="cancelEditName()"
+                  [attr.aria-label]="'CANCEL_BUTTON' | translate">
+                  <lucide-icon [img]="iconTimes" [size]="18"></lucide-icon>
+                  <span class="prof-hero-action-label" aria-hidden="true">{{ 'CANCEL_BUTTON' | translate }}</span>
+                </button>
+                <button type="button" class="prof-hero-action-btn prof-hero-save-btn" (click)="saveDisplayName()"
+                  [disabled]="userProfileForm.get('displayName')?.invalid" [attr.aria-label]="'SAVE_BUTTON_LABEL' | translate">
+                  <lucide-icon [img]="iconCheck" [size]="18"></lucide-icon>
+                  <span class="prof-hero-action-label" aria-hidden="true">{{ 'SAVE_BUTTON_LABEL' | translate }}</span>
                 </button>
               </div>
             </div>
+
+            <div class="prof-hero-email">{{ userData.email }}</div>
+          </div>
+
+          <!-- Full-width row under the avatar + name: account type/role, then details -->
+          <div class="prof-hero-details">
+            <div class="prof-hero-badges">
+              <span class="prof-badge" [ngClass]="userData.accountType === 'group' ? 'prof-badge-info' : 'prof-badge-success'">
+                {{ (userData.accountType === 'group' ? 'ACCOUNT_TYPE_GROUP' : 'ACCOUNT_TYPE_PERSONAL') | translate }}
+              </span>
+              <span class="prof-badge prof-badge-neutral" *ngIf="userData.accountType === 'group'">
+                {{ roleLabelKey(userData.roles) | translate }}
+              </span>
+            </div>
+
+            <div class="prof-hero-meta">
+              <span class="prof-hero-meta-item">
+                <span class="prof-hero-meta-label">{{ 'MEMBER_SINCE_LABEL' | translate }}</span>
+                <span class="prof-hero-meta-value">{{ formatService.formatLocalizedDate(userData.createdAt, 'MMM d, yyyy') }}</span>
+              </span>
+              <span class="prof-hero-meta-item" *ngIf="userData.accountType === 'group' && userData.groupName">
+                <span class="prof-hero-meta-label">{{ 'GROUP_NAME' | translate }}</span>
+                <span class="prof-hero-meta-value">{{ userData.groupName }}</span>
+              </span>
+            </div>
           </div>
         </div>
 
-        <!-- ── Preferences ── -->
+        <!-- ── Security: account (email/password accounts only — Google
+             accounts manage their password with Google, not here) ── -->
+        <div class="prof-list-card" *ngIf="isPasswordAccount">
+          <div class="prof-card-header-row">
+            <div class="prof-card-header-left">
+              <span class="prof-section-pill prof-section-pill-accent">
+                <lucide-icon [img]="iconKeyRound" [size]="14"></lucide-icon>
+              </span>
+              <span class="prof-card-label">{{ 'SECURITY_SECTION_LABEL' | translate }}</span>
+            </div>
+          </div>
+          <div class="prof-list-item prof-action-item">
+            <div class="prof-danger-info">
+              <p class="prof-danger-title">{{ 'CHANGE_PASSWORD_BUTTON' | translate }}</p>
+              <p class="prof-danger-desc">{{ 'CHANGE_PASSWORD_INFO' | translate }}</p>
+            </div>
+            <button type="button" class="prof-change-password-btn" (click)="openChangePasswordModal()" [disabled]="isChangingPassword">
+              <lucide-icon [img]="iconKeyRound" [size]="15" *ngIf="!isChangingPassword"></lucide-icon>
+              <span *ngIf="!isChangingPassword">{{ 'CHANGE_PASSWORD_BUTTON' | translate }}</span>
+              <span *ngIf="isChangingPassword">{{ 'CHANGING_PASSWORD_LABEL' | translate }}…</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- ── Preferences: how the app looks ── -->
         <div class="prof-list-card">
           <div class="prof-card-header-row">
             <div class="prof-card-header-left">
@@ -148,15 +120,6 @@
               </span>
               <span class="prof-card-label">{{ 'PREFERENCES_LABEL' | translate }}</span>
             </div>
-          </div>
-          <div class="prof-list-item">
-            <span class="prof-list-title">{{ 'CURRENCY' | translate }}</span>
-            <app-custom-select class="csl-tall-sheet"
-              formControlName="currency"
-              [options]="currencySelectOptions"
-              [fitContent]="true"
-              [sheetTitle]="'CURRENCY' | translate">
-            </app-custom-select>
           </div>
 
           <div class="prof-list-item prof-list-item-col">
@@ -251,29 +214,120 @@
           </label>
         </div>
 
-      </form>
-
-      <!-- ── Security (email/password accounts only — Google accounts
-           manage their password with Google, not here) ── -->
-      <div class="prof-section" *ngIf="isPasswordAccount">
-        <div class="prof-section-header">
-          <span class="prof-section-pill prof-section-pill-accent">
-            <lucide-icon [img]="iconKeyRound" [size]="14"></lucide-icon>
-          </span>
-          <span class="prof-section-label">{{ 'SECURITY_SECTION_LABEL' | translate }}</span>
-        </div>
-        <div class="prof-danger-row">
-          <div class="prof-danger-info">
-            <p class="prof-danger-title">{{ 'CHANGE_PASSWORD_BUTTON' | translate }}</p>
-            <p class="prof-danger-desc">{{ 'CHANGE_PASSWORD_INFO' | translate }}</p>
+        <!-- ── Records: currency + budget period (space-wide settings) ── -->
+        <div class="prof-list-card">
+          <div class="prof-card-header-row">
+            <div class="prof-card-header-left">
+              <span class="prof-section-pill prof-section-pill-accent">
+                <lucide-icon [img]="iconCoins" [size]="14"></lucide-icon>
+              </span>
+              <span class="prof-card-label">{{ 'RECORDS_SETTINGS_LABEL' | translate }}</span>
+            </div>
           </div>
-          <button type="button" class="prof-change-password-btn" (click)="openChangePasswordModal()" [disabled]="isChangingPassword">
-            <lucide-icon [img]="iconKeyRound" [size]="15" *ngIf="!isChangingPassword"></lucide-icon>
-            <span *ngIf="!isChangingPassword">{{ 'CHANGE_PASSWORD_BUTTON' | translate }}</span>
-            <span *ngIf="isChangingPassword">{{ 'CHANGING_PASSWORD_LABEL' | translate }}…</span>
-          </button>
+
+          <div class="prof-list-item prof-list-item-col">
+            <div class="prof-currency-row">
+              <span class="prof-list-title">{{ 'CURRENCY' | translate }}</span>
+              <app-custom-select class="csl-tall-sheet"
+                formControlName="currency"
+                [options]="currencySelectOptions"
+                [fitContent]="true"
+                [sheetTitle]="'CURRENCY' | translate">
+              </app-custom-select>
+            </div>
+            <!-- Members can't change it: say why instead of leaving a dead control -->
+            <p class="prof-field-hint prof-field-hint-lock" *ngIf="isSettingsLockedForMember">
+              <lucide-icon [img]="iconLock" [size]="13"></lucide-icon>
+              <span>{{ 'SETTINGS_LOCKED_GROUP' | translate }}</span>
+            </p>
+            <p class="prof-field-hint" *ngIf="!isSettingsLockedForMember">
+              <lucide-icon [img]="iconInfo" [size]="13"></lucide-icon>
+              <span>{{ (userData.accountType === 'group' ? 'CURRENCY_SCOPE_GROUP' : 'CURRENCY_SCOPE_PERSONAL') | translate }}</span>
+            </p>
+          </div>
+
+          <ng-container *ngIf="canEditSettings && !(isInventorySpace$ | async)">
+            <div class="prof-list-item prof-subhead">
+              <span class="prof-list-title">{{ 'BUDGET_PERIOD_LABEL' | translate }}</span>
+              <button class="prof-icon-btn" type="button" (click)="openBudgetPeriodModal()"
+                title="{{ 'CREATE_CUSTOM_BUDGET_PERIOD' | translate }}"
+                [attr.aria-label]="'CREATE_CUSTOM_BUDGET_PERIOD' | translate">
+                <lucide-icon [img]="iconPlus" [size]="15"></lucide-icon>
+              </button>
+            </div>
+
+          <div class="prof-select-row">
+            <app-custom-select
+              formControlName="budgetPeriod"
+              [options]="budgetPeriodSelectOptions"
+              [showSearch]="false"
+              [expandList]="true">
+            </app-custom-select>
+          </div>
+
+          <div class="prof-period-range-text" *ngIf="showCustomDateRange">
+            <lucide-icon [img]="iconCalendarRange" [size]="13"></lucide-icon>
+            <span *ngIf="userProfileForm.get('budgetStartDate')?.value && userProfileForm.get('budgetEndDate')?.value">
+              {{ 'BUDGET_PERIOD_RANGE_TEXT' | translate: {
+                start: formatService.formatLocalizedDate(userProfileForm.get('budgetStartDate')?.value, 'MMM d, yyyy'),
+                end: formatService.formatLocalizedDate(userProfileForm.get('budgetEndDate')?.value, 'MMM d, yyyy')
+              } }}
+            </span>
+          </div>
+
+          <div class="prof-custom-list-panel" *ngIf="customBudgetPeriods.length > 0">
+            <button class="prof-custom-list-toggle" type="button" (click)="toggleCustomBudgetList()">
+              <span>
+                <lucide-icon [img]="iconCalendarRange" [size]="15" class="calendar-range-icon"></lucide-icon>
+                {{ 'CUSTOM_BUDGET_PERIOD' | translate }}
+              </span>
+              <lucide-icon [img]="isCustomBudgetListCollapsed ? iconChevronDown : iconChevronUp" [size]="15" class="prof-chevron"></lucide-icon>
+            </button>
+            <div class="prof-custom-list-body" [class.open]="!isCustomBudgetListCollapsed">
+              <div *ngFor="let period of customBudgetPeriods; trackBy: trackByPeriodId" class="prof-custom-period-item">
+                <div class="prof-custom-period-info">
+                  <span class="prof-custom-period-name">{{ period.name }}</span>
+                  <span class="prof-custom-period-range">
+                    {{ this.formatService.formatLocalizedDate(period.startDate, 'shortDate') }} — {{
+                    this.formatService.formatLocalizedDate(period.endDate, 'shortDate') }}
+                  </span>
+                </div>
+                <button class="prof-delete-btn" type="button" (click)="deleteCustomPeriod(period.id, $event)"
+                  title="{{ 'CONFIRM_DELETE_BUDGET_PERIOD_TITLE' | translate }}">
+                  <lucide-icon [img]="iconTrash2" [size]="15" class="fa-delete-btn"></lucide-icon>
+                </button>
+              </div>
+            </div>
+          </div>
+          </ng-container>
         </div>
-      </div>
+
+        <!-- ── General: about, privacy, sign out ── -->
+        <div class="prof-list-card">
+          <div class="prof-card-header-row">
+            <div class="prof-card-header-left">
+              <span class="prof-section-pill prof-section-pill-accent">
+                <lucide-icon [img]="iconInfo" [size]="14"></lucide-icon>
+              </span>
+              <span class="prof-card-label">{{ 'PROFILE_GENERAL_LABEL' | translate }}</span>
+            </div>
+          </div>
+          <a class="prof-link-row" routerLink="/about">
+            <lucide-icon class="prof-link-icon" [img]="iconInfo" [size]="17"></lucide-icon>
+            <span class="prof-link-label">{{ 'NAV_ABOUT' | translate }}</span>
+            <lucide-icon class="prof-link-chevron" [img]="iconChevronRight" [size]="16"></lucide-icon>
+          </a>
+          <a class="prof-link-row" routerLink="/privacy-policy">
+            <lucide-icon class="prof-link-icon" [img]="iconShield" [size]="17"></lucide-icon>
+            <span class="prof-link-label">{{ 'NAV_PRIVACY_POLICY' | translate }}</span>
+            <lucide-icon class="prof-link-chevron" [img]="iconChevronRight" [size]="16"></lucide-icon>
+          </a>
+          <button type="button" class="prof-link-row prof-link-logout" (click)="logout()" [disabled]="isLoggingOut">
+            <lucide-icon class="prof-link-icon" [img]="iconLogOut" [size]="17"></lucide-icon>
+            <span class="prof-link-label">{{ 'NAV_LOGOUT' | translate }}</span>
+          </button>
+          <div class="prof-version">Kyat Wise · {{ 'ABOUT_VERSION_LABEL' | translate }} {{ appVersion }}</div>
+        </div>
 
       <!-- ── Danger Zone ── -->
       <div class="prof-section prof-danger-section">
@@ -295,6 +349,8 @@
           </button>
         </div>
       </div>
+
+      </form>
 
     </ng-container>
     <ng-template #profileLoading>
