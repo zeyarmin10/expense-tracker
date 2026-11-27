@@ -599,7 +599,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
         });
       }
       this.userProfileForm.markAsPristine();
-      Toast.fire({ icon: 'success', title: this.translate.instant('PROFILE_UPDATE_SUCCESS') });
+      // No success toast: the select already shows the new value (errors still toast).
     } catch (error: any) {
       console.error('Auto-save error:', error);
       // U8: show error toast so user knows the save failed
@@ -707,7 +707,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
 
     try {
       this.notificationState = await this.notificationService.enableNotifications();
-      Toast.fire({ icon: 'success', title: this.translate.instant('NOTI_ENABLE_SUCCESS') });
+      // No success toast: the switch itself shows the new state.
     } catch (error: any) {
       console.error('Notification enable error:', error);
       this.notificationState = { ...previousState };
@@ -725,7 +725,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
 
     try {
       this.notificationState = await this.notificationService.disableNotifications();
-      Toast.fire({ icon: 'success', title: this.translate.instant('NOTI_DISABLE_SUCCESS') });
+      // No success toast: the switch itself shows the new state.
     } catch (error: any) {
       console.error('Notification disable error:', error);
       this.notificationState = { ...previousState };
@@ -788,7 +788,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
 
     try {
       this.notificationState = await this.notificationService.setDailyReminderEnabled(enabled);
-      Toast.fire({ icon: 'success', title: this.translate.instant('NOTI_SETTINGS_SAVED') });
+      // No success toast: the switch itself shows the new state.
     } catch (error: any) {
       console.error('Daily reminder setting error:', error);
       this.notificationState = { ...previousState };

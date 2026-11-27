@@ -35,7 +35,8 @@
             <!-- Name view mode -->
             <div class="prof-hero-name-row" *ngIf="!isEditingName">
               <span class="prof-hero-name">{{ userProfileForm.get('displayName')?.value || '—' }}</span>
-              <button type="button" class="prof-hero-edit-btn" (click)="startEditName()">
+              <button type="button" class="prof-hero-edit-btn" (click)="startEditName()"
+                [attr.aria-label]="'EDIT_BUTTON_LABEL' | translate" [title]="'EDIT_BUTTON_LABEL' | translate">
                 <!-- <fa-icon [icon]="faEdit"></fa-icon> -->
                 <lucide-icon [img]="iconPencilLine" [size]="18" class="edit-pencil-icon"></lucide-icon>
               </button>
@@ -172,7 +173,6 @@
           <label class="prof-noti-switch-row" [class.prof-noti-disabled]="!canChangeNotificationEnabled">
             <span class="prof-noti-toggle-copy">
               <span class="prof-noti-toggle-title">
-                <lucide-icon [img]="isNotificationEnabled ? iconBell : iconBellOff" [size]="15"></lucide-icon>
                 {{ 'NOTI_MASTER_TITLE' | translate }}
                 <span class="prof-noti-loading-text" *ngIf="notificationBusyTarget === 'master'">
                   <span class="prof-noti-mini-spinner"></span>
@@ -191,7 +191,15 @@
             </span>
           </label>
 
-          <label class="prof-noti-toggle-row" [class.prof-noti-disabled]="!canToggleDailyReminder">
+          <!-- Blocked at the OS/browser level: the switch can't fix it, so say where to -->
+          <p class="prof-field-hint prof-noti-denied-hint"
+            *ngIf="!isNotificationEnabled && notificationState.permission === 'denied'">
+            <lucide-icon [img]="iconInfo" [size]="13"></lucide-icon>
+            <span>{{ 'NOTI_DENIED_HINT' | translate }}</span>
+          </p>
+
+          <!-- The daily reminder only means something once notifications are on -->
+          <label class="prof-noti-toggle-row" *ngIf="isNotificationEnabled" [class.prof-noti-disabled]="!canToggleDailyReminder">
             <span class="prof-noti-toggle-copy">
               <span class="prof-noti-toggle-title">
                 <lucide-icon [img]="iconClock" [size]="15"></lucide-icon>
@@ -249,10 +257,11 @@
           <ng-container *ngIf="canEditSettings && !(isInventorySpace$ | async)">
             <div class="prof-list-item prof-subhead">
               <span class="prof-list-title">{{ 'BUDGET_PERIOD_LABEL' | translate }}</span>
-              <button class="prof-icon-btn" type="button" (click)="openBudgetPeriodModal()"
-                title="{{ 'CREATE_CUSTOM_BUDGET_PERIOD' | translate }}"
+              <button class="prof-add-pill" type="button" (click)="openBudgetPeriodModal()"
+                [title]="'CREATE_CUSTOM_BUDGET_PERIOD' | translate"
                 [attr.aria-label]="'CREATE_CUSTOM_BUDGET_PERIOD' | translate">
                 <lucide-icon [img]="iconPlus" [size]="15"></lucide-icon>
+                <span>{{ 'BUDGET_PERIOD_ADD_SHORT' | translate }}</span>
               </button>
             </div>
 
@@ -293,6 +302,7 @@
                   </span>
                 </div>
                 <button class="prof-delete-btn" type="button" (click)="deleteCustomPeriod(period.id, $event)"
+                  [attr.aria-label]="('DELETE_BUTTON' | translate) + ' · ' + period.name"
                   title="{{ 'CONFIRM_DELETE_BUDGET_PERIOD_TITLE' | translate }}">
                   <lucide-icon [img]="iconTrash2" [size]="15" class="fa-delete-btn"></lucide-icon>
                 </button>
@@ -353,8 +363,21 @@
       </form>
 
     </ng-container>
+    <!-- Skeleton in the shape of the page, so nothing jumps when it loads -->
     <ng-template #profileLoading>
-      <div class="exp-loading"><span class="exp-spinner-sm"></span></div>
+      <div class="prof-skeleton" aria-busy="true" [attr.aria-label]="'LOADING_PROFILE_DATA' | translate">
+        <div class="prof-skel-card prof-skel-hero">
+          <span class="prof-skel prof-skel-avatar"></span>
+          <span class="prof-skel-lines">
+            <span class="prof-skel prof-skel-line prof-skel-w60"></span>
+            <span class="prof-skel prof-skel-line prof-skel-w80"></span>
+          </span>
+        </div>
+        <div class="prof-skel-card" *ngFor="let card of [1, 2, 3]">
+          <span class="prof-skel prof-skel-line prof-skel-w40"></span>
+          <span class="prof-skel prof-skel-block"></span>
+        </div>
+      </div>
     </ng-template>
   </div>
 </div>
