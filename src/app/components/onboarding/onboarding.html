@@ -5,9 +5,9 @@
   <div class="ob-scroll">
     <div class="ob-wrap">
       <div class="ob-header">
-        <button class="ob-back-button" type="button" (click)="goBack()">
+        <button class="ob-back-button" type="button" (click)="goBack()" [attr.aria-label]="'BACK_BUTTON' | translate">
           <lucide-icon [img]="iconArrowLeft" [size]="18"></lucide-icon>
-          <span>{{ 'BACK_BUTTON' | translate }}</span>
+          <span class="ob-back-label" aria-hidden="true">{{ 'BACK_BUTTON' | translate }}</span>
         </button>
         <div class="ob-brand">
           <div class="ob-brand-logo">

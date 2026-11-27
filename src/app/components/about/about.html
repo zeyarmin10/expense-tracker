@@ -1,6 +1,6 @@
-<button class="ab-float-back" type="button" (click)="goBack()">
+<button class="ab-float-back" type="button" (click)="goBack()" [attr.aria-label]="'BACK_BUTTON' | translate">
   <lucide-icon [img]="iconArrowLeft" [size]="18"></lucide-icon>
-  <span>{{ 'BACK_BUTTON' | translate }}</span>
+  <span class="ab-float-back-label" aria-hidden="true">{{ 'BACK_BUTTON' | translate }}</span>
 </button>
 
 <div class="ab-wrapper">
