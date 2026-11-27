@@ -41,6 +41,7 @@ import { CustomSelectComponent, SelectOption } from '../common/custom-select/cus
 import { passwordComplexityValidator, passwordsMatchValidator } from '../../utils/form-validators';
 
 import { SwipeToCloseDirective } from '../../directives/swipe-to-close.directive';
+import { focusAfterOpen } from '../../utils/focus-after-open';
 export const AVAILABLE_BUDGET_PERIODS = [
   { code: null, nameKey: 'BUDGET_PERIOD.NONE' },
   { code: 'weekly', nameKey: 'BUDGET_PERIOD.WEEKLY' },
@@ -1125,7 +1126,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
     });
     this.isBudgetPeriodModalOpen = true;
     document.body.classList.add('prof-bp-modal-open');
-    setTimeout(() => document.getElementById('bp-name')?.focus(), 0);
+    focusAfterOpen(() => document.getElementById('bp-name'));
   }
 
   closeBudgetPeriodModal(): void {

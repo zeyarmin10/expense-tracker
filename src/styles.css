@@ -98,7 +98,9 @@
 
 /* Keep controls out of Android's system-status-bar touch area when the
    WebView is intentionally edge-to-edge. iOS continues to use its reported
-   safe-area inset, and browser layouts retain the zero fallback above. */
+   safe-area inset, and browser layouts retain the zero fallback above.
+   28px is only the fallback: MainActivity sets the real status bar / camera
+   cutout height as an inline style on <html> once the page has loaded. */
 html.native-android {
   --native-status-bar-inset: 28px;
 }
@@ -1683,6 +1685,14 @@ body .swal2-popup.swal2-toast .swal2-html-container {
   font-size: 0.875em !important;
   margin: 0.25em 0.75em !important;
   padding: 0 !important;
+}
+
+/* Title-only toast (all of ours): let the title span every grid row like the
+   icon and ✕ do, so a one-line message sits centred beside them instead of
+   at the top. SweetAlert hides the unused text container with display:none. */
+body .swal2-popup.swal2-toast:not(:has(.swal2-html-container:not([style*="display: none"]))) .swal2-title {
+  grid-row: 1 / 99 !important;
+  align-self: center !important;
 }
 
 body .swal2-popup.swal2-toast .swal2-icon.swal2-success { border-color: #a5dc86 !important; color: #a5dc86 !important; }

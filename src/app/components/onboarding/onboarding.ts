@@ -20,6 +20,7 @@ import { CurrentSpaceTitleComponent } from '../common/current-space-title/curren
 import { FormatService } from '../../services/format.service';
 import { NetworkService } from '../../services/network.service';
 import { showAppToast } from '../../services/toast';
+import { focusAfterOpen } from '../../utils/focus-after-open';
 
 @Component({
   selector: 'app-onboarding',
@@ -453,9 +454,7 @@ export class OnboardingComponent implements OnInit, OnDestroy {
       history.pushState(null, '');
       this.modalStateService.modalOpened();
       this.isJoinSpaceModalOpen = true;
-      setTimeout(() => {
-        (document.getElementById('ob-join-invite-code') as HTMLInputElement | null)?.focus();
-      }, 80);
+      focusAfterOpen(() => document.getElementById('ob-join-invite-code'));
     } finally {
       this.isOpeningSpaceAction = null;
     }

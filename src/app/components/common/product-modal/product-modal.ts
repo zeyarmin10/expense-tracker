@@ -10,6 +10,7 @@ import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import Swal from 'sweetalert2';
 import { createAppToast } from '../../../services/toast';
 import { FormatService } from '../../../services/format.service';
+import { focusAfterOpen } from '../../../utils/focus-after-open';
 
 const Toast = createAppToast();
 
@@ -172,7 +173,7 @@ export class ProductModalComponent implements OnInit, OnDestroy {
     this.isModalOpen = true;
     document.body.classList.add('pd-modal-open');
     this.cdr.detectChanges();
-    setTimeout(() => document.getElementById('pdNameInput')?.focus(), 0);
+    focusAfterOpen(() => document.getElementById('pdNameInput'));
   }
 
   closeModal(): void {

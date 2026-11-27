@@ -16,6 +16,7 @@ import { ServiceICategory } from '../../../services/category';
 import Swal from 'sweetalert2';
 import { createAppToast } from '../../../services/toast';
 import { FormatService } from '../../../services/format.service';
+import { focusAfterOpen } from '../../../utils/focus-after-open';
 
 const Toast = createAppToast();
 
@@ -142,7 +143,7 @@ export class CategoryModalComponent implements OnInit, OnDestroy {
     // listVal() note in ngOnInit above), so isModalOpen=true above would
     // otherwise sit unpainted until some unrelated event triggers a repaint.
     this.cdr.detectChanges();
-    setTimeout(() => document.getElementById('catNameInput')?.focus(), 0);
+    focusAfterOpen(() => document.getElementById('catNameInput'));
   }
 
   closeModal(): void {
