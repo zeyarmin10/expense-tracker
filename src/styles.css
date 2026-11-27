@@ -396,17 +396,6 @@ body:has(.lb-overlay.lb-open) .swal2-container {
   padding-right: calc(env(safe-area-inset-right, 0px) + 0.75rem) !important;
 }
 
-/* Mobile: center toast at top instead of top-end */
-@media (max-width: 400px) {
-  body.swal2-toast-shown .swal2-container.swal2-top-end,
-  body.swal2-toast-shown .swal2-container.swal2-top-right {
-    right: auto !important;
-    left: 50% !important;
-    transform: translateX(-50%) !important;
-    max-width: 95% !important;
-  }
-}
-
 /* ── SweetAlert2 Dark Theme Override ── */
 .swal2-popup {
   --swal-alert-color: var(--accent);
@@ -546,26 +535,8 @@ body:has(.lb-overlay.lb-open) .swal2-container {
   color: #f0f2f7 !important;
 }
 
-/* Toast (top-end notification) */
-.swal2-toast {
-  background: #0f2348 !important;
-  border: 1px solid var(--swal-alert-color) !important;
-  border-radius: 12px !important;
-  box-shadow: 0 0 0 1px var(--swal-alert-glow), 0 8px 24px rgba(0, 0, 0, 0.4) !important;
-}
-
-.swal2-toast .swal2-title {
-  color: #f0f2f7 !important;
-  font-size: 0.9rem !important;
-  margin: 0.5em 1em !important;
-}
-
-.swal2-toast .swal2-html-container {
-  margin: 0 !important;
-  padding: 0 !important;
-}
-
-.swal2-timer-progress-bar {
+/* Dialog timer bar only — toasts keep SweetAlert2's own (see the end of this file) */
+.swal2-popup:not(.swal2-toast) .swal2-timer-progress-bar {
   background: var(--swal-alert-color) !important;
 }
 
@@ -702,23 +673,7 @@ body.light-mode .swal2-input::placeholder {
   color: #718096 !important;
 }
 
-body.light-mode .swal2-toast {
-  background: #ffffff !important;
-  border: 1px solid var(--swal-alert-color) !important;
-  box-shadow: 0 0 0 1px var(--swal-alert-glow), 0 8px 24px rgba(0, 0, 0, 0.12) !important;
-}
-
-body.light-mode .swal2-toast .swal2-title {
-  color: #1a202c !important;
-  margin: 0.5em 1em !important;
-}
-
-body.light-mode .swal2-toast .swal2-html-container {
-  margin: 0 !important;
-  padding: 0 !important;
-}
-
-body.light-mode .swal2-timer-progress-bar {
+body.light-mode .swal2-popup:not(.swal2-toast) .swal2-timer-progress-bar {
   background: var(--swal-alert-color) !important;
 }
 
@@ -832,10 +787,6 @@ body.light-mode .exp-seg-reset:hover {
   color: rgba(55, 78, 130, 0.85);
 }
 
-/* ── Dark mode SweetAlert toast shadow ── */
-.swal2-toast {
-  box-shadow: 0 0 0 1px rgba(11, 116, 255, 0.12), 0 8px 24px rgba(0, 0, 0, 0.6) !important;
-}
 
 /* Dark mode (default) */
 .prof-select,
@@ -1695,3 +1646,78 @@ body.dri-scroll-locked .exp-filter-bar {
   -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='2' x2='22' y1='2' y2='22'/%3E%3Cpath d='M10.41 10.41a2 2 0 1 1-2.83-2.83'/%3E%3Cline x1='13.5' x2='6' y1='13.5' y2='21'/%3E%3Cline x1='18' x2='21' y1='12' y2='15'/%3E%3Cpath d='M3.59 3.59A1.99 1.99 0 0 0 3 5v14a2 2 0 0 0 2 2h14c.55 0 1.052-.22 1.41-.59'/%3E%3Cpath d='M21 15V5a2 2 0 0 0-2-2H9'/%3E%3C/svg%3E") center / clamp(18px, 32%, 30px) no-repeat;
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='2' x2='22' y1='2' y2='22'/%3E%3Cpath d='M10.41 10.41a2 2 0 1 1-2.83-2.83'/%3E%3Cline x1='13.5' x2='6' y1='13.5' y2='21'/%3E%3Cline x1='18' x2='21' y1='12' y2='15'/%3E%3Cpath d='M3.59 3.59A1.99 1.99 0 0 0 3 5v14a2 2 0 0 0 2 2h14c.55 0 1.052-.22 1.41-.59'/%3E%3Cpath d='M21 15V5a2 2 0 0 0-2-2H9'/%3E%3C/svg%3E") center / clamp(18px, 32%, 30px) no-repeat;
 }
+
+/* ── SweetAlert2 toasts: the library's own default look ──
+   The dark/light dialog theme above (.swal2-popup, .swal2-title, icon colours…)
+   is for modal dialogs only. These undo it for toasts using SweetAlert2's own
+   default values (its --swal2-* variables), in both app themes. "body" in front
+   keeps them above the "body.light-mode …" dialog rules. */
+body .swal2-popup.swal2-toast {
+  background: var(--swal2-background) !important;
+  color: var(--swal2-color) !important;
+  border: var(--swal2-toast-border) !important;
+  border-radius: var(--swal2-border-radius) !important;
+  box-shadow: var(--swal2-toast-box-shadow) !important;
+}
+
+body .swal2-popup.swal2-toast::before {
+  content: none;
+}
+
+/* Slimmer than the library default: less padding around the toast and its
+   text, text a size smaller. The ✕ keeps the library's own placement. */
+body .swal2-popup.swal2-toast {
+  padding: 0.5em 0.75em !important;
+}
+
+body .swal2-popup.swal2-toast .swal2-title {
+  color: inherit !important;
+  font-size: 0.875em !important;
+  font-weight: 600 !important;
+  line-height: 1.45 !important;
+  margin: 0.25em 0.75em !important;
+}
+
+body .swal2-popup.swal2-toast .swal2-html-container {
+  color: inherit !important;
+  font-size: 0.875em !important;
+  margin: 0.25em 0.75em !important;
+  padding: 0 !important;
+}
+
+body .swal2-popup.swal2-toast .swal2-icon.swal2-success { border-color: #a5dc86 !important; color: #a5dc86 !important; }
+body .swal2-popup.swal2-toast .swal2-icon.swal2-error { border-color: #f27474 !important; color: #f27474 !important; }
+body .swal2-popup.swal2-toast .swal2-icon.swal2-warning { border-color: #f8bb86 !important; color: #f8bb86 !important; }
+body .swal2-popup.swal2-toast .swal2-icon.swal2-info { border-color: #3fc3ee !important; color: #3fc3ee !important; }
+body .swal2-popup.swal2-toast .swal2-icon.swal2-question { border-color: #87adbd !important; color: #87adbd !important; }
+body .swal2-popup.swal2-toast .swal2-success-ring { border-color: rgba(165, 220, 134, 0.3) !important; }
+
+/* Per-type tint: a soft radial glow of the icon's colour behind the icon,
+   fading out over a solid white base (so nothing underneath shows through),
+   and a timer line in the same colour (stronger shade). */
+body .swal2-popup.swal2-toast.swal2-icon-success {
+  background-color: #ffffff !important;
+  background-image: radial-gradient(ellipse 60% 140% at 0% 50%, rgba(165, 220, 134, 0.3) 0%, rgba(165, 220, 134, 0.1) 55%, rgba(165, 220, 134, 0) 100%) !important;
+}
+body .swal2-popup.swal2-toast.swal2-icon-error {
+  background-color: #ffffff !important;
+  background-image: radial-gradient(ellipse 60% 140% at 0% 50%, rgba(242, 116, 116, 0.3) 0%, rgba(242, 116, 116, 0.1) 55%, rgba(242, 116, 116, 0) 100%) !important;
+}
+body .swal2-popup.swal2-toast.swal2-icon-warning {
+  background-color: #ffffff !important;
+  background-image: radial-gradient(ellipse 60% 140% at 0% 50%, rgba(248, 187, 134, 0.3) 0%, rgba(248, 187, 134, 0.1) 55%, rgba(248, 187, 134, 0) 100%) !important;
+}
+body .swal2-popup.swal2-toast.swal2-icon-info {
+  background-color: #ffffff !important;
+  background-image: radial-gradient(ellipse 60% 140% at 0% 50%, rgba(63, 195, 238, 0.3) 0%, rgba(63, 195, 238, 0.1) 55%, rgba(63, 195, 238, 0) 100%) !important;
+}
+body .swal2-popup.swal2-toast.swal2-icon-question {
+  background-color: #ffffff !important;
+  background-image: radial-gradient(ellipse 60% 140% at 0% 50%, rgba(135, 173, 189, 0.3) 0%, rgba(135, 173, 189, 0.1) 55%, rgba(135, 173, 189, 0) 100%) !important;
+}
+
+body .swal2-popup.swal2-toast.swal2-icon-success .swal2-timer-progress-bar { background: #7cc65a !important; }
+body .swal2-popup.swal2-toast.swal2-icon-error .swal2-timer-progress-bar { background: #e85a5a !important; }
+body .swal2-popup.swal2-toast.swal2-icon-warning .swal2-timer-progress-bar { background: #f39c4f !important; }
+body .swal2-popup.swal2-toast.swal2-icon-info .swal2-timer-progress-bar { background: #1fb2e3 !important; }
+body .swal2-popup.swal2-toast.swal2-icon-question .swal2-timer-progress-bar { background: #6b97aa !important; }
