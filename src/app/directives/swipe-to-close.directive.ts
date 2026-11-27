@@ -1,6 +1,5 @@
 import { AfterViewInit, Directive, ElementRef, EventEmitter, Input, NgZone, OnDestroy, OnInit, Output, inject } from '@angular/core';
-import { Capacitor } from '@capacitor/core';
-import { Haptics, ImpactStyle } from '@capacitor/haptics';
+import { swipeCloseHaptic } from '../utils/haptics';
 
 /** Phones and small tablets; desktop dialogs/floating menus are left alone. */
 const MOBILE_QUERY = '(max-width: 991px)';
@@ -10,8 +9,9 @@ const SLOP_PX = 8;
 /**
  * Swipe-down-to-close for bottom sheets and full-screen overlays on phones,
  * like a native sheet: the sheet follows the finger and is dismissed when
- * pulled far or flicked fast enough, otherwise it springs back. Crossing the
- * dismiss point gives a light native haptic tap.
+ * pulled far or flicked fast enough, otherwise it springs back. Actually
+ * closing gives one very light native haptic tick (none while dragging, so a
+ * pull that springs back stays silent).
  *
  * - Only starts when every scrollable area under the finger is scrolled to
  *   the top, so it never steals normal content scrolling.
@@ -55,7 +55,6 @@ export class SwipeToCloseDirective implements OnInit, AfterViewInit, OnDestroy {
   private lastY = 0;
   private lastT = 0;
   private velocity = 0; // px/ms, positive = downward
-  private pastThreshold = false;
   private resetTimer: ReturnType<typeof setTimeout> | null = null;
   /** The sheet's own dimmed backdrop (preceding sibling), faded while dragging. */
   private backdrop: HTMLElement | null = null;
@@ -134,7 +133,6 @@ export class SwipeToCloseDirective implements OnInit, AfterViewInit, OnDestroy {
     this.lastT = e.timeStamp;
     this.velocity = 0;
     this.offset = 0;
-    this.pastThreshold = false;
     this.state = 'pending';
   }
 
@@ -176,12 +174,6 @@ export class SwipeToCloseDirective implements OnInit, AfterViewInit, OnDestroy {
       const progress = Math.min(1, this.offset / Math.max(1, this.el.nativeElement.offsetHeight));
       this.backdrop.style.opacity = String(1 - progress * 0.85);
     }
-
-    const past = this.offset >= this.threshold();
-    if (past !== this.pastThreshold) {
-      this.pastThreshold = past;
-      if (past) this.tapHaptic();
-    }
   }
 
   private handleEnd(): void {
@@ -194,8 +186,12 @@ export class SwipeToCloseDirective implements OnInit, AfterViewInit, OnDestroy {
     // backdrop, whose click handler also closes) must not close it twice.
     this.suppressNextClick();
     const flicked = this.velocity > 0.5 && this.offset > 40;
-    if (this.offset >= this.threshold() || flicked) this.slideOutAndClose();
-    else this.springBack();
+    if (this.offset >= this.threshold() || flicked) {
+      swipeCloseHaptic();
+      this.slideOutAndClose();
+    } else {
+      this.springBack();
+    }
   }
 
   /**
@@ -369,10 +365,5 @@ export class SwipeToCloseDirective implements OnInit, AfterViewInit, OnDestroy {
       if (node === host) break;
     }
     return false;
-  }
-
-  private tapHaptic(): void {
-    if (!Capacitor.isNativePlatform()) return;
-    Haptics.impact({ style: ImpactStyle.Light }).catch(() => undefined);
   }
 }

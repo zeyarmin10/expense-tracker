@@ -1,5 +1,6 @@
 import { BrandLoaderComponent } from './components/common/brand-loader/brand-loader.component';
 import { installLocalDigitInput } from './utils/local-digits';
+import { swipeCloseHaptic } from './utils/haptics';
 import { Component, inject, OnInit, AfterViewInit, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, NavigationEnd, RouterOutlet, RouterModule, ActivatedRoute } from '@angular/router';
@@ -1463,6 +1464,7 @@ export class App implements OnInit, AfterViewInit {
     if (drawer) {
       drawer.style.transition = '';
       if (this.drawerSwipeDelta > 120) {
+        swipeCloseHaptic(); // same light tick as the other swipe-to-close sheets
         drawer.style.transform = '';
         this.mobileMenuOpen = false;
         document.body.classList.remove('mob-drawer-open');
