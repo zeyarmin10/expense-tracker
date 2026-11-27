@@ -920,6 +920,7 @@
   "VOUCHER_GALLERY_NO_MATCH": "មិនមានបង្កាន់ដៃត្រូវនឹងការស្វែងរកទេ។",
   "VOUCHER_GALLERY_CLEAR_FILTERS": "សម្អាតតម្រង",
   "VOUCHER_SHARE": "ចែករំលែក",
+  "VOUCHER_SHARE_ERROR": "មិនអាចចែករំលែករូបភាពបានទេ។ សូមព្យាយាមម្តងទៀត។",
   "VOUCHER_LINK_COPIED": "បានចម្លងតំណរូបភាព",
   "VOUCHER_SHARE_UNAVAILABLE": "បង្កាន់ដៃនេះកំពុងរង់ចាំផ្ទុកឡើង ដូច្នេះមិនទាន់អាចចែករំលែកបានទេ។",
   "NAV_VOUCHERS": "បង្កាន់ដៃ",

@@ -5,6 +5,8 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { LucideAngularModule, Images, Receipt, Pencil, Trash2, Share2, Plus, Search, X, SearchX } from 'lucide-angular';
 import { BehaviorSubject, Observable, combineLatest, distinctUntilChanged, map, shareReplay, switchMap, tap } from 'rxjs';
 import { Share } from '@capacitor/share';
+import { Capacitor } from '@capacitor/core';
+import { Directory, Filesystem } from '@capacitor/filesystem';
 import Swal from 'sweetalert2';
 import { ServiceIVoucher, VoucherService } from '../../services/voucher';
 import { AuthService } from '../../services/auth';
@@ -54,6 +56,28 @@ interface ViewerEntry {
  * `VoucherService.getVouchers()` already follows the active space, so
  * switching group/personal space swaps the gallery contents automatically.
  */
+const IMAGE_EXTENSIONS: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/gif': 'gif',
+  'image/heic': 'heic',
+};
+
+function extensionFromUrl(url: string): string {
+  const match = url.split('?')[0].match(/\.(jpe?g|png|webp|gif|heic)$/i);
+  return match ? match[1].toLowerCase().replace('jpeg', 'jpg') : 'jpg';
+}
+
+function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result).split(',')[1] || '');
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(blob);
+  });
+}
+
 @Component({
   selector: 'app-voucher-gallery',
   standalone: true,
@@ -294,6 +318,7 @@ export class VoucherGallery implements OnDestroy {
   private viewerEntries: ViewerEntry[] = [];
   current: ViewerEntry | null = null;
   isDeleting = false;
+  isSharing = false;
 
   /** Deleting stays owner/admin-only. */
   get canManage(): boolean {
@@ -479,31 +504,75 @@ export class VoucherGallery implements OnDestroy {
     }
   }
 
+  /**
+   * Shares the voucher image itself (the file), not a link to it — the same
+   * picture the viewer's download button saves. App: the image is downloaded
+   * natively into the cache folder and handed to the share sheet as a file.
+   * Web: Web Share with a File where the browser supports it, otherwise the
+   * image is downloaded instead.
+   */
   async shareCurrent(): Promise<void> {
     const entry = this.current;
-    if (!entry) return;
     const url = this.viewerImages[this.lightbox.idx];
-    const title = entry.voucher.title || entry.voucher.fileName;
-    // Offline vouchers only have a device-local blob: URL — nothing shareable.
-    if (!url || url.startsWith('blob:')) {
-      Toast.fire({ icon: 'info', title: this.translate.instant('VOUCHER_SHARE_UNAVAILABLE') });
+    if (!entry || !url || this.isSharing) return;
+    const title = entry.voucher.title || entry.voucher.fileName || 'Kyat Wise';
+    this.isSharing = true;
+    this.cdr.markForCheck();
+    try {
+      if (Capacitor.isNativePlatform()) {
+        await this.shareNative(url, title);
+      } else {
+        await this.shareWeb(url, title);
+      }
+    } catch (error: any) {
+      // Closing the share sheet isn't a failure.
+      const message = String(error?.message || '').toLowerCase();
+      if (error?.name === 'AbortError' || message.includes('cancel')) return;
+      console.error('Voucher share failed:', error);
+      Toast.fire({ icon: 'error', title: this.translate.instant('VOUCHER_SHARE_ERROR') });
+    } finally {
+      this.isSharing = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  private async shareNative(url: string, title: string): Promise<void> {
+    const folder = 'voucher-share';
+    // Only the file being shared is kept; earlier ones are cleared first.
+    await Filesystem.rmdir({ path: folder, directory: Directory.Cache, recursive: true }).catch(() => undefined);
+    let path: string;
+    if (/^https?:/i.test(url)) {
+      // Downloaded natively, so the image bytes never cross the JS bridge.
+      path = `${folder}/kyat-wise-${Date.now()}.${extensionFromUrl(url)}`;
+      await Filesystem.downloadFile({ url, path, directory: Directory.Cache, recursive: true });
+    } else {
+      // blob:/data: URLs (vouchers saved offline) only exist in this WebView.
+      const blob = await (await fetch(url)).blob();
+      path = `${folder}/kyat-wise-${Date.now()}.${IMAGE_EXTENSIONS[blob.type] || 'jpg'}`;
+      await Filesystem.writeFile({ path, data: await blobToBase64(blob), directory: Directory.Cache, recursive: true });
+    }
+    const { uri } = await Filesystem.getUri({ path, directory: Directory.Cache });
+    await Share.share({ title, dialogTitle: title, files: [uri] });
+  }
+
+  private async shareWeb(url: string, title: string): Promise<void> {
+    const blob = await (await fetch(url)).blob();
+    const type = blob.type || 'image/jpeg';
+    const fileName = `kyat-wise-${Date.now()}.${IMAGE_EXTENSIONS[type] || extensionFromUrl(url)}`;
+    const file = new File([blob], fileName, { type });
+    if (typeof navigator.canShare === 'function' && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title });
       return;
     }
-    try {
-      const { value: canShare } = await Share.canShare();
-      if (!canShare) throw new Error('Share not supported');
-      await Share.share({ title, text: title, url });
-    } catch (error: any) {
-      // A cancelled share sheet isn't a failure — only fall back to the
-      // clipboard when sharing isn't available at all.
-      if (String(error?.message || '').toLowerCase().includes('cancel')) return;
-      try {
-        await navigator.clipboard.writeText(url);
-        Toast.fire({ icon: 'success', title: this.translate.instant('VOUCHER_LINK_COPIED') });
-      } catch {
-        // Nothing more to do — the image is still on screen.
-      }
-    }
+    // This browser can't share files (most desktop browsers): save the image instead.
+    const objectUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = objectUrl;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
   }
 
   trackByGroup(_: number, group: VoucherMonthGroup): string {

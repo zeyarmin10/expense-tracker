@@ -920,6 +920,7 @@
   "VOUCHER_GALLERY_NO_MATCH": "ไม่พบใบเสร็จที่ตรงกับการค้นหา",
   "VOUCHER_GALLERY_CLEAR_FILTERS": "ล้างตัวกรอง",
   "VOUCHER_SHARE": "แชร์",
+  "VOUCHER_SHARE_ERROR": "ไม่สามารถแชร์รูปภาพได้ โปรดลองอีกครั้ง",
   "VOUCHER_LINK_COPIED": "คัดลอกลิงก์รูปภาพแล้ว",
   "VOUCHER_SHARE_UNAVAILABLE": "ใบเสร็จนี้ยังรออัปโหลดอยู่ จึงยังแชร์ไม่ได้",
   "NAV_VOUCHERS": "ใบเสร็จ",

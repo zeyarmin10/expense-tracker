@@ -920,6 +920,7 @@
   "VOUCHER_GALLERY_NO_MATCH": "No vouchers match your search.",
   "VOUCHER_GALLERY_CLEAR_FILTERS": "Clear filters",
   "VOUCHER_SHARE": "Share",
+  "VOUCHER_SHARE_ERROR": "Couldn't share the image. Please try again.",
   "VOUCHER_LINK_COPIED": "Image link copied",
   "VOUCHER_SHARE_UNAVAILABLE": "This voucher is still waiting to upload, so it can't be shared yet.",
   "NAV_VOUCHERS": "Vouchers",

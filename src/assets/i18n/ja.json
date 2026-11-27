@@ -920,6 +920,7 @@
   "VOUCHER_GALLERY_NO_MATCH": "条件に一致するレシートはありません。",
   "VOUCHER_GALLERY_CLEAR_FILTERS": "絞り込みを解除",
   "VOUCHER_SHARE": "共有",
+  "VOUCHER_SHARE_ERROR": "画像を共有できませんでした。もう一度お試しください。",
   "VOUCHER_LINK_COPIED": "画像リンクをコピーしました",
   "VOUCHER_SHARE_UNAVAILABLE": "このレシートはまだアップロード待ちのため、共有できません。",
   "NAV_VOUCHERS": "レシート",

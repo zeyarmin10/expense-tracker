@@ -920,6 +920,7 @@
   "VOUCHER_GALLERY_NO_MATCH": "ရှာဖွေမှုနှင့် ကိုက်ညီသော ဘောင်ချာမရှိပါ။",
   "VOUCHER_GALLERY_CLEAR_FILTERS": "Filter များ ဖယ်ရှားရန်",
   "VOUCHER_SHARE": "မျှဝေရန်",
+  "VOUCHER_SHARE_ERROR": "ပုံကို မျှဝေ၍ မရပါ။ ထပ်စမ်းကြည့်ပါ။",
   "VOUCHER_LINK_COPIED": "ပုံ link ကို ကူးယူပြီးပါပြီ",
   "VOUCHER_SHARE_UNAVAILABLE": "ဤဘောင်ချာသည် upload မပြီးသေးသဖြင့် မျှဝေ၍ မရသေးပါ။",
   "NAV_VOUCHERS": "ဘောင်ချာများ",

@@ -166,7 +166,7 @@
     <p *ngIf="entry.voucher.note" class="vg-viewer-note">{{ entry.voucher.note }}</p>
 
     <div class="vg-viewer-actions">
-      <button type="button" class="vg-viewer-btn" (click)="shareCurrent()">
+      <button type="button" class="vg-viewer-btn" [disabled]="isSharing" (click)="shareCurrent()">
         <lucide-icon [img]="iconShare" [size]="18"></lucide-icon>
         <span>{{ 'VOUCHER_SHARE' | translate }}</span>
       </button>
