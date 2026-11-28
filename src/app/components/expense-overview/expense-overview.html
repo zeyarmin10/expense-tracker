@@ -112,7 +112,7 @@
                        [style.width.%]="getCategoryPercent(cat.total)"
                        [style.background]="getCategoryColor(cat.category)"></div>
                 </div>
-                <span class="ov-bar-pct">{{ getCategoryPercent(cat.total) | number:'1.0-0' }}%</span>
+                <span class="ov-bar-pct">{{ formatService.formatFixed(getCategoryPercent(cat.total), 0) }}%</span>
               </div>
             </div>
           </div>

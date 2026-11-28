@@ -899,13 +899,20 @@ body.light-mode .ov-bar-active {
 @media (max-width: 639.98px) {
   .expense-table {
     min-width: 0;
-    table-layout: fixed;
+    table-layout: auto;
   }
 
   .expense-table th,
   .expense-table td {
     white-space: normal;
     word-break: break-word;
+  }
+
+  /* Date column takes only as much width as its content; the rest goes to name/amount */
+  .expense-table th.th-date,
+  .expense-table td.td-date {
+    width: 1%;
+    white-space: nowrap;
   }
 }
 
