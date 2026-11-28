@@ -166,3 +166,8 @@
     </div>
   </div>
 </div>
+
+<!-- Saving: brand loader over everything until the voucher (and its images) is stored -->
+<div class="vfs-saving-overlay" *ngIf="isSaving" role="status" aria-live="polite">
+  <app-brand-loader></app-brand-loader>
+</div>

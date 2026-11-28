@@ -1,3 +1,4 @@
+import { BrandLoaderComponent } from '../brand-loader/brand-loader.component';
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -61,7 +62,7 @@ function toDateString(d: Date): string {
 @Component({
   selector: 'app-voucher-form-sheet',
   standalone: true,
-  imports: [SwipeToCloseDirective, ImgFallbackDirective, AutoGrowDirective, CommonModule, ReactiveFormsModule, FormsModule, TranslateModule, LucideAngularModule],
+  imports: [BrandLoaderComponent, SwipeToCloseDirective, ImgFallbackDirective, AutoGrowDirective, CommonModule, ReactiveFormsModule, FormsModule, TranslateModule, LucideAngularModule],
   providers: [DatePipe],
   templateUrl: './voucher-form-sheet.component.html',
   styleUrls: ['./voucher-form-sheet.component.css'],

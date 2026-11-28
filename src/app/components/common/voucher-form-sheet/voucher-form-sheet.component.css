@@ -546,3 +546,16 @@
     font-size: 0.9rem;
   }
 }
+
+/* Saving overlay: same look as the expense page's save overlay */
+.vfs-saving-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 12, 16, 0.75);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 10000;
+}
