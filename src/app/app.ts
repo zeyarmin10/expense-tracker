@@ -127,6 +127,10 @@ export class App implements OnInit, AfterViewInit {
   private pullStartY = 0;
   private pullStartX = 0;
   private pullTracking = false;
+  /** Finger travel before a touch counts as a pull, so a tap on a button with slight jitter stays a tap. */
+  private readonly pullSlopPx = 8;
+  /** A real pull happened during this touch: the click it would end on must not fire. */
+  private pullDragged = false;
   private nativeSplashHidden = false;
   private nativeSplashFallbackTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -439,6 +443,7 @@ export class App implements OnInit, AfterViewInit {
     this.pullStartY = touch.clientY;
     this.pullStartX = touch.clientX;
     this.pullTracking = true;
+    this.pullDragged = false;
     this.ngZone.run(() => {
       this.pullReadyToRefresh = false;
       this.pullDistance = 0;
@@ -458,11 +463,17 @@ export class App implements OnInit, AfterViewInit {
     const deltaY = touch.clientY - this.pullStartY;
     const deltaX = Math.abs(touch.clientX - this.pullStartX);
 
+    // Still within tap jitter: neither a pull nor a cancel yet.
+    if (!this.pullDragged && Math.abs(deltaY) < this.pullSlopPx && deltaX < this.pullSlopPx) {
+      return;
+    }
+
     if (deltaY <= 0 || deltaX > deltaY || this.getPageScrollTop() > 2) {
       this.resetPullRefresh();
       return;
     }
 
+    this.pullDragged = true;
     event.preventDefault();
     const distance = Math.min(
       this.pullRefreshMaxDistance,
@@ -480,12 +491,28 @@ export class App implements OnInit, AfterViewInit {
       return;
     }
 
+    // The pull may have started on a button/link (allowed so the whole
+    // dashboard can be pulled): don't let lifting the finger click it.
+    if (this.pullDragged) {
+      this.pullDragged = false;
+      this.suppressNextClick();
+    }
+
     if (this.pullReadyToRefresh) {
       this.ngZone.run(() => this.triggerPullRefresh());
       return;
     }
 
     this.resetPullRefresh();
+  }
+
+  private suppressNextClick(): void {
+    const stop = (e: Event) => {
+      e.stopPropagation();
+      e.preventDefault();
+    };
+    document.addEventListener('click', stop, { capture: true, once: true });
+    setTimeout(() => document.removeEventListener('click', stop, { capture: true }), 400);
   }
 
   private initPullToRefreshTouchHandlers(): void {
@@ -622,6 +649,13 @@ export class App implements OnInit, AfterViewInit {
     }
 
     const element = target as Element | null;
+    // A scrollable list/dropdown under the finger that isn't at its top:
+    // pulling down there must scroll that list back up, not reload. (Before
+    // buttons/links were allowed to start a pull, their being excluded
+    // happened to cover the button rows inside such lists.)
+    if (this.isInsideScrolledContainer(element)) {
+      return false;
+    }
     return !element?.closest(
       // .lb-overlay: the voucher/avatar image viewer (app-lightbox) —
       // pinch-zoom-and-drag on the photo reads as a downward pull otherwise,
@@ -630,8 +664,17 @@ export class App implements OnInit, AfterViewInit {
       // appSwipeToClose (e.g. the sync details sheet, which sets no
       // "-modal-open" body class) — swiping it down to close must not also
       // count as a pull-to-refresh on the page underneath.
-      'input, textarea, select, button, a, .mob-bottom-nav, .mob-drawer, .swal2-container, .lb-overlay, [data-swipe-sheet], [data-swipe-backdrop]'
+      // Buttons and links are allowed: a pull that starts on one still
+      // refreshes (its click is then suppressed in onPullTouchEnd()).
+      'input, textarea, select, .mob-bottom-nav, .mob-drawer, .swal2-container, .lb-overlay, [data-swipe-sheet], [data-swipe-backdrop]'
     );
+  }
+
+  private isInsideScrolledContainer(element: Element | null): boolean {
+    for (let node = element; node && node !== document.body && node !== document.documentElement; node = node.parentElement) {
+      if (node.scrollTop > 0) return true;
+    }
+    return false;
   }
 
   private getPageScrollTop(): number {
