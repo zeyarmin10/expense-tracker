@@ -156,25 +156,66 @@
       </ng-container>
     </ng-container>
 
-    <!-- Nothing recorded yet for this period -->
+    <!-- Nothing recorded yet for this period: a welcoming start screen with
+         a preview of what the dashboard turns into, plus the first steps. -->
     <ng-template #dashEmpty>
-      <div class="dash-empty-banner">
-        <div class="dash-empty-icon"><lucide-icon [img]="iconChartColumn" [size]="32"></lucide-icon></div>
-        <div class="dash-empty-content">
-          <p class="dash-empty-title">{{ 'EMPTY_STATE_TITLE' | translate }}</p>
-          <p class="dash-empty-sub">{{ 'EMPTY_STATE_SUB' | translate }}</p>
-        </div>
-        <div class="dash-empty-actions">
-          <a routerLink="/expense" class="dash-empty-btn dash-empty-btn-primary">
-            + {{ 'ADD_EXPENSE' | translate }}
+      <div class="dash-start">
+        <section class="dash-start-hero">
+          <!-- Decorative mini-dashboard preview -->
+          <div class="dash-start-preview" aria-hidden="true">
+            <div class="dsp-card dsp-balance">
+              <span class="dsp-line dsp-line-sm"></span>
+              <span class="dsp-line dsp-line-lg"></span>
+              <div class="dsp-split">
+                <span class="dsp-chip dsp-chip-in"><lucide-icon [img]="iconArrowDown" [size]="10"></lucide-icon></span>
+                <span class="dsp-chip dsp-chip-out"><lucide-icon [img]="iconArrowUp" [size]="10"></lucide-icon></span>
+              </div>
+            </div>
+            <div class="dsp-card dsp-bars">
+              <span style="--h: 45%"></span>
+              <span style="--h: 70%"></span>
+              <span style="--h: 35%"></span>
+              <span style="--h: 90%"></span>
+              <span style="--h: 60%"></span>
+            </div>
+            <div class="dsp-card dsp-donut"><span></span></div>
+          </div>
+
+          <h3 class="dash-start-title">{{ 'DASH_START_TITLE' | translate }}</h3>
+          <p class="dash-start-sub">{{ 'DASH_START_SUB' | translate }}</p>
+          <a routerLink="/expense" class="dash-start-cta">
+            <lucide-icon [img]="iconPlus" [size]="18"></lucide-icon>
+            {{ 'ADD_EXPENSE' | translate }}
           </a>
-          <a routerLink="/profit" class="dash-empty-btn dash-empty-btn-secondary">
-            + {{ 'ADD_INCOME' | translate }}
+        </section>
+
+        <section class="dash-start-steps">
+          <p class="dash-start-steps-title">{{ 'DASH_START_STEPS' | translate }}</p>
+          <a routerLink="/expense" class="dash-step" style="--step-color: var(--danger)">
+            <span class="dash-step-icon"><lucide-icon [img]="iconShoppingCart" [size]="18"></lucide-icon></span>
+            <span class="dash-step-text">
+              <span class="dash-step-name">{{ 'ADD_EXPENSE' | translate }}</span>
+              <span class="dash-step-desc">{{ 'DASH_STEP_EXPENSE_DESC' | translate }}</span>
+            </span>
+            <lucide-icon class="dash-step-chev" [img]="iconChevronRight" [size]="18"></lucide-icon>
           </a>
-          <a *ngIf="canManageBudgetActions" routerLink="/budget" class="dash-empty-btn dash-empty-btn-secondary">
-            {{ 'SET_BUDGET' | translate }}
+          <a routerLink="/profit" class="dash-step" style="--step-color: var(--success)">
+            <span class="dash-step-icon"><lucide-icon [img]="iconBanknote" [size]="18"></lucide-icon></span>
+            <span class="dash-step-text">
+              <span class="dash-step-name">{{ 'ADD_INCOME' | translate }}</span>
+              <span class="dash-step-desc">{{ 'DASH_STEP_INCOME_DESC' | translate }}</span>
+            </span>
+            <lucide-icon class="dash-step-chev" [img]="iconChevronRight" [size]="18"></lucide-icon>
           </a>
-        </div>
+          <a *ngIf="canManageBudgetActions" routerLink="/budget" class="dash-step" style="--step-color: #a855f7">
+            <span class="dash-step-icon"><lucide-icon [img]="iconPiggyBank" [size]="18"></lucide-icon></span>
+            <span class="dash-step-text">
+              <span class="dash-step-name">{{ 'SET_BUDGET' | translate }}</span>
+              <span class="dash-step-desc">{{ 'DASH_STEP_BUDGET_DESC' | translate }}</span>
+            </span>
+            <lucide-icon class="dash-step-chev" [img]="iconChevronRight" [size]="18"></lucide-icon>
+          </a>
+        </section>
       </div>
     </ng-template>
 

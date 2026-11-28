@@ -55,7 +55,7 @@ import {
   UserDataService,
   canManageSharedSpace,
 } from '../../services/user-data';
-import { LucideAngularModule, TrendingUp, TrendingDown, Banknote, PiggyBank, ShoppingCart, ChartColumn, ChartPie, RotateCw, Eye, EyeOff, ArrowDown, ArrowUp, ChevronRight, CalendarClock, LucideIconData } from 'lucide-angular';
+import { LucideAngularModule, TrendingUp, TrendingDown, Banknote, PiggyBank, ShoppingCart, ChartColumn, ChartPie, RotateCw, Eye, EyeOff, ArrowDown, ArrowUp, ChevronRight, CalendarClock, Plus, LucideIconData } from 'lucide-angular';
 import { getCategoryHue, getIconData, getIconHue } from '../../utils/category-icons';
 import { FormatService } from '../../services/format.service';
 import { CurrentSpaceTitleComponent } from '../common/current-space-title/current-space-title.component';
@@ -193,6 +193,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly iconArrowUp = ArrowUp;
   readonly iconChevronRight = ChevronRight;
   readonly iconCalendarClock = CalendarClock;
+  readonly iconPlus = Plus;
 
   // Banking-app style eye toggle: hides every amount on the balance card
   // (balance, money in, money out). Persisted across visits.
