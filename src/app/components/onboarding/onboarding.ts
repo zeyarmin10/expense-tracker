@@ -176,132 +176,98 @@ export class OnboardingComponent implements OnInit, OnDestroy {
     }
   }
 
-  async openEditGroupModal(space: UserSpaceSummary, event: Event): Promise<void> {
+  // ── Edit-space bottom sheet (same look/flow as the create-space sheet) ──
+  isEditSpaceModalOpen = false;
+  isSavingEditSpace = false;
+  editSpaceTarget: UserSpaceSummary | null = null;
+  editSpaceName = '';
+  editSpaceError: string | null = null;
+  editSpaceImageFile: File | null = null;
+  editSpaceImagePreview: string | null = null;
+
+  openEditGroupModal(space: UserSpaceSummary, event: Event): void {
     event.stopPropagation();
     this.closeSpaceActions();
 
     if (!this.canRenameSpace(space) || !space.id) return;
+    if (this.isCreateSpaceModalOpen || this.isJoinSpaceModalOpen || this.isEditSpaceModalOpen) return;
 
-    const max             = this.maxSpaceNameLength;
-    const namePlaceholder = this.translate.instant('ONBOARDING.ENTER_GROUP_NAME');
-    const optionalLabel   = this.translate.instant('OPTIONAL') || 'Optional';
-    const emptyErrMsg     = this.translate.instant('SPACE_RENAME_EMPTY_ERROR');
-    const maxErrMsg       = this.translate.instant('SPACE_NAME_MAX_LENGTH_ERROR', { max });
-    const noChangeMsg     = this.translate.instant('SPACE_RENAME_NO_CHANGES');
-    const uploadErrMsg    = this.translate.instant('AVATAR_UPLOAD_ERROR');
-    const counterHint     = this.translate.instant('SPACE_NAME_LIMIT_HINT', { max }) || `Max ${max} chars`;
-    const safeName        = space.name.replace(/"/g, '&quot;');
-    const existingPhoto   = space.imageUrl
-      ? `<img src="${space.imageUrl}" style="width:100%;height:100%;object-fit:cover;">`
-      : '👥';
+    this.editSpaceTarget = space;
+    this.editSpaceName = space.name;
+    this.editSpaceError = null;
+    this.clearEditSpaceImage();
+    // Same back-button handling as the create sheet (see openCreateSpaceModal).
+    history.pushState(null, '');
+    this.modalStateService.modalOpened();
+    this.isEditSpaceModalOpen = true;
+    focusAfterOpen(() => document.getElementById('ob-edit-space-name'));
+  }
 
-    const result = await Swal.fire<{ name: string; imageUrl: string | null; photoChanged: boolean }>({
-      title: this.translate.instant('SPACE_RENAME_TITLE'),
-      position: 'top',
-      html: `
-        <div style="display:flex;flex-direction:column;align-items:center;gap:0.85rem;">
-          <div style="position:relative;cursor:pointer;"
-               onclick="document.getElementById('swal-edit-photo').click()">
-            <div id="swal-edit-preview"
-                 style="width:80px;height:80px;border-radius:50%;
-                        background:var(--swal-preview-bg,#1e2130);border:2px dashed var(--swal-preview-border,#2a2f3d);
-                        display:flex;align-items:center;justify-content:center;
-                        overflow:hidden;font-size:2rem;color:var(--text-muted,#6b7280);">
-              ${existingPhoto}
-            </div>
-            <div style="position:absolute;bottom:0;right:0;width:22px;height:22px;
-                        border-radius:50%;background:#0b74ff;
-                        display:flex;align-items:center;justify-content:center;
-                        font-size:0.65rem;color:#fff;">✏️</div>
-          </div>
-          <small style="color:#6b7280;font-size:0.72rem;margin-top:-0.4rem;">${optionalLabel}</small>
-          <input type="file" id="swal-edit-photo" accept="image/*" style="display:none">
-          <div style="width:100%;">
-            <input id="swal-edit-name" class="swal2-input"
-                   type="text" placeholder="${namePlaceholder}"
-                   value="${safeName}" maxlength="${max}"
-                   style="margin:0;width:100%;">
-            <div style="display:flex;justify-content:space-between;align-items:center;
-                        margin-top:0.35rem;padding:0 0.1rem;">
-              <span id="swal-edit-hint" style="font-size:0.7rem;color:#f87171;display:${space.name.length >= max ? 'block' : 'none'};">${counterHint}</span>
-              <span id="swal-edit-count"
-                    style="font-size:0.7rem;color:${space.name.length >= max ? '#f87171' : '#6b7280'};">${space.name.length} / ${max}</span>
-            </div>
-          </div>
-        </div>
-      `,
-      showCancelButton: true,
-      confirmButtonText: this.translate.instant('SAVE_BUTTON'),
-      cancelButtonText: this.translate.instant('CANCEL_BUTTON'),
-      didOpen: () => {
-        const fileInput = document.getElementById('swal-edit-photo') as HTMLInputElement;
-        const nameInput = document.getElementById('swal-edit-name') as HTMLInputElement;
-        const countEl   = document.getElementById('swal-edit-count') as HTMLElement;
-        const hintEl    = document.getElementById('swal-edit-hint') as HTMLElement;
+  closeEditSpaceModal(): void {
+    if (this.isSavingEditSpace || !this.isEditSpaceModalOpen) return;
+    history.back();
+  }
 
-        fileInput?.addEventListener('change', () => {
-          const file = fileInput.files?.[0];
-          if (!file) return;
-          const reader = new FileReader();
-          reader.onload = (ev) => {
-            const preview = document.getElementById('swal-edit-preview');
-            if (preview && ev.target?.result) {
-              preview.innerHTML = `<img src="${ev.target.result as string}"
-                style="width:100%;height:100%;object-fit:cover;">`;
-            }
-          };
-          reader.readAsDataURL(file);
-        });
+  private resetEditSpaceModalState(): void {
+    this.isEditSpaceModalOpen = false;
+    this.isSavingEditSpace = false;
+    this.editSpaceError = null;
+    this.clearEditSpaceImage();
+    this.modalStateService.modalClosed();
+  }
 
-        nameInput?.addEventListener('input', () => {
-          const len = nameInput.value.length;
-          const atLimit = len >= max;
-          countEl.textContent = `${len} / ${max}`;
-          countEl.style.color = atLimit ? '#f87171' : '#6b7280';
-          nameInput.style.borderColor = atLimit ? '#f87171' : '';
-          if (hintEl) hintEl.style.display = atLimit ? 'block' : 'none';
-        });
+  private clearEditSpaceImage(): void {
+    if (this.editSpaceImagePreview) {
+      URL.revokeObjectURL(this.editSpaceImagePreview);
+    }
+    this.editSpaceImagePreview = null;
+    this.editSpaceImageFile = null;
+  }
 
-        setTimeout(() => { nameInput?.focus(); nameInput?.select(); }, 80);
-      },
-      preConfirm: async () => {
-        const nameInput = document.getElementById('swal-edit-name') as HTMLInputElement;
-        const fileInput = document.getElementById('swal-edit-photo') as HTMLInputElement;
-        const name      = nameInput?.value?.trim() ?? '';
+  onEditSpacePhotoSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    if (this.editSpaceImagePreview) {
+      URL.revokeObjectURL(this.editSpaceImagePreview);
+    }
+    this.editSpaceImageFile = file;
+    this.editSpaceImagePreview = URL.createObjectURL(file);
+    this.editSpaceError = null;
+  }
 
-        if (!name) { Swal.showValidationMessage(emptyErrMsg); return false; }
-        if (name.length > max) { Swal.showValidationMessage(maxErrMsg); return false; }
+  get canSubmitEditSpace(): boolean {
+    const space = this.editSpaceTarget;
+    if (!space || this.isSavingEditSpace) return false;
+    const name = this.editSpaceName.trim();
+    if (!name || name.length > this.maxSpaceNameLength) return false;
+    return name !== space.name.trim() || !!this.editSpaceImageFile;
+  }
 
-        const file        = fileInput?.files?.[0] ?? null;
-        const nameChanged = name !== space.name.trim();
-
-        if (!nameChanged && !file) { Swal.showValidationMessage(noChangeMsg); return false; }
-
-        let imageUrl: string | null = null;
-        if (file) {
-          Swal.showLoading();
-          try {
-            const compressed = await this.compressSpaceImage(file);
-            imageUrl = await this.imageUploadService.uploadSpaceImage(compressed);
-          } catch {
-            Swal.showValidationMessage(uploadErrMsg);
-            return false;
-          }
-        }
-
-        return { name, imageUrl, photoChanged: !!file };
-      },
-    });
-
-    if (!result.isConfirmed || !result.value) return;
-
+  async submitEditSpace(): Promise<void> {
+    const space = this.editSpaceTarget;
+    if (!space?.id || !this.canSubmitEditSpace) return;
+    const name = this.editSpaceName.trim();
+    this.isSavingEditSpace = true;
+    this.editSpaceError = null;
     try {
-      const { name, imageUrl, photoChanged } = result.value;
-      if (name !== space.name.trim()) {
-        await this.dataManager.renameGroup(space.id!, name);
+      let imageUrl: string | null = null;
+      if (this.editSpaceImageFile) {
+        try {
+          const compressed = await this.compressSpaceImage(this.editSpaceImageFile);
+          imageUrl = await this.imageUploadService.uploadSpaceImage(compressed);
+        } catch {
+          this.editSpaceError = this.translate.instant('AVATAR_UPLOAD_ERROR');
+          return;
+        }
       }
-      if (photoChanged && imageUrl) {
-        await this.dataManager.updateGroupSettings(space.id!, { imageUrl });
+
+      if (name !== space.name.trim()) {
+        await this.dataManager.renameGroup(space.id, name);
+      }
+      if (imageUrl) {
+        await this.dataManager.updateGroupSettings(space.id, { imageUrl });
         // The replaced photo is now unreferenced — free its Cloudinary
         // asset (best-effort; legacy unscoped 'groups/…' uploads are
         // refused by the endpoint and simply linger).
@@ -310,14 +276,14 @@ export class OnboardingComponent implements OnInit, OnDestroy {
           void this.imageUploadService.deleteImages([oldPublicId]);
         }
       }
+      this.isSavingEditSpace = false;
+      this.closeEditSpaceModal();
       void showAppToast(this.translate.instant('SPACE_RENAME_SUCCESS'), 'success');
     } catch (error) {
       console.error('Error editing group:', error);
-      Swal.fire({
-        icon: 'error',
-        title: this.translate.instant('ERROR_TITLE'),
-        text: this.getRenameSpaceErrorMessage(error),
-      });
+      this.editSpaceError = this.getRenameSpaceErrorMessage(error);
+    } finally {
+      this.isSavingEditSpace = false;
     }
   }
 
@@ -392,7 +358,7 @@ export class OnboardingComponent implements OnInit, OnDestroy {
   createSpaceEnableInventory = false;
 
   async openCreateSpaceModal(): Promise<void> {
-    if (this.isOpeningSpaceAction || this.isCreateSpaceModalOpen || this.isJoinSpaceModalOpen) return;
+    if (this.isOpeningSpaceAction || this.isCreateSpaceModalOpen || this.isJoinSpaceModalOpen || this.isEditSpaceModalOpen) return;
     this.isOpeningSpaceAction = 'create';
     try {
       if (!(await this.hasUsableServerConnection())) {
@@ -433,7 +399,7 @@ export class OnboardingComponent implements OnInit, OnDestroy {
   }
 
   async openJoinSpaceModal(): Promise<void> {
-    if (this.isOpeningSpaceAction || this.isCreateSpaceModalOpen || this.isJoinSpaceModalOpen) return;
+    if (this.isOpeningSpaceAction || this.isCreateSpaceModalOpen || this.isJoinSpaceModalOpen || this.isEditSpaceModalOpen) return;
     this.isOpeningSpaceAction = 'join';
     try {
       if (!(await this.hasUsableServerConnection())) {
@@ -471,6 +437,8 @@ export class OnboardingComponent implements OnInit, OnDestroy {
       this.resetCreateSpaceModalState();
     } else if (this.isJoinSpaceModalOpen) {
       this.resetJoinSpaceModalState();
+    } else if (this.isEditSpaceModalOpen) {
+      this.resetEditSpaceModalState();
     }
   }
 
@@ -498,9 +466,10 @@ export class OnboardingComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    if (this.isCreateSpaceModalOpen || this.isJoinSpaceModalOpen) {
+    if (this.isCreateSpaceModalOpen || this.isJoinSpaceModalOpen || this.isEditSpaceModalOpen) {
       this.modalStateService.modalClosed();
     }
+    this.clearEditSpaceImage();
   }
 
   private clearCreateSpaceImage(): void {

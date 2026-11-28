@@ -56,6 +56,8 @@ export class SwipeToCloseDirective implements OnInit, AfterViewInit, OnDestroy {
   private lastT = 0;
   private velocity = 0; // px/ms, positive = downward
   private resetTimer: ReturnType<typeof setTimeout> | null = null;
+  /** Watches for the sheet's closed state after `swipeClose` (may arrive late). */
+  private closeObserver: MutationObserver | null = null;
   /** The sheet's own dimmed backdrop (preceding sibling), faded while dragging. */
   private backdrop: HTMLElement | null = null;
   /** Backdrop found at init, which also accepts drags for this sheet. */
@@ -106,6 +108,7 @@ export class SwipeToCloseDirective implements OnInit, AfterViewInit, OnDestroy {
     }
     this.ownBackdrop?.removeAttribute('data-swipe-backdrop');
     if (this.resetTimer) clearTimeout(this.resetTimer);
+    this.closeObserver?.disconnect();
     this.removeUnderlay();
   }
 
@@ -226,12 +229,45 @@ export class SwipeToCloseDirective implements OnInit, AfterViewInit, OnDestroy {
       // nothing animates back into view, then drop the inline overrides.
       host.style.transition = 'none';
       if (this.backdrop) this.backdrop.style.transition = 'none';
+      // Many sheets close via history.back(), so their closed state only
+      // lands on the later popstate. Keep the sheet held off-screen until
+      // that state actually shows up; clearing the inline transform before
+      // it would make the still-open sheet jump back up and then slide down
+      // a second time.
+      this.waitForClosedState(() => {
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          this.clearInline();
+          this.closing = false;
+        }));
+      });
       this.zone.run(() => this.swipeClose.emit());
-      requestAnimationFrame(() => requestAnimationFrame(() => {
-        this.clearInline();
-        this.closing = false;
-      }));
     });
+  }
+
+  /**
+   * Calls `done` once the host's class / aria-hidden changes (its closed
+   * state was applied), or after a fallback timeout if the close never comes
+   * (e.g. the handler refused to close), so the sheet then springs back.
+   */
+  private waitForClosedState(done: () => void): void {
+    const host = this.el.nativeElement;
+    this.closeObserver?.disconnect();
+    let finished = false;
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      this.closeObserver?.disconnect();
+      this.closeObserver = null;
+      if (this.resetTimer) clearTimeout(this.resetTimer);
+      this.resetTimer = null;
+      done();
+    };
+    if (typeof MutationObserver === 'function') {
+      this.closeObserver = new MutationObserver(finish);
+      this.closeObserver.observe(host, { attributes: true, attributeFilter: ['class', 'aria-hidden', 'hidden'] });
+    }
+    if (this.resetTimer) clearTimeout(this.resetTimer);
+    this.resetTimer = setTimeout(finish, typeof MutationObserver === 'function' ? 700 : 0);
   }
 
   /**
