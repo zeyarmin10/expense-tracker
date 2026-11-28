@@ -1,5 +1,8 @@
 import { Injectable, inject } from '@angular/core';
-import { child, listVal, push, remove, update } from '@angular/fire/database';
+import {
+  child,
+  listVal,
+} from '@angular/fire/database';
 import { Observable, firstValueFrom, from, of, combineLatest } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { AuthService } from './auth';
@@ -8,6 +11,7 @@ import { getActiveGroupId, UserProfile } from './user-data';
 import { PersonalOfflineDataService } from './personal-offline-data.service';
 import { SharedOfflineDataService } from './shared-offline-data.service';
 import { NetworkService } from './network.service';
+import { GuardedWriteService } from './guarded-write.service';
 
 export interface ShopExpense {
   id: string;
@@ -31,6 +35,7 @@ export class ShopExpenseService {
   private personalOfflineData = inject(PersonalOfflineDataService);
   private sharedOfflineData = inject(SharedOfflineDataService);
   private network = inject(NetworkService);
+  private guardedWrite = inject(GuardedWriteService);
 
   getShopExpenses(): Observable<ShopExpense[]> {
     return combineLatest([this.authService.userProfile$, this.network.isOnline$]).pipe(
@@ -88,7 +93,7 @@ export class ShopExpenseService {
       return;
     }
     const { canonicalRef, legacyRef } = await this.spaceDataService.getActiveCollectionContext(profile, 'shopExpenses');
-    await push(canonicalRef || legacyRef, record);
+    await this.guardedWrite.push(canonicalRef || legacyRef, record);
   }
 
   async deleteShopExpense(id: string): Promise<void> {
@@ -105,7 +110,7 @@ export class ShopExpenseService {
       return;
     }
     const { canonicalRef, legacyRef } = await this.spaceDataService.getActiveCollectionContext(profile, 'shopExpenses');
-    await remove(child(canonicalRef || legacyRef, id));
+    await this.guardedWrite.remove(child(canonicalRef || legacyRef, id));
   }
 
   async updateShopExpense(
@@ -134,7 +139,7 @@ export class ShopExpenseService {
       return;
     }
     const { canonicalRef, legacyRef } = await this.spaceDataService.getActiveCollectionContext(profile, 'shopExpenses');
-    await update(child(canonicalRef || legacyRef, id), updateData);
+    await this.guardedWrite.update(child(canonicalRef || legacyRef, id), updateData);
   }
 
   private sortRecords(records: ShopExpense[]): ShopExpense[] {

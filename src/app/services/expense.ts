@@ -6,7 +6,6 @@ import {
   onValue,
   push,
   update,
-  remove,
   DatabaseReference,
   query,
   orderByChild,
@@ -27,6 +26,7 @@ import { toLocalDateKey } from './date-filter.service';
 import { PersonalOfflineDataService } from './personal-offline-data.service';
 import { SharedOfflineDataService } from './shared-offline-data.service';
 import { NetworkService } from './network.service';
+import { GuardedWriteService } from './guarded-write.service';
 
 import { changedFields, hasRealChanges } from '../utils/changed-fields';
 /** Fields whose change is reported as "X changed …" (same as editHistory). */
@@ -84,6 +84,7 @@ export class ExpenseService {
   private personalOfflineData = inject(PersonalOfflineDataService);
   private sharedOfflineData = inject(SharedOfflineDataService);
   private network = inject(NetworkService);
+  private guardedWrite = inject(GuardedWriteService);
 
   constructor() {}
 
@@ -379,7 +380,7 @@ export class ExpenseService {
       (newExpense as any).groupId = activeGroupId;
     }
 
-    await push(expensesRef, newExpense);
+    await this.guardedWrite.push(expensesRef, newExpense);
   }
 
   async updateExpense(
@@ -487,7 +488,7 @@ export class ExpenseService {
     };
 
     // ── Step 1: main fields update ──
-    await update(expenseRef, updatedData);
+    await this.guardedWrite.update(expenseRef, updatedData);
 
     // ── Step 2: editHistory ကို push() နဲ့ သပ်သပ်ထည့် ──
     // Firebase update() မှာ nested path (editHistory/key) မသုံးနိုင်
@@ -501,7 +502,7 @@ export class ExpenseService {
               ? `group_data/${activeGroupId}/expenses/${expenseId}/editHistory`
               : `users/${profile.uid}/expenses/${expenseId}/editHistory`
           );
-      await push(historyRef, {
+      await this.guardedWrite.push(historyRef, {
         editedAt: now,
         editedBy: profile.uid,
         editedByName: profile.displayName || 'Unknown',
@@ -537,7 +538,7 @@ export class ExpenseService {
       : activeGroupId
         ? this.getGroupExpenseRef(activeGroupId, expenseId)
         : this.getExpenseRef(profile.uid, expenseId);
-    await remove(expenseRef);
+    await this.guardedWrite.remove(expenseRef);
   }
 
   // The user-facing "Delete" action for a purchase — cancels it instead of
@@ -580,7 +581,7 @@ export class ExpenseService {
         : this.getExpenseRef(profile.uid, expenseId);
 
     const now = new Date().toISOString();
-    await update(expenseRef, {
+    await this.guardedWrite.update(expenseRef, {
       status: 'void',
       voidedAt: now,
       voidedBy: profile.uid,
@@ -596,7 +597,7 @@ export class ExpenseService {
             ? `group_data/${activeGroupId}/expenses/${expenseId}/editHistory`
             : `users/${profile.uid}/expenses/${expenseId}/editHistory`
         );
-    await push(historyRef, {
+    await this.guardedWrite.push(historyRef, {
       editedAt: now,
       editedBy: profile.uid,
       editedByName: profile.displayName || 'Unknown',

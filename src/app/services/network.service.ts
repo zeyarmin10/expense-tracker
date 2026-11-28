@@ -222,7 +222,11 @@ export class NetworkService {
           'Cache-Control': 'no-cache',
         },
       });
-      return response.status >= 200 && response.status < 500;
+      // Only answers that prove the database itself is serving: a success,
+      // or the permission error an unauthenticated read gets. A 4xx such as
+      // 429 (rate limited) or 423 (database disabled) means it can't take
+      // writes right now, so treat it as unreachable and use the offline queue.
+      return response.ok || response.status === 401 || response.status === 403;
     } catch {
       return false;
     } finally {

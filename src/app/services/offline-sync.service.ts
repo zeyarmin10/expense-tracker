@@ -5,6 +5,12 @@ import { NetworkService } from './network.service';
 import { OfflineOperation, OfflineStoreService } from './offline-store.service';
 import { environment } from '../../environments/environment';
 import { IncomeService } from './income';
+import { WriteTimeoutError, withWriteTimeout } from './guarded-write.service';
+
+/** Longest a replayed write may wait for the server before the queue pauses. */
+const SYNC_OPERATION_TIMEOUT_MS = 20000;
+/** Voucher replays upload images first, which can be slow on mobile data. */
+const VOUCHER_UPLOAD_TIMEOUT_MS = 120000;
 
 /** Replays durable local writes as soon as a connection returns. */
 @Injectable({ providedIn: 'root' })
@@ -89,10 +95,18 @@ export class OfflineSyncService {
         if (!this.network.isOnline$.value) break;
         this.store.replayingOperationId = operation.id;
         try {
-          await this.apply(operation);
+          // A replay that the server never answers (partial outage) would
+          // otherwise leave `syncing` stuck on until the app restarts.
+          await withWriteTimeout(this.apply(operation), operation.kind === 'uploadVoucher'
+            ? VOUCHER_UPLOAD_TIMEOUT_MS
+            : SYNC_OPERATION_TIMEOUT_MS);
           await this.store.removeOperation(operation.id);
         } catch (error) {
           await this.store.markFailed(operation, error);
+          // The server stopped answering: go back to offline mode; the next
+          // successful connectivity check resumes the queue. Retrying is safe:
+          // every queued write is idempotent (same path, same data).
+          if (error instanceof WriteTimeoutError) this.network.markServerUnavailable();
           // Preserve write order: an update after a failed create cannot run yet.
           break;
         } finally {
@@ -129,6 +143,9 @@ export class OfflineSyncService {
     if (!operation.sharedSpaceId || !operation.baseUpdatedAt) return;
     const current = await get(target);
     const serverRevision = (current.val()?.updatedAt || current.val()?.createdAt) as string | undefined;
+    // Our own write already landed (e.g. an earlier replay timed out after
+    // the server applied it): not a conflict with another device.
+    if (serverRevision && serverRevision === operation.payload?.['updatedAt']) return;
     if (serverRevision && serverRevision !== operation.baseUpdatedAt) {
       throw new Error('SYNC_CONFLICT: This shared record changed on another device.');
     }

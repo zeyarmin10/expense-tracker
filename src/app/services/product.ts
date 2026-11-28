@@ -3,9 +3,6 @@ import { Capacitor } from '@capacitor/core';
 import {
   Database,
   ref,
-  push,
-  remove,
-  update,
   listVal,
   query,
   orderByChild,
@@ -23,6 +20,7 @@ import { getIncomeLineItems, ServiceIIncome } from './income';
 import { PersonalOfflineDataService } from './personal-offline-data.service';
 import { SharedOfflineDataService } from './shared-offline-data.service';
 import { NetworkService } from './network.service';
+import { GuardedWriteService } from './guarded-write.service';
 
 export interface ServiceIProduct {
   id?: string;
@@ -75,6 +73,7 @@ export class ProductService {
   private personalOfflineData = inject(PersonalOfflineDataService);
   private sharedOfflineData = inject(SharedOfflineDataService);
   private network = inject(NetworkService);
+  private guardedWrite = inject(GuardedWriteService);
 
   constructor() {}
 
@@ -279,7 +278,7 @@ export class ProductService {
       newProduct.groupId = activeGroupId;
     }
 
-    const productRef = await push(productsRef, newProduct);
+    const productRef = await this.guardedWrite.push(productsRef, newProduct);
     return { id: productRef.key || undefined, ...newProduct };
   }
 
@@ -352,7 +351,7 @@ export class ProductService {
     if (barcode !== undefined) {
       updateData.barcode = trimmedBarcode || null;
     }
-    await update(productRef, updateData);
+    await this.guardedWrite.update(productRef, updateData);
   }
 
   async deleteProduct(productId: string): Promise<void> {
@@ -384,13 +383,13 @@ export class ProductService {
         ? `group_data/${activeGroupId}/products/${productId}`
         : `users/${profile.uid}/products/${productId}`;
 
-    const deleteOps: Promise<void>[] = [remove(ref(this.db, primaryPath))];
+    const deleteOps: Promise<void>[] = [this.guardedWrite.remove(ref(this.db, primaryPath))];
 
     if (canonicalRef && currentSpaceId) {
       const legacyPath = activeGroupId
         ? `group_data/${activeGroupId}/products/${productId}`
         : `users/${profile.uid}/products/${productId}`;
-      deleteOps.push(remove(ref(this.db, legacyPath)).catch(() => {}));
+      deleteOps.push(this.guardedWrite.remove(ref(this.db, legacyPath)).catch(() => {}));
     }
 
     await Promise.all(deleteOps);
@@ -473,6 +472,6 @@ export class ProductService {
         ? `group_data/${activeGroupId}/products/${productId}`
         : `users/${profile.uid}/products/${productId}`;
 
-    await update(ref(this.db, primaryPath), { isActive });
+    await this.guardedWrite.update(ref(this.db, primaryPath), { isActive });
   }
 }

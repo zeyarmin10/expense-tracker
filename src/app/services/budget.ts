@@ -4,9 +4,6 @@ import { switchMap, map, catchError, filter } from 'rxjs/operators';
 import {
   Database,
   ref,
-  push,
-  remove,
-  update,
   DatabaseReference,
   get,
   objectVal,
@@ -18,6 +15,7 @@ import { SpaceSwitchLoadingService } from './space-switch-loading.service';
 import { PersonalOfflineDataService } from './personal-offline-data.service';
 import { SharedOfflineDataService } from './shared-offline-data.service';
 import { NetworkService } from './network.service';
+import { GuardedWriteService } from './guarded-write.service';
 import { changedFields, hasRealChanges } from '../utils/changed-fields';
 
 export interface ServiceIBudget {
@@ -58,6 +56,7 @@ export class BudgetService {
   private personalOfflineData = inject(PersonalOfflineDataService);
   private sharedOfflineData = inject(SharedOfflineDataService);
   private network = inject(NetworkService);
+  private guardedWrite = inject(GuardedWriteService);
 
   constructor() {}
 
@@ -112,7 +111,7 @@ export class BudgetService {
       budgetsRef = canonicalRef || legacyRef;
     }
 
-    await push(budgetsRef, newBudget);
+    await this.guardedWrite.push(budgetsRef, newBudget);
   }
 
   getBudgets(
@@ -279,7 +278,7 @@ export class BudgetService {
 
     const currentSnapshot = await get(budgetRef);
     if (!hasRealChanges(currentSnapshot.val(), updatedData as Record<string, unknown>)) return 'unchanged';
-    await update(budgetRef, { ...updatedData, ...editMeta(currentSnapshot.val()) });
+    await this.guardedWrite.update(budgetRef, { ...updatedData, ...editMeta(currentSnapshot.val()) });
     return 'saved';
   }
 
@@ -315,7 +314,7 @@ export class BudgetService {
     } else {
         budgetRef = ref(this.db, `users/${profile.uid}/budgets/${id}`);
     }
-    await remove(budgetRef);
+    await this.guardedWrite.remove(budgetRef);
   }
 
   private filterBudgets(

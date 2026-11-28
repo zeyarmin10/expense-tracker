@@ -7,7 +7,6 @@ import {
   ref,
   push,
   remove,
-  update,
   DatabaseReference,
   query,
   orderByChild,
@@ -24,6 +23,7 @@ import { toLocalDateKey } from './date-filter.service';
 import { PersonalOfflineDataService } from './personal-offline-data.service';
 import { SharedOfflineDataService } from './shared-offline-data.service';
 import { NetworkService } from './network.service';
+import { GuardedWriteService } from './guarded-write.service';
 import { changedFields, hasRealChanges } from '../utils/changed-fields';
 import { getExpenseLineItems, ServiceIExpense } from './expense';
 import type { OfflineOperation } from './offline-store.service';
@@ -145,6 +145,7 @@ export class IncomeService {
   private personalOfflineData = inject(PersonalOfflineDataService);
   private sharedOfflineData = inject(SharedOfflineDataService);
   private network = inject(NetworkService);
+  private guardedWrite = inject(GuardedWriteService);
 
   constructor() {
   }
@@ -264,6 +265,31 @@ export class IncomeService {
     }
   }
 
+  /**
+   * Online stock sale that falls back to the offline queue if the server
+   * stops answering mid-way (see GuardedWriteService). The transaction and
+   * the queued replay share one operation id, which the transaction stamps
+   * on the sale, so whichever reaches the server second is a no-op instead
+   * of a second sale.
+   */
+  private saveProductSaleGuarded(
+    rootRef: DatabaseReference,
+    incomeId: string,
+    data: Partial<ServiceIIncome>,
+    mode: 'add' | 'update',
+  ): Promise<boolean> {
+    const operationId = this.guardedWrite.createOperationId();
+    return this.guardedWrite.run(
+      () => this.saveProductSaleTransaction(rootRef, incomeId, data, mode, undefined, operationId),
+      () => this.guardedWrite.queueOperation(
+        mode === 'add' ? 'stockSaleSet' : 'stockSaleUpdate',
+        `${this.guardedWrite.pathOf(rootRef)}/incomes/${incomeId}`,
+        data as Record<string, unknown>,
+        operationId,
+      ),
+    );
+  }
+
   private async assertOfflineProductSaleStock(
     profile: UserProfile,
     candidate: ServiceIIncome,
@@ -352,8 +378,8 @@ export class IncomeService {
       const { canonicalRef, legacyRef } = await this.spaceDataService.getActiveCollectionContext(profile, 'incomes');
       const incomeId = push(canonicalRef || legacyRef).key;
       if (!incomeId) throw new Error('STOCK_CHECK_RETRY');
-      await this.saveProductSaleTransaction(await this.getStockTransactionRoot(profile), incomeId, newIncomeToSave, 'add');
-      return 'saved';
+      const queued = await this.saveProductSaleGuarded(await this.getStockTransactionRoot(profile), incomeId, newIncomeToSave, 'add');
+      return queued ? 'queued' : 'saved';
     }
 
     let incomesRef: DatabaseReference;
@@ -366,7 +392,7 @@ export class IncomeService {
         incomesRef = canonicalRef || legacyRef;
     }
 
-    await push(incomesRef, newIncomeToSave);
+    await this.guardedWrite.push(incomesRef, newIncomeToSave);
     return 'saved';
   }
 
@@ -570,10 +596,10 @@ export class IncomeService {
     if (current && !hasRealChanges(current as unknown as Record<string, unknown>, updatedData as Record<string, unknown>)) return 'unchanged';
     const patch = { ...updatedData, ...editMeta(current as unknown as Record<string, unknown>) };
     if (current?.isProductSale || updatedData.isProductSale) {
-      await this.saveProductSaleTransaction(await this.getStockTransactionRoot(profile), incomeId, patch, 'update');
-      return 'saved';
+      const queued = await this.saveProductSaleGuarded(await this.getStockTransactionRoot(profile), incomeId, patch, 'update');
+      return queued ? 'queued' : 'saved';
     }
-    await update(incomeRef, patch);
+    await this.guardedWrite.update(incomeRef, patch);
     return 'saved';
   }
 
@@ -611,7 +637,7 @@ export class IncomeService {
     } else {
         incomeRef = ref(this.db, `users/${profile.uid}/incomes/${id}`);
     }
-    await remove(incomeRef);
+    await this.guardedWrite.remove(incomeRef);
   }
 
   // The user-facing "Delete" action for a sale — cancels it instead of
@@ -659,7 +685,7 @@ export class IncomeService {
       incomeRef = ref(this.db, `users/${profile.uid}/incomes/${id}`);
     }
 
-    await update(incomeRef, {
+    await this.guardedWrite.update(incomeRef, {
       status: 'void',
       voidedAt: new Date().toISOString(),
       voidedBy: profile.uid,

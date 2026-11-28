@@ -2,9 +2,6 @@ import { Injectable, inject, forwardRef } from '@angular/core';
 import {
   Database,
   ref,
-  push,
-  remove,
-  update,
   listVal,
   query,
   orderByChild,
@@ -23,6 +20,7 @@ import { ImageUploadService } from './image-upload.service';
 import { PersonalOfflineDataService } from './personal-offline-data.service';
 import { SharedOfflineDataService } from './shared-offline-data.service';
 import { NetworkService } from './network.service';
+import { GuardedWriteService } from './guarded-write.service';
 
 export interface ServiceICategory {
   id?: string;
@@ -67,6 +65,7 @@ export class CategoryService {
   private personalOfflineData = inject(PersonalOfflineDataService);
   private sharedOfflineData = inject(SharedOfflineDataService);
   private network = inject(NetworkService);
+  private guardedWrite = inject(GuardedWriteService);
 
   private categoryUpdatedSource = new Subject<{
     oldName: string;
@@ -245,7 +244,7 @@ export class CategoryService {
       categoriesRef = canonicalRef || legacyRef;
     }
 
-    await push(categoriesRef, newCategory);
+    await this.guardedWrite.push(categoriesRef, newCategory);
   }
 
   async updateCategory(
@@ -348,7 +347,7 @@ export class CategoryService {
     };
     if (icon !== undefined) updateData.icon = icon;
     if (iconUrl !== undefined) updateData.iconUrl = iconUrl;
-    await update(categoryRef, updateData);
+    await this.guardedWrite.update(categoryRef, updateData);
 
     // A replaced/removed custom image icon is now unreferenced — free the
     // Cloudinary asset (best-effort, after the record no longer points at it).
@@ -403,7 +402,7 @@ export class CategoryService {
         : activeGroupId
         ? ref(this.db, `group_data/${activeGroupId}/expenses/${childSnap.key}`)
         : ref(this.db, `users/${profile.uid}/expenses/${childSnap.key}`);
-      updates.push(update(directRef, { category: newName }));
+      updates.push(this.guardedWrite.update(directRef, { category: newName }));
     });
 
     await Promise.all(updates);
@@ -446,14 +445,14 @@ export class CategoryService {
     const iconUrl: string | null =
       (await get(ref(this.db, primaryPath))).val()?.iconUrl ?? null;
 
-    const deleteOps: Promise<void>[] = [remove(ref(this.db, primaryPath))];
+    const deleteOps: Promise<void>[] = [this.guardedWrite.remove(ref(this.db, primaryPath))];
 
     if (canonicalRef && currentSpaceId) {
       // Also remove from legacy path so backfill doesn't restore on next reload
       const legacyPath = activeGroupId
         ? `group_data/${activeGroupId}/categories/${categoryId}`
         : `users/${profile.uid}/categories/${categoryId}`;
-      deleteOps.push(remove(ref(this.db, legacyPath)).catch(() => {}));
+      deleteOps.push(this.guardedWrite.remove(ref(this.db, legacyPath)).catch(() => {}));
     }
 
     await Promise.all(deleteOps);
@@ -521,7 +520,7 @@ export class CategoryService {
         userId: userId,
         createdAt: new Date().toISOString(),
       };
-      return push(targetRef, newCategory);
+      return this.guardedWrite.push(targetRef, newCategory);
     }));
   }
 
@@ -556,7 +555,7 @@ export class CategoryService {
         groupId: groupId,
         createdAt: new Date().toISOString(),
       };
-      return push(groupCategoriesRef, newCategory);
+      return this.guardedWrite.push(groupCategoriesRef, newCategory);
     }));
   }
 }

@@ -5,9 +5,6 @@ import {
   get,
   push,
   ref as dbRef,
-  remove,
-  set,
-  update,
   objectVal,
   query,
   orderByChild,
@@ -30,6 +27,7 @@ import { PersonalOfflineDataService } from './personal-offline-data.service';
 import { SharedOfflineDataService } from './shared-offline-data.service';
 import { OfflineStoreService } from './offline-store.service';
 import { NetworkService } from './network.service';
+import { GuardedWriteService } from './guarded-write.service';
 
 import { changedFields } from '../utils/changed-fields';
 export type ServiceIVoucher = IVoucher & {
@@ -99,6 +97,7 @@ export class VoucherService {
   private sharedOfflineData = inject(SharedOfflineDataService);
   private offlineStore = inject(OfflineStoreService);
   private network = inject(NetworkService);
+  private guardedWrite = inject(GuardedWriteService);
 
   private getProfilePhotoURL(profile: { photoURL?: string | null } | null | undefined): string | null {
     if (!profile) return null;
@@ -498,7 +497,7 @@ export class VoucherService {
 
     if (activeGroupId) newVoucher.groupId = activeGroupId;
 
-    await set(newVoucherRef, newVoucher);
+    await this.guardedWrite.set(newVoucherRef, newVoucher);
   }
 
   /** The voucher's current images paired with their Cloudinary ids. */
@@ -586,7 +585,7 @@ export class VoucherService {
         : dbRef(this.db, `users/${profile.uid}/vouchers/${voucher.id}`);
 
     if (!imagesChanged) {
-      await update(voucherRef, metadata);
+      await this.guardedWrite.update(voucherRef, metadata);
       return 'saved';
     }
 
@@ -619,7 +618,7 @@ export class VoucherService {
     };
 
     try {
-      await update(voucherRef, { ...metadata, ...imagePayload });
+      await this.guardedWrite.update(voucherRef, { ...metadata, ...imagePayload });
     } catch (error) {
       void this.imageUploadService.deleteImages(uploaded.map(img => img.publicId));
       throw error;
@@ -679,7 +678,7 @@ export class VoucherService {
         ? dbRef(this.db, `group_data/${activeGroupId}/vouchers/${voucher.id}`)
         : dbRef(this.db, `users/${profile.uid}/vouchers/${voucher.id}`);
 
-    await remove(voucherRef);
+    await this.guardedWrite.remove(voucherRef);
 
     // Permanently free the Cloudinary storage too — best-effort, after the
     // record is gone (a cleanup failure must not resurrect the voucher).
