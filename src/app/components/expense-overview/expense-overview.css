@@ -914,6 +914,12 @@ body.light-mode .ov-bar-active {
     width: 1%;
     white-space: nowrap;
   }
+
+  /* Total: never split the number itself; only the currency label may wrap below it */
+  .expense-table td.td-amount {
+    word-break: normal;
+    overflow-wrap: normal;
+  }
 }
 
 /* Desktop: fit all columns (incl. total cost) without horizontal scroll */
