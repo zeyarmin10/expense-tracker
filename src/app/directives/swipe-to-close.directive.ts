@@ -7,7 +7,8 @@ const MOBILE_QUERY = '(max-width: 991px)';
 const SLOP_PX = 8;
 
 /**
- * Swipe-down-to-close for bottom sheets and full-screen overlays on phones,
+ * Swipe-down-to-close for bottom sheets on phones (full-screen overlays opt
+ * out automatically and close only via their own ✕/back button),
  * like a native sheet: the sheet follows the finger and is dismissed when
  * pulled far or flicked fast enough, otherwise it springs back. Actually
  * closing gives one very light native haptic tick (none while dragging, so a
@@ -117,6 +118,10 @@ export class SwipeToCloseDirective implements OnInit, AfterViewInit, OnDestroy {
     if (this.closing || this.swipeDisabled || e.touches.length !== 1) return;
     if (this.mobile && !this.mobile.matches) return;
     const host = this.el.nativeElement;
+    // Full-screen overlays (add purchase/sale carts, add forms, receipts…)
+    // close only via their own ✕/back: a downward drag there is far more
+    // likely to be scrolling or working the form than a request to discard it.
+    if (this.isFullScreen(host)) return;
     const target = e.target as Element | null;
     if (!target) return;
     this.fromBackdrop = !!this.ownBackdrop && this.ownBackdrop.contains(target);
@@ -377,6 +382,13 @@ export class SwipeToCloseDirective implements OnInit, AfterViewInit, OnDestroy {
     };
     document.addEventListener('click', stop, { capture: true, once: true });
     setTimeout(() => document.removeEventListener('click', stop, { capture: true }), 400);
+  }
+
+  /** The sheet covers the whole viewport (its mobile full-screen layout). */
+  private isFullScreen(host: HTMLElement): boolean {
+    const rect = host.getBoundingClientRect();
+    const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+    return rect.top <= 1 && rect.height >= viewportHeight - 2 && rect.width >= window.innerWidth - 2;
   }
 
   /** Distance that dismisses on release: a quarter of the sheet, capped. */

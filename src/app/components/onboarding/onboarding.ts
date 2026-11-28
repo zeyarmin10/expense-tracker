@@ -420,7 +420,6 @@ export class OnboardingComponent implements OnInit, OnDestroy {
       history.pushState(null, '');
       this.modalStateService.modalOpened();
       this.isJoinSpaceModalOpen = true;
-      focusAfterOpen(() => document.getElementById('ob-join-invite-code'));
     } finally {
       this.isOpeningSpaceAction = null;
     }

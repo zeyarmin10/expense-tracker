@@ -1329,6 +1329,8 @@ export class UserProfileComponent implements OnInit, OnDestroy {
       input: 'text',
       inputPlaceholder: 'DELETE',
       inputAttributes: { autocomplete: 'off', style: 'text-align:center' },
+      // Don't pop the keyboard open: let the user read the warning first.
+      inputAutoFocus: false,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: this.translate.instant('DELETE_ACCOUNT_BUTTON'),
@@ -1353,6 +1355,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
         title: this.translate.instant('DELETE_ACCOUNT_PASSWORD_TITLE'),
         input: 'password',
         inputPlaceholder: this.translate.instant('DELETE_ACCOUNT_PASSWORD_PLACEHOLDER'),
+        inputAutoFocus: false,
         showCancelButton: true,
         confirmButtonText: this.translate.instant('DELETE_ACCOUNT_BUTTON'),
         cancelButtonText: this.translate.instant('CANCEL_BUTTON'),
